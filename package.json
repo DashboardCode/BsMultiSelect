@@ -1,0 +1,35 @@
+{
+  "name": "dashboardcode.bsmutltiselect",
+  "version": "0.1.0",
+  "private": false,
+  "description": "Bootstrap 4 component - MultiSelect",
+  "dependencies": {
+    "bootstrap": "^4.1.1",
+    "popper.js": "^1.14.3"
+  },
+  "devDependencies": {
+    "@babel/core": "7.0.0-beta.46",
+    "@babel/preset-env": "7.0.0-beta.46",
+    "@babel/cli": "7.0.0-beta.46",
+    "@types/bootstrap": "4.1.0",
+    "@types/jquery": "3.3.1",
+    "@types/node": "10.0.8",
+    "autoprefixer": "8.4.1",
+    "gulp": "3.9.1",
+    "typescript": "2.8.3"
+  },
+  "scripts": {
+    "report": "echo.cd & cd & echo. & where node & echo.node -v & node -v & echo. & where npm & echo.npm -version & npm -version & echo. &  echo.babel -version & node ./node_modules/@babel/cli/bin/babel --version & echo. & echo.tsc --version & node ./node_modules/typescript/lib/tsc --version ",
+    "build": "node ./node_modules/webpack/bin/webpack --mode development",
+    "buildcss": "node ./node_modules/sass/sass ./src/site.scss ./wwwroot/dist/main.css",
+    "buildcssnode": "node ./node_modules/node-sass/bin/node-sass -q ./src/site.scss ./wwwroot/main.css",
+    "start:wds": "cross-env NODE_ENV=development webpack-dev-server --env=dev --progress --profile --colors",
+    "start:wds:withPublicPath": "cross-env PUBLIC_PATH=/public/ npm run start:wds",
+    "build:assets": "cross-env NODE_ENV=production webpack --env=prod --profile --colors --progress",
+    "build:assets:withPublicPath": "cross-env PUBLIC_PATH=/public/assets/ npm run build:assets"
+  },
+  "keywords": [
+    "bootstrap component"
+  ],
+  "author": "Roman Pokrovskij"
+}
