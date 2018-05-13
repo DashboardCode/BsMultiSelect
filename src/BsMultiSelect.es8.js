@@ -14,22 +14,31 @@ const BsMultiSelect = ((window, $, Popper) => {
         items: [],
         defaults: [],
         usePopper: true,
+        selectedPanelMinHeight: "calc(2.25rem + 2px)",
+        selectedPanelReadonlyBackgroundColor: "#e9ecef",
+        filterInputColor: "#495057",
 
         containerClass: "dashboardcode-bs-multiselect",
         dropDownMenuClass: "dropdown-menu",
         dropDownItemClass: "px-2",
+
         selectedPanelClass: "form-control btn border",
         selectedPanelStyle: { "min-height": "calc(2.25rem + 2px)" },
-        selectedPanelReadonlyStyle: { "background-color":"#e9ecef"},
         selectedPanelStyleSys: { "cursor": "text", "display": "flex", "flex-wrap": "wrap", "align-items": "center", "margin-bottom": "0px" }, 
+        
+        selectedPanelReadonlyStyle: { "background-color":"#e9ecef"},
+        
         selectedItemClass: "badge", 
         selectedItemStyle: { "padding-left": "0px"},
         selectedItemStyleSys: { "display": "flex", "align-items": "center" },
+        
         removeSelectedItemButtonClass: "close",
         removeSelectedItemButtonStyle: { "font-size": "100%" }, 
+        
         filterInputItemClass: "", 
         filterInputItemStyle: {},
         filterInputItemStyleSys: {"display": "block"},
+        
         filterInputClass: "",
         filterInputStyle: { "color": "#495057" },
         filterInputStyleSys: { "width": "2ch", "border": "0", "padding": "0", "outline": "none", }
@@ -52,7 +61,7 @@ const BsMultiSelect = ((window, $, Popper) => {
             this.filterInputItem = null;
             this.popper = null;
 
-            // statefull
+            // state
             this.skipFocusout = false;
             this.backspaceAtStartPoint = null;
             this.selectedDropDownItem = null;

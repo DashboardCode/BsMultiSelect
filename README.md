@@ -21,3 +21,6 @@ Unfortunatly BS4 do not provide several important constants as classes so if you
 d)
 e)
 f)
+
+Other Bootstrap 4 extension ideas:
+https://github.com/trumbitta/bootstrap-css-utils 
