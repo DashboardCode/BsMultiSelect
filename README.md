@@ -1,5 +1,5 @@
 # Bootstrap 4 Multiselect plugin
-*Reuse boostrap 4 styles where it can*
+*https://dashboardcode.github.io/BsMultiSelect/*
 
 There are many of such plugins but this is small since reuses maximum of bootrap 4 styles and code.
 
