@@ -7,6 +7,8 @@ There are many of such plugins but this is small since reuses maximum of bootrap
 Instead of using BS4 Dropdown (it was possible) plugin uses popper.js directly because of better performance (no need to manage `toggle-buttons`).
 Still plugin utilize `dropdown-menu`, `dropdown-item`, `show` styles.
 
+Also those BS4 styles where used:
+
 * BS4 Custom checkboxes
 
 * BS4 Close buttons.
@@ -15,7 +17,7 @@ Still plugin utilize `dropdown-menu`, `dropdown-item`, `show` styles.
 
 * Badge style.
 
-This plugin doesn't have its own styles. This was a clear goal but unfrtunatly it can be achived by a trick. Not all bootstrap styles varibales can be accessed from a plugin.
+This plugin doesn't have its own styles. This was a clear goal but unfrtunatly it can be achived only by a trick. Not all bootstrap styles varibales can be accessed from a plugin as classes, therefore we need javascript help. Those variables are:
 
 * form control's min-height; default value is "calc(2.25rem + 2px)",
 
@@ -23,7 +25,7 @@ This plugin doesn't have its own styles. This was a clear goal but unfrtunatly i
 
 * input color; default value is "#495057"
 
-So if you theme change those variables, you will need to update them in the initialization plugin options.
+If your theme changes those variables, you need to update them on the plugin initialization (setting options).
 
 
 
