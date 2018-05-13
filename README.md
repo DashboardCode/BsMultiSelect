@@ -4,23 +4,28 @@
 There are many of such plugins but this is small since reuses maximum of bootrap 4 styles and code.
 
 # Architecture
-Instead of using BS4 Dropdown (it was possible) it uses popper.js directly.
+Instead of using BS4 Dropdown (it was possible) it uses popper.js directly because of better performance.
 But it utilize dropdown-menu, dropdown-item styles.
-BS4 Custom checkboxes
-BS4 Close buttons.
 
-Plugin doesn't have own styles (this was liek a goad but was achived by a trick).
-In ideal worls if you customize bootsrap 4 this plugin should change with your new styles. And there is the number of style that it inherits:
+* BS4 Custom checkboxes
 
-a)
-b)
-c)
+* BS4 Close buttons.
 
-Unfortunatly BS4 do not provide several important constants as classes so if you have customized those values you should redifine them in options.
+* Form-control style.
 
-d)
-e)
-f)
+* Badge style.
+
+This plugin doesn't have its own styles. This was a clear goal but unfrtunatly it can be achived by a trick. Not all bootstrap styles varibales can be accessed from a plugin.
+
+* form control's min-height; default value is "calc(2.25rem + 2px)",
+
+* readonly control background color; default value is "#e9ecef"
+
+* input color; default value is "#495057"
+
+So if you theme change those variables, you will need to update them in the initialization plugin options.
+
+
 
 Alternatives:
 Chosen.js: https://harvesthq.github.io/chosen/ - (ver 1.8.5) strange "Consider marking event handler as 'passive' to make the page more responsive" warnings to console, heavy integrating to bootstrap theme (30KB+10KB js+css minified)
