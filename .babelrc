@@ -2,6 +2,7 @@
     "presets": [
         ["@babel/env",
             {
+                "modules": false,
                 "targets": {
                     "browsers": ["last 2 chrome versions", "ie 11", "safari 11", "edge 15", "firefox 59"]
                 },

@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "private": false,
   "description": "Bootstrap 4 component - MultiSelect",
+  "homepage": "https://dashboardcode.github.io/BsMultiSelect/",
   "dependencies": {
     "bootstrap": "^4.1.1",
     "popper.js": "^1.14.3",
@@ -13,11 +14,15 @@
     "@babel/preset-env": "7.0.0-beta.46",
     "@babel/cli": "7.0.0-beta.46",
     "gulp": "3.9.1",
-    "uglify-js": "3.3.25"
+    "uglify-js": "3.3.25",
+    "rollup": "0.58.2",
+    "rollup-plugin-babel": "v4.0.0-beta.4",
+    "rollup-plugin-node-resolve": "3.3.0"
   },
   "scripts": {
     "report": "echo.cd & cd & echo. & where node & echo.node -v & node -v & echo. & where npm & echo.npm -version & npm -version & echo. &  echo.babel -version & node ./node_modules/@babel/cli/bin/babel --version",
     "js-compile": "node ./node_modules/@babel/cli/bin/babel ./src/BsMultiSelect.es8.js --out-file ./dist/js/BsMultiSelect.js --source-maps",
+    "js-rollup": "rollup --environment BUNDLE:false --config build/rollup.config.js --sourcemap",
     "js-minify": "node ./node_modules/uglify-js/bin/uglifyjs ./dist/js/BsMultiSelect.js --compress typeofs=false --mangle --comments \"/^!/\" --source-map \"content=dist/js/BsMultiSelect.js.map,includeSources,url=BsMultiSelect.min.js.map\" --output ./dist/js/BsMultiSelect.min.js"
   },
   "keywords": [

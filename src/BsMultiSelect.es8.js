@@ -18,7 +18,7 @@ const BsMultiSelect = ((window, $, Popper) => {
         selectedPanelReadonlyBackgroundColor: "#e9ecef",
         filterInputColor: "#495057",
 
-        containerClass: "dashboardcode-bs-multiselect",
+        containerClass: "dashboardcode-bsmultiselect",
         dropDownMenuClass: "dropdown-menu",
         dropDownItemClass: "px-2",
 
@@ -183,7 +183,7 @@ const BsMultiSelect = ((window, $, Popper) => {
         
         appendDropDownItem(itemValue, itemText, isChecked) {
             var optionId = itemValue;
-            var checkBoxId = `dashboardcode-bs-multiselect-${this.input.name.toLowerCase()}-generated-id-${optionId.toLowerCase()}`;
+            var checkBoxId = `dashboardcode-bsmultiselect-${this.input.name.toLowerCase()}-generated-id-${optionId.toLowerCase()}`;
             var checked = isChecked ? "checked" : "";
             var $dropDownItem = $(
                 `<li data-option-id="${optionId}">
@@ -371,7 +371,7 @@ const BsMultiSelect = ((window, $, Popper) => {
                     var label = formGroup.querySelector(`label[for="${inputId}"]`);
                     var f = $(label).attr("for");
                     if ( f == this.input.id) {
-                        this.filterInput.id = "dashboardcode-bs-multiselect-generated-filter-id-" + this.input.id;
+                        this.filterInput.id = "dashboardcode-bsmultiselect-generated-filter-id-" + this.input.id;
                         label.setAttribute("for", this.filterInput.id);
                     }
                 }
