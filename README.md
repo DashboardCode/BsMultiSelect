@@ -4,8 +4,8 @@
 There are many of such plugins but this is small since reuses maximum of bootrap 4 styles and code.
 
 # Architecture
-Instead of using BS4 Dropdown (it was possible) it uses popper.js directly because of better performance.
-But it utilize dropdown-menu, dropdown-item styles.
+Instead of using BS4 Dropdown (it was possible) plugin uses popper.js directly because of better performance (no need to manage `toggle-buttons`).
+Still plugin utilize `dropdown-menu`, `dropdown-item`, `show` styles.
 
 * BS4 Custom checkboxes
 
