@@ -1,32 +1,45 @@
-# Bootstrap 4 Multiselect plugin
+# DashboardCode Multiselect plugin for Bootstrap 4
 *https://dashboardcode.github.io/BsMultiSelect/*
 
-There are many of such plugins but this is small since reuses maximum of bootrap 4 styles and code.
+There are many of such plugins but this is small since reuses maximum of bootrap 4 styles and code. It also follows Bootstrap 4 conventions and solutions.
 
 # Architecture
-Instead of using BS4 Dropdown (it was possible) plugin uses popper.js directly because of better performance (no need to manage `toggle-buttons`).
-Still plugin utilize `dropdown-menu`, `dropdown-item`, `show` styles.
+Instead of using BS4 Dropdown component (it is hardly possible because it require `toggle-buttons`) this plugin uses popper.js directly.
+Inspite of this plugin utilize `dropdown-menu` and `show` styles. Menu items contains BS4 Custom checkboxes
 
-Also those BS4 styles where used:
+Additionally those BS4 styles where used:
 
-* BS4 Custom checkboxes
+* `form-control` `btn` `border` `classes` - they are applied to div that emulates `input`
 
-* BS4 Close buttons.
+* `Badge` class - selected items, each item contains BS4 close buttons
 
-* Form-control style.
+This plugin doesn't have its own styles. This was a clear goal but unfrtunatly it can be achived only by a trick. Not all bootstrap styles varibales can be accessed from a plugin as classes, therefore we to configure them in javascript. Those variables are:
 
-* Badge style.
+* `form-control`'s min-height; default value is "calc(2.25rem + 2px)",
 
-This plugin doesn't have its own styles. This was a clear goal but unfrtunatly it can be achived only by a trick. Not all bootstrap styles varibales can be accessed from a plugin as classes, therefore we need javascript help. Those variables are:
+* disable `form-control` background color; default value is "#e9ecef"
 
-* form control's min-height; default value is "calc(2.25rem + 2px)",
+* input color (what are you typing); default value is "#495057"
 
-* readonly control background color; default value is "#e9ecef"
+If your theme changes those variables, you need to update them on the plugin initialization.
 
-* input color; default value is "#495057"
+It would very nice for Bootstrap to provide those SASS variables as classes (since they allready have classes like: `h-25`, `bg-light`, `text-primary`):
 
-If your theme changes those variables, you need to update them on the plugin initialization (setting options).
+````
+.h-input{
+  min-height: $input-height !important; 
+}
 
+.bg-disabled{
+   background-color: $input-disabled-bg !important; 
+}
+
+.text-input{
+   color: $input-color !important;
+}
+````
+
+There is better solution: provide full styles system for "divs that look like input" that will be used in plugins development.
 
 
 ### Alternatives:
