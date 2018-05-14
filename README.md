@@ -17,21 +17,22 @@ Additionally those BS4 styles where used:
 
 * `Badge` class - selected items, each item contains BS4 close buttons
 
-This plugin doesn't have its own styles. This was a clear goal but unfrtunatly it can be achived only by a trick. Not all bootstrap styles varibales can be accessed from a plugin as classes, therefore we to configure them in javascript. Those variables are:
+This plugin doesn't bring its own styles. This was a clear design goal but unfrtunatly it can be achived only by a trick. Not all bootstrap styles varibales can be accessed from a plugin as classes, therefore we need to setup them in javascript. Those variables are:
 
-* `form-control`'s min-height; default value is "calc(2.25rem + 2px)",
+* $input-height - we need it for DIV `form-control`'s min-height; default value is "calc(2.25rem + 2px)",
 
-* disable `form-control` background color; default value is "#e9ecef"
+* $input-disabled-bg - we need it to "disable" DIV `form-control` - set background color; default value is "#e9ecef"
 
-* `input` color (clorl of what you are typing); default value is "#495057"
+* $input-color - we need to make DIV color the same as `input` color (color of text you are typing); default value is "#495057"
 
-If your theme changes those variables, you need to update them on the plugin initialization.
+If your theme changes those variables, you need to update them on the plugin initialization. 
+(INSTRUCTION CURRENTLY MISSED, but clear from plugin help)
 
-It would very nice for Bootstrap to provide those SASS variables as classes :
+It would very nice if Bootstrap could provide those SASS variables as classes :
 
 ````
 .h-input{
-  min-height: $input-height !important; 
+  min-height: $input-height; 
 }
 
 .bg-disabled{
@@ -44,7 +45,7 @@ It would very nice for Bootstrap to provide those SASS variables as classes :
 ````
 Vote there: https://github.com/twbs/bootstrap/issues/26412 
 
-Important that BS allready provide classes like: `h-25`, `bg-light`, `text-primary` , so the proposal is just a improovement of theirs class system. But there is even better solution: to provide full CSS styles set for "divs that look like input" that  could be used in plugins development.
+Important that BS allready provide classes like: `h-25`, `bg-light`, `text-primary` , so the proposal is just a improovement of theirs class system (actually it is very strange that they are absent). But there is even better solution possible: to provide full CSS styles set for "divs that look like input" that  could be used in plugins development. e.g. `div.form-control{min-height: $input-height}` etc.
 
 
 ### Alternatives:
