@@ -1,7 +1,7 @@
 # DashboardCode Multiselect plugin for Bootstrap 4
 *https://dashboardcode.github.io/BsMultiSelect/*
 
-There are many of such plugins but this is small since reuses maximum of bootrap 4 styles and code. It also follows Bootstrap 4 conventions and solutions.
+There are many of such plugins but this is small since reuses maximum of bootrap 4 styles and code. It also follows Bootstrap 4 conventions and use the same instruments (babel, rollup) so pretend to be a `boilerplate`.
 
 
 # Architecture
