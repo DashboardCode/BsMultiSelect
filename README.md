@@ -3,9 +3,11 @@
 
 There are many of such plugins but this is small since reuses maximum of bootrap 4 styles and code. It also follows Bootstrap 4 conventions and solutions.
 
+
 # Architecture
-Instead of using BS4 Dropdown component (it is hardly possible because it require `toggle-buttons`) this plugin uses popper.js directly.
-Inspite of this plugin utilize `dropdown-menu` and `show` styles. Menu items contains BS4 Custom checkboxes
+Instead of using BS4 Dropdown component (it is not possible because BS Dropdown requires presence of `toggle-buttons` https://github.com/twbs/bootstrap/issues/26420) the plugin uses popper.js directly.
+
+Inspite of this the plugin utilize `dropdown-menu` and `show` styles. Menu items contains BS4 Custom checkboxes.
 
 Additionally those BS4 styles where used:
 
