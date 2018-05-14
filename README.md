@@ -40,7 +40,7 @@ It would very nice for Bootstrap to provide those SASS variables as classes :
 ````
 Vote there: https://github.com/twbs/bootstrap/issues/26412 
 
-Important that BS allready have classes like: `h-25`, `bg-light`, `text-primary` , so the proposal is not out of the system. But there is even better solution: to provide full styles set for "divs that look like input" that will be could in plugins development.
+Important that BS allready provide classes like: `h-25`, `bg-light`, `text-primary` , so the proposal is just a improovement of theirs class system. But there is even better solution: to provide full CSS styles set for "divs that look like input" that  could be used in plugins development.
 
 
 ### Alternatives:
