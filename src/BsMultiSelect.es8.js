@@ -13,10 +13,13 @@ const BsMultiSelect = ((window, $, Popper) => {
     const defaults = {
         items: [],
         defaults: [],
-        usePopper: true,
+        //usePopper: true,
         selectedPanelMinHeight: "calc(2.25rem + 2px)",
         selectedPanelReadonlyBackgroundColor: "#e9ecef",
+        selectedPanelValidBoxShadow: " 0 0 0 0.2rem rgba(40, 167, 69, 0.5)",
+        selectedPanelInvalidBoxShadow: "0 0 0 0.2rem rgba(220, 53, 69, 0.5)",
         filterInputColor: "#495057",
+
 
         containerClass: "dashboardcode-bsmultiselect",
         dropDownMenuClass: "dropdown-menu",
@@ -73,32 +76,32 @@ const BsMultiSelect = ((window, $, Popper) => {
 
         updateDropDownPosition() {
             //console.log("updateDropDownPosition");
-            if (this.options.usePopper) {
+            //if (this.options.usePopper) {
                 this.popper.update();
-            } else {
-                $(this.dropDownMenu).dropdown('update');
-            }
+            // } else {
+            //     $(this.dropDownMenu).dropdown('update');
+            // }
         }
 
         hideDropDown() {
-            if (this.options.usePopper) {
+            //if (this.options.usePopper) {
                 //console.log("popper remove show");
                 $(this.dropDownMenu).removeClass('show')
-            } else {
-                if ($(this.dropDownMenu).hasClass('show'))
-                    $(this.dropDownMenu).dropdown('toggle');
-            }
+            // } else {
+            //     if ($(this.dropDownMenu).hasClass('show'))
+            //         $(this.dropDownMenu).dropdown('toggle');
+            // }
         }
 
         showDropDown() {
             if (this.hasItems) {
-                if (this.options.usePopper) {
+                //if (this.options.usePopper) {
                     //console.log("popper add show");
                     $(this.dropDownMenu).addClass('show')
-                } else {
-                    if (!$(this.dropDownMenu).hasClass('show'))
-                        $(this.dropDownMenu).dropdown('toggle');
-                }
+                // } else {
+                //     if (!$(this.dropDownMenu).hasClass('show'))
+                //         $(this.dropDownMenu).dropdown('toggle');
+                // }
             }
         }
 
@@ -302,6 +305,21 @@ const BsMultiSelect = ((window, $, Popper) => {
                 .appendTo($container);
             this.selectedPanel = $selectedPanel.get(0);
 
+            if ($input.hasClass("is-valid")){
+                $selectedPanel.removeClass("border");
+                $selectedPanel.addClass("is-valid");
+                //$selectedPanel.removeClass("btn-outline-danger");
+                //$selectedPanel.addClass("btn-outline-success");
+                
+            }
+            
+            if ($input.hasClass("is-invalid")){
+                $selectedPanel.removeClass("border");
+                $selectedPanel.addClass("is-invalid");
+                //$selectedPanel.removeClass("btn-outline-success");
+                //$selectedPanel.addClass("btn-outline-danger");
+            }
+
             var $filterInputItem = $('<li/>')
                 .css(this.options.filterInputItemStyleSys)
                 .css(this.options.filterInputItemStyle)
@@ -320,7 +338,7 @@ const BsMultiSelect = ((window, $, Popper) => {
             this.dropDownMenu = $dropDownMenu.get(0);
 
             $dropDownMenu.addClass(this.options.dropDownMenuClass);
-            if (this.options.usePopper) {
+            //if (this.options.usePopper) {
                 this.popper = new Popper(this.filterInput, this.dropDownMenu, {
                     placement: 'bottom-start',
                     modifiers: {
@@ -329,15 +347,15 @@ const BsMultiSelect = ((window, $, Popper) => {
                         },
                     },
                 });
-            } else {
-                $(this.dropDownMenu).addClass("dropdown dropdown-menu")
-                $(this.dropDownMenu).data("", "");
-                $(this.dropDownMenu).dropdown({
-                    placement: 'bottom-start',
-                    flip: false,
-                    reference: this.filterInput
-                });
-            }
+            // } else {
+            //     $(this.dropDownMenu).addClass("dropdown dropdown-menu")
+            //     $(this.dropDownMenu).data("", "");
+            //     $(this.dropDownMenu).dropdown({
+            //         placement: 'bottom-start',
+            //         flip: false,
+            //         reference: this.filterInput
+            //     });
+            // }
 
             if (this.options.items == null) {
                 this.options.items.forEach(item => {
@@ -488,12 +506,20 @@ const BsMultiSelect = ((window, $, Popper) => {
                 });
 
                 $filterInput.focusin((event) => {
+                    if( $selectedPanel.hasClass("is-valid") ){
+                        $selectedPanel.css("box-shadow", this.options.selectedPanelValidBoxShadow );              
+                    }else if ( $selectedPanel.hasClass("is-invalid")){
+                        $selectedPanel.css("box-shadow", this.options.selectedPanelInvalidBoxShadow );
+                    }
                     $(this.selectedPanel).addClass("focus");
                 });
 
                 $filterInput.focusout((event) => {
                     if (!this.skipFocusout)
+                    {
+                        $selectedPanel.css("box-shadow", "" );                
                         $(this.selectedPanel).removeClass("focus");
+                    }
                 });
 
                 $container.mousedown((event) => {

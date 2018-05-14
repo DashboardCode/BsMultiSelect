@@ -75,9 +75,11 @@
     var defaults = {
       items: [],
       defaults: [],
-      usePopper: true,
+      //usePopper: true,
       selectedPanelMinHeight: "calc(2.25rem + 2px)",
       selectedPanelReadonlyBackgroundColor: "#e9ecef",
+      selectedPanelValidBoxShadow: " 0 0 0 0.2rem rgba(40, 167, 69, 0.5)",
+      selectedPanelInvalidBoxShadow: "0 0 0 0.2rem rgba(220, 53, 69, 0.5)",
       filterInputColor: "#495057",
       containerClass: "dashboardcode-bsmultiselect",
       dropDownMenuClass: "dropdown-menu",
@@ -158,32 +160,31 @@
         key: "updateDropDownPosition",
         value: function updateDropDownPosition() {
           //console.log("updateDropDownPosition");
-          if (this.options.usePopper) {
-            this.popper.update();
-          } else {
-            $$$1(this.dropDownMenu).dropdown('update');
-          }
+          //if (this.options.usePopper) {
+          this.popper.update(); // } else {
+          //     $(this.dropDownMenu).dropdown('update');
+          // }
         }
       }, {
         key: "hideDropDown",
         value: function hideDropDown() {
-          if (this.options.usePopper) {
-            //console.log("popper remove show");
-            $$$1(this.dropDownMenu).removeClass('show');
-          } else {
-            if ($$$1(this.dropDownMenu).hasClass('show')) $$$1(this.dropDownMenu).dropdown('toggle');
-          }
+          //if (this.options.usePopper) {
+          //console.log("popper remove show");
+          $$$1(this.dropDownMenu).removeClass('show'); // } else {
+          //     if ($(this.dropDownMenu).hasClass('show'))
+          //         $(this.dropDownMenu).dropdown('toggle');
+          // }
         }
       }, {
         key: "showDropDown",
         value: function showDropDown() {
           if (this.hasItems) {
-            if (this.options.usePopper) {
-              //console.log("popper add show");
-              $$$1(this.dropDownMenu).addClass('show');
-            } else {
-              if (!$$$1(this.dropDownMenu).hasClass('show')) $$$1(this.dropDownMenu).dropdown('toggle');
-            }
+            //if (this.options.usePopper) {
+            //console.log("popper add show");
+            $$$1(this.dropDownMenu).addClass('show'); // } else {
+            //     if (!$(this.dropDownMenu).hasClass('show'))
+            //         $(this.dropDownMenu).dropdown('toggle');
+            // }
           }
         }
       }, {
@@ -390,32 +391,43 @@
           this.container = $container.get(0);
           var $selectedPanel = $$$1("<ul/>").addClass(this.options.selectedPanelClass).css(this.options.selectedPanelStyleSys).css(this.options.selectedPanelStyle).appendTo($container);
           this.selectedPanel = $selectedPanel.get(0);
+
+          if ($input.hasClass("is-valid")) {
+            $selectedPanel.removeClass("border");
+            $selectedPanel.addClass("is-valid"); //$selectedPanel.removeClass("btn-outline-danger");
+            //$selectedPanel.addClass("btn-outline-success");
+          }
+
+          if ($input.hasClass("is-invalid")) {
+            $selectedPanel.removeClass("border");
+            $selectedPanel.addClass("is-invalid"); //$selectedPanel.removeClass("btn-outline-success");
+            //$selectedPanel.addClass("btn-outline-danger");
+          }
+
           var $filterInputItem = $$$1('<li/>').css(this.options.filterInputItemStyleSys).css(this.options.filterInputItemStyle).addClass(this.options.filterInputItemClass).appendTo($selectedPanel);
           this.filterInputItem = $filterInputItem.get(0);
           var $filterInput = $$$1('<input type="search" autocomplete="off">').css(this.options.filterInputStyleSys).css(this.options.filterInputStyle).addClass(this.options.filterInputClass).appendTo($filterInputItem);
           this.filterInput = $filterInput.get(0);
           var $dropDownMenu = $$$1("<ul/>").appendTo($container);
           this.dropDownMenu = $dropDownMenu.get(0);
-          $dropDownMenu.addClass(this.options.dropDownMenuClass);
+          $dropDownMenu.addClass(this.options.dropDownMenuClass); //if (this.options.usePopper) {
 
-          if (this.options.usePopper) {
-            this.popper = new Popper$$1(this.filterInput, this.dropDownMenu, {
-              placement: 'bottom-start',
-              modifiers: {
-                flip: {
-                  behavior: ['left', 'right']
-                }
+          this.popper = new Popper$$1(this.filterInput, this.dropDownMenu, {
+            placement: 'bottom-start',
+            modifiers: {
+              flip: {
+                behavior: ['left', 'right']
               }
-            });
-          } else {
-            $$$1(this.dropDownMenu).addClass("dropdown dropdown-menu");
-            $$$1(this.dropDownMenu).data("", "");
-            $$$1(this.dropDownMenu).dropdown({
-              placement: 'bottom-start',
-              flip: false,
-              reference: this.filterInput
-            });
-          }
+            }
+          }); // } else {
+          //     $(this.dropDownMenu).addClass("dropdown dropdown-menu")
+          //     $(this.dropDownMenu).data("", "");
+          //     $(this.dropDownMenu).dropdown({
+          //         placement: 'bottom-start',
+          //         flip: false,
+          //         reference: this.filterInput
+          //     });
+          // }
 
           if (this.options.items == null) {
             this.options.items.forEach(function (item) {
@@ -572,10 +584,19 @@
               }
             });
             $filterInput.focusin(function (event) {
+              if ($selectedPanel.hasClass("is-valid")) {
+                $selectedPanel.css("box-shadow", _this2.options.selectedPanelValidBoxShadow);
+              } else if ($selectedPanel.hasClass("is-invalid")) {
+                $selectedPanel.css("box-shadow", _this2.options.selectedPanelInvalidBoxShadow);
+              }
+
               $$$1(_this2.selectedPanel).addClass("focus");
             });
             $filterInput.focusout(function (event) {
-              if (!_this2.skipFocusout) $$$1(_this2.selectedPanel).removeClass("focus");
+              if (!_this2.skipFocusout) {
+                $selectedPanel.css("box-shadow", "");
+                $$$1(_this2.selectedPanel).removeClass("focus");
+              }
             });
             $container.mousedown(function (event) {
               _this2.skipFocusout = true;
