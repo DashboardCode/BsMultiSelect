@@ -9,6 +9,8 @@ Instead of using BS4 Dropdown component (it is not possible because BS Dropdown 
 
 Inspite of this the plugin utilize `dropdown-menu` and `show` styles. Menu items contains BS4 Custom checkboxes.
 
+![image](https://user-images.githubusercontent.com/11598038/39988733-cda205e2-5770-11e8-8ca2-0d30cefc3ca1.png)
+
 Additionally those BS4 styles where used:
 
 * `form-control` `btn` `border` `classes` - they are applied to div that emulates `input`
