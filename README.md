@@ -26,7 +26,7 @@ This plugin doesn't bring its own styles. This was a clear design goal but unfrt
 * $input-color - we need to make DIV color the same as `input` color (color of text you are typing); default value is "#495057"
 
 If your theme changes those variables, you need to update them on the plugin initialization. 
-(INSTRUCTION CURRENTLY MISSED, but clear from plugin help)
+(INSTRUCTION CURRENTLY MISSED, but is should be clear from plugin sources).
 
 It would very nice if Bootstrap could provide those SASS variables as classes :
 
