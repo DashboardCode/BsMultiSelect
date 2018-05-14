@@ -19,11 +19,11 @@ This plugin doesn't have its own styles. This was a clear goal but unfrtunatly i
 
 * disable `form-control` background color; default value is "#e9ecef"
 
-* input color (what are you typing); default value is "#495057"
+* `input` color (clorl of what you are typing); default value is "#495057"
 
 If your theme changes those variables, you need to update them on the plugin initialization.
 
-It would very nice for Bootstrap to provide those SASS variables as classes (since they allready have classes like: `h-25`, `bg-light`, `text-primary`):
+It would very nice for Bootstrap to provide those SASS variables as classes :
 
 ````
 .h-input{
@@ -38,8 +38,9 @@ It would very nice for Bootstrap to provide those SASS variables as classes (sin
    color: $input-color !important;
 }
 ````
+Vote there: https://github.com/twbs/bootstrap/issues/26412 
 
-There is better solution: provide full styles system for "divs that look like input" that will be used in plugins development.
+Important that BS allready have classes like: `h-25`, `bg-light`, `text-primary` , so the proposal is not out of the system. But there is even better solution: to provide full styles set for "divs that look like input" that will be could in plugins development.
 
 
 ### Alternatives:
