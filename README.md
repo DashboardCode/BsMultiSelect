@@ -26,9 +26,9 @@ This plugin doesn't bring its own styles. This was a clear design goal but unfrt
 * $input-color - we need to make DIV color the same as `input` color (color of text you are typing); default value is "#495057"
 
 If your theme changes those variables, you need to update them on the plugin initialization. 
-(INSTRUCTION CURRENTLY MISSED, but is should be clear from plugin sources).
+(INSTRUCTION ON THE WAY).
 
-It would very nice if Bootstrap could provide those SASS variables as classes :
+It would be very nice if Bootstrap could provide those SASS variables as classes :
 
 ````
 .h-input{
@@ -45,7 +45,7 @@ It would very nice if Bootstrap could provide those SASS variables as classes :
 ````
 Vote there: https://github.com/twbs/bootstrap/issues/26412 
 
-Important that BS allready provide classes like: `h-25`, `bg-light`, `text-primary` , so the proposal is just a improovement of theirs class system (actually it is very strange that they are absent). But there is even better solution possible: to provide full CSS styles set for "divs that look like input" that  could be used in plugins development. e.g. `div.form-control{min-height: $input-height}` etc.
+Important that BS allready provide classes like: `h-25`, `bg-light`, `text-primary` , so the proposal is just a improovement of theirs class system (actually it is very strange that thos impoertant styles are not available as classes). But there is even better solution possible:  provide full CSS styles set for "divs that look like input" that  could be used in plugins development. e.g. `div.form-control{min-height: $input-height}` etc.
 
 ### Known issues
 * Tested only for IE11, Chrome 66, Edge 42/17
