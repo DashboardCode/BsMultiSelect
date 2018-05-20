@@ -64,6 +64,10 @@
     if (Symbol.iterator in Object(iter) || Object.prototype.toString.call(iter) === "[object Arguments]") return Array.from(iter);
   }
 
+  function _nonIterableSpread() {
+    throw new TypeError("Invalid attempt to spread non-iterable instance");
+  }
+
   // 2) require polyfill Element.closest polyfill IE 11
   // 3) require multiple classList.add polyfill IE 11
   // IIFE to declare private members
@@ -72,6 +76,33 @@
     var JQUERY_NO_CONFLICT = $$$1.fn[pluginName];
     var pluginName = "dashboardCodeBsMultiSelect";
     var dataKey = "plugin_" + pluginName;
+    var defFilterInputItemStyleSys = {
+      "display": "block"
+    };
+    var defSelectedPanelClass = "form-control btn border";
+    var defFilterInputStyle = {
+      "width": "2ch",
+      "border": "0",
+      "padding": "0",
+      "outline": "none"
+    };
+    var defSelectedPanelStyle = {
+      "cursor": "text",
+      "display": "flex",
+      "flex-wrap": "wrap",
+      "align-items": "center",
+      "margin-bottom": "0px"
+    };
+    var defSelectedItemClass = "badge";
+    var defSelectedItemStyle = {
+      "padding-left": "0px",
+      "display": "flex",
+      "align-items": "center"
+    };
+    var defRemoveSelectedItemButtonClass = "close";
+    var defRemoveSelectedItemButtonStyle = {
+      "font-size": "100%"
+    };
     var defaults = {
       items: [],
       defaults: [],
@@ -84,47 +115,12 @@
       containerClass: "dashboardcode-bsmultiselect",
       dropDownMenuClass: "dropdown-menu",
       dropDownItemClass: "px-2",
-      selectedPanelClass: "form-control btn border",
-      selectedPanelStyle: {
-        "min-height": "calc(2.25rem + 2px)"
-      },
-      selectedPanelStyleSys: {
-        "cursor": "text",
-        "display": "flex",
-        "flex-wrap": "wrap",
-        "align-items": "center",
-        "margin-bottom": "0px"
-      },
-      selectedPanelReadonlyStyle: {
-        "background-color": "#e9ecef"
-      },
-      selectedItemClass: "badge",
-      selectedItemStyle: {
-        "padding-left": "0px"
-      },
-      selectedItemStyleSys: {
-        "display": "flex",
-        "align-items": "center"
-      },
-      removeSelectedItemButtonClass: "close",
-      removeSelectedItemButtonStyle: {
-        "font-size": "100%"
-      },
+      selectedPanelClass: "",
+      selectedPanelReadonlyClass: "",
+      selectedItemClass: "",
+      removeSelectedItemButtonClass: "",
       filterInputItemClass: "",
-      filterInputItemStyle: {},
-      filterInputItemStyleSys: {
-        "display": "block"
-      },
-      filterInputClass: "",
-      filterInputStyle: {
-        "color": "#495057"
-      },
-      filterInputStyleSys: {
-        "width": "2ch",
-        "border": "0",
-        "padding": "0",
-        "outline": "none"
-      }
+      filterInputClass: ""
     };
 
     var Plugin =
@@ -291,8 +287,26 @@
         value: function createAndAppendSelectedItem($checkBox, optionId, itemText) {
           var _this = this;
 
-          var $selectedItem = $$$1("<li data-option-id=\"".concat(optionId, "\"><span>").concat(itemText, "</span></li>")).css(this.options.selectedItemStyleSys).css(this.options.selectedItemStyle).addClass(this.options.selectedItemClass).insertBefore($$$1(this.filterInputItem));
-          var $buttom = $$$1("<button aria-label='Close' tabIndex='-1' type='button'><span aria-hidden='true'>&times;</span></button>").css(this.options.removeSelectedItemButtonStyle).addClass(this.options.removeSelectedItemButtonClass).appendTo($selectedItem);
+          var $selectedItem = $$$1("<li data-option-id=\"".concat(optionId, "\"><span>").concat(itemText, "</span></li>"));
+
+          if (!this.options.selectedItemClass) {
+            $selectedItem.addClass(defSelectedItemClass);
+            $selectedItem.css(defSelectedItemStyle);
+          } else {
+            $selectedItem.addClass(this.options.selectedItemClass);
+          }
+
+          $selectedItem.insertBefore($$$1(this.filterInputItem));
+          var $buttom = $$$1("<button aria-label='Close' tabIndex='-1' type='button'><span aria-hidden='true'>&times;</span></button>");
+
+          if (!this.options.removeSelectedItemButtonClass) {
+            $buttom.addClass(defRemoveSelectedItemButtonClass);
+            $buttom.css(defRemoveSelectedItemButtonStyle);
+          } else {
+            $buttom.addClass(this.options.removeSelectedItemButtonClass);
+          }
+
+          $buttom.appendTo($selectedItem);
           this.setCheck(optionId, true);
           $buttom.click(function (event) {
             _this.removeSelectedItem($selectedItem, optionId, $checkBox);
@@ -387,9 +401,19 @@
           var $input = $$$1(this.input);
           $input.hide();
           var disabled = this.input.disabled;
-          var $container = $$$1("<div/>").addClass(this.options.containerClass).insertAfter($input);
+          var $container = $$$1("<div/>");
+          if (!this.options.containerClass) $container.addClass(this.options.containerClass);
+          $container.insertAfter($input);
           this.container = $container.get(0);
-          var $selectedPanel = $$$1("<ul/>").addClass(this.options.selectedPanelClass).css(this.options.selectedPanelStyleSys).css(this.options.selectedPanelStyle).appendTo($container);
+          var $selectedPanel = $$$1("<ul/>");
+
+          if (!this.options.selectedPanelClass) {
+            $selectedPanel.addClass(defSelectedPanelClass);
+            $selectedPanel.css(defSelectedPanelStyle);
+            $selectedPanel.css("min-height", this.options.selectedPanelMinHeight);
+          } else $selectedPanel.addClass(this.options.selectedPanelClass);
+
+          $selectedPanel.appendTo($container);
           this.selectedPanel = $selectedPanel.get(0);
 
           if ($input.hasClass("is-valid")) {
@@ -404,9 +428,20 @@
             //$selectedPanel.addClass("btn-outline-danger");
           }
 
-          var $filterInputItem = $$$1('<li/>').css(this.options.filterInputItemStyleSys).css(this.options.filterInputItemStyle).addClass(this.options.filterInputItemClass).appendTo($selectedPanel);
+          var $filterInputItem = $$$1('<li/>');
           this.filterInputItem = $filterInputItem.get(0);
-          var $filterInput = $$$1('<input type="search" autocomplete="off">').css(this.options.filterInputStyleSys).css(this.options.filterInputStyle).addClass(this.options.filterInputClass).appendTo($filterInputItem);
+          if (!this.options.filterInputItemClass) $filterInputItem.css(defFilterInputItemStyleSys);else $filterInputItem.addClass(this.options.filterInputItemClass);
+          $filterInputItem.appendTo($selectedPanel);
+          var $filterInput = $$$1('<input type="search" autocomplete="off">');
+
+          if (!this.options.filterInputClass) {
+            $filterInput.css(defFilterInputStyle);
+            $filterInput.css("color", this.options.filterInputColor);
+          } else {
+            $filterInput.addClass(this.options.filterInputClass);
+          }
+
+          $filterInput.appendTo($filterInputItem);
           this.filterInput = $filterInput.get(0);
           var $dropDownMenu = $$$1("<ul/>").appendTo($container);
           this.dropDownMenu = $dropDownMenu.get(0);
@@ -452,7 +487,15 @@
 
           if (disabled) {
             this.filterInput.style.display = "none";
-            $selectedPanel.css(this.options.selectedPanelReadonlyStyle);
+
+            if (!this.options.selectedPanelReadonlyClass) {
+              $selectedPanel.css({
+                "background-color": this.options.selectedPanelReadonlyBackgroundColor
+              });
+            } else {
+              $selectedPanel.addClass(this.options.selectedPanelReadonlyClass);
+            }
+
             $selectedPanel.find('button').prop("disabled", true);
             $selectedPanel.addClass();
           } else {
@@ -502,8 +545,14 @@
                 event.preventDefault();
 
                 _this2.keydownArrow(true);
-              } else if (event.which == 13 || event.keyCode == 13 || event.which == 9 || event.keyCode == 9) {
+              } else if (event.which == 13 || event.keyCode == 13) {
                 event.preventDefault();
+              } else if (event.which == 9 || event.keyCode == 9) {
+                if (_this2.filterInput.value) {
+                  event.preventDefault();
+                } else {
+                  _this2.closeDropDown();
+                }
               } else {
                 if (event.which == 8 || event.keyCode == 8) {
                   // detect that backspace is at start of input field (this will be used at keydown)
@@ -535,6 +584,10 @@
 
                 } else {
                   _this2.analyzeInputText();
+                }
+
+                if (event.which == 9 || event.keyCode == 9) {
+                  _this2.closeDropDown();
                 }
               } else if (event.which == 8 || event.keyCode == 8) {
                 var startPosition = _this2.filterInput.selectionStart;
@@ -584,9 +637,9 @@
               }
             });
             $filterInput.focusin(function (event) {
-              if ($selectedPanel.hasClass("is-valid")) {
+              if ($selectedPanel.hasClass("is-valid") && _this2.options.selectedPanelValidBoxShadow) {
                 $selectedPanel.css("box-shadow", _this2.options.selectedPanelValidBoxShadow);
-              } else if ($selectedPanel.hasClass("is-invalid")) {
+              } else if ($selectedPanel.hasClass("is-invalid") && _this2.options.selectedPanelInvalidBoxShadow) {
                 $selectedPanel.css("box-shadow", _this2.options.selectedPanelInvalidBoxShadow);
               }
 

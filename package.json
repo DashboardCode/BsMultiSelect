@@ -4,26 +4,40 @@
   "private": false,
   "description": "Bootstrap 4 component - MultiSelect",
   "homepage": "https://dashboardcode.github.io/BsMultiSelect/",
+  "repository": "https://github.com/DashboardCode/BsMultiSelect",
+  "license": "Apache-2.0",
   "dependencies": {
-    "bootstrap": "^4.1.1",
-    "popper.js": "^1.14.3",
-    "@babel/polyfill": "7.0.0-beta.46"
+    "@babel/polyfill": "^7.0.0-beta.47",
+    "jquery": "1.9.1 - 3",
+    "popper.js": "^1.14.3"
+  },
+  "peerDependencies": {
+    "bootstrap": "^4.1.1"
   },
   "devDependencies": {
-    "@babel/core": "7.0.0-beta.46",
-    "@babel/preset-env": "7.0.0-beta.46",
-    "@babel/cli": "7.0.0-beta.46",
-    "gulp": "3.9.1",
-    "uglify-js": "3.3.25",
-    "rollup": "0.58.2",
-    "rollup-plugin-babel": "v4.0.0-beta.4",
-    "rollup-plugin-node-resolve": "3.3.0"
+    "@babel/core": "7.0.0-beta.47",
+    "@babel/preset-env": "7.0.0-beta.47",
+    "@babel/cli": "7.0.0-beta.47",
+    "@babel/plugin-external-helpers": "7.0.0-beta.47",
+    "@babel/plugin-transform-spread": "7.0.0-beta.47",
+    "gulp": "4.0.0",
+    "uglify-js": "3.3.26",
+    "rollup": "0.59.1",
+    "rollup-plugin-babel": "4.0.0-beta.4",
+    "rollup-plugin-node-resolve": "3.3.0",
+    "npm-run-all": "4.1.3",
+    "cross-env": "5.1.5"
   },
   "scripts": {
-    "report": "echo.cd & cd & echo. & where node & echo.node -v & node -v & echo. & where npm & echo.npm -version & npm -version & echo. &  echo.babel -version & node ./node_modules/@babel/cli/bin/babel --version",
-    "js-compile": "node ./node_modules/@babel/cli/bin/babel ./src/BsMultiSelect.es8.js --out-file ./dist/js/BsMultiSelect.js --source-maps",
-    "js-rollup": "rollup --environment BUNDLE:false --config build/rollup.config.js --sourcemap",
-    "js-minify": "node ./node_modules/uglify-js/bin/uglifyjs ./dist/js/BsMultiSelect.js --compress typeofs=false --mangle --comments \"/^!/\" --source-map \"content=dist/js/BsMultiSelect.js.map,includeSources,url=BsMultiSelect.min.js.map\" --output ./dist/js/BsMultiSelect.min.js"
+    "report": "echo.cd & cd & echo. & where node & echo.node -v & node -v & echo. & where npm & echo.npm -version & npm -version & echo. & where rollup & echo.rollup -version & rollup -version & echo. &  echo.babel -version & node ./node_modules/@babel/cli/bin/babel --version",
+    "js-compile": "npm-run-all --parallel js-compile-*",
+    "js-compile-standalone": "rollup --environment BUNDLE:false --config build/rollup.config.js --sourcemap",
+    "js-compile-bundle": "rollup --environment BUNDLE:true  --config build/rollup.config.js --sourcemap",
+    "js-compile-babel": "cross-env PLUGINS=true babel ./js/src/BsMultiSelect.es8.js --out-file ./js/dist/BsMultiSelect.js --source-maps",
+    "js-minify": "npm-run-all --parallel js-minify-*",
+    "js-minify-standalone": "node ./node_modules/uglify-js/bin/uglifyjs --compress typeofs=false --mangle --comments \"/^!/\" --source-map \"content=dist/js/BsMultiSelect.js.map,       includeSources,url=BsMultiSelect.min.js.map\"        --output ./dist/js/BsMultiSelect.min.js        ./dist/js/BsMultiSelect.js",
+    "js-minify-bundle": "node ./node_modules/uglify-js/bin/uglifyjs --compress typeofs=false --mangle --comments \"/^!/\" --source-map \"content=dist/js/BsMultiSelect.bundle.js.map,includeSources,url=BsMultiSelect.bundle.min.js.map\" --output ./dist/js/BsMultiSelect.bundle.min.js ./dist/js/BsMultiSelect.bundle.js",
+    "dist": "npm-run-all js-compile js-minify"
   },
   "keywords": [
     "bootstrap mutltiselect multiline component"
