@@ -1,5 +1,5 @@
 /*!
-  * DashboardCode BsMultiSelect v0.1.1 (https://dashboardcode.github.io/BsMultiSelect/)
+  * DashboardCode BsMultiSelect v0.1.3 (https://dashboardcode.github.io/BsMultiSelect/)
   * Copyright 2017-2018 Roman Pokrovskij (github user rpokrovskij)
   * Licensed under APACHE 2 (https://github.com/DashboardCode/BsMultiSelect/blob/master/LICENSE)
   */
@@ -2591,53 +2591,53 @@
 
   var BsMultiSelect = function (window, $$$1, Popper$$1) {
     var JQUERY_NO_CONFLICT = $$$1.fn[pluginName];
-    var pluginName = "dashboardCodeBsMultiSelect";
-    var dataKey = "plugin_" + pluginName;
+    var pluginName = 'dashboardCodeBsMultiSelect';
+    var dataKey = "plugin_".concat(pluginName);
     var defFilterInputItemStyleSys = {
-      "display": "block"
+      'display': 'block'
     };
-    var defSelectedPanelClass = "form-control btn border";
+    var defSelectedPanelClass = 'form-control btn border';
     var defFilterInputStyle = {
-      "width": "2ch",
-      "border": "0",
-      "padding": "0",
-      "outline": "none"
+      'width': '2ch',
+      'border': '0',
+      'padding': '0',
+      'outline': 'none'
     };
     var defSelectedPanelStyle = {
-      "cursor": "text",
-      "display": "flex",
+      'cursor': 'text',
+      'display': 'flex',
       "flex-wrap": "wrap",
       "align-items": "center",
       "margin-bottom": "0px"
     };
-    var defSelectedItemClass = "badge";
+    var defSelectedItemClass = 'badge';
     var defSelectedItemStyle = {
-      "padding-left": "0px",
-      "display": "flex",
-      "align-items": "center"
+      'padding-left': '0px',
+      'display': 'flex',
+      'align-items': 'center'
     };
-    var defRemoveSelectedItemButtonClass = "close";
+    var defRemoveSelectedItemButtonClass = 'close';
     var defRemoveSelectedItemButtonStyle = {
-      "font-size": "100%"
+      'font-size': '100%'
     };
     var defaults = {
       items: [],
       defaults: [],
       //usePopper: true,
-      selectedPanelMinHeight: "calc(2.25rem + 2px)",
-      selectedPanelReadonlyBackgroundColor: "#e9ecef",
-      selectedPanelValidBoxShadow: " 0 0 0 0.2rem rgba(40, 167, 69, 0.25)",
-      selectedPanelInvalidBoxShadow: "0 0 0 0.2rem rgba(220, 53, 69, 0.25)",
-      filterInputColor: "#495057",
-      containerClass: "dashboardcode-bsmultiselect",
-      dropDownMenuClass: "dropdown-menu",
-      dropDownItemClass: "px-2",
-      selectedPanelClass: "",
-      selectedPanelReadonlyClass: "",
-      selectedItemClass: "",
-      removeSelectedItemButtonClass: "",
-      filterInputItemClass: "",
-      filterInputClass: ""
+      selectedPanelMinHeight: 'calc(2.25rem + 2px)',
+      selectedPanelReadonlyBackgroundColor: '#e9ecef',
+      selectedPanelValidBoxShadow: ' 0 0 0 0.2rem rgba(40, 167, 69, 0.25)',
+      selectedPanelInvalidBoxShadow: '0 0 0 0.2rem rgba(220, 53, 69, 0.25)',
+      filterInputColor: '#495057',
+      containerClass: 'dashboardcode-bsmultiselect',
+      dropDownMenuClass: 'dropdown-menu',
+      dropDownItemClass: 'px-2',
+      selectedPanelClass: '',
+      selectedPanelReadonlyClass: '',
+      selectedItemClass: '',
+      removeSelectedItemButtonClass: '',
+      filterInputItemClass: '',
+      filterInputClass: ''
     };
 
     var Plugin =
@@ -2672,7 +2672,7 @@
       _createClass(Plugin, [{
         key: "updateDropDownPosition",
         value: function updateDropDownPosition() {
-          //console.log("updateDropDownPosition");
+          //console.log('updateDropDownPosition');
           //if (this.options.usePopper) {
           this.popper.update(); // } else {
           //     $(this.dropDownMenu).dropdown('update');
@@ -2682,7 +2682,7 @@
         key: "hideDropDown",
         value: function hideDropDown() {
           //if (this.options.usePopper) {
-          //console.log("popper remove show");
+          //console.log('popper remove show');
           $$$1(this.dropDownMenu).removeClass('show'); // } else {
           //     if ($(this.dropDownMenu).hasClass('show'))
           //         $(this.dropDownMenu).dropdown('toggle');
@@ -2693,7 +2693,7 @@
         value: function showDropDown() {
           if (this.hasItems) {
             //if (this.options.usePopper) {
-            //console.log("popper add show");
+            //console.log('popper add show');
             $$$1(this.dropDownMenu).addClass('show'); // } else {
             //     if (!$(this.dropDownMenu).hasClass('show'))
             //         $(this.dropDownMenu).dropdown('toggle');
@@ -2746,7 +2746,7 @@
           $$$1(this.dropDownMenu).find('li').each(function () {
             var $item = $$$1(this);
 
-            if (text == "") {
+            if (text == '') {
               $item.show();
               visible++;
             } else {
@@ -2826,7 +2826,7 @@
 
           $buttom.appendTo($selectedItem);
           this.setCheck(optionId, true);
-          $buttom.click(function (event) {
+          $buttom.click(function () {
             _this.removeSelectedItem($selectedItem, optionId, $checkBox);
 
             _this.updateDropDownPosition();
@@ -2848,7 +2848,7 @@
             return i.textContent.trim().toLowerCase() == text;
           });
 
-          if (item != undefined) {
+          if (item) {
             var $item = $$$1(item);
             var $checkBox = $item.find('input[type="checkbox"]');
 
@@ -2865,7 +2865,7 @@
       }, {
         key: "resetSelectDropDownMenu",
         value: function resetSelectDropDownMenu() {
-          if (this.selectedDropDownItem != null) {
+          if (this.selectedDropDownItem !== null) {
             // IE11 doesn't support remove('text-primary', bg-light' )
             this.selectedDropDownItem.classList.remove('bg-light');
             this.selectedDropDownItem.classList.remove('text-primary');
@@ -2882,7 +2882,7 @@
           if (items.length > 0) {
             this.showDropDown();
 
-            if (this.selectedDropDownItem == null) {
+            if (this.selectedDropDownItem === null) {
               this.selectedDropDownIndex = down ? 0 : items.length - 1;
             } else {
               // IE11 doesn't support remove('text-primary', bg-light' )
@@ -2893,8 +2893,9 @@
                 var newIndex = this.selectedDropDownIndex + 1;
                 this.selectedDropDownIndex = newIndex < items.length ? newIndex : 0;
               } else {
-                var newIndex = this.selectedDropDownIndex - 1;
-                this.selectedDropDownIndex = newIndex >= 0 ? newIndex : items.length - 1;
+                var _newIndex = this.selectedDropDownIndex - 1;
+
+                this.selectedDropDownIndex = _newIndex >= 0 ? _newIndex : items.length - 1;
               }
             }
 
@@ -2982,15 +2983,15 @@
           //     });
           // }
 
-          if (this.options.items == null) {
+          if (!this.options.items) {
             this.options.items.forEach(function (item) {
-              var itemValue = item['value'];
-              var itemText = item['text'];
-              var isChecked = item['isChecked'];
+              var itemValue = item.value;
+              var itemText = item.text;
+              var isChecked = item.isChecked;
 
               _this2.appendDropDownItem(itemValue, itemText, isChecked);
             });
-            this.hasItems = options.items.length > 0;
+            this.hasItems = this.options.items.length > 0;
           } else {
             var selectOptions = $input.find('option');
             selectOptions.each(function (index, option) {
@@ -3020,7 +3021,7 @@
             var inputId = this.input.id;
             var formGroup = this.input.closest(".form-group");
 
-            if (formGroup != null) {
+            if (formGroup) {
               var label = formGroup.querySelector("label[for=\"".concat(inputId, "\"]"));
               var f = $$$1(label).attr("for");
 
@@ -3038,7 +3039,7 @@
             $dropDownMenu.find('li').click(function (event) {
               _this2.clickDropDownItem(event);
             });
-            $dropDownMenu.on("mouseover", function (event) {
+            $dropDownMenu.on("mouseover", function () {
               _this2.resetSelectDropDownMenu();
             });
             $dropDownMenu.find("li").on("mouseover", function (event) {
@@ -3082,7 +3083,7 @@
             });
             $filterInput.on("keyup", function (event) {
               if (event.which == 13 || event.keyCode == 13 || event.which == 9 || event.keyCode == 9) {
-                if (_this2.selectedDropDownItem != null) {
+                if (_this2.selectedDropDownItem) {
                   var $item = $$$1(_this2.selectedDropDownItem);
                   var $checkBox = $item.find('input[type="checkbox"]');
                   var optionId = $item.data('option-id');
@@ -3117,17 +3118,20 @@
                   if (array.length >= 2) {
                     var itemToDelete = array[array.length - 2];
                     var $itemToDelete = $$$1(itemToDelete);
-                    var optionId = $itemToDelete.data("option-id");
+
+                    var _optionId = $itemToDelete.data("option-id");
 
                     var item = _toConsumableArray(_this2.dropDownMenu.querySelectorAll("LI")).find(function (i) {
-                      return i.dataset.optionId == optionId;
+                      return i.dataset.optionId == _optionId;
                     });
 
-                    var $item = $$$1(item);
-                    var $checkBox = $item.find('input[type="checkbox"]');
-                    var $selectedItem = $$$1(_this2.selectedPanel).find("li[data-option-id=\"".concat(optionId, "\"]"));
+                    var _$item = $$$1(item);
 
-                    _this2.removeSelectedItem($selectedItem, optionId, $checkBox);
+                    var _$checkBox = _$item.find('input[type="checkbox"]');
+
+                    var _$selectedItem = $$$1(_this2.selectedPanel).find("li[data-option-id=\"".concat(_optionId, "\"]"));
+
+                    _this2.removeSelectedItem(_$selectedItem, _optionId, _$checkBox);
                   }
                 }
 
@@ -3138,7 +3142,7 @@
               }
             }); // Set on change for filter input
 
-            $filterInput.on('input', function (event) {
+            $filterInput.on('input', function () {
               // keyup focus
               //console.log('filterInput input');
               _this2.adoptFilterInputLength();
@@ -3154,7 +3158,7 @@
                 _this2.hideDropDown();
               }
             });
-            $filterInput.focusin(function (event) {
+            $filterInput.focusin(function () {
               if ($selectedPanel.hasClass("is-valid") && _this2.options.selectedPanelValidBoxShadow) {
                 $selectedPanel.css("box-shadow", _this2.options.selectedPanelValidBoxShadow);
               } else if ($selectedPanel.hasClass("is-invalid") && _this2.options.selectedPanelInvalidBoxShadow) {
@@ -3163,13 +3167,13 @@
 
               $$$1(_this2.selectedPanel).addClass("focus");
             });
-            $filterInput.focusout(function (event) {
+            $filterInput.focusout(function () {
               if (!_this2.skipFocusout) {
                 $selectedPanel.css("box-shadow", "");
                 $$$1(_this2.selectedPanel).removeClass("focus");
               }
             });
-            $container.mousedown(function (event) {
+            $container.mousedown(function () {
               _this2.skipFocusout = true;
             });
             $$$1(window.document).mouseup(function (event) {
@@ -3187,18 +3191,18 @@
       return Plugin;
     }();
 
-    var jQueryInterface = function jQueryInterface(options) {
+    function jQueryInterface(options) {
       return this.each(function () {
         var data = $$$1(this).data(dataKey);
 
         if (!data) {
           if (/dispose|hide/.test(options)) {
             return;
-          } else {
-            var optionsObject = _typeof(options) === 'object' ? options : null;
-            data = new Plugin(this, optionsObject);
-            $$$1(this).data(dataKey, data);
           }
+
+          var optionsObject = _typeof(options) === 'object' ? options : null;
+          data = new Plugin(this, optionsObject);
+          $$$1(this).data(dataKey, data);
         }
 
         if (typeof options === 'string') {
@@ -3211,11 +3215,11 @@
           data[methodName]();
         }
       });
-    };
+    }
 
     $$$1.fn[pluginName] = jQueryInterface; // in case of mulitple $(this) it will return 1st element plugin instance
 
-    $$$1.fn[pluginName.charAt(0).toUpperCase() + pluginName.slice(1)] = function (options) {
+    $$$1.fn[pluginName.charAt(0).toUpperCase() + pluginName.slice(1)] = function () {
       return $$$1(this).data("plugin_" + pluginName);
     };
 
