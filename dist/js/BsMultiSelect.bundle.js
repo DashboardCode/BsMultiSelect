@@ -2721,6 +2721,7 @@
       }, {
         key: "closeDropDown",
         value: function closeDropDown() {
+          this.resetSelectDropDownMenu();
           this.clearFilterInput();
           this.hideDropDown();
           this.updateDropDownPosition();

@@ -113,6 +113,7 @@ const BsMultiSelect = ((window, $, Popper) => {
         }
 
         closeDropDown() {
+            this.resetSelectDropDownMenu();
             this.clearFilterInput();
             this.hideDropDown();
             this.updateDropDownPosition();
