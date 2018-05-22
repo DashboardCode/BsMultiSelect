@@ -183,7 +183,7 @@ const BsMultiSelect = ((window, $, Popper) => {
                         <label class="custom-control-label" for="${checkBoxId}">${itemText}</label>
                     </div>
                  </li>`).addClass(this.options.dropDownItemClass).appendTo($(this.dropDownMenu));
-
+            
             let $checkBox = $dropDownItem.find(`input[type="checkbox"]`);
             if (isChecked) {
                 this.createAndAppendSelectedItem($checkBox, optionId, itemText);
@@ -258,7 +258,7 @@ const BsMultiSelect = ((window, $, Popper) => {
         }
         
         keydownArrow(down) {
-            let visibleNodeListArray = $(this.dropDownMenu).find('LI:visible').toArray();
+            let visibleNodeListArray = $(this.dropDownMenu).find('LI:not([style*="display: none"])').toArray();
             if (visibleNodeListArray.length > 0) {
                 this.showDropDown();
                 if (this.selectedDropDownItem === null) {

@@ -302,7 +302,7 @@ var BsMultiSelect = function (window, $, Popper) {
     }, {
       key: "keydownArrow",
       value: function keydownArrow(down) {
-        var visibleNodeListArray = $(this.dropDownMenu).find('LI:visible').toArray();
+        var visibleNodeListArray = $(this.dropDownMenu).find('LI:not([style*="display: none"])').toArray();
 
         if (visibleNodeListArray.length > 0) {
           this.showDropDown();
