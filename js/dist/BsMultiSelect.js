@@ -1,13 +1,5 @@
 function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof = function _typeof(obj) { return typeof obj; }; } else { _typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof(obj); }
 
-function _toConsumableArray(arr) { return _arrayWithoutHoles(arr) || _iterableToArray(arr) || _nonIterableSpread(); }
-
-function _nonIterableSpread() { throw new TypeError("Invalid attempt to spread non-iterable instance"); }
-
-function _iterableToArray(iter) { if (Symbol.iterator in Object(iter) || Object.prototype.toString.call(iter) === "[object Arguments]") return Array.from(iter); }
-
-function _arrayWithoutHoles(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = new Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } }
-
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
@@ -15,10 +7,7 @@ function _defineProperties(target, props) { for (var i = 0; i < props.length; i+
 function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
 
 import $ from 'jquery';
-import Popper from 'popper.js'; // TODO: 
-// 2) require polyfill Element.closest polyfill IE 11
-// 3) require multiple classList.add polyfill IE 11
-// IIFE to declare private members
+import Popper from 'popper.js'; // TODO: try to find convinient way to declare private members. Is it convinient enough to move them into IIFE?
 
 var BsMultiSelect = function (window, $, Popper) {
   var JQUERY_NO_CONFLICT = $.fn[pluginName];
@@ -174,8 +163,8 @@ var BsMultiSelect = function (window, $, Popper) {
       value: function filterDropDownMenu() {
         var text = this.filterInput.value.trim();
         var visible = 0;
-        $(this.dropDownMenu).find('li').each(function () {
-          var $item = $(this);
+        $(this.dropDownMenu).find('li').each(function (i, item) {
+          var $item = $(item);
 
           if (text == '') {
             $item.show();
@@ -184,7 +173,7 @@ var BsMultiSelect = function (window, $, Popper) {
             var itemText = $item.text();
             var $checkbox = $item.find('input[type="checkbox"]');
 
-            if (!$checkbox.prop('checked') && itemText.toLowerCase().includes(text.toLowerCase())) {
+            if (!$checkbox.prop('checked') && itemText.toLowerCase().indexOf(text.toLowerCase()) >= 0) {
               $item.show();
               visible++;
             } else {
@@ -198,11 +187,10 @@ var BsMultiSelect = function (window, $, Popper) {
     }, {
       key: "clickDropDownItem",
       value: function clickDropDownItem(event) {
-        //console.log("filter & stopPropagation");
+        // console.log("filter & stopPropagation");
         event.preventDefault();
         event.stopPropagation();
-        var menuItem = event.currentTarget.closest("LI");
-        var $menuItem = $(menuItem);
+        var $menuItem = $(event.currentTarget).closest("LI");
         var optionId = $menuItem.data("option-id");
         var $checkBox = $menuItem.find('input[type="checkbox"]');
 
@@ -274,10 +262,17 @@ var BsMultiSelect = function (window, $, Popper) {
       key: "analyzeInputText",
       value: function analyzeInputText() {
         var text = this.filterInput.value.trim().toLowerCase();
+        var nodeList = this.dropDownMenu.querySelectorAll("LI");
+        var item = null;
 
-        var item = _toConsumableArray(this.dropDownMenu.querySelectorAll("LI")).find(function (i) {
-          return i.textContent.trim().toLowerCase() == text;
-        });
+        for (var i = 0; i < nodeList.length; ++i) {
+          var it = nodeList[i];
+
+          if (it.textContent.trim().toLowerCase() == text) {
+            item = it;
+            break;
+          }
+        }
 
         if (item) {
           var $item = $(item);
@@ -297,7 +292,6 @@ var BsMultiSelect = function (window, $, Popper) {
       key: "resetSelectDropDownMenu",
       value: function resetSelectDropDownMenu() {
         if (this.selectedDropDownItem !== null) {
-          // IE11 doesn't support remove('text-primary', bg-light' )
           this.selectedDropDownItem.classList.remove('bg-light');
           this.selectedDropDownItem.classList.remove('text-primary');
           this.selectedDropDownItem = null;
@@ -308,29 +302,29 @@ var BsMultiSelect = function (window, $, Popper) {
     }, {
       key: "keydownArrow",
       value: function keydownArrow(down) {
-        var items = _toConsumableArray(this.dropDownMenu.querySelectorAll('LI:not([style*="display: none"]'));
+        var visibleNodeListArray = $(this.dropDownMenu).find('LI:visible').toArray();
 
-        if (items.length > 0) {
+        if (visibleNodeListArray.length > 0) {
           this.showDropDown();
 
           if (this.selectedDropDownItem === null) {
-            this.selectedDropDownIndex = down ? 0 : items.length - 1;
+            this.selectedDropDownIndex = down ? 0 : visibleNodeListArray.length - 1;
           } else {
-            // IE11 doesn't support remove('text-primary', bg-light' )
+            // IE10-11 doesn't support multiple arguments in classList remove 
             this.selectedDropDownItem.classList.remove('bg-light');
             this.selectedDropDownItem.classList.remove('text-primary');
 
             if (down) {
               var newIndex = this.selectedDropDownIndex + 1;
-              this.selectedDropDownIndex = newIndex < items.length ? newIndex : 0;
+              this.selectedDropDownIndex = newIndex < visibleNodeListArray.length ? newIndex : 0;
             } else {
               var _newIndex = this.selectedDropDownIndex - 1;
 
-              this.selectedDropDownIndex = _newIndex >= 0 ? _newIndex : items.length - 1;
+              this.selectedDropDownIndex = _newIndex >= 0 ? _newIndex : visibleNodeListArray.length - 1;
             }
           }
 
-          this.selectedDropDownItem = items[this.selectedDropDownIndex]; // IE11 doesn't support add('text-primary', bg-light' )
+          this.selectedDropDownItem = visibleNodeListArray[this.selectedDropDownIndex]; // IE10-11 doesn't support multiple arguments in classList add 
 
           this.selectedDropDownItem.classList.add('text-primary');
           this.selectedDropDownItem.classList.add('bg-light');
@@ -450,15 +444,15 @@ var BsMultiSelect = function (window, $, Popper) {
           $selectedPanel.addClass();
         } else {
           var inputId = this.input.id;
-          var formGroup = this.input.closest(".form-group");
+          var $formGroup = $input.closest(".form-group");
 
-          if (formGroup) {
-            var label = formGroup.querySelector("label[for=\"".concat(inputId, "\"]"));
-            var f = $(label).attr("for");
+          if ($formGroup.length == 1) {
+            var $label = $formGroup.find("label[for=\"".concat(inputId, "\"]"));
+            var f = $label.attr("for");
 
             if (f == this.input.id) {
               this.filterInput.id = "dashboardcode-bsmultiselect-generated-filter-id-" + this.input.id;
-              label.setAttribute("for", this.filterInput.id);
+              $label.attr("for", this.filterInput.id);
             }
           }
 
@@ -474,12 +468,14 @@ var BsMultiSelect = function (window, $, Popper) {
             _this2.resetSelectDropDownMenu();
           });
           $dropDownMenu.find("li").on("mouseover", function (event) {
-            event.target.closest("li").classList.add('text-primary');
-            event.target.closest("li").classList.add('bg-light');
+            var $li = $(event.target).closest("li");
+            $li.addClass('text-primary');
+            $li.addClass('bg-light');
           });
           $dropDownMenu.find("li").on("mouseout", function (event) {
-            event.target.closest("li").classList.remove('text-primary');
-            event.target.closest("li").classList.remove('bg-light');
+            var $li = $(event.target).closest("li");
+            $li.removeClass('text-primary');
+            $li.removeClass('bg-light');
           });
           $selectedPanel.click(function (event) {
             //console.log('selectedPanel click ' + event.target.nodeName);
@@ -527,7 +523,7 @@ var BsMultiSelect = function (window, $, Popper) {
                   $checkBox.prop('checked', true);
                   _this2.filterInput.value = "";
                 } else {
-                  var $selectedItem = $(_this2.selectedPanel).find("li[data-option-id=\"".concat(optionId, "\"]"));
+                  var $selectedItem = $(_this2.selectedPanel).find("LI[data-option-id=\"".concat(optionId, "\"]:first"));
 
                   _this2.removeSelectedItem($selectedItem, optionId, $checkBox);
                 } //this.resetSelectDropDownMenu();
@@ -544,7 +540,9 @@ var BsMultiSelect = function (window, $, Popper) {
               var endPosition = _this2.filterInput.selectionEnd;
 
               if (endPosition == 0 && startPosition == 0 && _this2.backspaceAtStartPoint) {
-                var array = _toConsumableArray(_this2.selectedPanel.querySelectorAll("LI"));
+                var _$selectedPanel = $(_this2.selectedPanel);
+
+                var array = _$selectedPanel.find("LI").toArray();
 
                 if (array.length >= 2) {
                   var itemToDelete = array[array.length - 2];
@@ -552,15 +550,11 @@ var BsMultiSelect = function (window, $, Popper) {
 
                   var _optionId = $itemToDelete.data("option-id");
 
-                  var item = _toConsumableArray(_this2.dropDownMenu.querySelectorAll("LI")).find(function (i) {
-                    return i.dataset.optionId == _optionId;
-                  });
-
-                  var _$item = $(item);
+                  var _$item = $dropDownMenu.find("LI[data-option-id=\"".concat(_optionId, "\"]:first"));
 
                   var _$checkBox = _$item.find('input[type="checkbox"]');
 
-                  var _$selectedItem = $(_this2.selectedPanel).find("li[data-option-id=\"".concat(_optionId, "\"]"));
+                  var _$selectedItem = _$selectedPanel.find("LI[data-option-id=\"".concat(_optionId, "\"]:first"));
 
                   _this2.removeSelectedItem(_$selectedItem, _optionId, _$checkBox);
                 }
@@ -610,7 +604,7 @@ var BsMultiSelect = function (window, $, Popper) {
           $(window.document).mouseup(function (event) {
             _this2.skipFocusout = false;
 
-            if (!(_this2.container === event.target || _this2.container.contains(event.target))) {
+            if (!(_this2.container === event.target || $.contains(_this2.container, event.target))) {
               //console.log("document mouseup outside container");
               _this2.closeDropDown();
             }

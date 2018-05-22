@@ -2,41 +2,35 @@
 
 const path    = require('path')
 const babel   = require('rollup-plugin-babel')
-const resolve = require('rollup-plugin-node-resolve')
 
 const pkg     = require(path.resolve(__dirname, '../package.json'))
-const BUNDLE  = process.env.BUNDLE === 'true'
 const year    = new Date().getFullYear()
 
-const plugins = [
-babel({
-  exclude: 'node_modules/**',  // Only transpile our source code
-  //   externalHelpersWhitelist: [ // Include only required helpers
-  //      'defineProperties',
-  //      'toConsumableArray',
-  //      'createClass',
-  //      'classCallCheck',
-  //      'defineProperty',
-  //      'typeof',
-  //      'arrayWithoutHoles',
-  //      'iterableToArray'
-  //   ]
-})
-]
+let presets = [
+  [
+      "@babel/env",
+      {
+          loose: true,
+          modules: false,
+          targets: {
+              browsers: [
+                  "chrome  >= 45", "Firefox >= 38", "Explorer >= 10", "edge >= 12", "iOS >= 9","Safari >= 9","Android >= 4.4","Opera >= 30"]
+          },
+          debug: true
+      }
+  ]
+];
 
-let fileDest  = "";
-let external  = [];
-let globals  = [];
-if (BUNDLE) {
-  fileDest = 'BsMultiSelect.bundle.js'
-  external = ['jquery']
-  globals = {'jquery': 'jQuery'}
-  plugins.push(resolve())
-}else{
-  fileDest  = 'BsMultiSelect.js';
-  external = ['jquery', 'popper.js'];
-  globals = {'jquery': 'jQuery', 'popper.js': 'Popper'}
-}
+let fileDest  = 'BsMultiSelect.js';
+let external  = ['jquery', 'popper.js'];
+let globals   = {'jquery': 'jQuery', 'popper.js': 'Popper'};
+
+// NOTE: with Babel 7 babel helpers are managed in .babelrc
+const plugins = [
+  babel({
+    exclude: 'node_modules/**',  
+    presets: presets
+  })]
 
 module.exports = {
   input: path.resolve(__dirname, '../js/src/BsMultiSelect.es8.js'),

@@ -1,11 +1,7 @@
 import $ from 'jquery'
 import Popper from 'popper.js'
 
-// TODO: 
-// 2) require polyfill Element.closest polyfill IE 11
-// 3) require multiple classList.add polyfill IE 11
-
-// IIFE to declare private members
+// TODO: try to find convinient way to declare private members. Is it convinient enough to move them into IIFE?
 const BsMultiSelect = ((window, $, Popper) => {
     const JQUERY_NO_CONFLICT = $.fn[pluginName];
     const pluginName = 'dashboardCodeBsMultiSelect';
@@ -133,8 +129,8 @@ const BsMultiSelect = ((window, $, Popper) => {
         filterDropDownMenu() {
             let text = this.filterInput.value.trim();
             let visible = 0;
-            $(this.dropDownMenu).find('li').each(function () {
-                let $item = $(this);
+            $(this.dropDownMenu).find('li').each((i, item) => {
+                let $item = $(item);
                 if (text == '') {
                     $item.show();
                     visible++;
@@ -143,7 +139,7 @@ const BsMultiSelect = ((window, $, Popper) => {
                     let itemText = $item.text();
                     let $checkbox = $item.find('input[type="checkbox"]');
                     
-                    if (!$checkbox.prop('checked') && itemText.toLowerCase().includes(text.toLowerCase())) {
+                    if (!$checkbox.prop('checked') && itemText.toLowerCase().indexOf(text.toLowerCase())>=0) {
                         $item.show();
                         visible++;
                     } else {
@@ -156,12 +152,11 @@ const BsMultiSelect = ((window, $, Popper) => {
         }
 
         clickDropDownItem(event) {
-            //console.log("filter & stopPropagation");
+            // console.log("filter & stopPropagation");
             event.preventDefault();
             event.stopPropagation();
 
-            let menuItem = event.currentTarget.closest("LI");
-            let $menuItem = $(menuItem);
+            let $menuItem = $(event.currentTarget).closest("LI");
             let optionId = $menuItem.data("option-id");
             let $checkBox = $menuItem.find('input[type="checkbox"]');
             if ($checkBox.prop('checked')) {
@@ -230,8 +225,16 @@ const BsMultiSelect = ((window, $, Popper) => {
 
         analyzeInputText() {
             let text = this.filterInput.value.trim().toLowerCase();
-            let item = [...this.dropDownMenu.querySelectorAll("LI")]
-                .find((i) => i.textContent.trim().toLowerCase() == text);
+            let nodeList = this.dropDownMenu.querySelectorAll("LI");
+            let item = null;
+            for (let i = 0; i < nodeList.length; ++i) {
+                let it = nodeList[i];
+                if (it.textContent.trim().toLowerCase() == text)
+                {
+                    item=it;
+                    break;
+                }
+            }
             if (item) {
                 let $item = $(item);
                 let $checkBox = $item.find('input[type="checkbox"]');
@@ -247,7 +250,6 @@ const BsMultiSelect = ((window, $, Popper) => {
 
         resetSelectDropDownMenu() {
             if (this.selectedDropDownItem !== null) {
-                // IE11 doesn't support remove('text-primary', bg-light' )
                 this.selectedDropDownItem.classList.remove('bg-light');
                 this.selectedDropDownItem.classList.remove('text-primary');
                 this.selectedDropDownItem = null;
@@ -256,26 +258,26 @@ const BsMultiSelect = ((window, $, Popper) => {
         }
         
         keydownArrow(down) {
-            let items = [...this.dropDownMenu.querySelectorAll('LI:not([style*="display: none"]')];
-            if (items.length > 0) {
+            let visibleNodeListArray = $(this.dropDownMenu).find('LI:visible').toArray();
+            if (visibleNodeListArray.length > 0) {
                 this.showDropDown();
                 if (this.selectedDropDownItem === null) {
-                    this.selectedDropDownIndex = down ? 0 : items.length - 1;
+                    this.selectedDropDownIndex = down ? 0 : visibleNodeListArray.length - 1;
                 }
                 else {
-                    // IE11 doesn't support remove('text-primary', bg-light' )
+                    // IE10-11 doesn't support multiple arguments in classList remove 
                     this.selectedDropDownItem.classList.remove('bg-light');
                     this.selectedDropDownItem.classList.remove('text-primary');
                     if (down) {
                         let newIndex = this.selectedDropDownIndex + 1;
-                        this.selectedDropDownIndex = newIndex < items.length ? newIndex : 0;
+                        this.selectedDropDownIndex = newIndex < visibleNodeListArray.length ? newIndex : 0;
                     } else {
                         let newIndex = this.selectedDropDownIndex - 1;
-                        this.selectedDropDownIndex = newIndex >= 0 ? newIndex : items.length - 1;
+                        this.selectedDropDownIndex = newIndex >= 0 ? newIndex : visibleNodeListArray.length - 1;
                     }
                 }
-                this.selectedDropDownItem = items[this.selectedDropDownIndex];
-                // IE11 doesn't support add('text-primary', bg-light' )
+                this.selectedDropDownItem = visibleNodeListArray[this.selectedDropDownIndex];
+                // IE10-11 doesn't support multiple arguments in classList add 
                 this.selectedDropDownItem.classList.add('text-primary');
                 this.selectedDropDownItem.classList.add('bg-light');
             }
@@ -399,13 +401,13 @@ const BsMultiSelect = ((window, $, Popper) => {
                 $selectedPanel.addClass();
             } else {
                 let inputId = this.input.id;
-                let formGroup = this.input.closest(".form-group");
-                if (formGroup) {
-                    let label = formGroup.querySelector(`label[for="${inputId}"]`);
-                    let f = $(label).attr("for");
+                let $formGroup = $input.closest(".form-group");
+                if ($formGroup.length==1) {
+                    let $label = $formGroup.find(`label[for="${inputId}"]`);
+                    let f = $label.attr("for");
                     if (f == this.input.id) {
                         this.filterInput.id = "dashboardcode-bsmultiselect-generated-filter-id-" + this.input.id;
-                        label.setAttribute("for", this.filterInput.id);
+                        $label.attr("for", this.filterInput.id);
                     }
                 }
 
@@ -425,13 +427,15 @@ const BsMultiSelect = ((window, $, Popper) => {
                 });
 
                 $dropDownMenu.find("li").on("mouseover", (event) => {
-                    event.target.closest("li").classList.add('text-primary');
-                    event.target.closest("li").classList.add('bg-light');
+                    let $li= $(event.target).closest("li");
+                    $li.addClass('text-primary');
+                    $li.addClass('bg-light');
                 });
 
                 $dropDownMenu.find("li").on("mouseout", (event) => {
-                    event.target.closest("li").classList.remove('text-primary');
-                    event.target.closest("li").classList.remove('bg-light');
+                    let $li= $(event.target).closest("li");
+                    $li.removeClass('text-primary');
+                    $li.removeClass('bg-light');
                 });
 
                 $selectedPanel.click((event) => {
@@ -483,7 +487,7 @@ const BsMultiSelect = ((window, $, Popper) => {
                                 $checkBox.prop('checked', true);
                                 this.filterInput.value = "";
                             } else {
-                                let $selectedItem = $(this.selectedPanel).find(`li[data-option-id="${optionId}"]`);
+                                let $selectedItem = $(this.selectedPanel).find(`LI[data-option-id="${optionId}"]:first`);
                                 this.removeSelectedItem($selectedItem, optionId, $checkBox);
                             }
                             //this.resetSelectDropDownMenu();
@@ -497,16 +501,15 @@ const BsMultiSelect = ((window, $, Popper) => {
                         let startPosition = this.filterInput.selectionStart;
                         let endPosition = this.filterInput.selectionEnd;
                         if (endPosition == 0 && startPosition == 0 && this.backspaceAtStartPoint) {
-                            let array = [...this.selectedPanel.querySelectorAll("LI")];
+                            let $selectedPanel = $(this.selectedPanel);
+                            let array = $selectedPanel.find("LI").toArray();
                             if (array.length >= 2) {
                                 let itemToDelete = array[array.length - 2];
                                 let $itemToDelete = $(itemToDelete);
                                 let optionId = $itemToDelete.data("option-id");
-                                let item = [...this.dropDownMenu.querySelectorAll("LI")]
-                                    .find((i) => i.dataset.optionId == optionId);
-                                let $item = $(item);
+                                let $item = $dropDownMenu.find(`LI[data-option-id="${optionId}"]:first`);
                                 let $checkBox = $item.find('input[type="checkbox"]');
-                                let $selectedItem = $(this.selectedPanel).find(`li[data-option-id="${optionId}"]`);
+                                let $selectedItem = $selectedPanel.find(`LI[data-option-id="${optionId}"]:first`);
                                 this.removeSelectedItem($selectedItem, optionId, $checkBox);
                             }
                         }
@@ -553,7 +556,7 @@ const BsMultiSelect = ((window, $, Popper) => {
 
                 $(window.document).mouseup((event) => {
                     this.skipFocusout = false;
-                    if (!(this.container === event.target || this.container.contains(event.target))) {
+                    if (!(this.container === event.target || $.contains(this.container, event.target))) {
                         //console.log("document mouseup outside container");
                         this.closeDropDown();
                     }
