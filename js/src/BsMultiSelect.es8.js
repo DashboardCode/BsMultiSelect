@@ -64,12 +64,9 @@ const BsMultiSelect = ((window, $, Popper) => {
         }
 
         updateDropDownPosition() {
-            //console.log('updateDropDownPosition');
             //if (this.options.usePopper) {
             let offsetLeft = this.filterInputItem.offsetLeft;
-            window.console.log(`${offsetLeft} ${this.filterInputItemOffsetLeft}`);
             if (this.filterInputItemOffsetLeft!=offsetLeft){
-                window.console.log(`popper.update`);
                 this.popper.update();
                 this.filterInputItemOffsetLeft=offsetLeft;
             }
@@ -80,7 +77,6 @@ const BsMultiSelect = ((window, $, Popper) => {
 
         hideDropDown() {
             //if (this.options.usePopper) {
-                //console.log('popper remove show');
                 $(this.dropDownMenu).removeClass('show')
             // } else {
             //     if ($(this.dropDownMenu).hasClass('show'))
@@ -90,7 +86,6 @@ const BsMultiSelect = ((window, $, Popper) => {
 
         showDropDown() {
                 //if (this.options.usePopper) {
-                    //console.log('popper add show');
                     $(this.dropDownMenu).addClass('show')
                 // } else {
                 //     if (!$(this.dropDownMenu).hasClass('show'))

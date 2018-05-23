@@ -94,13 +94,10 @@
         var _proto = Plugin.prototype;
 
         _proto.updateDropDownPosition = function updateDropDownPosition() {
-          //console.log('updateDropDownPosition');
           //if (this.options.usePopper) {
           var offsetLeft = this.filterInputItem.offsetLeft;
-          window.console.log(offsetLeft + " " + this.filterInputItemOffsetLeft);
 
           if (this.filterInputItemOffsetLeft != offsetLeft) {
-            window.console.log("popper.update");
             this.popper.update();
             this.filterInputItemOffsetLeft = offsetLeft;
           } // } else {
@@ -111,7 +108,6 @@
 
         _proto.hideDropDown = function hideDropDown() {
           //if (this.options.usePopper) {
-          //console.log('popper remove show');
           $$$1(this.dropDownMenu).removeClass('show'); // } else {
           //     if ($(this.dropDownMenu).hasClass('show'))
           //         $(this.dropDownMenu).dropdown('toggle');
@@ -120,7 +116,6 @@
 
         _proto.showDropDown = function showDropDown() {
           //if (this.options.usePopper) {
-          //console.log('popper add show');
           $$$1(this.dropDownMenu).addClass('show'); // } else {
           //     if (!$(this.dropDownMenu).hasClass('show'))
           //         $(this.dropDownMenu).dropdown('toggle');
