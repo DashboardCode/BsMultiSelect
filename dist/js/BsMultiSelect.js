@@ -74,7 +74,7 @@
 
           this.element = element;
           this.options = $$$1.extend({}, defaults, options);
-          this.input = element;
+          this.hiddenSelect = element;
           this.container = null;
           this.dropDownMenu = null;
           this.selectedPanel = null;
@@ -82,6 +82,7 @@
           this.filterInputItem = null;
           this.popper = null; // state
 
+          this.filterInputItemOffsetLeft = null;
           this.skipFocusout = false;
           this.backspaceAtStartPoint = null;
           this.selectedDropDownItem = null;
@@ -95,9 +96,17 @@
         _proto.updateDropDownPosition = function updateDropDownPosition() {
           //console.log('updateDropDownPosition');
           //if (this.options.usePopper) {
-          this.popper.update(); // } else {
+          var offsetLeft = this.filterInputItem.offsetLeft;
+          window.console.log(offsetLeft + " " + this.filterInputItemOffsetLeft);
+
+          if (this.filterInputItemOffsetLeft != offsetLeft) {
+            window.console.log("popper.update");
+            this.popper.update();
+            this.filterInputItemOffsetLeft = offsetLeft;
+          } // } else {
           //     $(this.dropDownMenu).dropdown('update');
           // }
+
         };
 
         _proto.hideDropDown = function hideDropDown() {
@@ -119,11 +128,11 @@
         };
 
         _proto.setCheck = function setCheck(optionId, isChecked) {
-          for (var i = 0; i < this.input.options.length; i += 1) {
-            var option = this.input.options[i];
+          for (var i = 0; i < this.hiddenSelect.options.length; i += 1) {
+            var option = this.hiddenSelect.options[i];
 
             if (option.value == optionId) {
-              this.input.options[i].selected = isChecked;
+              this.hiddenSelect.options[i].selected = isChecked;
               break;
             }
           }
@@ -131,7 +140,7 @@
 
 
         _proto.getInputValue = function getInputValue() {
-          return $$$1(this.input).val();
+          return $$$1(this.hiddenSelect).val();
         };
 
         _proto.closeDropDown = function closeDropDown() {
@@ -199,7 +208,7 @@
 
         _proto.appendDropDownItem = function appendDropDownItem(itemValue, itemText, isChecked) {
           var optionId = itemValue;
-          var checkBoxId = "dashboardcode-bsmultiselect-" + this.input.name.toLowerCase() + "-generated-id-" + optionId.toLowerCase();
+          var checkBoxId = "dashboardcode-bsmultiselect-" + this.hiddenSelect.name.toLowerCase() + "-generated-id-" + optionId.toLowerCase();
           var checked = isChecked ? "checked" : "";
           var $dropDownItem = $$$1("<li data-option-id=\"" + optionId + "\">\n                    <div class=\"custom-control custom-checkbox\">\n                        <input type=\"checkbox\" class=\"custom-control-input\" id=\"" + checkBoxId + "\" " + checked + ">\n                        <label class=\"custom-control-label\" for=\"" + checkBoxId + "\">" + itemText + "</label>\n                    </div>\n                 </li>").addClass(this.options.dropDownItemClass).appendTo($$$1(this.dropDownMenu));
           var $checkBox = $dropDownItem.find("input[type=\"checkbox\"]");
@@ -326,12 +335,12 @@
         _proto.init = function init() {
           var _this2 = this;
 
-          var $input = $$$1(this.input);
-          $input.hide();
-          var disabled = this.input.disabled;
+          var $hiddenSelect = $$$1(this.hiddenSelect);
+          $hiddenSelect.hide();
+          var disabled = this.hiddenSelect.disabled;
           var $container = $$$1("<div/>");
           if (!this.options.containerClass) $container.addClass(this.options.containerClass);
-          $container.insertAfter($input);
+          $container.insertAfter($hiddenSelect);
           this.container = $container.get(0);
           var $selectedPanel = $$$1("<ul/>");
 
@@ -344,13 +353,13 @@
           $selectedPanel.appendTo(this.container);
           this.selectedPanel = $selectedPanel.get(0);
 
-          if ($input.hasClass("is-valid")) {
+          if ($hiddenSelect.hasClass("is-valid")) {
             $selectedPanel.removeClass("border");
             $selectedPanel.addClass("is-valid"); //$selectedPanel.removeClass("btn-outline-danger");
             //$selectedPanel.addClass("btn-outline-success");
           }
 
-          if ($input.hasClass("is-invalid")) {
+          if ($hiddenSelect.hasClass("is-invalid")) {
             $selectedPanel.removeClass("border");
             $selectedPanel.addClass("is-invalid"); //$selectedPanel.removeClass("btn-outline-success");
             //$selectedPanel.addClass("btn-outline-danger");
@@ -391,27 +400,43 @@
           //         reference: this.filterInput
           //     });
           // }
+          // some browsers (IE11) can change select value ("autocomplet") after page is loaded but before "ready" event
 
-          if (!this.options.items) {
-            this.options.items.forEach(function (item) {
-              var itemValue = item.value;
-              var itemText = item.text;
-              var isChecked = item.isChecked;
+          $$$1(document).ready(function () {
+            if (!_this2.options.items) {
+              _this2.options.items.forEach(function (item) {
+                var itemValue = item.value;
+                var itemText = item.text;
+                var isChecked = item.isChecked;
 
-              _this2.appendDropDownItem(itemValue, itemText, isChecked);
+                _this2.appendDropDownItem(itemValue, itemText, isChecked);
+              });
+
+              _this2.hasItems = _this2.options.items.length > 0;
+            } else {
+              var selectOptions = $hiddenSelect.find('option');
+              selectOptions.each(function (index, option) {
+                var itemValue = option.value;
+                var itemText = option.text;
+                var isChecked = option.selected;
+
+                _this2.appendDropDownItem(itemValue, itemText, isChecked);
+              });
+              _this2.hasItems = selectOptions.length > 0;
+            }
+
+            _this2.updateDropDownPosition();
+
+            $dropDownMenu.find('li').click(function (event) {
+              _this2.clickDropDownItem(event);
             });
-            this.hasItems = this.options.items.length > 0;
-          } else {
-            var selectOptions = $input.find('option');
-            selectOptions.each(function (index, option) {
-              var itemValue = option.value;
-              var itemText = option.text;
-              var isChecked = option.selected;
-
-              _this2.appendDropDownItem(itemValue, itemText, isChecked);
+            $dropDownMenu.find("li").on("mouseover", function (event) {
+              $$$1(event.target).closest("li").addClass('text-primary').addClass('bg-light');
             });
-            this.hasItems = selectOptions.length > 0;
-          }
+            $dropDownMenu.find("li").on("mouseout", function (event) {
+              $$$1(event.target).closest("li").removeClass('text-primary').removeClass('bg-light');
+            });
+          });
 
           if (disabled) {
             this.filterInput.style.display = "none";
@@ -427,37 +452,26 @@
             $selectedPanel.find('button').prop("disabled", true);
             $selectedPanel.addClass();
           } else {
-            var inputId = this.input.id;
-            var $formGroup = $input.closest(".form-group");
+            var inputId = this.hiddenSelect.id;
+            var $formGroup = $hiddenSelect.closest(".form-group");
 
             if ($formGroup.length == 1) {
               var $label = $formGroup.find("label[for=\"" + inputId + "\"]");
               var f = $label.attr("for");
 
-              if (f == this.input.id) {
-                this.filterInput.id = "dashboardcode-bsmultiselect-generated-filter-id-" + this.input.id;
+              if (f == this.hiddenSelect.id) {
+                this.filterInput.id = "dashboardcode-bsmultiselect-generated-filter-id-" + this.hiddenSelect.id;
                 $label.attr("for", this.filterInput.id);
               }
             }
 
-            this.updateDropDownPosition();
             $dropDownMenu.click(function (event) {
               event.stopPropagation();
-            });
-            $dropDownMenu.find('li').click(function (event) {
-              _this2.clickDropDownItem(event);
             });
             $dropDownMenu.on("mouseover", function () {
               _this2.resetSelectDropDownMenu();
             });
-            $dropDownMenu.find("li").on("mouseover", function (event) {
-              $$$1(event.target).closest("li").addClass('text-primary').addClass('bg-light');
-            });
-            $dropDownMenu.find("li").on("mouseout", function (event) {
-              $$$1(event.target).closest("li").removeClass('text-primary').removeClass('bg-light');
-            });
             $selectedPanel.click(function (event) {
-              //console.log('selectedPanel click ' + event.target.nodeName);
               if (event.target.nodeName != "INPUT") $$$1(_this2.filterInput).val('').focus();
               if (!(event.target.nodeName == "BUTTON" || event.target.nodeName == "SPAN" && event.target.parentElement.nodeName == "BUTTON") && _this2.hasItems) _this2.showDropDown();
             });
@@ -531,7 +545,7 @@
 
                     var _$item = $dropDownMenu.find("LI[data-option-id=\"" + _optionId + "\"]:first");
 
-                    var _$checkBox = _$item.find('input[type="checkbox"]');
+                    var _$checkBox = _$item.find('input[type="checkbox"]:first');
 
                     var _$selectedItem = _$selectedPanel.find("LI[data-option-id=\"" + _optionId + "\"]:first");
 
@@ -548,14 +562,12 @@
             }); // Set on change for filter input
 
             $filterInput.on('input', function () {
-              // keyup focus
-              //console.log('filterInput input');
               _this2.adoptFilterInputLength();
 
               _this2.filterDropDownMenu();
 
               if (_this2.hasItems) {
-                _this2.updateDropDownPosition(); // support case when textbox can change its place because of line break (texbox grow with each key press)
+                _this2.updateDropDownPosition(); // we need it to support case when textbox changes its place because of line break (texbox grow with each key press)
 
 
                 _this2.showDropDown();
@@ -585,7 +597,6 @@
               _this2.skipFocusout = false;
 
               if (!(_this2.container === event.target || $$$1.contains(_this2.container, event.target))) {
-                //console.log("document mouseup outside container");
                 _this2.closeDropDown();
               }
             });

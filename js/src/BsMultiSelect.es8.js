@@ -44,7 +44,7 @@ const BsMultiSelect = ((window, $, Popper) => {
             // readonly
             this.element = element;
             this.options = $.extend({}, defaults, options);
-            this.input = element;
+            this.hiddenSelect = element;
             this.container = null;
             this.dropDownMenu = null;
             this.selectedPanel = null;
@@ -53,6 +53,7 @@ const BsMultiSelect = ((window, $, Popper) => {
             this.popper = null;
 
             // state
+            this.filterInputItemOffsetLeft = null;
             this.skipFocusout = false;
             this.backspaceAtStartPoint = null;
             this.selectedDropDownItem = null;
@@ -65,7 +66,13 @@ const BsMultiSelect = ((window, $, Popper) => {
         updateDropDownPosition() {
             //console.log('updateDropDownPosition');
             //if (this.options.usePopper) {
+            let offsetLeft = this.filterInputItem.offsetLeft;
+            window.console.log(`${offsetLeft} ${this.filterInputItemOffsetLeft}`);
+            if (this.filterInputItemOffsetLeft!=offsetLeft){
+                window.console.log(`popper.update`);
                 this.popper.update();
+                this.filterInputItemOffsetLeft=offsetLeft;
+            }
             // } else {
             //     $(this.dropDownMenu).dropdown('update');
             // }
@@ -92,10 +99,10 @@ const BsMultiSelect = ((window, $, Popper) => {
         }
 
         setCheck(optionId, isChecked) {
-            for (let i = 0; i < this.input.options.length; i += 1) {
-                let option = this.input.options[i];
+            for (let i = 0; i < this.hiddenSelect.options.length; i += 1) {
+                let option = this.hiddenSelect.options[i];
                 if (option.value == optionId) {
-                    this.input.options[i].selected = isChecked;
+                    this.hiddenSelect.options[i].selected = isChecked;
                     break;
                 }
             }
@@ -103,7 +110,7 @@ const BsMultiSelect = ((window, $, Popper) => {
 
         // Public methods
         getInputValue() {
-            return $(this.input).val();
+            return $(this.hiddenSelect).val();
         }
 
         closeDropDown() {
@@ -169,7 +176,7 @@ const BsMultiSelect = ((window, $, Popper) => {
         
         appendDropDownItem(itemValue, itemText, isChecked) {
             let optionId = itemValue;
-            let checkBoxId = `dashboardcode-bsmultiselect-${this.input.name.toLowerCase()}-generated-id-${optionId.toLowerCase()}`;
+            let checkBoxId = `dashboardcode-bsmultiselect-${this.hiddenSelect.name.toLowerCase()}-generated-id-${optionId.toLowerCase()}`;
             let checked = isChecked ? "checked" : "";
             let $dropDownItem = $(
                 `<li data-option-id="${optionId}">
@@ -287,14 +294,14 @@ const BsMultiSelect = ((window, $, Popper) => {
         }
 
         init() {
-            let $input = $(this.input);
-            $input.hide();
-            let disabled = this.input.disabled;
+            let $hiddenSelect = $(this.hiddenSelect);
+            $hiddenSelect.hide();
+            let disabled = this.hiddenSelect.disabled;
 
             let $container = $("<div/>");
             if (!this.options.containerClass)
                 $container.addClass(this.options.containerClass);
-            $container.insertAfter($input);
+            $container.insertAfter($hiddenSelect);
                 
             this.container = $container.get(0);
 
@@ -310,14 +317,14 @@ const BsMultiSelect = ((window, $, Popper) => {
             $selectedPanel.appendTo(this.container);
             this.selectedPanel = $selectedPanel.get(0);
 
-            if ($input.hasClass("is-valid")){
+            if ($hiddenSelect.hasClass("is-valid")){
                 $selectedPanel.removeClass("border");
                 $selectedPanel.addClass("is-valid");
                 //$selectedPanel.removeClass("btn-outline-danger");
                 //$selectedPanel.addClass("btn-outline-success");
             }
             
-            if ($input.hasClass("is-invalid")){
+            if ($hiddenSelect.hasClass("is-invalid")){
                 $selectedPanel.removeClass("border");
                 $selectedPanel.addClass("is-invalid");
                 //$selectedPanel.removeClass("btn-outline-success");
@@ -366,27 +373,44 @@ const BsMultiSelect = ((window, $, Popper) => {
             //         reference: this.filterInput
             //     });
             // }
-
-            if (!this.options.items) {
-                this.options.items.forEach((item) => {
-                    let itemValue = item.value;
-                    let itemText = item.text;
-                    let isChecked = item.isChecked;
-                    this.appendDropDownItem(itemValue, itemText, isChecked);
-                });
-                this.hasItems = this.options.items.length > 0;
-            } else {
-                let selectOptions = $input.find('option');
-                selectOptions.each(
-                    (index, option) => {
-                        let itemValue = option.value;
-                        let itemText = option.text;
-                        let isChecked = option.selected;
+            
+            // some browsers (IE11) can change select value ("autocomplet") after page is loaded but before "ready" event
+            $(document).ready(() => {
+                if (!this.options.items) {
+                    this.options.items.forEach((item) => {
+                        let itemValue = item.value;
+                        let itemText = item.text;
+                        let isChecked = item.isChecked;
                         this.appendDropDownItem(itemValue, itemText, isChecked);
-                    }
-                );
-                this.hasItems = selectOptions.length > 0;
-            }
+                    });
+                    this.hasItems = this.options.items.length > 0;
+                } else {
+                    let selectOptions = $hiddenSelect.find('option');
+                    selectOptions.each(
+                        (index, option) => {
+                            let itemValue = option.value;
+                            let itemText = option.text;
+                            let isChecked = option.selected;
+                            this.appendDropDownItem(itemValue, itemText, isChecked);
+                        }
+                    );
+                    this.hasItems = selectOptions.length > 0;
+                }
+                this.updateDropDownPosition();
+
+                $dropDownMenu.find('li').click(event => {
+                    this.clickDropDownItem(event);
+                });
+
+                $dropDownMenu.find("li").on("mouseover", event => {
+                    $(event.target).closest("li").addClass('text-primary').addClass('bg-light')
+                });
+
+                $dropDownMenu.find("li").on("mouseout", event => {
+                    $(event.target).closest("li").removeClass('text-primary').removeClass('bg-light')
+                });
+            });
+
             if (disabled) {
                 this.filterInput.style.display = "none";
                 if(!this.options.selectedPanelReadonlyClass){
@@ -397,41 +421,26 @@ const BsMultiSelect = ((window, $, Popper) => {
                 $selectedPanel.find('button').prop("disabled", true);
                 $selectedPanel.addClass();
             } else {
-                let inputId = this.input.id;
-                let $formGroup = $input.closest(".form-group");
+                let inputId = this.hiddenSelect.id;
+                let $formGroup = $hiddenSelect.closest(".form-group");
                 if ($formGroup.length == 1) {
                     let $label = $formGroup.find(`label[for="${inputId}"]`);
                     let f = $label.attr("for");
-                    if (f == this.input.id) {
-                        this.filterInput.id = "dashboardcode-bsmultiselect-generated-filter-id-" + this.input.id;
+                    if (f == this.hiddenSelect.id) {
+                        this.filterInput.id = "dashboardcode-bsmultiselect-generated-filter-id-" + this.hiddenSelect.id;
                         $label.attr("for", this.filterInput.id);
                     }
                 }
 
-                this.updateDropDownPosition();
-
                 $dropDownMenu.click((event) => {
                     event.stopPropagation();
-                });
-
-                $dropDownMenu.find('li').click(event => {
-                    this.clickDropDownItem(event);
                 });
 
                 $dropDownMenu.on("mouseover", () => {
                     this.resetSelectDropDownMenu();
                 });
 
-                $dropDownMenu.find("li").on("mouseover", event => {
-                    $(event.target).closest("li").addClass('text-primary').addClass('bg-light')
-                });
-
-                $dropDownMenu.find("li").on("mouseout", event => {
-                    $(event.target).closest("li").removeClass('text-primary').removeClass('bg-light')
-                });
-
                 $selectedPanel.click((event) => {
-                    //console.log('selectedPanel click ' + event.target.nodeName);
                     if (event.target.nodeName != "INPUT")
                         $(this.filterInput).val('').focus();
                     if (!(event.target.nodeName == "BUTTON" || (event.target.nodeName == "SPAN" && event.target.parentElement.nodeName == "BUTTON")) && this.hasItems)
@@ -451,11 +460,11 @@ const BsMultiSelect = ((window, $, Popper) => {
                     else if (event.which == 13 || event.keyCode == 13) {
                         event.preventDefault();
                     }
-                    else if (event.which == 9 || event.keyCode == 9){
-                        if (this.filterInput.value){
+                    else if (event.which == 9 || event.keyCode == 9) {
+                        if (this.filterInput.value) {
                             event.preventDefault();
                         }
-                        else{
+                        else {
                             this.closeDropDown();
                         }
                     }
@@ -487,7 +496,7 @@ const BsMultiSelect = ((window, $, Popper) => {
                         } else {
                             this.analyzeInputText();
                         }
-                        if (event.which == 9 || event.keyCode == 9){
+                        if (event.which == 9 || event.keyCode == 9) {
                             this.closeDropDown();
                         }
                     } else if (event.which == 8 || event.keyCode == 8) {
@@ -515,12 +524,11 @@ const BsMultiSelect = ((window, $, Popper) => {
                 });
 
                 // Set on change for filter input
-                $filterInput.on('input', () => { // keyup focus
-                    //console.log('filterInput input');
+                $filterInput.on('input', () => { 
                     this.adoptFilterInputLength();
                     this.filterDropDownMenu();
                     if (this.hasItems) {
-                        this.updateDropDownPosition(); // support case when textbox can change its place because of line break (texbox grow with each key press)
+                        this.updateDropDownPosition(); // we need it to support case when textbox changes its place because of line break (texbox grow with each key press)
                         this.showDropDown();
                     } else {
                         this.hideDropDown();
@@ -528,17 +536,16 @@ const BsMultiSelect = ((window, $, Popper) => {
                 });
 
                 $filterInput.focusin(() => {
-                    if($selectedPanel.hasClass("is-valid") &&  this.options.selectedPanelValidBoxShadow ){
-                        $selectedPanel.css("box-shadow", this.options.selectedPanelValidBoxShadow );              
-                    }else if ($selectedPanel.hasClass("is-invalid") && this.options.selectedPanelInvalidBoxShadow){
-                        $selectedPanel.css("box-shadow", this.options.selectedPanelInvalidBoxShadow );
+                    if ($selectedPanel.hasClass("is-valid") &&  this.options.selectedPanelValidBoxShadow){
+                        $selectedPanel.css("box-shadow", this.options.selectedPanelValidBoxShadow);              
+                    } else if ($selectedPanel.hasClass("is-invalid") && this.options.selectedPanelInvalidBoxShadow){
+                        $selectedPanel.css("box-shadow", this.options.selectedPanelInvalidBoxShadow);
                     }
                     $(this.selectedPanel).addClass("focus");
                 });
 
                 $filterInput.focusout(() => {
-                    if (!this.skipFocusout)
-                    {
+                    if (!this.skipFocusout) {
                         $selectedPanel.css("box-shadow", "" );                
                         $(this.selectedPanel).removeClass("focus");
                     }
@@ -546,13 +553,11 @@ const BsMultiSelect = ((window, $, Popper) => {
 
                 $container.mousedown(() => {
                     this.skipFocusout = true;
-
                 });
 
                 $(window.document).mouseup((event) => {
                     this.skipFocusout = false;
                     if (!(this.container === event.target || $.contains(this.container, event.target))) {
-                        //console.log("document mouseup outside container");
                         this.closeDropDown();
                     }
                 });
