@@ -201,7 +201,7 @@
       "wrap-regex": "off",
   
       "arrow-body-style": ["error", "as-needed"],
-      "arrow-parens": "error",
+      "arrow-parens": "off",
       "arrow-spacing": "error",
       "generator-star-spacing": "error",
       "no-confusing-arrow": "error",

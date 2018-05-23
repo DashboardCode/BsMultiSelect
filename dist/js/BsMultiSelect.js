@@ -110,14 +110,12 @@
         };
 
         _proto.showDropDown = function showDropDown() {
-          if (this.hasItems) {
-            //if (this.options.usePopper) {
-            //console.log('popper add show');
-            $$$1(this.dropDownMenu).addClass('show'); // } else {
-            //     if (!$(this.dropDownMenu).hasClass('show'))
-            //         $(this.dropDownMenu).dropdown('toggle');
-            // }
-          }
+          //if (this.options.usePopper) {
+          //console.log('popper add show');
+          $$$1(this.dropDownMenu).addClass('show'); // } else {
+          //     if (!$(this.dropDownMenu).hasClass('show'))
+          //         $(this.dropDownMenu).dropdown('toggle');
+          // }
         };
 
         _proto.setCheck = function setCheck(optionId, isChecked) {
@@ -180,7 +178,6 @@
         };
 
         _proto.clickDropDownItem = function clickDropDownItem(event) {
-          // console.log("filter & stopPropagation");
           event.preventDefault();
           event.stopPropagation();
           var $menuItem = $$$1(event.currentTarget).closest("LI");
@@ -197,7 +194,7 @@
           }
 
           this.clearFilterInput();
-          $$$1(this.filterInput).focus();
+          this.filterInput.focus();
         };
 
         _proto.appendDropDownItem = function appendDropDownItem(itemValue, itemText, isChecked) {
@@ -292,7 +289,9 @@
           var visibleNodeListArray = $$$1(this.dropDownMenu).find('LI:not([style*="display: none"])').toArray();
 
           if (visibleNodeListArray.length > 0) {
-            this.showDropDown();
+            if (this.hasItems) {
+              this.showDropDown();
+            }
 
             if (this.selectedDropDownItem === null) {
               this.selectedDropDownIndex = down ? 0 : visibleNodeListArray.length - 1;
@@ -342,7 +341,7 @@
             $selectedPanel.css("min-height", this.options.selectedPanelMinHeight);
           } else $selectedPanel.addClass(this.options.selectedPanelClass);
 
-          $selectedPanel.appendTo($container);
+          $selectedPanel.appendTo(this.container);
           this.selectedPanel = $selectedPanel.get(0);
 
           if ($input.hasClass("is-valid")) {
@@ -360,7 +359,7 @@
           var $filterInputItem = $$$1('<li/>');
           this.filterInputItem = $filterInputItem.get(0);
           if (!this.options.filterInputItemClass) $filterInputItem.css(defFilterInputItemStyleSys);else $filterInputItem.addClass(this.options.filterInputItemClass);
-          $filterInputItem.appendTo($selectedPanel);
+          $filterInputItem.appendTo(this.selectedPanel);
           var $filterInput = $$$1('<input type="search" autocomplete="off">');
 
           if (!this.options.filterInputClass) {
@@ -370,7 +369,7 @@
             $filterInput.addClass(this.options.filterInputClass);
           }
 
-          $filterInput.appendTo($filterInputItem);
+          $filterInput.appendTo(this.filterInputItem);
           this.filterInput = $filterInput.get(0);
           var $dropDownMenu = $$$1("<ul/>").appendTo($container);
           this.dropDownMenu = $dropDownMenu.get(0);
@@ -443,7 +442,6 @@
 
             this.updateDropDownPosition();
             $dropDownMenu.click(function (event) {
-              //console.log('dropDownMenu click - stopPropagation')
               event.stopPropagation();
             });
             $dropDownMenu.find('li').click(function (event) {
@@ -453,19 +451,15 @@
               _this2.resetSelectDropDownMenu();
             });
             $dropDownMenu.find("li").on("mouseover", function (event) {
-              var $li = $$$1(event.target).closest("li");
-              $li.addClass('text-primary');
-              $li.addClass('bg-light');
+              $$$1(event.target).closest("li").addClass('text-primary').addClass('bg-light');
             });
             $dropDownMenu.find("li").on("mouseout", function (event) {
-              var $li = $$$1(event.target).closest("li");
-              $li.removeClass('text-primary');
-              $li.removeClass('bg-light');
+              $$$1(event.target).closest("li").removeClass('text-primary').removeClass('bg-light');
             });
             $selectedPanel.click(function (event) {
               //console.log('selectedPanel click ' + event.target.nodeName);
               if (event.target.nodeName != "INPUT") $$$1(_this2.filterInput).val('').focus();
-              if (!(event.target.nodeName == "BUTTON" || event.target.nodeName == "SPAN" && event.target.parentElement.nodeName == "BUTTON")) _this2.showDropDown();
+              if (!(event.target.nodeName == "BUTTON" || event.target.nodeName == "SPAN" && event.target.parentElement.nodeName == "BUTTON") && _this2.hasItems) _this2.showDropDown();
             });
             $filterInput.on("keydown", function (event) {
               if (event.which == 38 || event.keyCode == 38) {
@@ -546,6 +540,7 @@
                 }
 
                 _this2.backspaceAtStartPoint = null;
+                if ($dropDownMenu.is(':hidden')) _this2.updateDropDownPosition();
               } else if (event.which == 27 || event.keyCode == 27) {
                 // escape
                 _this2.closeDropDown();
