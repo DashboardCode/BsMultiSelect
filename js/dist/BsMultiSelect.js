@@ -154,6 +154,7 @@ var BsMultiSelect = function (window, $, Popper) {
       value: function clearFilterInput(updatePosition) {
         if (this.filterInput.value != '') {
           this.filterInput.value = '';
+          this.adoptFilterInputLength();
           this.filterDropDownMenu();
 
           if (updatePosition && this.hasItems) {

@@ -149,6 +149,7 @@
         _proto.clearFilterInput = function clearFilterInput(updatePosition) {
           if (this.filterInput.value != '') {
             this.filterInput.value = '';
+            this.adoptFilterInputLength();
             this.filterDropDownMenu();
 
             if (updatePosition && this.hasItems) {
