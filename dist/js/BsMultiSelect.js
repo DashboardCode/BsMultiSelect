@@ -93,11 +93,11 @@
 
         var _proto = Plugin.prototype;
 
-        _proto.updateDropDownPosition = function updateDropDownPosition() {
+        _proto.updateDropDownPosition = function updateDropDownPosition(force) {
           //if (this.options.usePopper) {
           var offsetLeft = this.filterInputItem.offsetLeft;
 
-          if (this.filterInputItemOffsetLeft != offsetLeft) {
+          if (force || this.filterInputItemOffsetLeft != offsetLeft) {
             this.popper.update();
             this.filterInputItemOffsetLeft = offsetLeft;
           } // } else {
@@ -116,6 +116,7 @@
 
         _proto.showDropDown = function showDropDown() {
           //if (this.options.usePopper) {
+          this.updateDropDownPosition(true);
           $$$1(this.dropDownMenu).addClass('show'); // } else {
           //     if (!$(this.dropDownMenu).hasClass('show'))
           //         $(this.dropDownMenu).dropdown('toggle');
@@ -145,13 +146,13 @@
           this.updateDropDownPosition();
         };
 
-        _proto.clearFilterInput = function clearFilterInput() {
+        _proto.clearFilterInput = function clearFilterInput(updatePosition) {
           if (this.filterInput.value != '') {
             this.filterInput.value = '';
             this.filterDropDownMenu();
 
-            if (this.hasItems) {
-              this.updateDropDownPosition();
+            if (updatePosition && this.hasItems) {
+              this.updateDropDownPosition(false);
             }
           }
         };
@@ -197,7 +198,7 @@
             $checkBox.prop('checked', true);
           }
 
-          this.clearFilterInput();
+          this.clearFilterInput(false);
           this.filterInput.focus();
         };
 
@@ -240,7 +241,9 @@
           $buttom.click(function () {
             _this.removeSelectedItem($selectedItem, optionId, $checkBox);
 
-            _this.updateDropDownPosition();
+            _this.clearFilterInput(true);
+
+            _this.updateDropDownPosition(false);
 
             $$$1(_this.filterInput).focus();
           });
@@ -275,7 +278,7 @@
               $checkBox.prop('checked', true);
             }
 
-            this.clearFilterInput();
+            this.clearFilterInput(true);
           }
         };
 
@@ -382,8 +385,14 @@
           this.popper = new Popper$$1(this.filterInput, this.dropDownMenu, {
             placement: 'bottom-start',
             modifiers: {
+              preventOverflow: {
+                enabled: false
+              },
+              hide: {
+                enabled: false
+              },
               flip: {
-                behavior: ['left', 'right']
+                enabled: false
               }
             }
           }); // } else {
@@ -420,7 +429,7 @@
               _this2.hasItems = selectOptions.length > 0;
             }
 
-            _this2.updateDropDownPosition();
+            _this2.updateDropDownPosition(false);
 
             $dropDownMenu.find('li').click(function (event) {
               _this2.clickDropDownItem(event);
@@ -509,11 +518,16 @@
                     _this2.createAndAppendSelectedItem($checkBox, optionId, itemText);
 
                     $checkBox.prop('checked', true);
-                    _this2.filterInput.value = "";
+
+                    _this2.resetSelectDropDownMenu();
                   } else {
                     var $selectedItem = $$$1(_this2.selectedPanel).find("LI[data-option-id=\"" + optionId + "\"]:first");
 
                     _this2.removeSelectedItem($selectedItem, optionId, $checkBox);
+                  }
+
+                  if (event.which == 13 || event.keyCode == 13) {
+                    _this2.closeDropDown();
                   } //this.resetSelectDropDownMenu();
 
                 } else {
@@ -548,8 +562,9 @@
                   }
                 }
 
-                _this2.backspaceAtStartPoint = null;
-                if ($dropDownMenu.is(':hidden')) _this2.updateDropDownPosition();
+                _this2.backspaceAtStartPoint = null; //if ($dropDownMenu.is(':hidden'))
+
+                _this2.updateDropDownPosition(false);
               } else if (event.which == 27 || event.keyCode == 27) {
                 // escape
                 _this2.closeDropDown();
@@ -562,7 +577,7 @@
               _this2.filterDropDownMenu();
 
               if (_this2.hasItems) {
-                _this2.updateDropDownPosition(); // we need it to support case when textbox changes its place because of line break (texbox grow with each key press)
+                _this2.updateDropDownPosition(false); // we need it to support case when textbox changes its place because of line break (texbox grow with each key press)
 
 
                 _this2.showDropDown();

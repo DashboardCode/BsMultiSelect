@@ -92,11 +92,11 @@ var BsMultiSelect = function (window, $, Popper) {
 
     _createClass(Plugin, [{
       key: "updateDropDownPosition",
-      value: function updateDropDownPosition() {
+      value: function updateDropDownPosition(force) {
         //if (this.options.usePopper) {
         var offsetLeft = this.filterInputItem.offsetLeft;
 
-        if (this.filterInputItemOffsetLeft != offsetLeft) {
+        if (force || this.filterInputItemOffsetLeft != offsetLeft) {
           this.popper.update();
           this.filterInputItemOffsetLeft = offsetLeft;
         } // } else {
@@ -117,6 +117,7 @@ var BsMultiSelect = function (window, $, Popper) {
       key: "showDropDown",
       value: function showDropDown() {
         //if (this.options.usePopper) {
+        this.updateDropDownPosition(true);
         $(this.dropDownMenu).addClass('show'); // } else {
         //     if (!$(this.dropDownMenu).hasClass('show'))
         //         $(this.dropDownMenu).dropdown('toggle');
@@ -150,13 +151,13 @@ var BsMultiSelect = function (window, $, Popper) {
       }
     }, {
       key: "clearFilterInput",
-      value: function clearFilterInput() {
+      value: function clearFilterInput(updatePosition) {
         if (this.filterInput.value != '') {
           this.filterInput.value = '';
           this.filterDropDownMenu();
 
-          if (this.hasItems) {
-            this.updateDropDownPosition();
+          if (updatePosition && this.hasItems) {
+            this.updateDropDownPosition(false);
           }
         }
       }
@@ -204,7 +205,7 @@ var BsMultiSelect = function (window, $, Popper) {
           $checkBox.prop('checked', true);
         }
 
-        this.clearFilterInput();
+        this.clearFilterInput(false);
         this.filterInput.focus();
       }
     }, {
@@ -249,7 +250,9 @@ var BsMultiSelect = function (window, $, Popper) {
         $buttom.click(function () {
           _this.removeSelectedItem($selectedItem, optionId, $checkBox);
 
-          _this.updateDropDownPosition();
+          _this.clearFilterInput(true);
+
+          _this.updateDropDownPosition(false);
 
           $(_this.filterInput).focus();
         });
@@ -286,7 +289,7 @@ var BsMultiSelect = function (window, $, Popper) {
             $checkBox.prop('checked', true);
           }
 
-          this.clearFilterInput();
+          this.clearFilterInput(true);
         }
       }
     }, {
@@ -397,8 +400,14 @@ var BsMultiSelect = function (window, $, Popper) {
         this.popper = new Popper(this.filterInput, this.dropDownMenu, {
           placement: 'bottom-start',
           modifiers: {
+            preventOverflow: {
+              enabled: false
+            },
+            hide: {
+              enabled: false
+            },
             flip: {
-              behavior: ['left', 'right']
+              enabled: false
             }
           }
         }); // } else {
@@ -435,7 +444,7 @@ var BsMultiSelect = function (window, $, Popper) {
             _this2.hasItems = selectOptions.length > 0;
           }
 
-          _this2.updateDropDownPosition();
+          _this2.updateDropDownPosition(false);
 
           $dropDownMenu.find('li').click(function (event) {
             _this2.clickDropDownItem(event);
@@ -524,11 +533,16 @@ var BsMultiSelect = function (window, $, Popper) {
                   _this2.createAndAppendSelectedItem($checkBox, optionId, itemText);
 
                   $checkBox.prop('checked', true);
-                  _this2.filterInput.value = "";
+
+                  _this2.resetSelectDropDownMenu();
                 } else {
                   var $selectedItem = $(_this2.selectedPanel).find("LI[data-option-id=\"".concat(optionId, "\"]:first"));
 
                   _this2.removeSelectedItem($selectedItem, optionId, $checkBox);
+                }
+
+                if (event.which == 13 || event.keyCode == 13) {
+                  _this2.closeDropDown();
                 } //this.resetSelectDropDownMenu();
 
               } else {
@@ -563,8 +577,9 @@ var BsMultiSelect = function (window, $, Popper) {
                 }
               }
 
-              _this2.backspaceAtStartPoint = null;
-              if ($dropDownMenu.is(':hidden')) _this2.updateDropDownPosition();
+              _this2.backspaceAtStartPoint = null; //if ($dropDownMenu.is(':hidden'))
+
+              _this2.updateDropDownPosition(false);
             } else if (event.which == 27 || event.keyCode == 27) {
               // escape
               _this2.closeDropDown();
@@ -577,7 +592,7 @@ var BsMultiSelect = function (window, $, Popper) {
             _this2.filterDropDownMenu();
 
             if (_this2.hasItems) {
-              _this2.updateDropDownPosition(); // we need it to support case when textbox changes its place because of line break (texbox grow with each key press)
+              _this2.updateDropDownPosition(false); // we need it to support case when textbox changes its place because of line break (texbox grow with each key press)
 
 
               _this2.showDropDown();

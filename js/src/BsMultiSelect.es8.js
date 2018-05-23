@@ -63,10 +63,10 @@ const BsMultiSelect = ((window, $, Popper) => {
             this.init();
         }
 
-        updateDropDownPosition() {
+        updateDropDownPosition(force) {
             //if (this.options.usePopper) {
             let offsetLeft = this.filterInputItem.offsetLeft;
-            if (this.filterInputItemOffsetLeft!=offsetLeft){
+            if (force || this.filterInputItemOffsetLeft!=offsetLeft){
                 this.popper.update();
                 this.filterInputItemOffsetLeft=offsetLeft;
             }
@@ -86,6 +86,7 @@ const BsMultiSelect = ((window, $, Popper) => {
 
         showDropDown() {
                 //if (this.options.usePopper) {
+                    this.updateDropDownPosition(true);
                     $(this.dropDownMenu).addClass('show')
                 // } else {
                 //     if (!$(this.dropDownMenu).hasClass('show'))
@@ -115,12 +116,12 @@ const BsMultiSelect = ((window, $, Popper) => {
             this.updateDropDownPosition();
         }
 
-        clearFilterInput() {
+        clearFilterInput(updatePosition) {
             if (this.filterInput.value != '') {
                 this.filterInput.value = '';
                 this.filterDropDownMenu();
-                if (this.hasItems) {
-                    this.updateDropDownPosition(); 
+                if (updatePosition && this.hasItems) {
+                    this.updateDropDownPosition(false); 
                 } 
             }
         }
@@ -165,7 +166,7 @@ const BsMultiSelect = ((window, $, Popper) => {
                 this.createAndAppendSelectedItem($checkBox, optionId, itemText);
                 $checkBox.prop('checked', true);
             }
-            this.clearFilterInput();
+            this.clearFilterInput(false);
             this.filterInput.focus();
         }
         
@@ -210,8 +211,9 @@ const BsMultiSelect = ((window, $, Popper) => {
             this.setCheck(optionId, true);
 
             $buttom.click(() => {
-                this.removeSelectedItem($selectedItem, optionId, $checkBox)
-                this.updateDropDownPosition();
+                this.removeSelectedItem($selectedItem, optionId, $checkBox);
+                this.clearFilterInput(true);
+                this.updateDropDownPosition(false);
                 $(this.filterInput).focus();
             });
         }
@@ -241,7 +243,7 @@ const BsMultiSelect = ((window, $, Popper) => {
                     this.createAndAppendSelectedItem($checkBox, optionId, itemText);
                     $checkBox.prop('checked', true);
                 }
-                this.clearFilterInput();
+                this.clearFilterInput(true);
             }
         }
 
@@ -354,10 +356,10 @@ const BsMultiSelect = ((window, $, Popper) => {
                 this.popper = new Popper(this.filterInput, this.dropDownMenu, {
                     placement: 'bottom-start',
                     modifiers: {
-                        flip: {
-                            behavior: ['left', 'right']
-                        }
-                    }
+                        preventOverflow: {enabled:false},
+                        hide: {enabled:false},
+                        flip: { enabled:false }
+                     }
                 });
             // } else {
             //     $(this.dropDownMenu).addClass("dropdown dropdown-menu")
@@ -391,7 +393,7 @@ const BsMultiSelect = ((window, $, Popper) => {
                     );
                     this.hasItems = selectOptions.length > 0;
                 }
-                this.updateDropDownPosition();
+                this.updateDropDownPosition(false);
 
                 $dropDownMenu.find('li').click(event => {
                     this.clickDropDownItem(event);
@@ -482,10 +484,13 @@ const BsMultiSelect = ((window, $, Popper) => {
                                 let itemText = $item.find('label').text();
                                 this.createAndAppendSelectedItem($checkBox, optionId, itemText);
                                 $checkBox.prop('checked', true);
-                                this.filterInput.value = "";
+                                this.resetSelectDropDownMenu();
                             } else {
                                 let $selectedItem = $(this.selectedPanel).find(`LI[data-option-id="${optionId}"]:first`);
                                 this.removeSelectedItem($selectedItem, optionId, $checkBox);
+                            }
+                            if (event.which == 13 || event.keyCode == 13) {
+                                this.closeDropDown();
                             }
                             //this.resetSelectDropDownMenu();
                         } else {
@@ -511,8 +516,8 @@ const BsMultiSelect = ((window, $, Popper) => {
                             }
                         }
                         this.backspaceAtStartPoint = null;
-                        if ($dropDownMenu.is(':hidden'))
-                            this.updateDropDownPosition();
+                        //if ($dropDownMenu.is(':hidden'))
+                        this.updateDropDownPosition(false);
                     } else if (event.which == 27 || event.keyCode == 27) { // escape
                         this.closeDropDown();
                     }
@@ -523,7 +528,7 @@ const BsMultiSelect = ((window, $, Popper) => {
                     this.adoptFilterInputLength();
                     this.filterDropDownMenu();
                     if (this.hasItems) {
-                        this.updateDropDownPosition(); // we need it to support case when textbox changes its place because of line break (texbox grow with each key press)
+                        this.updateDropDownPosition(false); // we need it to support case when textbox changes its place because of line break (texbox grow with each key press)
                         this.showDropDown();
                     } else {
                         this.hideDropDown();
