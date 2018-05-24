@@ -110,7 +110,7 @@
 
         _proto.hideDropDown = function hideDropDown() {
           //if (this.options.usePopper) {
-          $$$1(this.dropDownMenu).removeClass('show'); // } else {
+          $$$1(this.dropDownMenu).hide(); // } else {
           //     if ($(this.dropDownMenu).hasClass('show'))
           //         $(this.dropDownMenu).dropdown('toggle');
           // }
@@ -119,7 +119,7 @@
         _proto.showDropDown = function showDropDown() {
           //if (this.options.usePopper) {
           this.updateDropDownPosition(true);
-          $$$1(this.dropDownMenu).addClass('show'); // } else {
+          $$$1(this.dropDownMenu).show(); // } else {
           //     if (!$(this.dropDownMenu).hasClass('show'))
           //         $(this.dropDownMenu).dropdown('toggle');
           // }
@@ -340,7 +340,7 @@
           $hiddenSelect.hide();
           var disabled = this.hiddenSelect.disabled;
           var $container = $$$1("<div/>");
-          if (!this.options.containerClass) $container.addClass(this.options.containerClass);
+          $container.addClass(this.options.containerClass);
           $container.insertAfter($hiddenSelect);
           this.container = $container.get(0);
           var $selectedPanel = $$$1("<ul/>");
@@ -381,9 +381,15 @@
 
           $filterInput.appendTo(this.filterInputItem);
           this.filterInput = $filterInput.get(0);
-          var $dropDownMenu = $$$1("<ul/>").appendTo($container);
+          var $dropDownMenu = $$$1("<ul/>").css({
+            "display": "none"
+          }).appendTo($container);
           this.dropDownMenu = $dropDownMenu.get(0);
-          $dropDownMenu.addClass(this.options.dropDownMenuClass); //if (this.options.usePopper) {
+          $dropDownMenu.addClass(this.options.dropDownMenuClass); // prevent heavy understandable styling error
+
+          $dropDownMenu.css({
+            "list-style-type": "none"
+          }); //if (this.options.usePopper) {
 
           this.popper = new Popper$$1(this.filterInput, this.dropDownMenu, {
             placement: 'bottom-start',

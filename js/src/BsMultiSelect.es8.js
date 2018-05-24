@@ -77,7 +77,7 @@ const BsMultiSelect = ((window, $, Popper) => {
 
         hideDropDown() {
             //if (this.options.usePopper) {
-                $(this.dropDownMenu).removeClass('show')
+                $(this.dropDownMenu).hide()
             // } else {
             //     if ($(this.dropDownMenu).hasClass('show'))
             //         $(this.dropDownMenu).dropdown('toggle');
@@ -87,7 +87,7 @@ const BsMultiSelect = ((window, $, Popper) => {
         showDropDown() {
                 //if (this.options.usePopper) {
                     this.updateDropDownPosition(true);
-                    $(this.dropDownMenu).addClass('show')
+                    $(this.dropDownMenu).show()
                 // } else {
                 //     if (!$(this.dropDownMenu).hasClass('show'))
                 //         $(this.dropDownMenu).dropdown('toggle');
@@ -297,8 +297,7 @@ const BsMultiSelect = ((window, $, Popper) => {
             let disabled = this.hiddenSelect.disabled;
 
             let $container = $("<div/>");
-            if (!this.options.containerClass)
-                $container.addClass(this.options.containerClass);
+            $container.addClass(this.options.containerClass);
             $container.insertAfter($hiddenSelect);
                 
             this.container = $container.get(0);
@@ -349,10 +348,14 @@ const BsMultiSelect = ((window, $, Popper) => {
             $filterInput.appendTo(this.filterInputItem);
             this.filterInput = $filterInput.get(0);
 
-            let $dropDownMenu = $("<ul/>").appendTo($container);
+            let $dropDownMenu = $("<ul/>")
+                .css({"display":"none"})
+                .appendTo($container);
             this.dropDownMenu = $dropDownMenu.get(0);
 
             $dropDownMenu.addClass(this.options.dropDownMenuClass);
+            // prevent heavy understandable styling error
+            $dropDownMenu.css({"list-style-type":"none"});
             //if (this.options.usePopper) {
                 this.popper = new Popper(this.filterInput, this.dropDownMenu, {
                     placement: 'bottom-start',

@@ -110,7 +110,7 @@ var BsMultiSelect = function (window, $, Popper) {
       key: "hideDropDown",
       value: function hideDropDown() {
         //if (this.options.usePopper) {
-        $(this.dropDownMenu).removeClass('show'); // } else {
+        $(this.dropDownMenu).hide(); // } else {
         //     if ($(this.dropDownMenu).hasClass('show'))
         //         $(this.dropDownMenu).dropdown('toggle');
         // }
@@ -120,7 +120,7 @@ var BsMultiSelect = function (window, $, Popper) {
       value: function showDropDown() {
         //if (this.options.usePopper) {
         this.updateDropDownPosition(true);
-        $(this.dropDownMenu).addClass('show'); // } else {
+        $(this.dropDownMenu).show(); // } else {
         //     if (!$(this.dropDownMenu).hasClass('show'))
         //         $(this.dropDownMenu).dropdown('toggle');
         // }
@@ -355,7 +355,7 @@ var BsMultiSelect = function (window, $, Popper) {
         $hiddenSelect.hide();
         var disabled = this.hiddenSelect.disabled;
         var $container = $("<div/>");
-        if (!this.options.containerClass) $container.addClass(this.options.containerClass);
+        $container.addClass(this.options.containerClass);
         $container.insertAfter($hiddenSelect);
         this.container = $container.get(0);
         var $selectedPanel = $("<ul/>");
@@ -396,9 +396,15 @@ var BsMultiSelect = function (window, $, Popper) {
 
         $filterInput.appendTo(this.filterInputItem);
         this.filterInput = $filterInput.get(0);
-        var $dropDownMenu = $("<ul/>").appendTo($container);
+        var $dropDownMenu = $("<ul/>").css({
+          "display": "none"
+        }).appendTo($container);
         this.dropDownMenu = $dropDownMenu.get(0);
-        $dropDownMenu.addClass(this.options.dropDownMenuClass); //if (this.options.usePopper) {
+        $dropDownMenu.addClass(this.options.dropDownMenuClass); // prevent heavy understandable styling error
+
+        $dropDownMenu.css({
+          "list-style-type": "none"
+        }); //if (this.options.usePopper) {
 
         this.popper = new Popper(this.filterInput, this.dropDownMenu, {
           placement: 'bottom-start',
