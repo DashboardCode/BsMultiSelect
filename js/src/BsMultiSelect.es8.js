@@ -12,9 +12,9 @@ const BsMultiSelect = ((window, $, Popper) => {
     const defFilterInputStyle = {'width': '2ch', 'border': '0', 'padding': '0', 'outline': 'none'};
     const defSelectedPanelStyle = {'cursor': 'text', 'display': 'flex', "flex-wrap": "wrap", "align-items": "center", "margin-bottom": "0px"};
     const defSelectedItemClass = 'badge';
-    const defSelectedItemStyle = {'padding-left': '0px', 'display': 'flex', 'align-items': 'center'};
+    const defSelectedItemStyle = {'padding-left': '0px', 'padding-bottom': '0px', 'display': 'flex', 'align-items': 'center'};
     const defRemoveSelectedItemButtonClass = 'close';
-    const defRemoveSelectedItemButtonStyle = {'font-size': '100%'};
+    const defRemoveSelectedItemButtonStyle = {'line-height': '1rem', 'font-size':'1.2rem'};
     const defaults = {
         items: [],
         defaults: [],

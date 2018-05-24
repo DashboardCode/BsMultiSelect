@@ -33,12 +33,14 @@ var BsMultiSelect = function (window, $, Popper) {
   var defSelectedItemClass = 'badge';
   var defSelectedItemStyle = {
     'padding-left': '0px',
+    'padding-bottom': '0px',
     'display': 'flex',
     'align-items': 'center'
   };
   var defRemoveSelectedItemButtonClass = 'close';
   var defRemoveSelectedItemButtonStyle = {
-    'font-size': '100%'
+    'line-height': '1rem',
+    'font-size': '1.2rem'
   };
   var defaults = {
     items: [],
