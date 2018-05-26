@@ -29,10 +29,7 @@ class Bootstrap4Adapter {
         else{
             $buttom.addClass(this.options.removeSelectedItemButtonClass)
         }
-        $buttom.click(() => {
-            removeSelectedItem();
-        });
-
+        $buttom.on("click", removeSelectedItem);
         $text.appendTo($selectedItem);
         $buttom.appendTo($selectedItem); 
     }
@@ -87,14 +84,15 @@ class Bootstrap4Adapter {
             }else{
                 $selectedPanel.addClass(this.options.selectedPanelReadonlyClass);
             }
-            $selectedPanel.find('BUTTON').prop("disabled", true);
+            $selectedPanel.find('BUTTON').prop("disabled", true).off();
         }
     }
-    Hover($li, isEnabled){
-        if (isEnabled)
-            $li.addClass('text-primary').addClass('bg-light');
+
+    Hover($dropDownItem, isHover){
+        if (isHover)
+            $dropDownItem.addClass('text-primary').addClass('bg-light');
         else
-            $li.removeClass('text-primary').removeClass('bg-light');
+            $dropDownItem.removeClass('text-primary').removeClass('bg-light');
     }
 
     FilterClick(event){

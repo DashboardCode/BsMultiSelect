@@ -276,7 +276,7 @@ const BsMultiSelect = ((window, $, Popper) => {
                     }
             });
             
-            // some browsers (IE11) can change select value ("autocomplet") after page is loaded but before "ready" event
+            // some browsers (IE11) can change select value ("autocomplete") after page is loaded but before "ready" event
             $(document).ready(() => {
                 let selectOptions = $hiddenSelect.find('option');
                 selectOptions.each(
@@ -303,144 +303,144 @@ const BsMultiSelect = ((window, $, Popper) => {
                 $dropDownMenu.find("li").on("mouseout", event => {
                     this.adapter.Hover($(event.target).closest("li"), false);
                 });
-            });
 
-            if (disabled) {
-                this.filterInput.style.display = "none";
-                this.adapter.Enable($(this.selectedPanel), false);
-            } else {
-                this.filterInput.style.display = "inline-block";
-                this.adapter.Enable($(this.selectedPanel), true);
-                
-                $dropDownMenu.click((event) => {
-                    event.stopPropagation();
-                });
-
-                $dropDownMenu.on("mouseover", () => {
-                    this.resetSelectDropDownMenu();
-                });
-
-                $selectedPanel.click((event) => {
-                    if (event.target.nodeName != "INPUT")
-                        $(this.filterInput).val('').focus();
-                    if (this.hasItems)
-                        if (this.adapter.FilterClick(event))
-                            this.showDropDown();
-                });
-
-                $filterInput.on("keydown", (event) => {
-                    if (event.which == 38) {
-                        event.preventDefault();
-                        this.keydownArrow(false);
-                    }
-                    else if (event.which == 40) {
-                        event.preventDefault()
-                        this.keydownArrow(true);
-                    }
-                    else if (event.which == 13) {
-                        event.preventDefault();
-                    }
-                    else if (event.which == 9) {
-                        if (this.filterInput.value) {
-                            event.preventDefault();
-                        }
-                        else {
-                            this.closeDropDown();
-                        }
-                    }
-                    else {
-                        if (event.which == 8) {
-                            // detect that backspace is at start of input field (this will be used at keydown)
-                            this.backspaceAtStartPoint = (this.filterInput.selectionStart == 0 && this.filterInput.selectionEnd == 0);
-                        }
+                if (disabled) {
+                    this.filterInput.style.display = "none";
+                    this.adapter.Enable($(this.selectedPanel), false);
+                } else {
+                    this.filterInput.style.display = "inline-block";
+                    this.adapter.Enable($(this.selectedPanel), true);
+                    
+                    $selectedPanel.click((event) => {
+                        if (event.target.nodeName != "INPUT")
+                            $(this.filterInput).val('').focus();
+                        if (this.hasItems)
+                            if (this.adapter.FilterClick(event))
+                                this.showDropDown();
+                    });
+    
+                    $dropDownMenu.click((event) => {
+                        event.stopPropagation();
+                    });
+    
+                    $dropDownMenu.on("mouseover", () => {
                         this.resetSelectDropDownMenu();
+                    });
+    
+                    if (this.options.doManageFocus)
+                    {
+                        $filterInput.focusin(() => {
+                            this.adapter.Focus($selectedPanel, true);
+                        });
+    
+                        $filterInput.focusout(() => {
+                            if (!this.skipFocusout) {
+                                this.adapter.Focus($selectedPanel, false);
+                            }
+                        });
+    
+                        $container.mousedown(() => {
+                            this.skipFocusout = true;
+                        });
+    
+                        $(window.document).mouseup(() => {
+                            this.skipFocusout = false;
+                        });
                     }
-                });
-
-                $filterInput.on("keyup", (event) => {
-                    if (event.which == 13 || event.which == 9 ) {
-                        if (this.selectedDropDownItem) {
-                            let $selectedDropDownItem = $(this.selectedDropDownItem);
-                            let toggleItem =  $selectedDropDownItem.data("option-toggle");
-                            toggleItem();
+    
+                    $(window.document).mouseup((event) => {
+                        if (!(this.container === event.target || $.contains(this.container, event.target))) {
                             this.closeDropDown();
-                        } else {
-                            let text = this.filterInput.value.trim().toLowerCase();
-                            let dropDownItems = this.dropDownMenu.querySelectorAll("LI");
-                            let dropDownItem = null;
-                            for (let i = 0; i < dropDownItems.length; ++i) {
-                                let it = dropDownItems[i];
-                                if (it.textContent.trim().toLowerCase() == text)
-                                {
-                                    dropDownItem=it;
-                                    break;
-                                }
-                            }
-                            if (dropDownItem) {
-                                let $dropDownItem = $(dropDownItem);
-                                let isSelected = $dropDownItem.data("option-selected");
-                                if (!isSelected){
-                                    let toggle = $dropDownItem.data("option-toggle");
-                                    toggle();
-                                }
-                                this.clearFilterInput(true);
-                            }
                         }
-                    } else if (event.which == 8) {
-                        if (this.filterInput.selectionEnd == 0 && this.filterInput.selectionStart == 0 && this.backspaceAtStartPoint) {
-                            let $penult = $(this.selectedPanel).find("LI:last").prev();
-                            if ($penult.length){
-                                let removeItem = $penult.data("option-remove");
-                                removeItem();
-                            }
-                        }
-                        this.backspaceAtStartPoint = null;
-                        //if ($dropDownMenu.is(':hidden'))
-                        this.updateDropDownPosition(false);
-                    } else if (event.which == 27) { // escape
-                        this.closeDropDown();
-                    }
-                });
-
-                // Set on change for filter input
-                $filterInput.on('input', () => { 
-                    this.adoptFilterInputLength();
-                    this.filterDropDownMenu();
-                    if (this.hasItems) {
-                        this.updateDropDownPosition(false); // we need it to support case when textbox changes its place because of line break (texbox grow with each key press)
-                        this.showDropDown();
-                    } else {
-                        this.hideDropDown();
-                    }
-                });
-
-                if (this.options.doManageFocus)
-                {
-                    $filterInput.focusin(() => {
-                        this.adapter.Focus($selectedPanel, true);
-                    });
-
-                    $filterInput.focusout(() => {
-                        if (!this.skipFocusout) {
-                            this.adapter.Focus($selectedPanel, false);
-                        }
-                    });
-
-                    $container.mousedown(() => {
-                        this.skipFocusout = true;
-                    });
-
-                    $(window.document).mouseup(() => {
-                        this.skipFocusout = false;
                     });
                 }
+            });
 
-                $(window.document).mouseup((event) => {
-                    if (!(this.container === event.target || $.contains(this.container, event.target))) {
+            $filterInput.on("keydown", (event) => {
+                if (event.which == 38) {
+                    event.preventDefault();
+                    this.keydownArrow(false);
+                }
+                else if (event.which == 40) {
+                    event.preventDefault()
+                    this.keydownArrow(true);
+                }
+                else if (event.which == 13) {
+                    event.preventDefault();
+                }
+                else if (event.which == 9) {
+                    if (this.filterInput.value) {
+                        event.preventDefault();
+                    }
+                    else {
                         this.closeDropDown();
                     }
-                });
-            }
+                }
+                else {
+                    if (event.which == 8) {
+                        // detect that backspace is at start of input field (this will be used at keydown)
+                        this.backspaceAtStartPoint = (this.filterInput.selectionStart == 0 && this.filterInput.selectionEnd == 0);
+                    }
+                    this.resetSelectDropDownMenu();
+                }
+            });
+
+            $filterInput.on("keyup", (event) => {
+                if (event.which == 13 || event.which == 9 ) {
+                    if (this.selectedDropDownItem) {
+                        let $selectedDropDownItem = $(this.selectedDropDownItem);
+                        let toggleItem =  $selectedDropDownItem.data("option-toggle");
+                        toggleItem();
+                        this.closeDropDown();
+                    } else {
+                        let text = this.filterInput.value.trim().toLowerCase();
+                        let dropDownItems = this.dropDownMenu.querySelectorAll("LI");
+                        let dropDownItem = null;
+                        for (let i = 0; i < dropDownItems.length; ++i) {
+                            let it = dropDownItems[i];
+                            if (it.textContent.trim().toLowerCase() == text)
+                            {
+                                dropDownItem=it;
+                                break;
+                            }
+                        }
+                        if (dropDownItem) {
+                            let $dropDownItem = $(dropDownItem);
+                            let isSelected = $dropDownItem.data("option-selected");
+                            if (!isSelected){
+                                let toggle = $dropDownItem.data("option-toggle");
+                                toggle();
+                            }
+                            this.clearFilterInput(true);
+                        }
+                    }
+                } else if (event.which == 8) {
+                    if (this.filterInput.selectionEnd == 0 && this.filterInput.selectionStart == 0 && this.backspaceAtStartPoint) {
+                        let $penult = $(this.selectedPanel).find("LI:last").prev();
+                        if ($penult.length){
+                            let removeItem = $penult.data("option-remove");
+                            removeItem();
+                        }
+                    }
+                    this.backspaceAtStartPoint = null;
+                    //if ($dropDownMenu.is(':hidden'))
+                    this.updateDropDownPosition(false);
+                } else if (event.which == 27) { // escape
+                    this.closeDropDown();
+                }
+            });
+
+            // Set on change for filter input
+            $filterInput.on('input', () => { 
+                this.adoptFilterInputLength();
+                this.filterDropDownMenu();
+                if (this.hasItems) {
+                    this.updateDropDownPosition(false); // we need it to support case when textbox changes its place because of line break (texbox grow with each key press)
+                    this.showDropDown();
+                } else {
+                    this.hideDropDown();
+                }
+            });
         }
     }
 
