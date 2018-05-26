@@ -296,11 +296,11 @@ const BsMultiSelect = ((window, $, Popper) => {
                     this.filterInput.focus(); 
                 });
 
-                $dropDownMenu.find("li").on("mouseover", event => {
+                $dropDownMenu.find("LI").on("mouseover", event => {
                     this.adapter.Hover($(event.target).closest("li"), true);
                 });
 
-                $dropDownMenu.find("li").on("mouseout", event => {
+                $dropDownMenu.find("LI").on("mouseout", event => {
                     this.adapter.Hover($(event.target).closest("li"), false);
                 });
 

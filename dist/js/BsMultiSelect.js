@@ -465,10 +465,10 @@
 
               _this2.filterInput.focus();
             });
-            $dropDownMenu.find("li").on("mouseover", function (event) {
+            $dropDownMenu.find("LI").on("mouseover", function (event) {
               _this2.adapter.Hover($$$1(event.target).closest("li"), true);
             });
-            $dropDownMenu.find("li").on("mouseout", function (event) {
+            $dropDownMenu.find("LI").on("mouseout", function (event) {
               _this2.adapter.Hover($$$1(event.target).closest("li"), false);
             });
 
