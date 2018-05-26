@@ -85,21 +85,7 @@ const BsMultiSelect = ((window, $, Popper) => {
             $(this.dropDownMenu).show()
         }
 
-        setHiddenSelectOptionSelected(optionId, isChecked) {
-            for (let i = 0; i < this.hiddenSelect.options.length; i += 1) {
-                let option = this.hiddenSelect.options[i];
-                if (option.value == optionId) {
-                    this.hiddenSelect.options[i].selected = isChecked;
-                    break;
-                }
-            }
-        }
-
         // Public methods
-        getInputValue() {
-            return $(this.hiddenSelect).val();
-        }
-
         closeDropDown() {
             this.resetSelectDropDownMenu();
             this.clearFilterInput();
@@ -142,15 +128,6 @@ const BsMultiSelect = ((window, $, Popper) => {
             this.resetSelectDropDownMenu();
         }
 
-        clickDropDownItem(event) {
-            event.preventDefault();
-            event.stopPropagation();
-            let toggleItem = $(event.currentTarget).closest("LI").data("option-toggle");
-            toggleItem();
-            this.clearFilterInput(false); 
-            this.filterInput.focus(); 
-        }
-        
         appendDropDownItem(optionElement) {
             let optionId = optionElement.value;
             let itemText = optionElement.text;
@@ -200,29 +177,6 @@ const BsMultiSelect = ((window, $, Popper) => {
 
         adoptFilterInputLength() {
             this.filterInput.style.width = this.filterInput.value.length*1.3 + 2 + "ch";
-        }
-
-        analyzeInputText() {
-            let text = this.filterInput.value.trim().toLowerCase();
-            let dropDownItems = this.dropDownMenu.querySelectorAll("LI");
-            let dropDownItem = null;
-            for (let i = 0; i < dropDownItems.length; ++i) {
-                let it = dropDownItems[i];
-                if (it.textContent.trim().toLowerCase() == text)
-                {
-                    dropDownItem=it;
-                    break;
-                }
-            }
-            if (dropDownItem) {
-                let $dropDownItem = $(dropDownItem);
-                let isSelected = $dropDownItem.data("option-selected");
-                if (!isSelected){
-                    let toggle = $dropDownItem.data("option-toggle");
-                    toggle();
-                }
-                this.clearFilterInput(true);
-            }
         }
 
         resetSelectDropDownMenu() {
@@ -334,7 +288,12 @@ const BsMultiSelect = ((window, $, Popper) => {
                 this.updateDropDownPosition(false);
 
                 $dropDownMenu.find('li').click(event => {
-                    this.clickDropDownItem(event);
+                    event.preventDefault();
+                    event.stopPropagation();
+                    let toggleItem = $(event.currentTarget).closest("LI").data("option-toggle");
+                    toggleItem();
+                    this.clearFilterInput(false); 
+                    this.filterInput.focus(); 
                 });
 
                 $dropDownMenu.find("li").on("mouseover", event => {
@@ -406,7 +365,26 @@ const BsMultiSelect = ((window, $, Popper) => {
                             toggleItem();
                             this.closeDropDown();
                         } else {
-                            this.analyzeInputText();
+                            let text = this.filterInput.value.trim().toLowerCase();
+                            let dropDownItems = this.dropDownMenu.querySelectorAll("LI");
+                            let dropDownItem = null;
+                            for (let i = 0; i < dropDownItems.length; ++i) {
+                                let it = dropDownItems[i];
+                                if (it.textContent.trim().toLowerCase() == text)
+                                {
+                                    dropDownItem=it;
+                                    break;
+                                }
+                            }
+                            if (dropDownItem) {
+                                let $dropDownItem = $(dropDownItem);
+                                let isSelected = $dropDownItem.data("option-selected");
+                                if (!isSelected){
+                                    let toggle = $dropDownItem.data("option-toggle");
+                                    toggle();
+                                }
+                                this.clearFilterInput(true);
+                            }
                         }
                     } else if (event.which == 8) {
                         if (this.filterInput.selectionEnd == 0 && this.filterInput.selectionStart == 0 && this.backspaceAtStartPoint) {

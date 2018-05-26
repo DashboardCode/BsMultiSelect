@@ -109,25 +109,8 @@ var BsMultiSelect = function (window, $, Popper) {
       value: function showDropDown() {
         this.updateDropDownPosition(true);
         $(this.dropDownMenu).show();
-      }
-    }, {
-      key: "setHiddenSelectOptionSelected",
-      value: function setHiddenSelectOptionSelected(optionId, isChecked) {
-        for (var i = 0; i < this.hiddenSelect.options.length; i += 1) {
-          var option = this.hiddenSelect.options[i];
-
-          if (option.value == optionId) {
-            this.hiddenSelect.options[i].selected = isChecked;
-            break;
-          }
-        }
       } // Public methods
 
-    }, {
-      key: "getInputValue",
-      value: function getInputValue() {
-        return $(this.hiddenSelect).val();
-      }
     }, {
       key: "closeDropDown",
       value: function closeDropDown() {
@@ -174,16 +157,6 @@ var BsMultiSelect = function (window, $, Popper) {
         });
         this.hasItems = visible > 0;
         this.resetSelectDropDownMenu();
-      }
-    }, {
-      key: "clickDropDownItem",
-      value: function clickDropDownItem(event) {
-        event.preventDefault();
-        event.stopPropagation();
-        var toggleItem = $(event.currentTarget).closest("LI").data("option-toggle");
-        toggleItem();
-        this.clearFilterInput(false);
-        this.filterInput.focus();
       }
     }, {
       key: "appendDropDownItem",
@@ -243,34 +216,6 @@ var BsMultiSelect = function (window, $, Popper) {
       key: "adoptFilterInputLength",
       value: function adoptFilterInputLength() {
         this.filterInput.style.width = this.filterInput.value.length * 1.3 + 2 + "ch";
-      }
-    }, {
-      key: "analyzeInputText",
-      value: function analyzeInputText() {
-        var text = this.filterInput.value.trim().toLowerCase();
-        var dropDownItems = this.dropDownMenu.querySelectorAll("LI");
-        var dropDownItem = null;
-
-        for (var i = 0; i < dropDownItems.length; ++i) {
-          var it = dropDownItems[i];
-
-          if (it.textContent.trim().toLowerCase() == text) {
-            dropDownItem = it;
-            break;
-          }
-        }
-
-        if (dropDownItem) {
-          var $dropDownItem = $(dropDownItem);
-          var isSelected = $dropDownItem.data("option-selected");
-
-          if (!isSelected) {
-            var toggle = $dropDownItem.data("option-toggle");
-            toggle();
-          }
-
-          this.clearFilterInput(true);
-        }
       }
     }, {
       key: "resetSelectDropDownMenu",
@@ -387,7 +332,14 @@ var BsMultiSelect = function (window, $, Popper) {
           _this2.updateDropDownPosition(false);
 
           $dropDownMenu.find('li').click(function (event) {
-            _this2.clickDropDownItem(event);
+            event.preventDefault();
+            event.stopPropagation();
+            var toggleItem = $(event.currentTarget).closest("LI").data("option-toggle");
+            toggleItem();
+
+            _this2.clearFilterInput(false);
+
+            _this2.filterInput.focus();
           });
           $dropDownMenu.find("li").on("mouseover", function (event) {
             _this2.adapter.Hover($(event.target).closest("li"), true);
@@ -448,7 +400,32 @@ var BsMultiSelect = function (window, $, Popper) {
 
                 _this2.closeDropDown();
               } else {
-                _this2.analyzeInputText();
+                var text = _this2.filterInput.value.trim().toLowerCase();
+
+                var dropDownItems = _this2.dropDownMenu.querySelectorAll("LI");
+
+                var dropDownItem = null;
+
+                for (var i = 0; i < dropDownItems.length; ++i) {
+                  var it = dropDownItems[i];
+
+                  if (it.textContent.trim().toLowerCase() == text) {
+                    dropDownItem = it;
+                    break;
+                  }
+                }
+
+                if (dropDownItem) {
+                  var $dropDownItem = $(dropDownItem);
+                  var isSelected = $dropDownItem.data("option-selected");
+
+                  if (!isSelected) {
+                    var toggle = $dropDownItem.data("option-toggle");
+                    toggle();
+                  }
+
+                  _this2.clearFilterInput(true);
+                }
               }
             } else if (event.which == 8) {
               if (_this2.filterInput.selectionEnd == 0 && _this2.filterInput.selectionStart == 0 && _this2.backspaceAtStartPoint) {
