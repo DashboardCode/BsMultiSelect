@@ -1,9 +1,32 @@
 class Bootstrap4Adapter {
 
-    constructor(jQuery, options, hiddenSelect) {
+    constructor(jQuery, hiddenSelect, options) {
+        const defaults = {
+            //usePopper: true,
+            selectedPanelDefMinHeight: 'calc(2.25rem + 2px)',
+            selectedPanelReadonlyBackgroundColor: '#e9ecef',
+            selectedPanelBoxShadow: '0 0 0 0.2rem rgba(0, 123, 255, 0.25)',
+            selectedPanelBorderColor: '#80bdff', 
+            selectedPanelValidBoxShadow: ' 0 0 0 0.2rem rgba(40, 167, 69, 0.25)',
+            selectedPanelInvalidBoxShadow: '0 0 0 0.2rem rgba(220, 53, 69, 0.25)',
+            filterInputColor: '#495057',
+            containerClass: 'dashboardcode-bsmultiselect',
+            dropDownMenuClass: 'dropdown-menu',
+            dropDownItemClass: 'px-2',
+            selectedPanelClass: '',
+            selectedPanelFocusClass : '',
+            selectedPanelReadonlyClass: '',
+            selectedItemClass: '', 
+            
+            removeSelectedItemButtonClass: '',
+            
+            filterInputItemClass: '',
+            filterInputClass: ''
+        };
+        this.options = jQuery.extend({}, defaults, options);
         this.jQuery=jQuery;
-        this.options=options;
         this.hiddenSelect=hiddenSelect;
+        
     }
 
     CreateSelectedItemContent($selectedItem, itemText, removeSelectedItem){
@@ -51,7 +74,21 @@ class Bootstrap4Adapter {
         return adoptDropDownItem;
     }
 
-    Init($selectedPanel){
+    Init($container, $selectedPanel, $filterInputItem, $filterInput, $dropDownMenu){
+        const defSelectedPanelClass = 'form-control';
+        const defSelectedPanelStyle = {'margin-bottom': '0'}; // 16 is for bootstrap reboot for UL
+
+        $container.addClass(this.options.containerClass);
+
+        if (!this.options.selectedPanelClass){
+            $selectedPanel.addClass(defSelectedPanelClass);
+            $selectedPanel.css(defSelectedPanelStyle);
+            $selectedPanel.css({ "min-height" : this.options.selectedPanelMinHeight });
+        }
+        else {
+            $selectedPanel.addClass(this.options.selectedPanelClass);
+        }
+
         let $hiddenSelect = this.jQuery(this.hiddenSelect);
         if ($hiddenSelect.hasClass("is-valid")){
             $selectedPanel.addClass("is-valid");
@@ -59,6 +96,18 @@ class Bootstrap4Adapter {
         
         if ($hiddenSelect.hasClass("is-invalid")){
             $selectedPanel.addClass("is-invalid");
+        }
+
+        $dropDownMenu.addClass(this.options.dropDownMenuClass);
+
+        if (!this.options.filterInputItemClass)
+            $filterInputItem.addClass(this.options.filterInputItemClass)
+
+
+        if (!this.options.filterInputClass){
+            $filterInput.css("color", this.options.filterInputColor);
+        } else {
+            $filterInput.addClass(this.options.filterInputClass);
         }
     }
 

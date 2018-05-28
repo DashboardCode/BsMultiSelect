@@ -14,54 +14,31 @@ var BsMultiSelect = function (window, $, Popper) {
   var JQUERY_NO_CONFLICT = $.fn[pluginName];
   var pluginName = 'dashboardCodeBsMultiSelect';
   var dataKey = "plugin_".concat(pluginName);
-  var defSelectedPanelClass = 'form-control';
-  var defSelectedPanelStyle = {
-    'margin-bottom': '0'
-  }; // 16 is for bootstrap reboot for UL
-
   var defSelectedPanelStyleSys = {
     'display': 'flex',
-    "flex-wrap": "wrap"
-  };
-  var defFilterInputItemStyleSys = {
+    'flex-wrap': 'wrap',
     'list-style-type': 'none'
-  };
+  }; // remove bullets since this is ul
+
   var defFilterInputStyleSys = {
     'width': '2ch',
     'border': '0',
     'padding': '0',
-    'outline': 'none'
+    'outline': 'none',
+    'background-color': 'transparent'
   };
   var defDropDownMenuStyleSys = {
     'list-style-type': 'none'
-  }; // ul usualy has bullets
+  }; // remove bullets since this is ul
 
   var defaults = {
-    doManageFocus: true,
-    //usePopper: true,
-    selectedPanelDefMinHeight: 'calc(2.25rem + 2px)',
-    selectedPanelReadonlyBackgroundColor: '#e9ecef',
-    selectedPanelBoxShadow: '0 0 0 0.2rem rgba(0, 123, 255, 0.25)',
-    selectedPanelBorderColor: '#80bdff',
-    selectedPanelValidBoxShadow: ' 0 0 0 0.2rem rgba(40, 167, 69, 0.25)',
-    selectedPanelInvalidBoxShadow: '0 0 0 0.2rem rgba(220, 53, 69, 0.25)',
-    filterInputColor: '#495057',
-    containerClass: 'dashboardcode-bsmultiselect',
-    dropDownMenuClass: 'dropdown-menu',
-    dropDownItemClass: 'px-2',
-    selectedPanelClass: '',
-    selectedPanelFocusClass: '',
-    selectedPanelReadonlyClass: '',
-    selectedItemClass: '',
-    removeSelectedItemButtonClass: '',
-    filterInputItemClass: '',
-    filterInputClass: ''
+    doManageFocus: true
   };
 
   var Plugin =
   /*#__PURE__*/
   function () {
-    function Plugin(element, options) {
+    function Plugin(selectElement, options, adapter) {
       _classCallCheck(this, Plugin);
 
       if (typeof Popper === 'undefined') {
@@ -69,23 +46,22 @@ var BsMultiSelect = function (window, $, Popper) {
       } // readonly
 
 
-      this.hiddenSelect = element;
+      this.selectElement = selectElement;
       this.options = $.extend({}, defaults, options);
-      this.jQuery = $;
-      this.adapter = new Bootstrap4Adapter($, this.options, this.hiddenSelect);
+      this.adapter = adapter ? adapter : new Bootstrap4Adapter($, this.selectElement);
       this.container = null;
-      this.dropDownMenu = null;
       this.selectedPanel = null;
-      this.filterInput = null;
       this.filterInputItem = null;
+      this.filterInput = null;
+      this.dropDownMenu = null;
       this.popper = null; // state
 
-      this.filterInputItemOffsetLeft = null;
+      this.filterInputItemOffsetLeft = null; // used to detect changes in input field position (by comparision with current value)
+
       this.skipFocusout = false;
-      this.backspaceAtStartPoint = null;
-      this.selectedDropDownItem = null;
-      this.selectedDropDownIndex = null;
-      this.hasItems = false;
+      this.hoveredDropDownItem = null;
+      this.hoveredDropDownIndex = null;
+      this.hasDropDownVisible = false;
       this.init();
     }
 
@@ -102,35 +78,23 @@ var BsMultiSelect = function (window, $, Popper) {
     }, {
       key: "hideDropDown",
       value: function hideDropDown() {
-        $(this.dropDownMenu).hide();
+        this.dropDownMenu.style.display = 'none';
       }
     }, {
       key: "showDropDown",
       value: function showDropDown() {
-        this.updateDropDownPosition(true);
-        $(this.dropDownMenu).show();
+        this.dropDownMenu.style.display = 'block';
       } // Public methods
 
     }, {
-      key: "closeDropDown",
-      value: function closeDropDown() {
-        this.resetSelectDropDownMenu();
-        this.clearFilterInput();
-        this.hideDropDown();
-        this.updateDropDownPosition();
-      }
-    }, {
-      key: "clearFilterInput",
-      value: function clearFilterInput(updatePosition) {
-        if (this.filterInput.value != '') {
-          this.filterInput.value = '';
-          this.adoptFilterInputLength();
-          this.filterDropDownMenu();
-
-          if (updatePosition && this.hasItems) {
-            this.updateDropDownPosition(false);
-          }
+      key: "resetDropDownMenuHover",
+      value: function resetDropDownMenuHover() {
+        if (this.hoveredDropDownItem !== null) {
+          this.adapter.Hover($(this.hoveredDropDownItem), false);
+          this.hoveredDropDownItem = null;
         }
+
+        this.hoveredDropDownIndex = null;
       }
     }, {
       key: "filterDropDownMenu",
@@ -155,8 +119,23 @@ var BsMultiSelect = function (window, $, Popper) {
             }
           }
         });
-        this.hasItems = visible > 0;
-        this.resetSelectDropDownMenu();
+        this.hasDropDownVisible = visible > 0;
+        this.resetDropDownMenuHover();
+      }
+    }, {
+      key: "clearFilterInput",
+      value: function clearFilterInput(updatePosition) {
+        if (this.filterInput.value) {
+          this.filterInput.value = '';
+          this.input(updatePosition);
+        }
+      }
+    }, {
+      key: "closeDropDown",
+      value: function closeDropDown() {
+        this.resetDropDownMenuHover();
+        this.clearFilterInput(true);
+        this.hideDropDown();
       }
     }, {
       key: "appendDropDownItem",
@@ -166,15 +145,15 @@ var BsMultiSelect = function (window, $, Popper) {
         var optionId = optionElement.value;
         var itemText = optionElement.text;
         var isSelected = optionElement.selected;
-        var $dropDownItem = $("<li/>");
+        var $dropDownItem = $("<LI/>");
         $dropDownItem.data("option-id", optionId);
         $dropDownItem.data("option-text", itemText.toLowerCase());
         var adoptDropDownItem = this.adapter.CreateDropDownItemContent($dropDownItem, optionId, itemText, isSelected);
-        $dropDownItem.appendTo($(this.dropDownMenu));
+        $dropDownItem.appendTo(this.dropDownMenu);
 
         var appendItem = function appendItem() {
           $dropDownItem.data("option-selected", true);
-          var $selectedItem = $("<li/>");
+          var $selectedItem = $("<LI/>");
           $selectedItem.data("option-id", optionId);
           optionElement.selected = true;
           adoptDropDownItem(true);
@@ -188,19 +167,17 @@ var BsMultiSelect = function (window, $, Popper) {
             adoptDropDownItem(false);
           };
 
-          _this.adapter.CreateSelectedItemContent($selectedItem, itemText, function () {
+          var removeItemAndCloseDropDown = function removeItemAndCloseDropDown() {
             removeItem();
 
-            _this.clearFilterInput(true);
+            _this.closeDropDown();
+          };
 
-            _this.updateDropDownPosition(false);
+          _this.adapter.CreateSelectedItemContent($selectedItem, itemText, removeItemAndCloseDropDown);
 
-            $(_this.filterInput).focus();
-          });
-
-          $selectedItem.insertBefore(_this.jQuery(_this.filterInputItem));
+          $selectedItem.insertBefore(_this.filterInputItem);
           $dropDownItem.data("option-toggle", removeItem);
-          $selectedItem.data("option-remove", removeItem);
+          $selectedItem.data("option-remove", removeItemAndCloseDropDown);
           return $selectedItem;
         };
 
@@ -213,49 +190,48 @@ var BsMultiSelect = function (window, $, Popper) {
         }
       }
     }, {
-      key: "adoptFilterInputLength",
-      value: function adoptFilterInputLength() {
-        this.filterInput.style.width = this.filterInput.value.length * 1.3 + 2 + "ch";
-      }
-    }, {
-      key: "resetSelectDropDownMenu",
-      value: function resetSelectDropDownMenu() {
-        if (this.selectedDropDownItem !== null) {
-          this.adapter.Hover($(this.selectedDropDownItem), false);
-          this.selectedDropDownItem = null;
-        }
-
-        this.selectedDropDownIndex = null;
-      }
-    }, {
       key: "keydownArrow",
       value: function keydownArrow(down) {
         var visibleNodeListArray = $(this.dropDownMenu).find('LI:not([style*="display: none"])').toArray();
 
         if (visibleNodeListArray.length > 0) {
-          if (this.hasItems) {
+          if (this.hasDropDownVisible) {
+            this.updateDropDownPosition(true);
             this.showDropDown();
           }
 
-          if (this.selectedDropDownItem === null) {
-            this.selectedDropDownIndex = down ? 0 : visibleNodeListArray.length - 1;
+          if (this.hoveredDropDownItem === null) {
+            this.hoveredDropDownIndex = down ? 0 : visibleNodeListArray.length - 1;
           } else {
-            // IE10-11 doesn't support multiple arguments in classList remove 
-            this.adapter.Hover($(this.selectedDropDownItem), false);
+            this.adapter.Hover($(this.hoveredDropDownItem), false);
 
             if (down) {
-              var newIndex = this.selectedDropDownIndex + 1;
-              this.selectedDropDownIndex = newIndex < visibleNodeListArray.length ? newIndex : 0;
+              var newIndex = this.hoveredDropDownIndex + 1;
+              this.hoveredDropDownIndex = newIndex < visibleNodeListArray.length ? newIndex : 0;
             } else {
-              var _newIndex = this.selectedDropDownIndex - 1;
+              var _newIndex = this.hoveredDropDownIndex - 1;
 
-              this.selectedDropDownIndex = _newIndex >= 0 ? _newIndex : visibleNodeListArray.length - 1;
+              this.hoveredDropDownIndex = _newIndex >= 0 ? _newIndex : visibleNodeListArray.length - 1;
             }
           }
 
-          this.selectedDropDownItem = visibleNodeListArray[this.selectedDropDownIndex]; // IE10-11 doesn't support multiple arguments in classList add 
+          this.hoveredDropDownItem = visibleNodeListArray[this.hoveredDropDownIndex];
+          this.adapter.Hover($(this.hoveredDropDownItem), true);
+        }
+      }
+    }, {
+      key: "input",
+      value: function input(forceUpdatePosition) {
+        this.filterInput.style.width = this.filterInput.value.length * 1.3 + 2 + "ch";
+        this.filterDropDownMenu();
 
-          this.adapter.Hover($(this.selectedDropDownItem), true);
+        if (this.hasDropDownVisible) {
+          if (forceUpdatePosition) // ignore it if it is called from 
+            this.updateDropDownPosition(forceUpdatePosition); // we need it to support case when textbox changes its place because of line break (texbox grow with each key press)
+
+          this.showDropDown();
+        } else {
+          this.hideDropDown();
         }
       }
     }, {
@@ -263,50 +239,30 @@ var BsMultiSelect = function (window, $, Popper) {
       value: function init() {
         var _this2 = this;
 
-        var $hiddenSelect = $(this.hiddenSelect);
+        var $hiddenSelect = $(this.selectElement);
         $hiddenSelect.hide();
-        var disabled = this.hiddenSelect.disabled;
-        var $container = $("<div/>");
-        $container.addClass(this.options.containerClass);
-        $container.insertAfter($hiddenSelect);
+        var disabled = this.selectElement.disabled;
+        var $container = $("<DIV/>");
         this.container = $container.get(0);
-        var $selectedPanel = $("<ul/>");
+        var $selectedPanel = $("<UL/>");
         $selectedPanel.css(defSelectedPanelStyleSys);
-
-        if (!this.options.selectedPanelClass) {
-          $selectedPanel.addClass(defSelectedPanelClass);
-          $selectedPanel.css(defSelectedPanelStyle);
-          $selectedPanel.css({
-            "min-height": this.options.selectedPanelMinHeight
-          });
-        } else $selectedPanel.addClass(this.options.selectedPanelClass);
-
-        $selectedPanel.appendTo(this.container);
         this.selectedPanel = $selectedPanel.get(0);
-        this.adapter.Init($selectedPanel);
-        var $filterInputItem = $('<li/>');
+        $selectedPanel.appendTo(this.container);
+        var $filterInputItem = $('<LI/>');
         this.filterInputItem = $filterInputItem.get(0);
-        $filterInputItem.css(defFilterInputItemStyleSys);
-        if (!this.options.filterInputItemClass) $filterInputItem.addClass(this.options.filterInputItemClass);
         $filterInputItem.appendTo(this.selectedPanel);
-        var $filterInput = $('<input type="search" autocomplete="off">');
-
-        if (!this.options.filterInputClass) {
-          $filterInput.css(defFilterInputStyleSys);
-          $filterInput.css("color", this.options.filterInputColor);
-        } else {
-          $filterInput.addClass(this.options.filterInputClass);
-        }
-
+        var $filterInput = $('<INPUT type="search" autocomplete="off">');
+        $filterInput.css(defFilterInputStyleSys);
         $filterInput.appendTo(this.filterInputItem);
         this.filterInput = $filterInput.get(0);
-        var $dropDownMenu = $("<ul/>").css({
+        var $dropDownMenu = $("<UL/>").css({
           "display": "none"
         }).appendTo($container);
-        this.dropDownMenu = $dropDownMenu.get(0);
-        $dropDownMenu.addClass(this.options.dropDownMenuClass); // prevent heavy understandable styling error
+        this.dropDownMenu = $dropDownMenu.get(0); // prevent heavy understandable styling error
 
         $dropDownMenu.css(defDropDownMenuStyleSys);
+        this.adapter.Init($container, $selectedPanel, $filterInputItem, $filterInput, $dropDownMenu);
+        $container.insertAfter($hiddenSelect);
         this.popper = new Popper(this.filterInput, this.dropDownMenu, {
           placement: 'bottom-start',
           modifiers: {
@@ -323,49 +279,51 @@ var BsMultiSelect = function (window, $, Popper) {
         }); // some browsers (IE11) can change select value ("autocomplete") after page is loaded but before "ready" event
 
         $(document).ready(function () {
-          var selectOptions = $hiddenSelect.find('option');
+          var selectOptions = $hiddenSelect.find('OPTION');
           selectOptions.each(function (index, optionElement) {
             _this2.appendDropDownItem(optionElement);
           });
-          _this2.hasItems = selectOptions.length > 0;
+          _this2.hasDropDownVisible = selectOptions.length > 0;
 
           _this2.updateDropDownPosition(false);
 
-          $dropDownMenu.find('li').click(function (event) {
+          $dropDownMenu.find('LI').click(function (event) {
             event.preventDefault();
             event.stopPropagation();
             var toggleItem = $(event.currentTarget).closest("LI").data("option-toggle");
             toggleItem();
 
-            _this2.clearFilterInput(false);
-
             _this2.filterInput.focus();
           });
           $dropDownMenu.find("LI").on("mouseover", function (event) {
-            _this2.adapter.Hover($(event.target).closest("li"), true);
+            _this2.adapter.Hover($(event.target).closest("LI"), true);
           });
           $dropDownMenu.find("LI").on("mouseout", function (event) {
-            _this2.adapter.Hover($(event.target).closest("li"), false);
+            _this2.adapter.Hover($(event.target).closest("LI"), false);
           });
 
           if (disabled) {
             _this2.filterInput.style.display = "none";
 
-            _this2.adapter.Enable($(_this2.selectedPanel), false);
+            _this2.adapter.Enable($selectedPanel, false);
           } else {
             _this2.filterInput.style.display = "inline-block";
 
-            _this2.adapter.Enable($(_this2.selectedPanel), true);
+            _this2.adapter.Enable($selectedPanel, true);
 
             $selectedPanel.click(function (event) {
-              if (event.target.nodeName != "INPUT") $(_this2.filterInput).val('').focus();
-              if (_this2.hasItems) if (_this2.adapter.FilterClick(event)) _this2.showDropDown();
+              if (event.target.nodeName != "INPUT") $filterInput.val('').focus();
+              if (_this2.hasDropDownVisible) if (_this2.adapter.FilterClick(event)) {
+                _this2.updateDropDownPosition(true);
+
+                _this2.showDropDown();
+              }
             });
             $dropDownMenu.click(function (event) {
               event.stopPropagation();
             });
             $dropDownMenu.on("mouseover", function () {
-              _this2.resetSelectDropDownMenu();
+              return _this2.resetDropDownMenuHover();
             });
 
             if (_this2.options.doManageFocus) {
@@ -411,18 +369,29 @@ var BsMultiSelect = function (window, $, Popper) {
             }
           } else {
             if (event.which == 8) {
-              // detect that backspace is at start of input field (this will be used at keydown)
-              _this2.backspaceAtStartPoint = _this2.filterInput.selectionStart == 0 && _this2.filterInput.selectionEnd == 0;
+              // NOTE: this will process backspace only if there are no text in the input field
+              // If user will find this inconvinient, we will need to calculate something like this
+              // this.isBackspaceAtStartPoint = (this.filterInput.selectionStart == 0 && this.filterInput.selectionEnd == 0);
+              if (!_this2.filterInput.value) {
+                var $penult = $(_this2.selectedPanel).find("LI:last").prev();
+
+                if ($penult.length) {
+                  var removeItem = $penult.data("option-remove");
+                  removeItem();
+                }
+
+                _this2.updateDropDownPosition(false);
+              }
             }
 
-            _this2.resetSelectDropDownMenu();
+            _this2.resetDropDownMenuHover();
           }
         });
         $filterInput.on("keyup", function (event) {
           if (event.which == 13 || event.which == 9) {
-            if (_this2.selectedDropDownItem) {
-              var $selectedDropDownItem = $(_this2.selectedDropDownItem);
-              var toggleItem = $selectedDropDownItem.data("option-toggle");
+            if (_this2.hoveredDropDownItem) {
+              var $hoveredDropDownItem = $(_this2.hoveredDropDownItem);
+              var toggleItem = $hoveredDropDownItem.data("option-toggle");
               toggleItem();
 
               _this2.closeDropDown();
@@ -454,38 +423,13 @@ var BsMultiSelect = function (window, $, Popper) {
                 _this2.clearFilterInput(true);
               }
             }
-          } else if (event.which == 8) {
-            if (_this2.filterInput.selectionEnd == 0 && _this2.filterInput.selectionStart == 0 && _this2.backspaceAtStartPoint) {
-              var $penult = $(_this2.selectedPanel).find("LI:last").prev();
-
-              if ($penult.length) {
-                var removeItem = $penult.data("option-remove");
-                removeItem();
-              }
-            }
-
-            _this2.backspaceAtStartPoint = null; //if ($dropDownMenu.is(':hidden'))
-
-            _this2.updateDropDownPosition(false);
           } else if (event.which == 27) {
             // escape
             _this2.closeDropDown();
           }
-        }); // Set on change for filter input
-
+        });
         $filterInput.on('input', function () {
-          _this2.adoptFilterInputLength();
-
-          _this2.filterDropDownMenu();
-
-          if (_this2.hasItems) {
-            _this2.updateDropDownPosition(false); // we need it to support case when textbox changes its place because of line break (texbox grow with each key press)
-
-
-            _this2.showDropDown();
-          } else {
-            _this2.hideDropDown();
-          }
+          _this2.input(true);
         });
       }
     }]);

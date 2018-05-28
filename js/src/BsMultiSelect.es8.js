@@ -8,63 +8,39 @@ const BsMultiSelect = ((window, $, Popper) => {
     const pluginName = 'dashboardCodeBsMultiSelect';
     const dataKey = `plugin_${pluginName}`;
 
-    const defSelectedPanelClass = 'form-control';
-    const defSelectedPanelStyle = {'margin-bottom': '0'}; // 16 is for bootstrap reboot for UL
-    const defSelectedPanelStyleSys = {'display': 'flex', "flex-wrap": "wrap"};
+    const defSelectedPanelStyleSys = {'display':'flex', 'flex-wrap':'wrap', 'list-style-type':'none'};  // remove bullets since this is ul
+    const defFilterInputStyleSys   = {'width':'2ch', 'border':'0', 'padding':'0', 'outline':'none', 'background-color':'transparent' };
+    const defDropDownMenuStyleSys  = {'list-style-type':'none'}; // remove bullets since this is ul
 
-    const defFilterInputItemStyleSys = {'list-style-type':'none'}; 
-    const defFilterInputStyleSys = {'width': '2ch', 'border': '0', 'padding': '0', 'outline': 'none'};
-    
-    const defDropDownMenuStyleSys =  {'list-style-type':'none'}; // ul usualy has bullets
     const defaults = {
-        doManageFocus:true,
-        //usePopper: true,
-        selectedPanelDefMinHeight: 'calc(2.25rem + 2px)',
-        selectedPanelReadonlyBackgroundColor: '#e9ecef',
-        selectedPanelBoxShadow: '0 0 0 0.2rem rgba(0, 123, 255, 0.25)',
-        selectedPanelBorderColor: '#80bdff',
-        selectedPanelValidBoxShadow: ' 0 0 0 0.2rem rgba(40, 167, 69, 0.25)',
-        selectedPanelInvalidBoxShadow: '0 0 0 0.2rem rgba(220, 53, 69, 0.25)',
-        filterInputColor: '#495057',
-        containerClass: 'dashboardcode-bsmultiselect',
-        dropDownMenuClass: 'dropdown-menu',
-        dropDownItemClass: 'px-2',
-        selectedPanelClass: '',
-        selectedPanelFocusClass : '',
-        selectedPanelReadonlyClass: '',
-        selectedItemClass: '', 
-        removeSelectedItemButtonClass: '',
-        filterInputItemClass: '', 
-        filterInputClass: ''
-    };
+        doManageFocus:true
+    }
 
     class Plugin {
-        constructor(element, options) {
+        constructor(selectElement, options, adapter) {
             if (typeof Popper === 'undefined') {
                 throw new TypeError('DashboardCode BsMultiSelect require Popper.js (https://popper.js.org)')
             }
 
             // readonly
-            this.hiddenSelect = element;
+            this.selectElement = selectElement;
             this.options = $.extend({}, defaults, options);
-            this.jQuery = $;
-            this.adapter = new Bootstrap4Adapter($, this.options, this.hiddenSelect);
+
+            this.adapter = adapter?adapter:new Bootstrap4Adapter($, this.selectElement);
             
             this.container = null;
-            this.dropDownMenu = null;
             this.selectedPanel = null;
-            this.filterInput = null;
             this.filterInputItem = null;
+            this.filterInput = null;
+            this.dropDownMenu = null;
             this.popper = null;
 
             // state
-            this.filterInputItemOffsetLeft = null;
-            this.skipFocusout = false;
-            this.backspaceAtStartPoint = null;
-            this.selectedDropDownItem = null;
-            this.selectedDropDownIndex = null;
-            this.hasItems = false;
-
+            this.filterInputItemOffsetLeft = null; // used to detect changes in input field position (by comparision with current value)
+            this.skipFocusout = false; 
+            this.hoveredDropDownItem = null;
+            this.hoveredDropDownIndex = null;
+            this.hasDropDownVisible = false;
             this.init();
         }
 
@@ -77,31 +53,20 @@ const BsMultiSelect = ((window, $, Popper) => {
         }
 
         hideDropDown() {
-            $(this.dropDownMenu).hide()
+            this.dropDownMenu.style.display = 'none';
         }
 
         showDropDown() {
-            this.updateDropDownPosition(true);
-            $(this.dropDownMenu).show()
+            this.dropDownMenu.style.display = 'block';
         }
 
         // Public methods
-        closeDropDown() {
-            this.resetSelectDropDownMenu();
-            this.clearFilterInput();
-            this.hideDropDown();
-            this.updateDropDownPosition();
-        }
-
-        clearFilterInput(updatePosition) {
-            if (this.filterInput.value != '') {
-                this.filterInput.value = '';
-                this.adoptFilterInputLength();
-                this.filterDropDownMenu();
-                if (updatePosition && this.hasItems) {
-                    this.updateDropDownPosition(false); 
-                } 
+        resetDropDownMenuHover() {
+            if (this.hoveredDropDownItem !== null) {
+                this.adapter.Hover($(this.hoveredDropDownItem), false);
+                this.hoveredDropDownItem = null;
             }
+            this.hoveredDropDownIndex = null;
         }
 
         filterDropDownMenu() {
@@ -124,24 +89,37 @@ const BsMultiSelect = ((window, $, Popper) => {
                     }
                 }
             });
-            this.hasItems = visible > 0;
-            this.resetSelectDropDownMenu();
+            this.hasDropDownVisible = visible > 0;
+            this.resetDropDownMenuHover();
+        }
+
+        clearFilterInput(updatePosition) {
+            if (this.filterInput.value) {
+                this.filterInput.value = '';
+                this.input(updatePosition);
+            }
+        }
+
+        closeDropDown() {
+            this.resetDropDownMenuHover();
+            this.clearFilterInput(true);
+            this.hideDropDown();
         }
 
         appendDropDownItem(optionElement) {
             let optionId = optionElement.value;
             let itemText = optionElement.text;
             let isSelected = optionElement.selected;
-            let $dropDownItem = $("<li/>");
+            let $dropDownItem = $("<LI/>");
             $dropDownItem.data("option-id", optionId);
             $dropDownItem.data("option-text", itemText.toLowerCase());
 
             let adoptDropDownItem = this.adapter.CreateDropDownItemContent($dropDownItem, optionId, itemText, isSelected)
-            $dropDownItem.appendTo($(this.dropDownMenu));
+            $dropDownItem.appendTo(this.dropDownMenu);
 
             let appendItem = () => {
                 $dropDownItem.data("option-selected", true);
-                let $selectedItem = $("<li/>");
+                let $selectedItem = $("<LI/>");
                 $selectedItem.data("option-id", optionId);
                 optionElement.selected = true;
                 adoptDropDownItem(true);
@@ -154,18 +132,18 @@ const BsMultiSelect = ((window, $, Popper) => {
                     optionElement.selected = false;
                     adoptDropDownItem(false);
                 };
-
+                let removeItemAndCloseDropDown = () => {
+                    removeItem();
+                    this.closeDropDown();
+                };
                 this.adapter.CreateSelectedItemContent(
                     $selectedItem, 
-                    itemText, () => {
-                        removeItem();
-                        this.clearFilterInput(true);
-                        this.updateDropDownPosition(false);
-                        $(this.filterInput).focus();
-                });
-                $selectedItem.insertBefore(this.jQuery(this.filterInputItem));
+                    itemText, 
+                    removeItemAndCloseDropDown
+                );
+                $selectedItem.insertBefore(this.filterInputItem);
                 $dropDownItem.data("option-toggle", removeItem);
-                $selectedItem.data("option-remove", removeItem);
+                $selectedItem.data("option-remove", removeItemAndCloseDropDown);
                 return $selectedItem;
             }
             $dropDownItem.data("option-toggle", () => appendItem());
@@ -175,98 +153,79 @@ const BsMultiSelect = ((window, $, Popper) => {
             }
         }
 
-        adoptFilterInputLength() {
-            this.filterInput.style.width = this.filterInput.value.length*1.3 + 2 + "ch";
-        }
-
-        resetSelectDropDownMenu() {
-            if (this.selectedDropDownItem !== null) {
-                this.adapter.Hover($(this.selectedDropDownItem), false);
-                this.selectedDropDownItem = null;
-            }
-            this.selectedDropDownIndex = null;
-        }
-        
         keydownArrow(down) {
             let visibleNodeListArray = $(this.dropDownMenu).find('LI:not([style*="display: none"])').toArray();
             if (visibleNodeListArray.length > 0) {
-                if (this.hasItems) {
+                if (this.hasDropDownVisible) {
+                    this.updateDropDownPosition(true);
                     this.showDropDown();
                 }
-                if (this.selectedDropDownItem === null) {
-                    this.selectedDropDownIndex = down ? 0 : visibleNodeListArray.length - 1;
+                if (this.hoveredDropDownItem === null) {
+                    this.hoveredDropDownIndex = down ? 0 : visibleNodeListArray.length - 1;
                 }
                 else {
-                    // IE10-11 doesn't support multiple arguments in classList remove 
-                    this.adapter.Hover($(this.selectedDropDownItem), false);
+                    this.adapter.Hover($(this.hoveredDropDownItem), false);
                     if (down) {
-                        let newIndex = this.selectedDropDownIndex + 1;
-                        this.selectedDropDownIndex = newIndex < visibleNodeListArray.length ? newIndex : 0;
+                        let newIndex = this.hoveredDropDownIndex + 1;
+                        this.hoveredDropDownIndex = newIndex < visibleNodeListArray.length ? newIndex : 0;
                     } else {
-                        let newIndex = this.selectedDropDownIndex - 1;
-                        this.selectedDropDownIndex = newIndex >= 0 ? newIndex : visibleNodeListArray.length - 1;
+                        let newIndex = this.hoveredDropDownIndex - 1;
+                        this.hoveredDropDownIndex = newIndex >= 0 ? newIndex : visibleNodeListArray.length - 1;
                     }
                 }
-                this.selectedDropDownItem = visibleNodeListArray[this.selectedDropDownIndex];
-                // IE10-11 doesn't support multiple arguments in classList add 
-                this.adapter.Hover($(this.selectedDropDownItem), true);
+                this.hoveredDropDownItem = visibleNodeListArray[this.hoveredDropDownIndex];
+                this.adapter.Hover($(this.hoveredDropDownItem), true);
+            }
+        }
+
+        input(forceUpdatePosition) {
+            this.filterInput.style.width = this.filterInput.value.length*1.3 + 2 + "ch";
+            this.filterDropDownMenu();
+            if (this.hasDropDownVisible) {
+                if (forceUpdatePosition) // ignore it if it is called from 
+                    this.updateDropDownPosition(forceUpdatePosition); // we need it to support case when textbox changes its place because of line break (texbox grow with each key press)
+                this.showDropDown();
+            } else {
+                this.hideDropDown();
             }
         }
 
         init() {
-            let $hiddenSelect = $(this.hiddenSelect);
+            let $hiddenSelect = $(this.selectElement);
             $hiddenSelect.hide();
-            let disabled = this.hiddenSelect.disabled;
+            let disabled = this.selectElement.disabled;
 
-            let $container = $("<div/>");
-            $container.addClass(this.options.containerClass);
-            $container.insertAfter($hiddenSelect);
-                
+            let $container = $("<DIV/>");
             this.container = $container.get(0);
 
-            let $selectedPanel = $("<ul/>");
+            let $selectedPanel = $("<UL/>");
             $selectedPanel.css(defSelectedPanelStyleSys);
-            if (!this.options.selectedPanelClass){
-                $selectedPanel.addClass(defSelectedPanelClass);
-                $selectedPanel.css(defSelectedPanelStyle);
-                $selectedPanel.css({"min-height":this.options.selectedPanelMinHeight});
-            }
-            else
-                $selectedPanel.addClass(this.options.selectedPanelClass);
-            $selectedPanel.appendTo(this.container);
+            
             this.selectedPanel = $selectedPanel.get(0);
-            this.adapter.Init($selectedPanel);
             
+            $selectedPanel.appendTo(this.container);
 
-            let $filterInputItem = $('<li/>');
+            let $filterInputItem = $('<LI/>');
             this.filterInputItem = $filterInputItem.get(0)
-            $filterInputItem.css(defFilterInputItemStyleSys)
 
-            if (!this.options.filterInputItemClass)
-                $filterInputItem.addClass(this.options.filterInputItemClass)
-            
             $filterInputItem.appendTo(this.selectedPanel);
-            
 
-            let $filterInput = $('<input type="search" autocomplete="off">');
-            if (!this.options.filterInputClass){
-                $filterInput.css(defFilterInputStyleSys);
-                $filterInput.css("color", this.options.filterInputColor);
-            } else {
-                $filterInput.addClass(this.options.filterInputClass);
-            }
+            let $filterInput = $('<INPUT type="search" autocomplete="off">');
+            $filterInput.css(defFilterInputStyleSys);
             $filterInput.appendTo(this.filterInputItem);
             this.filterInput = $filterInput.get(0);
 
-            let $dropDownMenu = $("<ul/>")
+            let $dropDownMenu = $("<UL/>")
                 .css({"display":"none"})
                 .appendTo($container);
             this.dropDownMenu = $dropDownMenu.get(0);
-
-            $dropDownMenu.addClass(this.options.dropDownMenuClass);
+            
             // prevent heavy understandable styling error
             $dropDownMenu.css(defDropDownMenuStyleSys);
 
+            this.adapter.Init($container, $selectedPanel, $filterInputItem, $filterInput, $dropDownMenu);
+            $container.insertAfter($hiddenSelect);
+            
             this.popper = new Popper(this.filterInput, this.dropDownMenu, {
                 placement: 'bottom-start',
                 modifiers: {
@@ -278,54 +237,53 @@ const BsMultiSelect = ((window, $, Popper) => {
             
             // some browsers (IE11) can change select value ("autocomplete") after page is loaded but before "ready" event
             $(document).ready(() => {
-                let selectOptions = $hiddenSelect.find('option');
+                let selectOptions = $hiddenSelect.find('OPTION');
                 selectOptions.each(
                     (index, optionElement) => {
                         this.appendDropDownItem(optionElement);
                     }
                 );
-                this.hasItems = selectOptions.length > 0;
+                this.hasDropDownVisible = selectOptions.length > 0;
                 this.updateDropDownPosition(false);
 
-                $dropDownMenu.find('li').click(event => {
+                $dropDownMenu.find('LI').click(event => {
                     event.preventDefault();
                     event.stopPropagation();
                     let toggleItem = $(event.currentTarget).closest("LI").data("option-toggle");
                     toggleItem();
-                    this.clearFilterInput(false); 
                     this.filterInput.focus(); 
                 });
 
                 $dropDownMenu.find("LI").on("mouseover", event => {
-                    this.adapter.Hover($(event.target).closest("li"), true);
+                    this.adapter.Hover($(event.target).closest("LI"), true);
                 });
 
                 $dropDownMenu.find("LI").on("mouseout", event => {
-                    this.adapter.Hover($(event.target).closest("li"), false);
+                    this.adapter.Hover($(event.target).closest("LI"), false);
                 });
 
                 if (disabled) {
                     this.filterInput.style.display = "none";
-                    this.adapter.Enable($(this.selectedPanel), false);
+                    this.adapter.Enable($selectedPanel, false);
                 } else {
                     this.filterInput.style.display = "inline-block";
-                    this.adapter.Enable($(this.selectedPanel), true);
+                    this.adapter.Enable($selectedPanel, true);
                     
                     $selectedPanel.click((event) => {
                         if (event.target.nodeName != "INPUT")
-                            $(this.filterInput).val('').focus();
-                        if (this.hasItems)
-                            if (this.adapter.FilterClick(event))
+                            $filterInput.val('').focus();
+                        if (this.hasDropDownVisible)
+                            if (this.adapter.FilterClick(event)){
+                                this.updateDropDownPosition(true);
                                 this.showDropDown();
+                            }
                     });
     
                     $dropDownMenu.click((event) => {
                         event.stopPropagation();
                     });
     
-                    $dropDownMenu.on("mouseover", () => {
-                        this.resetSelectDropDownMenu();
-                    });
+                    $dropDownMenu.on("mouseover", () => this.resetDropDownMenuHover());
     
                     if (this.options.doManageFocus)
                     {
@@ -378,18 +336,28 @@ const BsMultiSelect = ((window, $, Popper) => {
                 }
                 else {
                     if (event.which == 8) {
-                        // detect that backspace is at start of input field (this will be used at keydown)
-                        this.backspaceAtStartPoint = (this.filterInput.selectionStart == 0 && this.filterInput.selectionEnd == 0);
+                        // NOTE: this will process backspace only if there are no text in the input field
+                        // If user will find this inconvinient, we will need to calculate something like this
+                        // this.isBackspaceAtStartPoint = (this.filterInput.selectionStart == 0 && this.filterInput.selectionEnd == 0);
+                        if (!this.filterInput.value)
+                        {
+                            let $penult = $(this.selectedPanel).find("LI:last").prev();
+                            if ($penult.length){
+                                let removeItem = $penult.data("option-remove");
+                                removeItem();
+                            }
+                            this.updateDropDownPosition(false);
+                        }
                     }
-                    this.resetSelectDropDownMenu();
+                    this.resetDropDownMenuHover();
                 }
             });
 
             $filterInput.on("keyup", (event) => {
                 if (event.which == 13 || event.which == 9 ) {
-                    if (this.selectedDropDownItem) {
-                        let $selectedDropDownItem = $(this.selectedDropDownItem);
-                        let toggleItem =  $selectedDropDownItem.data("option-toggle");
+                    if (this.hoveredDropDownItem) {
+                        let $hoveredDropDownItem = $(this.hoveredDropDownItem);
+                        let toggleItem =  $hoveredDropDownItem.data("option-toggle");
                         toggleItem();
                         this.closeDropDown();
                     } else {
@@ -414,32 +382,14 @@ const BsMultiSelect = ((window, $, Popper) => {
                             this.clearFilterInput(true);
                         }
                     }
-                } else if (event.which == 8) {
-                    if (this.filterInput.selectionEnd == 0 && this.filterInput.selectionStart == 0 && this.backspaceAtStartPoint) {
-                        let $penult = $(this.selectedPanel).find("LI:last").prev();
-                        if ($penult.length){
-                            let removeItem = $penult.data("option-remove");
-                            removeItem();
-                        }
-                    }
-                    this.backspaceAtStartPoint = null;
-                    //if ($dropDownMenu.is(':hidden'))
-                    this.updateDropDownPosition(false);
-                } else if (event.which == 27) { // escape
+                } 
+                else if (event.which == 27) { // escape
                     this.closeDropDown();
                 }
             });
 
-            // Set on change for filter input
             $filterInput.on('input', () => { 
-                this.adoptFilterInputLength();
-                this.filterDropDownMenu();
-                if (this.hasItems) {
-                    this.updateDropDownPosition(false); // we need it to support case when textbox changes its place because of line break (texbox grow with each key press)
-                    this.showDropDown();
-                } else {
-                    this.hideDropDown();
-                }
+                this.input(true);
             });
         }
     }
