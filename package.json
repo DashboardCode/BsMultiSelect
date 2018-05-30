@@ -11,10 +11,9 @@
     "jquery": "1.9.1 - 3",
     "popper.js": "^1.14.3"
   },
-  "peerDependencies": {
-    "bootstrap": "^4.1.1"
-  },
+  "peerDependencies": {},
   "devDependencies": {
+    "bootstrap": "4.1.1",
     "@babel/cli": "7.0.0-beta.49",
     "@babel/core": "7.0.0-beta.49",
     "@babel/plugin-external-helpers": "7.0.0-beta.49",
@@ -23,15 +22,25 @@
     "babel-eslint": "8.2.3",
     "cross-env": "5.1.6",
     "eslint": "4.19.1",
-    "eslint-plugin-compat": "2.2.0",
+    "eslint-plugin-compat": "2.3.0",
     "gulp": "^4.0.0",
     "npm-run-all": "4.1.3",
-    "rollup": "0.59.3",
+    "rollup": "0.59.4",
     "rollup-plugin-babel": "4.0.0-beta.4",
-    "uglify-js": "3.3.27"
+    "uglify-js": "3.3.28",
+    "node-sass": "4.9.0",
+    "autoprefixer": "8.5.1",
+    "stylelint": "9.2.1",
+    "stylelint-config-recommended-scss": "3.2.0",
+    "stylelint-config-standard": "18.2.0",
+    "stylelint-order": "0.8.1",
+    "stylelint-scss": "3.1.0",
+    "clean-css-cli": "4.1.11"
   },
   "scripts": {
     "report": "echo.cd & cd & echo. & where node & echo.node -v & node -v & echo. & where npm & echo.npm -version & npm -version  & echo. & where eslint & echo.eslint -v & eslint -v & echo. & where rollup & echo.rollup -version & rollup -version & echo. &  echo.babel -version & node ./node_modules/@babel/cli/bin/babel --version",
+    "css-compile": "node-sass --output-style expanded --source-map true --source-map-contents true --precision 6 scss/BsMultiSelect.scss dist/css/BsMultiSelect.css",
+    "css-minify": "cleancss --level 1 --source-map --source-map-inline-sources --output dist/css/BsMultiSelect.min.css dist/css/BsMultiSelect.css",
     "js": "npm-run-all js-lint js-compile js-minify",
     "js-lint": "node ./node_modules/eslint/bin/eslint ./js/src",
     "js-compile": "npm-run-all --parallel js-compile-*",
@@ -39,7 +48,7 @@
     "js-compile-babel": "cross-env PLUGINS=true babel ./js/src/BsMultiSelect.es8.js --out-file ./js/dist/BsMultiSelect.js --source-maps",
     "js-minify": "npm-run-all --parallel js-minify-*",
     "js-minify-standalone": "node ./node_modules/uglify-js/bin/uglifyjs --compress typeofs=false --mangle --comments \"/^!/\" --source-map \"content=dist/js/BsMultiSelect.js.map,       includeSources,url=BsMultiSelect.min.js.map\"        --output ./dist/js/BsMultiSelect.min.js        ./dist/js/BsMultiSelect.js",
-    "dist": "npm-run-all js-compile js-minify"
+    "dist": "npm-run-all js-compile js-minify css-compile css-minify"
   },
   "keywords": [
     "bootstrap mutltiselect multiline component"

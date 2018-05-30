@@ -12,27 +12,20 @@
     $ = $ && $.hasOwnProperty('default') ? $['default'] : $;
     Popper = Popper && Popper.hasOwnProperty('default') ? Popper['default'] : Popper;
 
-    var Bootstrap4Adapter =
+    var Bootstrap4CssAdapter =
     /*#__PURE__*/
     function () {
-      function Bootstrap4Adapter(jQuery, hiddenSelect, options) {
+      function Bootstrap4CssAdapter(jQuery, hiddenSelect, options) {
         var defaults = {
-          //usePopper: true,
-          selectedPanelDefMinHeight: 'calc(2.25rem + 2px)',
-          selectedPanelReadonlyBackgroundColor: '#e9ecef',
-          selectedPanelBoxShadow: '0 0 0 0.2rem rgba(0, 123, 255, 0.25)',
-          selectedPanelBorderColor: '#80bdff',
-          selectedPanelValidBoxShadow: ' 0 0 0 0.2rem rgba(40, 167, 69, 0.25)',
-          selectedPanelInvalidBoxShadow: '0 0 0 0.2rem rgba(220, 53, 69, 0.25)',
-          filterInputColor: '#495057',
           containerClass: 'dashboardcode-bsmultiselect',
           dropDownMenuClass: 'dropdown-menu',
           dropDownItemClass: 'px-2',
-          selectedPanelClass: '',
-          selectedPanelFocusClass: '',
-          selectedPanelReadonlyClass: '',
-          selectedItemClass: '',
-          removeSelectedItemButtonClass: '',
+          dropDownItemHoverClass: 'text-primary bg-light',
+          selectedPanelClass: 'form-control',
+          selectedPanelFocusClass: 'focus',
+          selectedPanelReadonlyClass: 'disabled',
+          selectedItemClass: 'badge',
+          removeSelectedItemButtonClass: 'close',
           filterInputItemClass: '',
           filterInputClass: ''
         };
@@ -41,37 +34,13 @@
         this.hiddenSelect = hiddenSelect;
       }
 
-      var _proto = Bootstrap4Adapter.prototype;
+      var _proto = Bootstrap4CssAdapter.prototype;
 
       _proto.CreateSelectedItemContent = function CreateSelectedItemContent($selectedItem, itemText, removeSelectedItem) {
-        var defSelectedItemClass = 'badge';
-        var defSelectedItemStyle = {
-          'padding-left': '0px',
-          'line-height': '1rem'
-        };
-        var defRemoveSelectedItemButtonClass = 'close';
-        var defRemoveSelectedItemButtonStyle = {
-          'line-height': '1rem',
-          'font-size': '1.3rem'
-        };
-
-        if (!this.options.selectedItemClass) {
-          $selectedItem.addClass(defSelectedItemClass);
-          $selectedItem.css(defSelectedItemStyle);
-        } else {
-          $selectedItem.addClass(this.options.selectedItemClass);
-        }
-
+        $selectedItem.addClass(this.options.selectedItemClass);
         var $text = this.jQuery("<span>" + itemText + "</span>");
         var $buttom = this.jQuery('<button aria-label="Close" tabIndex="-1" type="button"><span aria-hidden="true">&times;</span></button>');
-
-        if (!this.options.removeSelectedItemButtonClass) {
-          $buttom.addClass(defRemoveSelectedItemButtonClass);
-          $buttom.css(defRemoveSelectedItemButtonStyle);
-        } else {
-          $buttom.addClass(this.options.removeSelectedItemButtonClass);
-        }
-
+        $buttom.addClass(this.options.removeSelectedItemButtonClass);
         $buttom.on("click", removeSelectedItem);
         $text.appendTo($selectedItem);
         $buttom.appendTo($selectedItem);
@@ -93,23 +62,8 @@
       };
 
       _proto.Init = function Init($container, $selectedPanel, $filterInputItem, $filterInput, $dropDownMenu) {
-        var defSelectedPanelClass = 'form-control';
-        var defSelectedPanelStyle = {
-          'margin-bottom': '0'
-        }; // 16 is for bootstrap reboot for UL
-
         $container.addClass(this.options.containerClass);
-
-        if (!this.options.selectedPanelClass) {
-          $selectedPanel.addClass(defSelectedPanelClass);
-          $selectedPanel.css(defSelectedPanelStyle);
-          $selectedPanel.css({
-            "min-height": this.options.selectedPanelMinHeight
-          });
-        } else {
-          $selectedPanel.addClass(this.options.selectedPanelClass);
-        }
-
+        $selectedPanel.addClass(this.options.selectedPanelClass);
         var $hiddenSelect = this.jQuery(this.hiddenSelect);
 
         if ($hiddenSelect.hasClass("is-valid")) {
@@ -121,13 +75,8 @@
         }
 
         $dropDownMenu.addClass(this.options.dropDownMenuClass);
-        if (!this.options.filterInputItemClass) $filterInputItem.addClass(this.options.filterInputItemClass);
-
-        if (!this.options.filterInputClass) {
-          $filterInput.css("color", this.options.filterInputColor);
-        } else {
-          $filterInput.addClass(this.options.filterInputClass);
-        }
+        $filterInputItem.addClass(this.options.filterInputItemClass);
+        $filterInput.addClass(this.options.filterInputClass);
       };
 
       _proto.Enable = function Enable($selectedPanel, isEnabled) {
@@ -147,20 +96,13 @@
             }
           }
         } else {
-          if (!this.options.selectedPanelReadonlyClass) {
-            $selectedPanel.css({
-              "background-color": this.options.selectedPanelReadonlyBackgroundColor
-            });
-          } else {
-            $selectedPanel.addClass(this.options.selectedPanelReadonlyClass);
-          }
-
+          $selectedPanel.addClass(this.options.selectedPanelReadonlyClass);
           $selectedPanel.find('BUTTON').prop("disabled", true).off();
         }
       };
 
       _proto.Hover = function Hover($dropDownItem, isHover) {
-        if (isHover) $dropDownItem.addClass('text-primary').addClass('bg-light');else $dropDownItem.removeClass('text-primary').removeClass('bg-light');
+        if (isHover) $dropDownItem.addClass(this.options.dropDownItemHoverClass);else $dropDownItem.removeClass(this.options.dropDownItemHoverClass);
       };
 
       _proto.FilterClick = function FilterClick(event) {
@@ -169,27 +111,13 @@
 
       _proto.Focus = function Focus($selectedPanel, isFocused) {
         if (isFocused) {
-          if (this.options.selectedPanelFocusClass) {
-            $selectedPanel.addClass("this.options.selectedPanelFocusClass");
-          } else {
-            if ($selectedPanel.hasClass("is-valid") && this.options.selectedPanelValidBoxShadow) {
-              $selectedPanel.css("box-shadow", this.options.selectedPanelValidBoxShadow);
-            } else if ($selectedPanel.hasClass("is-invalid") && this.options.selectedPanelInvalidBoxShadow) {
-              $selectedPanel.css("box-shadow", this.options.selectedPanelInvalidBoxShadow);
-            } else {
-              $selectedPanel.css("box-shadow", this.options.selectedPanelBoxShadow).css("border-color", this.options.selectedPanelBorderColor);
-            }
-          }
+          $selectedPanel.addClass(this.options.selectedPanelFocusClass);
         } else {
-          if (this.options.selectedPanelFocusClass) {
-            $selectedPanel.removeClass(this.options.selectedPanelFocusClass);
-          } else {
-            $selectedPanel.css("box-shadow", "").css("border-color", "");
-          }
+          $selectedPanel.removeClass(this.options.selectedPanelFocusClass);
         }
       };
 
-      return Bootstrap4Adapter;
+      return Bootstrap4CssAdapter;
     }();
 
     var BsMultiSelect = function (window, $$$1, Popper$$1) {
@@ -228,7 +156,7 @@
 
           this.selectElement = selectElement;
           this.options = $$$1.extend({}, defaults, options);
-          this.adapter = adapter ? adapter : new Bootstrap4Adapter($$$1, this.selectElement);
+          this.adapter = adapter ? adapter : new Bootstrap4CssAdapter($$$1, this.selectElement);
           this.container = null;
           this.selectedPanel = null;
           this.filterInputItem = null;

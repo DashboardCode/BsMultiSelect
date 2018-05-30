@@ -1,49 +1,37 @@
-class Bootstrap4Adapter {
+class Bootstrap4CssAdapter {
 
     constructor(jQuery, hiddenSelect, options) {
         const defaults = {
-            //usePopper: true,
-            selectedPanelDefMinHeight: 'calc(2.25rem + 2px)',
-            selectedPanelReadonlyBackgroundColor: '#e9ecef',
-            selectedPanelBoxShadow: '0 0 0 0.2rem rgba(0, 123, 255, 0.25)',
-            selectedPanelFocusBorderColor: '#80bdff',
-            selectedPanelFocusValidBoxShadow: ' 0 0 0 0.2rem rgba(40, 167, 69, 0.25)',
-            selectedPanelFocusInvalidBoxShadow: '0 0 0 0.2rem rgba(220, 53, 69, 0.25)',
-            filterInputColor: '#495057'
+            containerClass: 'dashboardcode-bsmultiselect',
+            dropDownMenuClass: 'dropdown-menu',
+            dropDownItemClass: 'px-2',
+            dropDownItemHoverClass: 'text-primary bg-light',
+            selectedPanelClass: 'form-control',
+            selectedPanelFocusClass : 'focus',
+            selectedPanelReadonlyClass: 'disabled',
+            selectedItemClass: 'badge', 
+            removeSelectedItemButtonClass: 'close',
+            filterInputItemClass: '',
+            filterInputClass: ''
         };
         this.options = jQuery.extend({}, defaults, options);
         this.jQuery=jQuery;
         this.hiddenSelect=hiddenSelect;
-
-        this.containerClass= 'dashboardcode-bsmultiselect';
-        this.dropDownMenuClass= 'dropdown-menu';
-        this.dropDownItemClass= 'px-2';
-        this.dropDownItemHoverClass= 'text-primary bg-light';
-        this.selectedPanelClass= 'form-control';
-        this.selectedPanelStyle= {'margin-bottom': '0'};
-        this.selectedItemClass= 'badge'; 
-        this.selectedItemStyle= {'padding-left': '0px', 'line-height': '1rem'};
-        this.removeSelectedItemButtonClass= 'close';
-        this.removeSelectedItemButtonStyle= {'line-height': '1rem', 'font-size':'1.3rem'};
+        
     }
 
     CreateSelectedItemContent($selectedItem, itemText, removeSelectedItem){
-        $selectedItem.addClass(this.selectedItemClass);
-        $selectedItem.css(this.selectedItemStyle);
-            
+        $selectedItem.addClass(this.options.selectedItemClass);
         let $text = this.jQuery(`<span>${itemText}</span>`)
         let $buttom = this.jQuery('<button aria-label="Close" tabIndex="-1" type="button"><span aria-hidden="true">&times;</span></button>');
-
-        $buttom.addClass(this.removeSelectedItemButtonClass);
-        $buttom.css(this.removeSelectedItemButtonStyle);
-
+        $buttom.addClass(this.options.removeSelectedItemButtonClass)
         $buttom.on("click", removeSelectedItem);
         $text.appendTo($selectedItem);
         $buttom.appendTo($selectedItem); 
     }
 
     CreateDropDownItemContent($dropDownItem, optionId, itemText, isSelected){
-        let checkBoxId = `${this.containerClass}-${this.hiddenSelect.name.toLowerCase()}-generated-id-${optionId.toLowerCase()}`;
+        let checkBoxId = `${this.options.containerClass}-${this.hiddenSelect.name.toLowerCase()}-generated-id-${optionId.toLowerCase()}`;
         let checked = isSelected ? "checked" : "";
 
         let $dropDownItemContent= this.jQuery(`<div class="custom-control custom-checkbox">
@@ -51,7 +39,7 @@ class Bootstrap4Adapter {
                 <label class="custom-control-label" for="${checkBoxId}">${itemText}</label>
         </div>`)
         $dropDownItemContent.appendTo($dropDownItem);
-        $dropDownItem.addClass(this.dropDownItemClass)
+        $dropDownItem.addClass(this.options.dropDownItemClass)
         let $checkBox = $dropDownItem.find(`INPUT[type="checkbox"]`);
         let adoptDropDownItem = (isSelected) => {
             $checkBox.prop('checked', isSelected);
@@ -60,13 +48,9 @@ class Bootstrap4Adapter {
     }
 
     Init($container, $selectedPanel, $filterInputItem, $filterInput, $dropDownMenu){
-
-        $container.addClass(this.containerClass);
-
-
-            $selectedPanel.addClass(this.selectedPanelClass);
-            $selectedPanel.css(this.selectedPanelStyle);
-            $selectedPanel.css({ "min-height" : this.options.selectedPanelMinHeight });
+        $container.addClass(this.options.containerClass);
+        $selectedPanel.addClass(this.options.selectedPanelClass);
+        
 
         let $hiddenSelect = this.jQuery(this.hiddenSelect);
         if ($hiddenSelect.hasClass("is-valid")){
@@ -77,8 +61,9 @@ class Bootstrap4Adapter {
             $selectedPanel.addClass("is-invalid");
         }
 
-        $dropDownMenu.addClass(this.dropDownMenuClass);
-        $filterInput.css("color", this.options.filterInputColor);
+        $dropDownMenu.addClass(this.options.dropDownMenuClass);
+        $filterInputItem.addClass(this.options.filterInputItemClass)
+        $filterInput.addClass(this.options.filterInputClass);
     }
 
     Enable($selectedPanel, isEnabled){
@@ -91,14 +76,14 @@ class Bootstrap4Adapter {
                 let f = $label.attr('for');
                 let $filterInput = $selectedPanel.find('input');
                 if (f == this.hiddenSelect.id) {
-                    let id = `${this.containerClass}-generated-filter-id-${this.hiddenSelect.id}`;
+                    let id = `${this.options.containerClass}-generated-filter-id-${this.hiddenSelect.id}`;
                     $filterInput.attr('id', id);
                     $label.attr('for', id);
                 }
             }
         }
         else{
-            $selectedPanel.css({"background-color": this.dropDownItemHoverClass});
+            $selectedPanel.addClass(this.options.selectedPanelReadonlyClass);
             $selectedPanel.find('BUTTON').prop("disabled", true).off();
         }
     }
@@ -116,19 +101,11 @@ class Bootstrap4Adapter {
 
     Focus($selectedPanel, isFocused){
         if (isFocused){
-                if ($selectedPanel.hasClass("is-valid")){
-                    $selectedPanel.css("box-shadow", this.options.selectedPanelValidBoxShadow);              
-                } else if ($selectedPanel.hasClass("is-invalid")){
-                    $selectedPanel.css("box-shadow", this.options.selectedPanelInvalidBoxShadow);
-                } else {
-                    $selectedPanel
-                        .css("box-shadow", this.options.selectedPanelBoxShadow)
-                        .css("border-color", this.options.selectedPanelBorderColor);
-                }
+            $selectedPanel.addClass(this.options.selectedPanelFocusClass);
         }else{
-            $selectedPanel.css("box-shadow", "" ).css("border-color", "")
+            $selectedPanel.removeClass(this.options.selectedPanelFocusClass);
         }
     }
 }
 
-export default Bootstrap4Adapter;
+export default Bootstrap4CssAdapter;

@@ -1,0 +1,88 @@
+@import "./../node_modules/bootstrap/scss/_functions";
+@import "./../node_modules/bootstrap/scss/mixins/_box-shadow";
+@import "./../node_modules/bootstrap/scss/mixins/_transition";
+@import "./../node_modules/bootstrap/scss/mixins/_forms";
+@import "./../node_modules/bootstrap/scss/_variables";
+
+@mixin form-control-focus-class() {
+    &.focus {
+      color: $input-focus-color;
+      background-color: $input-focus-bg;
+      border-color: $input-focus-border-color;
+      outline: 0;
+      @if $enable-shadows {
+        box-shadow: $input-box-shadow, $input-focus-box-shadow;
+      } @else {
+        box-shadow: $input-focus-box-shadow;
+      }
+    }
+}
+
+@mixin form-validation-state($state, $color) {
+    ul.form-control{
+      .was-validated &:#{$state},
+      &.is-#{$state} {
+        border-color: $color;
+  
+        &.focus {
+          border-color: $color;
+          box-shadow: 0 0 0 $input-focus-width rgba($color, .25);
+        }
+      }
+    }
+}
+
+ul.form-control {
+    margin-bottom: 0;
+    min-height: #{$input-height};
+    
+    input {
+        color: $input-color;
+    }
+    &.disabled{
+        background-color: $input-disabled-bg;
+    }
+    .badge {
+        padding-left: 0px;
+        line-height: 1.5em;
+        button.close {
+            line-height: 1.1rem;
+            font-size: 1.3rem;
+        }
+    }
+
+    @include form-control-focus-class();
+
+
+    &.form-control-sm {
+        min-height: #{$input-height-sm};
+        .badge {
+            line-height: 1rem;
+            button.close{
+                line-height: 0.9rem;
+                font-size: 1rem;
+            }
+        };
+        input{
+            font-size: $font-size-sm;
+            line-height: $input-line-height-sm;
+        }
+    }
+
+    &.form-control-lg {
+        min-height: #{$input-height-lg};
+        .badge {
+            line-height: $input-line-height-sm;
+            button.close{
+                line-height: 1.3rem;
+                font-size: 1.5rem;
+            };
+        }
+        input{
+            font-size: $font-size-lg;
+            line-height: $input-line-height-lg;
+        }
+    }
+}
+@include form-validation-state("valid", $form-feedback-valid-color);
+@include form-validation-state("invalid", $form-feedback-invalid-color);

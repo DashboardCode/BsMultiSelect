@@ -8,7 +8,7 @@ function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _d
 
 import $ from 'jquery';
 import Popper from 'popper.js';
-import Bootstrap4Adapter from './Bootstrap4Adapter.es8'; // TODO: try to find convinient way to declare private members. Is it convinient enough to move them into IIFE?
+import Bootstrap4CssAdapter from './Bootstrap4CssAdapter.es8'; // TODO: try to find convinient way to declare private members. Is it convinient enough to move them into IIFE?
 
 var BsMultiSelect = function (window, $, Popper) {
   var JQUERY_NO_CONFLICT = $.fn[pluginName];
@@ -48,7 +48,7 @@ var BsMultiSelect = function (window, $, Popper) {
 
       this.selectElement = selectElement;
       this.options = $.extend({}, defaults, options);
-      this.adapter = adapter ? adapter : new Bootstrap4Adapter($, this.selectElement);
+      this.adapter = adapter ? adapter : new Bootstrap4CssAdapter($, this.selectElement);
       this.container = null;
       this.selectedPanel = null;
       this.filterInputItem = null;
