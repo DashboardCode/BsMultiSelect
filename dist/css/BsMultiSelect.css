@@ -2,25 +2,20 @@ ul.form-control {
   margin-bottom: 0;
   min-height: calc(2.25rem + 2px);
 }
-
 ul.form-control input {
   color: #495057;
 }
-
 ul.form-control.disabled {
   background-color: #e9ecef;
 }
-
 ul.form-control .badge {
   padding-left: 0px;
   line-height: 1.5em;
 }
-
 ul.form-control .badge button.close {
   line-height: 1.1rem;
   font-size: 1.3rem;
 }
-
 ul.form-control.focus {
   color: #495057;
   background-color: #fff;
@@ -28,38 +23,30 @@ ul.form-control.focus {
   outline: 0;
   box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
 }
-
 ul.form-control.form-control-sm {
   min-height: calc(1.8125rem + 2px);
 }
-
 ul.form-control.form-control-sm .badge {
   line-height: 1rem;
 }
-
 ul.form-control.form-control-sm .badge button.close {
   line-height: 0.9rem;
   font-size: 1rem;
 }
-
 ul.form-control.form-control-sm input {
   font-size: 0.875rem;
   line-height: 1.5;
 }
-
 ul.form-control.form-control-lg {
   min-height: calc(2.875rem + 2px);
 }
-
 ul.form-control.form-control-lg .badge {
   line-height: 1.5;
 }
-
 ul.form-control.form-control-lg .badge button.close {
   line-height: 1.3rem;
   font-size: 1.5rem;
 }
-
 ul.form-control.form-control-lg input {
   font-size: 1.25rem;
   line-height: 1.5;
@@ -68,7 +55,6 @@ ul.form-control.form-control-lg input {
 .was-validated ul.form-control:valid, ul.form-control.is-valid {
   border-color: #28a745;
 }
-
 .was-validated ul.form-control:valid.focus, ul.form-control.is-valid.focus {
   border-color: #28a745;
   box-shadow: 0 0 0 0.2rem rgba(40, 167, 69, 0.25);
@@ -77,10 +63,9 @@ ul.form-control.form-control-lg input {
 .was-validated ul.form-control:invalid, ul.form-control.is-invalid {
   border-color: #dc3545;
 }
-
 .was-validated ul.form-control:invalid.focus, ul.form-control.is-invalid.focus {
   border-color: #dc3545;
   box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25);
 }
 
-/*# sourceMappingURL=BsMultiSelect.css.map */
+/*# sourceMappingURL=dist/css/BsMultiSelect.css.map */
