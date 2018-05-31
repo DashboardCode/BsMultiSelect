@@ -1,6 +1,6 @@
 ul.form-control {
-  margin-bottom: 0;
   min-height: calc(2.25rem + 2px);
+  margin-bottom: 0;
 }
 ul.form-control input {
   color: #495057;
@@ -9,12 +9,12 @@ ul.form-control.disabled {
   background-color: #e9ecef;
 }
 ul.form-control .badge {
-  padding-left: 0px;
+  padding-left: 0;
   line-height: 1.5em;
 }
 ul.form-control .badge button.close {
-  line-height: 1.1rem;
   font-size: 1.3rem;
+  line-height: 1.1rem;
 }
 ul.form-control.focus {
   color: #495057;
@@ -30,8 +30,8 @@ ul.form-control.form-control-sm .badge {
   line-height: 1rem;
 }
 ul.form-control.form-control-sm .badge button.close {
-  line-height: 0.9rem;
   font-size: 1rem;
+  line-height: 0.9rem;
 }
 ul.form-control.form-control-sm input {
   font-size: 0.875rem;
@@ -44,8 +44,8 @@ ul.form-control.form-control-lg .badge {
   line-height: 1.5;
 }
 ul.form-control.form-control-lg .badge button.close {
-  line-height: 1.3rem;
   font-size: 1.5rem;
+  line-height: 1.3rem;
 }
 ul.form-control.form-control-lg input {
   font-size: 1.25rem;

@@ -6,36 +6,35 @@
 
 @mixin form-control-focus-class() {
     &.focus {
-      color: $input-focus-color;
-      background-color: $input-focus-bg;
-      border-color: $input-focus-border-color;
-      outline: 0;
-      @if $enable-shadows {
-        box-shadow: $input-box-shadow, $input-focus-box-shadow;
-      } @else {
-        box-shadow: $input-focus-box-shadow;
-      }
+        color: $input-focus-color;
+        background-color: $input-focus-bg;
+        border-color: $input-focus-border-color;
+        outline: 0;
+        @if $enable-shadows {
+            box-shadow: $input-box-shadow, $input-focus-box-shadow;
+        } @else {
+            box-shadow: $input-focus-box-shadow;
+        }
     }
 }
 
 @mixin form-validation-state($state, $color) {
     ul.form-control{
-      .was-validated &:#{$state},
-      &.is-#{$state} {
-        border-color: $color;
-  
-        &.focus {
-          border-color: $color;
-          box-shadow: 0 0 0 $input-focus-width rgba($color, .25);
+        .was-validated &:#{$state},
+        &.is-#{$state} {
+            border-color: $color;
+            &.focus {
+                border-color: $color;
+                box-shadow: 0 0 0 $input-focus-width rgba($color, .25);
+            }
         }
-      }
     }
 }
 
 ul.form-control {
-    margin-bottom: 0;
     min-height: #{$input-height};
-    
+    margin-bottom: 0;
+
     input {
         color: $input-color;
     }
@@ -43,11 +42,11 @@ ul.form-control {
         background-color: $input-disabled-bg;
     }
     .badge {
-        padding-left: 0px;
+        padding-left: 0;
         line-height: 1.5em;
         button.close {
-            line-height: 1.1rem;
             font-size: 1.3rem;
+            line-height: 1.1rem;
         }
     }
 
@@ -59,10 +58,10 @@ ul.form-control {
         .badge {
             line-height: 1rem;
             button.close{
-                line-height: 0.9rem;
                 font-size: 1rem;
+                line-height: .9rem;
             }
-        };
+        }
         input{
             font-size: $font-size-sm;
             line-height: $input-line-height-sm;
@@ -74,9 +73,9 @@ ul.form-control {
         .badge {
             line-height: $input-line-height-sm;
             button.close{
-                line-height: 1.3rem;
                 font-size: 1.5rem;
-            };
+                line-height: 1.3rem;
+            }
         }
         input{
             font-size: $font-size-lg;

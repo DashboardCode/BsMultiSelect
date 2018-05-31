@@ -47,7 +47,8 @@
     "report": "echo.cd & cd & echo. & where node & echo.node -v & node -v & echo. & where npm & echo.npm -version & npm -version  & echo. & where eslint & echo.eslint -v & eslint -v & echo. & where rollup & echo.rollup -version & rollup -version & echo. &  echo.babel -version & node ./node_modules/@babel/cli/bin/babel --version",
     
     "css-compile": "node ./node_modules/sass/sass scss/BsMultiSelect.scss:dist/css/BsMultiSelect.css --source-map",
-    "css-compilen": "node-sass --output-style expanded --source-map true --source-map-contents true --precision 6 scss/BsMultiSelect.scss dist/css/BsMultiSelect.css",
+    "css-ncompile": "node-sass --output-style expanded --source-map true --source-map-contents true --precision 6 scss/BsMultiSelect.scss dist/css/BsMultiSelect.css",
+    "css-lint": "stylelint --syntax scss \"scss/**/*.scss\"",
     "css-minify": "cleancss --level 1 --source-map --source-map-inline-sources --output dist/css/BsMultiSelect.min.css dist/css/BsMultiSelect.css",
     "js": "npm-run-all js-lint js-compile js-minify",
     "js-lint": "node ./node_modules/eslint/bin/eslint ./js/src",
@@ -56,7 +57,7 @@
     "js-compile-babel": "cross-env PLUGINS=true babel ./js/src/BsMultiSelect.es8.js --out-file ./js/dist/BsMultiSelect.js --source-maps",
     "js-minify": "npm-run-all --parallel js-minify-*",
     "js-minify-standalone": "node ./node_modules/uglify-js/bin/uglifyjs --compress typeofs=false --mangle --comments \"/^!/\" --source-map \"content=dist/js/BsMultiSelect.js.map,       includeSources,url=BsMultiSelect.min.js.map\"        --output ./dist/js/BsMultiSelect.min.js        ./dist/js/BsMultiSelect.js",
-    "dist": "npm-run-all js-compile js-minify css-compile css-minify"
+    "dist": "npm-run-all js-compile js-minify css-lint css-compile css-minify "
   },
   "keywords": [
     "bootstrap mutltiselect multiline component"
