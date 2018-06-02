@@ -218,7 +218,7 @@ const BsMultiSelect = ((window, $, Popper) => {
             let $selectedPanel = (this.selectedPanel);
             this.adapter.UpdateIsValid($selectedPanel);
             this.UpdateSizeImpl($selectedPanel);
-            this.UpdateReadonlyImpl($(this.container), $selectedPanel, $(this.filterInput), $(this.dropDownMenu));
+            this.UpdateReadonlyImpl($(this.container), $selectedPanel);
         }
 
         UpdateSize(){
@@ -226,7 +226,7 @@ const BsMultiSelect = ((window, $, Popper) => {
         }
 
         UpdateReadonly(){
-            this.UpdateReadonlyImpl($(this.container), $(this.selectedPanel), $(this.filterInput), $(this.dropDownMenu));
+            this.UpdateReadonlyImpl($(this.container), $(this.selectedPanel));
         }
 
         UpdateSizeImpl($selectedPanel){
@@ -234,36 +234,31 @@ const BsMultiSelect = ((window, $, Popper) => {
                 this.adapter.UpdateSize($selectedPanel);
         }
 
-        UpdateReadonlyImpl($container, $selectedPanel, $filterInput, $dropDownMenu){
+        UpdateReadonlyImpl($container, $selectedPanel){
             let disabled = this.selectElement.disabled;
             if (this.disabled!==disabled){
                 if (disabled) {
+                    console.log("set disable")
                     this.filterInput.style.display = "none";
                     this.adapter.Enable($selectedPanel, false);
 
-                    $container.unbind("mousedown", this.containerMousedown);
-                    $(window.document).unbind("mouseup", this.documentMouseup);
+                    if (this.options.doManageFocus){
+                        $container.unbind("mousedown", this.containerMousedown);
+                        $(window.document).unbind("mouseup", this.documentMouseup);
+                    }
                     $(window.document).unbind("mouseup", this.documentMouseup2);
                     $selectedPanel.unbind("click", this.selectedPanelClick);
                 } else {
+                    console.log("set enable")
                     this.filterInput.style.display = "inline-block";
                     this.adapter.Enable($selectedPanel, true);
-                    
-                    $selectedPanel.click(this.selectedPanelClick); // removable
 
-                    $dropDownMenu.click( event => event.stopPropagation());
-
-                    $dropDownMenu.mouseover(() => this.resetDropDownMenuHover());
-
-                    if (this.options.doManageFocus)
-                    {
-                        $filterInput.focusin(() => this.adapter.Focus($selectedPanel, true))
-                                    .focusout(() => { if (!this.skipFocusout)
-                                                        this.adapter.Focus($selectedPanel, false) });
+                    if (this.options.doManageFocus) {
                         $container.mousedown(this.containerMousedown);  // removable
                         $(window.document).mouseup(this.documentMouseup); // removable
                     }
 
+                    $selectedPanel.click(this.selectedPanelClick); // removable
                     $(window.document).mouseup(this.documentMouseup2); // removable
                 }
                 this.disabled=disabled;
@@ -340,7 +335,7 @@ const BsMultiSelect = ((window, $, Popper) => {
             });
             this.adapter.UpdateIsValid($selectedPanel);
             this.UpdateSizeImpl($selectedPanel);
-            this.UpdateReadonlyImpl($container, $selectedPanel, $filterInput, $dropDownMenu);
+            this.UpdateReadonlyImpl($container, $selectedPanel);
 
             // some browsers (IE11) can change select value (as part of "autocomplete") after page is loaded but before "ready" event
             $(document).ready(() => {
@@ -353,6 +348,17 @@ const BsMultiSelect = ((window, $, Popper) => {
                 this.hasDropDownVisible = selectOptions.length > 0;
                 this.updateDropDownPosition(false);
             });
+
+            $dropDownMenu.click( event => event.stopPropagation());
+
+            $dropDownMenu.mouseover(() => this.resetDropDownMenuHover());
+
+            if (this.options.doManageFocus)
+            {
+                $filterInput.focusin(() => this.adapter.Focus($selectedPanel, true))
+                            .focusout(() => { if (!this.skipFocusout)
+                                this.adapter.Focus($selectedPanel, false) });
+            }
 
             $filterInput.on("keydown", (event) => {
                 if (event.which == 38) {

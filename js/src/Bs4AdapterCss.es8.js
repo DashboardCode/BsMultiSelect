@@ -60,11 +60,11 @@ class Bs4AdapterCss {
     Enable($selectedPanel, isEnabled){
         if(isEnabled){
             $selectedPanel.removeClass(this.options.selectedPanelReadonlyClass);
-            $selectedPanel.find('BUTTON').prop("disabled", false).on();
+            $selectedPanel.find('BUTTON').prop("disabled", false);
         }
         else{
             $selectedPanel.addClass(this.options.selectedPanelReadonlyClass);
-            $selectedPanel.find('BUTTON').prop("disabled", true).off();
+            $selectedPanel.find('BUTTON').prop("disabled", true);
         }
     }
 

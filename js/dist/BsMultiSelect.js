@@ -266,7 +266,7 @@ var BsMultiSelect = function (window, $, Popper) {
         var $selectedPanel = this.selectedPanel;
         this.adapter.UpdateIsValid($selectedPanel);
         this.UpdateSizeImpl($selectedPanel);
-        this.UpdateReadonlyImpl($(this.container), $selectedPanel, $(this.filterInput), $(this.dropDownMenu));
+        this.UpdateReadonlyImpl($(this.container), $selectedPanel);
       }
     }, {
       key: "UpdateSize",
@@ -276,7 +276,7 @@ var BsMultiSelect = function (window, $, Popper) {
     }, {
       key: "UpdateReadonly",
       value: function UpdateReadonly() {
-        this.UpdateReadonlyImpl($(this.container), $(this.selectedPanel), $(this.filterInput), $(this.dropDownMenu));
+        this.UpdateReadonlyImpl($(this.container), $(this.selectedPanel));
       }
     }, {
       key: "UpdateSizeImpl",
@@ -285,41 +285,34 @@ var BsMultiSelect = function (window, $, Popper) {
       }
     }, {
       key: "UpdateReadonlyImpl",
-      value: function UpdateReadonlyImpl($container, $selectedPanel, $filterInput, $dropDownMenu) {
-        var _this2 = this;
-
+      value: function UpdateReadonlyImpl($container, $selectedPanel) {
         var disabled = this.selectElement.disabled;
 
         if (this.disabled !== disabled) {
           if (disabled) {
+            console.log("set disable");
             this.filterInput.style.display = "none";
             this.adapter.Enable($selectedPanel, false);
-            $container.unbind("mousedown", this.containerMousedown);
-            $(window.document).unbind("mouseup", this.documentMouseup);
+
+            if (this.options.doManageFocus) {
+              $container.unbind("mousedown", this.containerMousedown);
+              $(window.document).unbind("mouseup", this.documentMouseup);
+            }
+
             $(window.document).unbind("mouseup", this.documentMouseup2);
             $selectedPanel.unbind("click", this.selectedPanelClick);
           } else {
+            console.log("set enable");
             this.filterInput.style.display = "inline-block";
             this.adapter.Enable($selectedPanel, true);
-            $selectedPanel.click(this.selectedPanelClick); // removable
-
-            $dropDownMenu.click(function (event) {
-              return event.stopPropagation();
-            });
-            $dropDownMenu.mouseover(function () {
-              return _this2.resetDropDownMenuHover();
-            });
 
             if (this.options.doManageFocus) {
-              $filterInput.focusin(function () {
-                return _this2.adapter.Focus($selectedPanel, true);
-              }).focusout(function () {
-                if (!_this2.skipFocusout) _this2.adapter.Focus($selectedPanel, false);
-              });
               $container.mousedown(this.containerMousedown); // removable
 
               $(window.document).mouseup(this.documentMouseup); // removable
             }
+
+            $selectedPanel.click(this.selectedPanelClick); // removable
 
             $(window.document).mouseup(this.documentMouseup2); // removable
           }
@@ -330,7 +323,7 @@ var BsMultiSelect = function (window, $, Popper) {
     }, {
       key: "init",
       value: function init() {
-        var _this3 = this;
+        var _this2 = this;
 
         var $hiddenSelect = $(this.selectElement);
         $hiddenSelect.hide();
@@ -355,26 +348,26 @@ var BsMultiSelect = function (window, $, Popper) {
         $dropDownMenu.css(defDropDownMenuStyleSys); // create handlers
 
         this.documentMouseup = function () {
-          _this3.skipFocusout = false;
+          _this2.skipFocusout = false;
         };
 
         this.documentMousedown = function () {
-          _this3.skipFocusout = true;
+          _this2.skipFocusout = true;
         };
 
         this.documentMouseup2 = function (event) {
-          if (!(_this3.container === event.target || $.contains(_this3.container, _this3.target))) {
-            _this3.closeDropDown();
+          if (!(_this2.container === event.target || $.contains(_this2.container, _this2.target))) {
+            _this2.closeDropDown();
           }
         };
 
         this.selectedPanelClick = function (event) {
-          if (event.target.nodeName != "INPUT") $(_this3.filterInput).val('').focus();
+          if (event.target.nodeName != "INPUT") $(_this2.filterInput).val('').focus();
 
-          if (_this3.hasDropDownVisible && _this3.adapter.FilterClick(event)) {
-            _this3.updateDropDownPosition(true);
+          if (_this2.hasDropDownVisible && _this2.adapter.FilterClick(event)) {
+            _this2.updateDropDownPosition(true);
 
-            _this3.showDropDown();
+            _this2.showDropDown();
           }
         };
 
@@ -396,66 +389,81 @@ var BsMultiSelect = function (window, $, Popper) {
         });
         this.adapter.UpdateIsValid($selectedPanel);
         this.UpdateSizeImpl($selectedPanel);
-        this.UpdateReadonlyImpl($container, $selectedPanel, $filterInput, $dropDownMenu); // some browsers (IE11) can change select value (as part of "autocomplete") after page is loaded but before "ready" event
+        this.UpdateReadonlyImpl($container, $selectedPanel); // some browsers (IE11) can change select value (as part of "autocomplete") after page is loaded but before "ready" event
 
         $(document).ready(function () {
           var selectOptions = $hiddenSelect.find('OPTION');
           selectOptions.each(function (index, optionElement) {
-            _this3.appendDropDownItem(optionElement);
+            _this2.appendDropDownItem(optionElement);
           });
-          _this3.hasDropDownVisible = selectOptions.length > 0;
+          _this2.hasDropDownVisible = selectOptions.length > 0;
 
-          _this3.updateDropDownPosition(false);
+          _this2.updateDropDownPosition(false);
         });
+        $dropDownMenu.click(function (event) {
+          return event.stopPropagation();
+        });
+        $dropDownMenu.mouseover(function () {
+          return _this2.resetDropDownMenuHover();
+        });
+
+        if (this.options.doManageFocus) {
+          $filterInput.focusin(function () {
+            return _this2.adapter.Focus($selectedPanel, true);
+          }).focusout(function () {
+            if (!_this2.skipFocusout) _this2.adapter.Focus($selectedPanel, false);
+          });
+        }
+
         $filterInput.on("keydown", function (event) {
           if (event.which == 38) {
             event.preventDefault();
 
-            _this3.keydownArrow(false);
+            _this2.keydownArrow(false);
           } else if (event.which == 40) {
             event.preventDefault();
 
-            _this3.keydownArrow(true);
+            _this2.keydownArrow(true);
           } else if (event.which == 13) {
             event.preventDefault();
           } else if (event.which == 9) {
-            if (_this3.filterInput.value) {
+            if (_this2.filterInput.value) {
               event.preventDefault();
             } else {
-              _this3.closeDropDown();
+              _this2.closeDropDown();
             }
           } else {
             if (event.which == 8) {
               // NOTE: this will process backspace only if there are no text in the input field
               // If user will find this inconvinient, we will need to calculate something like this
               // this.isBackspaceAtStartPoint = (this.filterInput.selectionStart == 0 && this.filterInput.selectionEnd == 0);
-              if (!_this3.filterInput.value) {
-                var $penult = $(_this3.selectedPanel).find("LI:last").prev();
+              if (!_this2.filterInput.value) {
+                var $penult = $(_this2.selectedPanel).find("LI:last").prev();
 
                 if ($penult.length) {
                   var removeItem = $penult.data("option-remove");
                   removeItem();
                 }
 
-                _this3.updateDropDownPosition(false);
+                _this2.updateDropDownPosition(false);
               }
             }
 
-            _this3.resetDropDownMenuHover();
+            _this2.resetDropDownMenuHover();
           }
         });
         $filterInput.on("keyup", function (event) {
           if (event.which == 13 || event.which == 9) {
-            if (_this3.hoveredDropDownItem) {
-              var $hoveredDropDownItem = $(_this3.hoveredDropDownItem);
+            if (_this2.hoveredDropDownItem) {
+              var $hoveredDropDownItem = $(_this2.hoveredDropDownItem);
               var toggleItem = $hoveredDropDownItem.data("option-toggle");
               toggleItem();
 
-              _this3.closeDropDown();
+              _this2.closeDropDown();
             } else {
-              var text = _this3.filterInput.value.trim().toLowerCase();
+              var text = _this2.filterInput.value.trim().toLowerCase();
 
-              var dropDownItems = _this3.dropDownMenu.querySelectorAll("LI");
+              var dropDownItems = _this2.dropDownMenu.querySelectorAll("LI");
 
               var dropDownItem = null;
 
@@ -477,16 +485,16 @@ var BsMultiSelect = function (window, $, Popper) {
                   toggle();
                 }
 
-                _this3.clearFilterInput(true);
+                _this2.clearFilterInput(true);
               }
             }
           } else if (event.which == 27) {
             // escape
-            _this3.closeDropDown();
+            _this2.closeDropDown();
           }
         });
         $filterInput.on('input', function () {
-          _this3.input(true);
+          _this2.input(true);
         });
       }
     }]);

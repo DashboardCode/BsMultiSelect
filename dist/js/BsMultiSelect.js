@@ -121,10 +121,10 @@
       _proto.Enable = function Enable($selectedPanel, isEnabled) {
         if (isEnabled) {
           $selectedPanel.removeClass(this.options.selectedPanelReadonlyClass);
-          $selectedPanel.find('BUTTON').prop("disabled", false).on();
+          $selectedPanel.find('BUTTON').prop("disabled", false);
         } else {
           $selectedPanel.addClass(this.options.selectedPanelReadonlyClass);
-          $selectedPanel.find('BUTTON').prop("disabled", true).off();
+          $selectedPanel.find('BUTTON').prop("disabled", true);
         }
       };
 
@@ -535,7 +535,7 @@
           var $selectedPanel = this.selectedPanel;
           this.adapter.UpdateIsValid($selectedPanel);
           this.UpdateSizeImpl($selectedPanel);
-          this.UpdateReadonlyImpl($$$1(this.container), $selectedPanel, $$$1(this.filterInput), $$$1(this.dropDownMenu));
+          this.UpdateReadonlyImpl($$$1(this.container), $selectedPanel);
         };
 
         _proto.UpdateSize = function UpdateSize() {
@@ -543,48 +543,41 @@
         };
 
         _proto.UpdateReadonly = function UpdateReadonly() {
-          this.UpdateReadonlyImpl($$$1(this.container), $$$1(this.selectedPanel), $$$1(this.filterInput), $$$1(this.dropDownMenu));
+          this.UpdateReadonlyImpl($$$1(this.container), $$$1(this.selectedPanel));
         };
 
         _proto.UpdateSizeImpl = function UpdateSizeImpl($selectedPanel) {
           if (this.adapter.UpdateSize) this.adapter.UpdateSize($selectedPanel);
         };
 
-        _proto.UpdateReadonlyImpl = function UpdateReadonlyImpl($container, $selectedPanel, $filterInput, $dropDownMenu) {
-          var _this2 = this;
-
+        _proto.UpdateReadonlyImpl = function UpdateReadonlyImpl($container, $selectedPanel) {
           var disabled = this.selectElement.disabled;
 
           if (this.disabled !== disabled) {
             if (disabled) {
+              console.log("set disable");
               this.filterInput.style.display = "none";
               this.adapter.Enable($selectedPanel, false);
-              $container.unbind("mousedown", this.containerMousedown);
-              $$$1(window.document).unbind("mouseup", this.documentMouseup);
+
+              if (this.options.doManageFocus) {
+                $container.unbind("mousedown", this.containerMousedown);
+                $$$1(window.document).unbind("mouseup", this.documentMouseup);
+              }
+
               $$$1(window.document).unbind("mouseup", this.documentMouseup2);
               $selectedPanel.unbind("click", this.selectedPanelClick);
             } else {
+              console.log("set enable");
               this.filterInput.style.display = "inline-block";
               this.adapter.Enable($selectedPanel, true);
-              $selectedPanel.click(this.selectedPanelClick); // removable
-
-              $dropDownMenu.click(function (event) {
-                return event.stopPropagation();
-              });
-              $dropDownMenu.mouseover(function () {
-                return _this2.resetDropDownMenuHover();
-              });
 
               if (this.options.doManageFocus) {
-                $filterInput.focusin(function () {
-                  return _this2.adapter.Focus($selectedPanel, true);
-                }).focusout(function () {
-                  if (!_this2.skipFocusout) _this2.adapter.Focus($selectedPanel, false);
-                });
                 $container.mousedown(this.containerMousedown); // removable
 
                 $$$1(window.document).mouseup(this.documentMouseup); // removable
               }
+
+              $selectedPanel.click(this.selectedPanelClick); // removable
 
               $$$1(window.document).mouseup(this.documentMouseup2); // removable
             }
@@ -594,7 +587,7 @@
         };
 
         _proto.init = function init() {
-          var _this3 = this;
+          var _this2 = this;
 
           var $hiddenSelect = $$$1(this.selectElement);
           $hiddenSelect.hide();
@@ -619,26 +612,26 @@
           $dropDownMenu.css(defDropDownMenuStyleSys); // create handlers
 
           this.documentMouseup = function () {
-            _this3.skipFocusout = false;
+            _this2.skipFocusout = false;
           };
 
           this.documentMousedown = function () {
-            _this3.skipFocusout = true;
+            _this2.skipFocusout = true;
           };
 
           this.documentMouseup2 = function (event) {
-            if (!(_this3.container === event.target || $$$1.contains(_this3.container, _this3.target))) {
-              _this3.closeDropDown();
+            if (!(_this2.container === event.target || $$$1.contains(_this2.container, _this2.target))) {
+              _this2.closeDropDown();
             }
           };
 
           this.selectedPanelClick = function (event) {
-            if (event.target.nodeName != "INPUT") $$$1(_this3.filterInput).val('').focus();
+            if (event.target.nodeName != "INPUT") $$$1(_this2.filterInput).val('').focus();
 
-            if (_this3.hasDropDownVisible && _this3.adapter.FilterClick(event)) {
-              _this3.updateDropDownPosition(true);
+            if (_this2.hasDropDownVisible && _this2.adapter.FilterClick(event)) {
+              _this2.updateDropDownPosition(true);
 
-              _this3.showDropDown();
+              _this2.showDropDown();
             }
           };
 
@@ -660,66 +653,81 @@
           });
           this.adapter.UpdateIsValid($selectedPanel);
           this.UpdateSizeImpl($selectedPanel);
-          this.UpdateReadonlyImpl($container, $selectedPanel, $filterInput, $dropDownMenu); // some browsers (IE11) can change select value (as part of "autocomplete") after page is loaded but before "ready" event
+          this.UpdateReadonlyImpl($container, $selectedPanel); // some browsers (IE11) can change select value (as part of "autocomplete") after page is loaded but before "ready" event
 
           $$$1(document).ready(function () {
             var selectOptions = $hiddenSelect.find('OPTION');
             selectOptions.each(function (index, optionElement) {
-              _this3.appendDropDownItem(optionElement);
+              _this2.appendDropDownItem(optionElement);
             });
-            _this3.hasDropDownVisible = selectOptions.length > 0;
+            _this2.hasDropDownVisible = selectOptions.length > 0;
 
-            _this3.updateDropDownPosition(false);
+            _this2.updateDropDownPosition(false);
           });
+          $dropDownMenu.click(function (event) {
+            return event.stopPropagation();
+          });
+          $dropDownMenu.mouseover(function () {
+            return _this2.resetDropDownMenuHover();
+          });
+
+          if (this.options.doManageFocus) {
+            $filterInput.focusin(function () {
+              return _this2.adapter.Focus($selectedPanel, true);
+            }).focusout(function () {
+              if (!_this2.skipFocusout) _this2.adapter.Focus($selectedPanel, false);
+            });
+          }
+
           $filterInput.on("keydown", function (event) {
             if (event.which == 38) {
               event.preventDefault();
 
-              _this3.keydownArrow(false);
+              _this2.keydownArrow(false);
             } else if (event.which == 40) {
               event.preventDefault();
 
-              _this3.keydownArrow(true);
+              _this2.keydownArrow(true);
             } else if (event.which == 13) {
               event.preventDefault();
             } else if (event.which == 9) {
-              if (_this3.filterInput.value) {
+              if (_this2.filterInput.value) {
                 event.preventDefault();
               } else {
-                _this3.closeDropDown();
+                _this2.closeDropDown();
               }
             } else {
               if (event.which == 8) {
                 // NOTE: this will process backspace only if there are no text in the input field
                 // If user will find this inconvinient, we will need to calculate something like this
                 // this.isBackspaceAtStartPoint = (this.filterInput.selectionStart == 0 && this.filterInput.selectionEnd == 0);
-                if (!_this3.filterInput.value) {
-                  var $penult = $$$1(_this3.selectedPanel).find("LI:last").prev();
+                if (!_this2.filterInput.value) {
+                  var $penult = $$$1(_this2.selectedPanel).find("LI:last").prev();
 
                   if ($penult.length) {
                     var removeItem = $penult.data("option-remove");
                     removeItem();
                   }
 
-                  _this3.updateDropDownPosition(false);
+                  _this2.updateDropDownPosition(false);
                 }
               }
 
-              _this3.resetDropDownMenuHover();
+              _this2.resetDropDownMenuHover();
             }
           });
           $filterInput.on("keyup", function (event) {
             if (event.which == 13 || event.which == 9) {
-              if (_this3.hoveredDropDownItem) {
-                var $hoveredDropDownItem = $$$1(_this3.hoveredDropDownItem);
+              if (_this2.hoveredDropDownItem) {
+                var $hoveredDropDownItem = $$$1(_this2.hoveredDropDownItem);
                 var toggleItem = $hoveredDropDownItem.data("option-toggle");
                 toggleItem();
 
-                _this3.closeDropDown();
+                _this2.closeDropDown();
               } else {
-                var text = _this3.filterInput.value.trim().toLowerCase();
+                var text = _this2.filterInput.value.trim().toLowerCase();
 
-                var dropDownItems = _this3.dropDownMenu.querySelectorAll("LI");
+                var dropDownItems = _this2.dropDownMenu.querySelectorAll("LI");
 
                 var dropDownItem = null;
 
@@ -741,16 +749,16 @@
                     toggle();
                   }
 
-                  _this3.clearFilterInput(true);
+                  _this2.clearFilterInput(true);
                 }
               }
             } else if (event.which == 27) {
               // escape
-              _this3.closeDropDown();
+              _this2.closeDropDown();
             }
           });
           $filterInput.on('input', function () {
-            _this3.input(true);
+            _this2.input(true);
           });
         };
 
