@@ -290,7 +290,6 @@ var BsMultiSelect = function (window, $, Popper) {
 
         if (this.disabled !== disabled) {
           if (disabled) {
-            console.log("set disable");
             this.filterInput.style.display = "none";
             this.adapter.Enable($selectedPanel, false);
 
@@ -302,7 +301,6 @@ var BsMultiSelect = function (window, $, Popper) {
             $(window.document).unbind("mouseup", this.documentMouseup2);
             $selectedPanel.unbind("click", this.selectedPanelClick);
           } else {
-            console.log("set enable");
             this.filterInput.style.display = "inline-block";
             this.adapter.Enable($selectedPanel, true);
 
