@@ -1,6 +1,7 @@
 import $ from 'jquery'
 import Popper from 'popper.js'
-import Bootstrap4CssAdapter from './Bootstrap4CssAdapter.es8'
+import Bs4AdapterCss from './Bs4AdapterCss.es8'
+import Bs4Adapter from './Bs4Adapter.es8'
 
 // TODO: try to find convinient way to declare private members. Is it convinient enough to move them into IIFE?
 const BsMultiSelect = ((window, $, Popper) => {
@@ -13,7 +14,9 @@ const BsMultiSelect = ((window, $, Popper) => {
     const defDropDownMenuStyleSys  = {'list-style-type':'none'}; // remove bullets since this is ul
 
     const defaults = {
-        doManageFocus:true
+        doManageFocus:true,
+        useCss:false,
+        adapter:null
     }
 
     class Plugin {
@@ -26,7 +29,10 @@ const BsMultiSelect = ((window, $, Popper) => {
             this.selectElement = selectElement;
             this.options = $.extend({}, defaults, options);
 
-            this.adapter = adapter?adapter:new Bootstrap4CssAdapter($, this.selectElement);
+            if (adapter)
+                this.adapter = adapter;
+            else
+                this.adapter = this.options.useCss?new Bs4AdapterCss($, this.selectElement):new Bs4Adapter($, this.selectElement);
             
             this.container = null;
             this.selectedPanel = null;
@@ -35,9 +41,16 @@ const BsMultiSelect = ((window, $, Popper) => {
             this.dropDownMenu = null;
             this.popper = null;
 
+            // removable handlers
+            this.selectedPanelClick  = null;
+            this.documentMouseup   = null;
+            this.documentMousedown   = null;
+            this.documentMouseup2   = null;
+
             // state
+            this.disabled=null;
             this.filterInputItemOffsetLeft = null; // used to detect changes in input field position (by comparision with current value)
-            this.skipFocusout = false; 
+            this.skipFocusout = false;
             this.hoveredDropDownItem = null;
             this.hoveredDropDownIndex = null;
             this.hasDropDownVisible = false;
@@ -80,7 +93,7 @@ const BsMultiSelect = ((window, $, Popper) => {
                 }
                 else {
                     let itemText = $dropDownMenuItem.data("option-text");
-                    let isSelected = $dropDownMenuItem.data("option-selected"); 
+                    let isSelected = $dropDownMenuItem.data("option-selected");
                     if (!isSelected && itemText.indexOf(text)>=0) {
                         $dropDownMenuItem.show();
                         visible++;
@@ -137,9 +150,10 @@ const BsMultiSelect = ((window, $, Popper) => {
                     this.closeDropDown();
                 };
                 this.adapter.CreateSelectedItemContent(
-                    $selectedItem, 
-                    itemText, 
-                    removeItemAndCloseDropDown
+                    $selectedItem,
+                    itemText,
+                    removeItemAndCloseDropDown,
+                    this.disabled
                 );
                 $selectedItem.insertBefore(this.filterInputItem);
                 $dropDownItem.data("option-toggle", removeItem);
@@ -151,6 +165,16 @@ const BsMultiSelect = ((window, $, Popper) => {
             if (isSelected) {
                 appendItem();
             }
+            let manageHover = (event, isOn) => {
+                this.adapter.Hover($(event.target).closest("LI"), isOn)
+            }
+            $dropDownItem.click(event => {
+                event.preventDefault();
+                event.stopPropagation();
+                let toggleItem = $(event.currentTarget).closest("LI").data("option-toggle");
+                toggleItem();
+                this.filterInput.focus();
+            }).mouseover(e => manageHover(e, true)).mouseout(e => manageHover(e, false));
         }
 
         keydownArrow(down) {
@@ -182,7 +206,7 @@ const BsMultiSelect = ((window, $, Popper) => {
             this.filterInput.style.width = this.filterInput.value.length*1.3 + 2 + "ch";
             this.filterDropDownMenu();
             if (this.hasDropDownVisible) {
-                if (forceUpdatePosition) // ignore it if it is called from 
+                if (forceUpdatePosition) // ignore it if it is called from
                     this.updateDropDownPosition(forceUpdatePosition); // we need it to support case when textbox changes its place because of line break (texbox grow with each key press)
                 this.showDropDown();
             } else {
@@ -190,10 +214,65 @@ const BsMultiSelect = ((window, $, Popper) => {
             }
         }
 
+        Update(){
+            let $selectedPanel = (this.selectedPanel);
+            this.adapter.UpdateIsValid($selectedPanel);
+            this.UpdateSizeImpl();
+            this.UpdateReadonlyImpl($(this.container), $selectedPanel, $(this.filterInput), $(this.dropDownMenu));
+        }
+
+        UpdateSize(){
+            this.adapter.UpdateSizeImpl($(this.selectedPanel));
+        }
+
+        UpdateReadonly(){
+            this.UpdateReadonlyImpl($(this.container), $(this.selectedPanel), $(this.filterInput), $(this.dropDownMenu));
+        }
+
+        UpdateSizeImpl($selectedPanel){
+            if (this.adapter.UpdateSize)
+                this.adapter.UpdateSize($selectedPanel);
+        }
+
+        UpdateReadonlyImpl($container, $selectedPanel, $filterInput, $dropDownMenu){
+            let disabled = this.selectElement.disabled;
+            if (this.disabled!==disabled){
+                if (disabled) {
+                    this.filterInput.style.display = "none";
+                    this.adapter.Enable($selectedPanel, false);
+
+                    $container.unbind("mousedown", this.containerMousedown);
+                    $(window.document).unbind("mouseup", this.documentMouseup);
+                    $(window.document).unbind("mouseup", this.documentMouseup2);
+                    $selectedPanel.unbind("click", this.selectedPanelClick);
+                } else {
+                    this.filterInput.style.display = "inline-block";
+                    this.adapter.Enable($selectedPanel, true);
+                    
+                    $selectedPanel.click(this.selectedPanelClick); // removable
+
+                    $dropDownMenu.click( event => event.stopPropagation());
+
+                    $dropDownMenu.mouseover(() => this.resetDropDownMenuHover());
+
+                    if (this.options.doManageFocus)
+                    {
+                        $filterInput.focusin(() => this.adapter.Focus($selectedPanel, true))
+                                    .focusout(() => { if (!this.skipFocusout)
+                                                        this.adapter.Focus($selectedPanel, false) });
+                        $container.mousedown(this.containerMousedown);  // removable
+                        $(window.document).mouseup(this.documentMouseup); // removable
+                    }
+
+                    $(window.document).mouseup(this.documentMouseup2); // removable
+                }
+                this.disabled=disabled;
+            }
+        }
+
         init() {
             let $hiddenSelect = $(this.selectElement);
             $hiddenSelect.hide();
-            let disabled = this.selectElement.disabled;
 
             let $container = $("<DIV/>");
             this.container = $container.get(0);
@@ -223,6 +302,31 @@ const BsMultiSelect = ((window, $, Popper) => {
             // prevent heavy understandable styling error
             $dropDownMenu.css(defDropDownMenuStyleSys);
 
+            // create handlers
+            this.documentMouseup = () => {
+                this.skipFocusout = false;
+            }
+    
+            this.documentMousedown = () => {
+                this.skipFocusout = true;
+            };
+
+            this.documentMouseup2 = event => {
+                if (!(this.container === event.target || $.contains(this.container, this.target))) {
+                    this.closeDropDown();
+                }
+            }
+
+            this.selectedPanelClick = event => {
+                if (event.target.nodeName != "INPUT")
+                    $(this.filterInput).val('').focus();
+                if (this.hasDropDownVisible && this.adapter.FilterClick(event)){
+                    this.updateDropDownPosition(true);
+                    this.showDropDown();
+                }
+            };
+
+
             this.adapter.Init($container, $selectedPanel, $filterInputItem, $filterInput, $dropDownMenu);
             $container.insertAfter($hiddenSelect);
             
@@ -234,8 +338,11 @@ const BsMultiSelect = ((window, $, Popper) => {
                     flip: { enabled:false }
                     }
             });
-            
-            // some browsers (IE11) can change select value ("autocomplete") after page is loaded but before "ready" event
+            this.adapter.UpdateIsValid($selectedPanel);
+            this.UpdateSizeImpl($selectedPanel);
+            this.UpdateReadonlyImpl($container, $selectedPanel, $filterInput, $dropDownMenu);
+
+            // some browsers (IE11) can change select value (as part of "autocomplete") after page is loaded but before "ready" event
             $(document).ready(() => {
                 let selectOptions = $hiddenSelect.find('OPTION');
                 selectOptions.each(
@@ -245,73 +352,6 @@ const BsMultiSelect = ((window, $, Popper) => {
                 );
                 this.hasDropDownVisible = selectOptions.length > 0;
                 this.updateDropDownPosition(false);
-
-                $dropDownMenu.find('LI').click(event => {
-                    event.preventDefault();
-                    event.stopPropagation();
-                    let toggleItem = $(event.currentTarget).closest("LI").data("option-toggle");
-                    toggleItem();
-                    this.filterInput.focus(); 
-                });
-
-                $dropDownMenu.find("LI").on("mouseover", event => {
-                    this.adapter.Hover($(event.target).closest("LI"), true);
-                });
-
-                $dropDownMenu.find("LI").on("mouseout", event => {
-                    this.adapter.Hover($(event.target).closest("LI"), false);
-                });
-
-                if (disabled) {
-                    this.filterInput.style.display = "none";
-                    this.adapter.Enable($selectedPanel, false);
-                } else {
-                    this.filterInput.style.display = "inline-block";
-                    this.adapter.Enable($selectedPanel, true);
-                    
-                    $selectedPanel.click((event) => {
-                        if (event.target.nodeName != "INPUT")
-                            $filterInput.val('').focus();
-                        if (this.hasDropDownVisible)
-                            if (this.adapter.FilterClick(event)){
-                                this.updateDropDownPosition(true);
-                                this.showDropDown();
-                            }
-                    });
-    
-                    $dropDownMenu.click((event) => {
-                        event.stopPropagation();
-                    });
-    
-                    $dropDownMenu.on("mouseover", () => this.resetDropDownMenuHover());
-    
-                    if (this.options.doManageFocus)
-                    {
-                        $filterInput.focusin(() => {
-                            this.adapter.Focus($selectedPanel, true);
-                        });
-    
-                        $filterInput.focusout(() => {
-                            if (!this.skipFocusout) {
-                                this.adapter.Focus($selectedPanel, false);
-                            }
-                        });
-    
-                        $container.mousedown(() => {
-                            this.skipFocusout = true;
-                        });
-    
-                        $(window.document).mouseup(() => {
-                            this.skipFocusout = false;
-                        });
-                    }
-    
-                    $(window.document).mouseup((event) => {
-                        if (!(this.container === event.target || $.contains(this.container, event.target))) {
-                            this.closeDropDown();
-                        }
-                    });
-                }
             });
 
             $filterInput.on("keydown", (event) => {
@@ -382,13 +422,13 @@ const BsMultiSelect = ((window, $, Popper) => {
                             this.clearFilterInput(true);
                         }
                     }
-                } 
+                }
                 else if (event.which == 27) { // escape
                     this.closeDropDown();
                 }
             });
 
-            $filterInput.on('input', () => { 
+            $filterInput.on('input', () => {
                 this.input(true);
             });
         }

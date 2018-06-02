@@ -4,6 +4,10 @@
 @import "./../node_modules/bootstrap/scss/mixins/_forms";
 @import "./../node_modules/bootstrap/scss/_variables";
 
+// :export {
+//     inputHeightSm: $input-height-sm;
+// }
+
 @mixin form-control-focus-class() {
     &.focus {
         color: $input-focus-color;
