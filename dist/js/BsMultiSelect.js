@@ -1,5 +1,5 @@
 /*!
-  * DashboardCode BsMultiSelect v0.1.6 (https://dashboardcode.github.io/BsMultiSelect/)
+  * DashboardCode BsMultiSelect v0.1.7 (https://dashboardcode.github.io/BsMultiSelect/)
   * Copyright 2017-2018 Roman Pokrovskij (github user rpokrovskij)
   * Licensed under APACHE 2 (https://github.com/DashboardCode/BsMultiSelect/blob/master/LICENSE)
   */
@@ -534,12 +534,12 @@
         _proto.Update = function Update() {
           var $selectedPanel = this.selectedPanel;
           this.adapter.UpdateIsValid($selectedPanel);
-          this.UpdateSizeImpl();
+          this.UpdateSizeImpl($selectedPanel);
           this.UpdateReadonlyImpl($$$1(this.container), $selectedPanel, $$$1(this.filterInput), $$$1(this.dropDownMenu));
         };
 
         _proto.UpdateSize = function UpdateSize() {
-          this.adapter.UpdateSizeImpl($$$1(this.selectedPanel));
+          this.UpdateSizeImpl($$$1(this.selectedPanel));
         };
 
         _proto.UpdateReadonly = function UpdateReadonly() {

@@ -217,12 +217,12 @@ const BsMultiSelect = ((window, $, Popper) => {
         Update(){
             let $selectedPanel = (this.selectedPanel);
             this.adapter.UpdateIsValid($selectedPanel);
-            this.UpdateSizeImpl();
+            this.UpdateSizeImpl($selectedPanel);
             this.UpdateReadonlyImpl($(this.container), $selectedPanel, $(this.filterInput), $(this.dropDownMenu));
         }
 
         UpdateSize(){
-            this.adapter.UpdateSizeImpl($(this.selectedPanel));
+            this.UpdateSizeImpl($(this.selectedPanel));
         }
 
         UpdateReadonly(){

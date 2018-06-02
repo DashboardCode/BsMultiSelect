@@ -265,13 +265,13 @@ var BsMultiSelect = function (window, $, Popper) {
       value: function Update() {
         var $selectedPanel = this.selectedPanel;
         this.adapter.UpdateIsValid($selectedPanel);
-        this.UpdateSizeImpl();
+        this.UpdateSizeImpl($selectedPanel);
         this.UpdateReadonlyImpl($(this.container), $selectedPanel, $(this.filterInput), $(this.dropDownMenu));
       }
     }, {
       key: "UpdateSize",
       value: function UpdateSize() {
-        this.adapter.UpdateSizeImpl($(this.selectedPanel));
+        this.UpdateSizeImpl($(this.selectedPanel));
       }
     }, {
       key: "UpdateReadonly",
