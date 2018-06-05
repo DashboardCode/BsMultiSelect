@@ -130,7 +130,7 @@ const BsMultiSelect = ((window, $, Popper) => {
             let adoptDropDownItem = this.adapter.CreateDropDownItemContent($dropDownItem, optionId, itemText, isSelected)
             $dropDownItem.appendTo(this.dropDownMenu);
 
-            let appendItem = () => {
+            let appendItem = (doTrigger) => {
                 $dropDownItem.data("option-selected", true);
                 let $selectedItem = $("<LI/>");
                 $selectedItem.data("option-id", optionId);
@@ -159,13 +159,14 @@ const BsMultiSelect = ((window, $, Popper) => {
                 $selectedItem.insertBefore(this.filterInputItem);
                 $dropDownItem.data("option-toggle", removeItem);
                 $selectedItem.data("option-remove", removeItemAndCloseDropDown);
-                $(this.selectElement).trigger('change');
+                if (typeof doTrigger === "undefined" || doTrigger===true)
+                    $(this.selectElement).trigger('change');
                 return $selectedItem;
             }
-            $dropDownItem.data("option-toggle", () => appendItem());
+            $dropDownItem.data("option-toggle", appendItem );
             
             if (isSelected) {
-                appendItem();
+                appendItem(false);
             }
             let manageHover = (event, isOn) => {
                 this.adapter.Hover($(event.target).closest("LI"), isOn)

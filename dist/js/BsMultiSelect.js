@@ -432,7 +432,7 @@
           var adoptDropDownItem = this.adapter.CreateDropDownItemContent($dropDownItem, optionId, itemText, isSelected);
           $dropDownItem.appendTo(this.dropDownMenu);
 
-          var appendItem = function appendItem() {
+          var appendItem = function appendItem(doTrigger) {
             $dropDownItem.data("option-selected", true);
             var $selectedItem = $$$1("<LI/>");
             $selectedItem.data("option-id", optionId);
@@ -460,16 +460,19 @@
             $selectedItem.insertBefore(_this.filterInputItem);
             $dropDownItem.data("option-toggle", removeItem);
             $selectedItem.data("option-remove", removeItemAndCloseDropDown);
-            $$$1(_this.selectElement).trigger('change');
+
+            if (typeof doTrigger === "undefined" || doTrigger === true) {
+              console.log(doTrigger);
+              $$$1(_this.selectElement).trigger('change');
+            }
+
             return $selectedItem;
           };
 
-          $dropDownItem.data("option-toggle", function () {
-            return appendItem();
-          });
+          $dropDownItem.data("option-toggle", appendItem);
 
           if (isSelected) {
-            appendItem();
+            appendItem(false);
           }
 
           var manageHover = function manageHover(event, isOn) {
