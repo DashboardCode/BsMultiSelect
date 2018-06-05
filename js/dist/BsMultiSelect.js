@@ -174,6 +174,7 @@ var BsMultiSelect = function (window, $, Popper) {
             $selectedItem.remove();
             optionElement.selected = false;
             adoptDropDownItem(false);
+            $(_this.selectElement).trigger('change');
           };
 
           var removeItemAndCloseDropDown = function removeItemAndCloseDropDown() {
@@ -187,6 +188,7 @@ var BsMultiSelect = function (window, $, Popper) {
           $selectedItem.insertBefore(_this.filterInputItem);
           $dropDownItem.data("option-toggle", removeItem);
           $selectedItem.data("option-remove", removeItemAndCloseDropDown);
+          $(_this.selectElement).trigger('change');
           return $selectedItem;
         };
 

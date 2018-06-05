@@ -1,5 +1,5 @@
 /*!
-  * DashboardCode BsMultiSelect v0.1.7 (https://dashboardcode.github.io/BsMultiSelect/)
+  * DashboardCode BsMultiSelect v0.1.9 (https://dashboardcode.github.io/BsMultiSelect/)
   * Copyright 2017-2018 Roman Pokrovskij (github user rpokrovskij)
   * Licensed under APACHE 2 (https://github.com/DashboardCode/BsMultiSelect/blob/master/LICENSE)
   */
@@ -446,6 +446,7 @@
               $selectedItem.remove();
               optionElement.selected = false;
               adoptDropDownItem(false);
+              $$$1(_this.selectElement).trigger('change');
             };
 
             var removeItemAndCloseDropDown = function removeItemAndCloseDropDown() {
@@ -459,6 +460,7 @@
             $selectedItem.insertBefore(_this.filterInputItem);
             $dropDownItem.data("option-toggle", removeItem);
             $selectedItem.data("option-remove", removeItemAndCloseDropDown);
+            $$$1(_this.selectElement).trigger('change');
             return $selectedItem;
           };
 
