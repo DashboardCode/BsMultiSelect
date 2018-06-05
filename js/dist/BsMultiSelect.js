@@ -188,12 +188,7 @@ var BsMultiSelect = function (window, $, Popper) {
           $selectedItem.insertBefore(_this.filterInputItem);
           $dropDownItem.data("option-toggle", removeItem);
           $selectedItem.data("option-remove", removeItemAndCloseDropDown);
-
-          if (typeof doTrigger === "undefined" || doTrigger === true) {
-            console.log(doTrigger);
-            $(_this.selectElement).trigger('change');
-          }
-
+          if (typeof doTrigger === "undefined" || doTrigger === true) $(_this.selectElement).trigger('change');
           return $selectedItem;
         };
 

@@ -1,5 +1,5 @@
 /*!
-  * DashboardCode BsMultiSelect v0.1.9 (https://dashboardcode.github.io/BsMultiSelect/)
+  * DashboardCode BsMultiSelect v0.1.10 (https://dashboardcode.github.io/BsMultiSelect/)
   * Copyright 2017-2018 Roman Pokrovskij (github user rpokrovskij)
   * Licensed under APACHE 2 (https://github.com/DashboardCode/BsMultiSelect/blob/master/LICENSE)
   */
@@ -460,12 +460,7 @@
             $selectedItem.insertBefore(_this.filterInputItem);
             $dropDownItem.data("option-toggle", removeItem);
             $selectedItem.data("option-remove", removeItemAndCloseDropDown);
-
-            if (typeof doTrigger === "undefined" || doTrigger === true) {
-              console.log(doTrigger);
-              $$$1(_this.selectElement).trigger('change');
-            }
-
+            if (typeof doTrigger === "undefined" || doTrigger === true) $$$1(_this.selectElement).trigger('change');
             return $selectedItem;
           };
 
