@@ -160,7 +160,7 @@ const BsMultiSelect = ((window, $, Popper) => {
                 $dropDownItem.data("option-toggle", removeItem);
                 $selectedItem.data("option-remove", removeItemAndCloseDropDown);
                 if (typeof doTrigger === "undefined" || doTrigger===true)
-                    $(this.selectElement).trigger('change');
+                     $(this.selectElement).trigger('change');
                 return $selectedItem;
             }
             $dropDownItem.data("option-toggle", appendItem );
@@ -248,8 +248,9 @@ const BsMultiSelect = ((window, $, Popper) => {
                         $container.unbind("mousedown", this.containerMousedown);
                         $(window.document).unbind("mouseup", this.documentMouseup);
                     }
-                    $(window.document).unbind("mouseup", this.documentMouseup2);
                     $selectedPanel.unbind("click", this.selectedPanelClick);
+                    $(window.document).unbind("mouseup", this.documentMouseup2);
+                    
                 } else {
                     this.filterInput.style.display = "inline-block";
                     this.adapter.Enable($selectedPanel, true);
@@ -258,7 +259,6 @@ const BsMultiSelect = ((window, $, Popper) => {
                         $container.mousedown(this.containerMousedown);  // removable
                         $(window.document).mouseup(this.documentMouseup); // removable
                     }
-
                     $selectedPanel.click(this.selectedPanelClick); // removable
                     $(window.document).mouseup(this.documentMouseup2); // removable
                 }
@@ -308,7 +308,7 @@ const BsMultiSelect = ((window, $, Popper) => {
             };
 
             this.documentMouseup2 = event => {
-                if (!(this.container === event.target || $.contains(this.container, this.target))) {
+                if (!(this.container === event.target || $.contains(this.container, event.target))) {
                     this.closeDropDown();
                 }
             }

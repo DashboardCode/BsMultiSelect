@@ -563,8 +563,8 @@
                 $$$1(window.document).unbind("mouseup", this.documentMouseup);
               }
 
-              $$$1(window.document).unbind("mouseup", this.documentMouseup2);
               $selectedPanel.unbind("click", this.selectedPanelClick);
+              $$$1(window.document).unbind("mouseup", this.documentMouseup2);
             } else {
               this.filterInput.style.display = "inline-block";
               this.adapter.Enable($selectedPanel, true);
@@ -618,7 +618,7 @@
           };
 
           this.documentMouseup2 = function (event) {
-            if (!(_this2.container === event.target || $$$1.contains(_this2.container, _this2.target))) {
+            if (!(_this2.container === event.target || $$$1.contains(_this2.container, event.target))) {
               _this2.closeDropDown();
             }
           };

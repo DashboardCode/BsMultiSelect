@@ -298,8 +298,8 @@ var BsMultiSelect = function (window, $, Popper) {
               $(window.document).unbind("mouseup", this.documentMouseup);
             }
 
-            $(window.document).unbind("mouseup", this.documentMouseup2);
             $selectedPanel.unbind("click", this.selectedPanelClick);
+            $(window.document).unbind("mouseup", this.documentMouseup2);
           } else {
             this.filterInput.style.display = "inline-block";
             this.adapter.Enable($selectedPanel, true);
@@ -354,7 +354,7 @@ var BsMultiSelect = function (window, $, Popper) {
         };
 
         this.documentMouseup2 = function (event) {
-          if (!(_this2.container === event.target || $.contains(_this2.container, _this2.target))) {
+          if (!(_this2.container === event.target || $.contains(_this2.container, event.target))) {
             _this2.closeDropDown();
           }
         };
