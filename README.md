@@ -42,7 +42,7 @@ If your theme changes those variables, you need to update them on the plugin ini
             
 ````
 
-Alternatively you can use BsMultiSelect.css (included to distribution) or ./scss/BsMultiSelect.scss (copy it to your project) just by configuring plugin this way:
+**Alternatively** you can use BsMultiSelect.css (included to distribution, update values manually) or [./scss/BsMultiSelect.scss](https://github.com/DashboardCode/BsMultiSelect/blob/master/scss/BsMultiSelect.scss) (copy it to your project and update reference to your suctom BS variables) just by configuring plugin this way:
 
 ````
           $("select[multiple='multiple']").dashboardCodeBsMultiSelect({
@@ -51,7 +51,7 @@ Alternatively you can use BsMultiSelect.css (included to distribution) or ./scss
             
 ````
 
-# Proposeal to Bootstrap
+# Proposal to Bootstrap
 
 It would be very nice if Bootstrap could provide those SASS variables as classes :
 
