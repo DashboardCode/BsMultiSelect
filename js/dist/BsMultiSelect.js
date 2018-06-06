@@ -51,7 +51,7 @@ var BsMultiSelect = function (window, $, Popper) {
 
       this.selectElement = selectElement;
       this.options = $.extend({}, defaults, options);
-      if (adapter) this.adapter = adapter;else this.adapter = this.options.useCss ? new Bs4AdapterCss($, this.selectElement) : new Bs4Adapter($, this.selectElement);
+      if (adapter) this.adapter = adapter;else this.adapter = this.options.useCss ? new Bs4AdapterCss($, this.selectElement, this.options) : new Bs4Adapter($, this.selectElement, this.options);
       this.container = null;
       this.selectedPanel = null;
       this.filterInputItem = null;

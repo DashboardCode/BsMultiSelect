@@ -1,5 +1,5 @@
 /*!
-  * DashboardCode BsMultiSelect v0.1.14 (https://dashboardcode.github.io/BsMultiSelect/)
+  * DashboardCode BsMultiSelect v0.1.15 (https://dashboardcode.github.io/BsMultiSelect/)
   * Copyright 2017-2018 Roman Pokrovskij (github user rpokrovskij)
   * Licensed under APACHE 2 (https://github.com/DashboardCode/BsMultiSelect/blob/master/LICENSE)
   */
@@ -330,7 +330,7 @@
 
           this.selectElement = selectElement;
           this.options = $$$1.extend({}, defaults, options);
-          if (adapter) this.adapter = adapter;else this.adapter = this.options.useCss ? new Bs4AdapterCss($$$1, this.selectElement) : new Bs4Adapter($$$1, this.selectElement);
+          if (adapter) this.adapter = adapter;else this.adapter = this.options.useCss ? new Bs4AdapterCss($$$1, this.selectElement, this.options) : new Bs4Adapter($$$1, this.selectElement, this.options);
           this.container = null;
           this.selectedPanel = null;
           this.filterInputItem = null;
