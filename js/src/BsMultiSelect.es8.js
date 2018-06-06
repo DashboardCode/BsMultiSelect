@@ -32,7 +32,7 @@ const BsMultiSelect = ((window, $, Popper) => {
             if (adapter)
                 this.adapter = adapter;
             else
-                this.adapter = this.options.useCss?new Bs4AdapterCss($, this.selectElement):new Bs4Adapter($, this.selectElement);
+                this.adapter = this.options.useCss?new Bs4AdapterCss($, this.selectElement, this.options):new Bs4Adapter($, this.selectElement, this.options);
             
             this.container = null;
             this.selectedPanel = null;
