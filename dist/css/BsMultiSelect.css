@@ -13,8 +13,8 @@ ul.form-control .badge {
   line-height: 1.5em;
 }
 ul.form-control .badge button.close {
-  font-size: 1.3rem;
-  line-height: 1.1rem;
+  font-size: 1.5em;
+  line-height: 0.9em;
 }
 ul.form-control.focus {
   color: #495057;
@@ -26,30 +26,14 @@ ul.form-control.focus {
 ul.form-control.form-control-sm {
   min-height: calc(1.8125rem + 2px);
 }
-ul.form-control.form-control-sm .badge {
-  line-height: 1rem;
-}
-ul.form-control.form-control-sm .badge button.close {
-  font-size: 1rem;
-  line-height: 0.9rem;
-}
 ul.form-control.form-control-sm input {
   font-size: 0.875rem;
-  line-height: 1.5;
 }
 ul.form-control.form-control-lg {
   min-height: calc(2.875rem + 2px);
 }
-ul.form-control.form-control-lg .badge {
-  line-height: 1.5;
-}
-ul.form-control.form-control-lg .badge button.close {
-  font-size: 1.5rem;
-  line-height: 1.3rem;
-}
 ul.form-control.form-control-lg input {
   font-size: 1.25rem;
-  line-height: 1.5;
 }
 
 .was-validated ul.form-control:valid, ul.form-control.is-valid {

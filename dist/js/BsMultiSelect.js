@@ -1,5 +1,5 @@
 /*!
-  * DashboardCode BsMultiSelect v0.1.10 (https://dashboardcode.github.io/BsMultiSelect/)
+  * DashboardCode BsMultiSelect v0.1.12 (https://dashboardcode.github.io/BsMultiSelect/)
   * Copyright 2017-2018 Roman Pokrovskij (github user rpokrovskij)
   * Licensed under APACHE 2 (https://github.com/DashboardCode/BsMultiSelect/blob/master/LICENSE)
   */
@@ -185,11 +185,11 @@
         };
         this.selectedItemStyle = {
           'padding-left': '0px',
-          'line-height': '1rem'
+          'line-height': '1.5em'
         };
         this.removeSelectedItemButtonStyle = {
-          'line-height': '1rem',
-          'font-size': '1.3rem'
+          'font-size': '1.5em',
+          'line-height': '.9em'
         };
         this.bs4Commons = new Bs4Commons(jQuery, hiddenSelect, this.dropDownItemHoverClass);
       }

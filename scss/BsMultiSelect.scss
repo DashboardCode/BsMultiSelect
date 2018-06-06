@@ -49,8 +49,8 @@ ul.form-control {
         padding-left: 0;
         line-height: 1.5em;
         button.close {
-            font-size: 1.3rem;
-            line-height: 1.1rem;
+            font-size: 1.5em;
+            line-height: .9em;
         }
     }
 
@@ -59,31 +59,15 @@ ul.form-control {
 
     &.form-control-sm {
         min-height: #{$input-height-sm};
-        .badge {
-            line-height: 1rem;
-            button.close{
-                font-size: 1rem;
-                line-height: .9rem;
-            }
-        }
         input{
             font-size: $font-size-sm;
-            line-height: $input-line-height-sm;
         }
     }
 
     &.form-control-lg {
         min-height: #{$input-height-lg};
-        .badge {
-            line-height: $input-line-height-sm;
-            button.close{
-                font-size: 1.5rem;
-                line-height: 1.3rem;
-            }
-        }
         input{
             font-size: $font-size-lg;
-            line-height: $input-line-height-lg;
         }
     }
 }

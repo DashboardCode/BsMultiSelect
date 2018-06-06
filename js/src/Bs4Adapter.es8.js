@@ -28,8 +28,8 @@ class Bs4Adapter {
         this.removeSelectedItemButtonClass= 'close';
 
         this.selectedPanelStyle= {'margin-bottom': '0'};
-        this.selectedItemStyle= {'padding-left': '0px', 'line-height': '1rem'};
-        this.removeSelectedItemButtonStyle= {'line-height': '1rem', 'font-size':'1.3rem'};
+        this.selectedItemStyle= {'padding-left': '0px', 'line-height': '1.5em'};
+        this.removeSelectedItemButtonStyle= {'font-size':'1.5em', 'line-height': '.9em'};
 
         this.bs4Commons = new Bs4Commons(jQuery, hiddenSelect, this.dropDownItemHoverClass);
     }
