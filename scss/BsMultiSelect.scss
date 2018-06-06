@@ -2,11 +2,8 @@
 @import "./../node_modules/bootstrap/scss/mixins/_box-shadow";
 @import "./../node_modules/bootstrap/scss/mixins/_transition";
 @import "./../node_modules/bootstrap/scss/mixins/_forms";
-@import "./../node_modules/bootstrap/scss/_variables";
 
-// :export {
-//     inputHeightSm: $input-height-sm;
-// }
+@import "./../node_modules/bootstrap/scss/_variables"; // update it after copy, reference your custom theme variables
 
 @mixin form-control-focus-class() {
     &.focus {
