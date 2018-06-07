@@ -1,8 +1,11 @@
 # DashboardCode Multiselect plugin for Bootstrap 4
 *https://dashboardcode.github.io/BsMultiSelect/*
 
-There are many of such plugins but this is small since reuses maximum of bootrap 4 styles and code. It also follows Bootstrap 4 conventions and use the same instruments (babel, rollup) so pretend to be a modern plugin `boilerplate`.
+There are many of such plugins but this is small since reuses maximum of bootrap 4 styles and code (BsMultiSelect size is 15KB+2KB js+css minified). 
 
+You can copy [./scss/BsMultiSelect.scss](https://github.com/DashboardCode/BsMultiSelect/blob/master/scss/BsMultiSelect.scss) to your SASS project and I hope it should be enough to adopt plugin to your bootstrap theme (it utilize bootstrap variables).
+
+It also follows Bootstrap 4 conventions and use the same instruments (babel, rollup) so pretend to be a modern plugin `boilerplate`. 
 
 # Architecture
 Instead of using BS4 Dropdown component (it is not possible because BS Dropdown requires presence of `toggle-buttons` https://github.com/twbs/bootstrap/issues/26420) the plugin uses popper.js directly.
@@ -82,13 +85,15 @@ Important to know that BS allready provide classes like: `h-25`, `bg-light`, `te
 
 ### Alternatives:
 
+BsMultiSelect was created because at the moment when bootstrap 4 was released and all existed multi select plugins had strange side effects. It was just simpler to try to combine several BS 4 tools together: `form-control`, `dropdown-menu`, `close` button, `badge` then trying to understand internals of mature existed projects. 
+
 * Chosen.js: https://harvesthq.github.io/chosen/ - (ver 1.8.5) strange "Consider marking event handler as 'passive' to make the page more responsive" warnings to console, heavy integrating to bootstrap theme (30KB+10KB js+css minified)
 
 * Select2: https://select2.org/appearance - (ver 3.5.3) strange or broken backspace handling (at least in Chrome 66), heavy integrating to bootstrap theme (66KB+14KB js+css minified)
 
-* Bootstrap multiselect: http://davidstutz.de/bootstrap-multiselect/  -  (ver. 0.9.15) BS 4 not supported, selected options looks as plain text (not as badges), no backspace key handling (67KB+1KB js+css NOT minified)
+* Bootstrap multiselect: http://davidstutz.de/bootstrap-multiselect/  -  (ver. 0.9.15) BS 4 not supported, no SCSS, selected options looks as plain text (not as badges), no backspace key handling (67KB+1KB js+css NOT minified)
 
-* Bootstrap-select: https://silviomoreto.github.io/bootstrap-select/ - (ver. 1.12.4) BS 4 supported, but badges line can't be multiline (33KB+7KB js+css minified)
+* Bootstrap-select: https://silviomoreto.github.io/bootstrap-select/ - (ver. 1.12.4) BS 4 supported, but SCSS is not integrated with BS4 variables, also badges line can't be multiline (33KB+7KB js+css minified)
 
 Other Bootstrap extension ideas:
 https://github.com/trumbitta/bootstrap-css-utils
