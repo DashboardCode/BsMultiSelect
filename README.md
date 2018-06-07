@@ -28,6 +28,8 @@ This plugin doesn't bring its own styles. This was a clear design goal but unfor
 
 * $input-color - we need to make DIV color the same as `input` color (color of text you are typing); default value is "#495057"
 
+* focus, focus for `isvalid`, focus for `isinvalid` border effects mixins as classes
+
 If your theme changes those variables, you need to update them on the plugin initialization.
 
 ````
@@ -73,7 +75,7 @@ It would be very nice if Bootstrap could provide those SASS variables as classes
 ````
 Vote there: https://github.com/twbs/bootstrap/issues/26412
 
-Important to know that BS allready provide classes like: `h-25`, `bg-light`, `text-primary` , so the proposal is just an improovement of theirs class system (actually it is very strange that those important styles are not available as classes).
+Important to remember that BS allready provide classes like: `h-25`, `bg-light`, `text-primary` that make many variables available as classes so the proposal is just an improovement of theirs class system.
 
 
 ### Known issues
@@ -81,11 +83,11 @@ Important to know that BS allready provide classes like: `h-25`, `bg-light`, `te
 
 * `fieldset disabled` not supported currently
 
-* usually you still need css to patch some plugin element's styles to correct unexpected theme effects (e.g. in dark themes BS close button in not enough contrast).
+* usually you still need css to patch some plugin element's styles to correct unexpected theme effects (e.g. in dark themes BS close button could be made white, when you not expect it, then `.badge > close {color:black;}` solves the problem ).
 
 ### Alternatives:
 
-BsMultiSelect was created because at the moment when bootstrap 4 was released and all existed multi select plugins had strange side effects. It was just simpler to try to combine several BS 4 tools together: `form-control`, `dropdown-menu`, `close` button, `badge` then trying to understand internals of mature existed projects. 
+BsMultiSelect was created because at the moment when bootstrap 4 was released all existed multi select plugins had strange side effects with it and it was just simpler to try to combine several BS 4 tools together: `form-control`, `dropdown-menu`, `close` button, `badge` then trying to understand internals of mature projects. 
 
 * Chosen.js: https://harvesthq.github.io/chosen/ - (ver 1.8.5) strange "Consider marking event handler as 'passive' to make the page more responsive" warnings to console, heavy integrating to bootstrap theme (30KB+10KB js+css minified)
 
