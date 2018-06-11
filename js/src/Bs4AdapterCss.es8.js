@@ -20,7 +20,7 @@ class Bs4AdapterCss {
         this.jQuery=jQuery;
         this.hiddenSelect=hiddenSelect;
         this.bs4Commons = new Bs4Commons(jQuery, hiddenSelect, this.options.dropDownItemHoverClass);
-
+        this.bs4CommonsLabelDispose = null;
     }
 
     Init($container, $selectedPanel, $filterInputItem, $filterInput, $dropDownMenu){
@@ -31,19 +31,12 @@ class Bs4AdapterCss {
         $filterInputItem.addClass(this.options.filterInputItemClass)
         $filterInput.addClass(this.options.filterInputClass);
 
-        let inputId = this.hiddenSelect.id;
-        let $formGroup = this.jQuery(this.hiddenSelect).closest('.form-group');
-        
-        if ($formGroup.length == 1) {
-            let $label = $formGroup.find(`label[for="${inputId}"]`);
-            let f = $label.attr('for');
-            let $filterInput = $selectedPanel.find('input');
-            if (f == this.hiddenSelect.id) {
-                let id = `${this.options.containerClass}-generated-filter-id-${this.hiddenSelect.id}`;
-                $filterInput.attr('id', id);
-                $label.attr('for', id);
-            }
-        }
+        this.bs4CommonsLabelDispose = this.bs4Commons.HandleLabel($selectedPanel, this.options.containerClass);
+    }
+
+    Dispose(){
+        if (this.bs4CommonsLabelDispose !== null)
+            this.bs4CommonsLabelDispose();
     }
 
     UpdateIsValid($selectedPanel){

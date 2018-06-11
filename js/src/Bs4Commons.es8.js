@@ -6,6 +6,25 @@ class Bs4Commons {
         this.dropDownItemHoverClass = dropDownItemHoverClass;
     }
 
+    HandleLabel($selectedPanel, containerClass){
+        let inputId = this.hiddenSelect.id;
+        let $formGroup = this.$(this.hiddenSelect).closest('.form-group');
+        if ($formGroup.length == 1) {
+            let $label = $formGroup.find(`label[for="${inputId}"]`);
+            let forId = $label.attr('for');
+            let $filterInput = $selectedPanel.find('input');
+            if (forId == this.hiddenSelect.id) {
+                let id = `${containerClass}-generated-filter-id-${this.hiddenSelect.id}`;
+                $filterInput.attr('id', id);
+                $label.attr('for', id);
+                return () => {
+                    $label.attr('for', forId);
+                }
+            }
+        }
+        return null;
+    }
+
     CreateDropDownItemContent(
         $dropDownItem, optionId, itemText, isSelected,
         containerClass, dropDownItemClass){

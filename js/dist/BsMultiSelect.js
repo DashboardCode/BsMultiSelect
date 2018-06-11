@@ -272,33 +272,30 @@ var BsMultiSelect = function (window, $, Popper) {
       key: "Dispose",
       value: function Dispose() {
         $.removeData(this.selectElement, dataKey);
-        $(this.selectElement).off(dataKey);
+        $(this.selectElement).off(dataKey); // removable handlers
+        //$(window.selectedPanelClick).unbind("click", this.selectedPanelClick);
+
+        $(window.document).unbind("mouseup", this.documentMouseup); //$(this.container).unbind("mousedown", this.containerMousedown);
+
+        $(window.document).unbind("mouseup", this.documentMouseup2);
 
         if (this.adapter !== null) {
-          //this.adapter.destroy()
-          this.adapter = null;
+          this.adapter.Dispose();
         }
 
         if (this.popper !== null) {
           this.popper.destroy();
-          this.popper = null;
         }
 
         if (this.container !== null) {
           $(this.container).remove();
-          this.container = null;
-        }
+        } // this.selectedPanel = null;
+        // this.filterInputItem = null;
+        // this.filterInput = null;
+        // this.dropDownMenu = null;
+        // this.selectElement = null;
+        // this.options = null;
 
-        this.selectedPanel = null;
-        this.filterInputItem = null;
-        this.filterInput = null;
-        this.dropDownMenu = null; //this.selectElement = null;
-        //this.options = null;
-        // removable handlers
-
-        $(window.document).unbind("mouseup", this.documentMouseup); //$(window.document).unbind("mousedown", this.containerMousedown);
-
-        $(window.document).unbind("mouseup", this.documentMouseup2); //this.selectedPanelClick  = null;
       }
     }, {
       key: "UpdateSize",
@@ -355,8 +352,8 @@ var BsMultiSelect = function (window, $, Popper) {
       value: function init() {
         var _this2 = this;
 
-        var $hiddenSelect = $(this.selectElement);
-        $hiddenSelect.hide();
+        var $selectElement = $(this.selectElement);
+        $selectElement.hide();
         var $container = $("<DIV/>");
         this.container = $container.get(0);
         var $selectedPanel = $("<UL/>");
@@ -378,12 +375,10 @@ var BsMultiSelect = function (window, $, Popper) {
         $dropDownMenu.css(defDropDownMenuStyleSys); // create handlers
 
         this.documentMouseup = function () {
-          console.log("skipFocusout = false");
           _this2.skipFocusout = false;
         };
 
         this.containerMousedown = function () {
-          console.log("skipFocusout = true");
           _this2.skipFocusout = true;
         };
 
@@ -404,7 +399,7 @@ var BsMultiSelect = function (window, $, Popper) {
         };
 
         this.adapter.Init($container, $selectedPanel, $filterInputItem, $filterInput, $dropDownMenu);
-        $container.insertAfter($hiddenSelect);
+        $container.insertAfter($selectElement);
         this.popper = new Popper(this.filterInput, this.dropDownMenu, {
           placement: 'bottom-start',
           modifiers: {
@@ -424,7 +419,7 @@ var BsMultiSelect = function (window, $, Popper) {
         this.UpdateReadonlyImpl($container, $selectedPanel); // some browsers (IE11) can change select value (as part of "autocomplete") after page is loaded but before "ready" event
 
         $(document).ready(function () {
-          var selectOptions = $hiddenSelect.find('OPTION');
+          var selectOptions = $selectElement.find('OPTION');
           selectOptions.each(function (index, optionElement) {
             _this2.appendDropDownItem(optionElement);
           });
@@ -443,7 +438,6 @@ var BsMultiSelect = function (window, $, Popper) {
           $filterInput.focusin(function () {
             return _this2.adapter.Focus($selectedPanel, true);
           }).focusout(function () {
-            console.log("focusout " + _this2.skipFocusout);
             if (!_this2.skipFocusout) _this2.adapter.Focus($selectedPanel, false);
           });
         }

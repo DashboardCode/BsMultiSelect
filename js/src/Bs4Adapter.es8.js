@@ -32,6 +32,7 @@ class Bs4Adapter {
         this.removeSelectedItemButtonStyle= {'font-size':'1.5em', 'line-height': '.9em'};
 
         this.bs4Commons = new Bs4Commons(jQuery, hiddenSelect, this.dropDownItemHoverClass);
+        this.bs4CommonsLabelDispose = null;
     }
 
     Init($container, $selectedPanel, $filterInputItem, $filterInput, $dropDownMenu){
@@ -43,21 +44,14 @@ class Bs4Adapter {
         $dropDownMenu.addClass(this.dropDownMenuClass);
         $filterInput.css("color", this.options.filterInputColor);
 
-        let inputId = this.hiddenSelect.id;
-        let $formGroup = this.jQuery(this.hiddenSelect).closest('.form-group');
-        
-        if ($formGroup.length == 1) {
-            let $label = $formGroup.find(`label[for="${inputId}"]`);
-            let f = $label.attr('for');
-            let $filterInput = $selectedPanel.find('input');
-            if (f == this.hiddenSelect.id) {
-                let id = `${this.containerClass}-generated-filter-id-${this.hiddenSelect.id}`;
-                $filterInput.attr('id', id);
-                $label.attr('for', id);
-            }
-        }
+        this.bs4CommonsLabelDispose = this.bs4Commons.HandleLabel($selectedPanel, this.containerClass);
     }
 
+    Dispose(){
+        if (this.bs4CommonsLabelDispose !== null)
+            this.bs4CommonsLabelDispose();
+    }
+    
     UpdateIsValid($selectedPanel){
         let $hiddenSelect = this.jQuery(this.hiddenSelect);
         if ($hiddenSelect.hasClass("is-valid")){

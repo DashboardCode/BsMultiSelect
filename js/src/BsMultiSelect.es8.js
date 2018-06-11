@@ -228,36 +228,30 @@ const BsMultiSelect = ((window, $, Popper) => {
             $.removeData(this.selectElement, dataKey);
             $(this.selectElement).off(dataKey)
 
+            // removable handlers
+            //$(window.selectedPanelClick).unbind("click", this.selectedPanelClick);
+            $(window.document).unbind("mouseup", this.documentMouseup);
+            //$(this.container).unbind("mousedown", this.containerMousedown);
+            $(window.document).unbind("mouseup", this.documentMouseup2);
+            
             if (this.adapter !== null) {
-                //this.adapter.destroy()
-                this.adapter = null
+                this.adapter.Dispose()
             }
 
             if (this.popper !== null) {
                 this.popper.destroy()
-                this.popper = null
             }
             
-            if (this.container !== null)
-            {
+            if (this.container !== null) {
                 $(this.container).remove();
-                this.container = null;
             }
-            
-            
-            this.selectedPanel = null;
-            this.filterInputItem = null;
-            this.filterInput = null;
-            this.dropDownMenu = null;
-            
-            //this.selectElement = null;
-            //this.options = null;
-            
-            // removable handlers
-            $(window.document).unbind("mouseup", this.documentMouseup);
-            //$(window.document).unbind("mousedown", this.containerMousedown);
-            $(window.document).unbind("mouseup", this.documentMouseup2);
-            //this.selectedPanelClick  = null;
+
+            // this.selectedPanel = null;
+            // this.filterInputItem = null;
+            // this.filterInput = null;
+            // this.dropDownMenu = null;
+            // this.selectElement = null;
+            // this.options = null;
         }
 
         UpdateSize(){
@@ -303,8 +297,8 @@ const BsMultiSelect = ((window, $, Popper) => {
         }
 
         init() {
-            let $hiddenSelect = $(this.selectElement);
-            $hiddenSelect.hide();
+            let $selectElement = $(this.selectElement);
+            $selectElement.hide();
 
             let $container = $("<DIV/>");
             this.container = $container.get(0);
@@ -336,12 +330,10 @@ const BsMultiSelect = ((window, $, Popper) => {
 
             // create handlers
             this.documentMouseup = () => {
-                console.log("skipFocusout = false");
                 this.skipFocusout = false;
             }
     
             this.containerMousedown = () => {
-                console.log("skipFocusout = true");
                 this.skipFocusout = true;
             };
 
@@ -361,7 +353,7 @@ const BsMultiSelect = ((window, $, Popper) => {
             };
 
             this.adapter.Init($container, $selectedPanel, $filterInputItem, $filterInput, $dropDownMenu);
-            $container.insertAfter($hiddenSelect);
+            $container.insertAfter($selectElement);
             
             this.popper = new Popper(this.filterInput, this.dropDownMenu, {
                 placement: 'bottom-start',
@@ -377,7 +369,7 @@ const BsMultiSelect = ((window, $, Popper) => {
 
             // some browsers (IE11) can change select value (as part of "autocomplete") after page is loaded but before "ready" event
             $(document).ready(() => {
-                let selectOptions = $hiddenSelect.find('OPTION');
+                let selectOptions = $selectElement.find('OPTION');
                 selectOptions.each(
                     (index, optionElement) => {
                         this.appendDropDownItem(optionElement);
@@ -395,7 +387,6 @@ const BsMultiSelect = ((window, $, Popper) => {
             {
                 $filterInput.focusin(() => this.adapter.Focus($selectedPanel, true))
                             .focusout(() => {
-                                console.log("focusout " + this.skipFocusout);
                                 if (!this.skipFocusout)
                                     this.adapter.Focus($selectedPanel, false)
                                 });
