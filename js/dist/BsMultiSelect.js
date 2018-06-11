@@ -558,10 +558,10 @@ var BsMultiSelect = function (window, $, Popper) {
     });
   }
 
-  $.fn[pluginName] = jQueryInterface; // in case of mulitple $(this) it will return 1st element plugin instance
+  $.fn[pluginName] = jQueryInterface; // for first capitalized letter - return plugin instance, for 1st selected $ item
 
   $.fn[pluginName.charAt(0).toUpperCase() + pluginName.slice(1)] = function () {
-    return $(this).data("plugin_" + pluginName);
+    return $(this).data(dataKey);
   };
 
   $.fn[pluginName].Constructor = Plugin;

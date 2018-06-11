@@ -820,10 +820,10 @@
         });
       }
 
-      $$$1.fn[pluginName] = jQueryInterface; // in case of mulitple $(this) it will return 1st element plugin instance
+      $$$1.fn[pluginName] = jQueryInterface; // for first capitalized letter - return plugin instance, for 1st selected $ item
 
       $$$1.fn[pluginName.charAt(0).toUpperCase() + pluginName.slice(1)] = function () {
-        return $$$1(this).data("plugin_" + pluginName);
+        return $$$1(this).data(dataKey);
       };
 
       $$$1.fn[pluginName].Constructor = Plugin;
