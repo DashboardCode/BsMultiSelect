@@ -14,7 +14,7 @@ import Bs4Adapter from './Bs4Adapter.es8'; // TODO: try to find convinient way t
 var BsMultiSelect = function (window, $, Popper) {
   var JQUERY_NO_CONFLICT = $.fn[pluginName];
   var pluginName = 'dashboardCodeBsMultiSelect';
-  var dataKey = "plugin_".concat(pluginName);
+  var dataKey = "".concat(pluginName);
   var defSelectedPanelStyleSys = {
     'display': 'flex',
     'flex-wrap': 'wrap',
@@ -269,6 +269,38 @@ var BsMultiSelect = function (window, $, Popper) {
         this.UpdateReadonlyImpl($(this.container), $selectedPanel);
       }
     }, {
+      key: "Dispose",
+      value: function Dispose() {
+        $.removeData(this.selectElement, dataKey);
+        $(this.selectElement).off(dataKey);
+
+        if (this.adapter !== null) {
+          //this.adapter.destroy()
+          this.adapter = null;
+        }
+
+        if (this.popper !== null) {
+          this.popper.destroy();
+          this.popper = null;
+        }
+
+        if (this.container !== null) {
+          $(this.container).remove();
+          this.container = null;
+        }
+
+        this.selectedPanel = null;
+        this.filterInputItem = null;
+        this.filterInput = null;
+        this.dropDownMenu = null; //this.selectElement = null;
+        //this.options = null;
+        // removable handlers
+
+        $(window.document).unbind("mouseup", this.selectedPanelClick);
+        $(window.document).unbind("mousedown", this.documentMousedown);
+        $(window.document).unbind("mouseup", this.documentMouseup2); //this.selectedPanelClick  = null;
+      }
+    }, {
       key: "UpdateSize",
       value: function UpdateSize() {
         this.UpdateSizeImpl($(this.selectedPanel));
@@ -505,7 +537,7 @@ var BsMultiSelect = function (window, $, Popper) {
       var data = $(this).data(dataKey);
 
       if (!data) {
-        if (/dispose|hide/.test(options)) {
+        if (/Dispose/.test(options)) {
           return;
         }
 

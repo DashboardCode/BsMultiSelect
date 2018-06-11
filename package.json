@@ -11,8 +11,8 @@
   "main": "dist/js/BsMultiSelect",
   "dependencies": {
     "@babel/polyfill": "7.0.0-beta.49",
-    "jquery": "1.9.1 - 3",
-    "popper.js": "^1.14.3"
+    "jquery": "3.3.1",
+    "popper.js": "1.14.3"
   },
   "peerDependencies": {},
   "devDependencies": {
@@ -21,24 +21,27 @@
     "@babel/plugin-external-helpers": "7.0.0-beta.49",
     "@babel/plugin-transform-spread": "7.0.0-beta.49",
     "@babel/preset-env": "7.0.0-beta.49",
-    "autoprefixer": "8.6.0",
+    "autoprefixer": "8.6.2",
     "babel-eslint": "8.2.3",
     "bootstrap": "4.1.1",
     "clean-css-cli": "4.1.11",
     "cross-env": "5.1.6",
     "eslint": "4.19.1",
-    "eslint-plugin-compat": "2.3.0",
-    "gulp": "^4.0.0",
+    "eslint-plugin-compat": "2.4.0",
+    "gulp": "4.0.0",
     "npm-run-all": "4.1.3",
     "rollup": "0.60.1",
-    "rollup-plugin-babel": "4.0.0-beta.4",
-    "sass": "^1.5.1",
+    "rollup-plugin-babel": "4.0.0-beta.5",
+    "sass": "1.5.1",
     "stylelint": "9.2.1",
     "stylelint-config-recommended-scss": "3.2.0",
     "stylelint-config-standard": "18.2.0",
     "stylelint-order": "0.8.1",
     "stylelint-scss": "3.1.0",
-    "uglify-js": "3.4.0"
+    "uglify-js": "3.4.0",
+    "postcss-html": "0.27.0",
+    "postcss-markdown": "0.27.0",
+    "postcss-syntax": "0.27.0"
   },
   "scripts": {
     "report": "echo.cd & cd & echo. & where node & echo.node -v & node -v & echo. & where npm & echo.npm -version & npm -version  & echo. & where eslint & echo.eslint -v & eslint -v & echo. & where rollup & echo.rollup -version & rollup -version & echo. &  echo.babel -version & node ./node_modules/@babel/cli/bin/babel --version",

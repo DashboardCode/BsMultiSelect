@@ -7,7 +7,7 @@ import Bs4Adapter from './Bs4Adapter.es8'
 const BsMultiSelect = ((window, $, Popper) => {
     const JQUERY_NO_CONFLICT = $.fn[pluginName];
     const pluginName = 'dashboardCodeBsMultiSelect';
-    const dataKey = `plugin_${pluginName}`;
+    const dataKey = `${pluginName}`;
 
     const defSelectedPanelStyleSys = {'display':'flex', 'flex-wrap':'wrap', 'list-style-type':'none'};  // remove bullets since this is ul
     const defFilterInputStyleSys   = {'width':'2ch', 'border':'0', 'padding':'0', 'outline':'none', 'background-color':'transparent' };
@@ -222,6 +222,45 @@ const BsMultiSelect = ((window, $, Popper) => {
             this.adapter.UpdateIsValid($selectedPanel);
             this.UpdateSizeImpl($selectedPanel);
             this.UpdateReadonlyImpl($(this.container), $selectedPanel);
+        }
+
+        Dispose(){
+            $.removeData(this.selectElement, dataKey);
+            $(this.selectElement).off(dataKey)
+
+            if (this.adapter !== null) {
+                //this.adapter.destroy()
+                this.adapter = null
+            }
+
+            if (this.popper !== null) {
+                this.popper.destroy()
+                this.popper = null
+            }
+            
+            if (this.container !== null)
+            {
+                $(this.container).remove();
+                this.container = null;
+            }
+            
+            
+            this.selectedPanel = null;
+            this.filterInputItem = null;
+            this.filterInput = null;
+            this.dropDownMenu = null;
+            
+            //this.selectElement = null;
+            //this.options = null;
+            
+            // removable handlers
+            $(window.document).unbind("mouseup", this.selectedPanelClick);
+            $(window.document).unbind("mousedown", this.documentMousedown);
+            $(window.document).unbind("mouseup", this.documentMouseup2);
+            
+            //this.selectedPanelClick  = null;
+            
+
         }
 
         UpdateSize(){
@@ -446,7 +485,7 @@ const BsMultiSelect = ((window, $, Popper) => {
             let data = $(this).data(dataKey)
 
             if (!data) {
-                if (/dispose|hide/.test(options)) {
+                if (/Dispose/.test(options)) {
                     return;
                 }
                 const optionsObject = (typeof options === 'object')?options:null;

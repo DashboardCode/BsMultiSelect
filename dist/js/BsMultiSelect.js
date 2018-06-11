@@ -295,7 +295,7 @@
     var BsMultiSelect = function (window, $$$1, Popper$$1) {
       var JQUERY_NO_CONFLICT = $$$1.fn[pluginName];
       var pluginName = 'dashboardCodeBsMultiSelect';
-      var dataKey = "plugin_" + pluginName;
+      var dataKey = "" + pluginName;
       var defSelectedPanelStyleSys = {
         'display': 'flex',
         'flex-wrap': 'wrap',
@@ -538,6 +538,37 @@
           this.UpdateReadonlyImpl($$$1(this.container), $selectedPanel);
         };
 
+        _proto.Dispose = function Dispose() {
+          $$$1.removeData(this.selectElement, dataKey);
+          $$$1(this.selectElement).off(dataKey);
+
+          if (this.adapter !== null) {
+            //this.adapter.destroy()
+            this.adapter = null;
+          }
+
+          if (this.popper !== null) {
+            this.popper.destroy();
+            this.popper = null;
+          }
+
+          if (this.container !== null) {
+            $$$1(this.container).remove();
+            this.container = null;
+          }
+
+          this.selectedPanel = null;
+          this.filterInputItem = null;
+          this.filterInput = null;
+          this.dropDownMenu = null; //this.selectElement = null;
+          //this.options = null;
+          // removable handlers
+
+          $$$1(window.document).unbind("mouseup", this.selectedPanelClick);
+          $$$1(window.document).unbind("mousedown", this.documentMousedown);
+          $$$1(window.document).unbind("mouseup", this.documentMouseup2); //this.selectedPanelClick  = null;
+        };
+
         _proto.UpdateSize = function UpdateSize() {
           this.UpdateSizeImpl($$$1(this.selectedPanel));
         };
@@ -768,7 +799,7 @@
           var data = $$$1(this).data(dataKey);
 
           if (!data) {
-            if (/dispose|hide/.test(options)) {
+            if (/Dispose/.test(options)) {
               return;
             }
 

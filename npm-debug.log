@@ -1,0 +1,46 @@
+0 info it worked if it ends with ok
+1 verbose cli [ 'C:\\Program Files (x86)\\Microsoft Visual Studio\\2017\\Community\\Web\\External\\Node.exe',
+1 verbose cli   'C:\\Program Files (x86)\\Microsoft Visual Studio\\2017\\Community\\Web\\External\\node_modules\\npm\\bin\\npm-cli.js',
+1 verbose cli   'run',
+1 verbose cli   'report' ]
+2 info using npm@3.3.4
+3 info using node@v5.4.1
+4 verbose run-script [ 'prereport', 'report', 'postreport' ]
+5 info lifecycle dashboardcode.bsmutltiselect@0.1.15~prereport: dashboardcode.bsmutltiselect@0.1.15
+6 silly lifecycle dashboardcode.bsmutltiselect@0.1.15~prereport: no script for prereport, continuing
+7 info lifecycle dashboardcode.bsmutltiselect@0.1.15~report: dashboardcode.bsmutltiselect@0.1.15
+8 verbose lifecycle dashboardcode.bsmutltiselect@0.1.15~report: unsafe-perm in lifecycle true
+9 verbose lifecycle dashboardcode.bsmutltiselect@0.1.15~report: PATH: C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\Web\External\node_modules\npm\bin\node-gyp-bin;C:\cot\DashboardCode\BsMultiSelect\node_modules\.bin;C:\WINDOWS\system32;C:\WINDOWS;C:\WINDOWS\System32\Wbem;C:\WINDOWS\System32\WindowsPowerShell\v1.0\;C:\Program Files\Microsoft SQL Server\130\Tools\Binn\;C:\Program Files\dotnet\;C:\Program Files (x86)\Skype\Phone\;C:\Program Files\Git\cmd;C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\Web\External;C:\Program Files\nodejs\;C:\Users\pokrorom\.dnx\bin;C:\Program Files\Microsoft VS Code\bin;C:\Users\pokrorom\AppData\Roaming\npm
+10 verbose lifecycle dashboardcode.bsmutltiselect@0.1.15~report: CWD: C:\cot\DashboardCode\BsMultiSelect
+11 silly lifecycle dashboardcode.bsmutltiselect@0.1.15~report: Args: [ '/d /s /c',
+11 silly lifecycle   'echo.cd & cd & echo. & where node & echo.node -v & node -v & echo. & where npm & echo.npm -version & npm -version  & echo. & where eslint & echo.eslint -v & eslint -v & echo. & where rollup & echo.rollup -version & rollup -version & echo. &  echo.babel -version & node ./node_modules/@babel/cli/bin/babel --version' ]
+12 silly lifecycle dashboardcode.bsmutltiselect@0.1.15~report: Returned: code: 1  signal: null
+13 info lifecycle dashboardcode.bsmutltiselect@0.1.15~report: Failed to exec report script
+14 verbose stack Error: dashboardcode.bsmutltiselect@0.1.15 report: `echo.cd & cd & echo. & where node & echo.node -v & node -v & echo. & where npm & echo.npm -version & npm -version  & echo. & where eslint & echo.eslint -v & eslint -v & echo. & where rollup & echo.rollup -version & rollup -version & echo. &  echo.babel -version & node ./node_modules/@babel/cli/bin/babel --version`
+14 verbose stack Exit status 1
+14 verbose stack     at EventEmitter.<anonymous> (C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\Web\External\node_modules\npm\lib\utils\lifecycle.js:233:16)
+14 verbose stack     at emitTwo (events.js:87:13)
+14 verbose stack     at EventEmitter.emit (events.js:172:7)
+14 verbose stack     at ChildProcess.<anonymous> (C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\Web\External\node_modules\npm\lib\utils\spawn.js:24:14)
+14 verbose stack     at emitTwo (events.js:87:13)
+14 verbose stack     at ChildProcess.emit (events.js:172:7)
+14 verbose stack     at maybeClose (internal/child_process.js:821:16)
+14 verbose stack     at Process.ChildProcess._handle.onexit (internal/child_process.js:211:5)
+15 verbose pkgid dashboardcode.bsmutltiselect@0.1.15
+16 verbose cwd C:\cot\DashboardCode\BsMultiSelect
+17 error Windows_NT 6.1.7601
+18 error argv "C:\\Program Files (x86)\\Microsoft Visual Studio\\2017\\Community\\Web\\External\\Node.exe" "C:\\Program Files (x86)\\Microsoft Visual Studio\\2017\\Community\\Web\\External\\node_modules\\npm\\bin\\npm-cli.js" "run" "report"
+19 error node v5.4.1
+20 error npm  v3.3.4
+21 error code ELIFECYCLE
+22 error dashboardcode.bsmutltiselect@0.1.15 report: `echo.cd & cd & echo. & where node & echo.node -v & node -v & echo. & where npm & echo.npm -version & npm -version  & echo. & where eslint & echo.eslint -v & eslint -v & echo. & where rollup & echo.rollup -version & rollup -version & echo. &  echo.babel -version & node ./node_modules/@babel/cli/bin/babel --version`
+22 error Exit status 1
+23 error Failed at the dashboardcode.bsmutltiselect@0.1.15 report script 'echo.cd & cd & echo. & where node & echo.node -v & node -v & echo. & where npm & echo.npm -version & npm -version  & echo. & where eslint & echo.eslint -v & eslint -v & echo. & where rollup & echo.rollup -version & rollup -version & echo. &  echo.babel -version & node ./node_modules/@babel/cli/bin/babel --version'.
+23 error This is most likely a problem with the dashboardcode.bsmutltiselect package,
+23 error not with npm itself.
+23 error Tell the author that this fails on your system:
+23 error     echo.cd & cd & echo. & where node & echo.node -v & node -v & echo. & where npm & echo.npm -version & npm -version  & echo. & where eslint & echo.eslint -v & eslint -v & echo. & where rollup & echo.rollup -version & rollup -version & echo. &  echo.babel -version & node ./node_modules/@babel/cli/bin/babel --version
+23 error You can get their info via:
+23 error     npm owner ls dashboardcode.bsmutltiselect
+23 error There is likely additional logging output above.
+24 verbose exit [ 1, true ]
