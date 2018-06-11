@@ -61,7 +61,7 @@ var BsMultiSelect = function (window, $, Popper) {
 
       this.selectedPanelClick = null;
       this.documentMouseup = null;
-      this.documentMousedown = null;
+      this.containerMousedown = null;
       this.documentMouseup2 = null; // state
 
       this.disabled = null;
@@ -296,8 +296,8 @@ var BsMultiSelect = function (window, $, Popper) {
         //this.options = null;
         // removable handlers
 
-        $(window.document).unbind("mouseup", this.selectedPanelClick);
-        $(window.document).unbind("mousedown", this.documentMousedown);
+        $(window.document).unbind("mouseup", this.documentMouseup); //$(window.document).unbind("mousedown", this.containerMousedown);
+
         $(window.document).unbind("mouseup", this.documentMouseup2); //this.selectedPanelClick  = null;
       }
     }, {
@@ -378,10 +378,12 @@ var BsMultiSelect = function (window, $, Popper) {
         $dropDownMenu.css(defDropDownMenuStyleSys); // create handlers
 
         this.documentMouseup = function () {
+          console.log("skipFocusout = false");
           _this2.skipFocusout = false;
         };
 
-        this.documentMousedown = function () {
+        this.containerMousedown = function () {
+          console.log("skipFocusout = true");
           _this2.skipFocusout = true;
         };
 
@@ -441,6 +443,7 @@ var BsMultiSelect = function (window, $, Popper) {
           $filterInput.focusin(function () {
             return _this2.adapter.Focus($selectedPanel, true);
           }).focusout(function () {
+            console.log("focusout " + _this2.skipFocusout);
             if (!_this2.skipFocusout) _this2.adapter.Focus($selectedPanel, false);
           });
         }
@@ -558,7 +561,7 @@ var BsMultiSelect = function (window, $, Popper) {
     });
   }
 
-  $.fn[pluginName] = jQueryInterface; // for first capitalized letter - return plugin instance, for 1st selected $ item
+  $.fn[pluginName] = jQueryInterface; // pluginName with first capitalized letter - return plugin instance for 1st $selected item
 
   $.fn[pluginName.charAt(0).toUpperCase() + pluginName.slice(1)] = function () {
     return $(this).data(dataKey);

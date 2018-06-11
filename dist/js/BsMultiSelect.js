@@ -1,5 +1,5 @@
 /*!
-  * DashboardCode BsMultiSelect v0.1.15 (https://dashboardcode.github.io/BsMultiSelect/)
+  * DashboardCode BsMultiSelect v0.1.17 (https://dashboardcode.github.io/BsMultiSelect/)
   * Copyright 2017-2018 Roman Pokrovskij (github user rpokrovskij)
   * Licensed under APACHE 2 (https://github.com/DashboardCode/BsMultiSelect/blob/master/LICENSE)
   */
@@ -340,7 +340,7 @@
 
           this.selectedPanelClick = null;
           this.documentMouseup = null;
-          this.documentMousedown = null;
+          this.containerMousedown = null;
           this.documentMouseup2 = null; // state
 
           this.disabled = null;
@@ -564,8 +564,8 @@
           //this.options = null;
           // removable handlers
 
-          $$$1(window.document).unbind("mouseup", this.selectedPanelClick);
-          $$$1(window.document).unbind("mousedown", this.documentMousedown);
+          $$$1(window.document).unbind("mouseup", this.documentMouseup); //$(window.document).unbind("mousedown", this.containerMousedown);
+
           $$$1(window.document).unbind("mouseup", this.documentMouseup2); //this.selectedPanelClick  = null;
         };
 
@@ -641,10 +641,12 @@
           $dropDownMenu.css(defDropDownMenuStyleSys); // create handlers
 
           this.documentMouseup = function () {
+            console.log("skipFocusout = false");
             _this2.skipFocusout = false;
           };
 
-          this.documentMousedown = function () {
+          this.containerMousedown = function () {
+            console.log("skipFocusout = true");
             _this2.skipFocusout = true;
           };
 
@@ -704,6 +706,7 @@
             $filterInput.focusin(function () {
               return _this2.adapter.Focus($selectedPanel, true);
             }).focusout(function () {
+              console.log("focusout " + _this2.skipFocusout);
               if (!_this2.skipFocusout) _this2.adapter.Focus($selectedPanel, false);
             });
           }
@@ -820,7 +823,7 @@
         });
       }
 
-      $$$1.fn[pluginName] = jQueryInterface; // for first capitalized letter - return plugin instance, for 1st selected $ item
+      $$$1.fn[pluginName] = jQueryInterface; // pluginName with first capitalized letter - return plugin instance for 1st $selected item
 
       $$$1.fn[pluginName.charAt(0).toUpperCase() + pluginName.slice(1)] = function () {
         return $$$1(this).data(dataKey);

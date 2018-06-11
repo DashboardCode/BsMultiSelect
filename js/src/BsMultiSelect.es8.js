@@ -44,7 +44,7 @@ const BsMultiSelect = ((window, $, Popper) => {
             // removable handlers
             this.selectedPanelClick  = null;
             this.documentMouseup   = null;
-            this.documentMousedown   = null;
+            this.containerMousedown   = null;
             this.documentMouseup2   = null;
 
             // state
@@ -254,13 +254,10 @@ const BsMultiSelect = ((window, $, Popper) => {
             //this.options = null;
             
             // removable handlers
-            $(window.document).unbind("mouseup", this.selectedPanelClick);
-            $(window.document).unbind("mousedown", this.documentMousedown);
+            $(window.document).unbind("mouseup", this.documentMouseup);
+            //$(window.document).unbind("mousedown", this.containerMousedown);
             $(window.document).unbind("mouseup", this.documentMouseup2);
-            
             //this.selectedPanelClick  = null;
-            
-
         }
 
         UpdateSize(){
@@ -295,10 +292,10 @@ const BsMultiSelect = ((window, $, Popper) => {
                     this.adapter.Enable($selectedPanel, true);
 
                     if (this.options.doManageFocus) {
-                        $container.mousedown(this.containerMousedown);  // removable
+                        $container.mousedown(this.containerMousedown);    // removable
                         $(window.document).mouseup(this.documentMouseup); // removable
                     }
-                    $selectedPanel.click(this.selectedPanelClick); // removable
+                    $selectedPanel.click(this.selectedPanelClick);     // removable
                     $(window.document).mouseup(this.documentMouseup2); // removable
                 }
                 this.disabled=disabled;
@@ -339,10 +336,12 @@ const BsMultiSelect = ((window, $, Popper) => {
 
             // create handlers
             this.documentMouseup = () => {
+                console.log("skipFocusout = false");
                 this.skipFocusout = false;
             }
     
-            this.documentMousedown = () => {
+            this.containerMousedown = () => {
+                console.log("skipFocusout = true");
                 this.skipFocusout = true;
             };
 
@@ -360,7 +359,6 @@ const BsMultiSelect = ((window, $, Popper) => {
                     this.showDropDown();
                 }
             };
-
 
             this.adapter.Init($container, $selectedPanel, $filterInputItem, $filterInput, $dropDownMenu);
             $container.insertAfter($hiddenSelect);
@@ -396,8 +394,11 @@ const BsMultiSelect = ((window, $, Popper) => {
             if (this.options.doManageFocus)
             {
                 $filterInput.focusin(() => this.adapter.Focus($selectedPanel, true))
-                            .focusout(() => { if (!this.skipFocusout)
-                                this.adapter.Focus($selectedPanel, false) });
+                            .focusout(() => {
+                                console.log("focusout " + this.skipFocusout);
+                                if (!this.skipFocusout)
+                                    this.adapter.Focus($selectedPanel, false)
+                                });
             }
 
             $filterInput.on("keydown", (event) => {
@@ -505,7 +506,7 @@ const BsMultiSelect = ((window, $, Popper) => {
 
     $.fn[pluginName] = jQueryInterface;
 
-    // for first capitalized letter - return plugin instance, for 1st selected $ item
+    // pluginName with first capitalized letter - return plugin instance for 1st $selected item
     $.fn[pluginName.charAt(0).toUpperCase() + pluginName.slice(1)] = function () {
         return $(this).data(dataKey);
     };
