@@ -1,11 +1,11 @@
 # DashboardCode Multiselect plugin for Bootstrap 4
 *https://dashboardcode.github.io/BsMultiSelect/*
 
-There are many of such plugins but this is small since reuses maximum of bootrap 4 styles and code (BsMultiSelect size is 15KB+2KB js+css minified). 
+There are many of such plugins but this is small since reuses maximum of bootrap 4 styles and code (BsMultiSelect size is 15KB+2KB js+css minified).
 
 You can copy [./scss/BsMultiSelect.scss](https://github.com/DashboardCode/BsMultiSelect/blob/master/scss/BsMultiSelect.scss) to your SASS project and I hope it should be enough to adopt plugin to your bootstrap theme (it utilize bootstrap variables).
 
-It also follows Bootstrap 4 conventions and use the same instruments (babel, rollup) so pretend to be a modern plugin `boilerplate`. 
+It also follows Bootstrap 4 conventions and use the same instruments (babel, rollup) so pretend to be a modern plugin `boilerplate`.
 
 # Architecture
 Instead of using BS4 Dropdown component (it is not possible because BS Dropdown requires presence of `toggle-buttons` https://github.com/twbs/bootstrap/issues/26420) the plugin uses popper.js directly.
@@ -37,7 +37,7 @@ If your theme changes those variables, you need to update them on the plugin ini
                          selectedPanelDefMinHeight: 'calc(2.25rem + 2px)',  // default size
                          selectedPanelLgMinHeight: 'calc(2.875rem + 2px)',  // LG size
                          selectedPanelSmMinHeight: 'calc(1.8125rem + 2px)', // SM size
-                         selectedPanelReadonlyBackgroundColor: '#e9ecef',   // disabled background
+                         selectedPanelDisabledBackgroundColor: '#e9ecef',   // disabled background
                          selectedPanelFocusBorderColor: '#80bdff',          // focus border
                          selectedPanelFocusBoxShadow: '0 0 0 0.2rem rgba(0, 123, 255, 0.25)',  // foxus shadow
                          selectedPanelFocusValidBoxShadow: '0 0 0 0.2rem rgba(40, 167, 69, 0.25)',  // valid foxus shadow
@@ -46,6 +46,9 @@ If your theme changes those variables, you need to update them on the plugin ini
                      });
             
 ````
+
+**Disabled / Readonly**
+Although there is difference between those two attributes for `input`, the HTML 5.2 support only `disabled` for [`select`](https://www.w3.org/TR/2017/REC-html52-20171214/sec-forms.html#the-select-element) element. `Readonly` attribute on original `select` will be ignored.
 
 **Alternatively** you can use BsMultiSelect.css (included to distribution, update values manually) or [./scss/BsMultiSelect.scss](https://github.com/DashboardCode/BsMultiSelect/blob/master/scss/BsMultiSelect.scss) (copy it to your project and update reference to your suctom BS variables) just by configuring plugin this way:
 
@@ -79,15 +82,17 @@ Important to remember that BS allready provide classes like: `h-25`, `bg-light`,
 
 
 ### Known issues
-* Tested only for IE11, Chrome 66, Edge 42/17
+* Tested only for IE11, Chrome 66, Edge 42/17;
 
-* `fieldset disabled` not supported currently
+* `fieldset disabled` not supported currently;
 
-* usually you still need css to patch some plugin element's styles to correct unexpected theme effects (e.g. in dark themes BS close button could be made white, when you not expect it, then `.badge > close {color:black;}` solves the problem ).
+* Usually you still need css to patch some plugin element's styles to correct unexpected theme effects (e.g. in dark themes BS close button could be made white, when you not expect it, then `.badge > close {color:black;}` solves the problem );
+
+* Memory leaks: as I see there is several KB memory leak (that can be ignored) on each attach/detach (compiled objects, not nodes) but I can't identify its source (jquery, bootstrap utilities?).
 
 ### Alternatives:
 
-BsMultiSelect was created because at the moment when bootstrap 4 was released all existed multi select plugins had strange side effects with it and it was just simpler to try to combine several BS 4 tools together: `form-control`, `dropdown-menu`, `close` button, `badge` then trying to understand internals of mature projects. 
+BsMultiSelect was created because at the moment when bootstrap 4 was released all existed multi select plugins had strange side effects with it and it was just simpler to try to combine several BS 4 tools together: `form-control`, `dropdown-menu`, `close` button, `badge` then trying to understand internals of mature projects.
 
 * Chosen.js: https://harvesthq.github.io/chosen/ - (ver 1.8.5) strange "Consider marking event handler as 'passive' to make the page more responsive" warnings to console, heavy integrating to bootstrap theme (30KB+10KB js+css minified)
 

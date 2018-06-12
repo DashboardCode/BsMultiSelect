@@ -8,7 +8,7 @@ class Bs4Adapter {
             selectedPanelDefMinHeight: 'calc(2.25rem + 2px)',
             selectedPanelLgMinHeight: 'calc(2.875rem + 2px)',
             selectedPanelSmMinHeight: 'calc(1.8125rem + 2px)',
-            selectedPanelReadonlyBackgroundColor: '#e9ecef',
+            selectedPanelDisabledBackgroundColor: '#e9ecef',
             selectedPanelFocusBorderColor: '#80bdff',
             selectedPanelFocusBoxShadow: '0 0 0 0.2rem rgba(0, 123, 255, 0.25)',
             selectedPanelFocusValidBoxShadow: '0 0 0 0.2rem rgba(40, 167, 69, 0.25)',
@@ -79,7 +79,7 @@ class Bs4Adapter {
             $selectedPanel.find('BUTTON').prop("disabled", false);
         }
         else{
-            $selectedPanel.css({"background-color": this.options.selectedPanelReadonlyBackgroundColor});
+            $selectedPanel.css({"background-color": this.options.selectedPanelDisabledBackgroundColor});
             $selectedPanel.find('BUTTON').prop("disabled", true);
         }
     }

@@ -10,7 +10,7 @@ class Bs4AdapterCss {
             dropDownItemHoverClass: 'text-primary bg-light',
             selectedPanelClass: 'form-control',
             selectedPanelFocusClass : 'focus',
-            selectedPanelReadonlyClass: 'disabled',
+            selectedPanelDisabledClass: 'disabled',
             selectedItemClass: 'badge',
             removeSelectedItemButtonClass: 'close',
             filterInputItemClass: '',
@@ -52,11 +52,11 @@ class Bs4AdapterCss {
 
     Enable($selectedPanel, isEnabled){
         if(isEnabled){
-            $selectedPanel.removeClass(this.options.selectedPanelReadonlyClass);
+            $selectedPanel.removeClass(this.options.selectedPanelDisabledClass);
             $selectedPanel.find('BUTTON').prop("disabled", false);
         }
         else{
-            $selectedPanel.addClass(this.options.selectedPanelReadonlyClass);
+            $selectedPanel.addClass(this.options.selectedPanelDisabledClass);
             $selectedPanel.find('BUTTON').prop("disabled", true);
         }
     }

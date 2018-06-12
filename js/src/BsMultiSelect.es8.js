@@ -221,7 +221,7 @@ const BsMultiSelect = ((window, $, Popper) => {
             let $selectedPanel = (this.selectedPanel);
             this.adapter.UpdateIsValid($selectedPanel);
             this.UpdateSizeImpl($selectedPanel);
-            this.UpdateReadonlyImpl($(this.container), $selectedPanel);
+            this.UpdateDisabledImpl($(this.container), $selectedPanel);
         }
 
         Dispose(){
@@ -258,8 +258,8 @@ const BsMultiSelect = ((window, $, Popper) => {
             this.UpdateSizeImpl($(this.selectedPanel));
         }
 
-        UpdateReadonly(){
-            this.UpdateReadonlyImpl($(this.container), $(this.selectedPanel));
+        UpdateDisabled(){
+            this.UpdateDisabledImpl($(this.container), $(this.selectedPanel));
         }
 
         UpdateSizeImpl($selectedPanel){
@@ -267,7 +267,7 @@ const BsMultiSelect = ((window, $, Popper) => {
                 this.adapter.UpdateSize($selectedPanel);
         }
 
-        UpdateReadonlyImpl($container, $selectedPanel){
+        UpdateDisabledImpl($container, $selectedPanel){
             let disabled = this.selectElement.disabled;
             if (this.disabled!==disabled){
                 if (disabled) {
@@ -365,7 +365,7 @@ const BsMultiSelect = ((window, $, Popper) => {
             });
             this.adapter.UpdateIsValid($selectedPanel);
             this.UpdateSizeImpl($selectedPanel);
-            this.UpdateReadonlyImpl($container, $selectedPanel);
+            this.UpdateDisabledImpl($container, $selectedPanel);
 
             // some browsers (IE11) can change select value (as part of "autocomplete") after page is loaded but before "ready" event
             $(document).ready(() => {

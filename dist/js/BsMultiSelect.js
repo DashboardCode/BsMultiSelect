@@ -1,5 +1,5 @@
 /*!
-  * DashboardCode BsMultiSelect v0.1.17 (https://dashboardcode.github.io/BsMultiSelect/)
+  * DashboardCode BsMultiSelect v0.1.18 (https://dashboardcode.github.io/BsMultiSelect/)
   * Copyright 2017-2018 Roman Pokrovskij (github user rpokrovskij)
   * Licensed under APACHE 2 (https://github.com/DashboardCode/BsMultiSelect/blob/master/LICENSE)
   */
@@ -89,7 +89,7 @@
           dropDownItemHoverClass: 'text-primary bg-light',
           selectedPanelClass: 'form-control',
           selectedPanelFocusClass: 'focus',
-          selectedPanelReadonlyClass: 'disabled',
+          selectedPanelDisabledClass: 'disabled',
           selectedItemClass: 'badge',
           removeSelectedItemButtonClass: 'close',
           filterInputItemClass: '',
@@ -131,10 +131,10 @@
 
       _proto.Enable = function Enable($selectedPanel, isEnabled) {
         if (isEnabled) {
-          $selectedPanel.removeClass(this.options.selectedPanelReadonlyClass);
+          $selectedPanel.removeClass(this.options.selectedPanelDisabledClass);
           $selectedPanel.find('BUTTON').prop("disabled", false);
         } else {
-          $selectedPanel.addClass(this.options.selectedPanelReadonlyClass);
+          $selectedPanel.addClass(this.options.selectedPanelDisabledClass);
           $selectedPanel.find('BUTTON').prop("disabled", true);
         }
       };
@@ -174,7 +174,7 @@
           selectedPanelDefMinHeight: 'calc(2.25rem + 2px)',
           selectedPanelLgMinHeight: 'calc(2.875rem + 2px)',
           selectedPanelSmMinHeight: 'calc(1.8125rem + 2px)',
-          selectedPanelReadonlyBackgroundColor: '#e9ecef',
+          selectedPanelDisabledBackgroundColor: '#e9ecef',
           selectedPanelFocusBorderColor: '#80bdff',
           selectedPanelFocusBoxShadow: '0 0 0 0.2rem rgba(0, 123, 255, 0.25)',
           selectedPanelFocusValidBoxShadow: '0 0 0 0.2rem rgba(40, 167, 69, 0.25)',
@@ -251,7 +251,7 @@
           $selectedPanel.find('BUTTON').prop("disabled", false);
         } else {
           $selectedPanel.css({
-            "background-color": this.options.selectedPanelReadonlyBackgroundColor
+            "background-color": this.options.selectedPanelDisabledBackgroundColor
           });
           $selectedPanel.find('BUTTON').prop("disabled", true);
         }
@@ -535,7 +535,7 @@
           var $selectedPanel = this.selectedPanel;
           this.adapter.UpdateIsValid($selectedPanel);
           this.UpdateSizeImpl($selectedPanel);
-          this.UpdateReadonlyImpl($$$1(this.container), $selectedPanel);
+          this.UpdateDisabledImpl($$$1(this.container), $selectedPanel);
         };
 
         _proto.Dispose = function Dispose() {
@@ -570,15 +570,15 @@
           this.UpdateSizeImpl($$$1(this.selectedPanel));
         };
 
-        _proto.UpdateReadonly = function UpdateReadonly() {
-          this.UpdateReadonlyImpl($$$1(this.container), $$$1(this.selectedPanel));
+        _proto.UpdateDisabled = function UpdateDisabled() {
+          this.UpdateDisabledImpl($$$1(this.container), $$$1(this.selectedPanel));
         };
 
         _proto.UpdateSizeImpl = function UpdateSizeImpl($selectedPanel) {
           if (this.adapter.UpdateSize) this.adapter.UpdateSize($selectedPanel);
         };
 
-        _proto.UpdateReadonlyImpl = function UpdateReadonlyImpl($container, $selectedPanel) {
+        _proto.UpdateDisabledImpl = function UpdateDisabledImpl($container, $selectedPanel) {
           var disabled = this.selectElement.disabled;
 
           if (this.disabled !== disabled) {
@@ -679,7 +679,7 @@
           });
           this.adapter.UpdateIsValid($selectedPanel);
           this.UpdateSizeImpl($selectedPanel);
-          this.UpdateReadonlyImpl($container, $selectedPanel); // some browsers (IE11) can change select value (as part of "autocomplete") after page is loaded but before "ready" event
+          this.UpdateDisabledImpl($container, $selectedPanel); // some browsers (IE11) can change select value (as part of "autocomplete") after page is loaded but before "ready" event
 
           $$$1(document).ready(function () {
             var selectOptions = $selectElement.find('OPTION');

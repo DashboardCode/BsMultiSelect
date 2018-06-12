@@ -266,7 +266,7 @@ var BsMultiSelect = function (window, $, Popper) {
         var $selectedPanel = this.selectedPanel;
         this.adapter.UpdateIsValid($selectedPanel);
         this.UpdateSizeImpl($selectedPanel);
-        this.UpdateReadonlyImpl($(this.container), $selectedPanel);
+        this.UpdateDisabledImpl($(this.container), $selectedPanel);
       }
     }, {
       key: "Dispose",
@@ -303,9 +303,9 @@ var BsMultiSelect = function (window, $, Popper) {
         this.UpdateSizeImpl($(this.selectedPanel));
       }
     }, {
-      key: "UpdateReadonly",
-      value: function UpdateReadonly() {
-        this.UpdateReadonlyImpl($(this.container), $(this.selectedPanel));
+      key: "UpdateDisabled",
+      value: function UpdateDisabled() {
+        this.UpdateDisabledImpl($(this.container), $(this.selectedPanel));
       }
     }, {
       key: "UpdateSizeImpl",
@@ -313,8 +313,8 @@ var BsMultiSelect = function (window, $, Popper) {
         if (this.adapter.UpdateSize) this.adapter.UpdateSize($selectedPanel);
       }
     }, {
-      key: "UpdateReadonlyImpl",
-      value: function UpdateReadonlyImpl($container, $selectedPanel) {
+      key: "UpdateDisabledImpl",
+      value: function UpdateDisabledImpl($container, $selectedPanel) {
         var disabled = this.selectElement.disabled;
 
         if (this.disabled !== disabled) {
@@ -416,7 +416,7 @@ var BsMultiSelect = function (window, $, Popper) {
         });
         this.adapter.UpdateIsValid($selectedPanel);
         this.UpdateSizeImpl($selectedPanel);
-        this.UpdateReadonlyImpl($container, $selectedPanel); // some browsers (IE11) can change select value (as part of "autocomplete") after page is loaded but before "ready" event
+        this.UpdateDisabledImpl($container, $selectedPanel); // some browsers (IE11) can change select value (as part of "autocomplete") after page is loaded but before "ready" event
 
         $(document).ready(function () {
           var selectOptions = $selectElement.find('OPTION');
