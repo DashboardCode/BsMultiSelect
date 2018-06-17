@@ -28,12 +28,12 @@ let globals   = {'jquery': 'jQuery', 'popper.js': 'Popper'};
 // NOTE: with Babel 7 babel helpers are managed in .babelrc
 const plugins = [
   babel({
-    exclude: 'node_modules/**',  
+    exclude: 'node_modules/**',
     presets: presets
   })]
 
 module.exports = {
-  input: path.resolve(__dirname, '../js/src/BsMultiSelect.es8.js'),
+  input: path.resolve(__dirname, '../js/src/BsMultiSelect.js'),
   output: {
     banner: `/*!
   * DashboardCode BsMultiSelect v${pkg.version} (${pkg.homepage})

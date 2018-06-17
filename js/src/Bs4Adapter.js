@@ -1,4 +1,4 @@
-import Bs4Commons from "./Bs4Commons.es8";
+import Bs4Commons from "./Bs4Commons";
 //import styles from './../../scss/BsMutliSelect.scss'
 
 class Bs4Adapter {

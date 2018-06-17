@@ -4,13 +4,13 @@
   * Licensed under APACHE 2 (https://github.com/DashboardCode/BsMultiSelect/blob/master/LICENSE)
   */
 (function (global, factory) {
-    typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory(require('jquery'), require('popper.js')) :
-    typeof define === 'function' && define.amd ? define(['jquery', 'popper.js'], factory) :
-    (global.BsMultiSelect = factory(global.jQuery,global.Popper));
-}(this, (function ($,Popper) { 'use strict';
+    typeof exports === 'object' && typeof module !== 'undefined' ? factory(require('popper.js'), require('jquery')) :
+    typeof define === 'function' && define.amd ? define(['popper.js', 'jquery'], factory) :
+    (factory(global.Popper,global.jQuery));
+}(this, (function (Popper,$) { 'use strict';
 
-    $ = $ && $.hasOwnProperty('default') ? $['default'] : $;
     Popper = Popper && Popper.hasOwnProperty('default') ? Popper['default'] : Popper;
+    $ = $ && $.hasOwnProperty('default') ? $['default'] : $;
 
     var Bs4Commons =
     /*#__PURE__*/
@@ -292,548 +292,559 @@
       return Bs4Adapter;
     }();
 
-    var BsMultiSelect = function (window, $$$1, Popper$$1) {
-      var JQUERY_NO_CONFLICT = $$$1.fn[pluginName];
-      var pluginName = 'dashboardCodeBsMultiSelect';
-      var dataKey = "" + pluginName;
-      var defSelectedPanelStyleSys = {
-        'display': 'flex',
-        'flex-wrap': 'wrap',
-        'list-style-type': 'none'
-      }; // remove bullets since this is ul
+    var defSelectedPanelStyleSys = {
+      'display': 'flex',
+      'flex-wrap': 'wrap',
+      'list-style-type': 'none'
+    }; // remove bullets since this is ul
 
-      var defFilterInputStyleSys = {
-        'width': '2ch',
-        'border': '0',
-        'padding': '0',
-        'outline': 'none',
-        'background-color': 'transparent'
+    var defFilterInputStyleSys = {
+      'width': '2ch',
+      'border': '0',
+      'padding': '0',
+      'outline': 'none',
+      'background-color': 'transparent'
+    };
+    var defDropDownMenuStyleSys = {
+      'list-style-type': 'none'
+    }; // remove bullets since this is ul
+    // jQuery used for:
+    // $.extend, $.contains, $("<div>"), $(function(){}) aka ready
+    // $e.trigger, $e.unbind, $e.on; but namespaces are not used;
+    // events: "focusin", "focusout", "mouseover", "mouseout", "keydown", "keyup", "click"
+    // $e.show, $e.hide, $e.focus, $e.css
+    // $e.appendTo, $e.remove, $e.find, $e.closest, $e.prev, $e.data, $e.val
+
+    var MultiSelect =
+    /*#__PURE__*/
+    function () {
+      function MultiSelect(selectElement, options, adapter, window, $$$1) {
+        if (typeof Popper === 'undefined') {
+          throw new TypeError('DashboardCode BsMultiSelect require Popper.js (https://popper.js.org)');
+        } // readonly
+
+
+        this.selectElement = selectElement;
+        this.adapter = adapter;
+        this.window = window;
+        this.$ = $$$1;
+        this.options = $$$1.extend({}, options);
+        this.container = null;
+        this.selectedPanel = null;
+        this.filterInputItem = null;
+        this.filterInput = null;
+        this.dropDownMenu = null;
+        this.popper = null; // removable handlers
+
+        this.selectedPanelClick = null;
+        this.documentMouseup = null;
+        this.containerMousedown = null;
+        this.documentMouseup2 = null; // state
+
+        this.disabled = null;
+        this.filterInputItemOffsetLeft = null; // used to detect changes in input field position (by comparision with current value)
+
+        this.skipFocusout = false;
+        this.hoveredDropDownItem = null;
+        this.hoveredDropDownIndex = null;
+        this.hasDropDownVisible = false; // jquery adapters
+
+        this.$document = $$$1(window.document);
+        this.init();
+      }
+
+      var _proto = MultiSelect.prototype;
+
+      _proto.updateDropDownPosition = function updateDropDownPosition(force) {
+        var offsetLeft = this.filterInputItem.offsetLeft;
+
+        if (force || this.filterInputItemOffsetLeft != offsetLeft) {
+          this.popper.update();
+          this.filterInputItemOffsetLeft = offsetLeft;
+        }
       };
-      var defDropDownMenuStyleSys = {
-        'list-style-type': 'none'
-      }; // remove bullets since this is ul
 
-      var defaults = {
-        doManageFocus: true,
-        useCss: false,
-        adapter: null
+      _proto.hideDropDown = function hideDropDown() {
+        this.dropDownMenu.style.display = 'none';
       };
 
-      var Plugin =
-      /*#__PURE__*/
-      function () {
-        function Plugin(selectElement, options, adapter) {
-          if (typeof Popper$$1 === 'undefined') {
-            throw new TypeError('DashboardCode BsMultiSelect require Popper.js (https://popper.js.org)');
-          } // readonly
+      _proto.showDropDown = function showDropDown() {
+        this.dropDownMenu.style.display = 'block';
+      }; // Public methods
 
 
-          this.selectElement = selectElement;
-          this.options = $$$1.extend({}, defaults, options);
-          if (adapter) this.adapter = adapter;else this.adapter = this.options.useCss ? new Bs4AdapterCss($$$1, this.selectElement, this.options) : new Bs4Adapter($$$1, this.selectElement, this.options);
-          this.container = null;
-          this.selectedPanel = null;
-          this.filterInputItem = null;
-          this.filterInput = null;
-          this.dropDownMenu = null;
-          this.popper = null; // removable handlers
-
-          this.selectedPanelClick = null;
-          this.documentMouseup = null;
-          this.containerMousedown = null;
-          this.documentMouseup2 = null; // state
-
-          this.disabled = null;
-          this.filterInputItemOffsetLeft = null; // used to detect changes in input field position (by comparision with current value)
-
-          this.skipFocusout = false;
+      _proto.resetDropDownMenuHover = function resetDropDownMenuHover() {
+        if (this.hoveredDropDownItem !== null) {
+          this.adapter.Hover(this.$(this.hoveredDropDownItem), false);
           this.hoveredDropDownItem = null;
-          this.hoveredDropDownIndex = null;
-          this.hasDropDownVisible = false;
-          this.init();
         }
 
-        var _proto = Plugin.prototype;
+        this.hoveredDropDownIndex = null;
+      };
 
-        _proto.updateDropDownPosition = function updateDropDownPosition(force) {
-          var offsetLeft = this.filterInputItem.offsetLeft;
+      _proto.filterDropDownMenu = function filterDropDownMenu() {
+        var _this = this;
 
-          if (force || this.filterInputItemOffsetLeft != offsetLeft) {
-            this.popper.update();
-            this.filterInputItemOffsetLeft = offsetLeft;
-          }
-        };
+        var text = this.filterInput.value.trim().toLowerCase();
+        var visible = 0;
+        this.$(this.dropDownMenu).find('LI').each(function (i, dropDownMenuItem) {
+          var $dropDownMenuItem = _this.$(dropDownMenuItem);
 
-        _proto.hideDropDown = function hideDropDown() {
-          this.dropDownMenu.style.display = 'none';
-        };
+          if (text == '') {
+            $dropDownMenuItem.show();
+            visible++;
+          } else {
+            var itemText = $dropDownMenuItem.data("option-text");
+            var isSelected = $dropDownMenuItem.data("option-selected");
 
-        _proto.showDropDown = function showDropDown() {
-          this.dropDownMenu.style.display = 'block';
-        }; // Public methods
-
-
-        _proto.resetDropDownMenuHover = function resetDropDownMenuHover() {
-          if (this.hoveredDropDownItem !== null) {
-            this.adapter.Hover($$$1(this.hoveredDropDownItem), false);
-            this.hoveredDropDownItem = null;
-          }
-
-          this.hoveredDropDownIndex = null;
-        };
-
-        _proto.filterDropDownMenu = function filterDropDownMenu() {
-          var text = this.filterInput.value.trim().toLowerCase();
-          var visible = 0;
-          $$$1(this.dropDownMenu).find('LI').each(function (i, dropDownMenuItem) {
-            var $dropDownMenuItem = $$$1(dropDownMenuItem);
-
-            if (text == '') {
+            if (!isSelected && itemText.indexOf(text) >= 0) {
               $dropDownMenuItem.show();
               visible++;
             } else {
-              var itemText = $dropDownMenuItem.data("option-text");
-              var isSelected = $dropDownMenuItem.data("option-selected");
-
-              if (!isSelected && itemText.indexOf(text) >= 0) {
-                $dropDownMenuItem.show();
-                visible++;
-              } else {
-                $dropDownMenuItem.hide();
-              }
+              $dropDownMenuItem.hide();
             }
-          });
-          this.hasDropDownVisible = visible > 0;
-          this.resetDropDownMenuHover();
-        };
-
-        _proto.clearFilterInput = function clearFilterInput(updatePosition) {
-          if (this.filterInput.value) {
-            this.filterInput.value = '';
-            this.input(updatePosition);
           }
-        };
+        });
+        this.hasDropDownVisible = visible > 0;
+        this.resetDropDownMenuHover();
+      };
 
-        _proto.closeDropDown = function closeDropDown() {
-          this.resetDropDownMenuHover();
-          this.clearFilterInput(true);
-          this.hideDropDown();
-        };
+      _proto.clearFilterInput = function clearFilterInput(updatePosition) {
+        if (this.filterInput.value) {
+          this.filterInput.value = '';
+          this.input(updatePosition);
+        }
+      };
 
-        _proto.appendDropDownItem = function appendDropDownItem(optionElement) {
-          var _this = this;
+      _proto.closeDropDown = function closeDropDown() {
+        this.resetDropDownMenuHover();
+        this.clearFilterInput(true);
+        this.hideDropDown();
+      };
 
-          var optionId = optionElement.value;
-          var itemText = optionElement.text;
-          var isSelected = optionElement.selected;
-          var $dropDownItem = $$$1("<LI/>");
-          $dropDownItem.data("option-id", optionId);
-          $dropDownItem.data("option-text", itemText.toLowerCase());
-          var adoptDropDownItem = this.adapter.CreateDropDownItemContent($dropDownItem, optionId, itemText, isSelected);
-          $dropDownItem.appendTo(this.dropDownMenu);
+      _proto.appendDropDownItem = function appendDropDownItem(optionElement) {
+        var _this2 = this;
 
-          var appendItem = function appendItem(doTrigger) {
-            $dropDownItem.data("option-selected", true);
-            var $selectedItem = $$$1("<LI/>");
-            $selectedItem.data("option-id", optionId);
-            optionElement.selected = true;
-            adoptDropDownItem(true);
+        var optionId = optionElement.value;
+        var itemText = optionElement.text;
+        var isSelected = optionElement.selected;
+        var $dropDownItem = this.$("<LI/>");
+        $dropDownItem.data("option-id", optionId);
+        $dropDownItem.data("option-text", itemText.toLowerCase());
+        var adoptDropDownItem = this.adapter.CreateDropDownItemContent($dropDownItem, optionId, itemText, isSelected);
+        $dropDownItem.appendTo(this.dropDownMenu);
 
-            var removeItem = function removeItem() {
-              $dropDownItem.data("option-selected", false);
-              $dropDownItem.data("option-toggle", appendItem);
-              $selectedItem.data("option-remove", null);
-              $selectedItem.remove();
-              optionElement.selected = false;
-              adoptDropDownItem(false);
-              $$$1(_this.selectElement).trigger('change');
-            };
+        var appendItem = function appendItem(doTrigger) {
+          $dropDownItem.data("option-selected", true);
 
-            var removeItemAndCloseDropDown = function removeItemAndCloseDropDown() {
-              removeItem();
+          var $selectedItem = _this2.$("<LI/>");
 
-              _this.closeDropDown();
-            };
+          $selectedItem.data("option-id", optionId);
+          optionElement.selected = true;
+          adoptDropDownItem(true);
 
-            _this.adapter.CreateSelectedItemContent($selectedItem, itemText, removeItemAndCloseDropDown, _this.disabled);
+          var removeItem = function removeItem() {
+            $dropDownItem.data("option-selected", false);
+            $dropDownItem.data("option-toggle", appendItem);
+            $selectedItem.data("option-remove", null);
+            $selectedItem.remove();
+            optionElement.selected = false;
+            adoptDropDownItem(false);
 
-            $selectedItem.insertBefore(_this.filterInputItem);
-            $dropDownItem.data("option-toggle", removeItem);
-            $selectedItem.data("option-remove", removeItemAndCloseDropDown);
-            if (typeof doTrigger === "undefined" || doTrigger === true) $$$1(_this.selectElement).trigger('change');
-            return $selectedItem;
+            _this2.$(_this2.selectElement).trigger('change');
           };
 
-          $dropDownItem.data("option-toggle", appendItem);
+          var removeItemAndCloseDropDown = function removeItemAndCloseDropDown() {
+            removeItem();
 
-          if (isSelected) {
-            appendItem(false);
-          }
-
-          var manageHover = function manageHover(event, isOn) {
-            _this.adapter.Hover($$$1(event.target).closest("LI"), isOn);
+            _this2.closeDropDown();
           };
 
-          $dropDownItem.click(function (event) {
-            event.preventDefault();
-            event.stopPropagation();
-            var toggleItem = $$$1(event.currentTarget).closest("LI").data("option-toggle");
-            toggleItem();
+          _this2.adapter.CreateSelectedItemContent($selectedItem, itemText, removeItemAndCloseDropDown, _this2.disabled);
 
-            _this.filterInput.focus();
-          }).mouseover(function (e) {
-            return manageHover(e, true);
-          }).mouseout(function (e) {
-            return manageHover(e, false);
-          });
+          $selectedItem.insertBefore(_this2.filterInputItem);
+          $dropDownItem.data("option-toggle", removeItem);
+          $selectedItem.data("option-remove", removeItemAndCloseDropDown);
+          if (typeof doTrigger === "undefined" || doTrigger === true) _this2.$(_this2.selectElement).trigger('change');
+          return $selectedItem;
         };
 
-        _proto.keydownArrow = function keydownArrow(down) {
-          var visibleNodeListArray = $$$1(this.dropDownMenu).find('LI:not([style*="display: none"])').toArray();
+        $dropDownItem.data("option-toggle", appendItem);
 
-          if (visibleNodeListArray.length > 0) {
-            if (this.hasDropDownVisible) {
-              this.updateDropDownPosition(true);
-              this.showDropDown();
-            }
+        if (isSelected) {
+          appendItem(false);
+        }
 
-            if (this.hoveredDropDownItem === null) {
-              this.hoveredDropDownIndex = down ? 0 : visibleNodeListArray.length - 1;
-            } else {
-              this.adapter.Hover($$$1(this.hoveredDropDownItem), false);
-
-              if (down) {
-                var newIndex = this.hoveredDropDownIndex + 1;
-                this.hoveredDropDownIndex = newIndex < visibleNodeListArray.length ? newIndex : 0;
-              } else {
-                var _newIndex = this.hoveredDropDownIndex - 1;
-
-                this.hoveredDropDownIndex = _newIndex >= 0 ? _newIndex : visibleNodeListArray.length - 1;
-              }
-            }
-
-            this.hoveredDropDownItem = visibleNodeListArray[this.hoveredDropDownIndex];
-            this.adapter.Hover($$$1(this.hoveredDropDownItem), true);
-          }
+        var manageHover = function manageHover(event, isOn) {
+          _this2.adapter.Hover(_this2.$(event.target).closest("LI"), isOn);
         };
 
-        _proto.input = function input(forceUpdatePosition) {
-          this.filterInput.style.width = this.filterInput.value.length * 1.3 + 2 + "ch";
-          this.filterDropDownMenu();
+        $dropDownItem.click(function (event) {
+          event.preventDefault();
+          event.stopPropagation();
 
+          var toggleItem = _this2.$(event.currentTarget).closest("LI").data("option-toggle");
+
+          toggleItem();
+
+          _this2.filterInput.focus();
+        }).mouseover(function (e) {
+          return manageHover(e, true);
+        }).mouseout(function (e) {
+          return manageHover(e, false);
+        });
+      };
+
+      _proto.keydownArrow = function keydownArrow(down) {
+        var visibleNodeListArray = this.$(this.dropDownMenu).find('LI:not([style*="display: none"])').toArray();
+
+        if (visibleNodeListArray.length > 0) {
           if (this.hasDropDownVisible) {
-            if (forceUpdatePosition) // ignore it if it is called from
-              this.updateDropDownPosition(forceUpdatePosition); // we need it to support case when textbox changes its place because of line break (texbox grow with each key press)
-
+            this.updateDropDownPosition(true);
             this.showDropDown();
+          }
+
+          if (this.hoveredDropDownItem === null) {
+            this.hoveredDropDownIndex = down ? 0 : visibleNodeListArray.length - 1;
           } else {
-            this.hideDropDown();
-          }
-        };
+            this.adapter.Hover(this.$(this.hoveredDropDownItem), false);
 
-        _proto.Update = function Update() {
-          var $selectedPanel = this.selectedPanel;
-          this.adapter.UpdateIsValid($selectedPanel);
-          this.UpdateSizeImpl($selectedPanel);
-          this.UpdateDisabledImpl($$$1(this.container), $selectedPanel);
-        };
-
-        _proto.Dispose = function Dispose() {
-          $$$1.removeData(this.selectElement, dataKey);
-          $$$1(this.selectElement).off(dataKey); // removable handlers
-          //$(window.selectedPanelClick).unbind("click", this.selectedPanelClick);
-
-          $$$1(window.document).unbind("mouseup", this.documentMouseup); //$(this.container).unbind("mousedown", this.containerMousedown);
-
-          $$$1(window.document).unbind("mouseup", this.documentMouseup2);
-
-          if (this.adapter !== null) {
-            this.adapter.Dispose();
-          }
-
-          if (this.popper !== null) {
-            this.popper.destroy();
-          }
-
-          if (this.container !== null) {
-            $$$1(this.container).remove();
-          } // this.selectedPanel = null;
-          // this.filterInputItem = null;
-          // this.filterInput = null;
-          // this.dropDownMenu = null;
-          // this.selectElement = null;
-          // this.options = null;
-
-        };
-
-        _proto.UpdateSize = function UpdateSize() {
-          this.UpdateSizeImpl($$$1(this.selectedPanel));
-        };
-
-        _proto.UpdateDisabled = function UpdateDisabled() {
-          this.UpdateDisabledImpl($$$1(this.container), $$$1(this.selectedPanel));
-        };
-
-        _proto.UpdateSizeImpl = function UpdateSizeImpl($selectedPanel) {
-          if (this.adapter.UpdateSize) this.adapter.UpdateSize($selectedPanel);
-        };
-
-        _proto.UpdateDisabledImpl = function UpdateDisabledImpl($container, $selectedPanel) {
-          var disabled = this.selectElement.disabled;
-
-          if (this.disabled !== disabled) {
-            if (disabled) {
-              this.filterInput.style.display = "none";
-              this.adapter.Enable($selectedPanel, false);
-
-              if (this.options.doManageFocus) {
-                $container.unbind("mousedown", this.containerMousedown);
-                $$$1(window.document).unbind("mouseup", this.documentMouseup);
-              }
-
-              $selectedPanel.unbind("click", this.selectedPanelClick);
-              $$$1(window.document).unbind("mouseup", this.documentMouseup2);
+            if (down) {
+              var newIndex = this.hoveredDropDownIndex + 1;
+              this.hoveredDropDownIndex = newIndex < visibleNodeListArray.length ? newIndex : 0;
             } else {
-              this.filterInput.style.display = "inline-block";
-              this.adapter.Enable($selectedPanel, true);
+              var _newIndex = this.hoveredDropDownIndex - 1;
 
-              if (this.options.doManageFocus) {
-                $container.mousedown(this.containerMousedown); // removable
-
-                $$$1(window.document).mouseup(this.documentMouseup); // removable
-              }
-
-              $selectedPanel.click(this.selectedPanelClick); // removable
-
-              $$$1(window.document).mouseup(this.documentMouseup2); // removable
+              this.hoveredDropDownIndex = _newIndex >= 0 ? _newIndex : visibleNodeListArray.length - 1;
             }
+          }
 
-            this.disabled = disabled;
+          this.hoveredDropDownItem = visibleNodeListArray[this.hoveredDropDownIndex];
+          this.adapter.Hover(this.$(this.hoveredDropDownItem), true);
+        }
+      };
+
+      _proto.input = function input(forceUpdatePosition) {
+        this.filterInput.style.width = this.filterInput.value.length * 1.3 + 2 + "ch";
+        this.filterDropDownMenu();
+
+        if (this.hasDropDownVisible) {
+          if (forceUpdatePosition) // ignore it if it is called from
+            this.updateDropDownPosition(forceUpdatePosition); // we need it to support case when textbox changes its place because of line break (texbox grow with each key press)
+
+          this.showDropDown();
+        } else {
+          this.hideDropDown();
+        }
+      };
+
+      _proto.Update = function Update() {
+        var $selectedPanel = this.$(this.selectedPanel);
+        this.adapter.UpdateIsValid($selectedPanel);
+        this.UpdateSizeImpl($selectedPanel);
+        this.UpdateDisabledImpl(this.$(this.container), $selectedPanel);
+      };
+
+      _proto.Dispose = function Dispose() {
+        // removable handlers
+        this.$document.unbind("mouseup", this.documentMouseup).unbind("mouseup", this.documentMouseup2);
+
+        if (this.adapter !== null) {
+          this.adapter.Dispose();
+        }
+
+        if (this.popper !== null) {
+          this.popper.destroy();
+        }
+
+        if (this.container !== null) {
+          this.$(this.container).remove();
+        } // this.selectedPanel = null;
+        // this.filterInputItem = null;
+        // this.filterInput = null;
+        // this.dropDownMenu = null;
+        // this.selectElement = null;
+        // this.options = null;
+
+      };
+
+      _proto.UpdateSize = function UpdateSize() {
+        this.UpdateSizeImpl(this.$(this.selectedPanel));
+      };
+
+      _proto.UpdateDisabled = function UpdateDisabled() {
+        this.UpdateDisabledImpl(this.$(this.container), this.$(this.selectedPanel));
+      };
+
+      _proto.UpdateSizeImpl = function UpdateSizeImpl($selectedPanel) {
+        if (this.adapter.UpdateSize) this.adapter.UpdateSize($selectedPanel);
+      };
+
+      _proto.UpdateDisabledImpl = function UpdateDisabledImpl($container, $selectedPanel) {
+        var disabled = this.selectElement.disabled;
+
+        if (this.disabled !== disabled) {
+          if (disabled) {
+            this.filterInput.style.display = "none";
+            this.adapter.Enable($selectedPanel, false);
+            $container.unbind("mousedown", this.containerMousedown);
+            this.$document.unbind("mouseup", this.documentMouseup);
+            $selectedPanel.unbind("click", this.selectedPanelClick);
+            this.$document.unbind("mouseup", this.documentMouseup2);
+          } else {
+            this.filterInput.style.display = "inline-block";
+            this.adapter.Enable($selectedPanel, true);
+            $container.mousedown(this.containerMousedown); // removable
+
+            this.$document.mouseup(this.documentMouseup); // removable
+
+            $selectedPanel.click(this.selectedPanelClick); // removable
+
+            this.$document.mouseup(this.documentMouseup2); // removable
+          }
+
+          this.disabled = disabled;
+        }
+      };
+
+      _proto.init = function init() {
+        var _this3 = this;
+
+        var $selectElement = this.$(this.selectElement);
+        $selectElement.hide();
+        var $container = this.$("<DIV/>");
+        this.container = $container.get(0);
+        var $selectedPanel = this.$("<UL/>");
+        $selectedPanel.css(defSelectedPanelStyleSys);
+        this.selectedPanel = $selectedPanel.get(0);
+        $selectedPanel.appendTo(this.container);
+        var $filterInputItem = this.$('<LI/>');
+        this.filterInputItem = $filterInputItem.get(0);
+        $filterInputItem.appendTo(this.selectedPanel);
+        var $filterInput = this.$('<INPUT type="search" autocomplete="off">');
+        $filterInput.css(defFilterInputStyleSys);
+        $filterInput.appendTo(this.filterInputItem);
+        this.filterInput = $filterInput.get(0);
+        var $dropDownMenu = this.$("<UL/>").css({
+          "display": "none"
+        }).appendTo($container);
+        this.dropDownMenu = $dropDownMenu.get(0); // prevent heavy understandable styling error
+
+        $dropDownMenu.css(defDropDownMenuStyleSys); // create handlers
+
+        this.documentMouseup = function () {
+          _this3.skipFocusout = false;
+        };
+
+        this.containerMousedown = function () {
+          _this3.skipFocusout = true;
+        };
+
+        this.documentMouseup2 = function (event) {
+          if (!(_this3.container === event.target || _this3.$.contains(_this3.container, event.target))) {
+            _this3.closeDropDown();
           }
         };
 
-        _proto.init = function init() {
-          var _this2 = this;
+        this.selectedPanelClick = function (event) {
+          if (event.target.nodeName != "INPUT") _this3.$(_this3.filterInput).val('').focus();
 
-          var $selectElement = $$$1(this.selectElement);
-          $selectElement.hide();
-          var $container = $$$1("<DIV/>");
-          this.container = $container.get(0);
-          var $selectedPanel = $$$1("<UL/>");
-          $selectedPanel.css(defSelectedPanelStyleSys);
-          this.selectedPanel = $selectedPanel.get(0);
-          $selectedPanel.appendTo(this.container);
-          var $filterInputItem = $$$1('<LI/>');
-          this.filterInputItem = $filterInputItem.get(0);
-          $filterInputItem.appendTo(this.selectedPanel);
-          var $filterInput = $$$1('<INPUT type="search" autocomplete="off">');
-          $filterInput.css(defFilterInputStyleSys);
-          $filterInput.appendTo(this.filterInputItem);
-          this.filterInput = $filterInput.get(0);
-          var $dropDownMenu = $$$1("<UL/>").css({
-            "display": "none"
-          }).appendTo($container);
-          this.dropDownMenu = $dropDownMenu.get(0); // prevent heavy understandable styling error
+          if (_this3.hasDropDownVisible && _this3.adapter.FilterClick(event)) {
+            _this3.updateDropDownPosition(true);
 
-          $dropDownMenu.css(defDropDownMenuStyleSys); // create handlers
-
-          this.documentMouseup = function () {
-            _this2.skipFocusout = false;
-          };
-
-          this.containerMousedown = function () {
-            _this2.skipFocusout = true;
-          };
-
-          this.documentMouseup2 = function (event) {
-            if (!(_this2.container === event.target || $$$1.contains(_this2.container, event.target))) {
-              _this2.closeDropDown();
-            }
-          };
-
-          this.selectedPanelClick = function (event) {
-            if (event.target.nodeName != "INPUT") $$$1(_this2.filterInput).val('').focus();
-
-            if (_this2.hasDropDownVisible && _this2.adapter.FilterClick(event)) {
-              _this2.updateDropDownPosition(true);
-
-              _this2.showDropDown();
-            }
-          };
-
-          this.adapter.Init($container, $selectedPanel, $filterInputItem, $filterInput, $dropDownMenu);
-          $container.insertAfter($selectElement);
-          this.popper = new Popper$$1(this.filterInput, this.dropDownMenu, {
-            placement: 'bottom-start',
-            modifiers: {
-              preventOverflow: {
-                enabled: false
-              },
-              hide: {
-                enabled: false
-              },
-              flip: {
-                enabled: false
-              }
-            }
-          });
-          this.adapter.UpdateIsValid($selectedPanel);
-          this.UpdateSizeImpl($selectedPanel);
-          this.UpdateDisabledImpl($container, $selectedPanel); // some browsers (IE11) can change select value (as part of "autocomplete") after page is loaded but before "ready" event
-
-          $$$1(document).ready(function () {
-            var selectOptions = $selectElement.find('OPTION');
-            selectOptions.each(function (index, optionElement) {
-              _this2.appendDropDownItem(optionElement);
-            });
-            _this2.hasDropDownVisible = selectOptions.length > 0;
-
-            _this2.updateDropDownPosition(false);
-          });
-          $dropDownMenu.click(function (event) {
-            return event.stopPropagation();
-          });
-          $dropDownMenu.mouseover(function () {
-            return _this2.resetDropDownMenuHover();
-          });
-
-          if (this.options.doManageFocus) {
-            $filterInput.focusin(function () {
-              return _this2.adapter.Focus($selectedPanel, true);
-            }).focusout(function () {
-              if (!_this2.skipFocusout) _this2.adapter.Focus($selectedPanel, false);
-            });
+            _this3.showDropDown();
           }
+        };
 
-          $filterInput.on("keydown", function (event) {
-            if (event.which == 38) {
-              event.preventDefault();
+        this.adapter.Init($container, $selectedPanel, $filterInputItem, $filterInput, $dropDownMenu);
+        $container.insertAfter($selectElement);
+        this.popper = new Popper(this.filterInput, this.dropDownMenu, {
+          placement: 'bottom-start',
+          modifiers: {
+            preventOverflow: {
+              enabled: false
+            },
+            hide: {
+              enabled: false
+            },
+            flip: {
+              enabled: false
+            }
+          }
+        });
+        this.adapter.UpdateIsValid($selectedPanel);
+        this.UpdateSizeImpl($selectedPanel);
+        this.UpdateDisabledImpl($container, $selectedPanel); // some browsers (IE11) can change select value (as part of "autocomplete") after page is loaded but before "ready" event
+        // bellow: ready shortcut
 
-              _this2.keydownArrow(false);
-            } else if (event.which == 40) {
-              event.preventDefault();
+        this.$(function () {
+          var selectOptions = $selectElement.find('OPTION');
+          selectOptions.each(function (index, optionElement) {
+            _this3.appendDropDownItem(optionElement);
+          });
+          _this3.hasDropDownVisible = selectOptions.length > 0;
 
-              _this2.keydownArrow(true);
-            } else if (event.which == 13) {
+          _this3.updateDropDownPosition(false);
+        });
+        $dropDownMenu.click(function (event) {
+          return event.stopPropagation();
+        });
+        $dropDownMenu.mouseover(function () {
+          return _this3.resetDropDownMenuHover();
+        });
+        $filterInput.focusin(function () {
+          return _this3.adapter.Focus($selectedPanel, true);
+        }).focusout(function () {
+          if (!_this3.skipFocusout) _this3.adapter.Focus($selectedPanel, false);
+        });
+        $filterInput.on("keydown", function (event) {
+          if (event.which == 38) {
+            event.preventDefault();
+
+            _this3.keydownArrow(false);
+          } else if (event.which == 40) {
+            event.preventDefault();
+
+            _this3.keydownArrow(true);
+          } else if (event.which == 13) {
+            event.preventDefault();
+          } else if (event.which == 9) {
+            if (_this3.filterInput.value) {
               event.preventDefault();
-            } else if (event.which == 9) {
-              if (_this2.filterInput.value) {
-                event.preventDefault();
-              } else {
-                _this2.closeDropDown();
-              }
             } else {
-              if (event.which == 8) {
-                // NOTE: this will process backspace only if there are no text in the input field
-                // If user will find this inconvinient, we will need to calculate something like this
-                // this.isBackspaceAtStartPoint = (this.filterInput.selectionStart == 0 && this.filterInput.selectionEnd == 0);
-                if (!_this2.filterInput.value) {
-                  var $penult = $$$1(_this2.selectedPanel).find("LI:last").prev();
+              _this3.closeDropDown();
+            }
+          } else {
+            if (event.which == 8) {
+              // NOTE: this will process backspace only if there are no text in the input field
+              // If user will find this inconvinient, we will need to calculate something like this
+              // this.isBackspaceAtStartPoint = (this.filterInput.selectionStart == 0 && this.filterInput.selectionEnd == 0);
+              if (!_this3.filterInput.value) {
+                var $penult = _this3.$(_this3.selectedPanel).find("LI:last").prev();
 
-                  if ($penult.length) {
-                    var removeItem = $penult.data("option-remove");
-                    removeItem();
-                  }
+                if ($penult.length) {
+                  var removeItem = $penult.data("option-remove");
+                  removeItem();
+                }
 
-                  _this2.updateDropDownPosition(false);
+                _this3.updateDropDownPosition(false);
+              }
+            }
+
+            _this3.resetDropDownMenuHover();
+          }
+        });
+        $filterInput.on("keyup", function (event) {
+          if (event.which == 13 || event.which == 9) {
+            if (_this3.hoveredDropDownItem) {
+              var $hoveredDropDownItem = _this3.$(_this3.hoveredDropDownItem);
+
+              var toggleItem = $hoveredDropDownItem.data("option-toggle");
+              toggleItem();
+
+              _this3.closeDropDown();
+            } else {
+              var text = _this3.filterInput.value.trim().toLowerCase();
+
+              var dropDownItems = _this3.dropDownMenu.querySelectorAll("LI");
+
+              var dropDownItem = null;
+
+              for (var i = 0; i < dropDownItems.length; ++i) {
+                var it = dropDownItems[i];
+
+                if (it.textContent.trim().toLowerCase() == text) {
+                  dropDownItem = it;
+                  break;
                 }
               }
 
-              _this2.resetDropDownMenuHover();
-            }
-          });
-          $filterInput.on("keyup", function (event) {
-            if (event.which == 13 || event.which == 9) {
-              if (_this2.hoveredDropDownItem) {
-                var $hoveredDropDownItem = $$$1(_this2.hoveredDropDownItem);
-                var toggleItem = $hoveredDropDownItem.data("option-toggle");
-                toggleItem();
+              if (dropDownItem) {
+                var $dropDownItem = _this3.$(dropDownItem);
 
-                _this2.closeDropDown();
-              } else {
-                var text = _this2.filterInput.value.trim().toLowerCase();
+                var isSelected = $dropDownItem.data("option-selected");
 
-                var dropDownItems = _this2.dropDownMenu.querySelectorAll("LI");
-
-                var dropDownItem = null;
-
-                for (var i = 0; i < dropDownItems.length; ++i) {
-                  var it = dropDownItems[i];
-
-                  if (it.textContent.trim().toLowerCase() == text) {
-                    dropDownItem = it;
-                    break;
-                  }
+                if (!isSelected) {
+                  var toggle = $dropDownItem.data("option-toggle");
+                  toggle();
                 }
 
-                if (dropDownItem) {
-                  var $dropDownItem = $$$1(dropDownItem);
-                  var isSelected = $dropDownItem.data("option-selected");
-
-                  if (!isSelected) {
-                    var toggle = $dropDownItem.data("option-toggle");
-                    toggle();
-                  }
-
-                  _this2.clearFilterInput(true);
-                }
+                _this3.clearFilterInput(true);
               }
-            } else if (event.which == 27) {
-              // escape
-              _this2.closeDropDown();
             }
-          });
-          $filterInput.on('input', function () {
-            _this2.input(true);
-          });
-        };
+          } else if (event.which == 27) {
+            // escape
+            _this3.closeDropDown();
+          }
+        });
+        $filterInput.on('input', function () {
+          _this3.input(true);
+        });
+      };
 
-        return Plugin;
-      }();
+      return MultiSelect;
+    }();
 
-      function jQueryInterface(options) {
+    function AddToJQueryPrototype(pluginName, createPlugin, $$$1) {
+      var prototypedName = pluginName.charAt(0).toLowerCase() + pluginName.slice(1);
+      var noConflictPrototypable = $$$1.fn[prototypedName];
+      var dataKey = "DashboardCode." + pluginName;
+
+      function prototypable(options) {
         return this.each(function () {
-          var data = $$$1(this).data(dataKey);
+          var $e = $$$1(this);
+          var instance = $e.data(dataKey);
+          var isMethodName = typeof options === 'string';
 
-          if (!data) {
-            if (/Dispose/.test(options)) {
+          var isDispose = function isDispose(s) {
+            return /Dispose/.test(s);
+          };
+
+          if (!instance) {
+            if (isMethodName && isDispose(options)) {
               return;
             }
 
             var optionsObject = typeof options === 'object' ? options : null;
-            data = new Plugin(this, optionsObject);
-            $$$1(this).data(dataKey, data);
+            instance = createPlugin(this, optionsObject);
+            $e.data(dataKey, instance);
           }
 
-          if (typeof options === 'string') {
+          if (isMethodName) {
             var methodName = options;
 
-            if (typeof data[methodName] === 'undefined') {
+            if (isDispose(methodName)) {
+              $e.removeData(dataKey).off(dataKey);
+              instance.Dispose();
+            }
+
+            if (typeof instance[methodName] === 'undefined') {
               throw new TypeError("No method named \"" + methodName + "\"");
             }
 
-            data[methodName]();
+            instance[methodName]();
           }
         });
       }
 
-      $$$1.fn[pluginName] = jQueryInterface; // pluginName with first capitalized letter - return plugin instance for 1st $selected item
+      $$$1.fn[prototypedName] = prototypable; // pluginName with first capitalized letter - return plugin instance for 1st $selected item
 
-      $$$1.fn[pluginName.charAt(0).toUpperCase() + pluginName.slice(1)] = function () {
+      $$$1.fn[pluginName] = function () {
         return $$$1(this).data(dataKey);
       };
 
-      $$$1.fn[pluginName].Constructor = Plugin;
-
-      $$$1.fn[pluginName].noConflict = function () {
-        $$$1.fn[pluginName] = JQUERY_NO_CONFLICT;
-        return jQueryInterface;
+      $$$1.fn[prototypedName].noConflict = function () {
+        $$$1.fn[prototypedName] = noConflictPrototypable;
+        return prototypable;
       };
+    }
 
-      return Plugin;
-    }(window, $, Popper);
-
-    return BsMultiSelect;
+    (function (window, $$$1) {
+      AddToJQueryPrototype('BsMultiSelect', function (element, optionsObject) {
+        var adapter = optionsObject && optionsObject.useCss ? new Bs4AdapterCss($$$1, element, optionsObject) : new Bs4Adapter($$$1, element, optionsObject);
+        return new MultiSelect(element, optionsObject, adapter, window, $$$1);
+      }, $$$1);
+    })(window, $);
 
 })));
 //# sourceMappingURL=BsMultiSelect.js.map
