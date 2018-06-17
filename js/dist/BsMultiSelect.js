@@ -5,9 +5,9 @@ import MultiSelect from './MultiSelect';
 import AddToJQueryPrototype from './AddToJQueryPrototype';
 
 (function (window, $) {
-  AddToJQueryPrototype('BsMultiSelect', function (element, optionsObject) {
+  AddToJQueryPrototype('BsMultiSelect', function (element, optionsObject, onDispose) {
     var adapter = optionsObject && optionsObject.useCss ? new Bs4AdapterCss($, element, optionsObject) : new Bs4Adapter($, element, optionsObject);
-    return new MultiSelect(element, optionsObject, adapter, window, $);
+    return new MultiSelect(element, optionsObject, onDispose, adapter, window, $);
   }, $);
 })(window, $);
 

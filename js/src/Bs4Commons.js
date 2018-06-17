@@ -6,6 +6,25 @@ class Bs4Commons {
         this.dropDownItemHoverClass = dropDownItemHoverClass;
     }
 
+    UpdateIsValid($selectedPanel){
+        let $hiddenSelect = this.$(this.hiddenSelect);
+        if ($hiddenSelect.hasClass("is-valid")){
+            $selectedPanel.addClass("is-valid");
+        }
+
+        if ($hiddenSelect.hasClass("is-invalid")){
+            $selectedPanel.addClass("is-invalid");
+        }
+    }
+
+    Enable($selectedPanel){
+        $selectedPanel.find('BUTTON').prop("disabled", false);
+    }
+
+    Disable($selectedPanel){
+        $selectedPanel.find('BUTTON').prop("disabled", true);
+    }
+
     HandleLabel($selectedPanel, containerClass){
         let inputId = this.hiddenSelect.id;
         let $formGroup = this.$(this.hiddenSelect).closest('.form-group');

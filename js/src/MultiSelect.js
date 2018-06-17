@@ -12,7 +12,7 @@ const defDropDownMenuStyleSys  = {'list-style-type':'none'}; // remove bullets s
 // $e.appendTo, $e.remove, $e.find, $e.closest, $e.prev, $e.data, $e.val
 
 class MultiSelect {
-    constructor(selectElement, options, adapter, window, $) {
+    constructor(selectElement, options, onDispose, adapter, window, $) {
         if (typeof Popper === 'undefined') {
             throw new TypeError('DashboardCode BsMultiSelect require Popper.js (https://popper.js.org)')
         }
@@ -20,6 +20,7 @@ class MultiSelect {
         this.selectElement = selectElement;
         this.adapter = adapter;
         this.window = window;
+        this.onDispose=onDispose;
         this.$ = $;
         
         this.options = $.extend({}, options);
@@ -201,7 +202,10 @@ class MultiSelect {
         this.UpdateDisabledImpl(this.$(this.container), $selectedPanel);
     }
     Dispose(){
-        // removable handlers
+        if (this.onDispose)
+            this.onDispose();
+        
+            // removable handlers
         this.$document.unbind("mouseup", this.documentMouseup)
                       .unbind("mouseup", this.documentMouseup2);
         
@@ -237,7 +241,7 @@ class MultiSelect {
         if (this.disabled!==disabled){
             if (disabled) {
                 this.filterInput.style.display = "none";
-                this.adapter.Enable($selectedPanel, false);
+                this.adapter.Disable($selectedPanel);
 
                 $container.unbind("mousedown", this.containerMousedown);
                 this.$document.unbind("mouseup", this.documentMouseup);
@@ -247,7 +251,7 @@ class MultiSelect {
                 
             } else {
                 this.filterInput.style.display = "inline-block";
-                this.adapter.Enable($selectedPanel, true);
+                this.adapter.Enable($selectedPanel);
 
                 $container.mousedown(this.containerMousedown);    // removable
                 this.$document.mouseup(this.documentMouseup); // removable

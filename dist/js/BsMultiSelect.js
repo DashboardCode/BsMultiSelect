@@ -1,5 +1,5 @@
 /*!
-  * DashboardCode BsMultiSelect v0.1.19 (https://dashboardcode.github.io/BsMultiSelect/)
+  * DashboardCode BsMultiSelect v0.1.20 (https://dashboardcode.github.io/BsMultiSelect/)
   * Copyright 2017-2018 Roman Pokrovskij (github user rpokrovskij)
   * Licensed under APACHE 2 (https://github.com/DashboardCode/BsMultiSelect/blob/master/LICENSE)
   */
@@ -22,6 +22,26 @@
       }
 
       var _proto = Bs4Commons.prototype;
+
+      _proto.UpdateIsValid = function UpdateIsValid($selectedPanel) {
+        var $hiddenSelect = this.$(this.hiddenSelect);
+
+        if ($hiddenSelect.hasClass("is-valid")) {
+          $selectedPanel.addClass("is-valid");
+        }
+
+        if ($hiddenSelect.hasClass("is-invalid")) {
+          $selectedPanel.addClass("is-invalid");
+        }
+      };
+
+      _proto.Enable = function Enable($selectedPanel) {
+        $selectedPanel.find('BUTTON').prop("disabled", false);
+      };
+
+      _proto.Disable = function Disable($selectedPanel) {
+        $selectedPanel.find('BUTTON').prop("disabled", true);
+      };
 
       _proto.HandleLabel = function HandleLabel($selectedPanel, containerClass) {
         var inputId = this.hiddenSelect.id;
@@ -118,25 +138,17 @@
       };
 
       _proto.UpdateIsValid = function UpdateIsValid($selectedPanel) {
-        var $hiddenSelect = this.jQuery(this.hiddenSelect);
-
-        if ($hiddenSelect.hasClass("is-valid")) {
-          $selectedPanel.addClass("is-valid");
-        }
-
-        if ($hiddenSelect.hasClass("is-invalid")) {
-          $selectedPanel.addClass("is-invalid");
-        }
+        this.bs4Commons.UpdateIsValid($selectedPanel);
       };
 
-      _proto.Enable = function Enable($selectedPanel, isEnabled) {
-        if (isEnabled) {
-          $selectedPanel.removeClass(this.options.selectedPanelDisabledClass);
-          $selectedPanel.find('BUTTON').prop("disabled", false);
-        } else {
-          $selectedPanel.addClass(this.options.selectedPanelDisabledClass);
-          $selectedPanel.find('BUTTON').prop("disabled", true);
-        }
+      _proto.Enable = function Enable($selectedPanel) {
+        $selectedPanel.removeClass(this.options.selectedPanelDisabledClass);
+        this.bs4Commons.Enable($selectedPanel);
+      };
+
+      _proto.Disable = function Disable($selectedPanel) {
+        $selectedPanel.addClass(this.options.selectedPanelDisabledClass);
+        this.bs4Commons.Disable($selectedPanel);
       };
 
       _proto.CreateDropDownItemContent = function CreateDropDownItemContent($dropDownItem, optionId, itemText, isSelected) {
@@ -222,15 +234,21 @@
       };
 
       _proto.UpdateIsValid = function UpdateIsValid($selectedPanel) {
-        var $hiddenSelect = this.jQuery(this.hiddenSelect);
+        this.bs4Commons.UpdateIsValid($selectedPanel);
+      };
 
-        if ($hiddenSelect.hasClass("is-valid")) {
-          $selectedPanel.addClass("is-valid");
-        }
+      _proto.Enable = function Enable($selectedPanel) {
+        $selectedPanel.css({
+          "background-color": ""
+        });
+        this.bs4Commons.Enable($selectedPanel);
+      };
 
-        if ($hiddenSelect.hasClass("is-invalid")) {
-          $selectedPanel.addClass("is-invalid");
-        }
+      _proto.Disable = function Disable($selectedPanel) {
+        $selectedPanel.css({
+          "background-color": this.options.selectedPanelDisabledBackgroundColor
+        });
+        this.bs4Commons.Disable($selectedPanel);
       };
 
       _proto.UpdateSize = function UpdateSize($selectedPanel) {
@@ -240,20 +258,6 @@
           $selectedPanel.css("min-height", this.options.selectedPanelSmMinHeight);
         } else {
           $selectedPanel.css("min-height", this.options.selectedPanelDefMinHeight);
-        }
-      };
-
-      _proto.Enable = function Enable($selectedPanel, isEnabled) {
-        if (isEnabled) {
-          $selectedPanel.css({
-            "background-color": ""
-          });
-          $selectedPanel.find('BUTTON').prop("disabled", false);
-        } else {
-          $selectedPanel.css({
-            "background-color": this.options.selectedPanelDisabledBackgroundColor
-          });
-          $selectedPanel.find('BUTTON').prop("disabled", true);
         }
       };
 
@@ -318,7 +322,7 @@
     var MultiSelect =
     /*#__PURE__*/
     function () {
-      function MultiSelect(selectElement, options, adapter, window, $$$1) {
+      function MultiSelect(selectElement, options, onDispose, adapter, window, $$$1) {
         if (typeof Popper === 'undefined') {
           throw new TypeError('DashboardCode BsMultiSelect require Popper.js (https://popper.js.org)');
         } // readonly
@@ -327,6 +331,7 @@
         this.selectElement = selectElement;
         this.adapter = adapter;
         this.window = window;
+        this.onDispose = onDispose;
         this.$ = $$$1;
         this.options = $$$1.extend({}, options);
         this.container = null;
@@ -546,7 +551,8 @@
       };
 
       _proto.Dispose = function Dispose() {
-        // removable handlers
+        if (this.onDispose) this.onDispose(); // removable handlers
+
         this.$document.unbind("mouseup", this.documentMouseup).unbind("mouseup", this.documentMouseup2);
 
         if (this.adapter !== null) {
@@ -586,14 +592,14 @@
         if (this.disabled !== disabled) {
           if (disabled) {
             this.filterInput.style.display = "none";
-            this.adapter.Enable($selectedPanel, false);
+            this.adapter.Disable($selectedPanel);
             $container.unbind("mousedown", this.containerMousedown);
             this.$document.unbind("mouseup", this.documentMouseup);
             $selectedPanel.unbind("click", this.selectedPanelClick);
             this.$document.unbind("mouseup", this.documentMouseup2);
           } else {
             this.filterInput.style.display = "inline-block";
-            this.adapter.Enable($selectedPanel, true);
+            this.adapter.Enable($selectedPanel);
             $container.mousedown(this.containerMousedown); // removable
 
             this.$document.mouseup(this.documentMouseup); // removable
@@ -796,27 +802,20 @@
           var instance = $e.data(dataKey);
           var isMethodName = typeof options === 'string';
 
-          var isDispose = function isDispose(s) {
-            return /Dispose/.test(s);
-          };
-
           if (!instance) {
-            if (isMethodName && isDispose(options)) {
+            if (isMethodName && /Dispose/.test(options)) {
               return;
             }
 
             var optionsObject = typeof options === 'object' ? options : null;
-            instance = createPlugin(this, optionsObject);
+            instance = createPlugin(this, optionsObject, function () {
+              $e.removeData(dataKey);
+            });
             $e.data(dataKey, instance);
           }
 
           if (isMethodName) {
             var methodName = options;
-
-            if (isDispose(methodName)) {
-              $e.removeData(dataKey).off(dataKey);
-              instance.Dispose();
-            }
 
             if (typeof instance[methodName] === 'undefined') {
               throw new TypeError("No method named \"" + methodName + "\"");
@@ -840,9 +839,9 @@
     }
 
     (function (window, $$$1) {
-      AddToJQueryPrototype('BsMultiSelect', function (element, optionsObject) {
+      AddToJQueryPrototype('BsMultiSelect', function (element, optionsObject, onDispose) {
         var adapter = optionsObject && optionsObject.useCss ? new Bs4AdapterCss($$$1, element, optionsObject) : new Bs4Adapter($$$1, element, optionsObject);
-        return new MultiSelect(element, optionsObject, adapter, window, $$$1);
+        return new MultiSelect(element, optionsObject, onDispose, adapter, window, $$$1);
       }, $$$1);
     })(window, $);
 

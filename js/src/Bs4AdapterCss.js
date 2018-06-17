@@ -40,25 +40,17 @@ class Bs4AdapterCss {
     }
 
     UpdateIsValid($selectedPanel){
-        let $hiddenSelect = this.jQuery(this.hiddenSelect);
-        if ($hiddenSelect.hasClass("is-valid")){
-            $selectedPanel.addClass("is-valid");
-        }
-
-        if ($hiddenSelect.hasClass("is-invalid")){
-            $selectedPanel.addClass("is-invalid");
-        }
+        this.bs4Commons.UpdateIsValid($selectedPanel);
     }
 
-    Enable($selectedPanel, isEnabled){
-        if(isEnabled){
-            $selectedPanel.removeClass(this.options.selectedPanelDisabledClass);
-            $selectedPanel.find('BUTTON').prop("disabled", false);
-        }
-        else{
-            $selectedPanel.addClass(this.options.selectedPanelDisabledClass);
-            $selectedPanel.find('BUTTON').prop("disabled", true);
-        }
+    Enable($selectedPanel){
+        $selectedPanel.removeClass(this.options.selectedPanelDisabledClass)
+        this.bs4Commons.Enable($selectedPanel)
+    }
+
+    Disable($selectedPanel){
+        $selectedPanel.addClass(this.options.selectedPanelDisabledClass)
+        this.bs4Commons.Disable($selectedPanel);
     }
 
     CreateDropDownItemContent($dropDownItem, optionId, itemText, isSelected){

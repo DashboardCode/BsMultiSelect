@@ -8,23 +8,21 @@ function AddToJQueryPrototype(pluginName, createPlugin, $){
             let $e = $(this);
             let instance = $e.data(dataKey)
             let isMethodName = typeof options === 'string';
-            let isDispose = s => /Dispose/.test(s)
             if (!instance) {
-                if (isMethodName && isDispose(options)) {
+                if (isMethodName && /Dispose/.test(options)) {
                     return;
                 }
                 const optionsObject = (typeof options === 'object')?options:null;
 
-                instance = createPlugin(this, optionsObject);
+                instance = createPlugin(this, optionsObject,
+                    () => {
+                        $e.removeData(dataKey)
+                    });
                 $e.data(dataKey, instance);
             }
 
             if (isMethodName) {
                 let methodName = options;
-                if (isDispose(methodName)) {
-                    $e.removeData(dataKey).off(dataKey);
-                    instance.Dispose();
-                }
                 if (typeof instance[methodName] === 'undefined') {
                     throw new TypeError(`No method named "${methodName}"`)
                 }

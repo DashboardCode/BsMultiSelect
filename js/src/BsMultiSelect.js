@@ -7,11 +7,11 @@ import AddToJQueryPrototype from './AddToJQueryPrototype'
 (
     (window, $) => {
         AddToJQueryPrototype('BsMultiSelect',
-            (element, optionsObject) => {
+            (element, optionsObject, onDispose) => {
                 let adapter = optionsObject && optionsObject.useCss
                 ? new Bs4AdapterCss($, element, optionsObject)
                 : new Bs4Adapter($, element, optionsObject);
-                return new MultiSelect(element, optionsObject, adapter, window, $);
+                return new MultiSelect(element, optionsObject, onDispose, adapter, window, $);
             }, $);
     }
 )(window, $)

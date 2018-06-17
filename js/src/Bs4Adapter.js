@@ -53,14 +53,17 @@ class Bs4Adapter {
     }
     
     UpdateIsValid($selectedPanel){
-        let $hiddenSelect = this.jQuery(this.hiddenSelect);
-        if ($hiddenSelect.hasClass("is-valid")){
-            $selectedPanel.addClass("is-valid");
-        }
+        this.bs4Commons.UpdateIsValid($selectedPanel)
+    }
 
-        if ($hiddenSelect.hasClass("is-invalid")){
-            $selectedPanel.addClass("is-invalid");
-        }
+    Enable($selectedPanel){
+        $selectedPanel.css({"background-color": ""})
+        this.bs4Commons.Enable($selectedPanel)
+    }
+
+    Disable($selectedPanel){
+        $selectedPanel.css({"background-color": this.options.selectedPanelDisabledBackgroundColor})
+        this.bs4Commons.Disable($selectedPanel);
     }
 
     UpdateSize($selectedPanel){
@@ -73,16 +76,6 @@ class Bs4Adapter {
         }
     }
 
-    Enable($selectedPanel, isEnabled){
-        if(isEnabled){
-            $selectedPanel.css({"background-color": ""});
-            $selectedPanel.find('BUTTON').prop("disabled", false);
-        }
-        else{
-            $selectedPanel.css({"background-color": this.options.selectedPanelDisabledBackgroundColor});
-            $selectedPanel.find('BUTTON').prop("disabled", true);
-        }
-    }
 
     CreateDropDownItemContent($dropDownItem, optionId, itemText, isSelected){
         return this.bs4Commons.CreateDropDownItemContent($dropDownItem, optionId, itemText, isSelected, this.containerClass, this.dropDownItemClass)
