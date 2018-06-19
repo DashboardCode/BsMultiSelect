@@ -552,7 +552,7 @@
         this.selectedPanelClick = function (event) {
           if (event.target.nodeName != "INPUT") _this3.$(_this3.filterInput).val('').focus();
 
-          if (_this3.hasDropDownVisible && _this3.adapter.FilterClick(event)) {
+          if (_this3.hasDropDownVisible && _this3.adapter.IsClickToOpenDropdown(event)) {
             _this3.updateDropDownPosition(true);
 
             _this3.showDropDown();
@@ -810,7 +810,7 @@
       }; // -----------------------
 
 
-      _proto.FilterClick = function FilterClick(event) {
+      _proto.IsClickToOpenDropdown = function IsClickToOpenDropdown(event) {
         return !(event.target.nodeName == "BUTTON" || event.target.nodeName == "SPAN" && event.target.parentElement.nodeName == "BUTTON");
       };
 

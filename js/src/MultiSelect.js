@@ -309,7 +309,7 @@ class MultiSelect {
         this.selectedPanelClick = event => {
             if (event.target.nodeName != "INPUT")
                 this.$(this.filterInput).val('').focus();
-            if (this.hasDropDownVisible && this.adapter.FilterClick(event)){
+            if (this.hasDropDownVisible && this.adapter.IsClickToOpenDropdown(event)){
                 this.updateDropDownPosition(true);
                 this.showDropDown();
             }

@@ -69,10 +69,9 @@ class Bs4Adapter {
         this.adapter.CreateSelectedItemContent($selectedItem, $button)
     }
     // -----------------------
-    FilterClick(event){
+    IsClickToOpenDropdown(event){
         return !(event.target.nodeName == "BUTTON" || (event.target.nodeName == "SPAN" && event.target.parentElement.nodeName == "BUTTON"))
     }
-
 
     UpdateIsValid($selectedPanel){
         let $hiddenSelect = this.$(this.hiddenSelect);
