@@ -1,13 +1,15 @@
 import $ from 'jquery';
 import Bs4AdapterCss from './Bs4AdapterCss';
-import Bs4Adapter from './Bs4Adapter';
+import Bs4AdapterJs from './Bs4AdapterJs';
 import MultiSelect from './MultiSelect';
 import AddToJQueryPrototype from './AddToJQueryPrototype';
+import Bs4Adapter from './Bs4Adapter';
 
 (function (window, $) {
   AddToJQueryPrototype('BsMultiSelect', function (element, optionsObject, onDispose) {
-    var adapter = optionsObject && optionsObject.useCss ? new Bs4AdapterCss($, element, optionsObject) : new Bs4Adapter($, element, optionsObject);
-    return new MultiSelect(element, optionsObject, onDispose, adapter, window, $);
+    var adapter = optionsObject && optionsObject.useCss ? new Bs4AdapterCss($, element, optionsObject) : new Bs4AdapterJs($, element, optionsObject);
+    var facade = new Bs4Adapter($, element, adapter);
+    return new MultiSelect(element, optionsObject, onDispose, facade, window, $);
   }, $);
 })(window, $);
 

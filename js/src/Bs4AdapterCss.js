@@ -1,5 +1,3 @@
-import Bs4Commons from "./Bs4Commons";
-
 class Bs4AdapterCss {
 
     constructor(jQuery, hiddenSelect, options) {
@@ -19,63 +17,48 @@ class Bs4AdapterCss {
         this.options = jQuery.extend({}, defaults, options);
         this.jQuery=jQuery;
         this.hiddenSelect=hiddenSelect;
-        this.bs4Commons = new Bs4Commons(jQuery, hiddenSelect, this.options.dropDownItemHoverClass);
-        this.bs4CommonsLabelDispose = null;
+    }
+
+    GetDropDownItemClass(){
+        return this.options.dropDownItemClass;
+    }
+    
+    GetContainerClass(){
+        return this.options.containerClass;
+    }
+
+    GetDropDownItemHoverClass(){
+        return this.options.dropDownItemHoverClass;
     }
 
     Init($container, $selectedPanel, $filterInputItem, $filterInput, $dropDownMenu){
         $container.addClass(this.options.containerClass);
         $selectedPanel.addClass(this.options.selectedPanelClass);
-
         $dropDownMenu.addClass(this.options.dropDownMenuClass);
         $filterInputItem.addClass(this.options.filterInputItemClass)
         $filterInput.addClass(this.options.filterInputClass);
-
-        this.bs4CommonsLabelDispose = this.bs4Commons.HandleLabel($selectedPanel, this.options.containerClass);
     }
 
-    Dispose(){
-        if (this.bs4CommonsLabelDispose !== null)
-            this.bs4CommonsLabelDispose();
+    CreateSelectedItemContent($selectedItem, $button){
+        $selectedItem.addClass(this.options.selectedItemClass);
+        $button.addClass(this.options.removeSelectedItemButtonClass)
     }
 
-    UpdateIsValid($selectedPanel){
-        this.bs4Commons.UpdateIsValid($selectedPanel);
-    }
 
     Enable($selectedPanel){
         $selectedPanel.removeClass(this.options.selectedPanelDisabledClass)
-        this.bs4Commons.Enable($selectedPanel)
     }
 
     Disable($selectedPanel){
         $selectedPanel.addClass(this.options.selectedPanelDisabledClass)
-        this.bs4Commons.Disable($selectedPanel);
     }
 
-    CreateDropDownItemContent($dropDownItem, optionId, itemText, isSelected){
-        return this.bs4Commons.CreateDropDownItemContent($dropDownItem, optionId, itemText, isSelected, this.options.containerClass, this.options.dropDownItemClass);
+    FocusIn($selectedPanel){
+        $selectedPanel.addClass(this.options.selectedPanelFocusClass);
     }
 
-    CreateSelectedItemContent($selectedItem, itemText, removeSelectedItem, disabled){
-        this.bs4Commons.CreateSelectedItemContent($selectedItem, itemText, removeSelectedItem, this.options.selectedItemClass, this.options.removeSelectedItemButtonClass, disabled);
-    }
-
-    
-    Hover($dropDownItem, isHover){
-        this.bs4Commons.Hover($dropDownItem, isHover);
-    }
-
-    FilterClick(event){
-        return this.bs4Commons.FilterClick(event)
-    }
-
-    Focus($selectedPanel, isFocused){
-        if (isFocused){
-            $selectedPanel.addClass(this.options.selectedPanelFocusClass);
-        }else{
-            $selectedPanel.removeClass(this.options.selectedPanelFocusClass);
-        }
+    FocusOut($selectedPanel){
+        $selectedPanel.removeClass(this.options.selectedPanelFocusClass);
     }
 }
 

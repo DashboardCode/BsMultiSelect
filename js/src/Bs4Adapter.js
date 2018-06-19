@@ -1,114 +1,122 @@
-import Bs4Commons from "./Bs4Commons";
 //import styles from './../../scss/BsMutliSelect.scss'
 
 class Bs4Adapter {
 
-    constructor(jQuery, hiddenSelect, options) {
-        const defaults = {
-            selectedPanelDefMinHeight: 'calc(2.25rem + 2px)',
-            selectedPanelLgMinHeight: 'calc(2.875rem + 2px)',
-            selectedPanelSmMinHeight: 'calc(1.8125rem + 2px)',
-            selectedPanelDisabledBackgroundColor: '#e9ecef',
-            selectedPanelFocusBorderColor: '#80bdff',
-            selectedPanelFocusBoxShadow: '0 0 0 0.2rem rgba(0, 123, 255, 0.25)',
-            selectedPanelFocusValidBoxShadow: '0 0 0 0.2rem rgba(40, 167, 69, 0.25)',
-            selectedPanelFocusInvalidBoxShadow: '0 0 0 0.2rem rgba(220, 53, 69, 0.25)',
-            filterInputColor: '#495057'
-        };
-        this.options = jQuery.extend({}, defaults, options);
-        this.jQuery=jQuery;
+    constructor(jQuery, hiddenSelect, adapter){
+        this.$=jQuery;
         this.hiddenSelect=hiddenSelect;
-
-        this.containerClass= 'dashboardcode-bsmultiselect';
-        this.dropDownMenuClass= 'dropdown-menu';
-        this.dropDownItemClass= 'px-2';
-        this.dropDownItemHoverClass= 'text-primary bg-light';
-        this.selectedPanelClass= 'form-control';
-        this.selectedItemClass= 'badge';
-        this.removeSelectedItemButtonClass= 'close';
-
-        this.selectedPanelStyle= {'margin-bottom': '0'};
-        this.selectedItemStyle= {'padding-left': '0px', 'line-height': '1.5em'};
-        this.removeSelectedItemButtonStyle= {'font-size':'1.5em', 'line-height': '.9em'};
-
-        this.bs4Commons = new Bs4Commons(jQuery, hiddenSelect, this.dropDownItemHoverClass);
+        this.adapter = adapter;
+        this.containerClass = adapter.GetContainerClass();
+        this.dropDownItemHoverClass = adapter.GetDropDownItemHoverClass();
         this.bs4CommonsLabelDispose = null;
     }
 
+    HandleLabel($selectedPanel){
+        let inputId = this.hiddenSelect.id;
+        let $formGroup = this.$(this.hiddenSelect).closest('.form-group');
+        if ($formGroup.length == 1) {
+            let $label = $formGroup.find(`label[for="${inputId}"]`);
+            let forId = $label.attr('for');
+            let $filterInput = $selectedPanel.find('input');
+            if (forId == this.hiddenSelect.id) {
+                let id = `${this.containerClass}-generated-filter-id-${this.hiddenSelect.id}`;
+                $filterInput.attr('id', id);
+                $label.attr('for', id);
+                return () => {
+                    $label.attr('for', forId);
+                }
+            }
+        }
+        return null;
+    }
+
+    // ------------------------------------------
     Init($container, $selectedPanel, $filterInputItem, $filterInput, $dropDownMenu){
-
-        $container.addClass(this.containerClass);
-        $selectedPanel.addClass(this.selectedPanelClass);
-        $selectedPanel.css(this.selectedPanelStyle);
-
-        $dropDownMenu.addClass(this.dropDownMenuClass);
-        $filterInput.css("color", this.options.filterInputColor);
-
-        this.bs4CommonsLabelDispose = this.bs4Commons.HandleLabel($selectedPanel, this.containerClass);
+        this.adapter.Init($container, $selectedPanel, $filterInputItem, $filterInput, $dropDownMenu)
+        this.bs4CommonsLabelDispose = this.HandleLabel($selectedPanel);
     }
 
     Dispose(){
-        if (this.bs4CommonsLabelDispose !== null)
+        if (this.bs4CommonsLabelDispose)
             this.bs4CommonsLabelDispose();
     }
-    
-    UpdateIsValid($selectedPanel){
-        this.bs4Commons.UpdateIsValid($selectedPanel)
-    }
 
-    Enable($selectedPanel){
-        $selectedPanel.css({"background-color": ""})
-        this.bs4Commons.Enable($selectedPanel)
-    }
+    // ------------------------
+    CreateDropDownItemContent(
+        $dropDownItem, optionId, itemText, isSelected){
 
-    Disable($selectedPanel){
-        $selectedPanel.css({"background-color": this.options.selectedPanelDisabledBackgroundColor})
-        this.bs4Commons.Disable($selectedPanel);
-    }
+        let checkBoxId = `${this.containerClass}-${this.hiddenSelect.name.toLowerCase()}-generated-id-${optionId.toLowerCase()}`;
+        let checked = isSelected ? "checked" : "";
 
-    UpdateSize($selectedPanel){
-        if ($selectedPanel.hasClass("form-control-lg")){
-            $selectedPanel.css("min-height", this.options.selectedPanelLgMinHeight);
-        } else if ($selectedPanel.hasClass("form-control-sm")){
-            $selectedPanel.css("min-height", this.options.selectedPanelSmMinHeight);
-        } else {
-            $selectedPanel.css("min-height", this.options.selectedPanelDefMinHeight);
+        let $dropDownItemContent= this.$(`<div class="custom-control custom-checkbox">
+            <input type="checkbox" class="custom-control-input" id="${checkBoxId}" ${checked}>
+            <label class="custom-control-label" for="${checkBoxId}">${itemText}</label>
+        </div>`)
+        $dropDownItemContent.appendTo($dropDownItem);
+        let $checkBox = $dropDownItem.find(`INPUT[type="checkbox"]`);
+        let adoptDropDownItem = isSelected => {
+            $checkBox.prop('checked', isSelected);
         }
-    }
-
-
-    CreateDropDownItemContent($dropDownItem, optionId, itemText, isSelected){
-        return this.bs4Commons.CreateDropDownItemContent($dropDownItem, optionId, itemText, isSelected, this.containerClass, this.dropDownItemClass)
+        $dropDownItem.addClass(this.adapter.GetDropDownItemClass());
+        return adoptDropDownItem;
     }
 
     CreateSelectedItemContent($selectedItem, itemText, removeSelectedItem, disabled){
-        let $buttom = this.bs4Commons.CreateSelectedItemContent($selectedItem, itemText, removeSelectedItem, this.selectedItemClass, this.removeSelectedItemButtonClass, disabled);
-        $buttom.css(this.removeSelectedItemButtonStyle);
-        $selectedItem.css(this.selectedItemStyle);
+        this.$(`<span>${itemText}</span>`).appendTo($selectedItem);
+        let $button = this.$('<button aria-label="Close" tabIndex="-1" type="button"><span aria-hidden="true">&times;</span></button>')
+            .css("white-space", "nowrap")
+            .on("click", removeSelectedItem)
+            .appendTo($selectedItem)
+            .prop("disabled", disabled)
+        this.adapter.CreateSelectedItemContent($selectedItem, $button)
     }
-
-    Hover($dropDownItem, isHover){
-        this.bs4Commons.Hover($dropDownItem, isHover);
-    }
-
+    // -----------------------
     FilterClick(event){
-        return this.bs4Commons.FilterClick(event)
+        return !(event.target.nodeName == "BUTTON" || (event.target.nodeName == "SPAN" && event.target.parentElement.nodeName == "BUTTON"))
     }
 
-    Focus($selectedPanel, isFocused){
-        if (isFocused){
-                if ($selectedPanel.hasClass("is-valid")){
-                    $selectedPanel.css("box-shadow", this.options.selectedPanelFocusValidBoxShadow);
-                } else if ($selectedPanel.hasClass("is-invalid")){
-                    $selectedPanel.css("box-shadow", this.options.selectedPanelFocusInvalidBoxShadow);
-                } else {
-                    $selectedPanel
-                        .css("box-shadow", this.options.selectedPanelFocusBoxShadow)
-                        .css("border-color", this.options.selectedPanelFocusBorderColor);
-                }
-        }else{
-            $selectedPanel.css("box-shadow", "" ).css("border-color", "")
+
+    UpdateIsValid($selectedPanel){
+        let $hiddenSelect = this.$(this.hiddenSelect);
+        if ($hiddenSelect.hasClass("is-valid")){
+            $selectedPanel.addClass("is-valid");
         }
+
+        if ($hiddenSelect.hasClass("is-invalid")){
+            $selectedPanel.addClass("is-invalid");
+        }
+    }
+
+    UpdateSize($selectedPanel){
+        if(this.adapter.UpdateSize)
+            this.adapter.UpdateSize($selectedPanel)
+    }
+
+
+    Enable($selectedPanel){
+        this.adapter.Enable($selectedPanel)
+        $selectedPanel.find('BUTTON').prop("disabled", false);
+    }
+
+    Disable($selectedPanel){
+        this.adapter.Disable($selectedPanel)
+        $selectedPanel.find('BUTTON').prop("disabled", true);
+    }
+
+    FocusIn($selectedPanel){
+        this.adapter.FocusIn($selectedPanel)
+    }
+
+    FocusOut($selectedPanel){
+        this.adapter.FocusOut($selectedPanel)
+    }
+
+    HoverIn($dropDownItem){
+        $dropDownItem.addClass(this.dropDownItemHoverClass);
+    }
+
+    HoverOut($dropDownItem){
+        $dropDownItem.removeClass(this.dropDownItemHoverClass);
     }
 }
 

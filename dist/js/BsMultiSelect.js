@@ -1,5 +1,5 @@
 /*!
-  * DashboardCode BsMultiSelect v0.1.20 (https://dashboardcode.github.io/BsMultiSelect/)
+  * DashboardCode BsMultiSelect v0.1.21 (https://dashboardcode.github.io/BsMultiSelect/)
   * Copyright 2017-2018 Roman Pokrovskij (github user rpokrovskij)
   * Licensed under APACHE 2 (https://github.com/DashboardCode/BsMultiSelect/blob/master/LICENSE)
   */
@@ -11,92 +11,6 @@
 
     Popper = Popper && Popper.hasOwnProperty('default') ? Popper['default'] : Popper;
     $ = $ && $.hasOwnProperty('default') ? $['default'] : $;
-
-    var Bs4Commons =
-    /*#__PURE__*/
-    function () {
-      function Bs4Commons(jQuery, hiddenSelect, dropDownItemHoverClass) {
-        this.$ = jQuery;
-        this.hiddenSelect = hiddenSelect;
-        this.dropDownItemHoverClass = dropDownItemHoverClass;
-      }
-
-      var _proto = Bs4Commons.prototype;
-
-      _proto.UpdateIsValid = function UpdateIsValid($selectedPanel) {
-        var $hiddenSelect = this.$(this.hiddenSelect);
-
-        if ($hiddenSelect.hasClass("is-valid")) {
-          $selectedPanel.addClass("is-valid");
-        }
-
-        if ($hiddenSelect.hasClass("is-invalid")) {
-          $selectedPanel.addClass("is-invalid");
-        }
-      };
-
-      _proto.Enable = function Enable($selectedPanel) {
-        $selectedPanel.find('BUTTON').prop("disabled", false);
-      };
-
-      _proto.Disable = function Disable($selectedPanel) {
-        $selectedPanel.find('BUTTON').prop("disabled", true);
-      };
-
-      _proto.HandleLabel = function HandleLabel($selectedPanel, containerClass) {
-        var inputId = this.hiddenSelect.id;
-        var $formGroup = this.$(this.hiddenSelect).closest('.form-group');
-
-        if ($formGroup.length == 1) {
-          var $label = $formGroup.find("label[for=\"" + inputId + "\"]");
-          var forId = $label.attr('for');
-          var $filterInput = $selectedPanel.find('input');
-
-          if (forId == this.hiddenSelect.id) {
-            var id = containerClass + "-generated-filter-id-" + this.hiddenSelect.id;
-            $filterInput.attr('id', id);
-            $label.attr('for', id);
-            return function () {
-              $label.attr('for', forId);
-            };
-          }
-        }
-
-        return null;
-      };
-
-      _proto.CreateDropDownItemContent = function CreateDropDownItemContent($dropDownItem, optionId, itemText, isSelected, containerClass, dropDownItemClass) {
-        var checkBoxId = containerClass + "-" + this.hiddenSelect.name.toLowerCase() + "-generated-id-" + optionId.toLowerCase();
-        var checked = isSelected ? "checked" : "";
-        var $dropDownItemContent = this.$("<div class=\"custom-control custom-checkbox\">\n            <input type=\"checkbox\" class=\"custom-control-input\" id=\"" + checkBoxId + "\" " + checked + ">\n            <label class=\"custom-control-label\" for=\"" + checkBoxId + "\">" + itemText + "</label>\n        </div>");
-        $dropDownItemContent.appendTo($dropDownItem);
-        var $checkBox = $dropDownItem.find("INPUT[type=\"checkbox\"]");
-
-        var adoptDropDownItem = function adoptDropDownItem(isSelected) {
-          $checkBox.prop('checked', isSelected);
-        };
-
-        $dropDownItem.addClass(dropDownItemClass);
-        return adoptDropDownItem;
-      };
-
-      _proto.CreateSelectedItemContent = function CreateSelectedItemContent($selectedItem, itemText, removeSelectedItem, selectedItemClass, removeSelectedItemButtonClass, disabled) {
-        $selectedItem.addClass(selectedItemClass);
-        this.$("<span>" + itemText + "</span>").appendTo($selectedItem);
-        var $button = this.$('<button aria-label="Close" tabIndex="-1" type="button"><span aria-hidden="true">&times;</span></button>').addClass(removeSelectedItemButtonClass).css("white-space", "nowrap").on("click", removeSelectedItem).appendTo($selectedItem).prop("disabled", disabled);
-        return $button;
-      };
-
-      _proto.FilterClick = function FilterClick(event) {
-        return !(event.target.nodeName == "BUTTON" || event.target.nodeName == "SPAN" && event.target.parentElement.nodeName == "BUTTON");
-      };
-
-      _proto.Hover = function Hover($dropDownItem, isHover) {
-        if (isHover) $dropDownItem.addClass(this.dropDownItemHoverClass);else $dropDownItem.removeClass(this.dropDownItemHoverClass);
-      };
-
-      return Bs4Commons;
-    }();
 
     var Bs4AdapterCss =
     /*#__PURE__*/
@@ -118,11 +32,21 @@
         this.options = jQuery.extend({}, defaults, options);
         this.jQuery = jQuery;
         this.hiddenSelect = hiddenSelect;
-        this.bs4Commons = new Bs4Commons(jQuery, hiddenSelect, this.options.dropDownItemHoverClass);
-        this.bs4CommonsLabelDispose = null;
       }
 
       var _proto = Bs4AdapterCss.prototype;
+
+      _proto.GetDropDownItemClass = function GetDropDownItemClass() {
+        return this.options.dropDownItemClass;
+      };
+
+      _proto.GetContainerClass = function GetContainerClass() {
+        return this.options.containerClass;
+      };
+
+      _proto.GetDropDownItemHoverClass = function GetDropDownItemHoverClass() {
+        return this.options.dropDownItemHoverClass;
+      };
 
       _proto.Init = function Init($container, $selectedPanel, $filterInputItem, $filterInput, $dropDownMenu) {
         $container.addClass(this.options.containerClass);
@@ -130,58 +54,55 @@
         $dropDownMenu.addClass(this.options.dropDownMenuClass);
         $filterInputItem.addClass(this.options.filterInputItemClass);
         $filterInput.addClass(this.options.filterInputClass);
-        this.bs4CommonsLabelDispose = this.bs4Commons.HandleLabel($selectedPanel, this.options.containerClass);
       };
 
-      _proto.Dispose = function Dispose() {
-        if (this.bs4CommonsLabelDispose !== null) this.bs4CommonsLabelDispose();
-      };
-
-      _proto.UpdateIsValid = function UpdateIsValid($selectedPanel) {
-        this.bs4Commons.UpdateIsValid($selectedPanel);
+      _proto.CreateSelectedItemContent = function CreateSelectedItemContent($selectedItem, $button) {
+        $selectedItem.addClass(this.options.selectedItemClass);
+        $button.addClass(this.options.removeSelectedItemButtonClass);
       };
 
       _proto.Enable = function Enable($selectedPanel) {
         $selectedPanel.removeClass(this.options.selectedPanelDisabledClass);
-        this.bs4Commons.Enable($selectedPanel);
       };
 
       _proto.Disable = function Disable($selectedPanel) {
         $selectedPanel.addClass(this.options.selectedPanelDisabledClass);
-        this.bs4Commons.Disable($selectedPanel);
       };
 
-      _proto.CreateDropDownItemContent = function CreateDropDownItemContent($dropDownItem, optionId, itemText, isSelected) {
-        return this.bs4Commons.CreateDropDownItemContent($dropDownItem, optionId, itemText, isSelected, this.options.containerClass, this.options.dropDownItemClass);
+      _proto.FocusIn = function FocusIn($selectedPanel) {
+        $selectedPanel.addClass(this.options.selectedPanelFocusClass);
       };
 
-      _proto.CreateSelectedItemContent = function CreateSelectedItemContent($selectedItem, itemText, removeSelectedItem, disabled) {
-        this.bs4Commons.CreateSelectedItemContent($selectedItem, itemText, removeSelectedItem, this.options.selectedItemClass, this.options.removeSelectedItemButtonClass, disabled);
-      };
-
-      _proto.Hover = function Hover($dropDownItem, isHover) {
-        this.bs4Commons.Hover($dropDownItem, isHover);
-      };
-
-      _proto.FilterClick = function FilterClick(event) {
-        return this.bs4Commons.FilterClick(event);
-      };
-
-      _proto.Focus = function Focus($selectedPanel, isFocused) {
-        if (isFocused) {
-          $selectedPanel.addClass(this.options.selectedPanelFocusClass);
-        } else {
-          $selectedPanel.removeClass(this.options.selectedPanelFocusClass);
-        }
+      _proto.FocusOut = function FocusOut($selectedPanel) {
+        $selectedPanel.removeClass(this.options.selectedPanelFocusClass);
       };
 
       return Bs4AdapterCss;
     }();
 
-    var Bs4Adapter =
+    var defContainerClass = 'dashboardcode-bsmultiselect';
+    var defDropDownMenuClass = 'dropdown-menu';
+    var defDropDownItemHoverClass = 'text-primary bg-light';
+    var defSelectedPanelClass = 'form-control';
+    var defDropDownItemClass = 'px-2';
+    var defSelectedItemClass = 'badge';
+    var defSelectedPanelStyle = {
+      'margin-bottom': '0'
+    };
+    var defSelectedItemStyle = {
+      'padding-left': '0px',
+      'line-height': '1.5em'
+    };
+    var defRemoveSelectedItemButtonClass = 'close';
+    var defRemoveSelectedItemButtonStyle = {
+      'font-size': '1.5em',
+      'line-height': '.9em'
+    };
+
+    var Bs4AdapterJs =
     /*#__PURE__*/
     function () {
-      function Bs4Adapter(jQuery, hiddenSelect, options) {
+      function Bs4AdapterJs(jQuery, hiddenSelect, options) {
         var defaults = {
           selectedPanelDefMinHeight: 'calc(2.25rem + 2px)',
           selectedPanelLgMinHeight: 'calc(2.875rem + 2px)',
@@ -196,59 +117,28 @@
         this.options = jQuery.extend({}, defaults, options);
         this.jQuery = jQuery;
         this.hiddenSelect = hiddenSelect;
-        this.containerClass = 'dashboardcode-bsmultiselect';
-        this.dropDownMenuClass = 'dropdown-menu';
-        this.dropDownItemClass = 'px-2';
-        this.dropDownItemHoverClass = 'text-primary bg-light';
-        this.selectedPanelClass = 'form-control';
-        this.selectedItemClass = 'badge';
-        this.removeSelectedItemButtonClass = 'close';
-        this.selectedPanelStyle = {
-          'margin-bottom': '0'
-        };
-        this.selectedItemStyle = {
-          'padding-left': '0px',
-          'line-height': '1.5em'
-        };
-        this.removeSelectedItemButtonStyle = {
-          'font-size': '1.5em',
-          'line-height': '.9em'
-        };
-        this.bs4Commons = new Bs4Commons(jQuery, hiddenSelect, this.dropDownItemHoverClass);
-        this.bs4CommonsLabelDispose = null;
       }
 
-      var _proto = Bs4Adapter.prototype;
+      var _proto = Bs4AdapterJs.prototype;
+
+      _proto.GetDropDownItemClass = function GetDropDownItemClass() {
+        return defDropDownItemClass;
+      };
+
+      _proto.GetContainerClass = function GetContainerClass() {
+        return defContainerClass;
+      };
+
+      _proto.GetDropDownItemHoverClass = function GetDropDownItemHoverClass() {
+        return defDropDownItemHoverClass;
+      };
 
       _proto.Init = function Init($container, $selectedPanel, $filterInputItem, $filterInput, $dropDownMenu) {
-        $container.addClass(this.containerClass);
-        $selectedPanel.addClass(this.selectedPanelClass);
-        $selectedPanel.css(this.selectedPanelStyle);
-        $dropDownMenu.addClass(this.dropDownMenuClass);
+        $container.addClass(defContainerClass);
+        $selectedPanel.addClass(defSelectedPanelClass);
+        $selectedPanel.css(defSelectedPanelStyle);
+        $dropDownMenu.addClass(defDropDownMenuClass);
         $filterInput.css("color", this.options.filterInputColor);
-        this.bs4CommonsLabelDispose = this.bs4Commons.HandleLabel($selectedPanel, this.containerClass);
-      };
-
-      _proto.Dispose = function Dispose() {
-        if (this.bs4CommonsLabelDispose !== null) this.bs4CommonsLabelDispose();
-      };
-
-      _proto.UpdateIsValid = function UpdateIsValid($selectedPanel) {
-        this.bs4Commons.UpdateIsValid($selectedPanel);
-      };
-
-      _proto.Enable = function Enable($selectedPanel) {
-        $selectedPanel.css({
-          "background-color": ""
-        });
-        this.bs4Commons.Enable($selectedPanel);
-      };
-
-      _proto.Disable = function Disable($selectedPanel) {
-        $selectedPanel.css({
-          "background-color": this.options.selectedPanelDisabledBackgroundColor
-        });
-        this.bs4Commons.Disable($selectedPanel);
       };
 
       _proto.UpdateSize = function UpdateSize($selectedPanel) {
@@ -261,39 +151,40 @@
         }
       };
 
-      _proto.CreateDropDownItemContent = function CreateDropDownItemContent($dropDownItem, optionId, itemText, isSelected) {
-        return this.bs4Commons.CreateDropDownItemContent($dropDownItem, optionId, itemText, isSelected, this.containerClass, this.dropDownItemClass);
+      _proto.CreateSelectedItemContent = function CreateSelectedItemContent($selectedItem, $button) {
+        $selectedItem.addClass(defSelectedItemClass);
+        $selectedItem.css(defSelectedItemStyle);
+        $button.addClass(defRemoveSelectedItemButtonClass);
+        $button.css(defRemoveSelectedItemButtonStyle);
       };
 
-      _proto.CreateSelectedItemContent = function CreateSelectedItemContent($selectedItem, itemText, removeSelectedItem, disabled) {
-        var $buttom = this.bs4Commons.CreateSelectedItemContent($selectedItem, itemText, removeSelectedItem, this.selectedItemClass, this.removeSelectedItemButtonClass, disabled);
-        $buttom.css(this.removeSelectedItemButtonStyle);
-        $selectedItem.css(this.selectedItemStyle);
+      _proto.Enable = function Enable($selectedPanel) {
+        $selectedPanel.css({
+          "background-color": ""
+        });
       };
 
-      _proto.Hover = function Hover($dropDownItem, isHover) {
-        this.bs4Commons.Hover($dropDownItem, isHover);
+      _proto.Disable = function Disable($selectedPanel) {
+        $selectedPanel.css({
+          "background-color": this.options.selectedPanelDisabledBackgroundColor
+        });
       };
 
-      _proto.FilterClick = function FilterClick(event) {
-        return this.bs4Commons.FilterClick(event);
-      };
-
-      _proto.Focus = function Focus($selectedPanel, isFocused) {
-        if (isFocused) {
-          if ($selectedPanel.hasClass("is-valid")) {
-            $selectedPanel.css("box-shadow", this.options.selectedPanelFocusValidBoxShadow);
-          } else if ($selectedPanel.hasClass("is-invalid")) {
-            $selectedPanel.css("box-shadow", this.options.selectedPanelFocusInvalidBoxShadow);
-          } else {
-            $selectedPanel.css("box-shadow", this.options.selectedPanelFocusBoxShadow).css("border-color", this.options.selectedPanelFocusBorderColor);
-          }
+      _proto.FocusIn = function FocusIn($selectedPanel) {
+        if ($selectedPanel.hasClass("is-valid")) {
+          $selectedPanel.css("box-shadow", this.options.selectedPanelFocusValidBoxShadow);
+        } else if ($selectedPanel.hasClass("is-invalid")) {
+          $selectedPanel.css("box-shadow", this.options.selectedPanelFocusInvalidBoxShadow);
         } else {
-          $selectedPanel.css("box-shadow", "").css("border-color", "");
+          $selectedPanel.css("box-shadow", this.options.selectedPanelFocusBoxShadow).css("border-color", this.options.selectedPanelFocusBorderColor);
         }
       };
 
-      return Bs4Adapter;
+      _proto.FocusOut = function FocusOut($selectedPanel) {
+        $selectedPanel.css("box-shadow", "").css("border-color", "");
+      };
+
+      return Bs4AdapterJs;
     }();
 
     var defSelectedPanelStyleSys = {
@@ -380,7 +271,7 @@
 
       _proto.resetDropDownMenuHover = function resetDropDownMenuHover() {
         if (this.hoveredDropDownItem !== null) {
-          this.adapter.Hover(this.$(this.hoveredDropDownItem), false);
+          this.adapter.HoverOut(this.$(this.hoveredDropDownItem));
           this.hoveredDropDownItem = null;
         }
 
@@ -480,9 +371,15 @@
           appendItem(false);
         }
 
-        var manageHover = function manageHover(event, isOn) {
-          _this2.adapter.Hover(_this2.$(event.target).closest("LI"), isOn);
-        };
+        var closest = function closest(event) {
+          return _this2.$(event.target).closest("LI");
+        }; // let manageHoverIn = (event) => {
+        //     this.adapter.HoverIn(closest(event))
+        // }
+        // let manageHoverOut = (event) => {
+        //     this.adapter.HoverOut(closest(event))
+        // }
+
 
         $dropDownItem.click(function (event) {
           event.preventDefault();
@@ -494,9 +391,9 @@
 
           _this2.filterInput.focus();
         }).mouseover(function (e) {
-          return manageHover(e, true);
+          return _this2.adapter.HoverIn(closest(e));
         }).mouseout(function (e) {
-          return manageHover(e, false);
+          return _this2.adapter.HoverOut(closest(e));
         });
       };
 
@@ -512,7 +409,7 @@
           if (this.hoveredDropDownItem === null) {
             this.hoveredDropDownIndex = down ? 0 : visibleNodeListArray.length - 1;
           } else {
-            this.adapter.Hover(this.$(this.hoveredDropDownItem), false);
+            this.adapter.HoverOut(this.$(this.hoveredDropDownItem));
 
             if (down) {
               var newIndex = this.hoveredDropDownIndex + 1;
@@ -525,7 +422,7 @@
           }
 
           this.hoveredDropDownItem = visibleNodeListArray[this.hoveredDropDownIndex];
-          this.adapter.Hover(this.$(this.hoveredDropDownItem), true);
+          this.adapter.HoverIn(this.$(this.hoveredDropDownItem));
         }
       };
 
@@ -699,9 +596,9 @@
           return _this3.resetDropDownMenuHover();
         });
         $filterInput.focusin(function () {
-          return _this3.adapter.Focus($selectedPanel, true);
+          return _this3.adapter.FocusIn($selectedPanel);
         }).focusout(function () {
-          if (!_this3.skipFocusout) _this3.adapter.Focus($selectedPanel, false);
+          if (!_this3.skipFocusout) _this3.adapter.FocusOut($selectedPanel);
         });
         $filterInput.on("keydown", function (event) {
           if (event.which == 38) {
@@ -792,8 +689,14 @@
     }();
 
     function AddToJQueryPrototype(pluginName, createPlugin, $$$1) {
-      var prototypedName = pluginName.charAt(0).toLowerCase() + pluginName.slice(1);
-      var noConflictPrototypable = $$$1.fn[prototypedName];
+      var firstChar = pluginName.charAt(0);
+
+      if (firstChar.toLowerCase() == firstChar) {
+        throw new TypeError("Plugin name '" + pluginName + "' should be started from upper case char");
+      }
+
+      var prototypableName = firstChar.toLowerCase() + pluginName.slice(1);
+      var noConflictPrototypable = $$$1.fn[prototypableName];
       var dataKey = "DashboardCode." + pluginName;
 
       function prototypable(options) {
@@ -818,7 +721,7 @@
             var methodName = options;
 
             if (typeof instance[methodName] === 'undefined') {
-              throw new TypeError("No method named \"" + methodName + "\"");
+              throw new TypeError("No method named '" + methodName + "'");
             }
 
             instance[methodName]();
@@ -826,22 +729,142 @@
         });
       }
 
-      $$$1.fn[prototypedName] = prototypable; // pluginName with first capitalized letter - return plugin instance for 1st $selected item
+      $$$1.fn[prototypableName] = prototypable; // pluginName with first capitalized letter - return plugin instance for 1st $selected item
 
       $$$1.fn[pluginName] = function () {
         return $$$1(this).data(dataKey);
       };
 
-      $$$1.fn[prototypedName].noConflict = function () {
-        $$$1.fn[prototypedName] = noConflictPrototypable;
+      $$$1.fn[prototypableName].noConflict = function () {
+        $$$1.fn[prototypableName] = noConflictPrototypable;
         return prototypable;
       };
     }
 
+    //import styles from './../../scss/BsMutliSelect.scss'
+    var Bs4Adapter =
+    /*#__PURE__*/
+    function () {
+      function Bs4Adapter(jQuery, hiddenSelect, adapter) {
+        this.$ = jQuery;
+        this.hiddenSelect = hiddenSelect;
+        this.adapter = adapter;
+        this.containerClass = adapter.GetContainerClass();
+        this.dropDownItemHoverClass = adapter.GetDropDownItemHoverClass();
+        this.bs4CommonsLabelDispose = null;
+      }
+
+      var _proto = Bs4Adapter.prototype;
+
+      _proto.HandleLabel = function HandleLabel($selectedPanel) {
+        var inputId = this.hiddenSelect.id;
+        var $formGroup = this.$(this.hiddenSelect).closest('.form-group');
+
+        if ($formGroup.length == 1) {
+          var $label = $formGroup.find("label[for=\"" + inputId + "\"]");
+          var forId = $label.attr('for');
+          var $filterInput = $selectedPanel.find('input');
+
+          if (forId == this.hiddenSelect.id) {
+            var id = this.containerClass + "-generated-filter-id-" + this.hiddenSelect.id;
+            $filterInput.attr('id', id);
+            $label.attr('for', id);
+            return function () {
+              $label.attr('for', forId);
+            };
+          }
+        }
+
+        return null;
+      }; // ------------------------------------------
+
+
+      _proto.Init = function Init($container, $selectedPanel, $filterInputItem, $filterInput, $dropDownMenu) {
+        this.adapter.Init($container, $selectedPanel, $filterInputItem, $filterInput, $dropDownMenu);
+        this.bs4CommonsLabelDispose = this.HandleLabel($selectedPanel);
+      };
+
+      _proto.Dispose = function Dispose() {
+        if (this.bs4CommonsLabelDispose) this.bs4CommonsLabelDispose();
+      }; // ------------------------
+
+
+      _proto.CreateDropDownItemContent = function CreateDropDownItemContent($dropDownItem, optionId, itemText, isSelected) {
+        var checkBoxId = this.containerClass + "-" + this.hiddenSelect.name.toLowerCase() + "-generated-id-" + optionId.toLowerCase();
+        var checked = isSelected ? "checked" : "";
+        var $dropDownItemContent = this.$("<div class=\"custom-control custom-checkbox\">\n            <input type=\"checkbox\" class=\"custom-control-input\" id=\"" + checkBoxId + "\" " + checked + ">\n            <label class=\"custom-control-label\" for=\"" + checkBoxId + "\">" + itemText + "</label>\n        </div>");
+        $dropDownItemContent.appendTo($dropDownItem);
+        var $checkBox = $dropDownItem.find("INPUT[type=\"checkbox\"]");
+
+        var adoptDropDownItem = function adoptDropDownItem(isSelected) {
+          $checkBox.prop('checked', isSelected);
+        };
+
+        $dropDownItem.addClass(this.adapter.GetDropDownItemClass());
+        return adoptDropDownItem;
+      };
+
+      _proto.CreateSelectedItemContent = function CreateSelectedItemContent($selectedItem, itemText, removeSelectedItem, disabled) {
+        this.$("<span>" + itemText + "</span>").appendTo($selectedItem);
+        var $button = this.$('<button aria-label="Close" tabIndex="-1" type="button"><span aria-hidden="true">&times;</span></button>').css("white-space", "nowrap").on("click", removeSelectedItem).appendTo($selectedItem).prop("disabled", disabled);
+        this.adapter.CreateSelectedItemContent($selectedItem, $button);
+      }; // -----------------------
+
+
+      _proto.FilterClick = function FilterClick(event) {
+        return !(event.target.nodeName == "BUTTON" || event.target.nodeName == "SPAN" && event.target.parentElement.nodeName == "BUTTON");
+      };
+
+      _proto.UpdateIsValid = function UpdateIsValid($selectedPanel) {
+        var $hiddenSelect = this.$(this.hiddenSelect);
+
+        if ($hiddenSelect.hasClass("is-valid")) {
+          $selectedPanel.addClass("is-valid");
+        }
+
+        if ($hiddenSelect.hasClass("is-invalid")) {
+          $selectedPanel.addClass("is-invalid");
+        }
+      };
+
+      _proto.UpdateSize = function UpdateSize($selectedPanel) {
+        if (this.adapter.UpdateSize) this.adapter.UpdateSize($selectedPanel);
+      };
+
+      _proto.Enable = function Enable($selectedPanel) {
+        this.adapter.Enable($selectedPanel);
+        $selectedPanel.find('BUTTON').prop("disabled", false);
+      };
+
+      _proto.Disable = function Disable($selectedPanel) {
+        this.adapter.Disable($selectedPanel);
+        $selectedPanel.find('BUTTON').prop("disabled", true);
+      };
+
+      _proto.FocusIn = function FocusIn($selectedPanel) {
+        this.adapter.FocusIn($selectedPanel);
+      };
+
+      _proto.FocusOut = function FocusOut($selectedPanel) {
+        this.adapter.FocusOut($selectedPanel);
+      };
+
+      _proto.HoverIn = function HoverIn($dropDownItem) {
+        $dropDownItem.addClass(this.dropDownItemHoverClass);
+      };
+
+      _proto.HoverOut = function HoverOut($dropDownItem) {
+        $dropDownItem.removeClass(this.dropDownItemHoverClass);
+      };
+
+      return Bs4Adapter;
+    }();
+
     (function (window, $$$1) {
       AddToJQueryPrototype('BsMultiSelect', function (element, optionsObject, onDispose) {
-        var adapter = optionsObject && optionsObject.useCss ? new Bs4AdapterCss($$$1, element, optionsObject) : new Bs4Adapter($$$1, element, optionsObject);
-        return new MultiSelect(element, optionsObject, onDispose, adapter, window, $$$1);
+        var adapter = optionsObject && optionsObject.useCss ? new Bs4AdapterCss($$$1, element, optionsObject) : new Bs4AdapterJs($$$1, element, optionsObject);
+        var facade = new Bs4Adapter($$$1, element, adapter);
+        return new MultiSelect(element, optionsObject, onDispose, facade, window, $$$1);
       }, $$$1);
     })(window, $);
 

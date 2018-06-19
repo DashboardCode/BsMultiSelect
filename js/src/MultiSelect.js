@@ -64,7 +64,7 @@ class MultiSelect {
     // Public methods
     resetDropDownMenuHover() {
         if (this.hoveredDropDownItem !== null) {
-            this.adapter.Hover(this.$(this.hoveredDropDownItem), false);
+            this.adapter.HoverOut(this.$(this.hoveredDropDownItem));
             this.hoveredDropDownItem = null;
         }
         this.hoveredDropDownIndex = null;
@@ -131,6 +131,7 @@ class MultiSelect {
                 removeItem();
                 this.closeDropDown();
             };
+
             this.adapter.CreateSelectedItemContent(
                 $selectedItem,
                 itemText,
@@ -149,16 +150,21 @@ class MultiSelect {
         if (isSelected) {
             appendItem(false);
         }
-        let manageHover = (event, isOn) => {
-            this.adapter.Hover(this.$(event.target).closest("LI"), isOn)
-        }
+        let closest = (event) => this.$(event.target).closest("LI");
+        // let manageHoverIn = (event) => {
+        //     this.adapter.HoverIn(closest(event))
+        // }
+        // let manageHoverOut = (event) => {
+        //     this.adapter.HoverOut(closest(event))
+        // }
         $dropDownItem.click(event => {
             event.preventDefault();
             event.stopPropagation();
             let toggleItem = this.$(event.currentTarget).closest("LI").data("option-toggle");
             toggleItem();
             this.filterInput.focus();
-        }).mouseover(e => manageHover(e, true)).mouseout(e => manageHover(e, false));
+        }).mouseover(e => this.adapter.HoverIn(closest(e)))
+          .mouseout(e => this.adapter.HoverOut(closest(e)));
     }
     keydownArrow(down) {
         let visibleNodeListArray = this.$(this.dropDownMenu).find('LI:not([style*="display: none"])').toArray();
@@ -171,7 +177,7 @@ class MultiSelect {
                 this.hoveredDropDownIndex = down ? 0 : visibleNodeListArray.length - 1;
             }
             else {
-                this.adapter.Hover(this.$(this.hoveredDropDownItem), false);
+                this.adapter.HoverOut(this.$(this.hoveredDropDownItem));
                 if (down) {
                     let newIndex = this.hoveredDropDownIndex + 1;
                     this.hoveredDropDownIndex = newIndex < visibleNodeListArray.length ? newIndex : 0;
@@ -181,7 +187,7 @@ class MultiSelect {
                 }
             }
             this.hoveredDropDownItem = visibleNodeListArray[this.hoveredDropDownIndex];
-            this.adapter.Hover(this.$(this.hoveredDropDownItem), true);
+            this.adapter.HoverIn(this.$(this.hoveredDropDownItem));
         }
     }
     input(forceUpdatePosition) {
@@ -337,10 +343,10 @@ class MultiSelect {
         $dropDownMenu.click( event => event.stopPropagation());
         $dropDownMenu.mouseover(() => this.resetDropDownMenuHover());
 
-        $filterInput.focusin(() => this.adapter.Focus($selectedPanel, true))
+        $filterInput.focusin(() => this.adapter.FocusIn($selectedPanel))
                     .focusout(() => {
                             if (!this.skipFocusout)
-                                this.adapter.Focus($selectedPanel, false)
+                                this.adapter.FocusOut($selectedPanel)
                             });
         $filterInput.on("keydown", (event) => {
             if (event.which == 38) {

@@ -1,6 +1,6 @@
 {
   "name": "dashboardcode.bsmutltiselect",
-  "version": "0.1.20",
+  "version": "0.1.21",
   "private": false,
   "description": "Bootstrap 4 component - MultiSelect",
   "homepage": "https://dashboardcode.github.io/BsMultiSelect/",
@@ -73,7 +73,7 @@
     },
     {
       "path": "./dist/js/BsMultiSelect.min.js",
-      "maxSize": "16 kB",
+      "maxSize": "15 kB",
       "compression": "none"
     }
   ]

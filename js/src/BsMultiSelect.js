@@ -1,8 +1,9 @@
 import $ from 'jquery'
 import Bs4AdapterCss from './Bs4AdapterCss'
-import Bs4Adapter from './Bs4Adapter'
+import Bs4AdapterJs from './Bs4AdapterJs'
 import MultiSelect from './MultiSelect'
 import AddToJQueryPrototype from './AddToJQueryPrototype'
+import Bs4Adapter from './Bs4Adapter';
 
 (
     (window, $) => {
@@ -10,8 +11,9 @@ import AddToJQueryPrototype from './AddToJQueryPrototype'
             (element, optionsObject, onDispose) => {
                 let adapter = optionsObject && optionsObject.useCss
                 ? new Bs4AdapterCss($, element, optionsObject)
-                : new Bs4Adapter($, element, optionsObject);
-                return new MultiSelect(element, optionsObject, onDispose, adapter, window, $);
+                : new Bs4AdapterJs($, element, optionsObject);
+                let facade = new Bs4Adapter($, element, adapter);
+                return new MultiSelect(element, optionsObject, onDispose, facade, window, $);
             }, $);
     }
 )(window, $)

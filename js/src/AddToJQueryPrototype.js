@@ -1,6 +1,10 @@
 function AddToJQueryPrototype(pluginName, createPlugin, $){
-    const prototypedName = pluginName.charAt(0).toLowerCase() + pluginName.slice(1)
-    const noConflictPrototypable = $.fn[prototypedName];
+    const firstChar = pluginName.charAt(0);
+    if (firstChar.toLowerCase() == firstChar) {
+        throw new TypeError(`Plugin name '${pluginName}' should be started from upper case char`)
+    }
+    const prototypableName = firstChar.toLowerCase() + pluginName.slice(1)
+    const noConflictPrototypable = $.fn[prototypableName];
     const dataKey = `DashboardCode.${pluginName}`;
 
     function prototypable(options) {
@@ -24,22 +28,22 @@ function AddToJQueryPrototype(pluginName, createPlugin, $){
             if (isMethodName) {
                 let methodName = options;
                 if (typeof instance[methodName] === 'undefined') {
-                    throw new TypeError(`No method named "${methodName}"`)
+                    throw new TypeError(`No method named '${methodName}'`)
                 }
                 instance[methodName]()
             }
         })
     }
 
-    $.fn[prototypedName] = prototypable;
+    $.fn[prototypableName] = prototypable;
 
     // pluginName with first capitalized letter - return plugin instance for 1st $selected item
     $.fn[pluginName] = function () {
         return $(this).data(dataKey);
     };
 
-    $.fn[prototypedName].noConflict = function () {
-        $.fn[prototypedName] = noConflictPrototypable
+    $.fn[prototypableName].noConflict = function () {
+        $.fn[prototypableName] = noConflictPrototypable
         return prototypable;
     }
 }
