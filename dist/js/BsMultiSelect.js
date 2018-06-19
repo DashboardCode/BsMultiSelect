@@ -741,7 +741,6 @@
       };
     }
 
-    //import styles from './../../scss/BsMutliSelect.scss'
     var Bs4Adapter =
     /*#__PURE__*/
     function () {

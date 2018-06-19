@@ -1,5 +1,3 @@
-//import styles from './../../scss/BsMutliSelect.scss'
-
 class Bs4Adapter {
 
     constructor(jQuery, hiddenSelect, adapter){
