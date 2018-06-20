@@ -1,7 +1,3 @@
-import {defContainerClass, defDropDownMenuClass,
-    defDropDownItemHoverClass, defSelectedPanelClass, defDropDownItemClass,
-    defSelectedItemClass, defRemoveSelectedItemButtonClass} from './Bs4Const'
-
 const defSelectedPanelStyle = {'margin-bottom': '0'};
 const defSelectedItemStyle = {'padding-left': '0px', 'line-height': '1.5em'};
 const defRemoveSelectedItemButtonStyle = {'font-size':'1.5em', 'line-height': '.9em'};
@@ -20,18 +16,6 @@ class Bs4AdapterJs {
             filterInputColor: '#495057'
         };
         this.options = $.extend({}, defaults, options);
-    }
-
-    GetClasses(){
-        return {
-            dropDownItemClass: defDropDownItemClass,
-            containerClass: defContainerClass,
-            dropDownItemHoverClass: defDropDownItemHoverClass,
-            selectedItemClass: defSelectedItemClass,
-            removeSelectedItemButtonClass: defRemoveSelectedItemButtonClass,
-            selectedPanelClass:  defSelectedPanelClass,
-            dropDownMenuClass: defDropDownMenuClass
-        }
     }
 
     OnInit(dom){

@@ -5,10 +5,24 @@ function disableButton($selectedPanel, isDisabled){
 class Bs4Adapter {
 
     constructor(hiddenSelect, adapter, classes, $){
+        const defaults = {
+            containerClass: 'dashboardcode-bsmultiselect',
+            dropDownMenuClass: 'dropdown-menu',
+            dropDownItemClass:  'px-2',
+            dropDownItemHoverClass: 'text-primary bg-light',
+            selectedPanelClass: 'form-control',
+            selectedPanelFocusClass : 'focus',
+            selectedPanelDisabledClass: 'disabled',
+            selectedItemClass: 'badge',
+            removeSelectedItemButtonClass: 'close',
+            filterInputItemClass: '',
+            filterInputClass: ''
+        }
+
+        this.classes = $.extend({}, defaults, classes);
         this.$ = $;
         this.hiddenSelect=hiddenSelect;
         this.adapter = adapter;
-        this.classes = classes;
         this.bs4CommonsLabelDispose = null;
     }
 
@@ -35,7 +49,8 @@ class Bs4Adapter {
         dom.container.addClass(this.classes.containerClass);
         dom.selectedPanel.addClass(this.classes.selectedPanelClass);
         dom.dropDownMenu.addClass(this.classes.dropDownMenuClass);
-
+        dom.filterInputItem.addClass(this.classes.filterInputItemClass);
+        dom.filterInput.addClass(this.classes.filterInputClass);
         if (this.adapter.OnInit)
             this.adapter.OnInit(dom)
         this.bs4CommonsLabelDispose = this.HandleLabel(dom.selectedPanel);

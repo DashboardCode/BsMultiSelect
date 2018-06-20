@@ -12,8 +12,7 @@ import Bs4Adapter from './Bs4Adapter';
                 let adapter = optionsObject && optionsObject.useCss
                 ? new Bs4AdapterCss(optionsObject, $)
                 : new Bs4AdapterJs(optionsObject, $);
-                let classes =  adapter.GetClasses();
-                let facade = new Bs4Adapter(element, adapter, classes, $);
+                let facade = new Bs4Adapter(element, adapter, optionsObject, $);
                 return new MultiSelect(element, optionsObject, onDispose, facade, window, $);
             }, $);
     }

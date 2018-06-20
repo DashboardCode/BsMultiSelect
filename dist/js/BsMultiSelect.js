@@ -1,5 +1,5 @@
 /*!
-  * DashboardCode BsMultiSelect v0.2.01 (https://dashboardcode.github.io/BsMultiSelect/)
+  * DashboardCode BsMultiSelect v0.2.03 (https://dashboardcode.github.io/BsMultiSelect/)
   * Copyright 2017-2018 Roman Pokrovskij (github user rpokrovskij)
   * Licensed under APACHE 2 (https://github.com/DashboardCode/BsMultiSelect/blob/master/LICENSE)
   */
@@ -12,37 +12,18 @@
     Popper = Popper && Popper.hasOwnProperty('default') ? Popper['default'] : Popper;
     $ = $ && $.hasOwnProperty('default') ? $['default'] : $;
 
-    var defContainerClass = 'dashboardcode-bsmultiselect',
-        defDropDownMenuClass = 'dropdown-menu',
-        defDropDownItemHoverClass = 'text-primary bg-light',
-        defSelectedPanelClass = 'form-control',
-        defDropDownItemClass = 'px-2',
-        defSelectedItemClass = 'badge',
-        defRemoveSelectedItemButtonClass = 'close';
-
     var Bs4AdapterCss =
     /*#__PURE__*/
     function () {
       function Bs4AdapterCss(options, $$$1) {
         var defaults = {
-          containerClass: defContainerClass,
-          dropDownMenuClass: defDropDownMenuClass,
-          dropDownItemClass: defDropDownItemClass,
-          dropDownItemHoverClass: defDropDownItemHoverClass,
-          selectedPanelClass: defSelectedPanelClass,
           selectedPanelFocusClass: 'focus',
-          selectedPanelDisabledClass: 'disabled',
-          selectedItemClass: defSelectedItemClass,
-          removeSelectedItemButtonClass: defRemoveSelectedItemButtonClass
+          selectedPanelDisabledClass: 'disabled'
         };
         this.options = $$$1.extend({}, defaults, options);
       }
 
       var _proto = Bs4AdapterCss.prototype;
-
-      _proto.GetClasses = function GetClasses() {
-        return this.options;
-      };
 
       _proto.Enable = function Enable($selectedPanel) {
         $selectedPanel.removeClass(this.options.selectedPanelDisabledClass);
@@ -94,18 +75,6 @@
       }
 
       var _proto = Bs4AdapterJs.prototype;
-
-      _proto.GetClasses = function GetClasses() {
-        return {
-          dropDownItemClass: defDropDownItemClass,
-          containerClass: defContainerClass,
-          dropDownItemHoverClass: defDropDownItemHoverClass,
-          selectedItemClass: defSelectedItemClass,
-          removeSelectedItemButtonClass: defRemoveSelectedItemButtonClass,
-          selectedPanelClass: defSelectedPanelClass,
-          dropDownMenuClass: defDropDownMenuClass
-        };
-      };
 
       _proto.OnInit = function OnInit(dom) {
         dom.selectedPanel.css(defSelectedPanelStyle);
@@ -724,10 +693,23 @@
     /*#__PURE__*/
     function () {
       function Bs4Adapter(hiddenSelect, adapter, classes, $$$1) {
+        var defaults = {
+          containerClass: 'dashboardcode-bsmultiselect',
+          dropDownMenuClass: 'dropdown-menu',
+          dropDownItemClass: 'px-2',
+          dropDownItemHoverClass: 'text-primary bg-light',
+          selectedPanelClass: 'form-control',
+          selectedPanelFocusClass: 'focus',
+          selectedPanelDisabledClass: 'disabled',
+          selectedItemClass: 'badge',
+          removeSelectedItemButtonClass: 'close',
+          filterInputItemClass: '',
+          filterInputClass: ''
+        };
+        this.classes = $$$1.extend({}, defaults, classes);
         this.$ = $$$1;
         this.hiddenSelect = hiddenSelect;
         this.adapter = adapter;
-        this.classes = classes;
         this.bs4CommonsLabelDispose = null;
       }
 
@@ -759,6 +741,8 @@
         dom.container.addClass(this.classes.containerClass);
         dom.selectedPanel.addClass(this.classes.selectedPanelClass);
         dom.dropDownMenu.addClass(this.classes.dropDownMenuClass);
+        dom.filterInputItem.addClass(this.classes.filterInputItemClass);
+        dom.filterInput.addClass(this.classes.filterInputClass);
         if (this.adapter.OnInit) this.adapter.OnInit(dom);
         this.bs4CommonsLabelDispose = this.HandleLabel(dom.selectedPanel);
       };
@@ -844,8 +828,7 @@
     (function (window, $$$1) {
       AddToJQueryPrototype('BsMultiSelect', function (element, optionsObject, onDispose) {
         var adapter = optionsObject && optionsObject.useCss ? new Bs4AdapterCss(optionsObject, $$$1) : new Bs4AdapterJs(optionsObject, $$$1);
-        var classes = adapter.GetClasses();
-        var facade = new Bs4Adapter(element, adapter, classes, $$$1);
+        var facade = new Bs4Adapter(element, adapter, optionsObject, $$$1);
         return new MultiSelect(element, optionsObject, onDispose, facade, window, $$$1);
       }, $$$1);
     })(window, $);

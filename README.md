@@ -7,6 +7,9 @@ You can copy [./scss/BsMultiSelect.scss](https://github.com/DashboardCode/BsMult
 
 It also follows Bootstrap 4 conventions and use the same instruments (babel, rollup) so pretend to be a modern plugin `boilerplate`.
 
+# Install
+npm install @dashboardcode/bsmutltiselect
+
 # Architecture
 Instead of using BS4 Dropdown component (it is not possible because BS Dropdown requires presence of `toggle-buttons` https://github.com/twbs/bootstrap/issues/26420) the plugin uses popper.js directly.
 
