@@ -33,7 +33,7 @@ This plugin doesn't bring its own styles. This was a clear design goal but unfor
 If your theme changes those variables, you need to update them on the plugin initialization.
 
 ````
-          $("select[multiple='multiple']").dashboardCodeBsMultiSelect({
+          $("select[multiple='multiple']").bsMultiSelect({
                          selectedPanelDefMinHeight: 'calc(2.25rem + 2px)',  // default size
                          selectedPanelLgMinHeight: 'calc(2.875rem + 2px)',  // LG size
                          selectedPanelSmMinHeight: 'calc(1.8125rem + 2px)', // SM size
@@ -53,7 +53,7 @@ Although there is difference between those two attributes for `input`, the HTML 
 **Alternatively** you can use BsMultiSelect.css (included to distribution, update values manually) or [./scss/BsMultiSelect.scss](https://github.com/DashboardCode/BsMultiSelect/blob/master/scss/BsMultiSelect.scss) (copy it to your project and update reference to your suctom BS variables) just by configuring plugin this way:
 
 ````
-          $("select[multiple='multiple']").dashboardCodeBsMultiSelect({
+          $("select[multiple='multiple']").bsMultiSelect({
                          useCss: true
                      });
             

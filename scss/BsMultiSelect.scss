@@ -53,7 +53,6 @@ ul.form-control {
 
     @include form-control-focus-class();
 
-
     &.form-control-sm {
         min-height: #{$input-height-sm};
         input{
