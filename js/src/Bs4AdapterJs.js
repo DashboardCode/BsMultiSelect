@@ -1,18 +1,13 @@
-const defContainerClass= 'dashboardcode-bsmultiselect';
-const defDropDownMenuClass= 'dropdown-menu';
-const defDropDownItemHoverClass= 'text-primary bg-light';
-const defSelectedPanelClass = 'form-control';
-const defDropDownItemClass = 'px-2';
+import {defContainerClass, defDropDownMenuClass,
+    defDropDownItemHoverClass, defSelectedPanelClass, defDropDownItemClass,
+    defSelectedItemClass, defRemoveSelectedItemButtonClass} from './Bs4Const'
 
-const defSelectedItemClass = 'badge';
-const defSelectedPanelStyle= {'margin-bottom': '0'};
-const defSelectedItemStyle= {'padding-left': '0px', 'line-height': '1.5em'};
-const defRemoveSelectedItemButtonClass = 'close';
-const defRemoveSelectedItemButtonStyle= {'font-size':'1.5em', 'line-height': '.9em'};
+const defSelectedPanelStyle = {'margin-bottom': '0'};
+const defSelectedItemStyle = {'padding-left': '0px', 'line-height': '1.5em'};
+const defRemoveSelectedItemButtonStyle = {'font-size':'1.5em', 'line-height': '.9em'};
 
 class Bs4AdapterJs {
-
-    constructor(jQuery, hiddenSelect, options) {
+    constructor(options, $) {
         const defaults = {
             selectedPanelDefMinHeight: 'calc(2.25rem + 2px)',
             selectedPanelLgMinHeight:  'calc(2.875rem + 2px)',
@@ -24,31 +19,29 @@ class Bs4AdapterJs {
             selectedPanelFocusInvalidBoxShadow: '0 0 0 0.2rem rgba(220, 53, 69, 0.25)',
             filterInputColor: '#495057'
         };
-        this.options = jQuery.extend({}, defaults, options);
-        this.jQuery=jQuery;
-        this.hiddenSelect=hiddenSelect;
-
+        this.options = $.extend({}, defaults, options);
     }
 
-    GetDropDownItemClass(){
-        return defDropDownItemClass;
+    GetClasses(){
+        return {
+            dropDownItemClass: defDropDownItemClass,
+            containerClass: defContainerClass,
+            dropDownItemHoverClass: defDropDownItemHoverClass,
+            selectedItemClass: defSelectedItemClass,
+            removeSelectedItemButtonClass: defRemoveSelectedItemButtonClass,
+            selectedPanelClass:  defSelectedPanelClass,
+            dropDownMenuClass: defDropDownMenuClass
+        }
     }
 
-    GetContainerClass(){
-        return defContainerClass;
+    OnInit(dom){
+        dom.selectedPanel.css(defSelectedPanelStyle);
+        dom.filterInput.css("color", this.options.filterInputColor);
     }
 
-    GetDropDownItemHoverClass(){
-        return defDropDownItemHoverClass;
-    }
-
-    Init($container, $selectedPanel, $filterInputItem, $filterInput, $dropDownMenu){
-        $container.addClass(defContainerClass);
-        $selectedPanel.addClass(defSelectedPanelClass);
-        $selectedPanel.css(defSelectedPanelStyle);
-
-        $dropDownMenu.addClass(defDropDownMenuClass);
-        $filterInput.css("color", this.options.filterInputColor);
+    CreateSelectedItemContent($selectedItem, $button){
+        $selectedItem.css(defSelectedItemStyle);
+        $button.css(defRemoveSelectedItemButtonStyle);
     }
 
     UpdateSize($selectedPanel){
@@ -59,13 +52,6 @@ class Bs4AdapterJs {
         } else {
             $selectedPanel.css("min-height", this.options.selectedPanelDefMinHeight);
         }
-    }
-
-    CreateSelectedItemContent($selectedItem, $button){
-        $selectedItem.addClass(defSelectedItemClass);
-        $selectedItem.css(defSelectedItemStyle);
-        $button.addClass(defRemoveSelectedItemButtonClass)
-        $button.css(defRemoveSelectedItemButtonStyle);
     }
 
     Enable($selectedPanel){

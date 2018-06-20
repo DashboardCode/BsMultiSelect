@@ -314,7 +314,10 @@ class MultiSelect {
                 this.showDropDown();
             }
         };
-        this.adapter.Init($container, $selectedPanel, $filterInputItem, $filterInput, $dropDownMenu);
+        this.adapter.Init({
+            container:$container, selectedPanel:$selectedPanel,
+            filterInputItem:$filterInputItem, filterInput:$filterInput,
+            dropDownMenu:$dropDownMenu });
         $container.insertAfter($selectElement);
         
         this.popper = new Popper(this.filterInput, this.dropDownMenu, {

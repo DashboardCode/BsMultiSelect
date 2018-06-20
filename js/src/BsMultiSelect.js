@@ -10,9 +10,10 @@ import Bs4Adapter from './Bs4Adapter';
         AddToJQueryPrototype('BsMultiSelect',
             (element, optionsObject, onDispose) => {
                 let adapter = optionsObject && optionsObject.useCss
-                ? new Bs4AdapterCss($, element, optionsObject)
-                : new Bs4AdapterJs($, element, optionsObject);
-                let facade = new Bs4Adapter($, element, adapter);
+                ? new Bs4AdapterCss(optionsObject, $)
+                : new Bs4AdapterJs(optionsObject, $);
+                let classes =  adapter.GetClasses();
+                let facade = new Bs4Adapter(element, adapter, classes, $);
                 return new MultiSelect(element, optionsObject, onDispose, facade, window, $);
             }, $);
     }

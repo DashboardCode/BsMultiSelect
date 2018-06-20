@@ -7,8 +7,9 @@ import Bs4Adapter from './Bs4Adapter';
 
 (function (window, $) {
   AddToJQueryPrototype('BsMultiSelect', function (element, optionsObject, onDispose) {
-    var adapter = optionsObject && optionsObject.useCss ? new Bs4AdapterCss($, element, optionsObject) : new Bs4AdapterJs($, element, optionsObject);
-    var facade = new Bs4Adapter($, element, adapter);
+    var adapter = optionsObject && optionsObject.useCss ? new Bs4AdapterCss(optionsObject, $) : new Bs4AdapterJs(optionsObject, $);
+    var classes = adapter.GetClasses();
+    var facade = new Bs4Adapter(element, adapter, classes, $);
     return new MultiSelect(element, optionsObject, onDispose, facade, window, $);
   }, $);
 })(window, $);

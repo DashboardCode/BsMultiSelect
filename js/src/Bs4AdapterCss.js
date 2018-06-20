@@ -1,50 +1,28 @@
+import {defContainerClass, defDropDownMenuClass,
+        defDropDownItemHoverClass, defSelectedPanelClass, defDropDownItemClass,
+        defSelectedItemClass, defRemoveSelectedItemButtonClass} from './Bs4Const'
+
 class Bs4AdapterCss {
 
-    constructor(jQuery, hiddenSelect, options) {
+    constructor(options, $) {
         const defaults = {
-            containerClass: 'dashboardcode-bsmultiselect',
-            dropDownMenuClass: 'dropdown-menu',
-            dropDownItemClass: 'px-2',
-            dropDownItemHoverClass: 'text-primary bg-light',
-            selectedPanelClass: 'form-control',
+            containerClass: defContainerClass,
+            dropDownMenuClass: defDropDownMenuClass,
+            dropDownItemClass: defDropDownItemClass,
+            dropDownItemHoverClass: defDropDownItemHoverClass,
+            selectedPanelClass: defSelectedPanelClass,
             selectedPanelFocusClass : 'focus',
             selectedPanelDisabledClass: 'disabled',
-            selectedItemClass: 'badge',
-            removeSelectedItemButtonClass: 'close',
-            filterInputItemClass: '',
-            filterInputClass: ''
+            selectedItemClass: defSelectedItemClass,
+            removeSelectedItemButtonClass: defRemoveSelectedItemButtonClass
         };
-        this.options = jQuery.extend({}, defaults, options);
-        this.jQuery=jQuery;
-        this.hiddenSelect=hiddenSelect;
+        this.options = $.extend({}, defaults, options);
     }
 
-    GetDropDownItemClass(){
-        return this.options.dropDownItemClass;
+    GetClasses(){
+        return this.options;
     }
     
-    GetContainerClass(){
-        return this.options.containerClass;
-    }
-
-    GetDropDownItemHoverClass(){
-        return this.options.dropDownItemHoverClass;
-    }
-
-    Init($container, $selectedPanel, $filterInputItem, $filterInput, $dropDownMenu){
-        $container.addClass(this.options.containerClass);
-        $selectedPanel.addClass(this.options.selectedPanelClass);
-        $dropDownMenu.addClass(this.options.dropDownMenuClass);
-        $filterInputItem.addClass(this.options.filterInputItemClass)
-        $filterInput.addClass(this.options.filterInputClass);
-    }
-
-    CreateSelectedItemContent($selectedItem, $button){
-        $selectedItem.addClass(this.options.selectedItemClass);
-        $button.addClass(this.options.removeSelectedItemButtonClass)
-    }
-
-
     Enable($selectedPanel){
         $selectedPanel.removeClass(this.options.selectedPanelDisabledClass)
     }

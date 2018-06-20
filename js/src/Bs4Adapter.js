@@ -1,11 +1,14 @@
+function disableButton($selectedPanel, isDisabled){
+    $selectedPanel.find('BUTTON').prop("disabled", isDisabled);
+}
+
 class Bs4Adapter {
 
-    constructor(jQuery, hiddenSelect, adapter){
-        this.$=jQuery;
+    constructor(hiddenSelect, adapter, classes, $){
+        this.$ = $;
         this.hiddenSelect=hiddenSelect;
         this.adapter = adapter;
-        this.containerClass = adapter.GetContainerClass();
-        this.dropDownItemHoverClass = adapter.GetDropDownItemHoverClass();
+        this.classes = classes;
         this.bs4CommonsLabelDispose = null;
     }
 
@@ -15,10 +18,9 @@ class Bs4Adapter {
         if ($formGroup.length == 1) {
             let $label = $formGroup.find(`label[for="${inputId}"]`);
             let forId = $label.attr('for');
-            let $filterInput = $selectedPanel.find('input');
             if (forId == this.hiddenSelect.id) {
-                let id = `${this.containerClass}-generated-filter-id-${this.hiddenSelect.id}`;
-                $filterInput.attr('id', id);
+                let id = `${this.classes.containerClass}-generated-filter-id-${this.hiddenSelect.id}`;
+                $selectedPanel.find('input').attr('id', id);
                 $label.attr('for', id);
                 return () => {
                     $label.attr('for', forId);
@@ -29,9 +31,14 @@ class Bs4Adapter {
     }
 
     // ------------------------------------------
-    Init($container, $selectedPanel, $filterInputItem, $filterInput, $dropDownMenu){
-        this.adapter.Init($container, $selectedPanel, $filterInputItem, $filterInput, $dropDownMenu)
-        this.bs4CommonsLabelDispose = this.HandleLabel($selectedPanel);
+    Init(dom){
+        dom.container.addClass(this.classes.containerClass);
+        dom.selectedPanel.addClass(this.classes.selectedPanelClass);
+        dom.dropDownMenu.addClass(this.classes.dropDownMenuClass);
+
+        if (this.adapter.OnInit)
+            this.adapter.OnInit(dom)
+        this.bs4CommonsLabelDispose = this.HandleLabel(dom.selectedPanel);
     }
 
     Dispose(){
@@ -40,10 +47,9 @@ class Bs4Adapter {
     }
 
     // ------------------------
-    CreateDropDownItemContent(
-        $dropDownItem, optionId, itemText, isSelected){
+    CreateDropDownItemContent($dropDownItem, optionId, itemText, isSelected){
 
-        let checkBoxId = `${this.containerClass}-${this.hiddenSelect.name.toLowerCase()}-generated-id-${optionId.toLowerCase()}`;
+        let checkBoxId = `${this.classes.containerClass}-${this.hiddenSelect.name.toLowerCase()}-generated-id-${optionId.toLowerCase()}`;
         let checked = isSelected ? "checked" : "";
 
         let $dropDownItemContent= this.$(`<div class="custom-control custom-checkbox">
@@ -55,7 +61,7 @@ class Bs4Adapter {
         let adoptDropDownItem = isSelected => {
             $checkBox.prop('checked', isSelected);
         }
-        $dropDownItem.addClass(this.adapter.GetDropDownItemClass());
+        $dropDownItem.addClass(this.classes.dropDownItemClass);
         return adoptDropDownItem;
     }
 
@@ -66,7 +72,10 @@ class Bs4Adapter {
             .on("click", removeSelectedItem)
             .appendTo($selectedItem)
             .prop("disabled", disabled)
-        this.adapter.CreateSelectedItemContent($selectedItem, $button)
+        $selectedItem.addClass(this.classes.selectedItemClass);
+        $button.addClass(this.classes.removeSelectedItemButtonClass)
+        if (this.adapter.CreateSelectedItemContent)
+            this.adapter.CreateSelectedItemContent($selectedItem, $button)
     }
     // -----------------------
     IsClickToOpenDropdown(event){
@@ -89,15 +98,22 @@ class Bs4Adapter {
             this.adapter.UpdateSize($selectedPanel)
     }
 
+    HoverIn($dropDownItem){
+        $dropDownItem.addClass(this.classes.dropDownItemHoverClass);
+    }
+
+    HoverOut($dropDownItem){
+        $dropDownItem.removeClass(this.classes.dropDownItemHoverClass);
+    }
 
     Enable($selectedPanel){
         this.adapter.Enable($selectedPanel)
-        $selectedPanel.find('BUTTON').prop("disabled", false);
+        disableButton($selectedPanel, false)
     }
 
     Disable($selectedPanel){
         this.adapter.Disable($selectedPanel)
-        $selectedPanel.find('BUTTON').prop("disabled", true);
+        disableButton($selectedPanel, true)
     }
 
     FocusIn($selectedPanel){
@@ -106,14 +122,6 @@ class Bs4Adapter {
 
     FocusOut($selectedPanel){
         this.adapter.FocusOut($selectedPanel)
-    }
-
-    HoverIn($dropDownItem){
-        $dropDownItem.addClass(this.dropDownItemHoverClass);
-    }
-
-    HoverOut($dropDownItem){
-        $dropDownItem.removeClass(this.dropDownItemHoverClass);
     }
 }
 

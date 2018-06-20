@@ -174,7 +174,7 @@
       "object-curly-newline": ["off", { "minProperties": 1 }],
       "object-curly-spacing": ["off", "always"],
       "object-property-newline": "off",
-      "one-var": ["error", "never"],
+      "one-var":  "off",
       "one-var-declaration-per-line": "error",
       "operator-assignment": "error",
       "operator-linebreak": "error",
@@ -186,7 +186,7 @@
       "semi": ["off", "never"],
       "semi-spacing": "error",
       "sort-keys": "off",
-      "sort-vars": "error",
+      "sort-vars": "off",
       "space-before-blocks": "off",
       "space-before-function-paren": ["error", {
         "anonymous": "always",
