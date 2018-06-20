@@ -1,11 +1,15 @@
 # DashboardCode Multiselect plugin for Bootstrap 4
 *https://dashboardcode.github.io/BsMultiSelect/*
 
-There are many of such plugins but this is small since reuses maximum of bootrap 4 styles and code (BsMultiSelect size is 15KB+2KB js+css minified).
+There are many similar plugins but this is small since reuses maximum of bootrap 4 styles and code (BsMultiSelect size is 15KB+2KB js+css minified).
+
+In many cases it can be used without editing CSS.
 
 You can copy [./scss/BsMultiSelect.scss](https://github.com/DashboardCode/BsMultiSelect/blob/master/scss/BsMultiSelect.scss) to your SASS project and I hope it should be enough to adopt plugin to your bootstrap theme (it utilize bootstrap variables).
 
-It also follows Bootstrap 4 conventions and use the same instruments (babel, rollup) so pretend to be a modern plugin `boilerplate`.
+It is also possible to adopt it for theme using just JS (no CSS at all).
+
+Plugin follows Bootstrap 4 conventions and use the same instruments (babel, rollup) so pretend to present a modern plugin's `boilerplate`.
 
 # Install
 `npm install @dashboardcode/bsmutltiselect`
