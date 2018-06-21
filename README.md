@@ -80,8 +80,6 @@ Since this means you are going to heavy styling those additional options are ava
                          dropDownItemClass:  'px-2',
                          dropDownItemHoverClass: 'text-primary bg-light',
                          selectedPanelClass: 'form-control',
-                         selectedPanelFocusClass : 'focus',
-                         selectedPanelDisabledClass: 'disabled',
                          selectedItemClass: 'badge',
                          removeSelectedItemButtonClass: 'close',
                          filterInputItemClass: '',
