@@ -164,7 +164,7 @@ Note, BS allready provide classes like: `h-25`, `bg-light`, `text-primary` that 
 
 * no smart disabling on mobile devices
 
-* Memory leaks: as I see there is soemthing like several KB memory leak (that can be ignored since as I know every jquery plugin "attach/detach" have same effects) on each attach/detach (compiled objects, not nodes) but I can't identify its source (jquery, bootstrap utilities?). If you have knowledge to solve this puzzle: try yourself and experiment with attach/detach there https://dashboardcode.github.io/BsMultiSelect/ 
+* Memory leaks: as I see there is soemthing like several KB memory leak (that can be ignored since as I know every jquery plugin "attach/detach" have same effects) on each attach/detach (compiled objects, not nodes) but I can't identify its source (jquery, bootstrap utilities?). If you have knowledge to solve this puzzle: try yourself and experiment with attach/detach and memory snapshots there https://dashboardcode.github.io/BsMultiSelect/ 
 
 ### Alternatives:
 
