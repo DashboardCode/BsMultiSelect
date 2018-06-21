@@ -10,7 +10,7 @@ class Bs4AdapterCss {
     }
 
     DisableSelectedItemContent($content){
-        $content.addClass("opacity", this.options.selectedItemContentDisabledOpacity )
+        $content.addClass(this.options.selectedItemContentDisabledClass )
     }
 
     Enable($selectedPanel){

@@ -1,5 +1,5 @@
 /*!
-  * DashboardCode BsMultiSelect v0.2.5 (https://dashboardcode.github.io/BsMultiSelect/)
+  * DashboardCode BsMultiSelect v0.2.6 (https://dashboardcode.github.io/BsMultiSelect/)
   * Copyright 2017-2018 Roman Pokrovskij (github user rpokrovskij)
   * Licensed under APACHE 2 (https://github.com/DashboardCode/BsMultiSelect/blob/master/LICENSE)
   */
@@ -27,7 +27,7 @@
       var _proto = Bs4AdapterCss.prototype;
 
       _proto.DisableSelectedItemContent = function DisableSelectedItemContent($content) {
-        $content.addClass("opacity", this.options.selectedItemContentDisabledOpacity);
+        $content.addClass(this.options.selectedItemContentDisabledClass);
       };
 
       _proto.Enable = function Enable($selectedPanel) {
@@ -75,7 +75,7 @@
           selectedPanelFocusValidBoxShadow: '0 0 0 0.2rem rgba(40, 167, 69, 0.25)',
           selectedPanelFocusInvalidBoxShadow: '0 0 0 0.2rem rgba(220, 53, 69, 0.25)',
           filterInputColor: '#495057',
-          selectedItemContentDisabledOpacity: '0.65'
+          selectedItemContentDisabledOpacity: '.65'
         };
         this.options = $$$1.extend({}, defaults, options);
       }
