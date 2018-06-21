@@ -11,8 +11,6 @@ class Bs4Adapter {
             dropDownItemClass:  'px-2',
             dropDownItemHoverClass: 'text-primary bg-light',
             selectedPanelClass: 'form-control',
-            selectedPanelFocusClass : 'focus',
-            selectedPanelDisabledClass: 'disabled',
             selectedItemClass: 'badge',
             removeSelectedItemButtonClass: 'close',
             filterInputItemClass: '',

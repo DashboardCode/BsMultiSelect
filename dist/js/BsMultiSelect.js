@@ -1,5 +1,5 @@
 /*!
-  * DashboardCode BsMultiSelect v0.2.6 (https://dashboardcode.github.io/BsMultiSelect/)
+  * DashboardCode BsMultiSelect v0.2.7 (https://dashboardcode.github.io/BsMultiSelect/)
   * Copyright 2017-2018 Roman Pokrovskij (github user rpokrovskij)
   * Licensed under APACHE 2 (https://github.com/DashboardCode/BsMultiSelect/blob/master/LICENSE)
   */
@@ -702,8 +702,6 @@
           dropDownItemClass: 'px-2',
           dropDownItemHoverClass: 'text-primary bg-light',
           selectedPanelClass: 'form-control',
-          selectedPanelFocusClass: 'focus',
-          selectedPanelDisabledClass: 'disabled',
           selectedItemClass: 'badge',
           removeSelectedItemButtonClass: 'close',
           filterInputItemClass: '',

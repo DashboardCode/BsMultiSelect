@@ -69,7 +69,7 @@ Or you can use [./scss/BsMultiSelect.scss](https://github.com/DashboardCode/BsMu
                      });
             
 ````
-Since this means you are going to heavy styling those additional options are available (you see default values):
+ Also `useCss: true` allows you to go to heavy styling (and even use plugin without bootstrap). Those additional options are available (you see default values):
 
 
 ````
@@ -92,8 +92,7 @@ Since this means you are going to heavy styling those additional options are ava
 ````
 
 
-With them you can change classes of generated HTML . Default generated HTML (for `useCss: true`) looks like:
-
+With them you can change classes of generated HTML elements. Default generated HTML (for `useCss: true`) looks like:
 
 
 ````
