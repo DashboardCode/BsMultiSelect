@@ -98,6 +98,8 @@ Note, BS allready provide classes like: `h-25`, `bg-light`, `text-primary` that 
 ### Known issues
 * Tested only for IE11, Chrome 66, Edge 42/17;
 
+* it was not tested on bootstrap dialog
+
 * `optgroup` are not supported;
 
 * `hidden` options are not supported;
