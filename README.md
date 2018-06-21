@@ -60,7 +60,7 @@ If your theme changes those variables, you need to update them on the plugin ini
 
 **change event**: subscribe to original `select` change event.
 
-**<label>**: Click on label focus input and open the dropdown
+**`<label>`**: Click on label focus input and open the dropdown
 
 **SCSS**: you can copy BsMultiSelect.css (included to distribution) and update values manually for your theme.
 Or you can use [./scss/BsMultiSelect.scss](https://github.com/DashboardCode/BsMultiSelect/blob/master/scss/BsMultiSelect.scss) copy it to your project and update reference to your custom BS variables in yout theme); these requires such configuration:
