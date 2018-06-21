@@ -94,7 +94,7 @@ Since this means you are going to heavy styling those additional options are ava
 ````
 
 
-With them you can change generated HTML classes. Default generated HTML (for `useCss: true`) looks like:
+With them you can change classes of generated HTML . Default generated HTML (for `useCss: true`) looks like:
 
 
 
