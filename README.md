@@ -106,7 +106,7 @@ With them you can change classes of generated HTML . Default generated HTML (for
               <li><input id=".." style=".." ..></li>
           </ul>
           <ul class="dropdown-menu" style=".." ..>
-              <li class="px-2">
+              <li class="px-2 text-primary bg-light">
                 <div class="custom-control custom-checkbox">
                    <input type="checkbox" .. >
                    <label ..>Alabama</label>
