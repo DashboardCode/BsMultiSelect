@@ -107,10 +107,11 @@ class MultiSelect {
         let optionId = optionElement.value;
         let itemText = optionElement.text;
         let isSelected = optionElement.selected;
+        let isDisabled = optionElement.disabled;
         let $dropDownItem = this.$("<LI/>");
         $dropDownItem.data("option-id", optionId);
         $dropDownItem.data("option-text", itemText.toLowerCase());
-        let adoptDropDownItem = this.adapter.CreateDropDownItemContent($dropDownItem, optionId, itemText, isSelected)
+        let adoptDropDownItem = this.adapter.CreateDropDownItemContent($dropDownItem, optionId, itemText, isSelected, isDisabled)
         $dropDownItem.appendTo(this.dropDownMenu);
         let appendItem = (doTrigger) => {
             $dropDownItem.data("option-selected", true);
@@ -120,7 +121,7 @@ class MultiSelect {
             adoptDropDownItem(true);
             let removeItem = () => {
                 $dropDownItem.data("option-selected", false);
-                $dropDownItem.data("option-toggle", appendItem);
+                $dropDownItem.data("option-toggle", optionElement.disabled ? null : appendItem);                    
                 $selectedItem.data("option-remove", null);
                 $selectedItem.remove();
                 optionElement.selected = false;
@@ -145,26 +146,24 @@ class MultiSelect {
                 this.$(this.selectElement).trigger('change');
             return $selectedItem;
         }
-        $dropDownItem.data("option-toggle", appendItem );
+        $dropDownItem.data("option-toggle", optionElement.disabled ? null : appendItem);
         
         if (isSelected) {
             appendItem(false);
         }
         let closest = (event) => this.$(event.target).closest("LI");
-        // let manageHoverIn = (event) => {
-        //     this.adapter.HoverIn(closest(event))
-        // }
-        // let manageHoverOut = (event) => {
-        //     this.adapter.HoverOut(closest(event))
-        // }
+
         $dropDownItem.click(event => {
             event.preventDefault();
             event.stopPropagation();
             let toggleItem = this.$(event.currentTarget).closest("LI").data("option-toggle");
-            toggleItem();
+            if (toggleItem)
+                toggleItem();
             this.filterInput.focus();
-        }).mouseover(e => this.adapter.HoverIn(closest(e)))
-          .mouseout(e => this.adapter.HoverOut(closest(e)));
+        })
+
+        $dropDownItem.mouseover(e => this.adapter.HoverIn(closest(e)))
+                     .mouseout(e => this.adapter.HoverOut(closest(e)));
     }
     keydownArrow(down) {
         let visibleNodeListArray = this.$(this.dropDownMenu).find('LI:not([style*="display: none"])').toArray();
@@ -211,7 +210,7 @@ class MultiSelect {
         if (this.onDispose)
             this.onDispose();
         
-            // removable handlers
+        // removable handlers
         this.$document.unbind("mouseup", this.documentMouseup)
                       .unbind("mouseup", this.documentMouseup2);
         
@@ -352,50 +351,48 @@ class MultiSelect {
                                 this.adapter.FocusOut($selectedPanel)
                             });
         $filterInput.on("keydown", (event) => {
-            if (event.which == 38) {
+            if ([38, 40, 13].indexOf(event.which)>=0 || (event.which == 9 && this.filterInput.value) ) {
                 event.preventDefault();
+            }
+
+            if (event.which == 38) {
                 this.keydownArrow(false);
             }
             else if (event.which == 40) {
-                event.preventDefault()
                 this.keydownArrow(true);
             }
-            else if (event.which == 13) {
-                event.preventDefault();
-            }
             else if (event.which == 9) {
-                if (this.filterInput.value) {
-                    event.preventDefault();
-                }
-                else {
+                if (!this.filterInput.value) {
                     this.closeDropDown();
                 }
             }
-            else {
-                if (event.which == 8) {
-                    // NOTE: this will process backspace only if there are no text in the input field
-                    // If user will find this inconvinient, we will need to calculate something like this
-                    // this.isBackspaceAtStartPoint = (this.filterInput.selectionStart == 0 && this.filterInput.selectionEnd == 0);
-                    if (!this.filterInput.value)
-                    {
-                        let $penult = this.$(this.selectedPanel).find("LI:last").prev();
-                        if ($penult.length){
-                            let removeItem = $penult.data("option-remove");
-                            removeItem();
-                        }
-                        this.updateDropDownPosition(false);
+            else if (event.which == 8) {
+                // NOTE: this will process backspace only if there are no text in the input field
+                // If user will find this inconvinient, we will need to calculate something like this
+                // this.isBackspaceAtStartPoint = (this.filterInput.selectionStart == 0 && this.filterInput.selectionEnd == 0);
+                if (!this.filterInput.value)
+                {
+                    let $penult = this.$(this.selectedPanel).find("LI:last").prev();
+                    if ($penult.length){
+                        let removeItem = $penult.data("option-remove");
+                        removeItem();
                     }
+                    this.updateDropDownPosition(false);
                 }
-                this.resetDropDownMenuHover();
             }
+
+            if ([38, 40, 13, 9].indexOf(event.which)==-1)
+                this.resetDropDownMenuHover();
         });
         $filterInput.on("keyup", (event) => {
             if (event.which == 13 || event.which == 9 ) {
                 if (this.hoveredDropDownItem) {
                     let $hoveredDropDownItem = this.$(this.hoveredDropDownItem);
                     let toggleItem =  $hoveredDropDownItem.data("option-toggle");
-                    toggleItem();
-                    this.closeDropDown();
+                    if (toggleItem){
+                        toggleItem();
+                        this.closeDropDown();
+                    }
                 } else {
                     let text = this.filterInput.value.trim().toLowerCase();
                     let dropDownItems = this.dropDownMenu.querySelectorAll("LI");

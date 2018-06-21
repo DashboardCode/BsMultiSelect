@@ -1,5 +1,5 @@
 /*!
-  * DashboardCode BsMultiSelect v0.2.4 (https://dashboardcode.github.io/BsMultiSelect/)
+  * DashboardCode BsMultiSelect v0.2.5 (https://dashboardcode.github.io/BsMultiSelect/)
   * Copyright 2017-2018 Roman Pokrovskij (github user rpokrovskij)
   * Licensed under APACHE 2 (https://github.com/DashboardCode/BsMultiSelect/blob/master/LICENSE)
   */
@@ -262,10 +262,11 @@
         var optionId = optionElement.value;
         var itemText = optionElement.text;
         var isSelected = optionElement.selected;
+        var isDisabled = optionElement.disabled;
         var $dropDownItem = this.$("<LI/>");
         $dropDownItem.data("option-id", optionId);
         $dropDownItem.data("option-text", itemText.toLowerCase());
-        var adoptDropDownItem = this.adapter.CreateDropDownItemContent($dropDownItem, optionId, itemText, isSelected);
+        var adoptDropDownItem = this.adapter.CreateDropDownItemContent($dropDownItem, optionId, itemText, isSelected, isDisabled);
         $dropDownItem.appendTo(this.dropDownMenu);
 
         var appendItem = function appendItem(doTrigger) {
@@ -279,7 +280,7 @@
 
           var removeItem = function removeItem() {
             $dropDownItem.data("option-selected", false);
-            $dropDownItem.data("option-toggle", appendItem);
+            $dropDownItem.data("option-toggle", optionElement.disabled ? null : appendItem);
             $selectedItem.data("option-remove", null);
             $selectedItem.remove();
             optionElement.selected = false;
@@ -303,7 +304,7 @@
           return $selectedItem;
         };
 
-        $dropDownItem.data("option-toggle", appendItem);
+        $dropDownItem.data("option-toggle", optionElement.disabled ? null : appendItem);
 
         if (isSelected) {
           appendItem(false);
@@ -311,13 +312,7 @@
 
         var closest = function closest(event) {
           return _this2.$(event.target).closest("LI");
-        }; // let manageHoverIn = (event) => {
-        //     this.adapter.HoverIn(closest(event))
-        // }
-        // let manageHoverOut = (event) => {
-        //     this.adapter.HoverOut(closest(event))
-        // }
-
+        };
 
         $dropDownItem.click(function (event) {
           event.preventDefault();
@@ -325,10 +320,11 @@
 
           var toggleItem = _this2.$(event.currentTarget).closest("LI").data("option-toggle");
 
-          toggleItem();
+          if (toggleItem) toggleItem();
 
           _this2.filterInput.focus();
-        }).mouseover(function (e) {
+        });
+        $dropDownItem.mouseover(function (e) {
           return _this2.adapter.HoverIn(closest(e));
         }).mouseout(function (e) {
           return _this2.adapter.HoverOut(closest(e));
@@ -545,41 +541,35 @@
           if (!_this3.skipFocusout) _this3.adapter.FocusOut($selectedPanel);
         });
         $filterInput.on("keydown", function (event) {
-          if (event.which == 38) {
+          if ([38, 40, 13].indexOf(event.which) >= 0 || event.which == 9 && _this3.filterInput.value) {
             event.preventDefault();
+          }
 
+          if (event.which == 38) {
             _this3.keydownArrow(false);
           } else if (event.which == 40) {
-            event.preventDefault();
-
             _this3.keydownArrow(true);
-          } else if (event.which == 13) {
-            event.preventDefault();
           } else if (event.which == 9) {
-            if (_this3.filterInput.value) {
-              event.preventDefault();
-            } else {
+            if (!_this3.filterInput.value) {
               _this3.closeDropDown();
             }
-          } else {
-            if (event.which == 8) {
-              // NOTE: this will process backspace only if there are no text in the input field
-              // If user will find this inconvinient, we will need to calculate something like this
-              // this.isBackspaceAtStartPoint = (this.filterInput.selectionStart == 0 && this.filterInput.selectionEnd == 0);
-              if (!_this3.filterInput.value) {
-                var $penult = _this3.$(_this3.selectedPanel).find("LI:last").prev();
+          } else if (event.which == 8) {
+            // NOTE: this will process backspace only if there are no text in the input field
+            // If user will find this inconvinient, we will need to calculate something like this
+            // this.isBackspaceAtStartPoint = (this.filterInput.selectionStart == 0 && this.filterInput.selectionEnd == 0);
+            if (!_this3.filterInput.value) {
+              var $penult = _this3.$(_this3.selectedPanel).find("LI:last").prev();
 
-                if ($penult.length) {
-                  var removeItem = $penult.data("option-remove");
-                  removeItem();
-                }
-
-                _this3.updateDropDownPosition(false);
+              if ($penult.length) {
+                var removeItem = $penult.data("option-remove");
+                removeItem();
               }
-            }
 
-            _this3.resetDropDownMenuHover();
+              _this3.updateDropDownPosition(false);
+            }
           }
+
+          if ([38, 40, 13, 9].indexOf(event.which) == -1) _this3.resetDropDownMenuHover();
         });
         $filterInput.on("keyup", function (event) {
           if (event.which == 13 || event.which == 9) {
@@ -587,9 +577,12 @@
               var $hoveredDropDownItem = _this3.$(_this3.hoveredDropDownItem);
 
               var toggleItem = $hoveredDropDownItem.data("option-toggle");
-              toggleItem();
 
-              _this3.closeDropDown();
+              if (toggleItem) {
+                toggleItem();
+
+                _this3.closeDropDown();
+              }
             } else {
               var text = _this3.filterInput.value.trim().toLowerCase();
 
@@ -752,15 +745,17 @@
       }; // ------------------------
 
 
-      _proto.CreateDropDownItemContent = function CreateDropDownItemContent($dropDownItem, optionId, itemText, isSelected) {
+      _proto.CreateDropDownItemContent = function CreateDropDownItemContent($dropDownItem, optionId, itemText, isSelected, isDisabled) {
         var checkBoxId = this.classes.containerClass + "-" + this.hiddenSelect.name.toLowerCase() + "-generated-id-" + optionId.toLowerCase();
         var checked = isSelected ? "checked" : "";
-        var $dropDownItemContent = this.$("<div class=\"custom-control custom-checkbox\">\n            <input type=\"checkbox\" class=\"custom-control-input\" id=\"" + checkBoxId + "\" " + checked + ">\n            <label class=\"custom-control-label\" for=\"" + checkBoxId + "\">" + itemText + "</label>\n        </div>");
+        var disabled = isDisabled ? "disabled" : "";
+        var $dropDownItemContent = this.$("<div class=\"custom-control custom-checkbox\">\n            <input type=\"checkbox\" class=\"custom-control-input\" id=\"" + checkBoxId + "\" " + checked + " " + disabled + ">\n            <label class=\"custom-control-label\" for=\"" + checkBoxId + "\">" + itemText + "</label>\n        </div>");
         $dropDownItemContent.appendTo($dropDownItem);
         var $checkBox = $dropDownItem.find("INPUT[type=\"checkbox\"]");
 
-        var adoptDropDownItem = function adoptDropDownItem(isSelected) {
+        var adoptDropDownItem = function adoptDropDownItem(isSelected, isDisabled) {
           $checkBox.prop('checked', isSelected);
+          $checkBox.prop('disabled', isDisabled);
         };
 
         $dropDownItem.addClass(this.classes.dropDownItemClass);

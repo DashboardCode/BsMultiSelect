@@ -62,19 +62,21 @@ class Bs4Adapter {
     }
 
     // ------------------------
-    CreateDropDownItemContent($dropDownItem, optionId, itemText, isSelected){
+    CreateDropDownItemContent($dropDownItem, optionId, itemText, isSelected, isDisabled){
 
         let checkBoxId = `${this.classes.containerClass}-${this.hiddenSelect.name.toLowerCase()}-generated-id-${optionId.toLowerCase()}`;
         let checked = isSelected ? "checked" : "";
+        let disabled = isDisabled ? "disabled" : "";
 
         let $dropDownItemContent= this.$(`<div class="custom-control custom-checkbox">
-            <input type="checkbox" class="custom-control-input" id="${checkBoxId}" ${checked}>
+            <input type="checkbox" class="custom-control-input" id="${checkBoxId}" ${checked} ${disabled}>
             <label class="custom-control-label" for="${checkBoxId}">${itemText}</label>
         </div>`)
         $dropDownItemContent.appendTo($dropDownItem);
         let $checkBox = $dropDownItem.find(`INPUT[type="checkbox"]`);
-        let adoptDropDownItem = isSelected => {
+        let adoptDropDownItem = (isSelected, isDisabled) => {
             $checkBox.prop('checked', isSelected);
+            $checkBox.prop('disabled', isDisabled);
         }
         $dropDownItem.addClass(this.classes.dropDownItemClass);
         return adoptDropDownItem;
@@ -92,6 +94,7 @@ class Bs4Adapter {
         if (this.adapter.CreateSelectedItemContent)
             this.adapter.CreateSelectedItemContent($selectedItem, $button)
     }
+
     // -----------------------
     IsClickToOpenDropdown(event){
         return !(event.target.nodeName == "BUTTON" || (event.target.nodeName == "SPAN" && event.target.parentElement.nodeName == "BUTTON"))
