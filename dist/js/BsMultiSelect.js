@@ -18,12 +18,17 @@
       function Bs4AdapterCss(options, $$$1) {
         var defaults = {
           selectedPanelFocusClass: 'focus',
-          selectedPanelDisabledClass: 'disabled'
+          selectedPanelDisabledClass: 'disabled',
+          selectedItemContentDisabledClass: 'disabled'
         };
         this.options = $$$1.extend({}, defaults, options);
       }
 
       var _proto = Bs4AdapterCss.prototype;
+
+      _proto.DisableSelectedItemContent = function DisableSelectedItemContent($content) {
+        $content.addClass("opacity", this.options.selectedItemContentDisabledOpacity);
+      };
 
       _proto.Enable = function Enable($selectedPanel) {
         $selectedPanel.removeClass(this.options.selectedPanelDisabledClass);
@@ -69,7 +74,8 @@
           selectedPanelFocusBoxShadow: '0 0 0 0.2rem rgba(0, 123, 255, 0.25)',
           selectedPanelFocusValidBoxShadow: '0 0 0 0.2rem rgba(40, 167, 69, 0.25)',
           selectedPanelFocusInvalidBoxShadow: '0 0 0 0.2rem rgba(220, 53, 69, 0.25)',
-          filterInputColor: '#495057'
+          filterInputColor: '#495057',
+          selectedItemContentDisabledOpacity: '0.65'
         };
         this.options = $$$1.extend({}, defaults, options);
       }
@@ -84,6 +90,10 @@
       _proto.CreateSelectedItemContent = function CreateSelectedItemContent($selectedItem, $button) {
         $selectedItem.css(defSelectedItemStyle);
         $button.css(defRemoveSelectedItemButtonStyle);
+      };
+
+      _proto.DisableSelectedItemContent = function DisableSelectedItemContent($content) {
+        $content.css("opacity", this.options.selectedItemContentDisabledOpacity);
       };
 
       _proto.UpdateSize = function UpdateSize($selectedPanel) {
@@ -295,7 +305,7 @@
             _this2.closeDropDown();
           };
 
-          _this2.adapter.CreateSelectedItemContent($selectedItem, itemText, removeItemAndCloseDropDown, _this2.disabled);
+          _this2.adapter.CreateSelectedItemContent($selectedItem, itemText, removeItemAndCloseDropDown, _this2.disabled, isDisabled);
 
           $selectedItem.insertBefore(_this2.filterInputItem);
           $dropDownItem.data("option-toggle", removeItem);
@@ -762,9 +772,10 @@
         return adoptDropDownItem;
       };
 
-      _proto.CreateSelectedItemContent = function CreateSelectedItemContent($selectedItem, itemText, removeSelectedItem, disabled) {
-        this.$("<span>" + itemText + "</span>").appendTo($selectedItem);
-        var $button = this.$('<button aria-label="Close" tabIndex="-1" type="button"><span aria-hidden="true">&times;</span></button>').css("white-space", "nowrap").on("click", removeSelectedItem).appendTo($selectedItem).prop("disabled", disabled);
+      _proto.CreateSelectedItemContent = function CreateSelectedItemContent($selectedItem, itemText, removeSelectedItem, controlDisabled, optionDisabled) {
+        var $content = this.$("<span>" + itemText + "</span>").appendTo($selectedItem);
+        if (optionDisabled) this.adapter.DisableSelectedItemContent($content);
+        var $button = this.$('<button aria-label="Close" tabIndex="-1" type="button"><span aria-hidden="true">&times;</span></button>').css("white-space", "nowrap").on("click", removeSelectedItem).appendTo($selectedItem).prop("disabled", controlDisabled);
         $selectedItem.addClass(this.classes.selectedItemClass);
         $button.addClass(this.classes.removeSelectedItemButtonClass);
         if (this.adapter.CreateSelectedItemContent) this.adapter.CreateSelectedItemContent($selectedItem, $button);

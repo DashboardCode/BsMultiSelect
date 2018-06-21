@@ -56,7 +56,7 @@ If your theme changes those variables, you need to update them on the plugin ini
 
 **disabled / readonly select**: although there is difference between those two attributes for `input`, the HTML 5.2 support only `disabled` for [`select`](https://www.w3.org/TR/2017/REC-html52-20171214/sec-forms.html#the-select-element) element. `Readonly` attribute on original `select` will be ignored.
 
-**disabled selected option**: option that is `disabled` and `selected` at the same time can be deselected but can't be selected again (just as it is in HTML `select`).
+**disabled selected option**: option that is `disabled` and `selected` at the same time can be deselected but can't be selected again (just as it is in HTML `select` and unlike `chosen.js`).
 
 **change event**: subscribe to original `select` change event.
 

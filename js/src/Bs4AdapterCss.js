@@ -3,9 +3,14 @@ class Bs4AdapterCss {
     constructor(options, $) {
         const defaults = {
             selectedPanelFocusClass : 'focus',
-            selectedPanelDisabledClass: 'disabled'
+            selectedPanelDisabledClass: 'disabled',
+            selectedItemContentDisabledClass: 'disabled'
         };
         this.options = $.extend({}, defaults, options);
+    }
+
+    DisableSelectedItemContent($content){
+        $content.addClass("opacity", this.options.selectedItemContentDisabledOpacity )
     }
 
     Enable($selectedPanel){

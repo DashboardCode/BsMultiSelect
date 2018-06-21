@@ -82,13 +82,15 @@ class Bs4Adapter {
         return adoptDropDownItem;
     }
 
-    CreateSelectedItemContent($selectedItem, itemText, removeSelectedItem, disabled){
-        this.$(`<span>${itemText}</span>`).appendTo($selectedItem);
+    CreateSelectedItemContent($selectedItem, itemText, removeSelectedItem, controlDisabled, optionDisabled){
+        let $content = this.$(`<span>${itemText}</span>`).appendTo($selectedItem);
+        if (optionDisabled)
+            this.adapter.DisableSelectedItemContent($content);
         let $button = this.$('<button aria-label="Close" tabIndex="-1" type="button"><span aria-hidden="true">&times;</span></button>')
             .css("white-space", "nowrap")
             .on("click", removeSelectedItem)
             .appendTo($selectedItem)
-            .prop("disabled", disabled)
+            .prop("disabled", controlDisabled)
         $selectedItem.addClass(this.classes.selectedItemClass);
         $button.addClass(this.classes.removeSelectedItemButtonClass)
         if (this.adapter.CreateSelectedItemContent)

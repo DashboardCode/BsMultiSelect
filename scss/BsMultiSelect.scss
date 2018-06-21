@@ -49,6 +49,9 @@ ul.form-control {
             font-size: 1.5em;
             line-height: .9em;
         }
+        span.disabled {
+            opacity: $btn-disabled-opacity;
+        }
     }
 
     @include form-control-focus-class();

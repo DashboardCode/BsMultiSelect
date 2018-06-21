@@ -137,7 +137,8 @@ class MultiSelect {
                 $selectedItem,
                 itemText,
                 removeItemAndCloseDropDown,
-                this.disabled
+                this.disabled,
+                isDisabled
             );
             $selectedItem.insertBefore(this.filterInputItem);
             $dropDownItem.data("option-toggle", removeItem);

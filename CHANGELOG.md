@@ -1,5 +1,6 @@
 # CHANGELOG
 
+0.2.6 - disabled option when selected is displayed with opacity (default value .65)
 0.2.5 - disabled option support
 0.2.4 - npm published
 
