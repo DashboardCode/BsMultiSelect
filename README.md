@@ -148,7 +148,7 @@ Note, BS allready provide classes like: `h-25`, `bg-light`, `text-primary` that 
 
 * it was not tested on bootstrap dialog
 
-* `optgroup` are not supported;
+* `optgroup`, `optgroup disabled` are not supported;
 
 * `hidden` options are not supported;
 
