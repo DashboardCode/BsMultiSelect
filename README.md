@@ -35,7 +35,7 @@ This plugin doesn't bring its own styles. This was a clear design goal but unfor
 
 * $input-color - we need to make DIV color the same as `input` color (color of text you are typing); default value is "#495057"
 
-* focus, focus for `isvalid`, focus for `isinvalid` border effects mixins as classes
+* focus for `isvalid`, focus for `isinvalid` effects (mixins and classes)
 
 If your theme changes those variables, you need to update them on the plugin initialization.
 
@@ -54,21 +54,16 @@ If your theme changes those variables, you need to update them on the plugin ini
             
 ````
 
-**Disabled / Readonly**
-Although there is difference between those two attributes for `input`, the HTML 5.2 support only `disabled` for [`select`](https://www.w3.org/TR/2017/REC-html52-20171214/sec-forms.html#the-select-element) element. `Readonly` attribute on original `select` will be ignored.
+**disabled / readonly select**: although there is difference between those two attributes for `input`, the HTML 5.2 support only `disabled` for [`select`](https://www.w3.org/TR/2017/REC-html52-20171214/sec-forms.html#the-select-element) element. `Readonly` attribute on original `select` will be ignored.
 
-**disabled option**
-Option that is together `disabled` and `selected` can be deselected but can't be selected again (just as it is in HTML `select`)
+**disabled selected option**: option that is `disabled` and `selected` at the same time can be deselected but can't be selected again (just as it is in HTML `select`).
 
-**change trigger**
-Subscribe to original `select` change event.
+**change event**: subscribe to original `select` change event.
 
-**Label**
-Click on label focus input and open the dropdown
+**<label>**: Click on label focus input and open the dropdown
 
-**SCSS** 
-You can use BsMultiSelect.css (included to distribution) and update values manually for your theme.
-Or you can use [./scss/BsMultiSelect.scss](https://github.com/DashboardCode/BsMultiSelect/blob/master/scss/BsMultiSelect.scss) copy it to your project and update reference to your custom BS variables) just by configuring plugin this way:
+**SCSS**: you can copy BsMultiSelect.css (included to distribution) and update values manually for your theme.
+Or you can use [./scss/BsMultiSelect.scss](https://github.com/DashboardCode/BsMultiSelect/blob/master/scss/BsMultiSelect.scss) copy it to your project and update reference to your custom BS variables in yout theme); these requires such configuration:
 
 ````
           $("select[multiple='multiple']").bsMultiSelect({
