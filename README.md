@@ -1,33 +1,29 @@
 # DashboardCode Multiselect plugin for Bootstrap 4
 *https://dashboardcode.github.io/BsMultiSelect/*
 
-There are many similar plugins but this is small since reuses maximum of bootrap 4 styles and code (BsMultiSelect size is 15KB+2KB js+css minified).
+There are many similar plugins but this is small and clear since reuses maximum of bootrap 4 styles and code (BsMultiSelect size is 15KB+2KB js+css minified).
 
-In many cases it can be used without editing CSS.
+In many cases it can be adjusted for your theme without editing CSS. You can adjust some theme parameters in JS or you can copy [./scss/BsMultiSelect.scss](https://github.com/DashboardCode/BsMultiSelect/blob/master/scss/BsMultiSelect.scss) to your SASS project (it utilize bootstrap variables).
 
-You can copy [./scss/BsMultiSelect.scss](https://github.com/DashboardCode/BsMultiSelect/blob/master/scss/BsMultiSelect.scss) to your SASS project and I hope it should be enough to adopt plugin to your bootstrap theme (it utilize bootstrap variables).
+Plugin follows Bootstrap 4 conventions and use the same instruments (babel, rollup) so pretend to present a modern BS team plugin's `boilerplate`.
 
-It is also possible to adopt it for theme using just JS (no CSS at all).
-
-Plugin follows Bootstrap 4 conventions and use the same instruments (babel, rollup) so pretend to present a modern plugin's `boilerplate`.
+![image](https://user-images.githubusercontent.com/11598038/39988733-cda205e2-5770-11e8-8ca2-0d30cefc3ca1.png)
 
 # Install
 `npm install @dashboardcode/bsmutltiselect`
 
 # Architecture
-Instead of using BS4 Dropdown component (it is not possible because BS Dropdown requires presence of `toggle-buttons` https://github.com/twbs/bootstrap/issues/26420) the plugin uses popper.js directly.
+Instead of using BS4 Dropdown component (it is not possible since BS Dropdown requires presence of `toggle-buttons` https://github.com/twbs/bootstrap/issues/26420) the plugin uses popper.js directly.
 
 Inspite of this the plugin utilize `dropdown-menu` class. Menu items contains BS4 Custom checkboxes.
 
-![image](https://user-images.githubusercontent.com/11598038/39988733-cda205e2-5770-11e8-8ca2-0d30cefc3ca1.png)
+Additionally those BS4 classes where used:
 
-Additionally those BS4 styles where used:
-
-* `form-control` - it is applied to `ul` that emulates `input`
+* `form-control` class - it is applied to `ul` that emulates `input`
 
 * `badge` class - selected items, each item contains BS4 `close` button
 
-This plugin doesn't bring its own styles. This was a clear design goal but unfortunatly it can be achived only by a trick. Not all bootstrap styles varibales can be accessed from a plugin as classes, therefore we need to setup them in javascript. Those variables are:
+This plugin doesn't aim to bring its own styles. This was a clear design goal but unfortunatly it can be achived only by a trick. Not all bootstrap styles varibales can be accessed from a plugin as classes, therefore we need to setup them in javascript. Those variables are:
 
 * $input-height - we need it for DIV `form-control`'s min-height; default value is "calc(2.25rem + 2px)",
 
@@ -35,7 +31,7 @@ This plugin doesn't bring its own styles. This was a clear design goal but unfor
 
 * $input-color - we need to make DIV color the same as `input` color (color of text you are typing); default value is "#495057"
 
-* focus for `isvalid`, focus for `isinvalid` effects (mixins and classes)
+* focus for `isvalid`, focus for `isinvalid` effects (mixins)
 
 If your theme changes those variables, you need to update them on the plugin initialization.
 
@@ -54,13 +50,15 @@ If your theme changes those variables, you need to update them on the plugin ini
             
 ````
 
+## Features
+
 **disabled / readonly select**: although there is difference between those two attributes for `input`, the HTML 5.2 support only `disabled` for [`select`](https://www.w3.org/TR/2017/REC-html52-20171214/sec-forms.html#the-select-element) element. `Readonly` attribute on original `select` will be ignored.
 
 **disabled selected option**: option that is `disabled` and `selected` at the same time can be deselected but can't be selected again (just as it is in HTML `select` and unlike `chosen.js`).
 
 **change event**: subscribe to original `select` change event.
 
-**`<label>`**: Click on label focus input and open the dropdown
+**`<label>`**: Click on the label focus input and open the dropdown.
 
 **SCSS**: you can copy BsMultiSelect.css (included to distribution) and update values manually for your theme.
 Or you can use [./scss/BsMultiSelect.scss](https://github.com/DashboardCode/BsMultiSelect/blob/master/scss/BsMultiSelect.scss) copy it to your project and update reference to your custom BS variables in yout theme); these requires such configuration:
@@ -71,6 +69,59 @@ Or you can use [./scss/BsMultiSelect.scss](https://github.com/DashboardCode/BsMu
                      });
             
 ````
+Since this means you are going to heavy styling those additional options are available (you see default values):
+
+
+````
+          $("select[multiple='multiple']").bsMultiSelect({
+                         useCss: true,
+                         containerClass: 'dashboardcode-bsmultiselect',
+                         dropDownMenuClass: 'dropdown-menu',
+                         dropDownItemClass:  'px-2',
+                         dropDownItemHoverClass: 'text-primary bg-light',
+                         selectedPanelClass: 'form-control',
+                         selectedPanelFocusClass : 'focus',
+                         selectedPanelDisabledClass: 'disabled',
+                         selectedItemClass: 'badge',
+                         removeSelectedItemButtonClass: 'close',
+                         filterInputItemClass: '',
+                         filterInputClass: ''
+                         selectedPanelFocusClass : 'focus',
+                         selectedPanelDisabledClass: 'disabled',
+                         selectedItemContentDisabledClass: 'disabled'
+                     });
+            
+````
+
+
+With them you can change generated HTML classes. Default generated HTML looks like:
+
+
+
+````
+        <div class="dashboardcode-bsmultiselect">
+          <ul class="form-control focus" style="..">
+              <li class="badge"><span>California</span><button class="close">..</button></li>
+              <li class="badge"><span class="disabled">Pennsylvania</span><button class="close">..</button></li>
+              <li><input id=".." style=".." ..></li>
+          </ul>
+          <ul class="dropdown-menu" style=".." ..>
+              <li class="px-2">
+                <div class="custom-control custom-checkbox">
+                   <input type="checkbox" .. >
+                   <label ..>Alabama</label>
+                </div>
+              </li>
+              <li class="px-2">
+                <div class="custom-control custom-checkbox">
+                  <input type="checkbox" ..>
+                  <label ..>Alaska</label>
+                </div>
+              </li>
+          </ul>
+        </div>
+````
+
 
 
 ### Proposal to Bootstrap
