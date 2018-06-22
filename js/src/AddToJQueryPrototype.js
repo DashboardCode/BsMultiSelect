@@ -1,9 +1,10 @@
 function AddToJQueryPrototype(pluginName, createPlugin, $){
     const firstChar = pluginName.charAt(0);
-    if (firstChar.toLowerCase() == firstChar) {
+    const firstCharLower = firstChar.toLowerCase();
+    if (firstCharLower == firstChar) {
         throw new TypeError(`Plugin name '${pluginName}' should be started from upper case char`)
     }
-    const prototypableName = firstChar.toLowerCase() + pluginName.slice(1)
+    const prototypableName = firstCharLower + pluginName.slice(1)
     const noConflictPrototypable = $.fn[prototypableName];
     const dataKey = `DashboardCode.${pluginName}`;
 

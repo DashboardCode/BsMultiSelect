@@ -62,6 +62,8 @@ If your theme changes those variables, you need to update them on the plugin ini
 
 **`<label>`**: Click on the label puts focus on input and opens the dropdown.
 
+**`<optgroup label=".." >`** grouped options will be flatten; there is no sense mixing "Browse Tree" and "Autosuggest popup" UI expirience.
+
 **SCSS**: you can copy BsMultiSelect.css (included to distribution) and update values manually for your theme.
 Or you can use [./scss/BsMultiSelect.scss](https://github.com/DashboardCode/BsMultiSelect/blob/master/scss/BsMultiSelect.scss) copy it to your project and update reference to your custom BS variables in yout theme); these requires such configuration:
 
@@ -149,8 +151,6 @@ Note, BS allready provide classes like: `h-25`, `bg-light`, `text-primary` that 
 * Tested only for IE11, Chrome 66, Edge 42/17;
 
 * it was not tested on bootstrap dialog
-
-* `optgroup`, `optgroup disabled` are not supported;
 
 * no placeholder support (e.g. through `data-placeholder`)
 

@@ -533,8 +533,8 @@
 
         this.$(function () {
           var selectOptions = $selectElement.find('OPTION');
-          selectOptions.each(function (index, optionElement) {
-            _this3.appendDropDownItem(optionElement);
+          selectOptions.each(function (index, el) {
+            _this3.appendDropDownItem(el);
           });
           _this3.hasDropDownVisible = selectOptions.length > 0;
 
@@ -638,12 +638,13 @@
 
     function AddToJQueryPrototype(pluginName, createPlugin, $$$1) {
       var firstChar = pluginName.charAt(0);
+      var firstCharLower = firstChar.toLowerCase();
 
-      if (firstChar.toLowerCase() == firstChar) {
+      if (firstCharLower == firstChar) {
         throw new TypeError("Plugin name '" + pluginName + "' should be started from upper case char");
       }
 
-      var prototypableName = firstChar.toLowerCase() + pluginName.slice(1);
+      var prototypableName = firstCharLower + pluginName.slice(1);
       var noConflictPrototypable = $$$1.fn[prototypableName];
       var dataKey = "DashboardCode." + pluginName;
 
@@ -712,7 +713,7 @@
         this.$ = $$$1;
         this.hiddenSelect = hiddenSelect;
         this.adapter = adapter;
-        this.bs4CommonsLabelDispose = null;
+        this.bs4LabelDispose = null;
       }
 
       var _proto = Bs4Adapter.prototype;
@@ -746,11 +747,11 @@
         dom.filterInputItem.addClass(this.classes.filterInputItemClass);
         dom.filterInput.addClass(this.classes.filterInputClass);
         if (this.adapter.OnInit) this.adapter.OnInit(dom);
-        this.bs4CommonsLabelDispose = this.HandleLabel(dom.selectedPanel);
+        this.bs4LabelDispose = this.HandleLabel(dom.selectedPanel);
       };
 
       _proto.Dispose = function Dispose() {
-        if (this.bs4CommonsLabelDispose) this.bs4CommonsLabelDispose();
+        if (this.bs4LabelDispose) this.bs4LabelDispose();
       }; // ------------------------
 
 
@@ -763,8 +764,7 @@
         var $checkBox = $dropDownItem.find("INPUT[type=\"checkbox\"]");
 
         var adoptDropDownItem = function adoptDropDownItem(isSelected, isDisabled) {
-          $checkBox.prop('checked', isSelected);
-          $checkBox.prop('disabled', isDisabled);
+          $checkBox.prop('checked', isSelected).prop('disabled', isDisabled);
         };
 
         $dropDownItem.addClass(this.classes.dropDownItemClass);
@@ -782,7 +782,9 @@
 
 
       _proto.IsClickToOpenDropdown = function IsClickToOpenDropdown(event) {
-        return !(event.target.nodeName == "BUTTON" || event.target.nodeName == "SPAN" && event.target.parentElement.nodeName == "BUTTON");
+        var target = event.target;
+        var nodeName = target.nodeName;
+        return !(nodeName == "BUTTON" || nodeName == "SPAN" && target.parentElement.nodeName == "BUTTON");
       };
 
       _proto.UpdateIsValid = function UpdateIsValid($selectedPanel) {

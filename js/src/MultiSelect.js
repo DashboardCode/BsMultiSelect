@@ -337,8 +337,8 @@ class MultiSelect {
         this.$(() => {
             let selectOptions = $selectElement.find('OPTION');
             selectOptions.each(
-                (index, optionElement) => {
-                    this.appendDropDownItem(optionElement);
+                (index, el) => {
+                    this.appendDropDownItem(el);
                 }
             );
             this.hasDropDownVisible = selectOptions.length > 0;

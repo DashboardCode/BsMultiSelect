@@ -21,7 +21,7 @@ class Bs4Adapter {
         this.$ = $;
         this.hiddenSelect=hiddenSelect;
         this.adapter = adapter;
-        this.bs4CommonsLabelDispose = null;
+        this.bs4LabelDispose = null;
     }
 
     HandleLabel($selectedPanel){
@@ -51,12 +51,12 @@ class Bs4Adapter {
         dom.filterInput.addClass(this.classes.filterInputClass);
         if (this.adapter.OnInit)
             this.adapter.OnInit(dom)
-        this.bs4CommonsLabelDispose = this.HandleLabel(dom.selectedPanel);
+        this.bs4LabelDispose = this.HandleLabel(dom.selectedPanel);
     }
 
     Dispose(){
-        if (this.bs4CommonsLabelDispose)
-            this.bs4CommonsLabelDispose();
+        if (this.bs4LabelDispose)
+            this.bs4LabelDispose();
     }
 
     // ------------------------
@@ -73,8 +73,7 @@ class Bs4Adapter {
         $dropDownItemContent.appendTo($dropDownItem);
         let $checkBox = $dropDownItem.find(`INPUT[type="checkbox"]`);
         let adoptDropDownItem = (isSelected, isDisabled) => {
-            $checkBox.prop('checked', isSelected);
-            $checkBox.prop('disabled', isDisabled);
+            $checkBox.prop('checked', isSelected).prop('disabled', isDisabled);
         }
         $dropDownItem.addClass(this.classes.dropDownItemClass);
         return adoptDropDownItem;
@@ -97,7 +96,9 @@ class Bs4Adapter {
 
     // -----------------------
     IsClickToOpenDropdown(event){
-        return !(event.target.nodeName == "BUTTON" || (event.target.nodeName == "SPAN" && event.target.parentElement.nodeName == "BUTTON"))
+        const target = event.target;
+        const nodeName = target.nodeName;
+        return !(nodeName == "BUTTON" || (nodeName == "SPAN" && target.parentElement.nodeName == "BUTTON"))
     }
 
     UpdateIsValid($selectedPanel){
