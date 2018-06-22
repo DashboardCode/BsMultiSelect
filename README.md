@@ -151,6 +151,8 @@ Note, BS allready provide classes like: `h-25`, `bg-light`, `text-primary` that 
 ### Known issues
 * Tested only for IE11, Chrome 66, Edge 42/17;
 
+* options `optgroups` will be flatten and shown, but `hidden` and `disabled` on optgroup will be ignored
+
 * it was not tested on bootstrap dialog
 
 * no placeholder support (e.g. through `data-placeholder`)
