@@ -269,11 +269,12 @@
       _proto.appendDropDownItem = function appendDropDownItem(optionElement) {
         var _this2 = this;
 
+        var isHidden = optionElement.hidden;
         var optionId = optionElement.value;
         var itemText = optionElement.text;
         var isSelected = optionElement.selected;
         var isDisabled = optionElement.disabled;
-        var $dropDownItem = this.$("<LI/>");
+        var $dropDownItem = this.$("<LI/>").prop("hidden", isHidden);
         $dropDownItem.data("option-id", optionId);
         $dropDownItem.data("option-text", itemText.toLowerCase());
         var adoptDropDownItem = this.adapter.CreateDropDownItemContent($dropDownItem, optionId, itemText, isSelected, isDisabled);
@@ -316,7 +317,7 @@
 
         $dropDownItem.data("option-toggle", optionElement.disabled ? null : appendItem);
 
-        if (isSelected) {
+        if (isSelected && !isHidden) {
           appendItem(false);
         }
 

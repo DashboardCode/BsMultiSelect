@@ -104,11 +104,12 @@ class MultiSelect {
         this.hideDropDown();
     }
     appendDropDownItem(optionElement) {
+        let isHidden = optionElement.hidden;
         let optionId = optionElement.value;
         let itemText = optionElement.text;
         let isSelected = optionElement.selected;
         let isDisabled = optionElement.disabled;
-        let $dropDownItem = this.$("<LI/>");
+        let $dropDownItem = this.$("<LI/>").prop("hidden", isHidden)
         $dropDownItem.data("option-id", optionId);
         $dropDownItem.data("option-text", itemText.toLowerCase());
         let adoptDropDownItem = this.adapter.CreateDropDownItemContent($dropDownItem, optionId, itemText, isSelected, isDisabled)
@@ -148,8 +149,8 @@ class MultiSelect {
             return $selectedItem;
         }
         $dropDownItem.data("option-toggle", optionElement.disabled ? null : appendItem);
-        
-        if (isSelected) {
+
+        if (isSelected && !isHidden) {
             appendItem(false);
         }
         let closest = (event) => this.$(event.target).closest("LI");

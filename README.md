@@ -54,11 +54,13 @@ If your theme changes those variables, you need to update them on the plugin ini
 
 **disabled / readonly select**: although there is difference between those two attributes for `input`, the HTML 5.2 support only `disabled` for [`select`](https://www.w3.org/TR/2017/REC-html52-20171214/sec-forms.html#the-select-element) element. `Readonly` attribute on original `select` will be ignored.
 
-**disabled selected option**: option that is `disabled` and `selected` at the same time can be deselected but can't be selected again (just as it is in HTML `select` and unlike `chosen.js`).
+**`<option disabled selected>`**: option that is `disabled` and `selected` at the same time can be deselected but can't be selected again (just as it is in HTML `select` and unlike `chosen.js`).
+
+**`<option hidden>`**: options with `hidden` property are ... hidden. You can't deselect them either. This is exactly how HTML5.2 works, but many other plugins show hidden options.
 
 **change event**: subscribe to original `select` change event.
 
-**`<label>`**: Click on the label focus input and open the dropdown.
+**`<label>`**: Click on the label puts focus on input and opens the dropdown.
 
 **SCSS**: you can copy BsMultiSelect.css (included to distribution) and update values manually for your theme.
 Or you can use [./scss/BsMultiSelect.scss](https://github.com/DashboardCode/BsMultiSelect/blob/master/scss/BsMultiSelect.scss) copy it to your project and update reference to your custom BS variables in yout theme); these requires such configuration:
@@ -150,9 +152,7 @@ Note, BS allready provide classes like: `h-25`, `bg-light`, `text-primary` that 
 
 * `optgroup`, `optgroup disabled` are not supported;
 
-* `hidden` options are not supported;
-
-* no placeholder support (first `option` that is `default`, `selected`, `hidden` and has empty `value` usually is a placeholder 'Select your ...')
+* no placeholder support (e.g. through `data-placeholder`)
 
 * `fieldset disabled` not supported;
 
