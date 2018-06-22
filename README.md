@@ -5,7 +5,7 @@ There are many similar plugins but this is small and clear since reuses maximum 
 
 In many cases it can be adjusted for your theme without editing CSS. You can adjust some theme parameters in JS or you can copy [./scss/BsMultiSelect.scss](https://github.com/DashboardCode/BsMultiSelect/blob/master/scss/BsMultiSelect.scss) to your SASS project (it utilize bootstrap variables).
 
-Plugin follows Bootstrap 4 conventions and use the same instruments (babel, rollup) so pretend to present a modern BS team plugin's `boilerplate`.
+Plugin follows Bootstrap 4 conventions and use the same instruments (babel, sass, rollup) so pretend to present a BS team modern plugin's **boilerplate**.
 
 ![image](https://user-images.githubusercontent.com/11598038/39988733-cda205e2-5770-11e8-8ca2-0d30cefc3ca1.png)
 
