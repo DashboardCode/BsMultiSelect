@@ -60,23 +60,40 @@ class Bs4Adapter {
     }
 
     // ------------------------
-    CreateDropDownItemContent($dropDownItem, optionId, itemText, isSelected, isDisabled){
+    CreateDropDownItemContent($dropDownItem, optionId, itemText){
 
         let checkBoxId = `${this.classes.containerClass}-${this.hiddenSelect.name.toLowerCase()}-generated-id-${optionId.toLowerCase()}`;
-        let checked = isSelected ? "checked" : "";
-        let disabled = isDisabled ? "disabled" : "";
 
         let $dropDownItemContent= this.$(`<div class="custom-control custom-checkbox">
-            <input type="checkbox" class="custom-control-input" id="${checkBoxId}" ${checked} ${disabled}>
+            <input type="checkbox" class="custom-control-input" id="${checkBoxId}">
             <label class="custom-control-label" for="${checkBoxId}">${itemText}</label>
         </div>`)
         $dropDownItemContent.appendTo($dropDownItem);
-        let $checkBox = $dropDownItem.find(`INPUT[type="checkbox"]`);
-        let adoptDropDownItem = (isSelected, isDisabled) => {
-            $checkBox.prop('checked', isSelected).prop('disabled', isDisabled);
-        }
+        let $checkBox = $dropDownItemContent.find(`INPUT[type="checkbox"]`);
         $dropDownItem.addClass(this.classes.dropDownItemClass);
-        return adoptDropDownItem;
+
+        let selectDropDownItem = (isSelected) => {
+            $checkBox.prop('checked', isSelected);
+        }
+        let disableDropDownItem = (isDisabled) => {
+            $checkBox.prop('disabled', isDisabled);
+        }
+        let addDisabledStyleDropDownItem = () => {
+            this.adapter.AddDisabledStyle($dropDownItemContent)
+        }
+        let removeDisabledStyleDropDownItem = () => {
+            this.adapter.RemoveDisabledStyle($dropDownItemContent)
+        }
+        
+        let onChangeDropDownItem = (toggle) => {
+            $checkBox.on("change", toggle)
+        }
+
+        return { select: selectDropDownItem, 
+                 disable: disableDropDownItem,
+                 addDisabledStyle: addDisabledStyleDropDownItem,
+                 removeDisabledStyle: removeDisabledStyleDropDownItem,
+                 onChange: onChangeDropDownItem };
     }
 
     CreateSelectedItemContent($selectedItem, itemText, removeSelectedItem, controlDisabled, optionDisabled){

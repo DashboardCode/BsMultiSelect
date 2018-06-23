@@ -1,5 +1,5 @@
 /*!
-  * DashboardCode BsMultiSelect v0.2.7 (https://dashboardcode.github.io/BsMultiSelect/)
+  * DashboardCode BsMultiSelect v0.2.8 (https://dashboardcode.github.io/BsMultiSelect/)
   * Copyright 2017-2018 Roman Pokrovskij (github user rpokrovskij)
   * Licensed under APACHE 2 (https://github.com/DashboardCode/BsMultiSelect/blob/master/LICENSE)
   */
@@ -19,7 +19,8 @@
         var defaults = {
           selectedPanelFocusClass: 'focus',
           selectedPanelDisabledClass: 'disabled',
-          selectedItemContentDisabledClass: 'disabled'
+          selectedItemContentDisabledClass: 'disabled',
+          dropDownItemDisabledClass: 'disabled'
         };
         this.options = $$$1.extend({}, defaults, options);
       }
@@ -28,6 +29,14 @@
 
       _proto.DisableSelectedItemContent = function DisableSelectedItemContent($content) {
         $content.addClass(this.options.selectedItemContentDisabledClass);
+      };
+
+      _proto.AddDisabledStyle = function AddDisabledStyle($dropDownItemContent) {
+        $dropDownItemContent.removeClass(this.options.dropDownItemDisabledClass);
+      };
+
+      _proto.RemoveDisabledStyle = function RemoveDisabledStyle($dropDownItemContent) {
+        $dropDownItemContent.addClass(this.options.dropDownItemDisabledClass);
       };
 
       _proto.Enable = function Enable($selectedPanel) {
@@ -75,7 +84,8 @@
           selectedPanelFocusValidBoxShadow: '0 0 0 0.2rem rgba(40, 167, 69, 0.25)',
           selectedPanelFocusInvalidBoxShadow: '0 0 0 0.2rem rgba(220, 53, 69, 0.25)',
           filterInputColor: '#495057',
-          selectedItemContentDisabledOpacity: '.65'
+          selectedItemContentDisabledOpacity: '.65',
+          dropdDownLabelDisabledColor: '#6c757d'
         };
         this.options = $$$1.extend({}, defaults, options);
       }
@@ -94,6 +104,14 @@
 
       _proto.DisableSelectedItemContent = function DisableSelectedItemContent($content) {
         $content.css("opacity", this.options.selectedItemContentDisabledOpacity);
+      };
+
+      _proto.AddDisabledStyle = function AddDisabledStyle($dropDownItemContent) {
+        $dropDownItemContent.css('color', this.options.dropdDownLabelDisabledColor);
+      };
+
+      _proto.RemoveDisabledStyle = function RemoveDisabledStyle($dropDownItemContent) {
+        $dropDownItemContent.css('color', null);
       };
 
       _proto.UpdateSize = function UpdateSize($selectedPanel) {
@@ -194,6 +212,7 @@
         this.hasDropDownVisible = false; // jquery adapters
 
         this.$document = $$$1(window.document);
+        this.$selectElement = $$$1(selectElement);
         this.init();
       }
 
@@ -239,9 +258,9 @@
             visible++;
           } else {
             var itemText = $dropDownMenuItem.data("option-text");
-            var isSelected = $dropDownMenuItem.data("option-selected");
+            var option = $dropDownMenuItem.data("option");
 
-            if (!isSelected && itemText.indexOf(text) >= 0) {
+            if (!option.selected && !option.hidden && !option.disabled && itemText.indexOf(text) >= 0) {
               $dropDownMenuItem.show();
               visible++;
             } else {
@@ -270,34 +289,43 @@
         var _this2 = this;
 
         var isHidden = optionElement.hidden;
-        var optionId = optionElement.value;
         var itemText = optionElement.text;
-        var isSelected = optionElement.selected;
-        var isDisabled = optionElement.disabled;
         var $dropDownItem = this.$("<LI/>").prop("hidden", isHidden);
-        $dropDownItem.data("option-id", optionId);
-        $dropDownItem.data("option-text", itemText.toLowerCase());
-        var adoptDropDownItem = this.adapter.CreateDropDownItemContent($dropDownItem, optionId, itemText, isSelected, isDisabled);
-        $dropDownItem.appendTo(this.dropDownMenu);
+        $dropDownItem.data("option-text", itemText.toLowerCase()).appendTo(this.dropDownMenu);
+        $dropDownItem.data("option", optionElement);
+        var adjustDropDownItem = this.adapter.CreateDropDownItemContent($dropDownItem, optionElement.value, itemText);
+        var isDisabled = optionElement.disabled;
+        var isSelected = optionElement.selected;
+        if (isSelected && isDisabled) adjustDropDownItem.addDisabledStyle();else adjustDropDownItem.disable(isDisabled);
+        adjustDropDownItem.onChange(function () {
+          var toggleItem = $dropDownItem.data("option-toggle");
+          toggleItem();
 
-        var appendItem = function appendItem(doTrigger) {
-          $dropDownItem.data("option-selected", true);
+          _this2.filterInput.focus();
+        });
+
+        var selectItem = function selectItem() {
+          if (optionElement.hidden) return;
 
           var $selectedItem = _this2.$("<LI/>");
 
-          $selectedItem.data("option-id", optionId);
-          optionElement.selected = true;
-          adoptDropDownItem(true);
+          var adjustPair = function adjustPair(isSelected, toggle, remove) {
+            optionElement.selected = isSelected;
+            adjustDropDownItem.select(isSelected);
+            $dropDownItem.data("option-toggle", toggle);
+            $selectedItem.data("option-remove", remove);
+          };
 
           var removeItem = function removeItem() {
-            $dropDownItem.data("option-selected", false);
-            $dropDownItem.data("option-toggle", optionElement.disabled ? null : appendItem);
-            $selectedItem.data("option-remove", null);
-            $selectedItem.remove();
-            optionElement.selected = false;
-            adoptDropDownItem(false);
+            adjustDropDownItem.disable(optionElement.disabled);
+            adjustPair(false, function () {
+              selectItem();
 
-            _this2.$(_this2.selectElement).trigger('change');
+              _this2.$selectElement.trigger('change');
+            }, null, true);
+            $selectedItem.remove();
+
+            _this2.$selectElement.trigger('change');
           };
 
           var removeItemAndCloseDropDown = function removeItemAndCloseDropDown() {
@@ -306,44 +334,26 @@
             _this2.closeDropDown();
           };
 
-          _this2.adapter.CreateSelectedItemContent($selectedItem, itemText, removeItemAndCloseDropDown, _this2.disabled, isDisabled);
+          _this2.adapter.CreateSelectedItemContent($selectedItem, itemText, removeItemAndCloseDropDown, _this2.disabled, optionElement.disabled);
 
+          adjustPair(true, removeItem, removeItemAndCloseDropDown);
           $selectedItem.insertBefore(_this2.filterInputItem);
-          $dropDownItem.data("option-toggle", removeItem);
-          $selectedItem.data("option-remove", removeItemAndCloseDropDown);
-          if (typeof doTrigger === "undefined" || doTrigger === true) _this2.$(_this2.selectElement).trigger('change');
-          return $selectedItem;
         };
 
-        $dropDownItem.data("option-toggle", optionElement.disabled ? null : appendItem);
-
-        if (isSelected && !isHidden) {
-          appendItem(false);
-        }
-
-        var closest = function closest(event) {
-          return _this2.$(event.target).closest("LI");
-        };
-
-        $dropDownItem.click(function (event) {
-          event.preventDefault();
-          event.stopPropagation();
-
-          var toggleItem = _this2.$(event.currentTarget).closest("LI").data("option-toggle");
-
-          if (toggleItem) toggleItem();
-
-          _this2.filterInput.focus();
+        $dropDownItem.mouseover(function () {
+          return _this2.adapter.HoverIn($dropDownItem);
+        }).mouseout(function () {
+          return _this2.adapter.HoverOut($dropDownItem);
         });
-        $dropDownItem.mouseover(function (e) {
-          return _this2.adapter.HoverIn(closest(e));
-        }).mouseout(function (e) {
-          return _this2.adapter.HoverOut(closest(e));
+        if (optionElement.selected) selectItem();else $dropDownItem.data("option-toggle", function () {
+          if (optionElement.disabled) return;
+          adjustDropDownItem.removeDisabledStyle();
+          selectItem();
         });
       };
 
       _proto.keydownArrow = function keydownArrow(down) {
-        var visibleNodeListArray = this.$(this.dropDownMenu).find('LI:not([style*="display: none"])').toArray();
+        var visibleNodeListArray = this.$(this.dropDownMenu).find('LI:not([style*="display: none"]):not(:hidden)').toArray();
 
         if (visibleNodeListArray.length > 0) {
           if (this.hasDropDownVisible) {
@@ -588,12 +598,9 @@
               var $hoveredDropDownItem = _this3.$(_this3.hoveredDropDownItem);
 
               var toggleItem = $hoveredDropDownItem.data("option-toggle");
+              toggleItem();
 
-              if (toggleItem) {
-                toggleItem();
-
-                _this3.closeDropDown();
-              }
+              _this3.closeDropDown();
             } else {
               var text = _this3.filterInput.value.trim().toLowerCase();
 
@@ -613,9 +620,9 @@
               if (dropDownItem) {
                 var $dropDownItem = _this3.$(dropDownItem);
 
-                var isSelected = $dropDownItem.data("option-selected");
+                var option = $dropDownItem.data("option");
 
-                if (!isSelected) {
+                if (!option.selected) {
                   var toggle = $dropDownItem.data("option-toggle");
                   toggle();
                 }
@@ -755,20 +762,42 @@
       }; // ------------------------
 
 
-      _proto.CreateDropDownItemContent = function CreateDropDownItemContent($dropDownItem, optionId, itemText, isSelected, isDisabled) {
-        var checkBoxId = this.classes.containerClass + "-" + this.hiddenSelect.name.toLowerCase() + "-generated-id-" + optionId.toLowerCase();
-        var checked = isSelected ? "checked" : "";
-        var disabled = isDisabled ? "disabled" : "";
-        var $dropDownItemContent = this.$("<div class=\"custom-control custom-checkbox\">\n            <input type=\"checkbox\" class=\"custom-control-input\" id=\"" + checkBoxId + "\" " + checked + " " + disabled + ">\n            <label class=\"custom-control-label\" for=\"" + checkBoxId + "\">" + itemText + "</label>\n        </div>");
-        $dropDownItemContent.appendTo($dropDownItem);
-        var $checkBox = $dropDownItem.find("INPUT[type=\"checkbox\"]");
+      _proto.CreateDropDownItemContent = function CreateDropDownItemContent($dropDownItem, optionId, itemText) {
+        var _this = this;
 
-        var adoptDropDownItem = function adoptDropDownItem(isSelected, isDisabled) {
-          $checkBox.prop('checked', isSelected).prop('disabled', isDisabled);
+        var checkBoxId = this.classes.containerClass + "-" + this.hiddenSelect.name.toLowerCase() + "-generated-id-" + optionId.toLowerCase();
+        var $dropDownItemContent = this.$("<div class=\"custom-control custom-checkbox\">\n            <input type=\"checkbox\" class=\"custom-control-input\" id=\"" + checkBoxId + "\">\n            <label class=\"custom-control-label\" for=\"" + checkBoxId + "\">" + itemText + "</label>\n        </div>");
+        $dropDownItemContent.appendTo($dropDownItem);
+        var $checkBox = $dropDownItemContent.find("INPUT[type=\"checkbox\"]");
+        $dropDownItem.addClass(this.classes.dropDownItemClass);
+
+        var selectDropDownItem = function selectDropDownItem(isSelected) {
+          $checkBox.prop('checked', isSelected);
         };
 
-        $dropDownItem.addClass(this.classes.dropDownItemClass);
-        return adoptDropDownItem;
+        var disableDropDownItem = function disableDropDownItem(isDisabled) {
+          $checkBox.prop('disabled', isDisabled);
+        };
+
+        var addDisabledStyleDropDownItem = function addDisabledStyleDropDownItem() {
+          _this.adapter.AddDisabledStyle($dropDownItemContent);
+        };
+
+        var removeDisabledStyleDropDownItem = function removeDisabledStyleDropDownItem() {
+          _this.adapter.RemoveDisabledStyle($dropDownItemContent);
+        };
+
+        var onChangeDropDownItem = function onChangeDropDownItem(toggle) {
+          $checkBox.on("change", toggle);
+        };
+
+        return {
+          select: selectDropDownItem,
+          disable: disableDropDownItem,
+          addDisabledStyle: addDisabledStyleDropDownItem,
+          removeDisabledStyle: removeDisabledStyleDropDownItem,
+          onChange: onChangeDropDownItem
+        };
       };
 
       _proto.CreateSelectedItemContent = function CreateSelectedItemContent($selectedItem, itemText, removeSelectedItem, controlDisabled, optionDisabled) {

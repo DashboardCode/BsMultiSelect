@@ -46,6 +46,7 @@ class MultiSelect {
 
         // jquery adapters
         this.$document= $(window.document);
+        this.$selectElement = $(selectElement);
         this.init();
     }
     updateDropDownPosition(force) {
@@ -80,8 +81,8 @@ class MultiSelect {
             }
             else {
                 let itemText = $dropDownMenuItem.data("option-text");
-                let isSelected = $dropDownMenuItem.data("option-selected");
-                if (!isSelected && itemText.indexOf(text)>=0) {
+                let option = $dropDownMenuItem.data("option");
+                if (!option.selected && !option.hidden && !option.disabled && itemText.indexOf(text)>=0) {
                     $dropDownMenuItem.show();
                     visible++;
                 } else {
@@ -103,31 +104,49 @@ class MultiSelect {
         this.clearFilterInput(true);
         this.hideDropDown();
     }
+    
     appendDropDownItem(optionElement) {
         let isHidden = optionElement.hidden;
-        let optionId = optionElement.value;
         let itemText = optionElement.text;
-        let isSelected = optionElement.selected;
-        let isDisabled = optionElement.disabled;
         let $dropDownItem = this.$("<LI/>").prop("hidden", isHidden)
-        $dropDownItem.data("option-id", optionId);
-        $dropDownItem.data("option-text", itemText.toLowerCase());
-        let adoptDropDownItem = this.adapter.CreateDropDownItemContent($dropDownItem, optionId, itemText, isSelected, isDisabled)
-        $dropDownItem.appendTo(this.dropDownMenu);
-        let appendItem = (doTrigger) => {
-            $dropDownItem.data("option-selected", true);
-            let $selectedItem = this.$("<LI/>");
-            $selectedItem.data("option-id", optionId);
-            optionElement.selected = true;
-            adoptDropDownItem(true);
+        $dropDownItem.data("option-text", itemText.toLowerCase()).appendTo(this.dropDownMenu);
+        $dropDownItem.data("option", optionElement);
+
+        let adjustDropDownItem = this.adapter.CreateDropDownItemContent($dropDownItem, optionElement.value, itemText);
+        let isDisabled = optionElement.disabled;
+        let isSelected = optionElement.selected;
+
+        if (isSelected && isDisabled)
+            adjustDropDownItem.addDisabledStyle();
+        else
+            adjustDropDownItem.disable(isDisabled);
+       
+        adjustDropDownItem.onChange(() => {
+            let toggleItem = $dropDownItem.data("option-toggle");
+            toggleItem();
+            this.filterInput.focus();
+        });
+
+        let selectItem = () => {
+            if (optionElement.hidden)
+                return;
+            let $selectedItem = this.$("<LI/>")
+            
+            let adjustPair =(isSelected, toggle, remove) => {
+                    optionElement.selected = isSelected;
+                    adjustDropDownItem.select(isSelected);
+                    $dropDownItem.data("option-toggle", toggle);                    
+                    $selectedItem.data("option-remove", remove)
+                }
+
             let removeItem = () => {
-                $dropDownItem.data("option-selected", false);
-                $dropDownItem.data("option-toggle", optionElement.disabled ? null : appendItem);                    
-                $selectedItem.data("option-remove", null);
+                adjustDropDownItem.disable(optionElement.disabled);
+                adjustPair(false, () => {
+                    selectItem();
+                    this.$selectElement.trigger('change');
+                }, null, true)
                 $selectedItem.remove();
-                optionElement.selected = false;
-                adoptDropDownItem(false);
-                this.$(this.selectElement).trigger('change');
+                this.$selectElement.trigger('change');
             };
             let removeItemAndCloseDropDown = () => {
                 removeItem();
@@ -139,36 +158,28 @@ class MultiSelect {
                 itemText,
                 removeItemAndCloseDropDown,
                 this.disabled,
-                isDisabled
+                optionElement.disabled
             );
+            adjustPair(true, removeItem, removeItemAndCloseDropDown);
             $selectedItem.insertBefore(this.filterInputItem);
-            $dropDownItem.data("option-toggle", removeItem);
-            $selectedItem.data("option-remove", removeItemAndCloseDropDown);
-            if (typeof doTrigger === "undefined" || doTrigger===true)
-                this.$(this.selectElement).trigger('change');
-            return $selectedItem;
         }
-        $dropDownItem.data("option-toggle", optionElement.disabled ? null : appendItem);
 
-        if (isSelected && !isHidden) {
-            appendItem(false);
-        }
-        let closest = (event) => this.$(event.target).closest("LI");
+        $dropDownItem
+            .mouseover(() => this.adapter.HoverIn($dropDownItem))
+            .mouseout(() => this.adapter.HoverOut($dropDownItem));
 
-        $dropDownItem.click(event => {
-            event.preventDefault();
-            event.stopPropagation();
-            let toggleItem = this.$(event.currentTarget).closest("LI").data("option-toggle");
-            if (toggleItem)
-                toggleItem();
-            this.filterInput.focus();
-        })
-
-        $dropDownItem.mouseover(e => this.adapter.HoverIn(closest(e)))
-                     .mouseout(e => this.adapter.HoverOut(closest(e)));
+        if (optionElement.selected)
+            selectItem();
+        else
+            $dropDownItem.data("option-toggle",  () => { 
+                if (optionElement.disabled)
+                    return;
+                adjustDropDownItem.removeDisabledStyle();
+                selectItem();
+            })
     }
     keydownArrow(down) {
-        let visibleNodeListArray = this.$(this.dropDownMenu).find('LI:not([style*="display: none"])').toArray();
+        let visibleNodeListArray = this.$(this.dropDownMenu).find('LI:not([style*="display: none"]):not(:hidden)').toArray();
         if (visibleNodeListArray.length > 0) {
             if (this.hasDropDownVisible) {
                 this.updateDropDownPosition(true);
@@ -391,10 +402,8 @@ class MultiSelect {
                 if (this.hoveredDropDownItem) {
                     let $hoveredDropDownItem = this.$(this.hoveredDropDownItem);
                     let toggleItem =  $hoveredDropDownItem.data("option-toggle");
-                    if (toggleItem){
-                        toggleItem();
-                        this.closeDropDown();
-                    }
+                    toggleItem();
+                    this.closeDropDown();
                 } else {
                     let text = this.filterInput.value.trim().toLowerCase();
                     let dropDownItems = this.dropDownMenu.querySelectorAll("LI");
@@ -409,8 +418,8 @@ class MultiSelect {
                     }
                     if (dropDownItem) {
                         let $dropDownItem = this.$(dropDownItem);
-                        let isSelected = $dropDownItem.data("option-selected");
-                        if (!isSelected){
+                        let option = $dropDownItem.data("option");
+                        if (!option.selected){
                             let toggle = $dropDownItem.data("option-toggle");
                             toggle();
                         }

@@ -72,3 +72,7 @@ ul.form-control {
 }
 @include form-validation-state("valid", $form-feedback-valid-color);
 @include form-validation-state("invalid", $form-feedback-invalid-color);
+
+.custom-control-input.disabled ~ .custom-control-label {
+    color: $custom-control-label-disabled-color;
+}

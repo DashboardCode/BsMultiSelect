@@ -1,5 +1,6 @@
 # CHANGELOG
 
+0.2.8 - bug fix
 0.2.7 - hiddoen opion support
 0.2.6 - disabled option when selected is displayed with opacity (default value .65)
 0.2.5 - disabled option support

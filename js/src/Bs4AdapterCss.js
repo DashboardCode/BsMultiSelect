@@ -4,13 +4,22 @@ class Bs4AdapterCss {
         const defaults = {
             selectedPanelFocusClass : 'focus',
             selectedPanelDisabledClass: 'disabled',
-            selectedItemContentDisabledClass: 'disabled'
+            selectedItemContentDisabledClass: 'disabled',
+            dropDownItemDisabledClass: 'disabled'
         };
         this.options = $.extend({}, defaults, options);
     }
 
     DisableSelectedItemContent($content){
         $content.addClass(this.options.selectedItemContentDisabledClass )
+    }
+
+    AddDisabledStyle($dropDownItemContent){
+        $dropDownItemContent.removeClass(this.options.dropDownItemDisabledClass)
+    }
+
+    RemoveDisabledStyle($dropDownItemContent){
+        $dropDownItemContent.addClass(this.options.dropDownItemDisabledClass)
     }
 
     Enable($selectedPanel){

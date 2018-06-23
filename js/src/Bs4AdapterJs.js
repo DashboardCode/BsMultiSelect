@@ -14,7 +14,8 @@ class Bs4AdapterJs {
             selectedPanelFocusValidBoxShadow: '0 0 0 0.2rem rgba(40, 167, 69, 0.25)',
             selectedPanelFocusInvalidBoxShadow: '0 0 0 0.2rem rgba(220, 53, 69, 0.25)',
             filterInputColor: '#495057',
-            selectedItemContentDisabledOpacity: '.65'
+            selectedItemContentDisabledOpacity: '.65',
+            dropdDownLabelDisabledColor: '#6c757d'
         };
         this.options = $.extend({}, defaults, options);
     }
@@ -31,6 +32,14 @@ class Bs4AdapterJs {
 
     DisableSelectedItemContent($content){
         $content.css("opacity", this.options.selectedItemContentDisabledOpacity )
+    }
+
+    AddDisabledStyle($dropDownItemContent){
+        $dropDownItemContent.css('color', this.options.dropdDownLabelDisabledColor)
+    }
+
+    RemoveDisabledStyle($dropDownItemContent){
+        $dropDownItemContent.css('color', null)
     }
 
     UpdateSize($selectedPanel){
