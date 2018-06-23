@@ -140,6 +140,7 @@ class MultiSelect {
                 }
 
             let removeItem = () => {
+                adjustDropDownItem.removeDisabledStyle();
                 adjustDropDownItem.disable(optionElement.disabled);
                 adjustPair(false, () => {
                     selectItem();
@@ -174,7 +175,6 @@ class MultiSelect {
             $dropDownItem.data("option-toggle",  () => { 
                 if (optionElement.disabled)
                     return;
-                adjustDropDownItem.removeDisabledStyle();
                 selectItem();
             })
     }

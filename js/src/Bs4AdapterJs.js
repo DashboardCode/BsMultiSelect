@@ -39,7 +39,7 @@ class Bs4AdapterJs {
     }
 
     RemoveDisabledStyle($dropDownItemContent){
-        $dropDownItemContent.css('color', null)
+        $dropDownItemContent.css('color', '')
     }
 
     UpdateSize($selectedPanel){

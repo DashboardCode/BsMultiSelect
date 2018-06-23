@@ -111,7 +111,7 @@
       };
 
       _proto.RemoveDisabledStyle = function RemoveDisabledStyle($dropDownItemContent) {
-        $dropDownItemContent.css('color', null);
+        $dropDownItemContent.css('color', '');
       };
 
       _proto.UpdateSize = function UpdateSize($selectedPanel) {
@@ -317,6 +317,7 @@
           };
 
           var removeItem = function removeItem() {
+            adjustDropDownItem.removeDisabledStyle();
             adjustDropDownItem.disable(optionElement.disabled);
             adjustPair(false, function () {
               selectItem();
@@ -347,7 +348,6 @@
         });
         if (optionElement.selected) selectItem();else $dropDownItem.data("option-toggle", function () {
           if (optionElement.disabled) return;
-          adjustDropDownItem.removeDisabledStyle();
           selectItem();
         });
       };
