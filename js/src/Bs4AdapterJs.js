@@ -25,6 +25,7 @@ class Bs4AdapterJs {
         dom.filterInput.css("color", this.options.filterInputColor);
     }
 
+    
     CreateSelectedItemContent($selectedItem, $button){
         $selectedItem.css(defSelectedItemStyle);
         $button.css(defRemoveSelectedItemButtonStyle);
@@ -34,12 +35,8 @@ class Bs4AdapterJs {
         $content.css("opacity", this.options.selectedItemContentDisabledOpacity )
     }
 
-    AddDisabledStyle($checkBox){
-        $checkBox.siblings('label').css('color', this.options.dropdDownLabelDisabledColor)
-    }
-
-    RemoveDisabledStyle($checkBox){
-        $checkBox.siblings('label').css('color', '')
+    DisabledStyle($checkBox, isDisbaled){
+        $checkBox.siblings('label').css('color', isDisbaled?this.options.dropdDownLabelDisabledColor:'')
     }
 
     UpdateSize($selectedPanel){

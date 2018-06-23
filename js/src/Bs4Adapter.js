@@ -78,21 +78,19 @@ class Bs4Adapter {
         let disableDropDownItem = (isDisabled) => {
             $checkBox.prop('disabled', isDisabled);
         }
-        let addDisabledStyleDropDownItem = () => {
-            this.adapter.AddDisabledStyle($checkBox )
-        }
-        let removeDisabledStyleDropDownItem = () => {
-            this.adapter.RemoveDisabledStyle($checkBox)
-        }
-        
+        let dropDownItem = $dropDownItem.get(0);
+        let dropDownItemContent = $dropDownItemContent.get(0);
         let onChangeDropDownItem = (toggle) => {
             $checkBox.on("change", toggle)
+            $dropDownItem.on("click", (e) => {
+                if (e.target == dropDownItem || e.target==dropDownItemContent)
+                    toggle();
+            })
         }
-
+        let adapter = this.adapter;
         return { select: selectDropDownItem, 
                  disable: disableDropDownItem,
-                 addDisabledStyle: addDisabledStyleDropDownItem,
-                 removeDisabledStyle: removeDisabledStyleDropDownItem,
+                 disabledStyle(disabledStyle){ adapter.DisabledStyle($checkBox, disabledStyle); },
                  onChange: onChangeDropDownItem };
     }
 

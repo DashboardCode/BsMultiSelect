@@ -1,5 +1,5 @@
 /*!
-  * DashboardCode BsMultiSelect v0.2.10 (https://dashboardcode.github.io/BsMultiSelect/)
+  * DashboardCode BsMultiSelect v0.2.12 (https://dashboardcode.github.io/BsMultiSelect/)
   * Copyright 2017-2018 Roman Pokrovskij (github user rpokrovskij)
   * Licensed under APACHE 2 (https://github.com/DashboardCode/BsMultiSelect/blob/master/LICENSE)
   */
@@ -31,12 +31,9 @@
         $content.addClass(this.options.selectedItemContentDisabledClass);
       };
 
-      _proto.AddDisabledStyle = function AddDisabledStyle($checkBox) {
-        $checkBox.addClass(this.options.dropDownItemDisabledClass);
-      };
-
-      _proto.RemoveDisabledStyle = function RemoveDisabledStyle($checkBox) {
-        $checkBox.removeClass(this.options.dropDownItemDisabledClass);
+      _proto.DisabledStyle = function DisabledStyle($checkBox, isDisbaled) {
+        if (isDisbaled) //? $checkBox.addClass : $checkBox.removeClass
+          $checkBox.addClass(this.options.dropDownItemDisabledClass);else $checkBox.removeClass(this.options.dropDownItemDisabledClass);
       };
 
       _proto.Enable = function Enable($selectedPanel) {
@@ -106,12 +103,8 @@
         $content.css("opacity", this.options.selectedItemContentDisabledOpacity);
       };
 
-      _proto.AddDisabledStyle = function AddDisabledStyle($checkBox) {
-        $checkBox.siblings('label').css('color', this.options.dropdDownLabelDisabledColor);
-      };
-
-      _proto.RemoveDisabledStyle = function RemoveDisabledStyle($checkBox) {
-        $checkBox.siblings('label').css('color', '');
+      _proto.DisabledStyle = function DisabledStyle($checkBox, isDisbaled) {
+        $checkBox.siblings('label').css('color', isDisbaled ? this.options.dropdDownLabelDisabledColor : '');
       };
 
       _proto.UpdateSize = function UpdateSize($selectedPanel) {
@@ -296,7 +289,7 @@
         var adjustDropDownItem = this.adapter.CreateDropDownItemContent($dropDownItem, optionElement.value, itemText);
         var isDisabled = optionElement.disabled;
         var isSelected = optionElement.selected;
-        if (isSelected && isDisabled) adjustDropDownItem.addDisabledStyle();else adjustDropDownItem.disable(isDisabled);
+        if (isSelected && isDisabled) adjustDropDownItem.disabledStyle(true);else adjustDropDownItem.disable(isDisabled);
         adjustDropDownItem.onChange(function () {
           var toggleItem = $dropDownItem.data("option-toggle");
           toggleItem();
@@ -317,7 +310,7 @@
           };
 
           var removeItem = function removeItem() {
-            adjustDropDownItem.removeDisabledStyle();
+            adjustDropDownItem.disabledStyle(false);
             adjustDropDownItem.disable(optionElement.disabled);
             adjustPair(false, function () {
               selectItem();
@@ -569,6 +562,10 @@
           if (event.which == 38) {
             _this3.keydownArrow(false);
           } else if (event.which == 40) {
+            if (_this3.hoveredDropDownItem === null && _this3.hasDropDownVisible) {
+              _this3.showDropDown();
+            }
+
             _this3.keydownArrow(true);
           } else if (event.which == 9) {
             if (!_this3.filterInput.value) {
@@ -763,8 +760,6 @@
 
 
       _proto.CreateDropDownItemContent = function CreateDropDownItemContent($dropDownItem, optionId, itemText) {
-        var _this = this;
-
         var checkBoxId = this.classes.containerClass + "-" + this.hiddenSelect.name.toLowerCase() + "-generated-id-" + optionId.toLowerCase();
         var $dropDownItemContent = this.$("<div class=\"custom-control custom-checkbox\">\n            <input type=\"checkbox\" class=\"custom-control-input\" id=\"" + checkBoxId + "\">\n            <label class=\"custom-control-label\" for=\"" + checkBoxId + "\">" + itemText + "</label>\n        </div>");
         $dropDownItemContent.appendTo($dropDownItem);
@@ -779,23 +774,23 @@
           $checkBox.prop('disabled', isDisabled);
         };
 
-        var addDisabledStyleDropDownItem = function addDisabledStyleDropDownItem() {
-          _this.adapter.AddDisabledStyle($checkBox);
-        };
-
-        var removeDisabledStyleDropDownItem = function removeDisabledStyleDropDownItem() {
-          _this.adapter.RemoveDisabledStyle($checkBox);
-        };
+        var dropDownItem = $dropDownItem.get(0);
+        var dropDownItemContent = $dropDownItemContent.get(0);
 
         var onChangeDropDownItem = function onChangeDropDownItem(toggle) {
           $checkBox.on("change", toggle);
+          $dropDownItem.on("click", function (e) {
+            if (e.target == dropDownItem || e.target == dropDownItemContent) toggle();
+          });
         };
 
+        var adapter = this.adapter;
         return {
           select: selectDropDownItem,
           disable: disableDropDownItem,
-          addDisabledStyle: addDisabledStyleDropDownItem,
-          removeDisabledStyle: removeDisabledStyleDropDownItem,
+          disabledStyle: function disabledStyle(_disabledStyle) {
+            adapter.DisabledStyle($checkBox, _disabledStyle);
+          },
           onChange: onChangeDropDownItem
         };
       };

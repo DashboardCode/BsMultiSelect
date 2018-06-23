@@ -117,7 +117,7 @@ class MultiSelect {
         let isSelected = optionElement.selected;
 
         if (isSelected && isDisabled)
-            adjustDropDownItem.addDisabledStyle();
+            adjustDropDownItem.disabledStyle(true);
         else
             adjustDropDownItem.disable(isDisabled);
        
@@ -140,7 +140,7 @@ class MultiSelect {
                 }
 
             let removeItem = () => {
-                adjustDropDownItem.removeDisabledStyle();
+                adjustDropDownItem.disabledStyle(false);
                 adjustDropDownItem.disable(optionElement.disabled);
                 adjustPair(false, () => {
                     selectItem();
@@ -168,7 +168,7 @@ class MultiSelect {
         $dropDownItem
             .mouseover(() => this.adapter.HoverIn($dropDownItem))
             .mouseout(() => this.adapter.HoverOut($dropDownItem));
-
+        
         if (optionElement.selected)
             selectItem();
         else
@@ -372,6 +372,9 @@ class MultiSelect {
                 this.keydownArrow(false);
             }
             else if (event.which == 40) {
+                if (this.hoveredDropDownItem === null && this.hasDropDownVisible) {
+                    this.showDropDown();
+                }
                 this.keydownArrow(true);
             }
             else if (event.which == 9) {
