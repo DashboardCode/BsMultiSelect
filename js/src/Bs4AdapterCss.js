@@ -14,12 +14,12 @@ class Bs4AdapterCss {
         $content.addClass(this.options.selectedItemContentDisabledClass )
     }
 
-    AddDisabledStyle($dropDownItemContent){
-        $dropDownItemContent.removeClass(this.options.dropDownItemDisabledClass)
+    AddDisabledStyle($checkBox){
+        $checkBox.addClass(this.options.dropDownItemDisabledClass)
     }
 
-    RemoveDisabledStyle($dropDownItemContent){
-        $dropDownItemContent.addClass(this.options.dropDownItemDisabledClass)
+    RemoveDisabledStyle($checkBox){
+        $checkBox.removeClass(this.options.dropDownItemDisabledClass)
     }
 
     Enable($selectedPanel){

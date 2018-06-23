@@ -1,5 +1,5 @@
 /*!
-  * DashboardCode BsMultiSelect v0.2.8 (https://dashboardcode.github.io/BsMultiSelect/)
+  * DashboardCode BsMultiSelect v0.2.10 (https://dashboardcode.github.io/BsMultiSelect/)
   * Copyright 2017-2018 Roman Pokrovskij (github user rpokrovskij)
   * Licensed under APACHE 2 (https://github.com/DashboardCode/BsMultiSelect/blob/master/LICENSE)
   */
@@ -31,12 +31,12 @@
         $content.addClass(this.options.selectedItemContentDisabledClass);
       };
 
-      _proto.AddDisabledStyle = function AddDisabledStyle($dropDownItemContent) {
-        $dropDownItemContent.removeClass(this.options.dropDownItemDisabledClass);
+      _proto.AddDisabledStyle = function AddDisabledStyle($checkBox) {
+        $checkBox.addClass(this.options.dropDownItemDisabledClass);
       };
 
-      _proto.RemoveDisabledStyle = function RemoveDisabledStyle($dropDownItemContent) {
-        $dropDownItemContent.addClass(this.options.dropDownItemDisabledClass);
+      _proto.RemoveDisabledStyle = function RemoveDisabledStyle($checkBox) {
+        $checkBox.removeClass(this.options.dropDownItemDisabledClass);
       };
 
       _proto.Enable = function Enable($selectedPanel) {
@@ -106,12 +106,12 @@
         $content.css("opacity", this.options.selectedItemContentDisabledOpacity);
       };
 
-      _proto.AddDisabledStyle = function AddDisabledStyle($dropDownItemContent) {
-        $dropDownItemContent.css('color', this.options.dropdDownLabelDisabledColor);
+      _proto.AddDisabledStyle = function AddDisabledStyle($checkBox) {
+        $checkBox.siblings('label').css('color', this.options.dropdDownLabelDisabledColor);
       };
 
-      _proto.RemoveDisabledStyle = function RemoveDisabledStyle($dropDownItemContent) {
-        $dropDownItemContent.css('color', '');
+      _proto.RemoveDisabledStyle = function RemoveDisabledStyle($checkBox) {
+        $checkBox.siblings('label').css('color', '');
       };
 
       _proto.UpdateSize = function UpdateSize($selectedPanel) {
@@ -780,11 +780,11 @@
         };
 
         var addDisabledStyleDropDownItem = function addDisabledStyleDropDownItem() {
-          _this.adapter.AddDisabledStyle($dropDownItemContent);
+          _this.adapter.AddDisabledStyle($checkBox);
         };
 
         var removeDisabledStyleDropDownItem = function removeDisabledStyleDropDownItem() {
-          _this.adapter.RemoveDisabledStyle($dropDownItemContent);
+          _this.adapter.RemoveDisabledStyle($checkBox);
         };
 
         var onChangeDropDownItem = function onChangeDropDownItem(toggle) {

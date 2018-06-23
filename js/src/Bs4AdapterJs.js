@@ -34,12 +34,12 @@ class Bs4AdapterJs {
         $content.css("opacity", this.options.selectedItemContentDisabledOpacity )
     }
 
-    AddDisabledStyle($dropDownItemContent){
-        $dropDownItemContent.css('color', this.options.dropdDownLabelDisabledColor)
+    AddDisabledStyle($checkBox){
+        $checkBox.siblings('label').css('color', this.options.dropdDownLabelDisabledColor)
     }
 
-    RemoveDisabledStyle($dropDownItemContent){
-        $dropDownItemContent.css('color', '')
+    RemoveDisabledStyle($checkBox){
+        $checkBox.siblings('label').css('color', '')
     }
 
     UpdateSize($selectedPanel){

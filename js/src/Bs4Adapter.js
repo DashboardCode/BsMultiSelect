@@ -79,10 +79,10 @@ class Bs4Adapter {
             $checkBox.prop('disabled', isDisabled);
         }
         let addDisabledStyleDropDownItem = () => {
-            this.adapter.AddDisabledStyle($dropDownItemContent)
+            this.adapter.AddDisabledStyle($checkBox )
         }
         let removeDisabledStyleDropDownItem = () => {
-            this.adapter.RemoveDisabledStyle($dropDownItemContent)
+            this.adapter.RemoveDisabledStyle($checkBox)
         }
         
         let onChangeDropDownItem = (toggle) => {
