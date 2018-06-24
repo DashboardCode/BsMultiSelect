@@ -72,26 +72,22 @@ class Bs4Adapter {
         let $checkBox = $dropDownItemContent.find(`INPUT[type="checkbox"]`);
         $dropDownItem.addClass(this.classes.dropDownItemClass);
 
-        let selectDropDownItem = (isSelected) => {
-            $checkBox.prop('checked', isSelected);
-        }
-        let disableDropDownItem = (isDisabled) => {
-            $checkBox.prop('disabled', isDisabled);
-        }
         let dropDownItem = $dropDownItem.get(0);
         let dropDownItemContent = $dropDownItemContent.get(0);
-        let onChangeDropDownItem = (toggle) => {
-            $checkBox.on("change", toggle)
-            $dropDownItem.on("click", (e) => {
-                if (e.target == dropDownItem || e.target==dropDownItemContent)
-                    toggle();
-            })
-        }
+ 
         let adapter = this.adapter;
-        return { select: selectDropDownItem, 
-                 disable: disableDropDownItem,
-                 disabledStyle(disabledStyle){ adapter.DisabledStyle($checkBox, disabledStyle); },
-                 onChange: onChangeDropDownItem };
+        return { 
+            select(isSelected){ $checkBox.prop('checked', isSelected); }, 
+            disable(isDisabled){ $checkBox.prop('disabled', isDisabled); },
+            disabledStyle(disabledStyle){ adapter.DisabledStyle($checkBox, disabledStyle); },
+            onSelected(toggle) {
+                    $checkBox.on("change", toggle)
+                    $dropDownItem.on("click", (e) => {
+                        if (e.target == dropDownItem || e.target == dropDownItemContent)
+                            toggle();
+                    })
+            }
+        }
     }
 
     CreateSelectedItemContent($selectedItem, itemText, removeSelectedItem, controlDisabled, optionDisabled){

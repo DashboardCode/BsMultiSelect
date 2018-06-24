@@ -118,10 +118,10 @@ class MultiSelect {
 
         if (isSelected && isDisabled)
             adjustDropDownItem.disabledStyle(true);
-        else
+        else if (isDisabled)
             adjustDropDownItem.disable(isDisabled);
        
-        adjustDropDownItem.onChange(() => {
+        adjustDropDownItem.onSelected(() => {
             let toggleItem = $dropDownItem.data("option-toggle");
             toggleItem();
             this.filterInput.focus();
@@ -133,16 +133,18 @@ class MultiSelect {
             let $selectedItem = this.$("<LI/>")
             
             let adjustPair =(isSelected, toggle, remove) => {
-                    optionElement.selected = isSelected;
-                    adjustDropDownItem.select(isSelected);
-                    $dropDownItem.data("option-toggle", toggle);                    
-                    $selectedItem.data("option-remove", remove)
-                }
+                optionElement.selected = isSelected;
+                adjustDropDownItem.select(isSelected);
+                $dropDownItem.data("option-toggle", toggle);                    
+                $selectedItem.data("option-remove", remove)
+            }
 
             let removeItem = () => {
                 adjustDropDownItem.disabledStyle(false);
                 adjustDropDownItem.disable(optionElement.disabled);
                 adjustPair(false, () => {
+                    if (optionElement.disabled)
+                        return;
                     selectItem();
                     this.$selectElement.trigger('change');
                 }, null, true)

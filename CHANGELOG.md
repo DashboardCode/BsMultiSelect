@@ -1,5 +1,6 @@
 # CHANGELOG
 
+0.2.13 - bug fix
 0.2.12 - open autosuggest on arrow down (40)
 0.2.8-11 - bug fixes
 0.2.7 - hidden option support

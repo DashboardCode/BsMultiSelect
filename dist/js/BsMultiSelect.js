@@ -1,5 +1,5 @@
 /*!
-  * DashboardCode BsMultiSelect v0.2.12 (https://dashboardcode.github.io/BsMultiSelect/)
+  * DashboardCode BsMultiSelect v0.2.13 (https://dashboardcode.github.io/BsMultiSelect/)
   * Copyright 2017-2018 Roman Pokrovskij (github user rpokrovskij)
   * Licensed under APACHE 2 (https://github.com/DashboardCode/BsMultiSelect/blob/master/LICENSE)
   */
@@ -289,8 +289,8 @@
         var adjustDropDownItem = this.adapter.CreateDropDownItemContent($dropDownItem, optionElement.value, itemText);
         var isDisabled = optionElement.disabled;
         var isSelected = optionElement.selected;
-        if (isSelected && isDisabled) adjustDropDownItem.disabledStyle(true);else adjustDropDownItem.disable(isDisabled);
-        adjustDropDownItem.onChange(function () {
+        if (isSelected && isDisabled) adjustDropDownItem.disabledStyle(true);else if (isDisabled) adjustDropDownItem.disable(isDisabled);
+        adjustDropDownItem.onSelected(function () {
           var toggleItem = $dropDownItem.data("option-toggle");
           toggleItem();
 
@@ -313,6 +313,7 @@
             adjustDropDownItem.disabledStyle(false);
             adjustDropDownItem.disable(optionElement.disabled);
             adjustPair(false, function () {
+              if (optionElement.disabled) return;
               selectItem();
 
               _this2.$selectElement.trigger('change');
@@ -765,33 +766,25 @@
         $dropDownItemContent.appendTo($dropDownItem);
         var $checkBox = $dropDownItemContent.find("INPUT[type=\"checkbox\"]");
         $dropDownItem.addClass(this.classes.dropDownItemClass);
-
-        var selectDropDownItem = function selectDropDownItem(isSelected) {
-          $checkBox.prop('checked', isSelected);
-        };
-
-        var disableDropDownItem = function disableDropDownItem(isDisabled) {
-          $checkBox.prop('disabled', isDisabled);
-        };
-
         var dropDownItem = $dropDownItem.get(0);
         var dropDownItemContent = $dropDownItemContent.get(0);
-
-        var onChangeDropDownItem = function onChangeDropDownItem(toggle) {
-          $checkBox.on("change", toggle);
-          $dropDownItem.on("click", function (e) {
-            if (e.target == dropDownItem || e.target == dropDownItemContent) toggle();
-          });
-        };
-
         var adapter = this.adapter;
         return {
-          select: selectDropDownItem,
-          disable: disableDropDownItem,
+          select: function select(isSelected) {
+            $checkBox.prop('checked', isSelected);
+          },
+          disable: function disable(isDisabled) {
+            $checkBox.prop('disabled', isDisabled);
+          },
           disabledStyle: function disabledStyle(_disabledStyle) {
             adapter.DisabledStyle($checkBox, _disabledStyle);
           },
-          onChange: onChangeDropDownItem
+          onSelected: function onSelected(toggle) {
+            $checkBox.on("change", toggle);
+            $dropDownItem.on("click", function (e) {
+              if (e.target == dropDownItem || e.target == dropDownItemContent) toggle();
+            });
+          }
         };
       };
 
