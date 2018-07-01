@@ -1,6 +1,6 @@
 {
   "name": "@dashboardcode/bsmultiselect",
-  "version": "0.2.14",
+  "version": "0.2.15",
   "private": false,
   "description": "Bootstrap 4 component - MultiSelect",
   "homepage": "https://dashboardcode.github.io/BsMultiSelect/",
@@ -13,7 +13,6 @@
     "url": "https://github.com/DashboardCode/BsMultiSelect/issues"
   },
   "dependencies": {
-    "@babel/polyfill": "^7.0.0-beta.51",
     "jquery": "^3.3.1",
     "popper.js": "^1.14.3"
   },
@@ -24,6 +23,7 @@
     "@babel/plugin-external-helpers": "^7.0.0-beta.51",
     "@babel/plugin-transform-spread": "^7.0.0-beta.51",
     "@babel/preset-env": "^7.0.0-beta.51",
+    "@babel/polyfill": "^7.0.0-beta.51",
     "autoprefixer": "^8.6.4",
     "babel-eslint": "^8.2.5",
     "bootstrap": "^4.1.1",
