@@ -1,5 +1,5 @@
 {
-  "name": "@dashboardcode/bsmutltiselect",
+  "name": "@dashboardcode/bsmultiselect",
   "version": "0.2.14",
   "private": false,
   "description": "Bootstrap 4 component - MultiSelect",
@@ -67,7 +67,7 @@
     "scss/"
   ],
   "keywords": [
-    "bootstrap mutltiselect multiline component"
+    "bootstrap multiselect multiline component"
   ],
   "author": "Roman Pokrovskij (github user rpokrovskij)",
   "bundlesize": [

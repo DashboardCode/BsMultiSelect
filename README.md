@@ -10,7 +10,7 @@ Plugin follows Bootstrap 4 conventions and use the same instruments (babel, sass
 ![image](https://user-images.githubusercontent.com/11598038/39988733-cda205e2-5770-11e8-8ca2-0d30cefc3ca1.png)
 
 # Install
-`npm install @dashboardcode/bsmutltiselect`
+`npm install @dashboardcode/bsmultiselect`
 
 # Architecture
 Instead of using BS4 Dropdown component (it is not possible since BS Dropdown requires presence of `toggle-buttons` https://github.com/twbs/bootstrap/issues/26420) the plugin uses popper.js directly.
