@@ -153,7 +153,7 @@ Note, BS allready provide classes like: `h-25`, `bg-light`, `text-primary` that 
 
 * it was not tested on bootstrap dialog
 
-* no 'smart tracking' of dynamic changes in options - do detach/attach
+* no 'smart tracking' of dynamic changes in options - do detach/attach at the end of changes
 
 * no placeholder support (`data-placeholder` or smth like this)
 
