@@ -17,7 +17,7 @@ Instead of using BS4 Dropdown component (it is not possible since BS Dropdown re
 
 Inspite of this the plugin utilize `dropdown-menu` class. Menu items contains BS4 Custom checkboxes.
 
-Additionally those BS4 classes where used:
+Other BS4 classes were used:
 
 * `form-control` class - it is applied to `ul` that emulates `input`
 
