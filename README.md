@@ -53,17 +53,19 @@ If your theme changes those variables, you need to update them on the plugin ini
 
 ## Features
 
-**disabled / readonly select**: although there is difference between those two attributes for `input`, the HTML 5.2 support only `disabled` for [`select`](https://www.w3.org/TR/2017/REC-html52-20171214/sec-forms.html#the-select-element) element. `Readonly` attribute on original `select` will be ignored.
+**multiline**: input can grow vertically;
 
-**`<option disabled selected>`**: option that is `disabled` and `selected` at the same time can be deselected but can't be selected again (just as it is in HTML `select` and unlike `chosen.js`).
+**disabled / readonly select**: although there is difference between those two attributes for `input`, the HTML 5.2 support only `disabled` for [`select`](https://www.w3.org/TR/2017/REC-html52-20171214/sec-forms.html#the-select-element) element. `Readonly` attribute on original `select` will be ignored;
 
-**`<option hidden>`**: options with `hidden` property are ... hidden. You can't deselect them either. This is exactly how HTML5.2 works, but many other plugins show hidden options.
+**`<option disabled selected>`**: option that is `disabled` and `selected` at the same time can be deselected but can't be selected again (just as it is in HTML `select` and unlike `chosen.js`);
 
-**change event**: subscribe to original `select` change event.
+**`<option hidden>`**: options with `hidden` property are ... hidden. You can't deselect them either. This is exactly how HTML5.2 works, but many other plugins show hidden options;
 
-**`<label>`**: Click on the label puts focus on input and opens the dropdown.
+**change event**: subscribe to original `select` change event;
 
-**`<optgroup label=".." >`** grouped options will be flatten; there is no sense mixing "Browse Tree" and "Autosuggest popup" UI expirience. Even if it is possible, I consider this as true: "code that don't exist is infinitely performant and extremely easy to maintain and document." (c) Heydon Pickering
+**`<label>`**: Click on the label puts focus on input and opens the dropdown;
+
+**`<optgroup label=".." >`** grouped options will be flatten; there is no sense mixing "Browse Tree" and "Autosuggest popup" UI expirience. Even if it is possible, I consider this as true: "code that don't exist is infinitely performant and extremely easy to maintain and document." (c) Heydon Pickering;
 
 **CSS and SCSS**: you can copy BsMultiSelect.css (included to distribution) and update values manually for your theme.
 Or you can use [./scss/BsMultiSelect.scss](https://github.com/DashboardCode/BsMultiSelect/blob/master/scss/BsMultiSelect.scss) copy it to your project and update reference to your custom BS variables in yout theme); these requires such configuration:
