@@ -3,9 +3,9 @@
 
 There are many similar plugins but this is small and clear since reuses maximum of bootrap 4 styles and code (BsMultiSelect size is 15KB+2KB js+css minified).
 
-In many cases it can be adjusted for your theme without editing CSS. You can adjust some theme parameters in JS or you can copy [./scss/BsMultiSelect.scss](https://github.com/DashboardCode/BsMultiSelect/blob/master/scss/BsMultiSelect.scss) to your SASS project (it utilize bootstrap variables).
+In many cases it can be adjusted for your theme without editing CSS. Optionally you can adjust some theme parameters in JS or you can copy [./scss/BsMultiSelect.scss](https://github.com/DashboardCode/BsMultiSelect/blob/master/scss/BsMultiSelect.scss) to your SASS project (it utilize bootstrap variables).
 
-Plugin follows Bootstrap 4 conventions and use the same instruments (babel, sass, rollup) so pretend to present a BS team modern plugin's **boilerplate**.
+Plugin follows Bootstrap 4 conventions and use the same instruments (babel, sass, rollup) so pretend to represent a BS team's modern plugin's **boilerplate**. Learning it you will be familar with Bootstrap components development.
 
 ![image](https://user-images.githubusercontent.com/11598038/39988733-cda205e2-5770-11e8-8ca2-0d30cefc3ca1.png)
 
@@ -17,7 +17,7 @@ Instead of using BS4 Dropdown component (it is not possible since BS Dropdown re
 
 Inspite of this the plugin utilize `dropdown-menu` class. Menu items contains BS4 Custom checkboxes.
 
-Additionally those BS4 classes where used:
+Other BS4 classes were used:
 
 * `form-control` class - it is applied to `ul` that emulates `input`
 
@@ -53,19 +53,21 @@ If your theme changes those variables, you need to update them on the plugin ini
 
 ## Features
 
-**disabled / readonly select**: although there is difference between those two attributes for `input`, the HTML 5.2 support only `disabled` for [`select`](https://www.w3.org/TR/2017/REC-html52-20171214/sec-forms.html#the-select-element) element. `Readonly` attribute on original `select` will be ignored.
+**multiline**: input can grow vertically;
 
-**`<option disabled selected>`**: option that is `disabled` and `selected` at the same time can be deselected but can't be selected again (just as it is in HTML `select` and unlike `chosen.js`).
+**disabled / readonly select**: although there is difference between those two attributes for `input`, the HTML 5.2 support only `disabled` for [`select`](https://www.w3.org/TR/2017/REC-html52-20171214/sec-forms.html#the-select-element) element. `Readonly` attribute on original `select` will be ignored;
 
-**`<option hidden>`**: options with `hidden` property are ... hidden. You can't deselect them either. This is exactly how HTML5.2 works, but many other plugins show hidden options.
+**`<option disabled selected>`**: option that is `disabled` and `selected` at the same time can be deselected but can't be selected again (just as it is in HTML `select` and unlike `chosen.js`);
 
-**change event**: subscribe to original `select` change event.
+**`<option hidden>`**: options with `hidden` property are ... hidden. You can't deselect them either. This is exactly how HTML5.2 works, but many other plugins show hidden options;
 
-**`<label>`**: Click on the label puts focus on input and opens the dropdown.
+**change event**: subscribe to original `select` change event;
 
-**`<optgroup label=".." >`** grouped options will be flatten; there is no sense mixing "Browse Tree" and "Autosuggest popup" UI expirience. Even if it is possible, I consider this as true: "code that don't exist is infinitely performant and extremely easy to maintain and document." (c) Heydon Pickering
+**`<label>`**: Click on the label puts focus on input and opens the dropdown;
 
-**SCSS**: you can copy BsMultiSelect.css (included to distribution) and update values manually for your theme.
+**`<optgroup label=".." >`** grouped options will be flatten; there is no sense mixing "Browse Tree" and "Autosuggest popup" UI expirience. Even if it is possible, I consider this as true: "code that don't exist is infinitely performant and extremely easy to maintain and document." (c) Heydon Pickering;
+
+**CSS and SCSS**: you can copy BsMultiSelect.css (included to distribution) and update values manually for your theme.
 Or you can use [./scss/BsMultiSelect.scss](https://github.com/DashboardCode/BsMultiSelect/blob/master/scss/BsMultiSelect.scss) copy it to your project and update reference to your custom BS variables in yout theme); these requires such configuration:
 
 ````
@@ -152,6 +154,8 @@ Note, BS allready provide classes like: `h-25`, `bg-light`, `text-primary` that 
 * Tested only for IE11, Chrome 66, Edge 42/17;
 
 * it was not tested on bootstrap dialog
+
+* no 'smart tracking' of dynamic changes in options - do detach/attach at the end of changes
 
 * no placeholder support (`data-placeholder` or smth like this)
 
