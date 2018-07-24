@@ -1,5 +1,5 @@
 /*!
-  * DashboardCode BsMultiSelect v0.2.16-beta (https://dashboardcode.github.io/BsMultiSelect/)
+  * DashboardCode BsMultiSelect v0.2.16 (https://dashboardcode.github.io/BsMultiSelect/)
   * Copyright 2017-2018 Roman Pokrovskij (github user rpokrovskij)
   * Licensed under APACHE 2 (https://github.com/DashboardCode/BsMultiSelect/blob/master/LICENSE)
   */
@@ -56,7 +56,8 @@
     }();
 
     var defSelectedPanelStyle = {
-      'margin-bottom': '0'
+      'margin-bottom': '0',
+      'height': 'initial'
     };
     var defSelectedItemStyle = {
       'padding-left': '0px',

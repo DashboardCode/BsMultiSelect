@@ -1,4 +1,5 @@
 ul.form-control {
+  height: "initial";
   min-height: calc(2.25rem + 2px);
   margin-bottom: 0;
 }
