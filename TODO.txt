@@ -1,3 +1,21 @@
+new plugins
+https://habr.com/company/ruvds/blog/425313/
+
+webpack tricks
+https://habr.com/post/425215/
+
+Port to web component (habr user justboris).
+http://jsfiddle.net/gc1rynmf/9/
+https://developer.mozilla.org/en-US/docs/Web/Web_Components/Using_custom_elements
+compare how bootstrap manage this with nojquery build
+compare also with other alternatives https://github.com/thednp/bootstrap.native
+
+most important for ws : registration through customElements.define('my-component', MyComponent);
+check what other uses ? https://github.com/webcomponents/webcomponentsjs ?
+
+http://jsfiddle.net/bvL8wq0n/3/
+https://www.webcomponents.org/polyfills/
+
 RTL, how to do it without huge css growing?
 1) check how BS checkbox / dismissable badge  look in rtl
 2) read this https://habr.com/company/2gis/blog/416635/

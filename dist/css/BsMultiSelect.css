@@ -1,5 +1,5 @@
 ul.form-control {
-  height: initial;
+  height: auto;
   min-height: calc(2.25rem + 2px);
   margin-bottom: 0;
 }

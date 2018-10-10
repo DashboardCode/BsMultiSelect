@@ -1,4 +1,4 @@
-const defSelectedPanelStyle = {'margin-bottom': '0', 'height': 'initial'};
+const defSelectedPanelStyle = {'margin-bottom': '0', 'height': 'auto'};
 const defSelectedItemStyle = {'padding-left': '0px', 'line-height': '1.5em'};
 const defRemoveSelectedItemButtonStyle = {'font-size':'1.5em', 'line-height': '.9em'};
 
