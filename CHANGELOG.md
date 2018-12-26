@@ -1,4 +1,5 @@
 # CHANGELOG
+0.2.19 - minor changes related to the rollup.js update - define global as self if it was not defined - important only for module imports scenarious
 0.2.18 - input's height 'initial' changed  to height 'auto' (to support IE11)
 0.2.17 - bug fixes (grab newest BsMultiSelect.scss if you use useCss=true)
 0.2.16 - support Bootstrap 4.1.3 and its fixed height .form-control (grab newest BsMultiSelect.scss if you use useCss=true)

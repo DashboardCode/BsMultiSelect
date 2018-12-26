@@ -151,25 +151,31 @@ Note, BS allready provide classes like: `h-25`, `bg-light`, `text-primary` that 
 
 
 ### Known issues
-* Tested only for IE11, Chrome 66, Edge 42/17;
+* Tested only for IE11, Chrome 66, Edge 42/17; Browser should support 'display':'flex' (IE 9 doesn't); 
 
 * it was not tested on bootstrap dialog
 
-* no 'smart tracking' of dynamic changes in options - do detach/attach at the end of changes
+* no 'smart tracking' of dynamic changes in options - do detach/attach at the end of changes (this is actally not a issue, but desing feature)
 
 * no placeholder support (`data-placeholder` or smth like this)
 
 * `<fieldset disabled>` not supported;
 
-* no rtl (right to left)
+* no rtl (right to left) - as the whole Boostrap 4;
 
 * no max selected, no "no result" message on empty filter, no ajax or json as source
 
-* no smart disabling on mobile devices
+* no smart disabling on mobile devices (do it manually)
 
 * Usually you still need css to patch some plugin element's styles to fix unexpected theme effects (e.g. in dark themes BS close button could be made white by theme, when you not expect it, then `.badge > close {color:black;}` fix the problem );
 
 * Memory leaks: as I see there is soemthing like several KB memory leak (that can be ignored since as I know every jquery plugin "attach/detach" have same effects) on each attach/detach (compiled objects, not nodes) but I can't identify its source (jquery, bootstrap utilities?). If you have knowledge to solve this puzzle: try yourself and experiment with attach/detach and memory snapshots there https://dashboardcode.github.io/BsMultiSelect/ 
+
+* autosuggestions's list could be too long if your filter is weak (and items number in it is not configurable)
+
+### Future development
+
+It should be ready for BS 5 that means for "no jquery". Biggest analytical problem : should it be splitted to several npm packages. Please contact me if you want to discuss it.  
 
 ### Alternatives:
 

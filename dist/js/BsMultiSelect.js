@@ -1,16 +1,16 @@
 /*!
-  * DashboardCode BsMultiSelect v0.2.18 (https://dashboardcode.github.io/BsMultiSelect/)
+  * DashboardCode BsMultiSelect v0.2.19 (https://dashboardcode.github.io/BsMultiSelect/)
   * Copyright 2017-2018 Roman Pokrovskij (github user rpokrovskij)
   * Licensed under APACHE 2 (https://github.com/DashboardCode/BsMultiSelect/blob/master/LICENSE)
   */
 (function (global, factory) {
-    typeof exports === 'object' && typeof module !== 'undefined' ? factory(require('popper.js'), require('jquery')) :
-    typeof define === 'function' && define.amd ? define(['popper.js', 'jquery'], factory) :
-    (factory(global.Popper,global.jQuery));
-}(this, (function (Popper,$) { 'use strict';
+    typeof exports === 'object' && typeof module !== 'undefined' ? factory(require('jquery'), require('popper.js')) :
+    typeof define === 'function' && define.amd ? define(['jquery', 'popper.js'], factory) :
+    (global = global || self, factory(global.jQuery, global.Popper));
+}(this, function ($, Popper) { 'use strict';
 
-    Popper = Popper && Popper.hasOwnProperty('default') ? Popper['default'] : Popper;
     $ = $ && $.hasOwnProperty('default') ? $['default'] : $;
+    Popper = Popper && Popper.hasOwnProperty('default') ? Popper['default'] : Popper;
 
     var Bs4AdapterCss =
     /*#__PURE__*/
@@ -227,8 +227,8 @@
 
       _proto.showDropDown = function showDropDown() {
         this.dropDownMenu.style.display = 'block';
-      }; // Public methods
-
+      } // Public methods
+      ;
 
       _proto.resetDropDownMenuHover = function resetDropDownMenuHover() {
         if (this.hoveredDropDownItem !== null) {
@@ -743,8 +743,8 @@
         }
 
         return null;
-      }; // ------------------------------------------
-
+      } // ------------------------------------------
+      ;
 
       _proto.Init = function Init(dom) {
         dom.container.addClass(this.classes.containerClass);
@@ -758,8 +758,8 @@
 
       _proto.Dispose = function Dispose() {
         if (this.bs4LabelDispose) this.bs4LabelDispose();
-      }; // ------------------------
-
+      } // ------------------------
+      ;
 
       _proto.CreateDropDownItemContent = function CreateDropDownItemContent($dropDownItem, optionId, itemText) {
         var checkBoxId = this.classes.containerClass + "-" + this.hiddenSelect.name.toLowerCase() + "-generated-id-" + optionId.toLowerCase();
@@ -796,8 +796,8 @@
         $selectedItem.addClass(this.classes.selectedItemClass);
         $button.addClass(this.classes.removeSelectedItemButtonClass);
         if (this.adapter.CreateSelectedItemContent) this.adapter.CreateSelectedItemContent($selectedItem, $button);
-      }; // -----------------------
-
+      } // -----------------------
+      ;
 
       _proto.IsClickToOpenDropdown = function IsClickToOpenDropdown(event) {
         var target = event.target;
@@ -858,5 +858,5 @@
       }, $$$1);
     })(window, $);
 
-})));
+}));
 //# sourceMappingURL=BsMultiSelect.js.map
