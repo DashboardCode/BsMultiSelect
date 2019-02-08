@@ -1,6 +1,6 @@
 /*!
   * DashboardCode BsMultiSelect v0.2.19 (https://dashboardcode.github.io/BsMultiSelect/)
-  * Copyright 2017-2018 Roman Pokrovskij (github user rpokrovskij)
+  * Copyright 2017-2019 Roman Pokrovskij (github user rpokrovskij)
   * Licensed under APACHE 2 (https://github.com/DashboardCode/BsMultiSelect/blob/master/LICENSE)
   */
 (function (global, factory) {
