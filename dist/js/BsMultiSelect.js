@@ -15,14 +15,14 @@
     var Bs4AdapterCss =
     /*#__PURE__*/
     function () {
-      function Bs4AdapterCss(options, $$$1) {
+      function Bs4AdapterCss(options, $) {
         var defaults = {
           selectedPanelFocusClass: 'focus',
           selectedPanelDisabledClass: 'disabled',
           selectedItemContentDisabledClass: 'disabled',
           dropDownItemDisabledClass: 'disabled'
         };
-        this.options = $$$1.extend({}, defaults, options);
+        this.options = $.extend({}, defaults, options);
       }
 
       var _proto = Bs4AdapterCss.prototype;
@@ -71,7 +71,7 @@
     var Bs4AdapterJs =
     /*#__PURE__*/
     function () {
-      function Bs4AdapterJs(options, $$$1) {
+      function Bs4AdapterJs(options, $) {
         var defaults = {
           selectedPanelDefMinHeight: 'calc(2.25rem + 2px)',
           selectedPanelLgMinHeight: 'calc(2.875rem + 2px)',
@@ -85,7 +85,7 @@
           selectedItemContentDisabledOpacity: '.65',
           dropdDownLabelDisabledColor: '#6c757d'
         };
-        this.options = $$$1.extend({}, defaults, options);
+        this.options = $.extend({}, defaults, options);
       }
 
       var _proto = Bs4AdapterJs.prototype;
@@ -173,7 +173,7 @@
     var MultiSelect =
     /*#__PURE__*/
     function () {
-      function MultiSelect(selectElement, options, onDispose, adapter, window, $$$1) {
+      function MultiSelect(selectElement, options, onDispose, adapter, window, $) {
         if (typeof Popper === 'undefined') {
           throw new TypeError('DashboardCode BsMultiSelect require Popper.js (https://popper.js.org)');
         } // readonly
@@ -183,8 +183,8 @@
         this.adapter = adapter;
         this.window = window;
         this.onDispose = onDispose;
-        this.$ = $$$1;
-        this.options = $$$1.extend({}, options);
+        this.$ = $;
+        this.options = $.extend({}, options);
         this.container = null;
         this.selectedPanel = null;
         this.filterInputItem = null;
@@ -205,8 +205,8 @@
         this.hoveredDropDownIndex = null;
         this.hasDropDownVisible = false; // jquery adapters
 
-        this.$document = $$$1(window.document);
-        this.$selectElement = $$$1(selectElement);
+        this.$document = $(window.document);
+        this.$selectElement = $(selectElement);
         this.init();
       }
 
@@ -642,7 +642,7 @@
       return MultiSelect;
     }();
 
-    function AddToJQueryPrototype(pluginName, createPlugin, $$$1) {
+    function AddToJQueryPrototype(pluginName, createPlugin, $) {
       var firstChar = pluginName.charAt(0);
       var firstCharLower = firstChar.toLowerCase();
 
@@ -651,12 +651,12 @@
       }
 
       var prototypableName = firstCharLower + pluginName.slice(1);
-      var noConflictPrototypable = $$$1.fn[prototypableName];
+      var noConflictPrototypable = $.fn[prototypableName];
       var dataKey = "DashboardCode." + pluginName;
 
       function prototypable(options) {
         return this.each(function () {
-          var $e = $$$1(this);
+          var $e = $(this);
           var instance = $e.data(dataKey);
           var isMethodName = typeof options === 'string';
 
@@ -684,14 +684,14 @@
         });
       }
 
-      $$$1.fn[prototypableName] = prototypable; // pluginName with first capitalized letter - return plugin instance for 1st $selected item
+      $.fn[prototypableName] = prototypable; // pluginName with first capitalized letter - return plugin instance for 1st $selected item
 
-      $$$1.fn[pluginName] = function () {
-        return $$$1(this).data(dataKey);
+      $.fn[pluginName] = function () {
+        return $(this).data(dataKey);
       };
 
-      $$$1.fn[prototypableName].noConflict = function () {
-        $$$1.fn[prototypableName] = noConflictPrototypable;
+      $.fn[prototypableName].noConflict = function () {
+        $.fn[prototypableName] = noConflictPrototypable;
         return prototypable;
       };
     }
@@ -703,7 +703,7 @@
     var Bs4Adapter =
     /*#__PURE__*/
     function () {
-      function Bs4Adapter(hiddenSelect, adapter, classes, $$$1) {
+      function Bs4Adapter(hiddenSelect, adapter, classes, $) {
         var defaults = {
           containerClass: 'dashboardcode-bsmultiselect',
           dropDownMenuClass: 'dropdown-menu',
@@ -715,8 +715,8 @@
           filterInputItemClass: '',
           filterInputClass: ''
         };
-        this.classes = $$$1.extend({}, defaults, classes);
-        this.$ = $$$1;
+        this.classes = $.extend({}, defaults, classes);
+        this.$ = $;
         this.hiddenSelect = hiddenSelect;
         this.adapter = adapter;
         this.bs4LabelDispose = null;
@@ -850,12 +850,12 @@
       return Bs4Adapter;
     }();
 
-    (function (window, $$$1) {
+    (function (window, $) {
       AddToJQueryPrototype('BsMultiSelect', function (element, optionsObject, onDispose) {
-        var adapter = optionsObject && optionsObject.useCss ? new Bs4AdapterCss(optionsObject, $$$1) : new Bs4AdapterJs(optionsObject, $$$1);
-        var facade = new Bs4Adapter(element, adapter, optionsObject, $$$1);
-        return new MultiSelect(element, optionsObject, onDispose, facade, window, $$$1);
-      }, $$$1);
+        var adapter = optionsObject && optionsObject.useCss ? new Bs4AdapterCss(optionsObject, $) : new Bs4AdapterJs(optionsObject, $);
+        var facade = new Bs4Adapter(element, adapter, optionsObject, $);
+        return new MultiSelect(element, optionsObject, onDispose, facade, window, $);
+      }, $);
     })(window, $);
 
 }));

@@ -1,4 +1,5 @@
 # CHANGELOG
+0.2.20 - Bootstrap security problems: "before 3.4.1, XSS is possible" https://blog.getbootstrap.com/2019/02/13/bootstrap-4-3-1-and-3-4-1/
 0.2.19 - minor changes related to the rollup.js update - define global as self if it was not defined - important only for module imports scenarious
 0.2.18 - input's height 'initial' changed  to height 'auto' (to support IE11)
 0.2.17 - bug fixes (grab newest BsMultiSelect.scss if you use useCss=true)
