@@ -1,5 +1,5 @@
 /*!
-  * DashboardCode BsMultiSelect v0.2.21 (https://dashboardcode.github.io/BsMultiSelect/)
+  * DashboardCode BsMultiSelect v0.2.22 (https://dashboardcode.github.io/BsMultiSelect/)
   * Copyright 2017-2019 Roman Pokrovskij (github user rpokrovskij)
   * Licensed under APACHE 2 (https://github.com/DashboardCode/BsMultiSelect/blob/master/LICENSE)
   */
@@ -234,9 +234,8 @@
         if (this.hoveredDropDownItem !== null) {
           this.adapter.HoverOut(this.$(this.hoveredDropDownItem));
           this.hoveredDropDownItem = null;
+          this.hoveredDropDownIndex = null;
         }
-
-        this.hoveredDropDownIndex = null;
       };
 
       _proto.filterDropDownMenu = function filterDropDownMenu() {
@@ -264,6 +263,11 @@
         });
         this.hasDropDownVisible = visible > 0;
         this.resetDropDownMenuHover();
+
+        if (visible == 1) {
+          var visibleNodeListArray = this.getVisibleNodeListArray();
+          this.hoverInInternal(visibleNodeListArray, 0);
+        }
       };
 
       _proto.clearFilterInput = function clearFilterInput(updatePosition) {
@@ -346,8 +350,18 @@
         });
       };
 
+      _proto.getVisibleNodeListArray = function getVisibleNodeListArray() {
+        return this.$(this.dropDownMenu).find('LI:not([style*="display: none"]):not(:hidden)').toArray();
+      };
+
+      _proto.hoverInInternal = function hoverInInternal(visibleNodeListArray, index) {
+        this.hoveredDropDownIndex = index;
+        this.hoveredDropDownItem = visibleNodeListArray[index];
+        this.adapter.HoverIn(this.$(this.hoveredDropDownItem));
+      };
+
       _proto.keydownArrow = function keydownArrow(down) {
-        var visibleNodeListArray = this.$(this.dropDownMenu).find('LI:not([style*="display: none"]):not(:hidden)').toArray();
+        var visibleNodeListArray = this.getVisibleNodeListArray();
 
         if (visibleNodeListArray.length > 0) {
           if (this.hasDropDownVisible) {
@@ -355,23 +369,24 @@
             this.showDropDown();
           }
 
+          var index;
+
           if (this.hoveredDropDownItem === null) {
-            this.hoveredDropDownIndex = down ? 0 : visibleNodeListArray.length - 1;
+            index = down ? 0 : visibleNodeListArray.length - 1;
           } else {
             this.adapter.HoverOut(this.$(this.hoveredDropDownItem));
 
             if (down) {
               var newIndex = this.hoveredDropDownIndex + 1;
-              this.hoveredDropDownIndex = newIndex < visibleNodeListArray.length ? newIndex : 0;
+              index = newIndex < visibleNodeListArray.length ? newIndex : 0;
             } else {
               var _newIndex = this.hoveredDropDownIndex - 1;
 
-              this.hoveredDropDownIndex = _newIndex >= 0 ? _newIndex : visibleNodeListArray.length - 1;
+              index = _newIndex >= 0 ? _newIndex : visibleNodeListArray.length - 1;
             }
           }
 
-          this.hoveredDropDownItem = visibleNodeListArray[this.hoveredDropDownIndex];
-          this.adapter.HoverIn(this.$(this.hoveredDropDownItem));
+          this.hoverInInternal(visibleNodeListArray, index);
         }
       };
 

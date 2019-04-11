@@ -67,9 +67,10 @@ class MultiSelect {
         if (this.hoveredDropDownItem !== null) {
             this.adapter.HoverOut(this.$(this.hoveredDropDownItem));
             this.hoveredDropDownItem = null;
+            this.hoveredDropDownIndex = null;
         }
-        this.hoveredDropDownIndex = null;
     }
+
     filterDropDownMenu() {
         let text = this.filterInput.value.trim().toLowerCase();
         let visible = 0;
@@ -92,13 +93,19 @@ class MultiSelect {
         });
         this.hasDropDownVisible = visible > 0;
         this.resetDropDownMenuHover();
+        if (visible == 1) {
+            let visibleNodeListArray = this.getVisibleNodeListArray();
+            this.hoverInInternal(visibleNodeListArray, 0)
+        }
     }
+
     clearFilterInput(updatePosition) {
         if (this.filterInput.value) {
             this.filterInput.value = '';
             this.input(updatePosition);
         }
     }
+
     closeDropDown() {
         this.resetDropDownMenuHover();
         this.clearFilterInput(true);
@@ -181,33 +188,42 @@ class MultiSelect {
                 selectItem(true);
             })
     }
+    getVisibleNodeListArray(){
+        return this.$(this.dropDownMenu).find('LI:not([style*="display: none"]):not(:hidden)').toArray();
+    }
+    hoverInInternal(visibleNodeListArray, index){
+        this.hoveredDropDownIndex = index;
+        this.hoveredDropDownItem = visibleNodeListArray[index];
+        this.adapter.HoverIn(this.$(this.hoveredDropDownItem));
+    }
     keydownArrow(down) {
-        let visibleNodeListArray = this.$(this.dropDownMenu).find('LI:not([style*="display: none"]):not(:hidden)').toArray();
+        let visibleNodeListArray = this.getVisibleNodeListArray();
         if (visibleNodeListArray.length > 0) {
             if (this.hasDropDownVisible) {
                 this.updateDropDownPosition(true);
                 this.showDropDown();
             }
+            let index;
             if (this.hoveredDropDownItem === null) {
-                this.hoveredDropDownIndex = down ? 0 : visibleNodeListArray.length - 1;
+                index = down ? 0 : visibleNodeListArray.length - 1;
             }
             else {
                 this.adapter.HoverOut(this.$(this.hoveredDropDownItem));
                 if (down) {
                     let newIndex = this.hoveredDropDownIndex + 1;
-                    this.hoveredDropDownIndex = newIndex < visibleNodeListArray.length ? newIndex : 0;
+                    index = newIndex < visibleNodeListArray.length ? newIndex : 0;
                 } else {
                     let newIndex = this.hoveredDropDownIndex - 1;
-                    this.hoveredDropDownIndex = newIndex >= 0 ? newIndex : visibleNodeListArray.length - 1;
+                    index = newIndex >= 0 ? newIndex : visibleNodeListArray.length - 1;
                 }
             }
-            this.hoveredDropDownItem = visibleNodeListArray[this.hoveredDropDownIndex];
-            this.adapter.HoverIn(this.$(this.hoveredDropDownItem));
+            this.hoverInInternal(visibleNodeListArray, index);
         }
     }
     input(forceUpdatePosition) {
         this.filterInput.style.width = this.filterInput.value.length*1.3 + 2 + "ch";
         this.filterDropDownMenu();
+
         if (this.hasDropDownVisible) {
             if (forceUpdatePosition) // ignore it if it is called from
                 this.updateDropDownPosition(forceUpdatePosition); // we need it to support case when textbox changes its place because of line break (texbox grow with each key press)
