@@ -1,3 +1,14 @@
+configure package.json for multiple entrypoints
+
+{
+"main":"dist/index.js"
+"module":"lib/index.es6.js"
+"main:src": "src/index.js" / ?? could it be "polyfill free" (web standard polyfill) ?
+}
+
+and then test how weback handle it
+
+
 new plugins
 https://habr.com/company/ruvds/blog/425313/
 

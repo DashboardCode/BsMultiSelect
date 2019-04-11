@@ -1,5 +1,5 @@
 /*!
-  * DashboardCode BsMultiSelect v0.2.20 (https://dashboardcode.github.io/BsMultiSelect/)
+  * DashboardCode BsMultiSelect v0.2.21 (https://dashboardcode.github.io/BsMultiSelect/)
   * Copyright 2017-2019 Roman Pokrovskij (github user rpokrovskij)
   * Licensed under APACHE 2 (https://github.com/DashboardCode/BsMultiSelect/blob/master/LICENSE)
   */
@@ -298,7 +298,7 @@
           _this2.filterInput.focus();
         });
 
-        var selectItem = function selectItem() {
+        var selectItem = function selectItem(doPublishEvents) {
           if (optionElement.hidden) return;
 
           var $selectedItem = _this2.$("<LI/>");
@@ -315,9 +315,7 @@
             adjustDropDownItem.disable(optionElement.disabled);
             adjustPair(false, function () {
               if (optionElement.disabled) return;
-              selectItem();
-
-              _this2.$selectElement.trigger('change');
+              selectItem(true);
             }, null, true);
             $selectedItem.remove();
 
@@ -334,6 +332,7 @@
 
           adjustPair(true, removeItem, removeItemAndCloseDropDown);
           $selectedItem.insertBefore(_this2.filterInputItem);
+          if (doPublishEvents) _this2.$selectElement.trigger('change');
         };
 
         $dropDownItem.mouseover(function () {
@@ -341,9 +340,9 @@
         }).mouseout(function () {
           return _this2.adapter.HoverOut($dropDownItem);
         });
-        if (optionElement.selected) selectItem();else $dropDownItem.data("option-toggle", function () {
+        if (optionElement.selected) selectItem(false);else $dropDownItem.data("option-toggle", function () {
           if (optionElement.disabled) return;
-          selectItem();
+          selectItem(true);
         });
       };
 
@@ -534,7 +533,7 @@
         this.adapter.UpdateIsValid($selectedPanel);
         this.UpdateSizeImpl($selectedPanel);
         this.UpdateDisabledImpl($container, $selectedPanel); // some browsers (IE11) can change select value (as part of "autocomplete") after page is loaded but before "ready" event
-        // bellow: ready shortcut
+        // FYI: $(() => { ...}) is jquery ready event shortcut
 
         this.$(function () {
           var selectOptions = $selectElement.find('OPTION');

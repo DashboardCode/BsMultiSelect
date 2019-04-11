@@ -126,8 +126,8 @@ class MultiSelect {
             toggleItem();
             this.filterInput.focus();
         });
-
-        let selectItem = () => {
+        
+        let selectItem = (doPublishEvents) => {
             if (optionElement.hidden)
                 return;
             let $selectedItem = this.$("<LI/>")
@@ -145,8 +145,7 @@ class MultiSelect {
                 adjustPair(false, () => {
                     if (optionElement.disabled)
                         return;
-                    selectItem();
-                    this.$selectElement.trigger('change');
+                    selectItem(true);
                 }, null, true)
                 $selectedItem.remove();
                 this.$selectElement.trigger('change');
@@ -165,6 +164,8 @@ class MultiSelect {
             );
             adjustPair(true, removeItem, removeItemAndCloseDropDown);
             $selectedItem.insertBefore(this.filterInputItem);
+            if (doPublishEvents)
+                this.$selectElement.trigger('change');
         }
 
         $dropDownItem
@@ -172,12 +173,12 @@ class MultiSelect {
             .mouseout(() => this.adapter.HoverOut($dropDownItem));
         
         if (optionElement.selected)
-            selectItem();
+            selectItem(false);
         else
             $dropDownItem.data("option-toggle",  () => { 
                 if (optionElement.disabled)
                     return;
-                selectItem();
+                selectItem(true);
             })
     }
     keydownArrow(down) {
@@ -346,7 +347,7 @@ class MultiSelect {
         this.UpdateSizeImpl($selectedPanel);
         this.UpdateDisabledImpl($container, $selectedPanel);
         // some browsers (IE11) can change select value (as part of "autocomplete") after page is loaded but before "ready" event
-        // bellow: ready shortcut
+        // FYI: $(() => { ...}) is jquery ready event shortcut
         this.$(() => {
             let selectOptions = $selectElement.find('OPTION');
             selectOptions.each(
