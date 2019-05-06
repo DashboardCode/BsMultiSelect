@@ -13,7 +13,7 @@
     "url": "https://github.com/DashboardCode/BsMultiSelect/issues"
   },
   "dependencies": {
-     "popper.js": "^1.15.0"
+    "popper.js": "^1.15.0"
   },
   "peerDependencies": {},
   "devDependencies": {
@@ -41,7 +41,7 @@
     "stylelint-order": "^3.0.0",
     "stylelint-scss": "^3.6.1",
     "uglify-js": "^3.5.11",
-    "bundlesize": "^0.17.1",
+    "size-limit": "1.3.1",
     "postcss-cli": "^6.1.2"
   },
   "scripts": {
@@ -70,26 +70,22 @@
     "bootstrap multiselect multiline component"
   ],
   "author": "Roman Pokrovskij (github user rpokrovskij)",
-  "bundlesize": [
+  "size-limit": [
     {
-      "path": "./dist/css/BsMultiSelect.min.css",
-      "maxSize": "2 kB",
-      "compression": "none"
+      "path": "./dist/css/BsMultiSelect.min.css"
     },
     {
       "path": "./dist/css/BsMultiSelect.min.css",
-      "maxSize": "1 kB",
-      "compression": "gzip"
+      "gzip": false,
+      "limit": "2 kB"
     },
     {
-      "path": "./dist/js/BsMultiSelect.min.js",
-      "maxSize": "15 kB",
-      "compression": "none"
+      "path": "./dist/css/BsMultiSelect.min.js"
     },
     {
-      "path": "./dist/js/BsMultiSelect.min.js",
-      "maxSize": "5 kB",
-      "compression": "gzip"
+      "path": "./dist/css/BsMultiSelect.min.js",
+      "gzip": false,
+      "limit": "15 kB"
     }
   ]
 }
