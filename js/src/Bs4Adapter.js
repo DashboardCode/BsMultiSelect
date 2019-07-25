@@ -96,7 +96,9 @@ class Bs4Adapter {
             this.adapter.DisableSelectedItemContent($content);
         let $button = this.$('<button aria-label="Close" tabIndex="-1" type="button"><span aria-hidden="true">&times;</span></button>')
             .css("white-space", "nowrap")
-            .on("click", removeSelectedItem)
+            // there is an argument to call event => event.stopPropogation on the click (to prevent closing dropdown if bsmultiselect located there)
+            // but better solve it other way: filter clicks is dropdown responcibility; we remove item only after it could be catched by parents click filter
+            .on("click", () => setTimeout(removeSelectedItem, 0)) 
             .appendTo($selectedItem)
             .prop("disabled", controlDisabled)
         $selectedItem.addClass(this.classes.selectedItemClass);

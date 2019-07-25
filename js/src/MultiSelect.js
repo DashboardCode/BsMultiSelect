@@ -157,6 +157,7 @@ class MultiSelect {
                 $selectedItem.remove();
                 this.$selectElement.trigger('change');
             };
+            
             let removeItemAndCloseDropDown = () => {
                 removeItem();
                 this.closeDropDown();

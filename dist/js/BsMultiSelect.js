@@ -1,5 +1,5 @@
 /*!
-  * DashboardCode BsMultiSelect v0.2.22 (https://dashboardcode.github.io/BsMultiSelect/)
+  * DashboardCode BsMultiSelect v0.2.23 (https://dashboardcode.github.io/BsMultiSelect/)
   * Copyright 2017-2019 Roman Pokrovskij (github user rpokrovskij)
   * Licensed under APACHE 2 (https://github.com/DashboardCode/BsMultiSelect/blob/master/LICENSE)
   */
@@ -320,7 +320,7 @@
             adjustPair(false, function () {
               if (optionElement.disabled) return;
               selectItem(true);
-            }, null, true);
+            }, null);
             $selectedItem.remove();
 
             _this2.$selectElement.trigger('change');
@@ -806,7 +806,11 @@
       _proto.CreateSelectedItemContent = function CreateSelectedItemContent($selectedItem, itemText, removeSelectedItem, controlDisabled, optionDisabled) {
         var $content = this.$("<span>" + itemText + "</span>").appendTo($selectedItem);
         if (optionDisabled) this.adapter.DisableSelectedItemContent($content);
-        var $button = this.$('<button aria-label="Close" tabIndex="-1" type="button"><span aria-hidden="true">&times;</span></button>').css("white-space", "nowrap").on("click", removeSelectedItem).appendTo($selectedItem).prop("disabled", controlDisabled);
+        var $button = this.$('<button aria-label="Close" tabIndex="-1" type="button"><span aria-hidden="true">&times;</span></button>').css("white-space", "nowrap") // there is an argument to call event => event.stopPropogation on the click (to prevent closing dropdown if bsmultiselect located there)
+        // but better solve it other way: filter clicks is dropdown responcibility; we remove item only after it could be catched by parents click filter
+        .on("click", function () {
+          return setTimeout(removeSelectedItem, 0);
+        }).appendTo($selectedItem).prop("disabled", controlDisabled);
         $selectedItem.addClass(this.classes.selectedItemClass);
         $button.addClass(this.classes.removeSelectedItemButtonClass);
         if (this.adapter.CreateSelectedItemContent) this.adapter.CreateSelectedItemContent($selectedItem, $button);
