@@ -1,6 +1,6 @@
 # CHANGELOG
 ````
-0.2.23 - support bsMultiSelect on dropdown: click to remove is now processed in setTimout(..,0) it helps filter out close clicks
+0.2.23 - support bsMultiSelect on dropdown: click to remove/uselect the item is now processed in setTimout(..,0) this helps filter out close clicks on dropdown hide event handler
 0.2.22 - better UX, when only one left in aotosuggestion list - tab and enter select it
 0.2.21 - "change" event propogation bug resolved
 0.2.20 - Bootstrap security problems: "before 3.4.1, XSS is possible" https://blog.getbootstrap.com/2019/02/13/bootstrap-4-3-1-and-3-4-1/
