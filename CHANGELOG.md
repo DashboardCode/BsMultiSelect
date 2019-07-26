@@ -1,4 +1,5 @@
 # CHANGELOG
+````
 0.2.22 - better UX, when only one left in aotosuggestion list - tab and enter select it
 0.2.21 - "change" event propogation bug resolved
 0.2.20 - Bootstrap security problems: "before 3.4.1, XSS is possible" https://blog.getbootstrap.com/2019/02/13/bootstrap-4-3-1-and-3-4-1/
@@ -13,3 +14,4 @@
 0.2.6 - disabled option when selected is displayed with opacity (default value .65)
 0.2.5 - disabled option support
 0.2.4 - npm published
+````
