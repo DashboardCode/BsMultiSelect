@@ -149,11 +149,15 @@ class MultiSelect {
             let removeItem = () => {
                 adjustDropDownItem.disabledStyle(false);
                 adjustDropDownItem.disable(optionElement.disabled);
-                adjustPair(false, () => {
-                    if (optionElement.disabled)
-                        return;
-                    selectItem(true);
-                }, null, true)
+                adjustPair(
+                    false, 
+                    () => {
+                        if (optionElement.disabled)
+                            return;
+                        selectItem(true);
+                    }, 
+                    null
+                    )
                 $selectedItem.remove();
                 this.$selectElement.trigger('change');
             };
@@ -172,8 +176,9 @@ class MultiSelect {
             );
             adjustPair(true, removeItem, removeItemAndCloseDropDown);
             $selectedItem.insertBefore(this.filterInputItem);
-            if (doPublishEvents)
+            if (doPublishEvents){
                 this.$selectElement.trigger('change');
+            }
         }
 
         $dropDownItem
@@ -375,7 +380,10 @@ class MultiSelect {
             this.hasDropDownVisible = selectOptions.length > 0;
             this.updateDropDownPosition(false);
         });
-        $dropDownMenu.click( event => event.stopPropagation());
+        // there was unmotivated stopPropagation call. 
+        // $dropDownMenu.click(  event => { 
+        //    event.stopPropagation();
+        // });
         $dropDownMenu.mouseover(() => this.resetDropDownMenuHover());
 
         $filterInput.focusin(() => this.adapter.FocusIn($selectedPanel))

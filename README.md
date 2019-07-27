@@ -53,6 +53,8 @@ If your theme changes those variables, you need to update them on the plugin ini
             
 ````
 
+Important: events preventDefault, stopPropagation were not used, but to simplify the identification of click event's target during the bubling I remove dom elments (intiated by the click on "x" button) using setTimeout(..,0); 
+
 ## Features
 
 **multiline**: input can grow vertically;
@@ -68,6 +70,8 @@ If your theme changes those variables, you need to update them on the plugin ini
 **`<label>`**: Click on the label puts focus on input and opens the dropdown;
 
 **`<optgroup label=".." >`** grouped options will be flatten; there is no sense mixing "Browse Tree" and "Autosuggest popup" UI expirience. Even if it is possible, I consider this as true: "code that don't exist is infinitely performant and extremely easy to maintain and document." (c) Heydon Pickering;
+
+**Dialog and popup** works on Bootrap dialogs and dropdowns
 
 **CSS and SCSS**: you can copy BsMultiSelect.css (included to distribution) and update values manually for your theme.
 Or you can use [./scss/BsMultiSelect.scss](https://github.com/DashboardCode/BsMultiSelect/blob/master/scss/BsMultiSelect.scss) copy it to your project and update reference to your custom BS variables in yout theme); these requires such configuration:
@@ -154,8 +158,6 @@ Note, BS allready provide classes like: `h-25`, `bg-light`, `text-primary` that 
 
 ### Known issues
 * Tested only for IE11, Chrome 66, Edge 42/17; Browser should support 'display':'flex' (IE 9 doesn't); 
-
-* it was not tested on bootstrap dialog
 
 * no 'smart tracking' of dynamic changes in options - do detach/attach at the end of changes (this is actally not a issue, but desing feature)
 

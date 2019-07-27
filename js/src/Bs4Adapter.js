@@ -95,14 +95,18 @@ class Bs4Adapter {
         if (optionDisabled)
             this.adapter.DisableSelectedItemContent($content);
         let $button = this.$('<button aria-label="Close" tabIndex="-1" type="button"><span aria-hidden="true">&times;</span></button>')
-            .css("white-space", "nowrap")
+            // bs 'close' class that will be added to button set the float:right, therefore it impossible to configure no-warp policy 
+            // with .css("white-space", "nowrap") or  .css("display", "inline-block"); TODO: migrate to flex? 
+            .css("float", "none")
+
             // there is an argument to call event => event.stopPropogation on the click (to prevent closing dropdown if bsmultiselect located there)
             // but better solve it other way: filter clicks is dropdown responcibility; we remove item only after it could be catched by parents click filter
+            // why click is so specific for us? it is used to close dropdowns by BS4
             .on("click", () => setTimeout(removeSelectedItem, 0)) 
             .appendTo($selectedItem)
             .prop("disabled", controlDisabled)
         $selectedItem.addClass(this.classes.selectedItemClass);
-        $button.addClass(this.classes.removeSelectedItemButtonClass)
+        $button.addClass(this.classes.removeSelectedItemButtonClass) // bs close class set the float:right
         if (this.adapter.CreateSelectedItemContent)
             this.adapter.CreateSelectedItemContent($selectedItem, $button)
     }
