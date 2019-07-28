@@ -99,9 +99,18 @@ class Bs4Adapter {
             // with .css("white-space", "nowrap") or  .css("display", "inline-block"); TODO: migrate to flex? 
             .css("float", "none")
 
-            // there is an argument to call event => event.stopPropogation on the click (to prevent closing dropdown if bsmultiselect located there)
-            // but better solve it other way: filter clicks is dropdown responcibility; we remove item only after it could be catched by parents click filter
-            // why click is so specific for us? it is used to close dropdowns by BS4
+            // what is a problem with calling removeSelectedItem directly (not using  setTimeout(removeSelectedItem, 0)):
+            // consider situation "MultiSelect" on DROPDOWN (that should be closed on the click outside dropdown)
+            // therefore we aslo have document's click's handler where we decide to close or leave the DROPDOWN open.
+            // because of the event's bubling process removeSelectedItem runs first. 
+            // that means the event's target element on which we click (the x button) will be removed from the DOM together with badge 
+            // before we could analize is it belong to our dropdown or not.
+            // important 1: we can't just the stop propogation using stopPropogate because click outside dropdown on the similar 
+            // component that use stopPropogation will not close dropdown (error, dropdown should be closed)
+            // important 2: we can't change the dropdown's event handler to leave dropdown open if event's target is null because of
+            // the situation described above: click outside dropdown on the same component.
+            // Alternatively it could be possible to use stopPropogate but together create custom click event setting new target that belomgs to DOM (e.g. panel)
+            
             .on("click", () => setTimeout(removeSelectedItem, 0)) 
             .appendTo($selectedItem)
             .prop("disabled", controlDisabled)
