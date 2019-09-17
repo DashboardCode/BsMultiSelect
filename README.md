@@ -53,7 +53,7 @@ If your theme changes those variables, you need to update them on the plugin ini
             
 ````
 
-Important: events preventDefault, stopPropagation were not used, but to simplify the identification of click event's target during the bubling I remove dom elments (intiated by the click on "x" button) using setTimeout(..,0); 
+BsMultiSelect handles click event friendly to modals and popups. Important: events preventDefault, stopPropagation were not used, but to simplify the identification of click event's target during the bubling I remove dom elments (intiated by the click on "x" button) using setTimeout(..,0); 
 
 ## Features
 
