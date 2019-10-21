@@ -3,7 +3,7 @@ const defSelectedItemStyle = {'padding-left': '0px', 'line-height': '1.5em'};
 const defRemoveSelectedItemButtonStyle = {'font-size':'1.5em', 'line-height': '.9em'};
 
 class Bs4AdapterJs {
-    constructor(options, $) {
+    constructor(configuration, $) {
         const defaults = {
             selectedPanelDefMinHeight: 'calc(2.25rem + 2px)',
             selectedPanelLgMinHeight:  'calc(2.875rem + 2px)',
@@ -17,12 +17,13 @@ class Bs4AdapterJs {
             selectedItemContentDisabledOpacity: '.65',
             dropdDownLabelDisabledColor: '#6c757d'
         };
-        this.options = $.extend({}, defaults, options);
+        let tmp = $.extend({}, defaults, configuration);
+        this.configuration = $.extend(configuration, tmp);
     }
 
     OnInit(dom){
         dom.selectedPanel.css(defSelectedPanelStyle);
-        dom.filterInput.css("color", this.options.filterInputColor);
+        dom.filterInput.css("color", this.configuration.filterInputColor);
     }
 
     
@@ -32,20 +33,20 @@ class Bs4AdapterJs {
     }
 
     DisableSelectedItemContent($content){
-        $content.css("opacity", this.options.selectedItemContentDisabledOpacity )
+        $content.css("opacity", this.configuration.selectedItemContentDisabledOpacity )
     }
 
     DisabledStyle($checkBox, isDisbaled){
-        $checkBox.siblings('label').css('color', isDisbaled?this.options.dropdDownLabelDisabledColor:'')
+        $checkBox.siblings('label').css('color', isDisbaled?this.configuration.dropdDownLabelDisabledColor:'')
     }
 
     UpdateSize($selectedPanel){
         if ($selectedPanel.hasClass("form-control-lg")){
-            $selectedPanel.css("min-height", this.options.selectedPanelLgMinHeight);
+            $selectedPanel.css("min-height", this.configuration.selectedPanelLgMinHeight);
         } else if ($selectedPanel.hasClass("form-control-sm")){
-            $selectedPanel.css("min-height", this.options.selectedPanelSmMinHeight);
+            $selectedPanel.css("min-height", this.configuration.selectedPanelSmMinHeight);
         } else {
-            $selectedPanel.css("min-height", this.options.selectedPanelDefMinHeight);
+            $selectedPanel.css("min-height", this.configuration.selectedPanelDefMinHeight);
         }
     }
 
@@ -54,18 +55,18 @@ class Bs4AdapterJs {
     }
 
     Disable($selectedPanel){
-        $selectedPanel.css({"background-color": this.options.selectedPanelDisabledBackgroundColor})
+        $selectedPanel.css({"background-color": this.configuration.selectedPanelDisabledBackgroundColor})
     }
 
     FocusIn($selectedPanel){
         if ($selectedPanel.hasClass("is-valid")){
-            $selectedPanel.css("box-shadow", this.options.selectedPanelFocusValidBoxShadow);
+            $selectedPanel.css("box-shadow", this.configuration.selectedPanelFocusValidBoxShadow);
         } else if ($selectedPanel.hasClass("is-invalid")){
-            $selectedPanel.css("box-shadow", this.options.selectedPanelFocusInvalidBoxShadow);
+            $selectedPanel.css("box-shadow", this.configuration.selectedPanelFocusInvalidBoxShadow);
         } else {
             $selectedPanel
-                .css("box-shadow", this.options.selectedPanelFocusBoxShadow)
-                .css("border-color", this.options.selectedPanelFocusBorderColor);
+                .css("box-shadow", this.configuration.selectedPanelFocusBoxShadow)
+                .css("border-color", this.configuration.selectedPanelFocusBorderColor);
         }
     }
 

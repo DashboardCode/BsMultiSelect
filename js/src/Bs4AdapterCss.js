@@ -1,40 +1,41 @@
 class Bs4AdapterCss {
 
-    constructor(options, $) {
+    constructor(configuration, $) {
         const defaults = {
             selectedPanelFocusClass : 'focus',
             selectedPanelDisabledClass: 'disabled',
             selectedItemContentDisabledClass: 'disabled',
             dropDownItemDisabledClass: 'disabled'
         };
-        this.options = $.extend({}, defaults, options);
+        let tmp = $.extend({}, defaults, configuration);
+        this.configuration = $.extend(configuration, tmp);
     }
 
     DisableSelectedItemContent($content){
-        $content.addClass(this.options.selectedItemContentDisabledClass )
+        $content.addClass(this.configuration.selectedItemContentDisabledClass )
     }
 
     DisabledStyle($checkBox, isDisbaled){
-        if (isDisbaled) //? $checkBox.addClass : $checkBox.removeClass
-            $checkBox.addClass(this.options.dropDownItemDisabledClass);
+        if (isDisbaled) 
+            $checkBox.addClass(this.configuration.dropDownItemDisabledClass);
         else
-            $checkBox.removeClass(this.options.dropDownItemDisabledClass);
+            $checkBox.removeClass(this.configuration.dropDownItemDisabledClass);
     }
 
     Enable($selectedPanel){
-        $selectedPanel.removeClass(this.options.selectedPanelDisabledClass)
+        $selectedPanel.removeClass(this.configuration.selectedPanelDisabledClass)
     }
 
     Disable($selectedPanel){
-        $selectedPanel.addClass(this.options.selectedPanelDisabledClass)
+        $selectedPanel.addClass(this.configuration.selectedPanelDisabledClass)
     }
 
     FocusIn($selectedPanel){
-        $selectedPanel.addClass(this.options.selectedPanelFocusClass);
+        $selectedPanel.addClass(this.configuration.selectedPanelFocusClass);
     }
 
     FocusOut($selectedPanel){
-        $selectedPanel.removeClass(this.options.selectedPanelFocusClass);
+        $selectedPanel.removeClass(this.configuration.selectedPanelFocusClass);
     }
 }
 

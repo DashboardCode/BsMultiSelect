@@ -12,18 +12,18 @@ const defDropDownMenuStyleSys  = {'list-style-type':'none'}; // remove bullets s
 // $e.appendTo, $e.remove, $e.find, $e.closest, $e.prev, $e.data, $e.val
 
 class MultiSelect {
-    constructor(selectElement, options, onDispose, adapter, window, $) {
+    constructor(optionsAdapter, adapter, configuration, onDispose, window, $) {
         if (typeof Popper === 'undefined') {
             throw new TypeError('DashboardCode BsMultiSelect require Popper.js (https://popper.js.org)')
         }
         // readonly
-        this.selectElement = selectElement;
         this.adapter = adapter;
         this.window = window;
+        this.document = window.document;
         this.onDispose=onDispose;
         this.$ = $;
         
-        this.options = $.extend({}, options);
+        this.configuration = configuration;
         
         this.container = null;
         this.selectedPanel = null;
@@ -31,6 +31,7 @@ class MultiSelect {
         this.filterInput = null;
         this.dropDownMenu = null;
         this.popper = null;
+        this.getDisabled=null;
         // removable handlers
         this.selectedPanelClick  = null;
         this.documentMouseup   = null;
@@ -45,9 +46,10 @@ class MultiSelect {
         this.hasDropDownVisible = false;
 
         // jquery adapters
-        this.$document= $(window.document);
-        this.$selectElement = $(selectElement);
-        this.init();
+        this.$document= $(this.document);
+
+        //this.createContainer();
+        optionsAdapter.init(this);
     }
     updateDropDownPosition(force) {
         let offsetLeft = this.filterInputItem.offsetLeft;
@@ -112,14 +114,15 @@ class MultiSelect {
         this.hideDropDown();
     }
     
-    appendDropDownItem(optionElement) {
+    appendDropDownItem(optionElement, onChange) {
         let isHidden = optionElement.hidden;
         let itemText = optionElement.text;
         let $dropDownItem = this.$("<LI/>").prop("hidden", isHidden)
         $dropDownItem.data("option-text", itemText.toLowerCase()).appendTo(this.dropDownMenu);
         $dropDownItem.data("option", optionElement);
-
-        let adjustDropDownItem = this.adapter.CreateDropDownItemContent($dropDownItem, optionElement.value, itemText);
+        
+        //let optionData = {"optionId":optionElement.value, "itemText": optionElement.text }
+        let adjustDropDownItem = this.adapter.CreateDropDownItemContent($dropDownItem, optionElement);
         let isDisabled = optionElement.disabled;
         let isSelected = optionElement.selected;
 
@@ -159,25 +162,23 @@ class MultiSelect {
                     null
                     )
                 $selectedItem.remove();
-                this.$selectElement.trigger('change');
+                onChange();
             };
             
             let removeItemAndCloseDropDown = () => {
                 removeItem();
                 this.closeDropDown();
             };
-
             this.adapter.CreateSelectedItemContent(
                 $selectedItem,
-                itemText,
+                optionElement,
                 removeItemAndCloseDropDown,
-                this.disabled,
-                optionElement.disabled
+                this.disabled
             );
             adjustPair(true, removeItem, removeItemAndCloseDropDown);
             $selectedItem.insertBefore(this.filterInputItem);
             if (doPublishEvents){
-                this.$selectElement.trigger('change');
+                onChange();
             }
         }
 
@@ -259,15 +260,9 @@ class MultiSelect {
             this.popper.destroy()
         }
         
-        if (this.container !== null) {
-            this.$(this.container).remove();
+        if (this.removeContainer) {
+            this.removeContainer();
         }
-        // this.selectedPanel = null;
-        // this.filterInputItem = null;
-        // this.filterInput = null;
-        // this.dropDownMenu = null;
-        // this.selectElement = null;
-        // this.options = null;
     }
     UpdateSize(){
         this.UpdateSizeImpl(this.$(this.selectedPanel));
@@ -280,7 +275,7 @@ class MultiSelect {
             this.adapter.UpdateSize($selectedPanel);
     }
     UpdateDisabledImpl($container, $selectedPanel){
-        let disabled = this.selectElement.disabled;
+        let disabled = this.getDisabled();
         if (this.disabled!==disabled){
             if (disabled) {
                 this.filterInput.style.display = "none";
@@ -305,27 +300,24 @@ class MultiSelect {
             this.disabled=disabled;
         }
     }
-    init() {
-        let $selectElement = this.$(this.selectElement);
-        $selectElement.hide();
-        let $container = this.$("<DIV/>");
-        this.container = $container.get(0);
-        let $selectedPanel = this.$("<UL/>");
+    fillContainer(container, removeContainer){
+        this.container=container;
+        this.removeContainer=removeContainer;
+        let $container = this.$(container);
+        this.selectedPanel = this.document.createElement("ul");
+        let $selectedPanel = this.$(this.selectedPanel);
         $selectedPanel.css(defSelectedPanelStyleSys);
-        
-        this.selectedPanel = $selectedPanel.get(0);
-        
-        $selectedPanel.appendTo(this.container);
+        $selectedPanel.appendTo(container);
         let $filterInputItem = this.$('<LI/>');
         this.filterInputItem = $filterInputItem.get(0)
         $filterInputItem.appendTo(this.selectedPanel);
         let $filterInput = this.$('<INPUT type="search" autocomplete="off">');
+        this.filterInput = $filterInput.get(0);
         $filterInput.css(defFilterInputStyleSys);
         $filterInput.appendTo(this.filterInputItem);
-        this.filterInput = $filterInput.get(0);
-        let $dropDownMenu = this.$("<UL/>")
-            .css({"display":"none"})
-            .appendTo($container);
+        
+        let $dropDownMenu = this.$("<UL/>").css({"display":"none"});
+        $dropDownMenu.appendTo(container);
         this.dropDownMenu = $dropDownMenu.get(0);
         
         // prevent heavy understandable styling error
@@ -339,7 +331,7 @@ class MultiSelect {
             this.skipFocusout = true;
         };
         this.documentMouseup2 = event => {
-            if (!(this.container === event.target || this.$.contains(this.container, event.target))) {
+            if (!(container === event.target || this.$.contains(container, event.target))) {
                 this.closeDropDown();
             }
         }
@@ -355,14 +347,17 @@ class MultiSelect {
             container:$container, selectedPanel:$selectedPanel,
             filterInputItem:$filterInputItem, filterInput:$filterInput,
             dropDownMenu:$dropDownMenu });
-        $container.insertAfter($selectElement);
-        
+        return {$container, $selectedPanel, $dropDownMenu, $filterInput};
+    }
+
+    init($container, $selectedPanel, $dropDownMenu, $filterInput, onChange, getOptions, getDisabled) {
+        this.getDisabled=getDisabled;
         this.popper = new Popper(this.filterInput, this.dropDownMenu, {
             placement: 'bottom-start',
             modifiers: {
                 preventOverflow: {enabled:false},
                 hide: {enabled:false},
-                flip: { enabled:false }
+                flip: {enabled:false}
                 }
         });
         this.adapter.UpdateIsValid($selectedPanel);
@@ -371,16 +366,16 @@ class MultiSelect {
         // some browsers (IE11) can change select value (as part of "autocomplete") after page is loaded but before "ready" event
         // FYI: $(() => { ...}) is jquery ready event shortcut
         this.$(() => {
-            let selectOptions = $selectElement.find('OPTION');
-            selectOptions.each(
+            let options = getOptions();
+            this.$.each(options,
                 (index, el) => {
-                    this.appendDropDownItem(el);
+                    this.appendDropDownItem(el, onChange);
                 }
             );
-            this.hasDropDownVisible = selectOptions.length > 0;
+            this.hasDropDownVisible = options.length > 0;
             this.updateDropDownPosition(false);
         });
-        // there was unmotivated stopPropagation call. 
+        // there was unmotivated stopPropagation call. commented out.
         // $dropDownMenu.click(  event => { 
         //    event.stopPropagation();
         // });

@@ -1,5 +1,8 @@
 # CHANGELOG
 ````
+0.3.0  - full customization from jquery plugin configuration object.
+         BREAKING CHANGES: 1) configuration object is now named "configuration" (was options)
+         2) id generation - new ids (btw, id generation can be customized assigning configuration.createCheckBoxId and configuration.createInputId methods)
 0.2.24 - adding (hardcoded) css foat:none to "cancel" button span (x)  because BS team have added float:rigth to it (why?) in one of newest BS versions; this was the reason that sometimes badge's "x" button moved to new line separately.
 0.2.23 - support bsMultiSelect on dropdown: click to remove/unselect the item is now processed in setTimout(..,0) this helps filter out close clicks in dropdown's hide event handler (investigate that clicks target was bsMultiSelect and ignore it)
 0.2.22 - better UX, when only one left in aotosuggestion list - tab and enter select it

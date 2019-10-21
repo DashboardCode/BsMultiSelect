@@ -4,16 +4,37 @@ import Bs4AdapterJs from './Bs4AdapterJs'
 import MultiSelect from './MultiSelect'
 import AddToJQueryPrototype from './AddToJQueryPrototype'
 import Bs4Adapter from './Bs4Adapter';
+import OptionsAdapterElement from './OptionsAdapterElement';
+import OptionsAdapterJson from './OptionsAdapterJson';
 
 (
     (window, $) => {
         AddToJQueryPrototype('BsMultiSelect',
-            (element, optionsObject, onDispose) => {
-                let adapter = optionsObject && optionsObject.useCss
-                ? new Bs4AdapterCss(optionsObject, $)
-                : new Bs4AdapterJs(optionsObject, $);
-                let facade = new Bs4Adapter(element, adapter, optionsObject, $);
-                return new MultiSelect(element, optionsObject, onDispose, facade, window, $);
+            (element, configuration, onDispose) => {
+                let optionsAdapter = null;
+                configuration= $.extend({}, configuration);
+                if (configuration.optionsAdapter)
+                    optionsAdapter = configuration.optionsAdapter;
+                else
+                {
+                    optionsAdapter = configuration.options
+                        ? new OptionsAdapterJson(element, configuration)
+                        : new OptionsAdapterElement(element, configuration, $);
+                }
+
+                let adapter=null;
+                if (configuration.adapter)
+                    adapter = configuration.adapter;
+                else
+                {
+                    let stylingAdapter = configuration.useCss
+                        ? new Bs4AdapterCss(configuration, $)
+                        : new Bs4AdapterJs(configuration, $);
+                    adapter = new Bs4Adapter(stylingAdapter, configuration, $);
+                }
+
+                let multiSelect = new MultiSelect(optionsAdapter, adapter, configuration, onDispose, window, $);
+                return multiSelect;
             }, $);
     }
 )(window, $)

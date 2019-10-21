@@ -3,7 +3,7 @@
 
 JSFiddle: https://jsfiddle.net/u2xf6bew/3/ Use it for bug reporting.
 
-There are many similar plugins but this is small and clear since reuses maximum of bootrap 4 styles and code (BsMultiSelect size is 15KB+2KB js+css minified).
+There are many similar plugins but this is small and clear since reuses maximum of bootrap 4 styles and code (BsMultiSelect size is 17KB+2KB js+css minified).
 
 In many cases it can be adjusted for your theme without editing CSS. Optionally you can adjust some theme parameters in JS or you can copy [./scss/BsMultiSelect.scss](https://github.com/DashboardCode/BsMultiSelect/blob/master/scss/BsMultiSelect.scss) to your SASS project (it utilize bootstrap variables).
 
@@ -131,6 +131,25 @@ With them you can change classes of generated HTML elements. Default generated H
           </ul>
         </div>
 ````
+**without select element - intialize with js**: initialize over div
+````
+$('div.#bsMultiSelectJson').bsMultiSelect(
+                        {
+                            options : [
+                                        {text:"Asia", value:"C0",hidden:false,disabled:false,selected:true},
+                                        {text:"Europe",value:"C1",hidden:false,disabled:false,selected:false},
+                                        {text:"Australia",value:"C2",hidden:false,disabled:false,selected:false},
+                                        {text:"America",value:"C3",hidden:false,disabled:false,selected:false},
+                                        {text:"Africa",value:"C4",hidden:false,disabled:false,selected:false}
+                                     ],
+                            getDisabled : () => $('#optionDisable').is(":checked"), 
+                            getIsValid : () => false, //... or from where you want
+                            getIsInvalid : () => false, //... or from where you want
+                        }
+                );
+````
+
+Note: all options should contais all propoerties (text, value, hidden, disabled, selected) - you can't ommit them.
 
 
 
@@ -167,7 +186,7 @@ Note, BS allready provide classes like: `h-25`, `bg-light`, `text-primary` that 
 
 * no rtl (right to left) - as the whole Boostrap 4;
 
-* no max selected, no "no result" message on empty filter, no ajax or json as source
+* no max selected, no "no result" message on empty filter, no ajax as source (but js object coule be a source)
 
 * no smart disabling on mobile devices (do it manually)
 
