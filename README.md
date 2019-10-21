@@ -5,7 +5,7 @@ JSFiddle: https://jsfiddle.net/u2xf6bew/3/ Use it for bug reporting.
 
 There are many similar plugins but this is small and clear since reuses maximum of bootrap 4 styles and code (BsMultiSelect size is 17KB+2KB js+css minified).
 
-In many cases it can be adjusted for your theme without editing CSS. Optionally you can adjust some theme parameters in JS or you can copy [./scss/BsMultiSelect.scss](https://github.com/DashboardCode/BsMultiSelect/blob/master/scss/BsMultiSelect.scss) to your SASS project (it utilize bootstrap variables).
+In many cases it can be adjusted for your theme without editing CSS. Optionally you can adjust some theme parameters in JS or you can copy/reference [./scss/BsMultiSelect.scss](https://github.com/DashboardCode/BsMultiSelect/blob/master/scss/BsMultiSelect.scss) to your SASS project (it utilize bootstrap variables).
 
 Plugin follows Bootstrap 4 conventions and use the same instruments (babel, sass, rollup) so pretend to represent a BS team's modern plugin's **boilerplate**. 
 
@@ -53,7 +53,7 @@ If your theme changes those variables, you need to update them on the plugin ini
             
 ````
 
-Important: events preventDefault, stopPropagation were not used, but to simplify the identification of click event's target during the bubling I remove dom elments (intiated by the click on "x" button) using setTimeout(..,0); 
+BsMultiSelect handles click event friendly to modals and popups. Important: events preventDefault, stopPropagation were not used, but to simplify the identification of click event's target during the bubling I remove dom elments (intiated by the click on "x" button) using setTimeout(..,0); 
 
 ## Features
 
