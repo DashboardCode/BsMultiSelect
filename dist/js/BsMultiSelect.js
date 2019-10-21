@@ -1,5 +1,5 @@
 /*!
-  * DashboardCode BsMultiSelect v0.3.0 (https://dashboardcode.github.io/BsMultiSelect/)
+  * DashboardCode BsMultiSelect v0.3.1 (https://dashboardcode.github.io/BsMultiSelect/)
   * Copyright 2017-2019 Roman Pokrovskij (github user rpokrovskij)
   * Licensed under APACHE 2 (https://github.com/DashboardCode/BsMultiSelect/blob/master/LICENSE)
   */
@@ -731,7 +731,7 @@
     var Bs4Adapter =
     /*#__PURE__*/
     function () {
-      function Bs4Adapter(adapter, configuration, $) {
+      function Bs4Adapter(stylingAdapter, configuration, $) {
         var _this = this;
 
         var defaults = {
@@ -748,20 +748,24 @@
         var tmp = $.extend({}, defaults, configuration);
         this.configuration = $.extend(configuration, tmp);
         this.$ = $;
-        this.adapter = adapter;
+        this.stylingAdapter = stylingAdapter;
         this.bs4LabelDispose = null;
 
         this.createDropDownItemContent = function (configuration, $dropDownItem, option) {
           var checkBoxId = _this.configuration.createCheckBoxId(configuration, option);
 
-          var $dropDownItemContent = _this.$("<div class=\"custom-control custom-checkbox\">\n                <input type=\"checkbox\" class=\"custom-control-input\" id=\"" + checkBoxId + "\">\n                <label class=\"custom-control-label\" for=\"" + checkBoxId + "\">" + option.text + "</label>\n            </div>");
+          var $dropDownItemContent = _this.$("<div class=\"custom-control custom-checkbox\">\n                <input type=\"checkbox\" class=\"custom-control-input\">\n                <label class=\"custom-control-label\"></label>\n            </div>");
 
           $dropDownItemContent.appendTo($dropDownItem);
           var $checkBox = $dropDownItemContent.find("INPUT[type=\"checkbox\"]");
+          $checkBox.attr('id', checkBoxId);
+          var $checkBoxLabel = $dropDownItemContent.find("label");
+          $checkBoxLabel.attr('for', checkBoxId);
+          $checkBoxLabel.text(option.text);
           $dropDownItem.addClass(configuration.dropDownItemClass);
           var dropDownItem = $dropDownItem.get(0);
           var dropDownItemContent = $dropDownItemContent.get(0);
-          var adapter = _this.adapter;
+          var stylingAdapter = _this.stylingAdapter;
           return {
             select: function select(isSelected) {
               $checkBox.prop('checked', isSelected);
@@ -770,7 +774,7 @@
               $checkBox.prop('disabled', isDisabled);
             },
             disabledStyle: function disabledStyle(_disabledStyle) {
-              adapter.DisabledStyle($checkBox, _disabledStyle);
+              stylingAdapter.DisabledStyle($checkBox, _disabledStyle);
             },
             onSelected: function onSelected(toggle) {
               $checkBox.on("change", toggle);
@@ -785,7 +789,7 @@
           var $content = _this.$("<span/>").text(optionItem.text);
 
           $content.appendTo($selectedItem);
-          if (optionItem.disabled) _this.adapter.DisableSelectedItemContent($content);
+          if (optionItem.disabled) _this.stylingAdapter.DisableSelectedItemContent($content);
 
           var $button = _this.$('<button aria-label="Close" tabIndex="-1" type="button"><span aria-hidden="true">&times;</span></button>') // bs 'close' class that will be added to button set the float:right, therefore it impossible to configure no-warp policy 
           // with .css("white-space", "nowrap") or  .css("display", "inline-block"); TODO: migrate to flex? 
@@ -807,7 +811,7 @@
           $selectedItem.addClass(configuration.selectedItemClass);
           $button.addClass(configuration.removeSelectedItemButtonClass); // bs close class set the float:right
 
-          if (_this.adapter.CreateSelectedItemContent) _this.adapter.CreateSelectedItemContent($selectedItem, $button);
+          if (_this.stylingAdapter.CreateSelectedItemContent) _this.stylingAdapter.CreateSelectedItemContent($selectedItem, $button);
         };
       } // ------------------------------------------------------------------------------------------------
 
@@ -820,7 +824,7 @@
         dom.dropDownMenu.addClass(this.configuration.dropDownMenuClass);
         dom.filterInputItem.addClass(this.configuration.filterInputItemClass);
         dom.filterInput.addClass(this.configuration.filterInputClass);
-        if (this.adapter.OnInit) this.adapter.OnInit(dom);
+        if (this.stylingAdapter.OnInit) this.stylingAdapter.OnInit(dom);
         this.bs4LabelDispose = this.HandleLabel(dom.filterInput);
       };
 
@@ -871,7 +875,7 @@
       };
 
       _proto.UpdateSize = function UpdateSize($selectedPanel) {
-        if (this.adapter.UpdateSize) this.adapter.UpdateSize($selectedPanel);
+        if (this.stylingAdapter.UpdateSize) this.stylingAdapter.UpdateSize($selectedPanel);
       };
 
       _proto.HoverIn = function HoverIn($dropDownItem) {
@@ -883,21 +887,21 @@
       };
 
       _proto.Enable = function Enable($selectedPanel) {
-        this.adapter.Enable($selectedPanel);
+        this.stylingAdapter.Enable($selectedPanel);
         disableButton($selectedPanel, false);
       };
 
       _proto.Disable = function Disable($selectedPanel) {
-        this.adapter.Disable($selectedPanel);
+        this.stylingAdapter.Disable($selectedPanel);
         disableButton($selectedPanel, true);
       };
 
       _proto.FocusIn = function FocusIn($selectedPanel) {
-        this.adapter.FocusIn($selectedPanel);
+        this.stylingAdapter.FocusIn($selectedPanel);
       };
 
       _proto.FocusOut = function FocusOut($selectedPanel) {
-        this.adapter.FocusOut($selectedPanel);
+        this.stylingAdapter.FocusOut($selectedPanel);
       };
 
       return Bs4Adapter;

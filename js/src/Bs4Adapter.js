@@ -6,7 +6,7 @@ function disableButton($selectedPanel, isDisabled){
 class Bs4Adapter {
 
     constructor(
-        adapter, configuration, $){
+        stylingAdapter, configuration, $){
         const defaults = {
             containerClass: 'dashboardcode-bsmultiselect',
             dropDownMenuClass: 'dropdown-menu',
@@ -21,27 +21,31 @@ class Bs4Adapter {
         let tmp = $.extend({}, defaults, configuration);
         this.configuration = $.extend(configuration, tmp);
         this.$ = $;
-        this.adapter = adapter;
+        this.stylingAdapter = stylingAdapter;
         this.bs4LabelDispose = null;
         
         this.createDropDownItemContent = (configuration, $dropDownItem, option) => {
             let checkBoxId = this.configuration.createCheckBoxId(configuration, option);
             let $dropDownItemContent= this.$(`<div class="custom-control custom-checkbox">
-                <input type="checkbox" class="custom-control-input" id="${checkBoxId}">
-                <label class="custom-control-label" for="${checkBoxId}">${option.text}</label>
+                <input type="checkbox" class="custom-control-input">
+                <label class="custom-control-label"></label>
             </div>`);
             $dropDownItemContent.appendTo($dropDownItem);
             let $checkBox = $dropDownItemContent.find(`INPUT[type="checkbox"]`);
+            $checkBox.attr('id',  checkBoxId);
+            let $checkBoxLabel = $dropDownItemContent.find(`label`);
+            $checkBoxLabel.attr('for',  checkBoxId);
+            $checkBoxLabel.text(option.text);
             $dropDownItem.addClass(configuration.dropDownItemClass);
     
             let dropDownItem = $dropDownItem.get(0);
             let dropDownItemContent = $dropDownItemContent.get(0);
      
-            let adapter = this.adapter;
+            let stylingAdapter = this.stylingAdapter;
             return { 
                 select(isSelected){ $checkBox.prop('checked', isSelected); }, 
                 disable(isDisabled){ $checkBox.prop('disabled', isDisabled); },
-                disabledStyle(disabledStyle){ adapter.DisabledStyle($checkBox, disabledStyle); },
+                disabledStyle(disabledStyle){ stylingAdapter.DisabledStyle($checkBox, disabledStyle); },
                 onSelected(toggle) {
                         $checkBox.on("change", toggle)
                         $dropDownItem.on("click", (e) => {
@@ -56,7 +60,7 @@ class Bs4Adapter {
             let $content = this.$(`<span/>`).text(optionItem.text);
             $content.appendTo($selectedItem);
             if (optionItem.disabled)
-                this.adapter.DisableSelectedItemContent($content);
+                this.stylingAdapter.DisableSelectedItemContent($content);
             let $button = this.$('<button aria-label="Close" tabIndex="-1" type="button"><span aria-hidden="true">&times;</span></button>')
                 // bs 'close' class that will be added to button set the float:right, therefore it impossible to configure no-warp policy 
                 // with .css("white-space", "nowrap") or  .css("display", "inline-block"); TODO: migrate to flex? 
@@ -79,8 +83,8 @@ class Bs4Adapter {
                 .prop("disabled", controlDisabled)
             $selectedItem.addClass(configuration.selectedItemClass);
             $button.addClass(configuration.removeSelectedItemButtonClass) // bs close class set the float:right
-            if (this.adapter.CreateSelectedItemContent)
-                this.adapter.CreateSelectedItemContent($selectedItem, $button)
+            if (this.stylingAdapter.CreateSelectedItemContent)
+                this.stylingAdapter.CreateSelectedItemContent($selectedItem, $button)
         }
     }
    
@@ -92,8 +96,8 @@ class Bs4Adapter {
         dom.dropDownMenu.addClass(this.configuration.dropDownMenuClass);
         dom.filterInputItem.addClass(this.configuration.filterInputItemClass);
         dom.filterInput.addClass(this.configuration.filterInputClass);
-        if (this.adapter.OnInit)
-            this.adapter.OnInit(dom)
+        if (this.stylingAdapter.OnInit)
+            this.stylingAdapter.OnInit(dom)
         this.bs4LabelDispose = this.HandleLabel(dom.filterInput);
     }
 
@@ -143,8 +147,8 @@ class Bs4Adapter {
     }
 
     UpdateSize($selectedPanel){
-        if(this.adapter.UpdateSize)
-            this.adapter.UpdateSize($selectedPanel)
+        if(this.stylingAdapter.UpdateSize)
+            this.stylingAdapter.UpdateSize($selectedPanel)
     }
 
     HoverIn($dropDownItem){
@@ -156,21 +160,21 @@ class Bs4Adapter {
     }
 
     Enable($selectedPanel){
-        this.adapter.Enable($selectedPanel)
+        this.stylingAdapter.Enable($selectedPanel)
         disableButton($selectedPanel, false)
     }
 
     Disable($selectedPanel){
-        this.adapter.Disable($selectedPanel)
+        this.stylingAdapter.Disable($selectedPanel)
         disableButton($selectedPanel, true)
     }
 
     FocusIn($selectedPanel){
-        this.adapter.FocusIn($selectedPanel)
+        this.stylingAdapter.FocusIn($selectedPanel)
     }
 
     FocusOut($selectedPanel){
-        this.adapter.FocusOut($selectedPanel)
+        this.stylingAdapter.FocusOut($selectedPanel)
     }
 }
 
