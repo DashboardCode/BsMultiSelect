@@ -5,8 +5,7 @@ function disableButton($selectedPanel, isDisabled){
 // addClass, removeClass, css, siblings('label'), hasClass, find('BUTTON').prop(..)
 class Bs4Adapter {
 
-    constructor(
-        stylingAdapter, configuration, $){
+    constructor(stylingAdapter, configuration, $){
         const defaults = {
             containerClass: 'dashboardcode-bsmultiselect',
             dropDownMenuClass: 'dropdown-menu',
@@ -24,22 +23,18 @@ class Bs4Adapter {
         this.stylingAdapter = stylingAdapter;
         this.bs4LabelDispose = null;
         
-        this.createDropDownItemContent = (configuration, $dropDownItem, option) => {
-            let checkBoxId = this.configuration.createCheckBoxId(configuration, option);
+        this.createDropDownItemContent = (dropDownItem, option) => {
+            let $dropDownItem = $(dropDownItem);
+            $dropDownItem.addClass(configuration.dropDownItemClass);
             let $dropDownItemContent= this.$(`<div class="custom-control custom-checkbox">
                 <input type="checkbox" class="custom-control-input">
                 <label class="custom-control-label"></label>
             </div>`);
-            $dropDownItemContent.appendTo($dropDownItem);
+            $dropDownItemContent.appendTo(dropDownItem);
             let $checkBox = $dropDownItemContent.find(`INPUT[type="checkbox"]`);
-            $checkBox.attr('id',  checkBoxId);
             let $checkBoxLabel = $dropDownItemContent.find(`label`);
-            $checkBoxLabel.attr('for',  checkBoxId);
             $checkBoxLabel.text(option.text);
-            $dropDownItem.addClass(configuration.dropDownItemClass);
-    
-            let dropDownItem = $dropDownItem.get(0);
-            let dropDownItemContent = $dropDownItemContent.get(0);
+            
      
             let stylingAdapter = this.stylingAdapter;
             return { 
@@ -48,15 +43,17 @@ class Bs4Adapter {
                 disabledStyle(disabledStyle){ stylingAdapter.DisabledStyle($checkBox, disabledStyle); },
                 onSelected(toggle) {
                         $checkBox.on("change", toggle)
-                        $dropDownItem.on("click", (e) => {
-                            if (e.target == dropDownItem || e.target == dropDownItemContent)
+                        $dropDownItem.on("click", event => {
+                            if (dropDownItem === event.target || $.contains(dropDownItem, event.target)) {
                                 toggle();
+                            }
                         })
                 }
             }
         }
 
-        this.createSelectedItemContent = (configuration, $selectedItem, optionItem, removeSelectedItem, controlDisabled) => {
+        this.createSelectedItemContent = (selectedItem, optionItem, removeSelectedItem, controlDisabled) => {
+            let $selectedItem = $(selectedItem)
             let $content = this.$(`<span/>`).text(optionItem.text);
             $content.appendTo($selectedItem);
             if (optionItem.disabled)
@@ -104,7 +101,7 @@ class Bs4Adapter {
     HandleLabel($filterInput){
         var label = this.configuration.label;
         if (label!=null) {
-            var newForId = this.configuration.createInputId(this.configuration);
+            var newForId = this.configuration.createInputId();
             var backupForId =  label.getAttribute('for');
             $filterInput.attr('id', newForId);
             label.setAttribute('for',newForId);
@@ -121,12 +118,12 @@ class Bs4Adapter {
     }
 
     // ------------------------------------------------------------------------------------------------
-    CreateDropDownItemContent($dropDownItem, option){
-        return this.createDropDownItemContent(this.configuration, $dropDownItem, option);
+    CreateDropDownItemContent(dropDownItem, option){
+        return this.createDropDownItemContent(dropDownItem, option);
     }
 
-    CreateSelectedItemContent($selectedItem, optionItem, removeSelectedItem, controlDisabled){
-        return this.createSelectedItemContent(this.configuration, $selectedItem, optionItem, removeSelectedItem, controlDisabled);
+    CreateSelectedItemContent(selectedItem, optionItem, removeSelectedItem, controlDisabled){
+        return this.createSelectedItemContent(selectedItem, optionItem, removeSelectedItem, controlDisabled);
     }
 
     // -----------------------

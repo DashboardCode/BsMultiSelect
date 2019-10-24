@@ -11,6 +11,7 @@ import OptionsAdapterJson from './OptionsAdapterJson';
   AddToJQueryPrototype('BsMultiSelect', function (element, configuration, onDispose) {
     var optionsAdapter = null;
     configuration = $.extend({}, configuration);
+    if (configuration.buildConfiguration) configuration.buildConfiguration(element, configuration);
     if (configuration.optionsAdapter) optionsAdapter = configuration.optionsAdapter;else {
       optionsAdapter = configuration.options ? new OptionsAdapterJson(element, configuration) : new OptionsAdapterElement(element, configuration, $);
     }

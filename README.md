@@ -196,6 +196,7 @@ Note, BS allready provide classes like: `h-25`, `bg-light`, `text-primary` that 
 
 * autosuggestions's list could be too long if your filter is weak (and items number in it is not configurable)
 
+
 ### Future development
 
 It should be ready for BS 5 that means for "no jquery". Biggest analytical problem : should it be splitted to several npm packages. Please contact me if you want to discuss it.  

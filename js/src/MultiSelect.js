@@ -120,9 +120,10 @@ class MultiSelect {
         let $dropDownItem = this.$("<LI/>").prop("hidden", isHidden)
         $dropDownItem.data("option-text", itemText.toLowerCase()).appendTo(this.dropDownMenu);
         $dropDownItem.data("option", optionElement);
+        let dropDownItem = $dropDownItem.get(0);
         
         //let optionData = {"optionId":optionElement.value, "itemText": optionElement.text }
-        let adjustDropDownItem = this.adapter.CreateDropDownItemContent($dropDownItem, optionElement);
+        let adjustDropDownItem = this.adapter.CreateDropDownItemContent(dropDownItem, optionElement);
         let isDisabled = optionElement.disabled;
         let isSelected = optionElement.selected;
 
@@ -141,6 +142,7 @@ class MultiSelect {
             if (optionElement.hidden)
                 return;
             let $selectedItem = this.$("<LI/>")
+            let selectedItem = $selectedItem.get(0);
             
             let adjustPair =(isSelected, toggle, remove) => {
                 optionElement.selected = isSelected;
@@ -170,7 +172,7 @@ class MultiSelect {
                 this.closeDropDown();
             };
             this.adapter.CreateSelectedItemContent(
-                $selectedItem,
+                selectedItem,
                 optionElement,
                 removeItemAndCloseDropDown,
                 this.disabled

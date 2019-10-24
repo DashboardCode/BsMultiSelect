@@ -3,10 +3,14 @@ class OptionsAdapterJson {
 
         configuration.getIsValid=configuration.hasOwnProperty("getIsValid")?configuration.getIsValid:()=>false;
         configuration.getIsInvalid=configuration.hasOwnProperty("getIsInvalid")?configuration.getIsInvalid:()=>false;
-        configuration.createInputId=(configuration)=>`${configuration.containerClass}-generated-filter-${container.id}`;
-        configuration.label=configuration.hasOwnProperty("label")?configuration.label:null;
-        configuration.createCheckBoxId=(configuration, option) =>`${configuration.containerClass}-${container.id}-generated-checkbox-${option.value.toLowerCase()}-id`;
 
+        var idPart = container.id;
+        var classPart = configuration.containerClass;
+        if (!configuration.createInputId)
+            configuration.createInputId=()=>`${classPart}-generated-filter-${idPart}`;
+        //if (!configuration.createCheckBoxId)
+        //    configuration.createCheckBoxId=(option) =>`${classPart}-${idPart}-generated-checkbox-${option.value.toLowerCase()}-id`;
+        configuration.label=configuration.hasOwnProperty("label")?configuration.label:null;
         this.init = (ms) => {
             let {$container, $selectedPanel, $dropDownMenu, $filterInput} = ms.fillContainer(container,
                 ()=> {

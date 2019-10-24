@@ -13,6 +13,10 @@ import OptionsAdapterJson from './OptionsAdapterJson';
             (element, configuration, onDispose) => {
                 let optionsAdapter = null;
                 configuration= $.extend({}, configuration);
+                                 
+                if (configuration.buildConfiguration)
+                    configuration.buildConfiguration(element, configuration);
+
                 if (configuration.optionsAdapter)
                     optionsAdapter = configuration.optionsAdapter;
                 else

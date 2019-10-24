@@ -1,5 +1,5 @@
 /*!
-  * DashboardCode BsMultiSelect v0.3.1 (https://dashboardcode.github.io/BsMultiSelect/)
+  * DashboardCode BsMultiSelect v0.4.0 (https://dashboardcode.github.io/BsMultiSelect/)
   * Copyright 2017-2019 Roman Pokrovskij (github user rpokrovskij)
   * Licensed under APACHE 2 (https://github.com/DashboardCode/BsMultiSelect/blob/master/LICENSE)
   */
@@ -292,9 +292,10 @@
         var itemText = optionElement.text;
         var $dropDownItem = this.$("<LI/>").prop("hidden", isHidden);
         $dropDownItem.data("option-text", itemText.toLowerCase()).appendTo(this.dropDownMenu);
-        $dropDownItem.data("option", optionElement); //let optionData = {"optionId":optionElement.value, "itemText": optionElement.text }
+        $dropDownItem.data("option", optionElement);
+        var dropDownItem = $dropDownItem.get(0); //let optionData = {"optionId":optionElement.value, "itemText": optionElement.text }
 
-        var adjustDropDownItem = this.adapter.CreateDropDownItemContent($dropDownItem, optionElement);
+        var adjustDropDownItem = this.adapter.CreateDropDownItemContent(dropDownItem, optionElement);
         var isDisabled = optionElement.disabled;
         var isSelected = optionElement.selected;
         if (isSelected && isDisabled) adjustDropDownItem.disabledStyle(true);else if (isDisabled) adjustDropDownItem.disable(isDisabled);
@@ -309,6 +310,8 @@
           if (optionElement.hidden) return;
 
           var $selectedItem = _this2.$("<LI/>");
+
+          var selectedItem = $selectedItem.get(0);
 
           var adjustPair = function adjustPair(isSelected, toggle, remove) {
             optionElement.selected = isSelected;
@@ -334,7 +337,7 @@
             _this2.closeDropDown();
           };
 
-          _this2.adapter.CreateSelectedItemContent($selectedItem, optionElement, removeItemAndCloseDropDown, _this2.disabled);
+          _this2.adapter.CreateSelectedItemContent(selectedItem, optionElement, removeItemAndCloseDropDown, _this2.disabled);
 
           adjustPair(true, removeItem, removeItemAndCloseDropDown);
           $selectedItem.insertBefore(_this2.filterInputItem);
@@ -751,20 +754,16 @@
         this.stylingAdapter = stylingAdapter;
         this.bs4LabelDispose = null;
 
-        this.createDropDownItemContent = function (configuration, $dropDownItem, option) {
-          var checkBoxId = _this.configuration.createCheckBoxId(configuration, option);
+        this.createDropDownItemContent = function (dropDownItem, option) {
+          var $dropDownItem = $(dropDownItem);
+          $dropDownItem.addClass(configuration.dropDownItemClass);
 
           var $dropDownItemContent = _this.$("<div class=\"custom-control custom-checkbox\">\n                <input type=\"checkbox\" class=\"custom-control-input\">\n                <label class=\"custom-control-label\"></label>\n            </div>");
 
-          $dropDownItemContent.appendTo($dropDownItem);
+          $dropDownItemContent.appendTo(dropDownItem);
           var $checkBox = $dropDownItemContent.find("INPUT[type=\"checkbox\"]");
-          $checkBox.attr('id', checkBoxId);
           var $checkBoxLabel = $dropDownItemContent.find("label");
-          $checkBoxLabel.attr('for', checkBoxId);
           $checkBoxLabel.text(option.text);
-          $dropDownItem.addClass(configuration.dropDownItemClass);
-          var dropDownItem = $dropDownItem.get(0);
-          var dropDownItemContent = $dropDownItemContent.get(0);
           var stylingAdapter = _this.stylingAdapter;
           return {
             select: function select(isSelected) {
@@ -778,14 +777,18 @@
             },
             onSelected: function onSelected(toggle) {
               $checkBox.on("change", toggle);
-              $dropDownItem.on("click", function (e) {
-                if (e.target == dropDownItem || e.target == dropDownItemContent) toggle();
+              $dropDownItem.on("click", function (event) {
+                if (dropDownItem === event.target || $.contains(dropDownItem, event.target)) {
+                  toggle();
+                }
               });
             }
           };
         };
 
-        this.createSelectedItemContent = function (configuration, $selectedItem, optionItem, removeSelectedItem, controlDisabled) {
+        this.createSelectedItemContent = function (selectedItem, optionItem, removeSelectedItem, controlDisabled) {
+          var $selectedItem = $(selectedItem);
+
           var $content = _this.$("<span/>").text(optionItem.text);
 
           $content.appendTo($selectedItem);
@@ -832,7 +835,7 @@
         var label = this.configuration.label;
 
         if (label != null) {
-          var newForId = this.configuration.createInputId(this.configuration);
+          var newForId = this.configuration.createInputId();
           var backupForId = label.getAttribute('for');
           $filterInput.attr('id', newForId);
           label.setAttribute('for', newForId);
@@ -849,12 +852,12 @@
       } // ------------------------------------------------------------------------------------------------
       ;
 
-      _proto.CreateDropDownItemContent = function CreateDropDownItemContent($dropDownItem, option) {
-        return this.createDropDownItemContent(this.configuration, $dropDownItem, option);
+      _proto.CreateDropDownItemContent = function CreateDropDownItemContent(dropDownItem, option) {
+        return this.createDropDownItemContent(dropDownItem, option);
       };
 
-      _proto.CreateSelectedItemContent = function CreateSelectedItemContent($selectedItem, optionItem, removeSelectedItem, controlDisabled) {
-        return this.createSelectedItemContent(this.configuration, $selectedItem, optionItem, removeSelectedItem, controlDisabled);
+      _proto.CreateSelectedItemContent = function CreateSelectedItemContent(selectedItem, optionItem, removeSelectedItem, controlDisabled) {
+        return this.createSelectedItemContent(selectedItem, optionItem, removeSelectedItem, controlDisabled);
       } // -----------------------
       ;
 
@@ -918,10 +921,11 @@
         return $selectElement.hasClass("is-invalid");
       };
 
-      configuration.createInputId = function (configuration) {
-        return configuration.containerClass + "-generated-filter-" + selectElement.name.toLowerCase() + "-id";
+      var idPart = selectElement.id ? selectElement.id.toLowerCase() : selectElement.name.toLowerCase();
+      var classPart = configuration.containerClass;
+      if (!configuration.createInputId) configuration.createInputId = function () {
+        return classPart + "-generated-input-" + idPart + "-id";
       };
-
       configuration.label = null;
       var $formGroup = $selectElement.closest('.form-group');
 
@@ -937,10 +941,6 @@
           }
         }
       }
-
-      configuration.createCheckBoxId = function (configuration, option) {
-        return configuration.containerClass + "-" + selectElement.name.toLowerCase() + "-generated-checkbox-" + option.value.toLowerCase() + "-id";
-      };
 
       this.init = function (ms) {
         selectElement.style.display = 'none';
@@ -973,16 +973,14 @@
       configuration.getIsInvalid = configuration.hasOwnProperty("getIsInvalid") ? configuration.getIsInvalid : function () {
         return false;
       };
-
-      configuration.createInputId = function (configuration) {
-        return configuration.containerClass + "-generated-filter-" + container.id;
-      };
+      var idPart = container.id;
+      var classPart = configuration.containerClass;
+      if (!configuration.createInputId) configuration.createInputId = function () {
+        return classPart + "-generated-filter-" + idPart;
+      }; //if (!configuration.createCheckBoxId)
+      //    configuration.createCheckBoxId=(option) =>`${classPart}-${idPart}-generated-checkbox-${option.value.toLowerCase()}-id`;
 
       configuration.label = configuration.hasOwnProperty("label") ? configuration.label : null;
-
-      configuration.createCheckBoxId = function (configuration, option) {
-        return configuration.containerClass + "-" + container.id + "-generated-checkbox-" + option.value.toLowerCase() + "-id";
-      };
 
       this.init = function (ms) {
         var _ms$fillContainer = ms.fillContainer(container, function () {
@@ -1009,6 +1007,7 @@
       AddToJQueryPrototype('BsMultiSelect', function (element, configuration, onDispose) {
         var optionsAdapter = null;
         configuration = $.extend({}, configuration);
+        if (configuration.buildConfiguration) configuration.buildConfiguration(element, configuration);
         if (configuration.optionsAdapter) optionsAdapter = configuration.optionsAdapter;else {
           optionsAdapter = configuration.options ? new OptionsAdapterJson(element, configuration) : new OptionsAdapterElement(element, configuration, $);
         }

@@ -4,7 +4,12 @@ class OptionsAdapterElement {
         
         configuration.getIsValid=()=>$selectElement.hasClass("is-valid");
         configuration.getIsInvalid=()=>$selectElement.hasClass("is-invalid");
-        configuration.createInputId=(configuration)=>`${configuration.containerClass}-generated-filter-${selectElement.name.toLowerCase()}-id`;
+
+        var idPart = (selectElement.id)?selectElement.id.toLowerCase():selectElement.name.toLowerCase();
+        var classPart = configuration.containerClass;
+        if (!configuration.createInputId)
+            configuration.createInputId=()=>`${classPart}-generated-input-${idPart}-id`;
+        
         configuration.label=null;
         let $formGroup = $selectElement.closest('.form-group');
         if ($formGroup.length == 1) {
@@ -18,7 +23,6 @@ class OptionsAdapterElement {
                 }
             }   
         }
-        configuration.createCheckBoxId=(configuration, option)=>`${configuration.containerClass}-${selectElement.name.toLowerCase()}-generated-checkbox-${option.value.toLowerCase()}-id`;
 
         this.init = (ms) => {
             selectElement.style.display='none';

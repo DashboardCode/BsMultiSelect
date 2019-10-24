@@ -1,5 +1,6 @@
 # CHANGELOG
 ````
+0.4.0  - customization through build method added; id generation for label-input was redesigned once more (now id is used first, if id is absent then name); checkboxes now doesn't have ids (events are used to reference label and checbox).
 0.3.0  - full customization from jquery plugin configuration object.
          BREAKING CHANGES: 1) configuration object is now named "configuration" (was options)
          2) id generation - new ids (btw, id generation can be customized assigning configuration.createCheckBoxId and configuration.createInputId methods)
