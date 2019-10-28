@@ -18,7 +18,7 @@ class MultiSelect {
         }
         // readonly
         this.adapter = adapter;
-        this.optionsAdapter = optionsAdapter;
+        
         this.window = window;
         this.document = window.document;
         this.onDispose=onDispose;
@@ -53,7 +53,7 @@ class MultiSelect {
         // jquery adapters
         this.$document= $(this.document);
 
-        //this.createContainer();
+        optionsAdapter(this);
         
     }
     updateDropDownPosition(force) {
@@ -387,7 +387,6 @@ class MultiSelect {
     }
 
     init($container, $selectedPanel, $dropDownMenu, $filterInput, onChange, getOptions, getDisabled) {
-        this.optionsAdapter(this);
         this.getDisabled=getDisabled;
         this.popper = new Popper(this.filterInput, this.dropDownMenu, {
             placement: 'bottom-start',

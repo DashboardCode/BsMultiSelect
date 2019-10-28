@@ -124,7 +124,6 @@
 
 
         this.adapter = adapter;
-        this.optionsAdapter = optionsAdapter;
         this.window = window;
         this.document = window.document;
         this.onDispose = onDispose;
@@ -153,7 +152,8 @@
         this.bs4SelectedItemContent = bs4SelectedItemContent;
         this.bs4DropDownItemContent = bs4DropDownItemContent; // jquery adapters
 
-        this.$document = $(this.document); //this.createContainer();
+        this.$document = $(this.document);
+        optionsAdapter(this);
       }
 
       var _proto = MultiSelect.prototype;
@@ -522,7 +522,6 @@
       _proto.init = function init($container, $selectedPanel, $dropDownMenu, $filterInput, onChange, getOptions, getDisabled) {
         var _this4 = this;
 
-        this.optionsAdapter(this);
         this.getDisabled = getDisabled;
         this.popper = new Popper(this.filterInput, this.dropDownMenu, {
           placement: 'bottom-start',
