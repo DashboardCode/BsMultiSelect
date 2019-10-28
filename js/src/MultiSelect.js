@@ -12,12 +12,13 @@ const defDropDownMenuStyleSys  = {'list-style-type':'none'}; // remove bullets s
 // $e.appendTo, $e.remove, $e.find, $e.closest, $e.prev, $e.data, $e.val
 
 class MultiSelect {
-    constructor(optionsAdapter, adapter, configuration, onDispose, window, $) {
+    constructor(optionsAdapter, adapter, bs4SelectedItemContent, bs4DropDownItemContent, configuration, onDispose, window, $) {
         if (typeof Popper === 'undefined') {
             throw new TypeError('DashboardCode BsMultiSelect require Popper.js (https://popper.js.org)')
         }
         // readonly
         this.adapter = adapter;
+        this.optionsAdapter = optionsAdapter;
         this.window = window;
         this.document = window.document;
         this.onDispose=onDispose;
@@ -32,24 +33,28 @@ class MultiSelect {
         this.dropDownMenu = null;
         this.popper = null;
         this.getDisabled=null;
+        
         // removable handlers
         this.selectedPanelClick  = null;
-        this.documentMouseup   = null;
-        this.containerMousedown   = null;
-        this.documentMouseup2   = null;
+        this.documentMouseup = null;
+        this.containerMousedown = null;
+        this.documentMouseup2 = null;
+        
         // state
-        this.disabled=null;
+        this.disabled = null;
         this.filterInputItemOffsetLeft = null; // used to detect changes in input field position (by comparision with current value)
         this.skipFocusout = false;
         this.hoveredDropDownItem = null;
         this.hoveredDropDownIndex = null;
         this.hasDropDownVisible = false;
+        this.bs4SelectedItemContent=bs4SelectedItemContent;
+        this.bs4DropDownItemContent=bs4DropDownItemContent;
 
         // jquery adapters
         this.$document= $(this.document);
 
         //this.createContainer();
-        optionsAdapter.init(this);
+        
     }
     updateDropDownPosition(force) {
         let offsetLeft = this.filterInputItem.offsetLeft;
@@ -123,7 +128,7 @@ class MultiSelect {
         let dropDownItem = $dropDownItem.get(0);
         
         //let optionData = {"optionId":optionElement.value, "itemText": optionElement.text }
-        let adjustDropDownItem = this.adapter.CreateDropDownItemContent(dropDownItem, optionElement);
+        let adjustDropDownItem = this.bs4DropDownItemContent.CreateDropDownItemContent(dropDownItem, optionElement); 
         let isDisabled = optionElement.disabled;
         let isSelected = optionElement.selected;
 
@@ -141,14 +146,15 @@ class MultiSelect {
         let selectItem = (doPublishEvents) => {
             if (optionElement.hidden)
                 return;
-            let $selectedItem = this.$("<LI/>")
+            let $selectedItem = this.$("<LI/>");
             let selectedItem = $selectedItem.get(0);
             
-            let adjustPair =(isSelected, toggle, remove) => {
+            let adjustPair =(isSelected, toggle, remove, disable) => {
                 optionElement.selected = isSelected;
                 adjustDropDownItem.select(isSelected);
                 $dropDownItem.data("option-toggle", toggle);                    
-                $selectedItem.data("option-remove", remove)
+                $selectedItem.data("option-remove", remove);
+                $selectedItem.data("option-disable", disable);
             }
 
             let removeItem = () => {
@@ -161,23 +167,46 @@ class MultiSelect {
                             return;
                         selectItem(true);
                     }, 
+                    null,
                     null
-                    )
+                    );
                 $selectedItem.remove();
                 onChange();
             };
             
+            // what is a problem with calling removeSelectedItem directly (not using  setTimeout(removeSelectedItem, 0)):
+            // consider situation "MultiSelect" on DROPDOWN (that should be closed on the click outside dropdown)
+            // therefore we aslo have document's click's handler where we decide to close or leave the DROPDOWN open.
+            // because of the event's bubling process removeSelectedItem runs first. 
+            // that means the event's target element on which we click (the x button) will be removed from the DOM together with badge 
+            // before we could analize is it belong to our dropdown or not.
+            // important 1: we can't just the stop propogation using stopPropogate because click outside dropdown on the similar 
+            // component that use stopPropogation will not close dropdown (error, dropdown should be closed)
+            // important 2: we can't change the dropdown's event handler to leave dropdown open if event's target is null because of
+            // the situation described above: click outside dropdown on the same component.
+            // Alternatively it could be possible to use stopPropogate but together create custom click event setting new target that belomgs to DOM (e.g. panel)
+
             let removeItemAndCloseDropDown = () => {
                 removeItem();
                 this.closeDropDown();
             };
-            this.adapter.CreateSelectedItemContent(
+
+            let onRemoveItemEvent = (jqEvent) => {
+                setTimeout( ()=> {  
+                    removeItem();
+                    this.closeDropDown();
+                }, 0);
+                this.ProcessedBySelectedItemContentEvent=jqEvent;
+            };
+
+            let bsSelectedItemContent = this.bs4SelectedItemContent.CreateSelectedItemContent(
                 selectedItem,
                 optionElement,
-                removeItemAndCloseDropDown,
-                this.disabled
+                onRemoveItemEvent
             );
-            adjustPair(true, removeItem, removeItemAndCloseDropDown);
+            //bsSelectedItemContentList.push(bsSelectedItemContent);
+            bsSelectedItemContent.disable(this.disabled);
+            adjustPair(true, ()=>removeItem(), removeItemAndCloseDropDown, bsSelectedItemContent.disable);
             $selectedItem.insertBefore(this.filterInputItem);
             if (doPublishEvents){
                 onChange();
@@ -282,7 +311,9 @@ class MultiSelect {
             if (disabled) {
                 this.filterInput.style.display = "none";
                 this.adapter.Disable($selectedPanel);
-
+                $selectedPanel.find('LI').each( 
+                    function (i, e) {let disable = $(e).data("option-disable"); if (disable!=null) disable(true); } );
+                    
                 $container.unbind("mousedown", this.containerMousedown);
                 this.$document.unbind("mouseup", this.documentMouseup);
 
@@ -292,11 +323,13 @@ class MultiSelect {
             } else {
                 this.filterInput.style.display = "inline-block";
                 this.adapter.Enable($selectedPanel);
+                $selectedPanel.find('LI').each( 
+                    function (i, e) {let disable = $(e).data("option-disable"); if (disable!=null) disable(false);} );
 
-                $container.mousedown(this.containerMousedown);    // removable
-                this.$document.mouseup(this.documentMouseup); // removable
+                $container.mousedown(this.containerMousedown); // removable
+                this.$document.mouseup(this.documentMouseup);  // removable
 
-                $selectedPanel.click(this.selectedPanelClick);     // removable
+                $selectedPanel.click(this.selectedPanelClick); // removable
                 this.$document.mouseup(this.documentMouseup2); // removable
             }
             this.disabled=disabled;
@@ -337,13 +370,14 @@ class MultiSelect {
                 this.closeDropDown();
             }
         }
-        this.selectedPanelClick = event => {
-            if (event.target.nodeName != "INPUT")
+        this.selectedPanelClick = jqEvent => {
+            if (jqEvent.target.nodeName != "INPUT")
                 this.$(this.filterInput).val('').focus();
-            if (this.hasDropDownVisible && this.adapter.IsClickToOpenDropdown(event)){
+            if (this.hasDropDownVisible &&  (this.ProcessedBySelectedItemContentEvent==null || this.ProcessedBySelectedItemContentEvent.originalEvent!=jqEvent.originalEvent)){
                 this.updateDropDownPosition(true);
                 this.showDropDown();
             }
+            this.ProcessedBySelectedItemContentEvent=null;
         };
         this.adapter.Init({
             container:$container, selectedPanel:$selectedPanel,
@@ -353,6 +387,7 @@ class MultiSelect {
     }
 
     init($container, $selectedPanel, $dropDownMenu, $filterInput, onChange, getOptions, getDisabled) {
+        this.optionsAdapter(this);
         this.getDisabled=getDisabled;
         this.popper = new Popper(this.filterInput, this.dropDownMenu, {
             placement: 'bottom-start',
@@ -362,7 +397,9 @@ class MultiSelect {
                 flip: {enabled:false}
                 }
         });
+        
         this.adapter.UpdateIsValid($selectedPanel);
+        
         this.UpdateSizeImpl($selectedPanel);
         this.UpdateDisabledImpl($container, $selectedPanel);
         // some browsers (IE11) can change select value (as part of "autocomplete") after page is loaded but before "ready" event

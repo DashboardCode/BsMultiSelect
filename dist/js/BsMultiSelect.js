@@ -1,5 +1,5 @@
 /*!
-  * DashboardCode BsMultiSelect v0.4.0 (https://dashboardcode.github.io/BsMultiSelect/)
+  * DashboardCode BsMultiSelect v0.4.1-beta (https://dashboardcode.github.io/BsMultiSelect/)
   * Copyright 2017-2019 Roman Pokrovskij (github user rpokrovskij)
   * Licensed under APACHE 2 (https://github.com/DashboardCode/BsMultiSelect/blob/master/LICENSE)
   */
@@ -7,146 +7,89 @@
     typeof exports === 'object' && typeof module !== 'undefined' ? factory(require('jquery'), require('popper.js')) :
     typeof define === 'function' && define.amd ? define(['jquery', 'popper.js'], factory) :
     (global = global || self, factory(global.jQuery, global.Popper));
-}(this, function ($, Popper) { 'use strict';
+}(this, function ($$1, Popper) { 'use strict';
 
-    $ = $ && $.hasOwnProperty('default') ? $['default'] : $;
+    $$1 = $$1 && $$1.hasOwnProperty('default') ? $$1['default'] : $$1;
     Popper = Popper && Popper.hasOwnProperty('default') ? Popper['default'] : Popper;
 
-    var Bs4AdapterCss =
-    /*#__PURE__*/
-    function () {
-      function Bs4AdapterCss(configuration, $) {
-        var defaults = {
-          selectedPanelFocusClass: 'focus',
-          selectedPanelDisabledClass: 'disabled',
-          selectedItemContentDisabledClass: 'disabled',
-          dropDownItemDisabledClass: 'disabled'
-        };
-        var tmp = $.extend({}, defaults, configuration);
-        this.configuration = $.extend(configuration, tmp);
+    function ExtendIfUndefined(destination, source) {
+      for (var property in source) {
+        if (destination[property] === undefined) destination[property] = source[property];
       }
+    }
+    function ExtendIfUndefinedFluent(destination, source) {
+      ExtendIfUndefined(destination, source);
+      return destination;
+    }
 
-      var _proto = Bs4AdapterCss.prototype;
+    var defaults = {
+      selectedPanelFocusClass: 'focus',
+      selectedPanelDisabledClass: 'disabled',
+      dropDownItemDisabledClass: 'disabled'
+    };
 
-      _proto.DisableSelectedItemContent = function DisableSelectedItemContent($content) {
-        $content.addClass(this.configuration.selectedItemContentDisabledClass);
+    function StylingBs4AdapterCss(configuration) {
+      ExtendIfUndefined(configuration, defaults);
+      return {
+        Enable: function Enable($selectedPanel) {
+          $selectedPanel.removeClass(configuration.selectedPanelDisabledClass);
+        },
+        Disable: function Disable($selectedPanel) {
+          $selectedPanel.addClass(configuration.selectedPanelDisabledClass);
+        },
+        FocusIn: function FocusIn($selectedPanel) {
+          $selectedPanel.addClass(configuration.selectedPanelFocusClass);
+        },
+        FocusOut: function FocusOut($selectedPanel) {
+          $selectedPanel.removeClass(configuration.selectedPanelFocusClass);
+        }
       };
-
-      _proto.DisabledStyle = function DisabledStyle($checkBox, isDisbaled) {
-        if (isDisbaled) $checkBox.addClass(this.configuration.dropDownItemDisabledClass);else $checkBox.removeClass(this.configuration.dropDownItemDisabledClass);
-      };
-
-      _proto.Enable = function Enable($selectedPanel) {
-        $selectedPanel.removeClass(this.configuration.selectedPanelDisabledClass);
-      };
-
-      _proto.Disable = function Disable($selectedPanel) {
-        $selectedPanel.addClass(this.configuration.selectedPanelDisabledClass);
-      };
-
-      _proto.FocusIn = function FocusIn($selectedPanel) {
-        $selectedPanel.addClass(this.configuration.selectedPanelFocusClass);
-      };
-
-      _proto.FocusOut = function FocusOut($selectedPanel) {
-        $selectedPanel.removeClass(this.configuration.selectedPanelFocusClass);
-      };
-
-      return Bs4AdapterCss;
-    }();
+    }
 
     var defSelectedPanelStyle = {
       'margin-bottom': '0',
       'height': 'auto'
     };
-    var defSelectedItemStyle = {
-      'padding-left': '0px',
-      'line-height': '1.5em'
-    };
-    var defRemoveSelectedItemButtonStyle = {
-      'font-size': '1.5em',
-      'line-height': '.9em'
-    };
 
-    var Bs4AdapterJs =
-    /*#__PURE__*/
-    function () {
-      function Bs4AdapterJs(configuration, $) {
-        var defaults = {
-          selectedPanelDefMinHeight: 'calc(2.25rem + 2px)',
-          selectedPanelLgMinHeight: 'calc(2.875rem + 2px)',
-          selectedPanelSmMinHeight: 'calc(1.8125rem + 2px)',
-          selectedPanelDisabledBackgroundColor: '#e9ecef',
-          selectedPanelFocusBorderColor: '#80bdff',
-          selectedPanelFocusBoxShadow: '0 0 0 0.2rem rgba(0, 123, 255, 0.25)',
-          selectedPanelFocusValidBoxShadow: '0 0 0 0.2rem rgba(40, 167, 69, 0.25)',
-          selectedPanelFocusInvalidBoxShadow: '0 0 0 0.2rem rgba(220, 53, 69, 0.25)',
-          filterInputColor: '#495057',
-          selectedItemContentDisabledOpacity: '.65',
-          dropdDownLabelDisabledColor: '#6c757d'
-        };
-        var tmp = $.extend({}, defaults, configuration);
-        this.configuration = $.extend(configuration, tmp);
-      }
-
-      var _proto = Bs4AdapterJs.prototype;
-
-      _proto.OnInit = function OnInit(dom) {
-        dom.selectedPanel.css(defSelectedPanelStyle);
-        dom.filterInput.css("color", this.configuration.filterInputColor);
-      };
-
-      _proto.CreateSelectedItemContent = function CreateSelectedItemContent($selectedItem, $button) {
-        $selectedItem.css(defSelectedItemStyle);
-        $button.css(defRemoveSelectedItemButtonStyle);
-      };
-
-      _proto.DisableSelectedItemContent = function DisableSelectedItemContent($content) {
-        $content.css("opacity", this.configuration.selectedItemContentDisabledOpacity);
-      };
-
-      _proto.DisabledStyle = function DisabledStyle($checkBox, isDisbaled) {
-        $checkBox.siblings('label').css('color', isDisbaled ? this.configuration.dropdDownLabelDisabledColor : '');
-      };
-
-      _proto.UpdateSize = function UpdateSize($selectedPanel) {
-        if ($selectedPanel.hasClass("form-control-lg")) {
-          $selectedPanel.css("min-height", this.configuration.selectedPanelLgMinHeight);
-        } else if ($selectedPanel.hasClass("form-control-sm")) {
-          $selectedPanel.css("min-height", this.configuration.selectedPanelSmMinHeight);
-        } else {
-          $selectedPanel.css("min-height", this.configuration.selectedPanelDefMinHeight);
+    function StylingBs4AdapterJs(configuration) {
+      return {
+        OnInit: function OnInit(dom) {
+          dom.selectedPanel.css(defSelectedPanelStyle);
+          dom.filterInput.css("color", configuration.filterInputColor);
+        },
+        UpdateSize: function UpdateSize($selectedPanel) {
+          if ($selectedPanel.hasClass("form-control-lg")) {
+            $selectedPanel.css("min-height", configuration.selectedPanelLgMinHeight);
+          } else if ($selectedPanel.hasClass("form-control-sm")) {
+            $selectedPanel.css("min-height", configuration.selectedPanelSmMinHeight);
+          } else {
+            $selectedPanel.css("min-height", configuration.selectedPanelDefMinHeight);
+          }
+        },
+        Enable: function Enable($selectedPanel) {
+          $selectedPanel.css({
+            "background-color": ""
+          });
+        },
+        Disable: function Disable($selectedPanel) {
+          $selectedPanel.css({
+            "background-color": configuration.selectedPanelDisabledBackgroundColor
+          });
+        },
+        FocusIn: function FocusIn($selectedPanel) {
+          if ($selectedPanel.hasClass("is-valid")) {
+            $selectedPanel.css("box-shadow", configuration.selectedPanelFocusValidBoxShadow);
+          } else if ($selectedPanel.hasClass("is-invalid")) {
+            $selectedPanel.css("box-shadow", configuration.selectedPanelFocusInvalidBoxShadow);
+          } else {
+            $selectedPanel.css("box-shadow", configuration.selectedPanelFocusBoxShadow).css("border-color", configuration.selectedPanelFocusBorderColor);
+          }
+        },
+        FocusOut: function FocusOut($selectedPanel) {
+          $selectedPanel.css("box-shadow", "").css("border-color", "");
         }
       };
-
-      _proto.Enable = function Enable($selectedPanel) {
-        $selectedPanel.css({
-          "background-color": ""
-        });
-      };
-
-      _proto.Disable = function Disable($selectedPanel) {
-        $selectedPanel.css({
-          "background-color": this.configuration.selectedPanelDisabledBackgroundColor
-        });
-      };
-
-      _proto.FocusIn = function FocusIn($selectedPanel) {
-        if ($selectedPanel.hasClass("is-valid")) {
-          $selectedPanel.css("box-shadow", this.configuration.selectedPanelFocusValidBoxShadow);
-        } else if ($selectedPanel.hasClass("is-invalid")) {
-          $selectedPanel.css("box-shadow", this.configuration.selectedPanelFocusInvalidBoxShadow);
-        } else {
-          $selectedPanel.css("box-shadow", this.configuration.selectedPanelFocusBoxShadow).css("border-color", this.configuration.selectedPanelFocusBorderColor);
-        }
-      };
-
-      _proto.FocusOut = function FocusOut($selectedPanel) {
-        $selectedPanel.css("box-shadow", "").css("border-color", "");
-      };
-
-      return Bs4AdapterJs;
-    }();
+    }
 
     var defSelectedPanelStyleSys = {
       'display': 'flex',
@@ -174,13 +117,14 @@
     var MultiSelect =
     /*#__PURE__*/
     function () {
-      function MultiSelect(optionsAdapter, adapter, configuration, onDispose, window, $) {
+      function MultiSelect(optionsAdapter, adapter, bs4SelectedItemContent, bs4DropDownItemContent, configuration, onDispose, window, $) {
         if (typeof Popper === 'undefined') {
           throw new TypeError('DashboardCode BsMultiSelect require Popper.js (https://popper.js.org)');
         } // readonly
 
 
         this.adapter = adapter;
+        this.optionsAdapter = optionsAdapter;
         this.window = window;
         this.document = window.document;
         this.onDispose = onDispose;
@@ -205,11 +149,11 @@
         this.skipFocusout = false;
         this.hoveredDropDownItem = null;
         this.hoveredDropDownIndex = null;
-        this.hasDropDownVisible = false; // jquery adapters
+        this.hasDropDownVisible = false;
+        this.bs4SelectedItemContent = bs4SelectedItemContent;
+        this.bs4DropDownItemContent = bs4DropDownItemContent; // jquery adapters
 
         this.$document = $(this.document); //this.createContainer();
-
-        optionsAdapter.init(this);
       }
 
       var _proto = MultiSelect.prototype;
@@ -295,7 +239,7 @@
         $dropDownItem.data("option", optionElement);
         var dropDownItem = $dropDownItem.get(0); //let optionData = {"optionId":optionElement.value, "itemText": optionElement.text }
 
-        var adjustDropDownItem = this.adapter.CreateDropDownItemContent(dropDownItem, optionElement);
+        var adjustDropDownItem = this.bs4DropDownItemContent.CreateDropDownItemContent(dropDownItem, optionElement);
         var isDisabled = optionElement.disabled;
         var isSelected = optionElement.selected;
         if (isSelected && isDisabled) adjustDropDownItem.disabledStyle(true);else if (isDisabled) adjustDropDownItem.disable(isDisabled);
@@ -313,11 +257,12 @@
 
           var selectedItem = $selectedItem.get(0);
 
-          var adjustPair = function adjustPair(isSelected, toggle, remove) {
+          var adjustPair = function adjustPair(isSelected, toggle, remove, disable) {
             optionElement.selected = isSelected;
             adjustDropDownItem.select(isSelected);
             $dropDownItem.data("option-toggle", toggle);
             $selectedItem.data("option-remove", remove);
+            $selectedItem.data("option-disable", disable);
           };
 
           var removeItem = function removeItem() {
@@ -326,10 +271,21 @@
             adjustPair(false, function () {
               if (optionElement.disabled) return;
               selectItem(true);
-            }, null);
+            }, null, null);
             $selectedItem.remove();
             onChange();
-          };
+          }; // what is a problem with calling removeSelectedItem directly (not using  setTimeout(removeSelectedItem, 0)):
+          // consider situation "MultiSelect" on DROPDOWN (that should be closed on the click outside dropdown)
+          // therefore we aslo have document's click's handler where we decide to close or leave the DROPDOWN open.
+          // because of the event's bubling process removeSelectedItem runs first. 
+          // that means the event's target element on which we click (the x button) will be removed from the DOM together with badge 
+          // before we could analize is it belong to our dropdown or not.
+          // important 1: we can't just the stop propogation using stopPropogate because click outside dropdown on the similar 
+          // component that use stopPropogation will not close dropdown (error, dropdown should be closed)
+          // important 2: we can't change the dropdown's event handler to leave dropdown open if event's target is null because of
+          // the situation described above: click outside dropdown on the same component.
+          // Alternatively it could be possible to use stopPropogate but together create custom click event setting new target that belomgs to DOM (e.g. panel)
+
 
           var removeItemAndCloseDropDown = function removeItemAndCloseDropDown() {
             removeItem();
@@ -337,9 +293,22 @@
             _this2.closeDropDown();
           };
 
-          _this2.adapter.CreateSelectedItemContent(selectedItem, optionElement, removeItemAndCloseDropDown, _this2.disabled);
+          var onRemoveItemEvent = function onRemoveItemEvent(jqEvent) {
+            setTimeout(function () {
+              removeItem();
 
-          adjustPair(true, removeItem, removeItemAndCloseDropDown);
+              _this2.closeDropDown();
+            }, 0);
+            _this2.ProcessedBySelectedItemContentEvent = jqEvent;
+          };
+
+          var bsSelectedItemContent = _this2.bs4SelectedItemContent.CreateSelectedItemContent(selectedItem, optionElement, onRemoveItemEvent); //bsSelectedItemContentList.push(bsSelectedItemContent);
+
+
+          bsSelectedItemContent.disable(_this2.disabled);
+          adjustPair(true, function () {
+            return removeItem();
+          }, removeItemAndCloseDropDown, bsSelectedItemContent.disable);
           $selectedItem.insertBefore(_this2.filterInputItem);
 
           if (doPublishEvents) {
@@ -456,6 +425,10 @@
           if (disabled) {
             this.filterInput.style.display = "none";
             this.adapter.Disable($selectedPanel);
+            $selectedPanel.find('LI').each(function (i, e) {
+              var disable = $(e).data("option-disable");
+              if (disable != null) disable(true);
+            });
             $container.unbind("mousedown", this.containerMousedown);
             this.$document.unbind("mouseup", this.documentMouseup);
             $selectedPanel.unbind("click", this.selectedPanelClick);
@@ -463,6 +436,10 @@
           } else {
             this.filterInput.style.display = "inline-block";
             this.adapter.Enable($selectedPanel);
+            $selectedPanel.find('LI').each(function (i, e) {
+              var disable = $(e).data("option-disable");
+              if (disable != null) disable(false);
+            });
             $container.mousedown(this.containerMousedown); // removable
 
             this.$document.mouseup(this.documentMouseup); // removable
@@ -515,14 +492,16 @@
           }
         };
 
-        this.selectedPanelClick = function (event) {
-          if (event.target.nodeName != "INPUT") _this3.$(_this3.filterInput).val('').focus();
+        this.selectedPanelClick = function (jqEvent) {
+          if (jqEvent.target.nodeName != "INPUT") _this3.$(_this3.filterInput).val('').focus();
 
-          if (_this3.hasDropDownVisible && _this3.adapter.IsClickToOpenDropdown(event)) {
+          if (_this3.hasDropDownVisible && (_this3.ProcessedBySelectedItemContentEvent == null || _this3.ProcessedBySelectedItemContentEvent.originalEvent != jqEvent.originalEvent)) {
             _this3.updateDropDownPosition(true);
 
             _this3.showDropDown();
           }
+
+          _this3.ProcessedBySelectedItemContentEvent = null;
         };
 
         this.adapter.Init({
@@ -543,6 +522,7 @@
       _proto.init = function init($container, $selectedPanel, $dropDownMenu, $filterInput, onChange, getOptions, getDisabled) {
         var _this4 = this;
 
+        this.optionsAdapter(this);
         this.getDisabled = getDisabled;
         this.popper = new Popper(this.filterInput, this.dropDownMenu, {
           placement: 'bottom-start',
@@ -726,98 +706,27 @@
       };
     }
 
-    function disableButton($selectedPanel, isDisabled) {
-      $selectedPanel.find('BUTTON').prop("disabled", isDisabled);
-    } // addClass, removeClass, css, siblings('label'), hasClass, find('BUTTON').prop(..)
-
+    var defaults$1 = {
+      containerClass: 'dashboardcode-bsmultiselect',
+      dropDownMenuClass: 'dropdown-menu',
+      dropDownItemClass: 'px-2',
+      dropDownItemHoverClass: 'text-primary bg-light',
+      selectedPanelClass: 'form-control',
+      selectedItemClass: 'badge',
+      removeSelectedItemButtonClass: 'close',
+      filterInputItemClass: '',
+      filterInputClass: ''
+    };
 
     var Bs4Adapter =
     /*#__PURE__*/
     function () {
       function Bs4Adapter(stylingAdapter, configuration, $) {
-        var _this = this;
-
-        var defaults = {
-          containerClass: 'dashboardcode-bsmultiselect',
-          dropDownMenuClass: 'dropdown-menu',
-          dropDownItemClass: 'px-2',
-          dropDownItemHoverClass: 'text-primary bg-light',
-          selectedPanelClass: 'form-control',
-          selectedItemClass: 'badge',
-          removeSelectedItemButtonClass: 'close',
-          filterInputItemClass: '',
-          filterInputClass: ''
-        };
-        var tmp = $.extend({}, defaults, configuration);
-        this.configuration = $.extend(configuration, tmp);
-        this.$ = $;
         this.stylingAdapter = stylingAdapter;
+        this.configuration = ExtendIfUndefinedFluent(configuration, defaults$1);
+        this.$ = $;
         this.bs4LabelDispose = null;
-
-        this.createDropDownItemContent = function (dropDownItem, option) {
-          var $dropDownItem = $(dropDownItem);
-          $dropDownItem.addClass(configuration.dropDownItemClass);
-
-          var $dropDownItemContent = _this.$("<div class=\"custom-control custom-checkbox\">\n                <input type=\"checkbox\" class=\"custom-control-input\">\n                <label class=\"custom-control-label\"></label>\n            </div>");
-
-          $dropDownItemContent.appendTo(dropDownItem);
-          var $checkBox = $dropDownItemContent.find("INPUT[type=\"checkbox\"]");
-          var $checkBoxLabel = $dropDownItemContent.find("label");
-          $checkBoxLabel.text(option.text);
-          var stylingAdapter = _this.stylingAdapter;
-          return {
-            select: function select(isSelected) {
-              $checkBox.prop('checked', isSelected);
-            },
-            disable: function disable(isDisabled) {
-              $checkBox.prop('disabled', isDisabled);
-            },
-            disabledStyle: function disabledStyle(_disabledStyle) {
-              stylingAdapter.DisabledStyle($checkBox, _disabledStyle);
-            },
-            onSelected: function onSelected(toggle) {
-              $checkBox.on("change", toggle);
-              $dropDownItem.on("click", function (event) {
-                if (dropDownItem === event.target || $.contains(dropDownItem, event.target)) {
-                  toggle();
-                }
-              });
-            }
-          };
-        };
-
-        this.createSelectedItemContent = function (selectedItem, optionItem, removeSelectedItem, controlDisabled) {
-          var $selectedItem = $(selectedItem);
-
-          var $content = _this.$("<span/>").text(optionItem.text);
-
-          $content.appendTo($selectedItem);
-          if (optionItem.disabled) _this.stylingAdapter.DisableSelectedItemContent($content);
-
-          var $button = _this.$('<button aria-label="Close" tabIndex="-1" type="button"><span aria-hidden="true">&times;</span></button>') // bs 'close' class that will be added to button set the float:right, therefore it impossible to configure no-warp policy 
-          // with .css("white-space", "nowrap") or  .css("display", "inline-block"); TODO: migrate to flex? 
-          .css("float", "none") // what is a problem with calling removeSelectedItem directly (not using  setTimeout(removeSelectedItem, 0)):
-          // consider situation "MultiSelect" on DROPDOWN (that should be closed on the click outside dropdown)
-          // therefore we aslo have document's click's handler where we decide to close or leave the DROPDOWN open.
-          // because of the event's bubling process removeSelectedItem runs first. 
-          // that means the event's target element on which we click (the x button) will be removed from the DOM together with badge 
-          // before we could analize is it belong to our dropdown or not.
-          // important 1: we can't just the stop propogation using stopPropogate because click outside dropdown on the similar 
-          // component that use stopPropogation will not close dropdown (error, dropdown should be closed)
-          // important 2: we can't change the dropdown's event handler to leave dropdown open if event's target is null because of
-          // the situation described above: click outside dropdown on the same component.
-          // Alternatively it could be possible to use stopPropogate but together create custom click event setting new target that belomgs to DOM (e.g. panel)
-          .on("click", function () {
-            return setTimeout(removeSelectedItem, 0);
-          }).appendTo($selectedItem).prop("disabled", controlDisabled);
-
-          $selectedItem.addClass(configuration.selectedItemClass);
-          $button.addClass(configuration.removeSelectedItemButtonClass); // bs close class set the float:right
-
-          if (_this.stylingAdapter.CreateSelectedItemContent) _this.stylingAdapter.CreateSelectedItemContent($selectedItem, $button);
-        };
-      } // ------------------------------------------------------------------------------------------------
-
+      }
 
       var _proto = Bs4Adapter.prototype;
 
@@ -827,45 +736,25 @@
         dom.dropDownMenu.addClass(this.configuration.dropDownMenuClass);
         dom.filterInputItem.addClass(this.configuration.filterInputItemClass);
         dom.filterInput.addClass(this.configuration.filterInputClass);
-        if (this.stylingAdapter.OnInit) this.stylingAdapter.OnInit(dom);
-        this.bs4LabelDispose = this.HandleLabel(dom.filterInput);
-      };
-
-      _proto.HandleLabel = function HandleLabel($filterInput) {
-        var label = this.configuration.label;
-
-        if (label != null) {
-          var newForId = this.configuration.createInputId();
-          var backupForId = label.getAttribute('for');
-          $filterInput.attr('id', newForId);
-          label.setAttribute('for', newForId);
-          return function () {
-            label.setAttribute('for', backupForId);
-          };
-        }
-
-        return null;
-      };
-
-      _proto.Dispose = function Dispose() {
-        if (this.bs4LabelDispose) this.bs4LabelDispose();
-      } // ------------------------------------------------------------------------------------------------
+        if (this.stylingAdapter.OnInit) this.stylingAdapter.OnInit(dom); //this.bs4LabelDispose = this.handleLabel(dom.filterInput);
+      } // handleLabel($filterInput){
+      //     var label = this.configuration.label;
+      //     if (label!=null) {
+      //         var newForId = this.configuration.createInputId();
+      //         var backupForId =  label.getAttribute('for');
+      //         $filterInput.attr('id', newForId);
+      //         label.setAttribute('for',newForId);
+      //         return () => {
+      //             label.setAttribute('for',backupForId);
+      //         }
+      //     }
+      //     return null;
+      // }
+      // Dispose(){
+      //     if (this.bs4LabelDispose)
+      //         this.bs4LabelDispose();
+      // }
       ;
-
-      _proto.CreateDropDownItemContent = function CreateDropDownItemContent(dropDownItem, option) {
-        return this.createDropDownItemContent(dropDownItem, option);
-      };
-
-      _proto.CreateSelectedItemContent = function CreateSelectedItemContent(selectedItem, optionItem, removeSelectedItem, controlDisabled) {
-        return this.createSelectedItemContent(selectedItem, optionItem, removeSelectedItem, controlDisabled);
-      } // -----------------------
-      ;
-
-      _proto.IsClickToOpenDropdown = function IsClickToOpenDropdown(event) {
-        var target = event.target;
-        var nodeName = target.nodeName;
-        return !(nodeName == "BUTTON" || nodeName == "SPAN" && target.parentElement.nodeName == "BUTTON");
-      };
 
       _proto.UpdateIsValid = function UpdateIsValid($selectedPanel) {
         if (this.configuration.getIsValid()) {
@@ -891,12 +780,10 @@
 
       _proto.Enable = function Enable($selectedPanel) {
         this.stylingAdapter.Enable($selectedPanel);
-        disableButton($selectedPanel, false);
       };
 
       _proto.Disable = function Disable($selectedPanel) {
         this.stylingAdapter.Disable($selectedPanel);
-        disableButton($selectedPanel, true);
       };
 
       _proto.FocusIn = function FocusIn($selectedPanel) {
@@ -910,79 +797,19 @@
       return Bs4Adapter;
     }();
 
-    var OptionsAdapterElement = function OptionsAdapterElement(selectElement, configuration, $) {
-      var $selectElement = $(selectElement);
-
-      configuration.getIsValid = function () {
-        return $selectElement.hasClass("is-valid");
-      };
-
-      configuration.getIsInvalid = function () {
-        return $selectElement.hasClass("is-invalid");
-      };
-
-      var idPart = selectElement.id ? selectElement.id.toLowerCase() : selectElement.name.toLowerCase();
-      var classPart = configuration.containerClass;
-      if (!configuration.createInputId) configuration.createInputId = function () {
-        return classPart + "-generated-input-" + idPart + "-id";
-      };
-      configuration.label = null;
-      var $formGroup = $selectElement.closest('.form-group');
-
-      if ($formGroup.length == 1) {
-        var $label = $formGroup.find("label[for=\"" + selectElement.id + "\"]");
-
-        if ($label.length > 0) {
-          var label = $label.get(0);
-          var forId = label.getAttribute('for');
-
-          if (forId == selectElement.id) {
-            configuration.label = label;
-          }
-        }
-      }
-
-      this.init = function (ms) {
-        selectElement.style.display = 'none';
-        var container = document.createElement("div");
-
-        var _ms$fillContainer = ms.fillContainer(container, function () {
-          return container.parentNode.removeChild(container);
-        }),
-            $container = _ms$fillContainer.$container,
-            $selectedPanel = _ms$fillContainer.$selectedPanel,
-            $dropDownMenu = _ms$fillContainer.$dropDownMenu,
-            $filterInput = _ms$fillContainer.$filterInput;
-
-        $container.insertAfter(selectElement);
-        ms.init($container, $selectedPanel, $dropDownMenu, $filterInput, function () {
-          $selectElement.trigger('change');
-          $selectElement.trigger("multiselect:change");
-        }, function () {
-          return $selectElement.find('OPTION');
-        }, function () {
-          return selectElement.disabled;
-        });
-      };
+    var defaults$2 = {
+      getIsValid: function getIsValid() {
+        return false;
+      },
+      getIsInvalid: function getIsInvalid() {
+        return false;
+      },
+      label: null
     };
 
-    var OptionsAdapterJson = function OptionsAdapterJson(container, configuration) {
-      configuration.getIsValid = configuration.hasOwnProperty("getIsValid") ? configuration.getIsValid : function () {
-        return false;
-      };
-      configuration.getIsInvalid = configuration.hasOwnProperty("getIsInvalid") ? configuration.getIsInvalid : function () {
-        return false;
-      };
-      var idPart = container.id;
-      var classPart = configuration.containerClass;
-      if (!configuration.createInputId) configuration.createInputId = function () {
-        return classPart + "-generated-filter-" + idPart;
-      }; //if (!configuration.createCheckBoxId)
-      //    configuration.createCheckBoxId=(option) =>`${classPart}-${idPart}-generated-checkbox-${option.value.toLowerCase()}-id`;
-
-      configuration.label = configuration.hasOwnProperty("label") ? configuration.label : null;
-
-      this.init = function (ms) {
+    function OptionsAdapterJson(container, configuration) {
+      ExtendIfUndefined(configuration, defaults$2);
+      return function (ms) {
         var _ms$fillContainer = ms.fillContainer(container, function () {
           while (container.firstChild) {
             container.removeChild(container.firstChild);
@@ -1001,25 +828,299 @@
           return true;
         });
       };
+    }
+
+    function OptionsAdapterElement(selectElement, configuration, $) {
+      ExtendIfUndefined(configuration, defaults$2);
+      var $selectElement = $(selectElement);
+      return function (ms) {
+        selectElement.style.display = 'none';
+        var container = document.createElement("div");
+
+        var _ms$fillContainer2 = ms.fillContainer(container, function () {
+          return container.parentNode.removeChild(container);
+        }),
+            $container = _ms$fillContainer2.$container,
+            $selectedPanel = _ms$fillContainer2.$selectedPanel,
+            $dropDownMenu = _ms$fillContainer2.$dropDownMenu,
+            $filterInput = _ms$fillContainer2.$filterInput;
+
+        $container.insertAfter(selectElement);
+        ms.init($container, $selectedPanel, $dropDownMenu, $filterInput, function () {
+          $selectElement.trigger('change');
+          $selectElement.trigger("multiselect:change");
+        }, function () {
+          return $selectElement.find('OPTION');
+        }, function () {
+          return selectElement.disabled;
+        });
+      };
+    }
+
+    var Bs4SelectedItemContentCss =
+    /*#__PURE__*/
+    function () {
+      function Bs4SelectedItemContentCss(configuration) {
+        var defaults = {
+          selectedItemContentDisabledClass: 'disabled'
+        };
+        this.configuration = ExtendIfUndefinedFluent(configuration, defaults);
+      }
+
+      var _proto = Bs4SelectedItemContentCss.prototype;
+
+      _proto.DisableSelectedItemContent = function DisableSelectedItemContent($content) {
+        $content.addClass(this.configuration.selectedItemContentDisabledClass);
+      };
+
+      return Bs4SelectedItemContentCss;
+    }();
+
+    var defSelectedItemStyle = {
+      'padding-left': '0px',
+      'line-height': '1.5em'
+    };
+    var defRemoveSelectedItemButtonStyle = {
+      'font-size': '1.5em',
+      'line-height': '.9em'
     };
 
+    var Bs4SelectedItemContentJs =
+    /*#__PURE__*/
+    function () {
+      function Bs4SelectedItemContentJs(configuration) {
+        var defaults = {
+          selectedItemContentDisabledOpacity: '.65'
+        };
+        this.configuration = ExtendIfUndefinedFluent(configuration, defaults);
+      }
+
+      var _proto2 = Bs4SelectedItemContentJs.prototype;
+
+      _proto2.DisableSelectedItemContent = function DisableSelectedItemContent($content) {
+        $content.css("opacity", this.configuration.selectedItemContentDisabledOpacity);
+      };
+
+      _proto2.CreateSelectedItemContent = function CreateSelectedItemContent($selectedItem, $button) {
+        $selectedItem.css(defSelectedItemStyle);
+        if ($button) $button.css(defRemoveSelectedItemButtonStyle);
+      };
+
+      return Bs4SelectedItemContentJs;
+    }();
+
+    var Bs4SelectedItemContent =
+    /*#__PURE__*/
+    function () {
+      function Bs4SelectedItemContent(stylingAdapter, configuration, $) {
+        var _this = this;
+
+        var defaults = {
+          selectedItemClass: 'badge',
+          removeSelectedItemButtonClass: 'close'
+        };
+        ExtendIfUndefined(configuration, defaults);
+        this.stylingAdapter = stylingAdapter;
+        this.$ = $;
+        if (configuration.createSelectedItemContent) this.createSelectedItemContent = configuration.createSelectedItemContent;else this.createSelectedItemContent = function (selectedItem, optionItem, removeSelectedItem) {
+          var $selectedItem = $(selectedItem);
+          $selectedItem.addClass(configuration.selectedItemClass);
+
+          var $content = _this.$("<span/>").text(optionItem.text);
+
+          $content.appendTo($selectedItem);
+          if (optionItem.disabled) _this.stylingAdapter.DisableSelectedItemContent($content);
+
+          var $button = _this.$('<button aria-label="Close" tabIndex="-1" type="button"><span aria-hidden="true">&times;</span></button>') // bs 'close' class that will be added to button set the float:right, therefore it impossible to configure no-warp policy 
+          // with .css("white-space", "nowrap") or  .css("display", "inline-block"); TODO: migrate to flex? 
+          .css("float", "none").appendTo($selectedItem).addClass(configuration.removeSelectedItemButtonClass) // bs close class set the float:right
+          .on("click", function (jqEvent) {
+            return removeSelectedItem(jqEvent);
+          });
+
+          if (_this.stylingAdapter.CreateSelectedItemContent) _this.stylingAdapter.CreateSelectedItemContent($selectedItem, $button);
+          return {
+            disable: function disable(isDisabled) {
+              $button.prop('disabled', isDisabled);
+            }
+          };
+        };
+      }
+
+      var _proto3 = Bs4SelectedItemContent.prototype;
+
+      _proto3.CreateSelectedItemContent = function CreateSelectedItemContent(selectedItem, optionItem, removeSelectedItem, skipProcessingEvent) {
+        return this.createSelectedItemContent(selectedItem, optionItem, removeSelectedItem, skipProcessingEvent);
+      };
+
+      return Bs4SelectedItemContent;
+    }();
+
+    var Bs4DropDownItemContentCss =
+    /*#__PURE__*/
+    function () {
+      function Bs4DropDownItemContentCss(configuration) {
+        var defaults = {
+          selectedItemContentDisabledClass: 'disabled'
+        };
+        this.configuration = ExtendIfUndefinedFluent(configuration, defaults);
+      }
+
+      var _proto = Bs4DropDownItemContentCss.prototype;
+
+      _proto.DisabledStyle = function DisabledStyle($checkBox, $checkBoxLabel, isDisbaled) {
+        if (isDisbaled) $checkBox.addClass(this.configuration.dropDownItemDisabledClass);else $checkBox.removeClass(this.configuration.dropDownItemDisabledClass);
+      };
+
+      return Bs4DropDownItemContentCss;
+    }();
+
+    var Bs4DropDownItemContentJs =
+    /*#__PURE__*/
+    function () {
+      function Bs4DropDownItemContentJs(configuration) {
+        var defaults = {
+          selectedItemContentDisabledOpacity: '.65',
+          dropdDownLabelDisabledColor: '#6c757d'
+        };
+        this.configuration = ExtendIfUndefinedFluent(configuration, defaults);
+      }
+
+      var _proto2 = Bs4DropDownItemContentJs.prototype;
+
+      _proto2.DisabledStyle = function DisabledStyle($checkBox, $checkBoxLabel, isDisbaled) {
+        $checkBoxLabel.css('color', isDisbaled ? this.configuration.dropdDownLabelDisabledColor : '');
+      };
+
+      return Bs4DropDownItemContentJs;
+    }(); // addClass, removeClass, css, siblings('label'), hasClass, find('BUTTON').prop(..)
+
+
+    var Bs4DropDownItemContent =
+    /*#__PURE__*/
+    function () {
+      function Bs4DropDownItemContent(stylingAdapter, configuration, $) {
+        var _this = this;
+
+        var defaults = {
+          dropDownItemClass: 'px-2'
+        };
+        ExtendIfUndefined(configuration, defaults);
+        this.$ = $;
+        this.stylingAdapter = stylingAdapter;
+
+        this.createDropDownItemContent = function (dropDownItem, option) {
+          var $dropDownItem = $(dropDownItem);
+          $dropDownItem.addClass(configuration.dropDownItemClass);
+
+          var $dropDownItemContent = _this.$("<div class=\"custom-control custom-checkbox\">\n                <input type=\"checkbox\" class=\"custom-control-input\">\n                <label class=\"custom-control-label\"></label>\n            </div>");
+
+          $dropDownItemContent.appendTo(dropDownItem);
+          var $checkBox = $dropDownItemContent.find("INPUT[type=\"checkbox\"]");
+          var $checkBoxLabel = $dropDownItemContent.find("label");
+          $checkBoxLabel.text(option.text);
+          return {
+            select: function select(isSelected) {
+              $checkBox.prop('checked', isSelected);
+            },
+            disable: function disable(isDisabled) {
+              $checkBox.prop('disabled', isDisabled);
+            },
+            disabledStyle: function disabledStyle(isDisbaled) {
+              stylingAdapter.DisabledStyle($checkBox, $checkBoxLabel, isDisbaled);
+            },
+            onSelected: function onSelected(toggle) {
+              $checkBox.on("change", toggle);
+              $dropDownItem.on("click", function (event) {
+                if (dropDownItem === event.target || $.contains(dropDownItem, event.target)) {
+                  toggle();
+                }
+              });
+            }
+          };
+        };
+      } // ------------------------------------------------------------------------------------------------
+
+
+      var _proto3 = Bs4DropDownItemContent.prototype;
+
+      _proto3.CreateDropDownItemContent = function CreateDropDownItemContent(dropDownItem, option) {
+        return this.createDropDownItemContent(dropDownItem, option);
+      };
+
+      return Bs4DropDownItemContent;
+    }();
+
     (function (window, $) {
-      AddToJQueryPrototype('BsMultiSelect', function (element, configuration, onDispose) {
-        var optionsAdapter = null;
-        configuration = $.extend({}, configuration);
+      AddToJQueryPrototype('BsMultiSelect', function (element, settings, onDispose) {
+        var configuration = $.extend({}, settings); // settings used per jQuery intialization, configuration per element
+
         if (configuration.buildConfiguration) configuration.buildConfiguration(element, configuration);
+        var optionsAdapter = null;
         if (configuration.optionsAdapter) optionsAdapter = configuration.optionsAdapter;else {
-          optionsAdapter = configuration.options ? new OptionsAdapterJson(element, configuration) : new OptionsAdapterElement(element, configuration, $);
+          if (configuration.options) {
+            optionsAdapter = OptionsAdapterJson(element, configuration);
+            if (!configuration.createInputId) configuration.createInputId = function () {
+              return configuration.containerClass + "-generated-filter-" + element.id;
+            };
+          } else {
+            configuration.getIsValid = function () {
+              return element.classList.contains('is-valid');
+            };
+
+            configuration.getIsInvalid = function () {
+              return element.classList.contains('is-invalid');
+            };
+
+            if (!configuration.label) {
+              var $formGroup = $(element).closest('.form-group');
+
+              if ($formGroup.length == 1) {
+                var $label = $formGroup.find("label[for=\"" + element.id + "\"]");
+
+                if ($label.length > 0) {
+                  var label = $label.get(0);
+                  var forId = label.getAttribute('for');
+
+                  if (forId == element.id) {
+                    configuration.label = label;
+                  }
+                }
+              }
+            }
+
+            optionsAdapter = OptionsAdapterElement(element, configuration, $);
+            if (!configuration.createInputId) configuration.createInputId = function () {
+              return configuration.containerClass + "-generated-input-" + (element.id ? element.id : element.name).toLowerCase() + "-id";
+            };
+          }
         }
         var adapter = null;
         if (configuration.adapter) adapter = configuration.adapter;else {
-          var stylingAdapter = configuration.useCss ? new Bs4AdapterCss(configuration, $) : new Bs4AdapterJs(configuration, $);
+          var stylingAdapter = configuration.useCss ? StylingBs4AdapterCss(configuration) : StylingBs4AdapterJs(configuration);
           adapter = new Bs4Adapter(stylingAdapter, configuration, $);
-        }
-        var multiSelect = new MultiSelect(optionsAdapter, adapter, configuration, onDispose, window, $);
+        } // configuration.createSelectedItemContent = function(selectedItem, optionItem, removeSelectedItem){
+        //     let $selectedItem = $(selectedItem)
+        //     $selectedItem.addClass(configuration.selectedItemClass);
+        //     let $content = this.$(`<span/>`).text(optionItem.text);
+        //     $content.appendTo($selectedItem);
+        //     if (optionItem.disabled)
+        //         this.stylingAdapter.DisableSelectedItemContent($content);
+        //     if (this.stylingAdapter.CreateSelectedItemContent)
+        //         this.stylingAdapter.CreateSelectedItemContent($selectedItem, null);
+        //     return {
+        //          disable(isDisabled){  }
+        //     };
+        // }
+
+        var stylingAdapter2 = configuration.useCss ? new Bs4SelectedItemContentCss(configuration, $) : new Bs4SelectedItemContentJs(configuration, $);
+        var stylingAdapter3 = configuration.useCss ? new Bs4DropDownItemContentCss(configuration, $) : new Bs4DropDownItemContentJs(configuration, $);
+        var bs4SelectedItemContent = new Bs4SelectedItemContent(stylingAdapter2, configuration, $);
+        var bs4DropDownItemContent = new Bs4DropDownItemContent(stylingAdapter3, configuration, $);
+        var multiSelect = new MultiSelect(optionsAdapter, adapter, bs4SelectedItemContent, bs4DropDownItemContent, configuration, onDispose, window, $);
         return multiSelect;
       }, $);
-    })(window, $);
+    })(window, $$1);
 
 }));
 //# sourceMappingURL=BsMultiSelect.js.map

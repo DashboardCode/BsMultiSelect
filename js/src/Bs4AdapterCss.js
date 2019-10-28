@@ -1,42 +1,31 @@
-class Bs4AdapterCss {
+import  { ExtendIfUndefined } from './Tools';
 
-    constructor(configuration, $) {
-        const defaults = {
-            selectedPanelFocusClass : 'focus',
-            selectedPanelDisabledClass: 'disabled',
-            selectedItemContentDisabledClass: 'disabled',
-            dropDownItemDisabledClass: 'disabled'
-        };
-        let tmp = $.extend({}, defaults, configuration);
-        this.configuration = $.extend(configuration, tmp);
-    }
+const defaults = {
+    selectedPanelFocusClass : 'focus',
+    selectedPanelDisabledClass: 'disabled',
+    dropDownItemDisabledClass: 'disabled'
+};
 
-    DisableSelectedItemContent($content){
-        $content.addClass(this.configuration.selectedItemContentDisabledClass )
-    }
+function StylingBs4AdapterCss(configuration){
+    ExtendIfUndefined(configuration, defaults);
 
-    DisabledStyle($checkBox, isDisbaled){
-        if (isDisbaled) 
-            $checkBox.addClass(this.configuration.dropDownItemDisabledClass);
-        else
-            $checkBox.removeClass(this.configuration.dropDownItemDisabledClass);
-    }
-
-    Enable($selectedPanel){
-        $selectedPanel.removeClass(this.configuration.selectedPanelDisabledClass)
-    }
-
-    Disable($selectedPanel){
-        $selectedPanel.addClass(this.configuration.selectedPanelDisabledClass)
-    }
-
-    FocusIn($selectedPanel){
-        $selectedPanel.addClass(this.configuration.selectedPanelFocusClass);
-    }
-
-    FocusOut($selectedPanel){
-        $selectedPanel.removeClass(this.configuration.selectedPanelFocusClass);
+    return {
+        Enable($selectedPanel){
+            $selectedPanel.removeClass(configuration.selectedPanelDisabledClass)
+        },
+    
+        Disable($selectedPanel){
+            $selectedPanel.addClass(configuration.selectedPanelDisabledClass)
+        },
+    
+        FocusIn($selectedPanel){
+            $selectedPanel.addClass(configuration.selectedPanelFocusClass);
+        },
+    
+        FocusOut($selectedPanel){
+            $selectedPanel.removeClass(configuration.selectedPanelFocusClass);
+        }
     }
 }
 
-export default Bs4AdapterCss;
+export default StylingBs4AdapterCss;
