@@ -1,15 +1,9 @@
 import Popper from 'popper.js'
-import { ExtendIfUndefinedFluent } from './Tools';
 
 const defSelectedPanelStyleSys = {'display':'flex', 'flex-wrap':'wrap', 'list-style-type':'none'};  // remove bullets since this is ul
 const defFilterInputStyleSys   = {'width':'2ch', 'border':'0', 'padding':'0', 'outline':'none', 'background-color':'transparent' };
 const defDropDownMenuStyleSys  = {'list-style-type':'none'}; // remove bullets since this is ul
 
-const defaults = {
-    getIsValid(){return false},
-    getIsInvalid(){return false},
-    label:null
-}
 
 // jQuery used for:
 // $.extend, $.contains, $("<div>"), $(function(){}) aka ready
@@ -19,7 +13,7 @@ const defaults = {
 // $e.appendTo, $e.remove, $e.find, $e.closest, $e.prev, $e.data, $e.val
 
 class MultiSelect {
-    constructor(optionsAdapter, adapter, bs4SelectedItemContent, bs4DropDownItemContent, labelAdapter, configuration, onDispose, window, $) {
+    constructor(optionsAdapter, adapter, selectedItemContentFactory, dropDownItemContentFactory, labelAdapter, configuration, onDispose, window, $) {
         if (typeof Popper === 'undefined') {
             throw new TypeError('DashboardCode BsMultiSelect require Popper.js (https://popper.js.org)')
         }
@@ -33,7 +27,7 @@ class MultiSelect {
         this.onDispose=onDispose;
         this.$ = $;
         
-        this.configuration = ExtendIfUndefinedFluent(configuration, defaults);;
+        this.configuration = configuration;
         
         this.selectedPanel = null;
         this.filterInputItem = null;
@@ -55,8 +49,8 @@ class MultiSelect {
         this.hoveredDropDownItem = null;
         this.hoveredDropDownIndex = null;
         this.hasDropDownVisible = false;
-        this.bs4SelectedItemContent=bs4SelectedItemContent;
-        this.bs4DropDownItemContent=bs4DropDownItemContent;
+        this.selectedItemContentFactory=selectedItemContentFactory;
+        this.dropDownItemContentFactory=dropDownItemContentFactory;
 
         // jquery adapters
         this.$document = $(this.document);
@@ -138,7 +132,7 @@ class MultiSelect {
         let dropDownItem = $dropDownItem.get(0);
         
         //let optionData = {"optionId":optionElement.value, "itemText": optionElement.text }
-        let adjustDropDownItem = this.bs4DropDownItemContent.CreateDropDownItemContent(dropDownItem, optionElement); 
+        let adjustDropDownItem = this.dropDownItemContentFactory(dropDownItem, optionElement); 
         let isDisabled = optionElement.disabled;
         let isSelected = optionElement.selected;
 
@@ -209,7 +203,7 @@ class MultiSelect {
                 this.ProcessedBySelectedItemContentEvent=jqEvent;
             };
 
-            let bsSelectedItemContent = this.bs4SelectedItemContent.CreateSelectedItemContent(
+            let bsSelectedItemContent = this.selectedItemContentFactory(
                 selectedItem,
                 optionElement,
                 onRemoveItemEvent
@@ -282,7 +276,7 @@ class MultiSelect {
     }
     Update(){
         let $selectedPanel = this.$(this.selectedPanel);
-        this.adapter.UpdateIsValid($selectedPanel);
+        this.adapter.UpdateIsValid($selectedPanel, this.optionsAdapter.getIsValid(), this.optionsAdapter.getIsInvalid());
         this.UpdateSizeImpl($selectedPanel);
         this.UpdateDisabledImpl(this.$(this.optionsAdapter.container), $selectedPanel);
     }
@@ -408,7 +402,7 @@ class MultiSelect {
                 }
         });
         
-        this.adapter.UpdateIsValid($selectedPanel);
+        this.adapter.UpdateIsValid($selectedPanel, this.optionsAdapter.getIsValid(), this.optionsAdapter.getIsInvalid());
         
         this.UpdateSizeImpl($selectedPanel);
         this.UpdateDisabledImpl($container, $selectedPanel);

@@ -15,8 +15,8 @@ const defaults = {
 
 class Bs4Adapter {
 
-    constructor(stylingAdapter, configuration){
-        this.stylingAdapter = stylingAdapter;
+    constructor(stylingMethod, configuration){
+        this.stylingMethod = stylingMethod;
         this.configuration = ExtendIfUndefinedFluent(configuration, defaults);
     }
    
@@ -26,42 +26,23 @@ class Bs4Adapter {
         dom.dropDownMenu.addClass(this.configuration.dropDownMenuClass);
         dom.filterInputItem.addClass(this.configuration.filterInputItemClass);
         dom.filterInput.addClass(this.configuration.filterInputClass);
-        if (this.stylingAdapter.OnInit)
-            this.stylingAdapter.OnInit(dom)
+        if (this.stylingMethod.OnInit)
+            this.stylingMethod.OnInit(dom)
     }
 
-    // handleLabel($filterInput){
-    //     var label = this.configuration.label;
-    //     if (label!=null) {
-    //         var newForId = this.configuration.createInputId();
-    //         var backupForId =  label.getAttribute('for');
-    //         $filterInput.attr('id', newForId);
-    //         label.setAttribute('for',newForId);
-    //         return () => {
-    //             label.setAttribute('for',backupForId);
-    //         }
-    //     }
-    //     return null;
-    // }
-
-    // Dispose(){
-    //     if (this.bs4LabelDispose)
-    //         this.bs4LabelDispose();
-    // }
-
-    UpdateIsValid($selectedPanel){
-        if (this.configuration.getIsValid()){
+    UpdateIsValid($selectedPanel, isValid, isInvalid){
+        if (isValid){
             $selectedPanel.addClass("is-valid");
         }
 
-        if (this.configuration.getIsInvalid()){
+        if (isInvalid){
             $selectedPanel.addClass("is-invalid");
         }
     }
 
     UpdateSize($selectedPanel){
-        if(this.stylingAdapter.UpdateSize)
-            this.stylingAdapter.UpdateSize($selectedPanel)
+        if(this.stylingMethod.UpdateSize)
+            this.stylingMethod.UpdateSize($selectedPanel)
     }
 
     HoverIn($dropDownItem){
@@ -73,19 +54,19 @@ class Bs4Adapter {
     }
 
     Enable($selectedPanel){
-        this.stylingAdapter.Enable($selectedPanel)
+        this.stylingMethod.Enable($selectedPanel)
     }
 
     Disable($selectedPanel){
-        this.stylingAdapter.Disable($selectedPanel)
+        this.stylingMethod.Disable($selectedPanel)
     }
 
     FocusIn($selectedPanel){
-        this.stylingAdapter.FocusIn($selectedPanel)
+        this.stylingMethod.FocusIn($selectedPanel)
     }
 
     FocusOut($selectedPanel){
-        this.stylingAdapter.FocusOut($selectedPanel)
+        this.stylingMethod.FocusOut($selectedPanel)
     }
 }
 

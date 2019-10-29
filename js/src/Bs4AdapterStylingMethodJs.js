@@ -15,7 +15,7 @@ const defaults = {
     //selectedItemContentDisabledOpacity: '.65'
 };
 
-function StylingBs4AdapterJs(configuration){
+function Bs4AdapterStylingMethodJs(configuration){
     ExtendIfUndefined(configuration, defaults);
 
     return {
@@ -61,4 +61,4 @@ function StylingBs4AdapterJs(configuration){
 }
 
 
-export default StylingBs4AdapterJs;
+export default Bs4AdapterStylingMethodJs;

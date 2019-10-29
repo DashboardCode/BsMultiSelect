@@ -1,4 +1,4 @@
-function OptionsAdapterJson(container, options, getDisabled, $) {
+function OptionsAdapterJson(container, options, getDisabled, getIsValid, getIsInvalid, $) {
     var $container = $(container);
     return {
         container,
@@ -11,6 +11,12 @@ function OptionsAdapterJson(container, options, getDisabled, $) {
         },
         getDisabled(){
             return getDisabled?getDisabled():false;
+        },
+        getIsValid(){
+            return getIsValid?getIsValid():false;
+        },
+        getIsInvalid(){
+            return getIsInvalid?getIsInvalid():false;
         }
     }
 }
@@ -35,6 +41,12 @@ function OptionsAdapterElement(selectElement, $) {
         },
         getDisabled(){
             return selectElement.disabled;
+        },
+        getIsValid(){
+            return selectElement.classList.contains('is-valid');
+        },
+        getIsInvalid(){
+            return selectElement.classList.contains('is-invalid');
         }
     }
 }
