@@ -4,6 +4,8 @@ import StylingBs4AdapterJs from './Bs4AdapterJs'
 import MultiSelect from './MultiSelect'
 import AddToJQueryPrototype from './AddToJQueryPrototype'
 import Bs4Adapter from './Bs4Adapter';
+import LabelAdapter from './LabelAdapter';
+
 import {OptionsAdapterJson,OptionsAdapterElement} from './OptionsAdapters';
 
 import { Bs4SelectedItemContent, Bs4SelectedItemContentJs, Bs4SelectedItemContentCss } from './Bs4SelectedItemContent';
@@ -23,7 +25,7 @@ import { Bs4DropDownItemContent, Bs4DropDownItemContentJs, Bs4DropDownItemConten
                 else
                 {
                     if (configuration.options){
-                        optionsAdapter = OptionsAdapterJson(element, configuration);
+                        optionsAdapter = OptionsAdapterJson(element, configuration.options, configuration.hasOwnProperty("getDisabled")?configuration.getDisabled:()=>false, $ );
                         if (!configuration.createInputId)
                             configuration.createInputId=()=>`${configuration.containerClass}-generated-filter-${element.id}`;
             
@@ -45,11 +47,13 @@ import { Bs4DropDownItemContent, Bs4DropDownItemContentJs, Bs4DropDownItemConten
                                 }   
                             }
                         }
-                        optionsAdapter = OptionsAdapterElement(element, configuration, $);
+                        optionsAdapter = OptionsAdapterElement(element, $);
                         if (!configuration.createInputId)
                             configuration.createInputId=()=>`${configuration.containerClass}-generated-input-${((element.id)?element.id:element.name).toLowerCase()}-id`;
                     }
                 }
+
+                let labelAdapter = LabelAdapter(configuration.label, configuration.createInputId);
 
                 let adapter=null;
                 if (configuration.adapter)
@@ -59,7 +63,7 @@ import { Bs4DropDownItemContent, Bs4DropDownItemContentJs, Bs4DropDownItemConten
                     let stylingAdapter = configuration.useCss
                         ? StylingBs4AdapterCss(configuration)
                         : StylingBs4AdapterJs(configuration);
-                    adapter = new Bs4Adapter(stylingAdapter, configuration, $);
+                    adapter = new Bs4Adapter(stylingAdapter, configuration);
                 }
 
                 // configuration.createSelectedItemContent = function(selectedItem, optionItem, removeSelectedItem){
@@ -88,7 +92,7 @@ import { Bs4DropDownItemContent, Bs4DropDownItemContentJs, Bs4DropDownItemConten
 
                 
 
-                let multiSelect = new MultiSelect(optionsAdapter, adapter, bs4SelectedItemContent, bs4DropDownItemContent, configuration, onDispose, window, $);
+                let multiSelect = new MultiSelect(optionsAdapter, adapter, bs4SelectedItemContent, bs4DropDownItemContent, labelAdapter, configuration, onDispose, window, $);
                 return multiSelect;
             }, $);
     }

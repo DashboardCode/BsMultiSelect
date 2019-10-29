@@ -1,45 +1,41 @@
-import { ExtendIfUndefined } from './Tools';
-
-const defaults = {
-    getIsValid(){return false},
-    getIsInvalid(){return false},
-    label:null
-}
-
-function OptionsAdapterJson(container, configuration) {
-        ExtendIfUndefined(configuration, defaults);
-
-        return function(ms){
-            let {$container, $selectedPanel, $dropDownMenu, $filterInput} = ms.fillContainer(container,
-                ()=> {
-                    while (container.firstChild) container.removeChild(container.firstChild);
-                });
-            ms.init($container, $selectedPanel, $dropDownMenu, $filterInput, 
-                () => {
-                    $container.trigger( "multiselect:change" );
-                }, 
-                () => configuration.options, 
-                configuration.hasOwnProperty("getDisabled")?configuration.getDisabled:()=>true);
+function OptionsAdapterJson(container, options, getDisabled, $) {
+    var $container = $(container);
+    return {
+        container,
+        options,
+        dispose(){
+            while (container.firstChild) container.removeChild(container.firstChild);
+        },
+        triggerChange(){
+            $container.trigger( "multiselect:change" );
+        },
+        getDisabled(){
+            return getDisabled?getDisabled():false;
         }
+    }
 }
 
-function OptionsAdapterElement(selectElement, configuration, $) {
-    ExtendIfUndefined(configuration, defaults);
+function OptionsAdapterElement(selectElement, $) {
     var $selectElement = $(selectElement);
-    return function (ms){
-        selectElement.style.display='none';
-        let container = document.createElement("div");
-
-        let {$container, $selectedPanel, $dropDownMenu, $filterInput} = ms.fillContainer(container, 
-            ()=>container.parentNode.removeChild(container));
-        $container.insertAfter(selectElement);
-        ms.init($container, $selectedPanel, $dropDownMenu, $filterInput, 
-            () => {
-                $selectElement.trigger('change');
-                $selectElement.trigger( "multiselect:change" );
-            }, 
-            () => $selectElement.find('OPTION'), 
-            () => selectElement.disabled);
+    selectElement.style.display='none';
+    var container = document.createElement("div");
+    var options = $selectElement.find('OPTION');;
+    return {
+        container,
+        options,
+        dispose(){
+            container.parentNode.removeChild(container);
+        },
+        afterContainerFilled(){
+            selectElement.parentNode.insertBefore(container, selectElement.nextSibling);
+        },
+        triggerChange(){
+            $selectElement.trigger('change');
+            $selectElement.trigger("multiselect:change");
+        },
+        getDisabled(){
+            return selectElement.disabled;
+        }
     }
 }
 

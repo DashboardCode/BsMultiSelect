@@ -74,7 +74,6 @@ class Bs4SelectedItemContent {
     CreateSelectedItemContent(selectedItem, optionItem, removeSelectedItem, skipProcessingEvent){
         return this.createSelectedItemContent(selectedItem, optionItem, removeSelectedItem, skipProcessingEvent);
     }
-
 }
 
 export { Bs4SelectedItemContent, Bs4SelectedItemContentJs, Bs4SelectedItemContentCss };

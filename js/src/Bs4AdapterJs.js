@@ -16,6 +16,8 @@ const defaults = {
 };
 
 function StylingBs4AdapterJs(configuration){
+    ExtendIfUndefined(configuration, defaults);
+
     return {
         OnInit(dom){
             dom.selectedPanel.css(defSelectedPanelStyle);
@@ -33,11 +35,11 @@ function StylingBs4AdapterJs(configuration){
         },
     
         Enable($selectedPanel){
-            $selectedPanel.css({"background-color": ""})
+            $selectedPanel.css("background-color", "")
         },
     
         Disable($selectedPanel){
-            $selectedPanel.css({"background-color": configuration.selectedPanelDisabledBackgroundColor})
+            $selectedPanel.css("background-color", configuration.selectedPanelDisabledBackgroundColor)
         },
     
         FocusIn($selectedPanel){

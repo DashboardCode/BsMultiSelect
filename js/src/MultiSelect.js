@@ -1,8 +1,15 @@
 import Popper from 'popper.js'
+import { ExtendIfUndefinedFluent } from './Tools';
 
 const defSelectedPanelStyleSys = {'display':'flex', 'flex-wrap':'wrap', 'list-style-type':'none'};  // remove bullets since this is ul
 const defFilterInputStyleSys   = {'width':'2ch', 'border':'0', 'padding':'0', 'outline':'none', 'background-color':'transparent' };
 const defDropDownMenuStyleSys  = {'list-style-type':'none'}; // remove bullets since this is ul
+
+const defaults = {
+    getIsValid(){return false},
+    getIsInvalid(){return false},
+    label:null
+}
 
 // jQuery used for:
 // $.extend, $.contains, $("<div>"), $(function(){}) aka ready
@@ -12,21 +19,22 @@ const defDropDownMenuStyleSys  = {'list-style-type':'none'}; // remove bullets s
 // $e.appendTo, $e.remove, $e.find, $e.closest, $e.prev, $e.data, $e.val
 
 class MultiSelect {
-    constructor(optionsAdapter, adapter, bs4SelectedItemContent, bs4DropDownItemContent, configuration, onDispose, window, $) {
+    constructor(optionsAdapter, adapter, bs4SelectedItemContent, bs4DropDownItemContent, labelAdapter, configuration, onDispose, window, $) {
         if (typeof Popper === 'undefined') {
             throw new TypeError('DashboardCode BsMultiSelect require Popper.js (https://popper.js.org)')
         }
         // readonly
+        this.optionsAdapter = optionsAdapter;
+        this.container = optionsAdapter.container; // part of published api
         this.adapter = adapter;
-        
+        this.labelAdapter=labelAdapter;
         this.window = window;
         this.document = window.document;
         this.onDispose=onDispose;
         this.$ = $;
         
-        this.configuration = configuration;
+        this.configuration = ExtendIfUndefinedFluent(configuration, defaults);;
         
-        this.container = null;
         this.selectedPanel = null;
         this.filterInputItem = null;
         this.filterInput = null;
@@ -51,11 +59,13 @@ class MultiSelect {
         this.bs4DropDownItemContent=bs4DropDownItemContent;
 
         // jquery adapters
-        this.$document= $(this.document);
+        this.$document = $(this.document);
 
-        optionsAdapter(this);
         
+        //optionsAdapter(this.fillContainer, this.init);
+        this.init();
     }
+
     updateDropDownPosition(force) {
         let offsetLeft = this.filterInputItem.offsetLeft;
         if (force || this.filterInputItemOffsetLeft!=offsetLeft){
@@ -119,7 +129,7 @@ class MultiSelect {
         this.hideDropDown();
     }
     
-    appendDropDownItem(optionElement, onChange) {
+    appendDropDownItem(optionElement) {
         let isHidden = optionElement.hidden;
         let itemText = optionElement.text;
         let $dropDownItem = this.$("<LI/>").prop("hidden", isHidden)
@@ -171,7 +181,7 @@ class MultiSelect {
                     null
                     );
                 $selectedItem.remove();
-                onChange();
+                this.optionsAdapter.triggerChange();
             };
             
             // what is a problem with calling removeSelectedItem directly (not using  setTimeout(removeSelectedItem, 0)):
@@ -209,7 +219,7 @@ class MultiSelect {
             adjustPair(true, ()=>removeItem(), removeItemAndCloseDropDown, bsSelectedItemContent.disable);
             $selectedItem.insertBefore(this.filterInputItem);
             if (doPublishEvents){
-                onChange();
+                this.optionsAdapter.triggerChange();
             }
         }
 
@@ -274,7 +284,7 @@ class MultiSelect {
         let $selectedPanel = this.$(this.selectedPanel);
         this.adapter.UpdateIsValid($selectedPanel);
         this.UpdateSizeImpl($selectedPanel);
-        this.UpdateDisabledImpl(this.$(this.container), $selectedPanel);
+        this.UpdateDisabledImpl(this.$(this.optionsAdapter.container), $selectedPanel);
     }
     Dispose(){
         if (this.onDispose)
@@ -284,15 +294,16 @@ class MultiSelect {
         this.$document.unbind("mouseup", this.documentMouseup)
                       .unbind("mouseup", this.documentMouseup2);
         
-        if (this.adapter !== null) {
-            this.adapter.Dispose()
-        }
+        this.labelAdapter.dispose();
+        // if (this.adapter && this.adapter.Dispose) {
+        //     this.adapter.Dispose()
+        // }
         if (this.popper !== null) {
             this.popper.destroy()
         }
         
-        if (this.removeContainer) {
-            this.removeContainer();
+        if (this.optionsAdapter.dispose) {
+            this.optionsAdapter.dispose();
         }
     }
     UpdateSize(){
@@ -306,7 +317,7 @@ class MultiSelect {
             this.adapter.UpdateSize($selectedPanel);
     }
     UpdateDisabledImpl($container, $selectedPanel){
-        let disabled = this.getDisabled();
+        let disabled = this.optionsAdapter.getDisabled();
         if (this.disabled!==disabled){
             if (disabled) {
                 this.filterInput.style.display = "none";
@@ -335,9 +346,9 @@ class MultiSelect {
             this.disabled=disabled;
         }
     }
-    fillContainer(container, removeContainer){
-        this.container=container;
-        this.removeContainer=removeContainer;
+
+    init() {
+        let container = this.optionsAdapter.container;
         let $container = this.$(container);
         this.selectedPanel = this.document.createElement("ul");
         let $selectedPanel = this.$(this.selectedPanel);
@@ -383,11 +394,11 @@ class MultiSelect {
             container:$container, selectedPanel:$selectedPanel,
             filterInputItem:$filterInputItem, filterInput:$filterInput,
             dropDownMenu:$dropDownMenu });
-        return {$container, $selectedPanel, $dropDownMenu, $filterInput};
-    }
+        
+        this.labelAdapter.init($filterInput); 
 
-    init($container, $selectedPanel, $dropDownMenu, $filterInput, onChange, getOptions, getDisabled) {
-        this.getDisabled=getDisabled;
+        if (this.optionsAdapter.afterContainerFilled)
+            this.optionsAdapter.afterContainerFilled();
         this.popper = new Popper(this.filterInput, this.dropDownMenu, {
             placement: 'bottom-start',
             modifiers: {
@@ -404,10 +415,10 @@ class MultiSelect {
         // some browsers (IE11) can change select value (as part of "autocomplete") after page is loaded but before "ready" event
         // FYI: $(() => { ...}) is jquery ready event shortcut
         this.$(() => {
-            let options = getOptions();
+            let options = this.optionsAdapter.options;
             this.$.each(options,
                 (index, el) => {
-                    this.appendDropDownItem(el, onChange);
+                    this.appendDropDownItem(el);
                 }
             );
             this.hasDropDownVisible = options.length > 0;

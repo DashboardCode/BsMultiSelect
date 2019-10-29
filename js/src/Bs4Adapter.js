@@ -15,11 +15,9 @@ const defaults = {
 
 class Bs4Adapter {
 
-    constructor(stylingAdapter, configuration, $){
+    constructor(stylingAdapter, configuration){
         this.stylingAdapter = stylingAdapter;
         this.configuration = ExtendIfUndefinedFluent(configuration, defaults);
-        this.$ = $;
-        this.bs4LabelDispose = null;
     }
    
     Init(dom){
@@ -30,7 +28,6 @@ class Bs4Adapter {
         dom.filterInput.addClass(this.configuration.filterInputClass);
         if (this.stylingAdapter.OnInit)
             this.stylingAdapter.OnInit(dom)
-        //this.bs4LabelDispose = this.handleLabel(dom.filterInput);
     }
 
     // handleLabel($filterInput){
