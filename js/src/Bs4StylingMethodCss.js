@@ -6,7 +6,7 @@ const defaults = {
     dropDownItemDisabledClass: 'disabled'
 };
 
-function Bs4AdapterStylingMethodCss(configuration){
+function Bs4StylingMethodCss(configuration){
     ExtendIfUndefined(configuration, defaults);
 
     return {
@@ -28,4 +28,4 @@ function Bs4AdapterStylingMethodCss(configuration){
     }
 }
 
-export default Bs4AdapterStylingMethodCss;
+export default Bs4StylingMethodCss;

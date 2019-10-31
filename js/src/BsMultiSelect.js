@@ -1,15 +1,16 @@
 import $ from 'jquery'
-import Bs4AdapterStylingMethodCss from './Bs4AdapterStylingMethodCss'
-import Bs4AdapterStylingMethodJs from './Bs4AdapterStylingMethodJs'
-import MultiSelect from './MultiSelect'
-import AddToJQueryPrototype from './AddToJQueryPrototype'
-import Bs4Adapter from './Bs4Adapter';
-import LabelAdapter from './LabelAdapter';
 
+import MultiSelect from './MultiSelect'
+import LabelAdapter from './LabelAdapter';
 import {OptionsAdapterJson,OptionsAdapterElement} from './OptionsAdapters';
 
-import { ComposeBs4SelectedItemContentFactory, Bs4SelectedItemContentStylingMethodJs, Bs4SelectedItemContentStylingMethodCss} from './Bs4SelectedItemContentFactory';
-import { ComposeBs4DropDownItemContentFactory, Bs4DropDownItemContentStylingMethodJs, Bs4DropDownItemContentStylingMethodCss } from './Bs4DropDownItemContentFactory';
+import Bs4StylingMethodCss from './Bs4StylingMethodCss'
+import Bs4StylingMethodJs from './Bs4StylingMethodJs'
+import Bs4Styling from './Bs4Styling';
+import AddToJQueryPrototype from './AddToJQueryPrototype'
+
+import { Bs4SelectedItemContent, Bs4SelectedItemContentStylingMethodJs, Bs4SelectedItemContentStylingMethodCss} from './Bs4SelectedItemContent';
+import { Bs4DropDownItemContent, Bs4DropDownItemContentStylingMethodJs, Bs4DropDownItemContentStylingMethodCss } from './Bs4DropDownItemContent';
 
 (
     (window, $) => {
@@ -18,16 +19,19 @@ import { ComposeBs4DropDownItemContentFactory, Bs4DropDownItemContentStylingMeth
                 let configuration = $.extend({}, settings); // settings used per jQuery intialization, configuration per element
                 if (configuration.buildConfiguration)
                     configuration.buildConfiguration(element, configuration);
-
+                var $element= $(element);
                 let optionsAdapter = null;
                 if (configuration.optionsAdapter)
                     optionsAdapter = configuration.optionsAdapter;
                 else
                 {
+                    var trigger = function(eventName){
+                        $element.trigger(eventName);
+                    }
                     if (configuration.options){
                         optionsAdapter = OptionsAdapterJson(element, configuration.options, 
                             configuration.getDisabled, configuration.getIsValid, configuration.getIsInvalid,
-                            $ );
+                            trigger );
                         if (!configuration.createInputId)
                             configuration.createInputId=()=>`${configuration.containerClass}-generated-filter-${element.id}`;
             
@@ -47,7 +51,7 @@ import { ComposeBs4DropDownItemContentFactory, Bs4DropDownItemContentStylingMeth
                                 }   
                             }
                         }
-                        optionsAdapter = OptionsAdapterElement(element, $);
+                        optionsAdapter = OptionsAdapterElement(element, trigger);
                         if (!configuration.createInputId)
                             configuration.createInputId=()=>`${configuration.containerClass}-generated-input-${((element.id)?element.id:element.name).toLowerCase()}-id`;
                     }
@@ -60,10 +64,10 @@ import { ComposeBs4DropDownItemContentFactory, Bs4DropDownItemContentStylingMeth
                     adapter = configuration.adapter;
                 else
                 {
-                    let stylingAdapter = configuration.useCss
-                        ? Bs4AdapterStylingMethodCss(configuration)
-                        : Bs4AdapterStylingMethodJs(configuration);
-                    adapter = new Bs4Adapter(stylingAdapter, configuration);
+                    let stylingMethod = configuration.useCss
+                        ? Bs4StylingMethodCss(configuration)
+                        : Bs4StylingMethodJs(configuration);
+                    adapter = Bs4Styling(stylingMethod, configuration, $);
                 }
 
                 let stylingAdapter2 = configuration.useCss
@@ -72,12 +76,18 @@ import { ComposeBs4DropDownItemContentFactory, Bs4DropDownItemContentStylingMeth
                 let stylingAdapter3 = configuration.useCss
                     ? Bs4DropDownItemContentStylingMethodCss(configuration, $)
                     : Bs4DropDownItemContentStylingMethodJs(configuration, $);
-                let bs4SelectedItemContent = ComposeBs4SelectedItemContentFactory(stylingAdapter2, configuration, $);
-                let bs4DropDownItemContent = ComposeBs4DropDownItemContentFactory(stylingAdapter3, configuration, $)
+                let bs4SelectedItemContent = Bs4SelectedItemContent(stylingAdapter2, configuration, $);
+                let bs4DropDownItemContent = Bs4DropDownItemContent(stylingAdapter3, configuration, $)
 
-                
+                let createStylingComposite = function(container, selectedPanel, filterInputItem, filterInput, dropDownMenu){
+                    return {
+                        $container:$(container), $selectedPanel:$(selectedPanel),
+                        $filterInputItem:$(filterInputItem), $filterInput:$(filterInput),
+                        $dropDownMenu:$(dropDownMenu)
+                        };
+                }
                 let multiSelect = new MultiSelect(optionsAdapter, adapter, bs4SelectedItemContent, bs4DropDownItemContent, 
-                    labelAdapter, configuration, onDispose, window, $);
+                    labelAdapter, createStylingComposite, configuration, onDispose, window, $);
                 return multiSelect;
             }, $);
     }

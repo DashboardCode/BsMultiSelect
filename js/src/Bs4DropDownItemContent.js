@@ -28,7 +28,7 @@ function Bs4DropDownItemContentStylingMethodJs(configuration) {
     }
 }
 
-function ComposeBs4DropDownItemContentFactory(stylingMethod, configuration, $) {
+function Bs4DropDownItemContent(stylingMethod, configuration, $) {
     const defaults = {
             dropDownItemClass:  'px-2',
     }
@@ -61,4 +61,4 @@ function ComposeBs4DropDownItemContentFactory(stylingMethod, configuration, $) {
             }
 }
 
-export { ComposeBs4DropDownItemContentFactory, Bs4DropDownItemContentStylingMethodJs, Bs4DropDownItemContentStylingMethodCss };
+export { Bs4DropDownItemContent, Bs4DropDownItemContentStylingMethodJs, Bs4DropDownItemContentStylingMethodCss };

@@ -1,5 +1,4 @@
-function OptionsAdapterJson(container, options, getDisabled, getIsValid, getIsInvalid, $) {
-    var $container = $(container);
+function OptionsAdapterJson(container, options, getDisabled, getIsValid, getIsInvalid, trigger) {
     return {
         container,
         options,
@@ -7,7 +6,7 @@ function OptionsAdapterJson(container, options, getDisabled, getIsValid, getIsIn
             while (container.firstChild) container.removeChild(container.firstChild);
         },
         triggerChange(){
-            $container.trigger( "multiselect:change" );
+            trigger('multiselect:change');
         },
         getDisabled(){
             return getDisabled?getDisabled():false;
@@ -21,11 +20,10 @@ function OptionsAdapterJson(container, options, getDisabled, getIsValid, getIsIn
     }
 }
 
-function OptionsAdapterElement(selectElement, $) {
-    var $selectElement = $(selectElement);
+function OptionsAdapterElement(selectElement, trigger) {
     selectElement.style.display='none';
-    var container = document.createElement("div");
-    var options = $selectElement.find('OPTION');;
+    var container = document.createElement('div');
+    var options = selectElement.getElementsByTagName('OPTION');
     return {
         container,
         options,
@@ -36,8 +34,8 @@ function OptionsAdapterElement(selectElement, $) {
             selectElement.parentNode.insertBefore(container, selectElement.nextSibling);
         },
         triggerChange(){
-            $selectElement.trigger('change');
-            $selectElement.trigger("multiselect:change");
+            trigger('change');
+            trigger('multiselect:change');
         },
         getDisabled(){
             return selectElement.disabled;

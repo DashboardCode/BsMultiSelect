@@ -1,16 +1,17 @@
 function LabelAdapter(label, createInputId){
-    var backupForId = label!=null?label.getAttribute('for'):null;
+    var backupedFor = null; // state saved between init and dispose
     return {
-        init($filterInput) {
-            if (label!=null) {
-                var newForId = createInputId();
-                $filterInput.attr('id', newForId);
-                label.setAttribute('for',newForId);
+        init(filterInput) {
+            if (label) {
+                backupedFor = label.getAttribute('for');
+                var newId = createInputId();
+                filterInput.setAttribute('id', newId);
+                label.setAttribute('for',newId);
             }
         },
         dispose(){
-            if(backupForId)
-                label.setAttribute('for',backupForId);
+            if(backupedFor)
+                label.setAttribute('for',backupedFor);
         }
     }
 }

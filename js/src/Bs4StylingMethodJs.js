@@ -15,13 +15,13 @@ const defaults = {
     //selectedItemContentDisabledOpacity: '.65'
 };
 
-function Bs4AdapterStylingMethodJs(configuration){
+function Bs4StylingMethodJs(configuration){
     ExtendIfUndefined(configuration, defaults);
 
     return {
-        OnInit(dom){
-            dom.selectedPanel.css(defSelectedPanelStyle);
-            dom.filterInput.css("color", configuration.filterInputColor);
+        OnInit(composite){
+            composite.$selectedPanel.css(defSelectedPanelStyle);
+            composite.$filterInput.css("color", configuration.filterInputColor);
         },
     
         UpdateSize($selectedPanel){
@@ -61,4 +61,4 @@ function Bs4AdapterStylingMethodJs(configuration){
 }
 
 
-export default Bs4AdapterStylingMethodJs;
+export default Bs4StylingMethodJs;

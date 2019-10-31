@@ -17,10 +17,10 @@ const defSelectedItemStyle = {'padding-left': '0px', 'line-height': '1.5em'};
 const defRemoveSelectedItemButtonStyle = {'font-size':'1.5em', 'line-height': '.9em'};
 
 function Bs4SelectedItemContentStylingMethodJs(configuration) {
-        const defaults = {
-            selectedItemContentDisabledOpacity: '.65',
-        };
-        ExtendIfUndefined(configuration, defaults);
+    const defaults = {
+       selectedItemContentDisabledOpacity: '.65',
+    };
+    ExtendIfUndefined(configuration, defaults);
     
     return {
         disableSelectedItemContent($content){
@@ -35,7 +35,7 @@ function Bs4SelectedItemContentStylingMethodJs(configuration) {
     }
 }
 
-function ComposeBs4SelectedItemContentFactory(stylingMethod, configuration, $) {
+function Bs4SelectedItemContent(stylingMethod, configuration, $) {
         const defaults = {
             selectedItemClass: 'badge',
             removeSelectedItemButtonClass: 'close'
@@ -65,4 +65,4 @@ function ComposeBs4SelectedItemContentFactory(stylingMethod, configuration, $) {
     
 }
 
-export { ComposeBs4SelectedItemContentFactory, Bs4SelectedItemContentStylingMethodJs, Bs4SelectedItemContentStylingMethodCss};
+export { Bs4SelectedItemContent as Bs4SelectedItemContent, Bs4SelectedItemContentStylingMethodJs, Bs4SelectedItemContentStylingMethodCss};
