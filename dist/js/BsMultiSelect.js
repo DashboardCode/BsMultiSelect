@@ -1,5 +1,5 @@
 /*!
-  * DashboardCode BsMultiSelect v0.4.1-beta (https://dashboardcode.github.io/BsMultiSelect/)
+  * DashboardCode BsMultiSelect v0.4.1 (https://dashboardcode.github.io/BsMultiSelect/)
   * Copyright 2017-2019 Roman Pokrovskij (github user rpokrovskij)
   * Licensed under APACHE 2 (https://github.com/DashboardCode/BsMultiSelect/blob/master/LICENSE)
   */
@@ -7,7 +7,7 @@
     typeof exports === 'object' && typeof module !== 'undefined' ? factory(require('jquery'), require('popper.js')) :
     typeof define === 'function' && define.amd ? define(['jquery', 'popper.js'], factory) :
     (global = global || self, factory(global.jQuery, global.Popper));
-}(this, function ($, Popper) { 'use strict';
+}(this, (function ($, Popper) { 'use strict';
 
     $ = $ && $.hasOwnProperty('default') ? $['default'] : $;
     Popper = Popper && Popper.hasOwnProperty('default') ? Popper['default'] : Popper;
@@ -1047,5 +1047,5 @@
       }, $);
     })(window, $);
 
-}));
+})));
 //# sourceMappingURL=BsMultiSelect.js.map
