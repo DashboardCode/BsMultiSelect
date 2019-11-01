@@ -71,7 +71,7 @@ import { Bs4DropDownItemContent, Bs4DropDownItemContentStylingMethodJs, Bs4DropD
       };
     };
 
-    var multiSelect = new MultiSelect(optionsAdapter, adapter, bs4SelectedItemContent, bs4DropDownItemContent, labelAdapter, createStylingComposite, configuration, onDispose, window, $);
+    var multiSelect = new MultiSelect(optionsAdapter, adapter, bs4SelectedItemContent, bs4DropDownItemContent, labelAdapter, createStylingComposite, configuration, onDispose, window);
     return multiSelect;
   }, $);
 })(window, $);

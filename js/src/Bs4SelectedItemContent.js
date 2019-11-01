@@ -42,7 +42,7 @@ function Bs4SelectedItemContent(stylingMethod, configuration, $) {
         };
         ExtendIfUndefined(configuration, defaults);
         
-        return function (selectedItem, optionItem, removeSelectedItem){
+        return function (selectedItem, optionItem, removeSelectedItem, preventDefaultMultiSelect){
                 let $selectedItem = $(selectedItem)
                 $selectedItem.addClass(configuration.selectedItemClass);
                 let $content = $(`<span/>`).text(optionItem.text);
@@ -54,7 +54,8 @@ function Bs4SelectedItemContent(stylingMethod, configuration, $) {
                     // with .css("white-space", "nowrap") or  .css("display", "inline-block"); TODO: migrate to flex? 
                     .css("float", "none").appendTo($selectedItem)
                     .addClass(configuration.removeSelectedItemButtonClass) // bs close class set the float:right
-                    .on("click", (jqEvent) => removeSelectedItem(jqEvent));
+                    .on("click", (jqEvent) => 
+                        { removeSelectedItem(); preventDefaultMultiSelect(jqEvent.originalEvent);});
                 
                 if (stylingMethod.createSelectedItemContent)
                     stylingMethod.createSelectedItemContent($selectedItem, $button);
