@@ -1,5 +1,5 @@
 /*!
-  * DashboardCode BsMultiSelect v0.4.1 (https://dashboardcode.github.io/BsMultiSelect/)
+  * DashboardCode BsMultiSelect v0.4.2 (https://dashboardcode.github.io/BsMultiSelect/)
   * Copyright 2017-2019 Roman Pokrovskij (github user rpokrovskij)
   * Licensed under APACHE 2 (https://github.com/DashboardCode/BsMultiSelect/blob/master/LICENSE)
   */
@@ -33,7 +33,7 @@
     var MultiSelect =
     /*#__PURE__*/
     function () {
-      function MultiSelect(optionsAdapter, styling, selectedItemContentFactory, dropDownItemContentFactory, labelAdapter, createStylingComposite, configuration, onDispose, window) {
+      function MultiSelect(optionsAdapter, styling, selectedItemContent, dropDownItemContent, labelAdapter, createStylingComposite, configuration, onDispose, window) {
         if (typeof Popper === 'undefined') {
           throw new TypeError('DashboardCode BsMultiSelect require Popper.js (https://popper.js.org)');
         } // readonly
@@ -43,12 +43,14 @@
         this.container = optionsAdapter.container; // part of published api
 
         this.styling = styling;
+        this.selectedItemContent = selectedItemContent;
+        this.dropDownItemContent = dropDownItemContent;
         this.labelAdapter = labelAdapter;
-        this.window = window;
-        this.document = window.document;
-        this.onDispose = onDispose;
         this.createStylingComposite = createStylingComposite;
         this.configuration = configuration;
+        this.onDispose = onDispose;
+        this.window = window;
+        this.document = window.document;
         this.selectedPanel = null;
         this.filterInputItem = null;
         this.filterInput = null;
@@ -67,16 +69,19 @@
 
         this.skipFocusout = false;
         this.hoveredMultiSelectData = null;
-        this.hoveredMultiSelectDataIndex = null;
-        this.hasDropDownVisible = false;
-        this.selectedItemContentFactory = selectedItemContentFactory;
-        this.dropDownItemContentFactory = dropDownItemContentFactory;
+        this.hoveredMultiSelectDataIndex = null; //this.hasDropDownVisible = false;
+
         this.MultiSelectDataList = [];
         this.MultiSelectDataSelectedTail = null;
-        this.init();
+        this.visibleMultiSelectDataList = null;
+        this.visibleCount = 10;
       }
 
       var _proto = MultiSelect.prototype;
+
+      _proto.getVisibleMultiSelectDataList = function getVisibleMultiSelectDataList() {
+        if (this.visibleMultiSelectDataList) return this.visibleMultiSelectDataList;else return this.MultiSelectDataList;
+      };
 
       _proto.updateDropDownPosition = function updateDropDownPosition(force) {
         var offsetLeft = this.filterInputItem.offsetLeft;
@@ -103,38 +108,37 @@
         }
       };
 
+      _proto.filterMultiSelectData = function filterMultiSelectData(MultiSelectData, isFiltered) {
+        MultiSelectData.visible = isFiltered;
+        MultiSelectData.dropDownMenuItemElement.style.display = isFiltered ? 'block' : 'none';
+      };
+
       _proto.filterDropDownMenu = function filterDropDownMenu() {
         var text = this.filterInput.value.trim().toLowerCase();
-        var visible = 0;
 
-        for (var i = 0; i < this.MultiSelectDataList.length; i++) {
-          var MultiSelectData = this.MultiSelectDataList[i];
-          var dropDownMenuItemElement = MultiSelectData.dropDownMenuItemElement;
+        if (text == '') {
+          for (var i = 0; i < this.MultiSelectDataList.length; i++) {
+            this.filterMultiSelectData(this.MultiSelectDataList[i], true);
+          }
 
-          if (text == '') {
-            MultiSelectData.visible = true;
-            dropDownMenuItemElement.style.display = 'block';
-            visible++;
-          } else {
-            var option = MultiSelectData.option;
+          this.visibleMultiSelectDataList = null;
+        } else {
+          this.visibleMultiSelectDataList = [];
 
-            if (!option.selected && !option.hidden && !option.disabled && MultiSelectData.searchText.indexOf(text) >= 0) {
-              MultiSelectData.visible = true;
-              dropDownMenuItemElement.style.display = 'block';
-              visible++;
-            } else {
-              MultiSelectData.visible = false;
-              dropDownMenuItemElement.style.display = 'none';
+          for (var _i = 0; _i < this.MultiSelectDataList.length; _i++) {
+            var multiSelectData = this.MultiSelectDataList[_i];
+            var option = multiSelectData.option;
+            if (option.selected || option.disabled || multiSelectData.searchText.indexOf(text) < 0) this.filterMultiSelectData(multiSelectData, false);else {
+              this.filterMultiSelectData(multiSelectData, true);
+              this.visibleMultiSelectDataList.push(multiSelectData);
             }
           }
         }
 
-        this.hasDropDownVisible = visible > 0;
         this.resetDropDownMenuHover();
 
-        if (visible == 1) {
-          var visibleNodeListArray = this.getVisibleMultiSelectDataList();
-          this.hoverInInternal(visibleNodeListArray, 0);
+        if (this.getVisibleMultiSelectDataList().length == 1) {
+          this.hoverInInternal(0);
         }
       };
 
@@ -172,9 +176,8 @@
         var _this = this;
 
         var dropDownMenuItemElement = this.document.createElement('LI');
-        dropDownMenuItemElement.hidden = option.hidden;
         this.dropDownMenu.appendChild(dropDownMenuItemElement);
-        var dropDownItemContent = this.dropDownItemContentFactory(dropDownMenuItemElement, option);
+        var dropDownItemContent = this.dropDownItemContent(dropDownMenuItemElement, option);
         var isDisabled = option.disabled;
         var isSelected = option.selected;
         if (isSelected && isDisabled) dropDownItemContent.disabledStyle(true);else if (isDisabled) dropDownItemContent.disable(isDisabled);
@@ -199,8 +202,8 @@
         });
 
         var selectItem = function selectItem(doPublishEvents) {
-          if (option.hidden) return;
-
+          //if (option.hidden)
+          //    return;
           var selectedItemElement = _this.document.createElement('LI');
 
           MultiSelectData.selectedItemElement = selectedItemElement;
@@ -263,7 +266,7 @@
             _this.preventDefaultMultiSelectEvent = event;
           };
 
-          var bsSelectedItemContent = _this.selectedItemContentFactory(selectedItemElement, option, onRemoveItemEvent, preventDefaultMultiSelect);
+          var bsSelectedItemContent = _this.selectedItemContent(selectedItemElement, option, onRemoveItemEvent, preventDefaultMultiSelect);
 
           bsSelectedItemContent.disable(_this.disabled);
           adjustPair(true, function () {
@@ -287,22 +290,13 @@
           if (option.disabled) return;
           selectItem(true);
         };
+        return MultiSelectData;
       };
 
-      _proto.getVisibleMultiSelectDataList = function getVisibleMultiSelectDataList() {
-        var visibleMultiSelectDataList = [];
-
-        for (var i = 0; i < this.MultiSelectDataList.length; i++) {
-          var multiSelectData = this.MultiSelectDataList[i];
-          if (multiSelectData.visible && !multiSelectData.option.hidden) visibleMultiSelectDataList.push(multiSelectData);
-        }
-
-        return visibleMultiSelectDataList;
-      };
-
-      _proto.hoverInInternal = function hoverInInternal(visibleMultiSelectDataList, index) {
+      _proto.hoverInInternal = function hoverInInternal(index) {
+        this.visibleIndex = 0;
         this.hoveredMultiSelectDataIndex = index;
-        this.hoveredMultiSelectData = visibleMultiSelectDataList[index];
+        this.hoveredMultiSelectData = this.getVisibleMultiSelectDataList()[index];
         this.styling.HoverIn(this.hoveredMultiSelectData.dropDownMenuItemElement);
       };
 
@@ -310,7 +304,7 @@
         var visibleMultiSelectDataList = this.getVisibleMultiSelectDataList();
 
         if (visibleMultiSelectDataList.length > 0) {
-          if (this.hasDropDownVisible) {
+          if (visibleMultiSelectDataList.length > 0) {
             this.updateDropDownPosition(true);
             this.showDropDown();
           }
@@ -332,7 +326,7 @@
             }
           }
 
-          this.hoverInInternal(visibleMultiSelectDataList, index);
+          this.hoverInInternal(index);
         }
       };
 
@@ -340,7 +334,7 @@
         this.filterInput.style.width = this.filterInput.value.length * 1.3 + 2 + "ch";
         this.filterDropDownMenu();
 
-        if (this.hasDropDownVisible) {
+        if (this.getVisibleMultiSelectDataList().length > 0) {
           if (forceUpdatePosition) // ignore it if it is called from
             this.updateDropDownPosition(forceUpdatePosition); // we need it to support case when textbox changes its place because of line break (texbox grow with each key press)
 
@@ -457,7 +451,7 @@
             _this3.filterInput.focus();
           }
 
-          if (_this3.hasDropDownVisible && _this3.preventDefaultMultiSelectEvent != event) {
+          if (_this3.getVisibleMultiSelectDataList().length > 0 && _this3.preventDefaultMultiSelectEvent != event) {
             _this3.updateDropDownPosition(true);
 
             _this3.showDropDown();
@@ -492,10 +486,13 @@
           var options = _this3.optionsAdapter.options;
 
           for (var i = 0; i < options.length; i++) {
-            _this3.appendDropDownItem(options[i]);
-          }
+            var option = options[i];
 
-          _this3.hasDropDownVisible = options.length > 0;
+            if (!option.hidden) {
+              _this3.appendDropDownItem(option);
+            }
+          } //this.hasDropDownVisible = options.length > 0;
+
 
           _this3.updateDropDownPosition(false);
         }; // some browsers (IE11) can change select value (as part of "autocomplete") after page is loaded but before "ready" event
@@ -528,7 +525,7 @@
           if (event.which == 38) {
             _this3.keydownArrow(false);
           } else if (event.which == 40) {
-            if (_this3.hoveredMultiSelectData === null && _this3.hasDropDownVisible) {
+            if (_this3.hoveredMultiSelectData === null && _this3.getVisibleMultiSelectDataList().length > 0) {
               _this3.showDropDown();
             }
 
@@ -559,32 +556,24 @@
 
               _this3.closeDropDown();
             }
-            /*
-            // it seems we do not need this - unique full match is always hoovered (and covered by previous condition)
-            
-            else {
-                let text = this.filterInput.value.trim().toLowerCase();
-                let fullMatchMultiSelectData = null;
-                for (let i = 0; i < this.MultiSelectDataList.length; i++) {
-                    let multiSelectData = this.MultiSelectDataList[i];
-                    if (multiSelectData.searchText == text)
-                    {
-                        fullMatchMultiSelectData=multiSelectData;
-                        break;
-                    }
-                }
-                if (fullMatchMultiSelectData) {
-                    if (! fullMatchMultiSelectData.option.selected){
-                        fullMatchMultiSelectData.toggle();
-                    }
-                    this.clearFilterInput(true);
-                }
-            }*/
+          } else if (event.which == 27) {
+            // escape
+            _this3.closeDropDown();
+          } // TODO may be do it on "space" (when there is left only one)?
+          else {
+              var text = _this3.filterInput.value.trim().toLowerCase();
 
-          } // TODO support "space" when there is left only one ?
-          else if (event.which == 27) {
-              // escape
-              _this3.closeDropDown();
+              var visibleMultiSelectDataList = _this3.getVisibleMultiSelectDataList();
+
+              if (text && visibleMultiSelectDataList.length == 1) {
+                var fullMatchMultiSelectData = visibleMultiSelectDataList[0];
+
+                if (fullMatchMultiSelectData.searchText == text) {
+                  fullMatchMultiSelectData.toggle();
+
+                  _this3.clearFilterInput(true);
+                }
+              }
             }
         });
         this.filterInput.addEventListener('input', function () {
@@ -672,14 +661,14 @@
       }
     }
 
-    var defaults = {
+    var bs4StylingMethodCssDefaults = {
       selectedPanelFocusClass: 'focus',
       selectedPanelDisabledClass: 'disabled',
       dropDownItemDisabledClass: 'disabled'
     };
 
     function Bs4StylingMethodCss(configuration) {
-      ExtendIfUndefined(configuration, defaults);
+      ExtendIfUndefined(configuration, bs4StylingMethodCssDefaults);
       return {
         Enable: function Enable($selectedPanel) {
           $selectedPanel.removeClass(configuration.selectedPanelDisabledClass);
@@ -700,7 +689,7 @@
       'margin-bottom': '0',
       'height': 'auto'
     };
-    var defaults$1 = {
+    var bs4StylingMethodJsDefaults = {
       selectedPanelDefMinHeight: 'calc(2.25rem + 2px)',
       selectedPanelLgMinHeight: 'calc(2.875rem + 2px)',
       selectedPanelSmMinHeight: 'calc(1.8125rem + 2px)',
@@ -714,7 +703,7 @@
     };
 
     function Bs4StylingMethodJs(configuration) {
-      ExtendIfUndefined(configuration, defaults$1);
+      ExtendIfUndefined(configuration, bs4StylingMethodJsDefaults);
       return {
         OnInit: function OnInit(composite) {
           composite.$selectedPanel.css(defSelectedPanelStyle);
@@ -750,7 +739,7 @@
       };
     }
 
-    var defaults$2 = {
+    var bs4StylingDefaults = {
       containerClass: 'dashboardcode-bsmultiselect',
       dropDownMenuClass: 'dropdown-menu',
       dropDownItemClass: 'px-2',
@@ -763,7 +752,7 @@
     };
 
     function Bs4Styling(stylingMethod, configuration, $) {
-      ExtendIfUndefined(configuration, defaults$2);
+      ExtendIfUndefined(configuration, bs4StylingDefaults);
       return {
         Init: function Init(composite) {
           composite.$container.addClass(configuration.containerClass);
@@ -855,11 +844,12 @@
       };
     }
 
+    var bs4StylingMethodCssdefaults = {
+      selectedItemContentDisabledClass: 'disabled'
+    };
+
     function Bs4SelectedItemContentStylingMethodCss(configuration) {
-      var defaults = {
-        selectedItemContentDisabledClass: 'disabled'
-      };
-      ExtendIfUndefined(configuration, defaults);
+      ExtendIfUndefined(configuration, bs4StylingMethodCssdefaults);
       return {
         disableSelectedItemContent: function disableSelectedItemContent($content) {
           $content.addClass(configuration.selectedItemContentDisabledClass);
@@ -875,12 +865,12 @@
       'font-size': '1.5em',
       'line-height': '.9em'
     };
+    var bs4StylingMethodJsDefaults$1 = {
+      selectedItemContentDisabledOpacity: '.65'
+    };
 
     function Bs4SelectedItemContentStylingMethodJs(configuration) {
-      var defaults = {
-        selectedItemContentDisabledOpacity: '.65'
-      };
-      ExtendIfUndefined(configuration, defaults);
+      ExtendIfUndefined(configuration, bs4StylingMethodJsDefaults$1);
       return {
         disableSelectedItemContent: function disableSelectedItemContent($content) {
           $content.css("opacity", configuration.selectedItemContentDisabledOpacity);
@@ -892,12 +882,13 @@
       };
     }
 
+    var bs4SelectedItemContentDefaults = {
+      selectedItemClass: 'badge',
+      removeSelectedItemButtonClass: 'close'
+    };
+
     function Bs4SelectedItemContent(stylingMethod, configuration, $) {
-      var defaults = {
-        selectedItemClass: 'badge',
-        removeSelectedItemButtonClass: 'close'
-      };
-      ExtendIfUndefined(configuration, defaults);
+      ExtendIfUndefined(configuration, bs4SelectedItemContentDefaults);
       return function (selectedItem, optionItem, removeSelectedItem, preventDefaultMultiSelect) {
         var $selectedItem = $(selectedItem);
         $selectedItem.addClass(configuration.selectedItemClass);
@@ -920,11 +911,12 @@
       };
     }
 
+    var bs4StylingMethodCssDefaults$1 = {
+      selectedItemContentDisabledClass: 'disabled'
+    };
+
     function Bs4DropDownItemContentStylingMethodCss(configuration) {
-      var defaults = {
-        selectedItemContentDisabledClass: 'disabled'
-      };
-      ExtendIfUndefined(configuration, defaults);
+      ExtendIfUndefined(configuration, bs4StylingMethodCssDefaults$1);
       return {
         disabledStyle: function disabledStyle($checkBox, $checkBoxLabel, isDisbaled) {
           if (isDisbaled) $checkBox.addClass(configuration.dropDownItemDisabledClass);else $checkBox.removeClass(configuration.dropDownItemDisabledClass);
@@ -932,12 +924,13 @@
       };
     }
 
+    var bs4StylingMethodJsDefaults$2 = {
+      selectedItemContentDisabledOpacity: '.65',
+      dropdDownLabelDisabledColor: '#6c757d'
+    };
+
     function Bs4DropDownItemContentStylingMethodJs(configuration) {
-      var defaults = {
-        selectedItemContentDisabledOpacity: '.65',
-        dropdDownLabelDisabledColor: '#6c757d'
-      };
-      ExtendIfUndefined(configuration, defaults);
+      ExtendIfUndefined(configuration, bs4StylingMethodJsDefaults$2);
       return {
         disabledStyle: function disabledStyle($checkBox, $checkBoxLabel, isDisbaled) {
           $checkBoxLabel.css('color', isDisbaled ? configuration.dropdDownLabelDisabledColor : '');
@@ -945,15 +938,16 @@
       };
     }
 
+    var bs4DropDownItemContentDefaults = {
+      dropDownItemClass: 'px-2'
+    };
+
     function Bs4DropDownItemContent(stylingMethod, configuration, $) {
-      var defaults = {
-        dropDownItemClass: 'px-2'
-      };
-      ExtendIfUndefined(configuration, defaults);
+      ExtendIfUndefined(configuration, bs4DropDownItemContentDefaults);
       return function (dropDownItem, option) {
         var $dropDownItem = $(dropDownItem);
         $dropDownItem.addClass(configuration.dropDownItemClass);
-        var $dropDownItemContent = $("<div class=\"custom-control custom-checkbox\">\n                    <input type=\"checkbox\" class=\"custom-control-input\">\n                    <label class=\"custom-control-label\"></label>\n                </div>");
+        var $dropDownItemContent = $("<div class=\"custom-control custom-checkbox\">\n            <input type=\"checkbox\" class=\"custom-control-input\">\n            <label class=\"custom-control-label\"></label>\n        </div>");
         $dropDownItemContent.appendTo(dropDownItem);
         var $checkBox = $dropDownItemContent.find("INPUT[type=\"checkbox\"]");
         var $checkBoxLabel = $dropDownItemContent.find("label");
@@ -984,7 +978,7 @@
       AddToJQueryPrototype('BsMultiSelect', function (element, settings, onDispose) {
         var configuration = $.extend({}, settings); // settings used per jQuery intialization, configuration per element
 
-        if (configuration.buildConfiguration) configuration.buildConfiguration(element, configuration);
+        if (configuration.preBuildConfiguration) configuration.preBuildConfiguration(element, configuration);
         var $element = $(element);
         var optionsAdapter = null;
         if (configuration.optionsAdapter) optionsAdapter = configuration.optionsAdapter;else {
@@ -1022,15 +1016,38 @@
           }
         }
         var labelAdapter = LabelAdapter(configuration.label, configuration.createInputId);
-        var adapter = null;
-        if (configuration.adapter) adapter = configuration.adapter;else {
-          var stylingMethod = configuration.useCss ? Bs4StylingMethodCss(configuration) : Bs4StylingMethodJs(configuration);
-          adapter = Bs4Styling(stylingMethod, configuration, $);
+        var useCss = configuration.useCss;
+        var styling = configuration.styling;
+
+        if (!configuration.adapter) {
+          var stylingMethod = configuration.stylingMethod;
+
+          if (!stylingMethod) {
+            if (useCss) stylingMethod = Bs4StylingMethodCss(configuration);else stylingMethod = Bs4StylingMethodJs(configuration);
+          }
+
+          styling = Bs4Styling(stylingMethod, configuration, $);
         }
-        var stylingAdapter2 = configuration.useCss ? Bs4SelectedItemContentStylingMethodCss(configuration) : Bs4SelectedItemContentStylingMethodJs(configuration);
-        var stylingAdapter3 = configuration.useCss ? Bs4DropDownItemContentStylingMethodCss(configuration) : Bs4DropDownItemContentStylingMethodJs(configuration);
-        var bs4SelectedItemContent = Bs4SelectedItemContent(stylingAdapter2, configuration, $);
-        var bs4DropDownItemContent = Bs4DropDownItemContent(stylingAdapter3, configuration, $);
+
+        var selectedItemContent = configuration.selectedItemContent;
+
+        if (!selectedItemContent) {
+          var selectedItemContentStylingMethod = configuration.selectedItemContentStylingMethod;
+
+          if (!selectedItemContentStylingMethod) {
+            if (useCss) selectedItemContentStylingMethod = Bs4SelectedItemContentStylingMethodCss(configuration);else selectedItemContentStylingMethod = Bs4SelectedItemContentStylingMethodJs(configuration);
+          }
+
+          selectedItemContent = Bs4SelectedItemContent(selectedItemContentStylingMethod, configuration, $);
+        }
+
+        var dropDownItemContent = configuration.bs4DropDownItemContent;
+
+        if (!dropDownItemContent) {
+          var dropDownItemContentStylingMethod = configuration.dropDownItemContentStylingMethod;
+          if (useCss) dropDownItemContentStylingMethod = Bs4DropDownItemContentStylingMethodCss(configuration);else dropDownItemContentStylingMethod = Bs4DropDownItemContentStylingMethodJs(configuration);
+          dropDownItemContent = Bs4DropDownItemContent(dropDownItemContentStylingMethod, configuration, $);
+        }
 
         var createStylingComposite = function createStylingComposite(container, selectedPanel, filterInputItem, filterInput, dropDownMenu) {
           return {
@@ -1042,7 +1059,9 @@
           };
         };
 
-        var multiSelect = new MultiSelect(optionsAdapter, adapter, bs4SelectedItemContent, bs4DropDownItemContent, labelAdapter, createStylingComposite, configuration, onDispose, window);
+        var multiSelect = new MultiSelect(optionsAdapter, styling, selectedItemContent, dropDownItemContent, labelAdapter, createStylingComposite, configuration, onDispose, window);
+        if (configuration.postBuildConfiguration) configuration.postBuildConfiguration(element, multiSelect);
+        multiSelect.init();
         return multiSelect;
       }, $);
     })(window, $);

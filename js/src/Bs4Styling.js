@@ -1,7 +1,7 @@
 import  { ExtendIfUndefined } from './Tools';
 
-// addClass, removeClass, css, siblings('label'), hasClass, find('BUTTON').prop(..)
-const defaults = {
+// Bs4Styling
+const bs4StylingDefaults = {
     containerClass: 'dashboardcode-bsmultiselect',
     dropDownMenuClass: 'dropdown-menu',
     dropDownItemClass:  'px-2',
@@ -14,9 +14,9 @@ const defaults = {
 }
 
 function Bs4Styling(stylingMethod, configuration, $) {
-    ExtendIfUndefined(configuration, defaults);
+    ExtendIfUndefined(configuration, bs4StylingDefaults);
 
-    return{
+    return {
         Init(composite){
             composite.$container.addClass(configuration.containerClass);
             composite.$selectedPanel.addClass(configuration.selectedPanelClass);
@@ -64,6 +64,7 @@ function Bs4Styling(stylingMethod, configuration, $) {
             $(dropDownItem).removeClass(configuration.dropDownItemHoverClass);
         }
     }
+    
 }
 
 export default Bs4Styling;

@@ -2,7 +2,7 @@ import  { ExtendIfUndefined } from './Tools';
 
 const defSelectedPanelStyle = {'margin-bottom': '0', 'height': 'auto'};
 
-const defaults = {
+const bs4StylingMethodJsDefaults = {
     selectedPanelDefMinHeight: 'calc(2.25rem + 2px)',
     selectedPanelLgMinHeight:  'calc(2.875rem + 2px)',
     selectedPanelSmMinHeight:  'calc(1.8125rem + 2px)',
@@ -16,7 +16,7 @@ const defaults = {
 };
 
 function Bs4StylingMethodJs(configuration){
-    ExtendIfUndefined(configuration, defaults);
+    ExtendIfUndefined(configuration, bs4StylingMethodJsDefaults);
 
     return {
         OnInit(composite){
@@ -59,6 +59,5 @@ function Bs4StylingMethodJs(configuration){
         },
     }
 }
-
 
 export default Bs4StylingMethodJs;

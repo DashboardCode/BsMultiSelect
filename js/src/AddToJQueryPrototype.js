@@ -49,4 +49,4 @@ function AddToJQueryPrototype(pluginName, createPlugin, $){
     }
 }
 
-export default AddToJQueryPrototype
+export default AddToJQueryPrototype;

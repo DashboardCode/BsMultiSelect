@@ -13,7 +13,7 @@ import { Bs4DropDownItemContent, Bs4DropDownItemContentStylingMethodJs, Bs4DropD
   AddToJQueryPrototype('BsMultiSelect', function (element, settings, onDispose) {
     var configuration = $.extend({}, settings); // settings used per jQuery intialization, configuration per element
 
-    if (configuration.buildConfiguration) configuration.buildConfiguration(element, configuration);
+    if (configuration.preBuildConfiguration) configuration.preBuildConfiguration(element, configuration);
     var $element = $(element);
     var optionsAdapter = null;
     if (configuration.optionsAdapter) optionsAdapter = configuration.optionsAdapter;else {
@@ -51,15 +51,38 @@ import { Bs4DropDownItemContent, Bs4DropDownItemContentStylingMethodJs, Bs4DropD
       }
     }
     var labelAdapter = LabelAdapter(configuration.label, configuration.createInputId);
-    var adapter = null;
-    if (configuration.adapter) adapter = configuration.adapter;else {
-      var stylingMethod = configuration.useCss ? Bs4StylingMethodCss(configuration) : Bs4StylingMethodJs(configuration);
-      adapter = Bs4Styling(stylingMethod, configuration, $);
+    var useCss = configuration.useCss;
+    var styling = configuration.styling;
+
+    if (!configuration.adapter) {
+      var stylingMethod = configuration.stylingMethod;
+
+      if (!stylingMethod) {
+        if (useCss) stylingMethod = Bs4StylingMethodCss(configuration);else stylingMethod = Bs4StylingMethodJs(configuration);
+      }
+
+      styling = Bs4Styling(stylingMethod, configuration, $);
     }
-    var stylingAdapter2 = configuration.useCss ? Bs4SelectedItemContentStylingMethodCss(configuration, $) : Bs4SelectedItemContentStylingMethodJs(configuration, $);
-    var stylingAdapter3 = configuration.useCss ? Bs4DropDownItemContentStylingMethodCss(configuration, $) : Bs4DropDownItemContentStylingMethodJs(configuration, $);
-    var bs4SelectedItemContent = Bs4SelectedItemContent(stylingAdapter2, configuration, $);
-    var bs4DropDownItemContent = Bs4DropDownItemContent(stylingAdapter3, configuration, $);
+
+    var selectedItemContent = configuration.selectedItemContent;
+
+    if (!selectedItemContent) {
+      var selectedItemContentStylingMethod = configuration.selectedItemContentStylingMethod;
+
+      if (!selectedItemContentStylingMethod) {
+        if (useCss) selectedItemContentStylingMethod = Bs4SelectedItemContentStylingMethodCss(configuration, $);else selectedItemContentStylingMethod = Bs4SelectedItemContentStylingMethodJs(configuration, $);
+      }
+
+      selectedItemContent = Bs4SelectedItemContent(selectedItemContentStylingMethod, configuration, $);
+    }
+
+    var dropDownItemContent = configuration.bs4DropDownItemContent;
+
+    if (!dropDownItemContent) {
+      var dropDownItemContentStylingMethod = configuration.dropDownItemContentStylingMethod;
+      if (useCss) dropDownItemContentStylingMethod = Bs4DropDownItemContentStylingMethodCss(configuration, $);else dropDownItemContentStylingMethod = Bs4DropDownItemContentStylingMethodJs(configuration, $);
+      dropDownItemContent = Bs4DropDownItemContent(dropDownItemContentStylingMethod, configuration, $);
+    }
 
     var createStylingComposite = function createStylingComposite(container, selectedPanel, filterInputItem, filterInput, dropDownMenu) {
       return {
@@ -71,7 +94,9 @@ import { Bs4DropDownItemContent, Bs4DropDownItemContentStylingMethodJs, Bs4DropD
       };
     };
 
-    var multiSelect = new MultiSelect(optionsAdapter, adapter, bs4SelectedItemContent, bs4DropDownItemContent, labelAdapter, createStylingComposite, configuration, onDispose, window);
+    var multiSelect = new MultiSelect(optionsAdapter, styling, selectedItemContent, dropDownItemContent, labelAdapter, createStylingComposite, configuration, onDispose, window);
+    if (configuration.postBuildConfiguration) configuration.postBuildConfiguration(element, multiSelect);
+    multiSelect.init();
     return multiSelect;
   }, $);
 })(window, $);

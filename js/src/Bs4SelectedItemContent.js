@@ -1,10 +1,11 @@
 import  { ExtendIfUndefined } from './Tools';
 
+const bs4StylingMethodCssdefaults = {
+    selectedItemContentDisabledClass: 'disabled'
+};
+
 function Bs4SelectedItemContentStylingMethodCss(configuration) {
-    const defaults = {
-            selectedItemContentDisabledClass: 'disabled',
-    };
-    ExtendIfUndefined(configuration, defaults);
+    ExtendIfUndefined(configuration, bs4StylingMethodCssdefaults);
 
     return {
         disableSelectedItemContent($content){
@@ -15,13 +16,12 @@ function Bs4SelectedItemContentStylingMethodCss(configuration) {
 
 const defSelectedItemStyle = {'padding-left': '0px', 'line-height': '1.5em'};
 const defRemoveSelectedItemButtonStyle = {'font-size':'1.5em', 'line-height': '.9em'};
+const bs4StylingMethodJsDefaults = {
+    selectedItemContentDisabledOpacity: '.65'
+ };
 
 function Bs4SelectedItemContentStylingMethodJs(configuration) {
-    const defaults = {
-       selectedItemContentDisabledOpacity: '.65',
-    };
-    ExtendIfUndefined(configuration, defaults);
-    
+    ExtendIfUndefined(configuration, bs4StylingMethodJsDefaults);
     return {
         disableSelectedItemContent($content){
             $content.css("opacity", configuration.selectedItemContentDisabledOpacity )
@@ -35,12 +35,12 @@ function Bs4SelectedItemContentStylingMethodJs(configuration) {
     }
 }
 
+const bs4SelectedItemContentDefaults = {
+    selectedItemClass: 'badge',
+    removeSelectedItemButtonClass: 'close'
+};
 function Bs4SelectedItemContent(stylingMethod, configuration, $) {
-        const defaults = {
-            selectedItemClass: 'badge',
-            removeSelectedItemButtonClass: 'close'
-        };
-        ExtendIfUndefined(configuration, defaults);
+        ExtendIfUndefined(configuration, bs4SelectedItemContentDefaults);
         
         return function (selectedItem, optionItem, removeSelectedItem, preventDefaultMultiSelect){
                 let $selectedItem = $(selectedItem)
@@ -63,7 +63,6 @@ function Bs4SelectedItemContent(stylingMethod, configuration, $) {
                     disable(isDisabled){ $button.prop('disabled', isDisabled); }
                 };
             }
-    
 }
 
 export { Bs4SelectedItemContent as Bs4SelectedItemContent, Bs4SelectedItemContentStylingMethodJs, Bs4SelectedItemContentStylingMethodCss};
