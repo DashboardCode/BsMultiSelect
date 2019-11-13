@@ -55,12 +55,16 @@ function Bs4SelectedItemContent(stylingMethod, configuration, $) {
                     .css("float", "none").appendTo($selectedItem)
                     .addClass(configuration.removeSelectedItemButtonClass) // bs close class set the float:right
                     .on("click", (jqEvent) => 
-                        { removeSelectedItem(); preventDefaultMultiSelect(jqEvent.originalEvent);});
+                        {   
+                            removeSelectedItem(); 
+                            preventDefaultMultiSelect(jqEvent.originalEvent);});
                 
                 if (stylingMethod.createSelectedItemContent)
                     stylingMethod.createSelectedItemContent($selectedItem, $button);
                 return {
-                    disable(isDisabled){ $button.prop('disabled', isDisabled); }
+                    disable(isDisabled){ 
+                        $button.prop('disabled', isDisabled); 
+                    }
                 };
             }
 }

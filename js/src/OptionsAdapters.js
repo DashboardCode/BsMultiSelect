@@ -1,7 +1,7 @@
 function OptionsAdapterJson(container, options, getDisabled, getIsValid, getIsInvalid, trigger) {
     return {
         container,
-        options,
+        getOptions(){return options},
         dispose(){
             while (container.firstChild) container.removeChild(container.firstChild);
         },
@@ -23,10 +23,9 @@ function OptionsAdapterJson(container, options, getDisabled, getIsValid, getIsIn
 function OptionsAdapterElement(selectElement, trigger) {
     selectElement.style.display='none';
     var container = document.createElement('div');
-    var options = selectElement.getElementsByTagName('OPTION');
     return {
         container,
-        options,
+        getOptions(){return selectElement.getElementsByTagName('OPTION')},
         dispose(){
             container.parentNode.removeChild(container);
         },
