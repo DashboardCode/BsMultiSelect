@@ -48,10 +48,12 @@ function Bs4DropDownItemContent(stylingMethod, configuration, $) {
         let $checkBoxLabel = $dropDownItemContent.find(`label`);
         $checkBoxLabel.text(option.text);
 
-        return { 
+        var tmp = { 
             select(isSelected){ $checkBox.prop('checked', isSelected); }, 
+            // --- distinct disable and disabledStyle to provide a possibility to unselect disabled option
             disable(isDisabled){ $checkBox.prop('disabled', isDisabled); },
             disabledStyle(isDisbaled){ stylingMethod.disabledStyle($checkBox, $checkBoxLabel, isDisbaled); },
+
             onSelected(toggle) {
                 $checkBox.on("change", toggle)
                 $dropDownItem.on("click", event => {
@@ -61,6 +63,8 @@ function Bs4DropDownItemContent(stylingMethod, configuration, $) {
                 })
             }
         }
+        
+        return tmp;
     }
 }
 
