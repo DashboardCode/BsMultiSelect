@@ -1,0 +1,54 @@
+<html>
+<body>
+
+1 put focus<br/>
+2 move mouse pointer to yellow area, <br/>
+3 and type any char <br/>
+
+<input id="typeMe" style="width:100px;"  />
+
+<div style="background-color: yellow; width:100px; height:100px;">
+  <div id="showMe" 
+    style="background-color: red; position: absolute; z-index: 1; display:none;">
+    <div id="item1"><div style="width:100px;">item 1</div></div>
+    <div id="item2"><div style="width:100px;">item 2</div></div>
+    <div id="item3"><div style="width:100px;">item 3</div></div>
+    <div id="item4"><div style="width:100px;">item 4</div></div>
+    <div id="item5"><div style="width:100px;">item 5</div></div>
+  </div>
+
+</div>
+
+<script>
+var isInShow = false;
+var typeMeInput = document.getElementById("typeMe");
+var showMeDiv   = document.getElementById("showMe");
+
+typeMeInput.addEventListener('input',
+   function(){
+      isInShow = true;
+      showMeDiv.style.display="block";
+      setTimeout( function(){  
+                    isInShow = false;
+                }, 0);
+   }
+)
+   
+for(var i =1; i<=5; i++)
+{
+   var itemX= document.getElementById("item"+i);
+   (function(itemX,i){ 
+      //itemX.addEventListener('mouseenter',
+      //   function(){
+      //       console.log("mouseenter happen "+i + " isInShow "+isInShow );   
+      //   })
+      itemX.addEventListener('mouseover',
+         function(){
+             console.log("mouseover happen "+i + " isInShow "+isInShow );   
+         })
+
+   })(itemX, i)
+}
+</script>
+</body>
+</html>

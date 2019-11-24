@@ -136,6 +136,8 @@ class MultiSelect {
         }
     }
 
+    
+
     showDropDown() {
         if (this.dropDownMenu.style.display != 'block')
         {
@@ -148,13 +150,14 @@ class MultiSelect {
             this.container.addEventListener("mousedown", this.containerMousedown);
             this.document.addEventListener("mouseup", this.documentMouseup);
             this.document.addEventListener("mouseup", this.documentMouseup2);
+
+
         }
     }
 
     hoverInInternal(index){
         this.hoveredMultiSelectDataIndex = index;
         this.hoveredMultiSelectData = this.getVisibleMultiSelectDataList()[index];
-        //console.log(this.hoveredMultiSelectData.dropDownMenuItemElement);
         this.styling.HoverIn(this.hoveredMultiSelectData.dropDownMenuItemElement);
     }
 
@@ -198,13 +201,20 @@ class MultiSelect {
     insertDropDownItem(MultiSelectData, insertToDropDownMenu, isSelected, isOptionDisabled) {
         var dropDownMenuItemElement = this.document.createElement('LI');
         
+        // in chrome it happens on "become visible" so we need to skip it, 
+        // for IE11 and edge it doesn't happens, but for IE11 and Edge it doesn't happens on small 
+        // mouse moves inside the item. 
+        // https://stackoverflow.com/questions/59022563/browser-events-mouseover-doesnt-happen-when-you-make-element-visible-and-mous
         dropDownMenuItemElement.addEventListener('mouseover', () => 
             {
                 if (!this.inShowDropDown)
                 {
-                    // mouseleave is not enough to handle situation "mouseover" after typing
+                    
                     if (this.hoveredMultiSelectData!=MultiSelectData)
                     {
+                        // mouseleave is not enough to guarantee remove hover styles in situations
+                        // when style was setuped without mouse (keyboard arrows)
+                        // therefore force reset manually
                         this.resetDropDownMenuHover(); 
                         this.hoverInInternal(MultiSelectData.visibleIndex);
                     }
@@ -392,13 +402,11 @@ class MultiSelect {
         
         if (newIndex!=null)
         {
-            console.log('newIndex start');
             if (this.hoveredMultiSelectData)
                 this.styling.HoverOut(this.hoveredMultiSelectData.dropDownMenuItemElement);
             this.updateDropDownLocation(true);
             this.showDropDown(); 
             this.hoverInInternal(newIndex);
-            console.log('newIndex finish');
         }
     }
 

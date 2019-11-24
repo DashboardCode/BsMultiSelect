@@ -57,7 +57,6 @@ function Bs4Styling(stylingMethod, configuration, $) {
         },
 
         HoverIn(dropDownItem){
-            console.log("HoverIn");
             $(dropDownItem).addClass(configuration.dropDownItemHoverClass);
         },
 

@@ -174,8 +174,7 @@
 
       _proto.hoverInInternal = function hoverInInternal(index) {
         this.hoveredMultiSelectDataIndex = index;
-        this.hoveredMultiSelectData = this.getVisibleMultiSelectDataList()[index]; //console.log(this.hoveredMultiSelectData.dropDownMenuItemElement);
-
+        this.hoveredMultiSelectData = this.getVisibleMultiSelectDataList()[index];
         this.styling.HoverIn(this.hoveredMultiSelectData.dropDownMenuItemElement);
       };
 
@@ -220,20 +219,23 @@
       _proto.insertDropDownItem = function insertDropDownItem(MultiSelectData, insertToDropDownMenu, isSelected, isOptionDisabled) {
         var _this2 = this;
 
-        var dropDownMenuItemElement = this.document.createElement('LI');
-        dropDownMenuItemElement.addEventListener('mouseover', function () {
-          console.log('mouseover');
+        var dropDownMenuItemElement = this.document.createElement('LI'); // in chrome it happens on "become visible" so we need to skip it, 
+        // for IE11 and edge it doesn't happens, but for IE11 and Edge it doesn't happens on small 
+        // mouse moves inside the item. 
+        // https://stackoverflow.com/questions/59022563/browser-events-mouseover-doesnt-happen-when-you-make-element-visible-and-mous
 
+        dropDownMenuItemElement.addEventListener('mouseover', function () {
           if (!_this2.inShowDropDown) {
-            // mouseleave is not enough to handle situation "mouseover" after typing
             if (_this2.hoveredMultiSelectData != MultiSelectData) {
+              // mouseleave is not enough to guarantee remove hover styles in situations
+              // when style was setuped without mouse (keyboard arrows)
+              // therefore force reset manually
               _this2.resetDropDownMenuHover();
 
               _this2.hoverInInternal(MultiSelectData.visibleIndex);
             }
           } else {
             _this2.candidateToHoveredMultiSelectData = MultiSelectData;
-            console.log("ADD mousemove");
             dropDownMenuItemElement.addEventListener('mousemove', _this2.processCandidateToHovered);
             dropDownMenuItemElement.addEventListener('mousedown', _this2.processCandidateToHovered);
           }
@@ -411,12 +413,10 @@
         }
 
         if (newIndex != null) {
-          console.log('newIndex start');
           if (this.hoveredMultiSelectData) this.styling.HoverOut(this.hoveredMultiSelectData.dropDownMenuItemElement);
           this.updateDropDownLocation(true);
           this.showDropDown();
           this.hoverInInternal(newIndex);
-          console.log('newIndex finish');
         }
       };
 
@@ -985,7 +985,6 @@
           stylingMethod.FocusOut(composite.$selectedPanel);
         },
         HoverIn: function HoverIn(dropDownItem) {
-          console.log("HoverIn");
           $(dropDownItem).addClass(configuration.dropDownItemHoverClass);
         },
         HoverOut: function HoverOut(dropDownItem) {
