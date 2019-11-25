@@ -61,6 +61,10 @@ function Bs4DropDownItemContent(stylingMethod, configuration, $) {
                         toggle();
                     }
                 })
+            },
+            dispose(){
+                $checkBox.unbind();
+                $dropDownItem.unbind();
             }
         }
         

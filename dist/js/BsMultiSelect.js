@@ -1,5 +1,5 @@
 /*!
-  * DashboardCode BsMultiSelect v0.4.3-beta (https://dashboardcode.github.io/BsMultiSelect/)
+  * DashboardCode BsMultiSelect v0.4.3 (https://dashboardcode.github.io/BsMultiSelect/)
   * Copyright 2017-2019 Roman Pokrovskij (github user rpokrovskij)
   * Licensed under APACHE 2 (https://github.com/DashboardCode/BsMultiSelect/blob/master/LICENSE)
   */
@@ -89,6 +89,7 @@
         this.createStylingComposite = createStylingComposite;
         this.configuration = configuration;
         this.onDispose = onDispose;
+        this.isDisposed = false;
         this.window = window;
         this.document = window.document;
         this.popper = null;
@@ -148,6 +149,7 @@
         }
 
         if (this.dropDownMenu.style.display != 'none') {
+          console.log("removed");
           this.dropDownMenu.style.display = 'none'; // remove listeners that manages close dropdown on input's focusout and click outside container
 
           this.container.removeEventListener("mousedown", this.containerMousedown);
@@ -224,7 +226,7 @@
         // mouse moves inside the item. 
         // https://stackoverflow.com/questions/59022563/browser-events-mouseover-doesnt-happen-when-you-make-element-visible-and-mous
 
-        dropDownMenuItemElement.addEventListener('mouseover', function () {
+        var onDropDownMenuItemElementMouseover = function onDropDownMenuItemElementMouseover() {
           if (!_this2.inShowDropDown) {
             if (_this2.hoveredMultiSelectData != MultiSelectData) {
               // mouseleave is not enough to guarantee remove hover styles in situations
@@ -239,16 +241,25 @@
             dropDownMenuItemElement.addEventListener('mousemove', _this2.processCandidateToHovered);
             dropDownMenuItemElement.addEventListener('mousedown', _this2.processCandidateToHovered);
           }
-        }); // note 1: mouseleave preferred to mouseout - which fires on each descendant
+        };
+
+        dropDownMenuItemElement.addEventListener('mouseover', onDropDownMenuItemElementMouseover); // note 1: mouseleave preferred to mouseout - which fires on each descendant
         // note 2: since I want add aditional info panels to the dropdown put mouseleave on dropdwon would not work
 
-        dropDownMenuItemElement.addEventListener('mouseleave', function () {
+        var onDropDownMenuItemElementMouseleave = function onDropDownMenuItemElementMouseleave() {
           return _this2.resetDropDownMenuHover();
-        });
+        };
+
+        dropDownMenuItemElement.addEventListener('mouseleave', onDropDownMenuItemElementMouseleave);
         insertToDropDownMenu(dropDownMenuItemElement);
         var dropDownItemContent = this.dropDownItemContent(dropDownMenuItemElement, MultiSelectData.option);
         MultiSelectData.dropDownMenuItemElement = dropDownMenuItemElement;
-        MultiSelectData.dropDownItemContent = dropDownItemContent;
+        MultiSelectData.DropDownItemContent = dropDownItemContent;
+
+        MultiSelectData.DisposeDropDownMenuItemElement = function () {
+          dropDownMenuItemElement.removeEventListener('mouseover', onDropDownMenuItemElementMouseover);
+          dropDownMenuItemElement.removeEventListener('mouseleave', onDropDownMenuItemElementMouseleave);
+        };
 
         var setDropDownItemContentDisabled = function setDropDownItemContentDisabled(dropDownItemContent, isSelected) {
           dropDownItemContent.disabledStyle(true); // do not desable if selected! there should be possibility to unselect "disabled"
@@ -305,6 +316,9 @@
 
             dropDownItemContent.select(false);
             removeElement(selectedItemElement);
+            MultiSelectData.SelectedItemContent.dispose();
+            MultiSelectData.SelectedItemContent = null;
+            MultiSelectData.selectedItemElement = null;
 
             _this2.removeSelectedFromList(MultiSelectData);
 
@@ -334,10 +348,10 @@
             }, 0);
           };
 
-          var bsSelectedItemContent = _this2.selectedItemContent(selectedItemElement, MultiSelectData.option, onRemoveSelectedItemEvent, setPreventDefaultMultiSelectEvent);
+          MultiSelectData.SelectedItemContent = _this2.selectedItemContent(selectedItemElement, MultiSelectData.option, onRemoveSelectedItemEvent, setPreventDefaultMultiSelectEvent);
 
           var disable = function disable(isDisabled) {
-            return bsSelectedItemContent.disable(isDisabled);
+            return MultiSelectData.SelectedItemContent.disable(isDisabled);
           };
 
           disable(_this2.isComponentDisabled);
@@ -531,6 +545,7 @@
       };
 
       _proto.Dispose = function Dispose() {
+        this.isDisposed = true;
         if (this.onDispose) this.onDispose(); // primary used to remove from jQuery tables
         // remove event listeners
         // TODO check if open
@@ -538,6 +553,11 @@
         this.hideDropDown();
         this.selectedPanel.removeEventListener("click", this.selectedPanelClick); // OPEN dropdown
 
+        this.filterInput.removeEventListener('focusin', this.onFilterInputFocusIn);
+        this.filterInput.removeEventListener('focusout', this.onFilterInputFocusOut);
+        this.filterInput.removeEventListener('keydown', this.onfilterInputKeyDown);
+        this.filterInput.removeEventListener('keyup', this.onFilterInputKeyUp);
+        this.filterInput.removeEventListener('input', this.onFilterInputInput);
         this.labelAdapter.dispose();
 
         if (this.popper) {
@@ -547,6 +567,24 @@
         if (this.optionsAdapter.dispose) {
           this.optionsAdapter.dispose();
         }
+
+        for (var i = 0; i < this.MultiSelectDataList.length; i++) {
+          var multiSelectData = this.MultiSelectDataList[i];
+          if (multiSelectData.DisposeDropDownMenuItemElement) multiSelectData.DisposeDropDownMenuItemElement();
+          if (multiSelectData.SelectedItemContent) multiSelectData.SelectedItemContent.dispose();
+          if (multiSelectData.DropDownItemContent) multiSelectData.DropDownItemContent.dispose();
+        } // this.resetMultiSelectDataList();
+        // this.onFilterInputInput = null;
+        // this.onFilterInputKeyUp = null;
+        // this.onfilterInputKeyDown = null;
+        // this.onFilterInputFocusOut = null;
+        // this.onFilterInputFocusIn = null;
+        // this.selectedPanelClick = null;
+        // this.containerMousedown = null;
+        // this.documentMouseup = null;
+        // this.documentMouseup2 = null;
+        // this.processCandidateToHovered = null;
+
       };
 
       _proto.UpdateSize = function UpdateSize() {
@@ -678,16 +716,23 @@
         // $dropDownMenu.click(  event => { 
         //    event.stopPropagation();
         // });
+        // possibly not need ???
         // this.dropDownMenu.addEventListener('mouseover', () => 
         //      this.resetDropDownMenuHover());
 
-        this.filterInput.addEventListener('focusin', function () {
-          return _this6.styling.FocusIn(_this6.stylingComposite);
-        });
-        this.filterInput.addEventListener('focusout', function () {
+        this.onFilterInputFocusIn = function () {
+          _this6.styling.FocusIn(_this6.stylingComposite);
+        };
+
+        this.filterInput.addEventListener('focusin', this.onFilterInputFocusIn);
+
+        this.onFilterInputFocusOut = function () {
           if (!_this6.skipFocusout) _this6.styling.FocusOut(_this6.stylingComposite);
-        });
-        this.filterInput.addEventListener('keydown', function (event) {
+        };
+
+        this.filterInput.addEventListener('focusout', this.onFilterInputFocusOut);
+
+        this.onfilterInputKeyDown = function (event) {
           if ([38, 40, 13].indexOf(event.which) >= 0 || event.which == 9 && _this6.filterInput.value) {
             event.preventDefault(); // for 9 it enables keyup
           }
@@ -716,8 +761,11 @@
             }
 
           if ([38, 40, 13, 9].indexOf(event.which) == -1) _this6.resetDropDownMenuHover();
-        });
-        this.filterInput.addEventListener('keyup', function (event) {
+        };
+
+        this.filterInput.addEventListener('keydown', this.onfilterInputKeyDown);
+
+        this.onFilterInputKeyUp = function (event) {
           if (event.which == 13 || event.which == 9) {
             if (_this6.hoveredMultiSelectData) {
               _this6.hoveredMultiSelectData.toggle();
@@ -749,8 +797,11 @@
                 }
               }
             }
-        });
-        this.filterInput.addEventListener('input', function () {
+        };
+
+        this.filterInput.addEventListener('keyup', this.onFilterInputKeyUp);
+
+        this.onFilterInputInput = function () {
           var filterInput = _this6.filterInput;
           var filterInputValue = filterInput.value;
           var text = filterInputValue.trim().toLowerCase();
@@ -777,7 +828,9 @@
           } else {
             _this6.hideDropDown();
           }
-        });
+        };
+
+        this.filterInput.addEventListener('input', this.onFilterInputInput);
         this.updateDataImpl();
       };
 
@@ -1109,6 +1162,9 @@
         return {
           disable: function disable(isDisabled) {
             $button.prop('disabled', isDisabled);
+          },
+          dispose: function dispose() {
+            $button.unbind();
           }
         };
       };
@@ -1173,6 +1229,10 @@
                 toggle();
               }
             });
+          },
+          dispose: function dispose() {
+            $checkBox.unbind();
+            $dropDownItem.unbind();
           }
         };
         return tmp;

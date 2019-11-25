@@ -57,13 +57,17 @@ function Bs4SelectedItemContent(stylingMethod, configuration, $) {
                     .on("click", (jqEvent) => 
                         {   
                             removeSelectedItem(); 
-                            preventDefaultMultiSelect(jqEvent.originalEvent);});
+                            preventDefaultMultiSelect(jqEvent.originalEvent);
+                        });
                 
                 if (stylingMethod.createSelectedItemContent)
                     stylingMethod.createSelectedItemContent($selectedItem, $button);
                 return {
                     disable(isDisabled){ 
                         $button.prop('disabled', isDisabled); 
+                    },
+                    dispose(){
+                        $button.unbind();
                     }
                 };
             }

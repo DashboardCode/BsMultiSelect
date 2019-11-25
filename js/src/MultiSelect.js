@@ -63,6 +63,7 @@ class MultiSelect {
         this.createStylingComposite = createStylingComposite;
         this.configuration = configuration;
         this.onDispose = onDispose;
+        this.isDisposed = false;
         this.window = window;
         this.document = window.document;
 
@@ -128,6 +129,7 @@ class MultiSelect {
         }
         if (this.dropDownMenu.style.display != 'none')
         {
+            console.log("removed");
             this.dropDownMenu.style.display = 'none';
             // remove listeners that manages close dropdown on input's focusout and click outside container
             this.container.removeEventListener("mousedown", this.containerMousedown);
@@ -205,41 +207,48 @@ class MultiSelect {
         // for IE11 and edge it doesn't happens, but for IE11 and Edge it doesn't happens on small 
         // mouse moves inside the item. 
         // https://stackoverflow.com/questions/59022563/browser-events-mouseover-doesnt-happen-when-you-make-element-visible-and-mous
-        dropDownMenuItemElement.addEventListener('mouseover', () => 
+        
+        var onDropDownMenuItemElementMouseover = () => 
+        {
+            if (!this.inShowDropDown)
             {
-                if (!this.inShowDropDown)
+                
+                if (this.hoveredMultiSelectData!=MultiSelectData)
                 {
-                    
-                    if (this.hoveredMultiSelectData!=MultiSelectData)
-                    {
-                        // mouseleave is not enough to guarantee remove hover styles in situations
-                        // when style was setuped without mouse (keyboard arrows)
-                        // therefore force reset manually
-                        this.resetDropDownMenuHover(); 
-                        this.hoverInInternal(MultiSelectData.visibleIndex);
-                    }
-                }
-                else
-                {
-                    this.candidateToHoveredMultiSelectData = MultiSelectData;
-                    dropDownMenuItemElement.addEventListener('mousemove', this.processCandidateToHovered);
-                    dropDownMenuItemElement.addEventListener('mousedown', this.processCandidateToHovered);
+                    // mouseleave is not enough to guarantee remove hover styles in situations
+                    // when style was setuped without mouse (keyboard arrows)
+                    // therefore force reset manually
+                    this.resetDropDownMenuHover(); 
+                    this.hoverInInternal(MultiSelectData.visibleIndex);
                 }
             }
-        );
+            else
+            {
+                this.candidateToHoveredMultiSelectData = MultiSelectData;
+                dropDownMenuItemElement.addEventListener('mousemove', this.processCandidateToHovered);
+                dropDownMenuItemElement.addEventListener('mousedown', this.processCandidateToHovered);
+            }
+        }
+
+        dropDownMenuItemElement.addEventListener('mouseover', onDropDownMenuItemElementMouseover);
         
         // note 1: mouseleave preferred to mouseout - which fires on each descendant
         // note 2: since I want add aditional info panels to the dropdown put mouseleave on dropdwon would not work
-        dropDownMenuItemElement.addEventListener('mouseleave', () =>  
-                this.resetDropDownMenuHover()
-            );
+        var onDropDownMenuItemElementMouseleave = () => this.resetDropDownMenuHover();
+        dropDownMenuItemElement.addEventListener('mouseleave', onDropDownMenuItemElementMouseleave);
+
 
         insertToDropDownMenu(dropDownMenuItemElement);
 
         let dropDownItemContent = this.dropDownItemContent(dropDownMenuItemElement, MultiSelectData.option); 
         MultiSelectData.dropDownMenuItemElement = dropDownMenuItemElement;
-        MultiSelectData.dropDownItemContent = dropDownItemContent;
-        
+        MultiSelectData.DropDownItemContent = dropDownItemContent;
+
+        MultiSelectData.DisposeDropDownMenuItemElement = ()=> {
+            dropDownMenuItemElement.removeEventListener('mouseover',  onDropDownMenuItemElementMouseover);
+            dropDownMenuItemElement.removeEventListener('mouseleave', onDropDownMenuItemElementMouseleave);
+        }
+
         var setDropDownItemContentDisabled = (dropDownItemContent,  isSelected) => {
             dropDownItemContent.disabledStyle(true);
             // do not desable if selected! there should be possibility to unselect "disabled"
@@ -278,7 +287,7 @@ class MultiSelect {
             }
             this.MultiSelectDataSelectedTail = MultiSelectData;
 
-            var removeSelectedItem = ()=>{
+            var removeSelectedItem = () => {
                 MultiSelectData.option.selected = false;
                 MultiSelectData.excludedFromSearch = isOptionDisabled;
                 if (isOptionDisabled)
@@ -295,6 +304,10 @@ class MultiSelect {
                 }
                 dropDownItemContent.select(false);
                 removeElement(selectedItemElement);
+                MultiSelectData.SelectedItemContent.dispose();
+                MultiSelectData.SelectedItemContent=null;
+                MultiSelectData.selectedItemElement=null;
+
                 this.removeSelectedFromList(MultiSelectData);
                 this.optionsAdapter.triggerChange();
             }
@@ -322,14 +335,14 @@ class MultiSelect {
                 }, 0);
             };
 
-            var bsSelectedItemContent = this.selectedItemContent(
+            MultiSelectData.SelectedItemContent = this.selectedItemContent(
                 selectedItemElement,
                 MultiSelectData.option,
                 onRemoveSelectedItemEvent,
                 setPreventDefaultMultiSelectEvent);
     
             var disable = (isDisabled) =>
-                bsSelectedItemContent.disable(isDisabled);
+                MultiSelectData.SelectedItemContent.disable(isDisabled);
             disable(this.isComponentDisabled);
 
             MultiSelectData.option.selected = true;
@@ -531,6 +544,7 @@ class MultiSelect {
     }
 
     Dispose(){
+        this.isDisposed = true;
         if (this.onDispose)
             this.onDispose(); // primary used to remove from jQuery tables
         
@@ -539,8 +553,14 @@ class MultiSelect {
         this.hideDropDown();
         
         this.selectedPanel.removeEventListener("click", this.selectedPanelClick); // OPEN dropdown
+        this.filterInput.removeEventListener('focusin', this.onFilterInputFocusIn);
+        this.filterInput.removeEventListener('focusout', this.onFilterInputFocusOut);
+        this.filterInput.removeEventListener('keydown', this.onfilterInputKeyDown);
+        this.filterInput.removeEventListener('keyup', this.onFilterInputKeyUp);
+        this.filterInput.removeEventListener('input', this.onFilterInputInput);
 
         this.labelAdapter.dispose();
+
         
         if (this.popper) {
             this.popper.destroy();
@@ -549,6 +569,30 @@ class MultiSelect {
         if (this.optionsAdapter.dispose) {
             this.optionsAdapter.dispose();
         }
+
+        for(let i=0; i<this.MultiSelectDataList.length; i++)
+        {
+            let multiSelectData = this.MultiSelectDataList[i];
+            if (multiSelectData.DisposeDropDownMenuItemElement)
+                multiSelectData.DisposeDropDownMenuItemElement();
+            
+            if (multiSelectData.SelectedItemContent)
+                multiSelectData.SelectedItemContent.dispose();
+            if (multiSelectData.DropDownItemContent)
+                multiSelectData.DropDownItemContent.dispose();
+        }
+
+        // this.resetMultiSelectDataList();
+        // this.onFilterInputInput = null;
+        // this.onFilterInputKeyUp = null;
+        // this.onfilterInputKeyDown = null;
+        // this.onFilterInputFocusOut = null;
+        // this.onFilterInputFocusIn = null;
+        // this.selectedPanelClick = null;
+        // this.containerMousedown = null;
+        // this.documentMouseup = null;
+        // this.documentMouseup2 = null;
+        // this.processCandidateToHovered = null;
     }
 
     UpdateSize(){
@@ -683,47 +727,52 @@ class MultiSelect {
         //    event.stopPropagation();
         // });
 
+        // possibly not need ???
         // this.dropDownMenu.addEventListener('mouseover', () => 
         //      this.resetDropDownMenuHover());
 
-        this.filterInput.addEventListener('focusin', () => 
-            this.styling.FocusIn(this.stylingComposite));
+        this.onFilterInputFocusIn = ()=>{ 
+            this.styling.FocusIn(this.stylingComposite)}
+        this.filterInput.addEventListener('focusin', this.onFilterInputFocusIn);
         
-        this.filterInput.addEventListener('focusout', () => {
+        this.onFilterInputFocusOut = () => {
             if (!this.skipFocusout)
                 this.styling.FocusOut(this.stylingComposite)
-            });
+            }
+        this.filterInput.addEventListener('focusout', this.onFilterInputFocusOut);
 
-        this.filterInput.addEventListener('keydown', (event) => {
-            if ([38, 40, 13].indexOf(event.which)>=0 || (event.which == 9 && this.filterInput.value) ) {
-                event.preventDefault(); // for 9 it enables keyup
-            }
-
-            if (event.which == 38) {
-                this.keyDownArrowUp();
-            }
-            else if (event.which == 40) {
-                this.keyDownArrowDown();
-            }
-            else if (event.which == 9  /*tab*/) { // no keydown for this
-                if (!this.filterInput.value) {
-                    this.hideDropDown(); // filter is empty, nothing to reset
+        this.onfilterInputKeyDown = (event) => {
+                if ([38, 40, 13].indexOf(event.which)>=0 || (event.which == 9 && this.filterInput.value) ) {
+                    event.preventDefault(); // for 9 it enables keyup
                 }
-            }
-            else if (event.which == 8 /*backspace*/) {
-                // NOTE: this will process backspace only if there are no text in the input field
-                // If user will find this inconvinient, we will need to calculate something like this
-                // this.isBackspaceAtStartPoint = (this.filterInput.selectionStart == 0 && this.filterInput.selectionEnd == 0);
-                if (!this.filterInput.value)
-                { 
-                    this.removeSelectedTail();
+    
+                if (event.which == 38) {
+                    this.keyDownArrowUp();
                 }
+                else if (event.which == 40) {
+                    this.keyDownArrowDown();
+                }
+                else if (event.which == 9  /*tab*/) { // no keydown for this
+                    if (!this.filterInput.value) {
+                        this.hideDropDown(); // filter is empty, nothing to reset
+                    }
+                }
+                else if (event.which == 8 /*backspace*/) {
+                    // NOTE: this will process backspace only if there are no text in the input field
+                    // If user will find this inconvinient, we will need to calculate something like this
+                    // this.isBackspaceAtStartPoint = (this.filterInput.selectionStart == 0 && this.filterInput.selectionEnd == 0);
+                    if (!this.filterInput.value)
+                    { 
+                        this.removeSelectedTail();
+                    }
+                }
+    
+                if ([38, 40, 13, 9].indexOf(event.which)==-1)
+                    this.resetDropDownMenuHover();
             }
+        this.filterInput.addEventListener('keydown', this.onfilterInputKeyDown);
 
-            if ([38, 40, 13, 9].indexOf(event.which)==-1)
-                this.resetDropDownMenuHover();
-        });
-        this.filterInput.addEventListener('keyup', (event) => {
+        this.onFilterInputKeyUp = (event) => {
             
             if (event.which == 13 || event.which == 9 ) {
                 if (this.hoveredMultiSelectData) {
@@ -752,8 +801,11 @@ class MultiSelect {
                     }
                 }
             }
-        });
-        this.filterInput.addEventListener('input', () => {
+        }
+
+        this.filterInput.addEventListener('keyup', this.onFilterInputKeyUp);
+        
+        this.onFilterInputInput = () => {
             
             var filterInput = this.filterInput;
             var filterInputValue = filterInput.value;
@@ -783,7 +835,9 @@ class MultiSelect {
             } else {
                 this.hideDropDown();
             }
-        });
+        }
+
+        this.filterInput.addEventListener('input', this.onFilterInputInput);
 
         this.updateDataImpl();
     }

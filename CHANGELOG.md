@@ -1,5 +1,6 @@
 # CHANGELOG
 ````
+0.4.3  - there was a bug "two dropdown items can be hovered for a moment" (one by mouse second from keyboard) that is solved;
 0.4.2  - configuration API changed; "selected" happens when full text entered.
 0.4.1  - jquery eliminated from component core, ready for no jQuery bs5 (and migration to web components). 
 0.4.0  - customization through build method added; id generation for label-input was redesigned once more (now id is used first, if id is absent then name); checkboxes now doesn't have ids (events are used to reference label and checbox).
