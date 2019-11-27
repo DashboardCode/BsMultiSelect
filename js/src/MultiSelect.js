@@ -1,7 +1,7 @@
 import Popper from 'popper.js'
+import FilterPanel from './FilterPanel.js'
 
 function defSelectedPanelStyleSys(s) {s.display='flex'; s.flexWrap='wrap'; s.listStyleType='none'};  // remove bullets since this is ul
-function defFilterInputStyleSys(s) {s.width='2ch'; s.border='0'; s.padding='0'; s.outline='none'; s.backgroundColor='transparent' };
 function defDropDownMenuStyleSys(s) {s.listStyleType='none'}; // remove bullets since this is ul
 function removeElement(e) {e.parentNode.removeChild(e)}
 
@@ -73,7 +73,7 @@ class MultiSelect {
 
         this.selectedPanel = null;
         this.filterInputItem = null;
-        this.filterInput = null;
+
         this.dropDownMenu = null;
 
         this.stylingComposite = null;
@@ -129,7 +129,6 @@ class MultiSelect {
         }
         if (this.dropDownMenu.style.display != 'none')
         {
-            console.log("removed");
             this.dropDownMenu.style.display = 'none';
             // remove listeners that manages close dropdown on input's focusout and click outside container
             this.container.removeEventListener("mousedown", this.containerMousedown);
@@ -138,22 +137,22 @@ class MultiSelect {
         }
     }
 
-    
+    setInShowDropDown(){
+        this.inShowDropDown = true;
+            setTimeout( () => {  
+                this.inShowDropDown = null;
+            }, 0)
+    }    
 
     showDropDown() {
         if (this.dropDownMenu.style.display != 'block')
         {
-            this.inShowDropDown = true;
-            setTimeout( () => {  
-                this.inShowDropDown = null;
-            }, 0)
+            this.setInShowDropDown();
             this.dropDownMenu.style.display = 'block';
             // add listeners that manages close dropdown on input's focusout and click outside container
             this.container.addEventListener("mousedown", this.containerMousedown);
             this.document.addEventListener("mouseup", this.documentMouseup);
             this.document.addEventListener("mouseup", this.documentMouseup2);
-
-
         }
     }
 
@@ -171,18 +170,15 @@ class MultiSelect {
         }
     }
 
-    resetFilterAndHideDropDown() {
-        //this.resetDropDownMenuHover();
-        if (this.filterInput.value) {
-            this.filterInput.value = '';
+    resetFilter(){
+        if (!this.filterPanel.isEmpty()) {
+            this.filterPanel.setEmpty();
             this.processEmptyInput();
-
-            // this.resetDropDownMenuHover(); // TODO: second time resetDropDownMenuHover?
-        
-            // if (this.getVisibleMultiSelectDataList().length == 1) {
-            //     this.hoverInInternal(0)
-            // }
         }
+    }
+
+    resetFilterAndHideDropDown() {
+        this.resetFilter();
         this.hideDropDown();
     }
     
@@ -254,22 +250,13 @@ class MultiSelect {
             // do not desable if selected! there should be possibility to unselect "disabled"
             dropDownItemContent.disable(!isSelected);
         }
-        
-        // var setEnabled = (dropDownItemContent) => {
-        //     dropDownItemContent.disabledStyle(false);
-        //     dropDownItemContent.disable(false);
-        // }
 
         if (isOptionDisabled)
             setDropDownItemContentDisabled(dropDownItemContent, isSelected )
-        // if (isSelected && isOptionDisabled) // do not desable if selected! there should be possibility to unselect "disabled"
-        //     dropDownItemContent.disabledStyle(true);
-        // else if (isOptionDisabled)
-        //     dropDownItemContent.disable(true);
 
         dropDownItemContent.onSelected(() => {
             MultiSelectData.toggle();
-            this.filterInput.focus();
+            this.filterPanel.setFocus();
         });
         // ------------------------------------------------------------------------------
         
@@ -424,7 +411,7 @@ class MultiSelect {
     }
 
     processEmptyInput(){
-        this.filterInput.length="2ch";
+        this.filterPanel.setEmptyLength();
         resetFilterDropDownMenu(this.MultiSelectDataList);
         this.visibleMultiSelectDataList = null;
     }
@@ -553,12 +540,8 @@ class MultiSelect {
         this.hideDropDown();
         
         this.selectedPanel.removeEventListener("click", this.selectedPanelClick); // OPEN dropdown
-        this.filterInput.removeEventListener('focusin', this.onFilterInputFocusIn);
-        this.filterInput.removeEventListener('focusout', this.onFilterInputFocusOut);
-        this.filterInput.removeEventListener('keydown', this.onfilterInputKeyDown);
-        this.filterInput.removeEventListener('keyup', this.onFilterInputKeyUp);
-        this.filterInput.removeEventListener('input', this.onFilterInputInput);
-
+        this.filterPanel.dispose();
+        
         this.labelAdapter.dispose();
 
         
@@ -611,13 +594,15 @@ class MultiSelect {
         }
         if (this.isComponentDisabled!==isComponentDisabled){
             if (isComponentDisabled) {
-                this.filterInput.style.display = "none";
+                //this.filterInput.style.display = "none";
+                this.filterInputItem.style.display = "none";
                 this.styling.Disable(this.stylingComposite);
                 iterateAll(true);
                     
                 this.selectedPanel.removeEventListener("click", this.selectedPanelClick);
             } else {
-                this.filterInput.style.display = "inline-block";
+                //this.filterInput.style.display = "inline-block";
+                this.filterInputItem.style.display = "list-item";
                 this.styling.Enable(this.stylingComposite);
                 iterateAll(false);
 
@@ -633,6 +618,53 @@ class MultiSelect {
         this.candidateToHoveredMultiSelectData = null;
     }
 
+    toggleHovered(){
+        if (this.hoveredMultiSelectData) {
+            this.hoveredMultiSelectData.toggle();
+            this.resetFilterAndHideDropDown();
+        } 
+    }
+
+    input(filterInputValue, resetLength){
+        let text = filterInputValue.trim().toLowerCase();
+        var isEmpty=false;
+        if (text == '')
+            isEmpty=true;
+        else
+        {
+            // check if exact match, otherwise new search
+            this.visibleMultiSelectDataList = filterDropDownMenu(this.MultiSelectDataList, text);
+            if (this.visibleMultiSelectDataList.length == 1)
+            {
+                let fullMatchMultiSelectData =  this.visibleMultiSelectDataList[0];
+                if (fullMatchMultiSelectData.searchText == text)
+                {
+                    fullMatchMultiSelectData.toggle();
+                    this.filterPanel.setEmpty(); // clear
+                    isEmpty=true;
+                }
+            }
+        }
+        if (isEmpty)
+            this.processEmptyInput();
+        else
+            resetLength();  
+        this.setInShowDropDown();
+
+        this.resetDropDownMenuHover();
+
+        if (this.getVisibleMultiSelectDataList().length == 1) {
+            this.hoverInInternal(0)
+        }
+
+        if (this.getVisibleMultiSelectDataList().length > 0) {
+            this.updateDropDownLocation(true); // we need it to support case when textbox changes its place because of line break (texbox grow with each key press)
+            this.showDropDown();
+        } else {
+            this.hideDropDown();
+        }
+    }
+
     init() {
         var document = this.document;
         let container = this.optionsAdapter.container;
@@ -643,12 +675,31 @@ class MultiSelect {
         this.filterInputItem = document.createElement('LI');
         this.selectedPanel.appendChild(this.filterInputItem);
         
-        this.filterInput = document.createElement('INPUT'); 
-        this.filterInput.setAttribute("type","search");
-        this.filterInput.setAttribute("autocomplete","off");
+        this.filterPanel = FilterPanel(
+            (input) => {
+                this.filterInputItem.appendChild(input);
+                this.labelAdapter.init(input); 
+            },
+            () => this.styling.FocusIn(this.stylingComposite),  // show dropdown
+            () => {
+                if (!this.skipFocusout)
+                {
+                    this.resetFilter(); // if do not do this we will return to filtered list without text filter in input
+                    this.resetDropDownMenuHover(); // if do not do this tab will select "only one hovered"
+                    this.styling.FocusOut(this.stylingComposite)
+                }
+                }, // hide dropdown
+            () => this.keyDownArrowUp(), 
+            () => this.keyDownArrowDown(),
+            () => this.hideDropDown(),  
+            () => this.removeSelectedTail(), // backspace alike
+            () => this.resetDropDownMenuHover(), 
+            () => this.toggleHovered(), // "compleate alike"
+            () => this.resetFilterAndHideDropDown(), // "esc" alike
+            (filterInputValue, resetLength) => this.input(filterInputValue, resetLength) // filter
+        );
         
-        defFilterInputStyleSys(this.filterInput.style);
-        this.filterInputItem.appendChild(this.filterInput);
+        //defFilterInputStyleSys(this.filterInput.style);
 
         this.dropDownMenu = document.createElement('UL');
         this.dropDownMenu.style.display="none";
@@ -672,7 +723,6 @@ class MultiSelect {
             this.resetCandidateToHoveredMultiSelectData();
         }
 
-
         // document.Mouseup used for better realiability
         // TODO : this.containerMousedown , this.documentMouseup and filterInput.focusOut are actual only when menu is open
         this.documentMouseup = () => {
@@ -686,10 +736,10 @@ class MultiSelect {
         }
 
         this.selectedPanelClick = event => {
-            if (event.target != this.filterInput)
+            if (!this.filterPanel.isEventTarget(event))
             {   
-                this.filterInput.value='';
-                this.filterInput.focus();
+                //this.filterPanel.setEmpty();
+                this.filterPanel.setFocus();
             }
             if (this.getVisibleMultiSelectDataList().length > 0 && this.preventDefaultMultiSelectEvent != event) {
                 this.updateDropDownLocation(true);
@@ -699,16 +749,14 @@ class MultiSelect {
         };
 
         this.stylingComposite = this.createStylingComposite(container, this.selectedPanel,
-            this.filterInputItem, this.filterInput, this.dropDownMenu);
+            this.filterInputItem, this.filterPanel.input, this.dropDownMenu);
         
         this.styling.Init(this.stylingComposite);
-        
-        this.labelAdapter.init(this.filterInput); 
 
         if (this.optionsAdapter.afterContainerFilled)
             this.optionsAdapter.afterContainerFilled();
 
-        this.popper = new Popper(this.filterInput, this.dropDownMenu, {
+        this.popper = new Popper( this.filterInputItem, this.dropDownMenu, {
             placement: 'bottom-start',
             modifiers: {
                 preventOverflow: {enabled:false},
@@ -722,123 +770,6 @@ class MultiSelect {
         this.UpdateSize();
         this.UpdateDisabled();
         
-        // there was unmotivated stopPropagation call. commented out.
-        // $dropDownMenu.click(  event => { 
-        //    event.stopPropagation();
-        // });
-
-        // possibly not need ???
-        // this.dropDownMenu.addEventListener('mouseover', () => 
-        //      this.resetDropDownMenuHover());
-
-        this.onFilterInputFocusIn = ()=>{ 
-            this.styling.FocusIn(this.stylingComposite)}
-        this.filterInput.addEventListener('focusin', this.onFilterInputFocusIn);
-        
-        this.onFilterInputFocusOut = () => {
-            if (!this.skipFocusout)
-                this.styling.FocusOut(this.stylingComposite)
-            }
-        this.filterInput.addEventListener('focusout', this.onFilterInputFocusOut);
-
-        this.onfilterInputKeyDown = (event) => {
-                if ([38, 40, 13].indexOf(event.which)>=0 || (event.which == 9 && this.filterInput.value) ) {
-                    event.preventDefault(); // for 9 it enables keyup
-                }
-    
-                if (event.which == 38) {
-                    this.keyDownArrowUp();
-                }
-                else if (event.which == 40) {
-                    this.keyDownArrowDown();
-                }
-                else if (event.which == 9  /*tab*/) { // no keydown for this
-                    if (!this.filterInput.value) {
-                        this.hideDropDown(); // filter is empty, nothing to reset
-                    }
-                }
-                else if (event.which == 8 /*backspace*/) {
-                    // NOTE: this will process backspace only if there are no text in the input field
-                    // If user will find this inconvinient, we will need to calculate something like this
-                    // this.isBackspaceAtStartPoint = (this.filterInput.selectionStart == 0 && this.filterInput.selectionEnd == 0);
-                    if (!this.filterInput.value)
-                    { 
-                        this.removeSelectedTail();
-                    }
-                }
-    
-                if ([38, 40, 13, 9].indexOf(event.which)==-1)
-                    this.resetDropDownMenuHover();
-            }
-        this.filterInput.addEventListener('keydown', this.onfilterInputKeyDown);
-
-        this.onFilterInputKeyUp = (event) => {
-            
-            if (event.which == 13 || event.which == 9 ) {
-                if (this.hoveredMultiSelectData) {
-                    this.hoveredMultiSelectData.toggle();
-                    this.resetFilterAndHideDropDown();
-                } 
-            }
-            else if (event.which == 27) { // escape
-                this.resetFilterAndHideDropDown();
-            }
-            // TODO may be do it on "space" (when there is left only one)?
-            else {
-                let text = this.filterInput.value.trim().toLowerCase();
-                let visibleMultiSelectDataList = this.getVisibleMultiSelectDataList();
-                if (text && visibleMultiSelectDataList.length == 1)
-                {
-                    let fullMatchMultiSelectData=  visibleMultiSelectDataList[0];
-                    if (fullMatchMultiSelectData.searchText == text)
-                    {
-                        fullMatchMultiSelectData.toggle();
-                        // clear
-                        this.filterInput.value = '';
-                        this.processEmptyInput();
-                        this.resetDropDownMenuHover();
-                        this.hideDropDown();
-                    }
-                }
-            }
-        }
-
-        this.filterInput.addEventListener('keyup', this.onFilterInputKeyUp);
-        
-        this.onFilterInputInput = () => {
-            
-            var filterInput = this.filterInput;
-            var filterInputValue = filterInput.value;
-            let text = filterInputValue.trim().toLowerCase();
-            if (text == '')
-                this.processEmptyInput();
-            else
-            {
-                filterInput.style.width = filterInputValue.length*1.3 + 2 + "ch";
-                this.visibleMultiSelectDataList = filterDropDownMenu(this.MultiSelectDataList, text);
-            }
-
-            this.inShowDropDown = true;
-            setTimeout( () => {  
-                 this.inShowDropDown = null;
-            }, 0)
-
-            this.resetDropDownMenuHover();
-
-            if (this.getVisibleMultiSelectDataList().length == 1) {
-                this.hoverInInternal(0)
-            }
-
-            if (this.getVisibleMultiSelectDataList().length > 0) {
-                this.updateDropDownLocation(true); // we need it to support case when textbox changes its place because of line break (texbox grow with each key press)
-                this.showDropDown();
-            } else {
-                this.hideDropDown();
-            }
-        }
-
-        this.filterInput.addEventListener('input', this.onFilterInputInput);
-
         this.updateDataImpl();
     }
 }

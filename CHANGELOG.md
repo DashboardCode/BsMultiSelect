@@ -1,5 +1,6 @@
 # CHANGELOG
 ````
+0.4.4  - click inside selected panel doesn't clear the filter input (we have bootrap x for this and ESC button)
 0.4.3  - there was a bug "two dropdown items can be hovered for a moment" (one by mouse second from keyboard) that is solved;
 0.4.2  - configuration API changed; "selected" happens when full text entered.
 0.4.1  - jquery eliminated from component core, ready for no jQuery bs5 (and migration to web components). 
