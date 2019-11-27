@@ -53,7 +53,13 @@ If your theme changes those variables, you need to update them on the plugin ini
             
 ````
 
-BsMultiSelect handles click event friendly to modals and popups. Important: events preventDefault, stopPropagation were not used, but to simplify the identification of click event's target during the bubling I remove dom elments (intiated by the click on "x" button) using setTimeout(..,0); 
+BsMultiSelect handles click events friendly to modals and popups. Important: `preventDefault`, `stopPropagation` were not used (for mouse events), but to simplify the identification of click event's target during the bubling I remove dom elments (intiated by the click on "x" button) using setTimeout(..,0); 
+
+For keyboard events `preventDefault` was used to 
+    a) handle tab `9`  as autocompleate 
+    b) arrows `38`, `40` to prevent browser still them; 
+    c) enter `13` to prvent default button action (submit etc.)
+    d) esc `27` to not dublicate `clear text` functionlity 
 
 ## Features
 
