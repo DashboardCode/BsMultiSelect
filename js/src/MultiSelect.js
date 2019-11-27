@@ -177,9 +177,9 @@ class MultiSelect {
         }
     }
 
-    resetFilterAndHideDropDown() {
+    hideDropDownAndResetFilter() {
+        this.hideDropDown(); // always hide 1st
         this.resetFilter();
-        this.hideDropDown();
     }
     
     removeSelectedFromList(MultiSelectData){
@@ -313,7 +313,7 @@ class MultiSelect {
     
             let removeSelectedItemAndCloseDropDown = () => {
                 removeSelectedItem();
-                this.resetFilterAndHideDropDown();
+                this.hideDropDownAndResetFilter();
             };
         
             let onRemoveSelectedItemEvent = () => {
@@ -466,7 +466,7 @@ class MultiSelect {
 
     UpdateData(){
         // close drop down , remove filter and listeners
-        this.resetFilterAndHideDropDown();
+        this.hideDropDownAndResetFilter();
 
         for(let i=0; i<this.MultiSelectDataList.length; i++)
         {
@@ -622,7 +622,7 @@ class MultiSelect {
         if (this.hoveredMultiSelectData) {
             this.hoveredMultiSelectData.toggle();
             this.resetDropDownMenuHover();
-            this.resetFilterAndHideDropDown();
+            this.hideDropDownAndResetFilter();
         } 
     }
 
@@ -689,14 +689,14 @@ class MultiSelect {
                     this.resetDropDownMenuHover(); // if do not do this tab will select "only one hovered"
                     this.styling.FocusOut(this.stylingComposite)
                 }
-                }, // hide dropdown
+            }, // hide dropdown
             () => this.keyDownArrowUp(), 
             () => this.keyDownArrowDown(),
             () => this.hideDropDown(),  
             () => this.removeSelectedTail(), // backspace alike
             () => this.resetDropDownMenuHover(), 
             () => this.toggleHovered(), // "compleate alike"
-            () => this.resetFilterAndHideDropDown(), // "esc" alike
+            () => this.hideDropDownAndResetFilter(), // "esc" alike
             (filterInputValue, resetLength) => this.input(filterInputValue, resetLength) // filter
         );
         
@@ -732,7 +732,7 @@ class MultiSelect {
 
         this.documentMouseup2 = event => {
             if (!(container === event.target || container.contains(event.target))) {
-                this.resetFilterAndHideDropDown();
+                this.hideDropDownAndResetFilter();
             }
         }
 

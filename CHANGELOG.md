@@ -1,5 +1,6 @@
 # CHANGELOG
 ````
+0.4.6  - esc keydown now processed with preventDefault (to do not duplicate clear text custom functionality)
 0.4.5  - bug solved (enter toggles the selected menu item even if dropdown is not visible)
 0.4.4  - click inside selected panel doesn't clear the filter input (we have bootrap x for this and ESC button)
 0.4.3  - there was a bug "two dropdown items can be hovered for a moment" (one by mouse second from keyboard) that is solved;

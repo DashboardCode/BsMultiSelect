@@ -1,5 +1,5 @@
 /*!
-  * DashboardCode BsMultiSelect v0.4.5 (https://dashboardcode.github.io/BsMultiSelect/)
+  * DashboardCode BsMultiSelect v0.4.6 (https://dashboardcode.github.io/BsMultiSelect/)
   * Copyright 2017-2019 Roman Pokrovskij (github user rpokrovskij)
   * Licensed under APACHE 2 (https://github.com/DashboardCode/BsMultiSelect/blob/master/LICENSE)
   */
@@ -34,7 +34,9 @@
      insertIntoDom(filterInput);
 
      var onfilterInputKeyDown = function onfilterInputKeyDown(event) {
-       if ([38, 40, 13].indexOf(event.which) >= 0 || event.which == 9 && filterInput.value) {
+       console.log("down " + event.which);
+
+       if ([38, 40, 13, 27].indexOf(event.which) >= 0 || event.which == 9 && filterInput.value) {
          event.preventDefault(); // for 9 it enables keyup
        }
 
@@ -70,7 +72,11 @@
          // escape
          resetFilterAndHideDropDown();
        }
-     };
+     }; // it can be initated by 3PP functionality
+     // sample (1) BS functionality - input x button click - clears input
+     // sample (2) BS functionality - esc keydown - clears input
+     // and there could be difference in processing: (2) should hide the menu, then reset , when (1) should just reset without hiding.
+
 
      var onFilterInputInput = function onFilterInputInput() {
        var filterInputValue = filterInput.value;
@@ -294,9 +300,10 @@
        }
      };
 
-     _proto.resetFilterAndHideDropDown = function resetFilterAndHideDropDown() {
+     _proto.hideDropDownAndResetFilter = function hideDropDownAndResetFilter() {
+       this.hideDropDown(); // always hide 1st
+
        this.resetFilter();
-       this.hideDropDown();
      };
 
      _proto.removeSelectedFromList = function removeSelectedFromList(MultiSelectData) {
@@ -429,7 +436,7 @@
          var removeSelectedItemAndCloseDropDown = function removeSelectedItemAndCloseDropDown() {
            removeSelectedItem();
 
-           _this2.resetFilterAndHideDropDown();
+           _this2.hideDropDownAndResetFilter();
          };
 
          var onRemoveSelectedItemEvent = function onRemoveSelectedItemEvent() {
@@ -566,7 +573,7 @@
 
      _proto.UpdateData = function UpdateData() {
        // close drop down , remove filter and listeners
-       this.resetFilterAndHideDropDown();
+       this.hideDropDownAndResetFilter();
 
        for (var i = 0; i < this.MultiSelectDataList.length; i++) {
          var multiSelectData = this.MultiSelectDataList[i];
@@ -720,7 +727,7 @@
        if (this.hoveredMultiSelectData) {
          this.hoveredMultiSelectData.toggle();
          this.resetDropDownMenuHover();
-         this.resetFilterAndHideDropDown();
+         this.hideDropDownAndResetFilter();
        }
      };
 
@@ -802,7 +809,7 @@
          return _this6.toggleHovered();
        }, // "compleate alike"
        function () {
-         return _this6.resetFilterAndHideDropDown();
+         return _this6.hideDropDownAndResetFilter();
        }, // "esc" alike
        function (filterInputValue, resetLength) {
          return _this6.input(filterInputValue, resetLength);
@@ -838,7 +845,7 @@
 
        this.documentMouseup2 = function (event) {
          if (!(container === event.target || container.contains(event.target))) {
-           _this6.resetFilterAndHideDropDown();
+           _this6.hideDropDownAndResetFilter();
          }
        };
 
