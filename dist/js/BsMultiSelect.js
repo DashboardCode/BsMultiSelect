@@ -1,5 +1,5 @@
 /*!
-  * DashboardCode BsMultiSelect v0.4.4 (https://dashboardcode.github.io/BsMultiSelect/)
+  * DashboardCode BsMultiSelect v0.4.5 (https://dashboardcode.github.io/BsMultiSelect/)
   * Copyright 2017-2019 Roman Pokrovskij (github user rpokrovskij)
   * Licensed under APACHE 2 (https://github.com/DashboardCode/BsMultiSelect/blob/master/LICENSE)
   */
@@ -719,6 +719,7 @@
      _proto.toggleHovered = function toggleHovered() {
        if (this.hoveredMultiSelectData) {
          this.hoveredMultiSelectData.toggle();
+         this.resetDropDownMenuHover();
          this.resetFilterAndHideDropDown();
        }
      };

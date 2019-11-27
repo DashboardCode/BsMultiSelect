@@ -621,6 +621,7 @@ class MultiSelect {
     toggleHovered(){
         if (this.hoveredMultiSelectData) {
             this.hoveredMultiSelectData.toggle();
+            this.resetDropDownMenuHover();
             this.resetFilterAndHideDropDown();
         } 
     }
