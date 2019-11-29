@@ -1,6 +1,7 @@
 function defFilterInputStyleSys(s) {s.width='2ch'; s.border='0'; s.padding='0'; s.outline='none'; s.backgroundColor='transparent' };
 
 function FilterPanel(
+        document,
         insertIntoDom,
         onFilterInputFocusIn,  // show dropdown
         onFilterInputFocusOut, // hide dropdown
@@ -24,7 +25,6 @@ function FilterPanel(
     insertIntoDom(filterInput);
 
     var onfilterInputKeyDown = (event) => {
-        console.log("down "+ event.which);
         if ([38, 40, 13 ,27].indexOf(event.which)>=0 || (event.which == 9 && filterInput.value) ) {
             event.preventDefault(); // for 9 it enables keyup
         }

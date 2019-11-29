@@ -1,8 +1,8 @@
 import Popper from 'popper.js'
 import FilterPanel from './FilterPanel.js'
+import OptionsPanel from './OptionsPanel.js'
 
 function defSelectedPanelStyleSys(s) {s.display='flex'; s.flexWrap='wrap'; s.listStyleType='none'};  // remove bullets since this is ul
-function defDropDownMenuStyleSys(s) {s.listStyleType='none'}; // remove bullets since this is ul
 function removeElement(e) {e.parentNode.removeChild(e)}
 
 function filterMultiSelectData(MultiSelectData, isFiltered, visibleIndex) {
@@ -63,7 +63,6 @@ class MultiSelect {
         this.createStylingComposite = createStylingComposite;
         this.configuration = configuration;
         this.onDispose = onDispose;
-        this.isDisposed = false;
         this.window = window;
         this.document = window.document;
 
@@ -73,8 +72,7 @@ class MultiSelect {
 
         this.selectedPanel = null;
         this.filterInputItem = null;
-
-        this.dropDownMenu = null;
+        this.optionsPanel = null;
 
         this.stylingComposite = null;
 
@@ -82,17 +80,12 @@ class MultiSelect {
         this.selectedPanelClick  = null;
         this.documentMouseup = null;
         this.containerMousedown = null;
-        this.documentMouseup2 = null;
 
         // state
         this.isComponentDisabled = null;
         this.filterInputItemOffsetLeft = null; // used to detect changes in input field position (by comparision with current value)
         
         this.resetMultiSelectDataList();
-        this.skipFocusout = false;
-        this.hoveredMultiSelectData = null;
-        this.hoveredMultiSelectDataIndex = null;
-        
     }
 
     resetMultiSelectDataList(){
@@ -117,58 +110,12 @@ class MultiSelect {
 
     updateDropDownLocation(force) {
         let offsetLeft = this.filterInputItem.offsetLeft;
-        if (force || this.filterInputItemOffsetLeft!=offsetLeft){
+        if (force || this.filterInputItemOffsetLeft != offsetLeft){ // position changed
             this.popper.update();
             this.filterInputItemOffsetLeft=offsetLeft;
         }
     }
 
-    hideDropDown() {
-        if (this.candidateToHoveredMultiSelectData){
-            this.resetCandidateToHoveredMultiSelectData();
-        }
-        if (this.dropDownMenu.style.display != 'none')
-        {
-            this.dropDownMenu.style.display = 'none';
-            // remove listeners that manages close dropdown on input's focusout and click outside container
-            this.container.removeEventListener("mousedown", this.containerMousedown);
-            this.document.removeEventListener("mouseup", this.documentMouseup);
-            this.document.removeEventListener("mouseup", this.documentMouseup2);
-        }
-    }
-
-    setInShowDropDown(){
-        this.inShowDropDown = true;
-            setTimeout( () => {  
-                this.inShowDropDown = null;
-            }, 0)
-    }    
-
-    showDropDown() {
-        if (this.dropDownMenu.style.display != 'block')
-        {
-            this.setInShowDropDown();
-            this.dropDownMenu.style.display = 'block';
-            // add listeners that manages close dropdown on input's focusout and click outside container
-            this.container.addEventListener("mousedown", this.containerMousedown);
-            this.document.addEventListener("mouseup", this.documentMouseup);
-            this.document.addEventListener("mouseup", this.documentMouseup2);
-        }
-    }
-
-    hoverInInternal(index){
-        this.hoveredMultiSelectDataIndex = index;
-        this.hoveredMultiSelectData = this.getVisibleMultiSelectDataList()[index];
-        this.styling.HoverIn(this.hoveredMultiSelectData.dropDownMenuItemElement);
-    }
-
-    resetDropDownMenuHover() {
-        if (this.hoveredMultiSelectData) {
-            this.styling.HoverOut(this.hoveredMultiSelectData.dropDownMenuItemElement);
-            this.hoveredMultiSelectData = null;
-            this.hoveredMultiSelectDataIndex = null;
-        }
-    }
 
     resetFilter(){
         if (!this.filterPanel.isEmpty()) {
@@ -178,7 +125,7 @@ class MultiSelect {
     }
 
     hideDropDownAndResetFilter() {
-        this.hideDropDown(); // always hide 1st
+        this.optionsPanel.hideDropDown(); // always hide 1st
         this.resetFilter();
     }
     
@@ -204,33 +151,16 @@ class MultiSelect {
         // mouse moves inside the item. 
         // https://stackoverflow.com/questions/59022563/browser-events-mouseover-doesnt-happen-when-you-make-element-visible-and-mous
         
-        var onDropDownMenuItemElementMouseover = () => 
-        {
-            if (!this.inShowDropDown)
-            {
-                
-                if (this.hoveredMultiSelectData!=MultiSelectData)
-                {
-                    // mouseleave is not enough to guarantee remove hover styles in situations
-                    // when style was setuped without mouse (keyboard arrows)
-                    // therefore force reset manually
-                    this.resetDropDownMenuHover(); 
-                    this.hoverInInternal(MultiSelectData.visibleIndex);
-                }
-            }
-            else
-            {
-                this.candidateToHoveredMultiSelectData = MultiSelectData;
-                dropDownMenuItemElement.addEventListener('mousemove', this.processCandidateToHovered);
-                dropDownMenuItemElement.addEventListener('mousedown', this.processCandidateToHovered);
-            }
-        }
+        var onDropDownMenuItemElementMouseover = ()=>this.optionsPanel.onDropDownMenuItemElementMouseover(
+            MultiSelectData,
+            dropDownMenuItemElement
+        )
 
         dropDownMenuItemElement.addEventListener('mouseover', onDropDownMenuItemElementMouseover);
         
         // note 1: mouseleave preferred to mouseout - which fires on each descendant
         // note 2: since I want add aditional info panels to the dropdown put mouseleave on dropdwon would not work
-        var onDropDownMenuItemElementMouseleave = () => this.resetDropDownMenuHover();
+        var onDropDownMenuItemElementMouseleave = () => this.optionsPanel.resetDropDownMenuHover();
         dropDownMenuItemElement.addEventListener('mouseleave', onDropDownMenuItemElementMouseleave);
 
 
@@ -313,7 +243,8 @@ class MultiSelect {
     
             let removeSelectedItemAndCloseDropDown = () => {
                 removeSelectedItem();
-                this.hideDropDownAndResetFilter();
+                this.optionsPanel.hideDropDown(); // always hide 1st
+                this.resetFilter();
             };
         
             let onRemoveSelectedItemEvent = () => {
@@ -368,47 +299,7 @@ class MultiSelect {
         }
     }
 
-    keyDownArrowDown() {
-        this.keyDownArrow(true);
-    }
-    keyDownArrowUp() {
-        this.keyDownArrow(false);
-    }
-    keyDownArrow(down) {
-        let visibleMultiSelectDataList = this.getVisibleMultiSelectDataList();
-        let length = visibleMultiSelectDataList.length;
-        let newIndex=null;
-        if (length > 0) {
-            if (down) {
-                let i = this.hoveredMultiSelectDataIndex==null?0:this.hoveredMultiSelectDataIndex+1;
-                while(i<length){
-                    if (visibleMultiSelectDataList[i].visible){
-                        newIndex=i;
-                        break;
-                    }
-                    i++;
-                }
-            } else {
-                let i = this.hoveredMultiSelectDataIndex==null?length-1:this.hoveredMultiSelectDataIndex-1;
-                while(i>=0){
-                    if (visibleMultiSelectDataList[i].visible){
-                        newIndex=i;
-                        break;
-                    }
-                    i--;
-                }
-            }
-        }
-        
-        if (newIndex!=null)
-        {
-            if (this.hoveredMultiSelectData)
-                this.styling.HoverOut(this.hoveredMultiSelectData.dropDownMenuItemElement);
-            this.updateDropDownLocation(true);
-            this.showDropDown(); 
-            this.hoverInInternal(newIndex);
-        }
-    }
+    
 
     processEmptyInput(){
         this.filterPanel.setEmptyLength();
@@ -430,7 +321,7 @@ class MultiSelect {
         {
             multiSelectData.isHidden=option.isHidden;
             if (multiSelectData.isHidden)
-                this.insertDropDownItem(multiSelectData, (e)=>this.dropDownMenu.appendChild(e), option.isSelected, option.isDisabled);
+                this.insertDropDownItem(multiSelectData, (e)=>this.optionsPanel.dropDownMenu.appendChild(e), option.isSelected, option.isDisabled);
             else
                 multiSelectData.removeDropDownMenuItemElement();
         }
@@ -466,7 +357,8 @@ class MultiSelect {
 
     UpdateData(){
         // close drop down , remove filter and listeners
-        this.hideDropDownAndResetFilter();
+        this.optionsPanel.hideDropDown(); // always hide 1st
+        this.resetFilter();
 
         for(let i=0; i<this.MultiSelectDataList.length; i++)
         {
@@ -512,7 +404,7 @@ class MultiSelect {
                 if (!isHidden){
                     MultiSelectData.visible = true;
                     MultiSelectData.visibleIndex=i;
-                    this.insertDropDownItem(MultiSelectData, (e)=>this.dropDownMenu.appendChild(e), isSelected, isDisabled);
+                    this.insertDropDownItem(MultiSelectData, (e)=>this.optionsPanel.dropDownMenu.appendChild(e), isSelected, isDisabled);
                 }
             } 
             this.updateDropDownLocation(false);
@@ -531,19 +423,17 @@ class MultiSelect {
     }
 
     Dispose(){
-        this.isDisposed = true;
         if (this.onDispose)
             this.onDispose(); // primary used to remove from jQuery tables
         
         // remove event listeners
         // TODO check if open
-        this.hideDropDown();
+        this.optionsPanel.hideDropDown();
         
         this.selectedPanel.removeEventListener("click", this.selectedPanelClick); // OPEN dropdown
         this.filterPanel.dispose();
         
         this.labelAdapter.dispose();
-
         
         if (this.popper) {
             this.popper.destroy();
@@ -564,18 +454,6 @@ class MultiSelect {
             if (multiSelectData.DropDownItemContent)
                 multiSelectData.DropDownItemContent.dispose();
         }
-
-        // this.resetMultiSelectDataList();
-        // this.onFilterInputInput = null;
-        // this.onFilterInputKeyUp = null;
-        // this.onfilterInputKeyDown = null;
-        // this.onFilterInputFocusOut = null;
-        // this.onFilterInputFocusIn = null;
-        // this.selectedPanelClick = null;
-        // this.containerMousedown = null;
-        // this.documentMouseup = null;
-        // this.documentMouseup2 = null;
-        // this.processCandidateToHovered = null;
     }
 
     UpdateSize(){
@@ -611,21 +489,7 @@ class MultiSelect {
             this.isComponentDisabled=isComponentDisabled;
         }
     }
-    
-    resetCandidateToHoveredMultiSelectData(){
-        this.candidateToHoveredMultiSelectData.dropDownMenuItemElement.removeEventListener('mousemove', this.processCandidateToHovered);
-        this.candidateToHoveredMultiSelectData.dropDownMenuItemElement.removeEventListener('mousedown', this.processCandidateToHovered);
-        this.candidateToHoveredMultiSelectData = null;
-    }
-
-    toggleHovered(){
-        if (this.hoveredMultiSelectData) {
-            this.hoveredMultiSelectData.toggle();
-            this.resetDropDownMenuHover();
-            this.hideDropDownAndResetFilter();
-        } 
-    }
-
+ 
     input(filterInputValue, resetLength){
         let text = filterInputValue.trim().toLowerCase();
         var isEmpty=false;
@@ -650,25 +514,27 @@ class MultiSelect {
             this.processEmptyInput();
         else
             resetLength();  
-        this.setInShowDropDown();
+        
+        this.optionsPanel.setInShowDropDown();
 
-        this.resetDropDownMenuHover();
+        this.optionsPanel.resetDropDownMenuHover();
 
         if (this.getVisibleMultiSelectDataList().length == 1) {
-            this.hoverInInternal(0)
+            this.optionsPanel.hoverInInternal(0)
         }
 
         if (this.getVisibleMultiSelectDataList().length > 0) {
             this.updateDropDownLocation(true); // we need it to support case when textbox changes its place because of line break (texbox grow with each key press)
-            this.showDropDown();
+            this.optionsPanel.showDropDown();
         } else {
-            this.hideDropDown();
+            this.optionsPanel.hideDropDown();
         }
     }
 
     init() {
         var document = this.document;
         let container = this.optionsAdapter.container;
+        
         this.selectedPanel = document.createElement('UL');
         defSelectedPanelStyleSys(this.selectedPanel.style); 
         container.appendChild(this.selectedPanel);
@@ -677,64 +543,45 @@ class MultiSelect {
         this.selectedPanel.appendChild(this.filterInputItem);
         
         this.filterPanel = FilterPanel(
+            document,
             (input) => {
                 this.filterInputItem.appendChild(input);
                 this.labelAdapter.init(input); 
             },
             () => this.styling.FocusIn(this.stylingComposite),  // show dropdown
             () => {
-                if (!this.skipFocusout)
+                if (!this.optionsPanel.getSkipFocusout()) // skip initiated by mouse click (we manage it different way)
                 {
                     this.resetFilter(); // if do not do this we will return to filtered list without text filter in input
-                    this.resetDropDownMenuHover(); // if do not do this tab will select "only one hovered"
+                    this.optionsPanel.resetDropDownMenuHover(); // if do not do this tab will select "only one hovered"
                     this.styling.FocusOut(this.stylingComposite)
+                    this.optionsPanel.resetSkipFocusout();
                 }
             }, // hide dropdown
-            () => this.keyDownArrowUp(), 
-            () => this.keyDownArrowDown(),
-            () => this.hideDropDown(),  
+            () => this.optionsPanel.keyDownArrow(false), // arrow up
+            () => this.optionsPanel.keyDownArrow(true), // arrow down
+            () => this.optionsPanel.hideDropDown(),  
             () => this.removeSelectedTail(), // backspace alike
-            () => this.resetDropDownMenuHover(), 
-            () => this.toggleHovered(), // "compleate alike"
-            () => this.hideDropDownAndResetFilter(), // "esc" alike
+            () => this.optionsPanel.resetDropDownMenuHover(), 
+            () => this.optionsPanel.toggleHovered(), // "compleate alike"
+            () => {
+                this.optionsPanel.hideDropDown(); // always hide 1st
+                this.resetFilter();
+            }, // "esc" alike
             (filterInputValue, resetLength) => this.input(filterInputValue, resetLength) // filter
         );
         
-        //defFilterInputStyleSys(this.filterInput.style);
-
-        this.dropDownMenu = document.createElement('UL');
-        this.dropDownMenu.style.display="none";
-        container.appendChild(this.dropDownMenu);
-        
-        // prevent heavy understandable styling error
-        defDropDownMenuStyleSys(this.dropDownMenu.style);
-
-        // we want to escape the closing of the menu on a user's click inside the container
-        this.containerMousedown = () => {
-            this.skipFocusout = true;
-            this.skipContainerMousedownEvent = event;
-        };
-        
-        this.processCandidateToHovered = () => {
-            if (this.hoveredMultiSelectData!=this.candidateToHoveredMultiSelectData)
-            {
-                this.resetDropDownMenuHover(); 
-                this.hoverInInternal(this.candidateToHoveredMultiSelectData.visibleIndex);
-            }
-            this.resetCandidateToHoveredMultiSelectData();
-        }
-
-        // document.Mouseup used for better realiability
-        // TODO : this.containerMousedown , this.documentMouseup and filterInput.focusOut are actual only when menu is open
-        this.documentMouseup = () => {
-            this.skipFocusout = false;
-        }
-
-        this.documentMouseup2 = event => {
-            if (!(container === event.target || container.contains(event.target))) {
-                this.hideDropDownAndResetFilter();
-            }
-        }
+        this.optionsPanel = OptionsPanel(
+            document,
+            container,
+            (dropDownMenu) => {
+                container.appendChild(dropDownMenu);
+            },
+            this.styling, 
+            () => this.getVisibleMultiSelectDataList(),
+            () => this.resetFilter(),
+            () => this.updateDropDownLocation(true)
+        );
 
         this.selectedPanelClick = event => {
             if (!this.filterPanel.isEventTarget(event))
@@ -744,26 +591,26 @@ class MultiSelect {
             }
             if (this.getVisibleMultiSelectDataList().length > 0 && this.preventDefaultMultiSelectEvent != event) {
                 this.updateDropDownLocation(true);
-                this.showDropDown();
+                this.optionsPanel.showDropDown();
             }
             this.preventDefaultMultiSelectEvent=null;
         };
 
         this.stylingComposite = this.createStylingComposite(container, this.selectedPanel,
-            this.filterInputItem, this.filterPanel.input, this.dropDownMenu);
+            this.filterInputItem, this.filterPanel.input, this.optionsPanel.dropDownMenu);
         
         this.styling.Init(this.stylingComposite);
 
         if (this.optionsAdapter.afterContainerFilled)
             this.optionsAdapter.afterContainerFilled();
 
-        this.popper = new Popper( this.filterInputItem, this.dropDownMenu, {
+        this.popper = new Popper( this.filterInputItem, this.optionsPanel.dropDownMenu, {
             placement: 'bottom-start',
             modifiers: {
                 preventOverflow: {enabled:false},
                 hide: {enabled:false},
                 flip: {enabled:false}
-                }
+            }
         });
         
         this.styling.UpdateIsValid(this.stylingComposite, this.optionsAdapter.getIsValid(), this.optionsAdapter.getIsInvalid());
