@@ -7,9 +7,8 @@ function FilterPanel(
         onFilterInputFocusOut, // hide dropdown
         keyDownArrowUp, 
         keyDownArrowDown,
-        hideDropDown,  
+        hideDropDown,  // tab on empty
         removeSelectedTail, // backspace alike
-        resetDropDownMenuHover, 
         toggleHovered, // "compleate alike"
         resetFilterAndHideDropDown, // "esc" alike
         input // filter
@@ -37,7 +36,7 @@ function FilterPanel(
         }
         else if (event.which == 9  /*tab*/) { // no keydown for this
             if (!filterInput.value) {
-                hideDropDown(); // filter is empty, nothing to reset
+                 hideDropDown(); // filter is empty, nothing to reset
             }
         }
         else if (event.which == 8 /*backspace*/) {
@@ -50,14 +49,12 @@ function FilterPanel(
             }
         }
 
-        if ([38, 40, 13, 9].indexOf(event.which)==-1)
-            resetDropDownMenuHover();
+        //if ([38, 40, 13, 9].indexOf(event.which)==-1)
+        //    resetDropDownMenuHover();
     }
-   
-
     
-   var onFilterInputKeyUp = (event) => {
-        if (event.which == 13 || event.which == 9 ) {
+    var onFilterInputKeyUp = (event) => {
+        if (event.which == 13 || event.which == 9) {
             toggleHovered();
         }
         else if (event.which == 27) { // escape
@@ -80,6 +77,7 @@ function FilterPanel(
     var setEmptyLength =() =>{
         filterInput.style.width="2ch";
     }
+
     var setEmpty= ()=> {
         filterInput.value ='';
         setEmptyLength();

@@ -13,6 +13,7 @@ function OptionsPanel(document, container, dropDownItemContent, styling,
 
     var skipFocusout = false;
     var inShowDropDown = false;
+    
     // we want to escape the closing of the menu on a user's click inside the container
     var containerMousedown = function(){
         skipFocusout = true;
@@ -27,8 +28,7 @@ function OptionsPanel(document, container, dropDownItemContent, styling,
         }
     }
 
-
-    var setInShowDropDown= function(){
+    function setInShowDropDown(){
         inShowDropDown = true;
             setTimeout( () => {  
                 inShowDropDown = null;
@@ -59,7 +59,7 @@ function OptionsPanel(document, container, dropDownItemContent, styling,
         }
     }
 
-    function hoverInInternal(index){
+    var hoverInInternal = function(index){
         hoveredMultiSelectDataIndex = index;
         hoveredMultiSelectData = getVisibleMultiSelectDataList()[index];
         styling.HoverIn(hoveredMultiSelectData.dropDownMenuItemElement);
@@ -73,13 +73,13 @@ function OptionsPanel(document, container, dropDownItemContent, styling,
         }
     }
 
-    function resetCandidateToHoveredMultiSelectData(){
+    var resetCandidateToHoveredMultiSelectData = function(){
         candidateToHoveredMultiSelectData.dropDownMenuItemElement.removeEventListener('mousemove', processCandidateToHovered);
         candidateToHoveredMultiSelectData.dropDownMenuItemElement.removeEventListener('mousedown', processCandidateToHovered);
         candidateToHoveredMultiSelectData = null;
     }
 
-    function processCandidateToHovered() {
+    var processCandidateToHovered = function() {
         if (hoveredMultiSelectData != candidateToHoveredMultiSelectData)
         {
             resetDropDownMenuHover(); 
@@ -134,7 +134,7 @@ function OptionsPanel(document, container, dropDownItemContent, styling,
         }
     }
 
-    function  onDropDownMenuItemElementMouseoverGeneral(MultiSelectData, dropDownMenuItemElement)
+    var  onDropDownMenuItemElementMouseoverGeneral = function(MultiSelectData, dropDownMenuItemElement)
     {
         if (inShowDropDown)
         {
@@ -166,7 +166,7 @@ function OptionsPanel(document, container, dropDownItemContent, styling,
         // mouse moves inside the item. 
         // https://stackoverflow.com/questions/59022563/browser-events-mouseover-doesnt-happen-when-you-make-element-visible-and-mous
         
-        var onDropDownMenuItemElementMouseover = ()=> onDropDownMenuItemElementMouseoverGeneral(
+        var onDropDownMenuItemElementMouseover = () => onDropDownMenuItemElementMouseoverGeneral(
             MultiSelectData,
             dropDownMenuItemElement
         )
@@ -179,7 +179,6 @@ function OptionsPanel(document, container, dropDownItemContent, styling,
         dropDownMenuItemElement.addEventListener('mouseleave', onDropDownMenuItemElementMouseleave);
 
         dropDownMenu.appendChild(dropDownMenuItemElement);
-        
 
         let content = dropDownItemContent(dropDownMenuItemElement, MultiSelectData.option); 
         MultiSelectData.dropDownMenuItemElement = dropDownMenuItemElement;
@@ -199,7 +198,7 @@ function OptionsPanel(document, container, dropDownItemContent, styling,
         if (isOptionDisabled)
             setDropDownItemContentDisabled(content, isSelected )
 
-        content.onSelected(() => {
+        content.onSelected( () => {
             MultiSelectData.toggle();
             filterPanelSetFocus();
         });
@@ -208,10 +207,8 @@ function OptionsPanel(document, container, dropDownItemContent, styling,
         var createSelectedItem = () => createSelectedItemGen(
             MultiSelectData,
             isOptionDisabled,
-            ()=> setDropDownItemContentDisabled(content, false)
-            );
-
-        
+            () => setDropDownItemContentDisabled(content, false)
+        );
         
         if (isSelected)
         {
@@ -238,8 +235,6 @@ function OptionsPanel(document, container, dropDownItemContent, styling,
 
     var item = {
         dropDownMenu,
-        
-        processCandidateToHovered,
         hoverInInternal,
         resetDropDownMenuHover,
         setInShowDropDown, 

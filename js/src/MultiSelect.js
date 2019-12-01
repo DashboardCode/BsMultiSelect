@@ -3,7 +3,6 @@ import FilterPanel from './FilterPanel.js'
 import OptionsPanel from './OptionsPanel.js'
 import SelectionsPanel from './SelectionsPanel.js'
 import MultiSelectInputAspect from './MultiSelectInputAspect.js'
-//import removeElement from './removeElement.js'
 
 function filterMultiSelectData(MultiSelectData, isFiltered, visibleIndex) {
     MultiSelectData.visible = isFiltered;
@@ -22,7 +21,7 @@ function resetFilterDropDownMenu(MultiSelectDataList) {
     }
 }
 
-function filterDropDownMenu(MultiSelectDataList, text) {
+function collectFilterDropDownMenu(MultiSelectDataList, text) {
     var list = [];
     var j = 0;
     for(let i=0; i<MultiSelectDataList.length; i++)
@@ -89,13 +88,13 @@ class MultiSelect {
 
     resetMultiSelectDataList(){
         this.MultiSelectDataList = [];
-        this.visibleMultiSelectDataList = null;
+        this.filteredMultiSelectDataList = null;
     }
 
     
     getVisibleMultiSelectDataList(){
-        if (this.visibleMultiSelectDataList)
-            return this.visibleMultiSelectDataList;
+        if (this.filteredMultiSelectDataList)
+            return this.filteredMultiSelectDataList;
         else
             return this.MultiSelectDataList;
     }
@@ -110,19 +109,10 @@ class MultiSelect {
     processEmptyInput(){
         this.filterPanel.setEmptyLength();
         resetFilterDropDownMenu(this.MultiSelectDataList);
-        this.visibleMultiSelectDataList = null;
+        this.filteredMultiSelectDataList = null;
     }
 
-    
-    hideDropDownAndResetFilter() {
-        this.optionsPanel.hideDropDown(); // always hide 1st
-        this.resetFilter();
-    }
-    
-
-    
-
-
+    // -----------------------------------------------------------------------------------------------------------------------
     Update(){
         this.styling.UpdateIsValid(this.stylingComposite, this.optionsAdapter.getIsValid(), this.optionsAdapter.getIsInvalid());
         this.UpdateSize();
@@ -303,10 +293,10 @@ class MultiSelect {
         else
         {
             // check if exact match, otherwise new search
-            this.visibleMultiSelectDataList = filterDropDownMenu(this.MultiSelectDataList, text);
-            if (this.visibleMultiSelectDataList.length == 1)
+            this.filteredMultiSelectDataList = collectFilterDropDownMenu(this.MultiSelectDataList, text);
+            if (this.filteredMultiSelectDataList.length == 1)
             {
-                let fullMatchMultiSelectData =  this.visibleMultiSelectDataList[0];
+                let fullMatchMultiSelectData =  this.filteredMultiSelectDataList[0];
                 if (fullMatchMultiSelectData.searchText == text)
                 {
                     fullMatchMultiSelectData.toggle();
@@ -350,7 +340,7 @@ class MultiSelect {
                     this.labelAdapter.init(filterItemInputElement); 
                 };
             },
-            () => this.styling.FocusIn(this.stylingComposite),  // show dropdown
+            () => this.styling.FocusIn(this.stylingComposite),  // focus in - show dropdown
             () => {
                 if (!this.optionsPanel.getSkipFocusout()) // skip initiated by mouse click (we manage it different way)
                 {
@@ -359,20 +349,19 @@ class MultiSelect {
                     this.styling.FocusOut(this.stylingComposite)
                     this.optionsPanel.resetSkipFocusout();
                 }
-            }, // hide dropdown
+            }, // focus out - hide dropdown
             () => this.optionsPanel.keyDownArrow(false), // arrow up
-            () => this.optionsPanel.keyDownArrow(true), // arrow down
-            () => this.optionsPanel.hideDropDown(),  
+            () => this.optionsPanel.keyDownArrow(true),  // arrow down
+            () => this.optionsPanel.hideDropDown(),  // tab on empty
             () => {
                 this.selectionsPanel.removeSelectedTail();
                 this.aspect.alignToFilterInputItemLocation(false);
-            }, // backspace alike
-            () => this.optionsPanel.resetDropDownMenuHover(), 
-            () => this.optionsPanel.toggleHovered(), // "compleate alike"
+            }, // backspace - "remove last"
+            () => this.optionsPanel.toggleHovered(), // tab/enter "compleate hovered"
             () => {
                 this.optionsPanel.hideDropDown(); // always hide 1st
                 this.resetFilter();
-            }, // "esc" alike
+            }, // esc  
             (filterInputValue, resetLength) => this.input(filterInputValue, resetLength) // filter
         );
              
@@ -388,7 +377,7 @@ class MultiSelect {
                 this.optionsPanel.hideDropDown(); // always hide 1st
                 this.resetFilter();
             },
-            () => {
+            (event) => {
                   if (!this.filterPanel.isEventTarget(event))
                      this.filterPanel.setFocus();
                 },
