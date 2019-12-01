@@ -1,10 +1,9 @@
 function defDropDownMenuStyleSys(s) {s.listStyleType='none'}; // remove bullets since this is ul
 
-function OptionsPanel(document, container, init, styling, 
-        getVisibleMultiSelectDataList, resetFilter,updateDropDownLocation) {
+function OptionsPanel(document, container, dropDownItemContent, styling, 
+        getVisibleMultiSelectDataList, resetFilter,updateDropDownLocation, filterPanelSetFocus) {
     var dropDownMenu = document.createElement('UL');
     dropDownMenu.style.display="none";
-    init(dropDownMenu);
 
     // prevent heavy understandable styling error
     defDropDownMenuStyleSys(dropDownMenu.style);
@@ -81,12 +80,13 @@ function OptionsPanel(document, container, init, styling,
     }
 
     function processCandidateToHovered() {
-        if (hoveredMultiSelectData!=candidateToHoveredMultiSelectData)
+        if (hoveredMultiSelectData != candidateToHoveredMultiSelectData)
         {
             resetDropDownMenuHover(); 
             hoverInInternal(candidateToHoveredMultiSelectData.visibleIndex);
         }
-        resetCandidateToHoveredMultiSelectData();
+        if(candidateToHoveredMultiSelectData) 
+            resetCandidateToHoveredMultiSelectData();
     }
 
     function toggleHovered(){
@@ -134,6 +134,108 @@ function OptionsPanel(document, container, init, styling,
         }
     }
 
+    function  onDropDownMenuItemElementMouseoverGeneral(MultiSelectData, dropDownMenuItemElement)
+    {
+        if (inShowDropDown)
+        {
+            if(candidateToHoveredMultiSelectData)
+                resetCandidateToHoveredMultiSelectData()
+
+            candidateToHoveredMultiSelectData = MultiSelectData;
+            dropDownMenuItemElement.addEventListener('mousemove', processCandidateToHovered);
+            dropDownMenuItemElement.addEventListener('mousedown', processCandidateToHovered);
+        }
+        else
+        {
+            if (hoveredMultiSelectData!=MultiSelectData)
+            {
+                // mouseleave is not enough to guarantee remove hover styles in situations
+                // when style was setuped without mouse (keyboard arrows)
+                // therefore force reset manually
+                resetDropDownMenuHover(); 
+                hoverInInternal(MultiSelectData.visibleIndex);
+            }                
+        }
+    }
+
+    function insertDropDownItem(MultiSelectData, createSelectedItemGen, triggerChange, isSelected, isOptionDisabled) {
+        var dropDownMenuItemElement = document.createElement('LI');
+        
+        // in chrome it happens on "become visible" so we need to skip it, 
+        // for IE11 and edge it doesn't happens, but for IE11 and Edge it doesn't happens on small 
+        // mouse moves inside the item. 
+        // https://stackoverflow.com/questions/59022563/browser-events-mouseover-doesnt-happen-when-you-make-element-visible-and-mous
+        
+        var onDropDownMenuItemElementMouseover = ()=> onDropDownMenuItemElementMouseoverGeneral(
+            MultiSelectData,
+            dropDownMenuItemElement
+        )
+
+        dropDownMenuItemElement.addEventListener('mouseover', onDropDownMenuItemElementMouseover);
+        
+        // note 1: mouseleave preferred to mouseout - which fires on each descendant
+        // note 2: since I want add aditional info panels to the dropdown put mouseleave on dropdwon would not work
+        var onDropDownMenuItemElementMouseleave = () => resetDropDownMenuHover();
+        dropDownMenuItemElement.addEventListener('mouseleave', onDropDownMenuItemElementMouseleave);
+
+        dropDownMenu.appendChild(dropDownMenuItemElement);
+        
+
+        let content = dropDownItemContent(dropDownMenuItemElement, MultiSelectData.option); 
+        MultiSelectData.dropDownMenuItemElement = dropDownMenuItemElement;
+        MultiSelectData.DropDownItemContent = content;
+
+        MultiSelectData.DisposeDropDownMenuItemElement = ()=> {
+            dropDownMenuItemElement.removeEventListener('mouseover',  onDropDownMenuItemElementMouseover);
+            dropDownMenuItemElement.removeEventListener('mouseleave', onDropDownMenuItemElementMouseleave);
+        }
+
+        var setDropDownItemContentDisabled = (content,  isSelected) => {
+            content.disabledStyle(true);
+            // do not desable if selected! there should be possibility to unselect "disabled"
+            content.disable(!isSelected);
+        }
+
+        if (isOptionDisabled)
+            setDropDownItemContentDisabled(content, isSelected )
+
+        content.onSelected(() => {
+            MultiSelectData.toggle();
+            filterPanelSetFocus();
+        });
+        // ------------------------------------------------------------------------------
+        
+        var createSelectedItem = () => createSelectedItemGen(
+            MultiSelectData,
+            isOptionDisabled,
+            ()=> setDropDownItemContentDisabled(content, false)
+            );
+
+        
+        
+        if (isSelected)
+        {
+            createSelectedItem();
+        }
+        else
+        {
+            MultiSelectData.excludedFromSearch =  isOptionDisabled;
+            if (isOptionDisabled)
+                MultiSelectData.toggle = () => { }
+            else
+                MultiSelectData.toggle = () =>  {
+                    createSelectedItem();
+                    triggerChange();
+                }
+        }
+        // TODO
+        // MultiSelectData.removeDropDownMenuItemElement = () => {
+        //     removeElement(dropDownMenuItemElement);
+        //     if (MultiSelectData.selectedItemElement!=null)
+        //         removeElement(MultiSelectData.selectedItemElement);
+        // }
+    }
+
     var item = {
         dropDownMenu,
         
@@ -147,26 +249,8 @@ function OptionsPanel(document, container, init, styling,
         getSkipFocusout : function() {return skipFocusout},
         resetSkipFocusout : function() {skipFocusout=false},
         keyDownArrow,
-        onDropDownMenuItemElementMouseover : function(MultiSelectData, dropDownMenuItemElement)
-        {
-            if (!inShowDropDown)
-            {
-                if (hoveredMultiSelectData!=MultiSelectData)
-                {
-                    // mouseleave is not enough to guarantee remove hover styles in situations
-                    // when style was setuped without mouse (keyboard arrows)
-                    // therefore force reset manually
-                    resetDropDownMenuHover(); 
-                    hoverInInternal(MultiSelectData.visibleIndex);
-                }
-            }
-            else
-            {
-                candidateToHoveredMultiSelectData = MultiSelectData;
-                dropDownMenuItemElement.addEventListener('mousemove', processCandidateToHovered);
-                dropDownMenuItemElement.addEventListener('mousedown', processCandidateToHovered);
-            }
-        }
+        insertDropDownItem
+        
     }
     return item;
 }
