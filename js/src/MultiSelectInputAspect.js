@@ -2,7 +2,11 @@ function MultiSelectInputAspect (
     document, 
     container, 
     selectedPanel, 
-    filterInputItem, dropDownMenu, Popper
+    filterInputItem, 
+    dropDownMenu, 
+    showDropDown,
+    getVisibleMultiSelectDataList,
+    Popper
     ) {
 
     container.appendChild(selectedPanel);
@@ -22,17 +26,35 @@ function MultiSelectInputAspect (
     );
 
     var filterInputItemOffsetLeft = null;
+    var preventDefaultClickEvent = null;
+
+    function alignAndShowDropDown(event){
+        if (preventDefaultClickEvent != event) {
+            if (getVisibleMultiSelectDataList().length > 0)
+            {
+                alignToFilterInputItemLocation(true);
+                showDropDown();
+            }
+        }
+        preventDefaultClickEvent=null;
+    }
+    
+    function alignToFilterInputItemLocation(force) {
+        let offsetLeft = filterInputItem.offsetLeft;
+        if (force || filterInputItemOffsetLeft != offsetLeft){ // position changed
+            popper.update();
+            filterInputItemOffsetLeft = offsetLeft;
+        }
+    }
 
     return {
         dispose(){
             popper.destroy();
         },
-        alignToFilterInputItemLocation(force) {
-            let offsetLeft = filterInputItem.offsetLeft;
-            if (force || filterInputItemOffsetLeft != offsetLeft){ // position changed
-                popper.update();
-                this.filterInputItemOffsetLeft=offsetLeft;
-            }
+        alignToFilterInputItemLocation,
+        alignAndShowDropDown,
+        setPreventDefaultMultiSelectEvent(event){
+            preventDefaultClickEvent = event;
         }
     }
 }

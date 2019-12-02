@@ -20,35 +20,35 @@
       s.backgroundColor = 'transparent';
     }
 
-    function FilterPanel(document, insertIntoDom, onFilterInputFocusIn, // show dropdown
-    onFilterInputFocusOut, // hide dropdown
-    keyDownArrowUp, keyDownArrowDown, hideDropDown, // tab on empty
-    removeSelectedTail, // backspace alike
-    toggleHovered, // "compleate alike"
-    resetFilterAndHideDropDown, // "esc" alike
-    input // filter
+    function FilterPanel(createElement, insertIntoDom, onFocusIn, // show dropdown
+    onFocusOut, // hide dropdown
+    onKeyDownArrowUp, onKeyDownArrowDown, onTabForEmpty, // tab on empty
+    onBackspace, // backspace alike
+    onEnterOrTabToCompleate, // "compleate alike"
+    onEmptyEscape, // "esc" alike
+    onInput // filter
     ) {
-      var filterInput = document.createElement('INPUT');
-      filterInput.setAttribute("type", "search");
-      filterInput.setAttribute("autocomplete", "off");
-      defFilterInputStyleSys(filterInput.style);
-      insertIntoDom(filterInput);
+      var inputElement = createElement('INPUT');
+      inputElement.setAttribute("type", "search");
+      inputElement.setAttribute("autocomplete", "off");
+      defFilterInputStyleSys(inputElement.style);
+      insertIntoDom(inputElement);
 
       var onfilterInputKeyDown = function onfilterInputKeyDown(event) {
-        if ([38, 40, 13, 27].indexOf(event.which) >= 0 || event.which == 9 && filterInput.value) {
+        if ([38, 40, 13, 27].indexOf(event.which) >= 0 || event.which == 9 && inputElement.value) {
           event.preventDefault(); // for 9 it enables keyup
         }
 
         if (event.which == 38) {
-          keyDownArrowUp();
+          onKeyDownArrowUp();
         } else if (event.which == 40) {
-          keyDownArrowDown();
+          onKeyDownArrowDown();
         } else if (event.which == 9
         /*tab*/
         ) {
             // no keydown for this
-            if (!filterInput.value) {
-              hideDropDown(); // filter is empty, nothing to reset
+            if (!inputElement.value) {
+              onTabForEmpty(); // filter is empty, nothing to reset
             }
           } else if (event.which == 8
         /*backspace*/
@@ -56,20 +56,18 @@
             // NOTE: this will process backspace only if there are no text in the input field
             // If user will find this inconvinient, we will need to calculate something like this
             // this.isBackspaceAtStartPoint = (this.filterInput.selectionStart == 0 && this.filterInput.selectionEnd == 0);
-            if (!filterInput.value) {
-              removeSelectedTail();
+            if (!inputElement.value) {
+              onBackspace();
             }
-          } //if ([38, 40, 13, 9].indexOf(event.which)==-1)
-        //    resetDropDownMenuHover();
-
+          }
       };
 
       var onFilterInputKeyUp = function onFilterInputKeyUp(event) {
         if (event.which == 13 || event.which == 9) {
-          toggleHovered();
+          onEnterOrTabToCompleate();
         } else if (event.which == 27) {
           // escape
-          resetFilterAndHideDropDown();
+          onEmptyEscape();
         }
       }; // it can be initated by 3PP functionality
       // sample (1) BS functionality - input x button click - clears input
@@ -78,48 +76,47 @@
 
 
       var onFilterInputInput = function onFilterInputInput() {
-        var filterInputValue = filterInput.value;
-        input(filterInputValue, function () {
-          return filterInput.style.width = filterInputValue.length * 1.3 + 2 + "ch";
+        var filterInputValue = inputElement.value;
+        onInput(filterInputValue, function () {
+          return inputElement.style.width = filterInputValue.length * 1.3 + 2 + "ch";
         });
       };
 
-      var setEmptyLength = function setEmptyLength() {
-        filterInput.style.width = "2ch";
-      };
+      inputElement.addEventListener('focusin', onFocusIn);
+      inputElement.addEventListener('focusout', onFocusOut);
+      inputElement.addEventListener('keydown', onfilterInputKeyDown);
+      inputElement.addEventListener('keyup', onFilterInputKeyUp);
+      inputElement.addEventListener('input', onFilterInputInput);
 
-      var setEmpty = function setEmpty() {
-        filterInput.value = '';
+      function setEmptyLength() {
+        inputElement.style.width = "2ch";
+      }
+
+      function setEmpty() {
+        inputElement.value = '';
         setEmptyLength();
-      };
-
-      filterInput.addEventListener('focusin', onFilterInputFocusIn);
-      filterInput.addEventListener('focusout', onFilterInputFocusOut);
-      filterInput.addEventListener('keydown', onfilterInputKeyDown);
-      filterInput.addEventListener('keyup', onFilterInputKeyUp);
-      filterInput.addEventListener('input', onFilterInputInput);
-      var filterPanel = {
-        input: filterInput,
+      }
+      return {
+        input: inputElement,
         isEmpty: function isEmpty() {
-          return filterInput.value ? false : true;
+          return inputElement.value ? false : true;
         },
         setEmpty: setEmpty,
         setEmptyLength: setEmptyLength,
         setFocus: function setFocus() {
-          filterInput.focus();
+          inputElement.focus();
         },
         isEventTarget: function isEventTarget(event) {
-          return event.target == filterInput;
+          return event.target == inputElement;
         },
         dispose: function dispose() {
-          filterInput.removeEventListener('focusin', onFilterInputFocusIn);
-          filterInput.removeEventListener('focusout', onFilterInputFocusOut);
-          filterInput.removeEventListener('keydown', onfilterInputKeyDown);
-          filterInput.removeEventListener('keyup', onFilterInputKeyUp);
-          filterInput.removeEventListener('input', onFilterInputInput);
+          inputElement.removeEventListener('focusin', onFocusIn);
+          inputElement.removeEventListener('focusout', onFocusOut);
+          inputElement.removeEventListener('keydown', onfilterInputKeyDown);
+          inputElement.removeEventListener('keyup', onFilterInputKeyUp);
+          inputElement.removeEventListener('input', onFilterInputInput);
         }
       };
-      return filterPanel;
     }
 
     function defDropDownMenuStyleSys(s) {
@@ -368,10 +365,12 @@
       s.listStyleType = 'none';
     }
 
-    function SelectionsPanel(document, init, selectedItemContent, isComponentDisabled, triggerChange, onRemove, trySetFilterPanelFocus, trySetOptionsPanelFocus) {
-      var selectedPanel = document.createElement('UL');
+    function SelectionsPanel(createElement, init, selectedItemContent, isComponentDisabled, triggerChange, onRemove, onClick, preventDefaultClick //trySetFilterPanelFocus,
+    //trySetOptionsPanelFocus
+    ) {
+      var selectedPanel = createElement('UL');
       defSelectedPanelStyleSys(selectedPanel.style);
-      var filterInputItem = document.createElement('LI'); // detached
+      var filterInputItem = createElement('LI'); // detached
 
       selectedPanel.appendChild(filterInputItem); // located filter in selectionsPanel
 
@@ -401,14 +400,8 @@
         MultiSelectData.selectedPrev = null;
       }
 
-      var preventDefaultMultiSelectEvent;
-
-      var setPreventDefaultMultiSelectEvent = function setPreventDefaultMultiSelectEvent(event) {
-        preventDefaultMultiSelectEvent = event;
-      };
-
       function createSelectedItem(MultiSelectData, isOptionDisabled, setDropDownItemContentDisabled) {
-        var selectedItemElement = document.createElement('LI');
+        var selectedItemElement = createElement('LI');
         MultiSelectData.selectedItemElement = selectedItemElement;
 
         if (MultiSelectDataSelectedTail) {
@@ -458,13 +451,14 @@
           onRemove();
         };
 
-        var onRemoveSelectedItemEvent = function onRemoveSelectedItemEvent() {
+        var onRemoveSelectedItemEvent = function onRemoveSelectedItemEvent(jqEvent) {
           setTimeout(function () {
             removeSelectedItemAndCloseDropDown();
           }, 0);
+          preventDefaultClick(jqEvent.originalEvent);
         };
 
-        MultiSelectData.SelectedItemContent = selectedItemContent(selectedItemElement, MultiSelectData.option, onRemoveSelectedItemEvent, setPreventDefaultMultiSelectEvent);
+        MultiSelectData.SelectedItemContent = selectedItemContent(selectedItemElement, MultiSelectData.option, onRemoveSelectedItemEvent);
 
         var disable = function disable(isDisabled) {
           return MultiSelectData.SelectedItemContent.disable(isDisabled);
@@ -486,13 +480,7 @@
       }
 
       var selectedPanelClick = function selectedPanelClick(event) {
-        trySetFilterPanelFocus(event);
-
-        if (preventDefaultMultiSelectEvent != event) {
-          trySetOptionsPanelFocus();
-        }
-
-        preventDefaultMultiSelectEvent = null;
+        onClick(event);
       };
 
       function iterateAll(isDisabled) {
@@ -532,7 +520,7 @@
       return item;
     }
 
-    function MultiSelectInputAspect(document, container, selectedPanel, filterInputItem, dropDownMenu, Popper) {
+    function MultiSelectInputAspect(document, container, selectedPanel, filterInputItem, dropDownMenu, showDropDown, getVisibleMultiSelectDataList, Popper) {
       container.appendChild(selectedPanel);
       container.appendChild(dropDownMenu);
       var popper = new Popper(filterInputItem, dropDownMenu, {
@@ -550,18 +538,37 @@
         }
       });
       var filterInputItemOffsetLeft = null;
+      var preventDefaultClickEvent = null;
+
+      function alignAndShowDropDown(event) {
+        if (preventDefaultClickEvent != event) {
+          if (getVisibleMultiSelectDataList().length > 0) {
+            alignToFilterInputItemLocation(true);
+            showDropDown();
+          }
+        }
+
+        preventDefaultClickEvent = null;
+      }
+
+      function alignToFilterInputItemLocation(force) {
+        var offsetLeft = filterInputItem.offsetLeft;
+
+        if (force || filterInputItemOffsetLeft != offsetLeft) {
+          // position changed
+          popper.update();
+          filterInputItemOffsetLeft = offsetLeft;
+        }
+      }
+
       return {
         dispose: function dispose() {
           popper.destroy();
         },
-        alignToFilterInputItemLocation: function alignToFilterInputItemLocation(force) {
-          var offsetLeft = filterInputItem.offsetLeft;
-
-          if (force || filterInputItemOffsetLeft != offsetLeft) {
-            // position changed
-            popper.update();
-            this.filterInputItemOffsetLeft = offsetLeft;
-          }
+        alignToFilterInputItemLocation: alignToFilterInputItemLocation,
+        alignAndShowDropDown: alignAndShowDropDown,
+        setPreventDefaultMultiSelectEvent: function setPreventDefaultMultiSelectEvent(event) {
+          preventDefaultClickEvent = event;
         }
       };
     }
@@ -858,9 +865,14 @@
         var _this3 = this;
 
         var document = this.document;
+
+        var createElement = function createElement(name) {
+          return document.createElement(name);
+        };
+
         var container = this.optionsAdapter.container;
         var lazyfilterItemInputElementAtach = null;
-        this.filterPanel = FilterPanel(document, function (filterItemInputElement) {
+        this.filterPanel = FilterPanel(createElement, function (filterItemInputElement) {
           lazyfilterItemInputElementAtach = function lazyfilterItemInputElementAtach(filterItemElement) {
             filterItemElement.appendChild(filterItemInputElement);
 
@@ -910,7 +922,7 @@
           return _this3.input(filterInputValue, resetLength);
         } // filter
         );
-        this.selectionsPanel = SelectionsPanel(document, function (filterItemElement) {
+        this.selectionsPanel = SelectionsPanel(createElement, function (filterItemElement) {
           lazyfilterItemInputElementAtach(filterItemElement);
         }, this.selectedItemContent, this.isComponentDisabled, function () {
           return _this3.optionsAdapter.triggerChange();
@@ -921,12 +933,24 @@
           _this3.resetFilter();
         }, function (event) {
           if (!_this3.filterPanel.isEventTarget(event)) _this3.filterPanel.setFocus();
-        }, function () {
-          if (_this3.getVisibleMultiSelectDataList().length > 0) {
-            _this3.aspect.alignToFilterInputItemLocation(true);
 
-            _this3.optionsPanel.showDropDown();
-          }
+          _this3.aspect.alignAndShowDropDown(event); // if (preventDefaultClickEvent != event) {
+          //     if (this.getVisibleMultiSelectDataList().length > 0)
+          //     {
+          //         this.aspect.alignToFilterInputItemLocation(true);
+          //         this.optionsPanel.showDropDown();
+          //     }
+          // }
+          //preventDefaultClickEvent=null;
+          //-----------------------------
+
+          /*var preventDefaultClickEvent;
+          var setPreventDefaultMultiSelectEvent = (event)=>{
+              preventDefaultClickEvent = event;
+          } */
+
+        }, function (event) {
+          return _this3.aspect.setPreventDefaultMultiSelectEvent(event);
         });
         this.selectedPanel = this.selectionsPanel.selectedPanel; // TODO remove
 
@@ -940,7 +964,11 @@
         }, function () {
           return _this3.filterPanel.setFocus();
         });
-        this.aspect = MultiSelectInputAspect(document, this.optionsAdapter.container, this.selectionsPanel.selectedPanel, this.selectionsPanel.filterInputItem, this.optionsPanel.dropDownMenu, Popper);
+        this.aspect = MultiSelectInputAspect(document, this.optionsAdapter.container, this.selectionsPanel.selectedPanel, this.selectionsPanel.filterInputItem, this.optionsPanel.dropDownMenu, function () {
+          return _this3.optionsPanel.showDropDown();
+        }, function () {
+          return _this3.getVisibleMultiSelectDataList();
+        }, Popper);
         this.stylingComposite = this.createStylingComposite(container, this.selectionsPanel.selectedPanel, this.selectionsPanel.filterInputItem, this.filterPanel.input, this.optionsPanel.dropDownMenu);
         this.styling.Init(this.stylingComposite);
         if (this.optionsAdapter.afterContainerFilled) this.optionsAdapter.afterContainerFilled();
@@ -1261,7 +1289,7 @@
 
     function Bs4SelectedItemContent(stylingMethod, configuration, $) {
       ExtendIfUndefined(configuration, bs4SelectedItemContentDefaults);
-      return function (selectedItem, optionItem, removeSelectedItem, preventDefaultMultiSelect) {
+      return function (selectedItem, optionItem, removeSelectedItem, preventDefaultClick) {
         var $selectedItem = $(selectedItem);
         $selectedItem.addClass(configuration.selectedItemClass);
         var $content = $("<span/>").text(optionItem.text);
@@ -1271,8 +1299,7 @@
         // with .css("white-space", "nowrap") or  .css("display", "inline-block"); TODO: migrate to flex? 
         .css("float", "none").appendTo($selectedItem).addClass(configuration.removeSelectedItemButtonClass) // bs close class set the float:right
         .on("click", function (jqEvent) {
-          removeSelectedItem();
-          preventDefaultMultiSelect(jqEvent.originalEvent);
+          removeSelectedItem(jqEvent); //preventDefaultClick(jqEvent.originalEvent);
         });
         if (stylingMethod.createSelectedItemContent) stylingMethod.createSelectedItemContent($selectedItem, $button);
         return {

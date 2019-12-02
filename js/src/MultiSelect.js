@@ -328,12 +328,13 @@ class MultiSelect {
 
     init() {
         var document = this.document;
+        var createElement = (name) => document.createElement(name);
         let container = this.optionsAdapter.container;
 
         var lazyfilterItemInputElementAtach=null;
         
         this.filterPanel = FilterPanel(
-            document,
+            createElement,
             (filterItemInputElement) => {
                 lazyfilterItemInputElementAtach = (filterItemElement)=>{
                     filterItemElement.appendChild(filterItemInputElement);
@@ -366,7 +367,7 @@ class MultiSelect {
         );
              
         this.selectionsPanel =  SelectionsPanel(
-            document,
+            createElement,
             (filterItemElement) => {
                 lazyfilterItemInputElementAtach(filterItemElement);
             },
@@ -378,16 +379,11 @@ class MultiSelect {
                 this.resetFilter();
             },
             (event) => {
-                  if (!this.filterPanel.isEventTarget(event))
-                     this.filterPanel.setFocus();
-                },
-            () => {
-                    if (this.getVisibleMultiSelectDataList().length > 0)
-                    {
-                        this.aspect.alignToFilterInputItemLocation(true);
-                        this.optionsPanel.showDropDown();
-                    }
-                }
+                if (!this.filterPanel.isEventTarget(event))
+                    this.filterPanel.setFocus();
+                this.aspect.alignAndShowDropDown(event);
+            },
+            (event) => this.aspect.setPreventDefaultMultiSelectEvent(event)
         );
         
         this.selectedPanel = this.selectionsPanel.selectedPanel; // TODO remove
@@ -410,6 +406,8 @@ class MultiSelect {
             this.selectionsPanel.selectedPanel, 
             this.selectionsPanel.filterInputItem, 
             this.optionsPanel.dropDownMenu, 
+            ()=> this.optionsPanel.showDropDown(),
+            ()=>this.getVisibleMultiSelectDataList(),
             Popper
         );
 

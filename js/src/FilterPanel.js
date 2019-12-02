@@ -1,64 +1,61 @@
 function defFilterInputStyleSys(s) {s.width='2ch'; s.border='0'; s.padding='0'; s.outline='none'; s.backgroundColor='transparent' };
 
 function FilterPanel(
-        document,
+        createElement,
         insertIntoDom,
-        onFilterInputFocusIn,  // show dropdown
-        onFilterInputFocusOut, // hide dropdown
-        keyDownArrowUp, 
-        keyDownArrowDown,
-        hideDropDown,  // tab on empty
-        removeSelectedTail, // backspace alike
-        toggleHovered, // "compleate alike"
-        resetFilterAndHideDropDown, // "esc" alike
-        input // filter
+        onFocusIn,  // show dropdown
+        onFocusOut, // hide dropdown
+        onKeyDownArrowUp, 
+        onKeyDownArrowDown,
+        onTabForEmpty,  // tab on empty
+        onBackspace, // backspace alike
+        onEnterOrTabToCompleate, // "compleate alike"
+        onEmptyEscape, // "esc" alike
+        onInput // filter
     ) {
     
-    var filterInput = document.createElement('INPUT'); 
+    var inputElement = createElement('INPUT'); 
     
-    filterInput.setAttribute("type","search");
-    filterInput.setAttribute("autocomplete","off");
+    inputElement.setAttribute("type","search");
+    inputElement.setAttribute("autocomplete","off");
 
-    defFilterInputStyleSys(filterInput.style);
+    defFilterInputStyleSys(inputElement.style);
 
-    insertIntoDom(filterInput);
+    insertIntoDom(inputElement);
 
     var onfilterInputKeyDown = (event) => {
-        if ([38, 40, 13 ,27].indexOf(event.which)>=0 || (event.which == 9 && filterInput.value) ) {
+        if ([38, 40, 13 ,27].indexOf(event.which)>=0 || (event.which == 9 && inputElement.value) ) {
             event.preventDefault(); // for 9 it enables keyup
         }
 
         if (event.which == 38) {
-            keyDownArrowUp();
+            onKeyDownArrowUp();
         }
         else if (event.which == 40) {
-            keyDownArrowDown();
+            onKeyDownArrowDown();
         }
         else if (event.which == 9  /*tab*/) { // no keydown for this
-            if (!filterInput.value) {
-                 hideDropDown(); // filter is empty, nothing to reset
+            if (!inputElement.value) {
+                 onTabForEmpty(); // filter is empty, nothing to reset
             }
         }
         else if (event.which == 8 /*backspace*/) {
             // NOTE: this will process backspace only if there are no text in the input field
             // If user will find this inconvinient, we will need to calculate something like this
             // this.isBackspaceAtStartPoint = (this.filterInput.selectionStart == 0 && this.filterInput.selectionEnd == 0);
-            if (!filterInput.value)
+            if (!inputElement.value)
             { 
-                removeSelectedTail();
+                onBackspace();
             }
         }
-
-        //if ([38, 40, 13, 9].indexOf(event.which)==-1)
-        //    resetDropDownMenuHover();
     }
     
     var onFilterInputKeyUp = (event) => {
         if (event.which == 13 || event.which == 9) {
-            toggleHovered();
+            onEnterOrTabToCompleate();
         }
         else if (event.which == 27) { // escape
-            resetFilterAndHideDropDown();
+            onEmptyEscape();
         }
     }
     
@@ -67,50 +64,49 @@ function FilterPanel(
     // sample (2) BS functionality - esc keydown - clears input
     // and there could be difference in processing: (2) should hide the menu, then reset , when (1) should just reset without hiding.
     var onFilterInputInput = () => {
-        var filterInputValue = filterInput.value;
-        input(
+        var filterInputValue = inputElement.value;
+        onInput(
             filterInputValue, 
-            ()=> filterInput.style.width = filterInputValue.length*1.3 + 2 + "ch"
+            ()=> inputElement.style.width = filterInputValue.length*1.3 + 2 + "ch"
         );
     }
     
-    var setEmptyLength =() =>{
-        filterInput.style.width="2ch";
+    inputElement.addEventListener('focusin', onFocusIn);
+    inputElement.addEventListener('focusout', onFocusOut);
+    inputElement.addEventListener('keydown', onfilterInputKeyDown);    
+    inputElement.addEventListener('keyup', onFilterInputKeyUp);
+    inputElement.addEventListener('input', onFilterInputInput);
+
+    function setEmptyLength(){
+        inputElement.style.width="2ch";
     }
 
-    var setEmpty= ()=> {
-        filterInput.value ='';
+    function setEmpty(){
+        inputElement.value ='';
         setEmptyLength();
     };
-
-    filterInput.addEventListener('focusin', onFilterInputFocusIn);
-    filterInput.addEventListener('focusout', onFilterInputFocusOut);
-    filterInput.addEventListener('keydown', onfilterInputKeyDown);    
-    filterInput.addEventListener('keyup', onFilterInputKeyUp);
-    filterInput.addEventListener('input', onFilterInputInput);
-
-    var filterPanel = {
-        input:filterInput,
+    
+    return {
+        input:inputElement,
         isEmpty(){
-            return filterInput.value ? false:true;
+            return inputElement.value ? false:true;
         },
         setEmpty,
         setEmptyLength,
         setFocus(){
-            filterInput.focus();
+            inputElement.focus();
         },
         isEventTarget(event){
-            return event.target == filterInput;
+            return event.target == inputElement;
         },
         dispose(){
-            filterInput.removeEventListener('focusin', onFilterInputFocusIn);
-            filterInput.removeEventListener('focusout', onFilterInputFocusOut);
-            filterInput.removeEventListener('keydown', onfilterInputKeyDown);
-            filterInput.removeEventListener('keyup', onFilterInputKeyUp);
-            filterInput.removeEventListener('input', onFilterInputInput);
+            inputElement.removeEventListener('focusin', onFocusIn);
+            inputElement.removeEventListener('focusout', onFocusOut);
+            inputElement.removeEventListener('keydown', onfilterInputKeyDown);
+            inputElement.removeEventListener('keyup', onFilterInputKeyUp);
+            inputElement.removeEventListener('input', onFilterInputInput);
         }
     }
-    return filterPanel;
 }
 
 export default FilterPanel;

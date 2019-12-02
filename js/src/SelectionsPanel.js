@@ -2,16 +2,22 @@ import removeElement from './removeElement.js'
 
 function defSelectedPanelStyleSys(s) {s.display='flex'; s.flexWrap='wrap'; s.listStyleType='none'};  // remove bullets since this is ul
 
-function SelectionsPanel (document, init, 
+function SelectionsPanel (
+    createElement, 
+    init, 
     selectedItemContent, 
     isComponentDisabled, 
     triggerChange, 
     onRemove,
-    trySetFilterPanelFocus,
-    trySetOptionsPanelFocus) {
-    var selectedPanel = document.createElement('UL');
+    onClick,
+    preventDefaultClick
+    //trySetFilterPanelFocus,
+    //trySetOptionsPanelFocus
+    ) 
+    {
+    var selectedPanel = createElement('UL');
     defSelectedPanelStyleSys(selectedPanel.style); 
-    var filterInputItem = document.createElement('LI'); // detached
+    var filterInputItem = createElement('LI'); // detached
     selectedPanel.appendChild(filterInputItem); // located filter in selectionsPanel
 
     init(filterInputItem);
@@ -37,13 +43,9 @@ function SelectionsPanel (document, init,
         MultiSelectData.selectedPrev=null;
     }
 
-    var preventDefaultMultiSelectEvent;
-    var setPreventDefaultMultiSelectEvent = (event)=>{
-        preventDefaultMultiSelectEvent = event;
-    }
 
     function createSelectedItem(MultiSelectData, isOptionDisabled, setDropDownItemContentDisabled) {
-        var selectedItemElement = document.createElement('LI');
+        var selectedItemElement = createElement('LI');
         MultiSelectData.selectedItemElement = selectedItemElement;
         if (MultiSelectDataSelectedTail){
             MultiSelectDataSelectedTail.selectedNext = MultiSelectData;
@@ -93,17 +95,17 @@ function SelectionsPanel (document, init,
             onRemove();
         };
     
-        let onRemoveSelectedItemEvent = () => {
+        let onRemoveSelectedItemEvent = (jqEvent) => {
             setTimeout( () => {  
                 removeSelectedItemAndCloseDropDown();
             }, 0);
+            preventDefaultClick(jqEvent.originalEvent);
         };
 
         MultiSelectData.SelectedItemContent = selectedItemContent(
             selectedItemElement,
             MultiSelectData.option,
-            onRemoveSelectedItemEvent,
-            setPreventDefaultMultiSelectEvent);
+            onRemoveSelectedItemEvent);
 
         var disable = (isDisabled) =>
             MultiSelectData.SelectedItemContent.disable(isDisabled);
@@ -122,14 +124,8 @@ function SelectionsPanel (document, init,
     }
 
     var selectedPanelClick = event => {
-
-        trySetFilterPanelFocus(event);
-        if (preventDefaultMultiSelectEvent != event) {
-            trySetOptionsPanelFocus();
-        }
-        preventDefaultMultiSelectEvent=null;
+        onClick(event);
     };
-
 
     function iterateAll(isDisabled){
         let i = MultiSelectDataSelectedTail;
@@ -138,7 +134,6 @@ function SelectionsPanel (document, init,
             i = i.selectedPrev;
         }
     }
-
 
     var item = {
         selectedPanel,
