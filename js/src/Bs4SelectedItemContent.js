@@ -42,7 +42,7 @@ const bs4SelectedItemContentDefaults = {
 function Bs4SelectedItemContent(stylingMethod, configuration, $) {
     ExtendIfUndefined(configuration, bs4SelectedItemContentDefaults);
     
-    return function (selectedItem, optionItem, removeSelectedItem, preventDefaultClick){
+    return function (selectedItem, optionItem, removeSelectedItem){
             let $selectedItem = $(selectedItem)
             $selectedItem.addClass(configuration.selectedItemClass);
             let $content = $(`<span/>`).text(optionItem.text);
@@ -55,10 +55,9 @@ function Bs4SelectedItemContent(stylingMethod, configuration, $) {
                 .css("float", "none").appendTo($selectedItem)
                 .addClass(configuration.removeSelectedItemButtonClass) // bs close class set the float:right
                 .on("click", 
-                    jqEvent => {   
-                        removeSelectedItem(jqEvent); 
-                        //preventDefaultClick(jqEvent.originalEvent);
-                    });
+                    jqEvent =>    
+                        removeSelectedItem(jqEvent.originalEvent)
+                    );
             
             if (stylingMethod.createSelectedItemContent)
                 stylingMethod.createSelectedItemContent($selectedItem, $button);

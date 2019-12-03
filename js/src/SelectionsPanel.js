@@ -95,11 +95,11 @@ function SelectionsPanel (
             onRemove();
         };
     
-        let onRemoveSelectedItemEvent = (jqEvent) => {
-            setTimeout( () => {  
+        let onRemoveSelectedItemEvent = (event) => {
+            document.setTimeout( () => {  
                 removeSelectedItemAndCloseDropDown();
             }, 0);
-            preventDefaultClick(jqEvent.originalEvent);
+            preventDefaultClick(event);
         };
 
         MultiSelectData.SelectedItemContent = selectedItemContent(

@@ -1,5 +1,5 @@
 /*!
-  * DashboardCode BsMultiSelect v0.4.7-beta (https://dashboardcode.github.io/BsMultiSelect/)
+  * DashboardCode BsMultiSelect v0.4.7 (https://dashboardcode.github.io/BsMultiSelect/)
   * Copyright 2017-2019 Roman Pokrovskij (github user rpokrovskij)
   * Licensed under APACHE 2 (https://github.com/DashboardCode/BsMultiSelect/blob/master/LICENSE)
   */
@@ -286,7 +286,9 @@
         // note 2: since I want add aditional info panels to the dropdown put mouseleave on dropdwon would not work
 
         var onDropDownMenuItemElementMouseleave = function onDropDownMenuItemElementMouseleave() {
-          return resetDropDownMenuHover();
+          if (!inShowDropDown) {
+            resetDropDownMenuHover();
+          }
         };
 
         dropDownMenuItemElement.addEventListener('mouseleave', onDropDownMenuItemElementMouseleave);
@@ -451,11 +453,11 @@
           onRemove();
         };
 
-        var onRemoveSelectedItemEvent = function onRemoveSelectedItemEvent(jqEvent) {
-          setTimeout(function () {
+        var onRemoveSelectedItemEvent = function onRemoveSelectedItemEvent(event) {
+          document.setTimeout(function () {
             removeSelectedItemAndCloseDropDown();
           }, 0);
-          preventDefaultClick(jqEvent.originalEvent);
+          preventDefaultClick(event);
         };
 
         MultiSelectData.SelectedItemContent = selectedItemContent(selectedItemElement, MultiSelectData.option, onRemoveSelectedItemEvent);
@@ -520,7 +522,7 @@
       return item;
     }
 
-    function MultiSelectInputAspect(document, container, selectedPanel, filterInputItem, dropDownMenu, showDropDown, getVisibleMultiSelectDataList, Popper) {
+    function MultiSelectInputAspect(document, container, selectedPanel, filterInputItem, dropDownMenu, showDropDown, isDropDownMenuEmpty, Popper) {
       container.appendChild(selectedPanel);
       container.appendChild(dropDownMenu);
       var popper = new Popper(filterInputItem, dropDownMenu, {
@@ -542,7 +544,7 @@
 
       function alignAndShowDropDown(event) {
         if (preventDefaultClickEvent != event) {
-          if (getVisibleMultiSelectDataList().length > 0) {
+          if (!isDropDownMenuEmpty()) {
             alignToFilterInputItemLocation(true);
             showDropDown();
           }
@@ -934,21 +936,7 @@
         }, function (event) {
           if (!_this3.filterPanel.isEventTarget(event)) _this3.filterPanel.setFocus();
 
-          _this3.aspect.alignAndShowDropDown(event); // if (preventDefaultClickEvent != event) {
-          //     if (this.getVisibleMultiSelectDataList().length > 0)
-          //     {
-          //         this.aspect.alignToFilterInputItemLocation(true);
-          //         this.optionsPanel.showDropDown();
-          //     }
-          // }
-          //preventDefaultClickEvent=null;
-          //-----------------------------
-
-          /*var preventDefaultClickEvent;
-          var setPreventDefaultMultiSelectEvent = (event)=>{
-              preventDefaultClickEvent = event;
-          } */
-
+          _this3.aspect.alignAndShowDropDown(event);
         }, function (event) {
           return _this3.aspect.setPreventDefaultMultiSelectEvent(event);
         });
@@ -967,7 +955,7 @@
         this.aspect = MultiSelectInputAspect(document, this.optionsAdapter.container, this.selectionsPanel.selectedPanel, this.selectionsPanel.filterInputItem, this.optionsPanel.dropDownMenu, function () {
           return _this3.optionsPanel.showDropDown();
         }, function () {
-          return _this3.getVisibleMultiSelectDataList();
+          return _this3.getVisibleMultiSelectDataList().length == 0;
         }, Popper);
         this.stylingComposite = this.createStylingComposite(container, this.selectionsPanel.selectedPanel, this.selectionsPanel.filterInputItem, this.filterPanel.input, this.optionsPanel.dropDownMenu);
         this.styling.Init(this.stylingComposite);
@@ -1289,7 +1277,7 @@
 
     function Bs4SelectedItemContent(stylingMethod, configuration, $) {
       ExtendIfUndefined(configuration, bs4SelectedItemContentDefaults);
-      return function (selectedItem, optionItem, removeSelectedItem, preventDefaultClick) {
+      return function (selectedItem, optionItem, removeSelectedItem) {
         var $selectedItem = $(selectedItem);
         $selectedItem.addClass(configuration.selectedItemClass);
         var $content = $("<span/>").text(optionItem.text);
@@ -1299,7 +1287,7 @@
         // with .css("white-space", "nowrap") or  .css("display", "inline-block"); TODO: migrate to flex? 
         .css("float", "none").appendTo($selectedItem).addClass(configuration.removeSelectedItemButtonClass) // bs close class set the float:right
         .on("click", function (jqEvent) {
-          removeSelectedItem(jqEvent); //preventDefaultClick(jqEvent.originalEvent);
+          return removeSelectedItem(jqEvent.originalEvent);
         });
         if (stylingMethod.createSelectedItemContent) stylingMethod.createSelectedItemContent($selectedItem, $button);
         return {

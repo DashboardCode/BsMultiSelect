@@ -175,7 +175,13 @@ function OptionsPanel(document, container, dropDownItemContent, styling,
         
         // note 1: mouseleave preferred to mouseout - which fires on each descendant
         // note 2: since I want add aditional info panels to the dropdown put mouseleave on dropdwon would not work
-        var onDropDownMenuItemElementMouseleave = () => resetDropDownMenuHover();
+        var onDropDownMenuItemElementMouseleave = () => {
+            if (! inShowDropDown)
+            {
+             
+                resetDropDownMenuHover();
+            }
+        }
         dropDownMenuItemElement.addEventListener('mouseleave', onDropDownMenuItemElementMouseleave);
 
         dropDownMenu.appendChild(dropDownMenuItemElement);

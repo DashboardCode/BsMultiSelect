@@ -5,7 +5,7 @@ function MultiSelectInputAspect (
     filterInputItem, 
     dropDownMenu, 
     showDropDown,
-    getVisibleMultiSelectDataList,
+    isDropDownMenuEmpty,
     Popper
     ) {
 
@@ -30,7 +30,7 @@ function MultiSelectInputAspect (
 
     function alignAndShowDropDown(event){
         if (preventDefaultClickEvent != event) {
-            if (getVisibleMultiSelectDataList().length > 0)
+            if (!isDropDownMenuEmpty())
             {
                 alignToFilterInputItemLocation(true);
                 showDropDown();

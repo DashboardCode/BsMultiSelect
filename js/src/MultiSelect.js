@@ -313,7 +313,6 @@ class MultiSelect {
         this.optionsPanel.setInShowDropDown();
 
         this.optionsPanel.resetDropDownMenuHover();
-
         if (this.getVisibleMultiSelectDataList().length == 1) {
             this.optionsPanel.hoverInInternal(0)
         }
@@ -407,7 +406,7 @@ class MultiSelect {
             this.selectionsPanel.filterInputItem, 
             this.optionsPanel.dropDownMenu, 
             ()=> this.optionsPanel.showDropDown(),
-            ()=>this.getVisibleMultiSelectDataList(),
+            ()=>this.getVisibleMultiSelectDataList().length==0, 
             Popper
         );
 
