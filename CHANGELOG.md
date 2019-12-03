@@ -1,6 +1,6 @@
 # CHANGELOG
 ````
-0.4.7  - small problem solved: mouse leave initated by new filter prevents the default hover (when only one item left by filter) 
+0.4.7  - small problem solved: `mouseleave` event initated by new  filter (that rearrange menu item) resets the default hover (when only one item left by filter) 
 0.4.6  - esc keydown now processed with preventDefault (to do not duplicate clear text custom functionality)
 0.4.5  - bug solved (enter toggles the selected menu item even if dropdown is not visible)
 0.4.4  - click inside selected panel doesn't clear the filter input (we have bootrap x for this and ESC button)
