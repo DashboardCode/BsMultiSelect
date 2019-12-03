@@ -205,7 +205,11 @@ Note, BS allready provide classes like: `h-25`, `bg-light`, `text-primary` that 
 
 ### Future development
 
-It should be ready for BS 5 that means for "no jquery". Biggest analytical problem : should it be splitted to several npm packages. Please contact me if you want to discuss it.  
+Actually plugin is ready for BS 5 that means for "no jquery". 
+Almost ready "option refresh" and "whole data refresh" without the "attach/detach".
+The default dropdown menu and limitation should be provided next.
+Then going to move it to other frameworks: please suggest your options.
+Biggest analytical problem : should it be splitted to several npm packages. Please contact me if you want to discuss it.  
 
 ### Alternatives:
 
