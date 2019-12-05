@@ -382,7 +382,10 @@ class MultiSelect {
                     this.filterPanel.setFocus();
                 this.aspect.alignAndShowDropDown(event);
             },
-            (event) => this.aspect.setPreventDefaultMultiSelectEvent(event)
+            (f, event) => {
+                this.window.setTimeout(()=>f(),0)
+                this.aspect.setPreventDefaultMultiSelectEvent(event)
+            }
         );
         
         this.selectedPanel = this.selectionsPanel.selectedPanel; // TODO remove

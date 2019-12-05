@@ -10,7 +10,8 @@ function SelectionsPanel (
     triggerChange, 
     onRemove,
     onClick,
-    preventDefaultClick
+    processRemoveButtonClick//,
+    //setTimeout
     //trySetFilterPanelFocus,
     //trySetOptionsPanelFocus
     ) 
@@ -96,10 +97,7 @@ function SelectionsPanel (
         };
     
         let onRemoveSelectedItemEvent = (event) => {
-            document.setTimeout( () => {  
-                removeSelectedItemAndCloseDropDown();
-            }, 0);
-            preventDefaultClick(event);
+            processRemoveButtonClick(() => removeSelectedItemAndCloseDropDown(), event);
         };
 
         MultiSelectData.SelectedItemContent = selectedItemContent(

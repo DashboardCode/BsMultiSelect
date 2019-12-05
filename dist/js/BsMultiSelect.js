@@ -1,5 +1,5 @@
 /*!
-  * DashboardCode BsMultiSelect v0.4.7 (https://dashboardcode.github.io/BsMultiSelect/)
+  * DashboardCode BsMultiSelect v0.4.8 (https://dashboardcode.github.io/BsMultiSelect/)
   * Copyright 2017-2019 Roman Pokrovskij (github user rpokrovskij)
   * Licensed under APACHE 2 (https://github.com/DashboardCode/BsMultiSelect/blob/master/LICENSE)
   */
@@ -367,7 +367,9 @@
       s.listStyleType = 'none';
     }
 
-    function SelectionsPanel(createElement, init, selectedItemContent, isComponentDisabled, triggerChange, onRemove, onClick, preventDefaultClick //trySetFilterPanelFocus,
+    function SelectionsPanel(createElement, init, selectedItemContent, isComponentDisabled, triggerChange, onRemove, onClick, processRemoveButtonClick //,
+    //setTimeout
+    //trySetFilterPanelFocus,
     //trySetOptionsPanelFocus
     ) {
       var selectedPanel = createElement('UL');
@@ -454,10 +456,10 @@
         };
 
         var onRemoveSelectedItemEvent = function onRemoveSelectedItemEvent(event) {
-          document.setTimeout(function () {
-            removeSelectedItemAndCloseDropDown();
-          }, 0);
-          preventDefaultClick(event);
+          //setTimeout( () => removeSelectedItemAndCloseDropDown(), 0);
+          processRemoveButtonClick(function () {
+            return removeSelectedItemAndCloseDropDown();
+          }, event);
         };
 
         MultiSelectData.SelectedItemContent = selectedItemContent(selectedItemElement, MultiSelectData.option, onRemoveSelectedItemEvent);
@@ -937,8 +939,12 @@
           if (!_this3.filterPanel.isEventTarget(event)) _this3.filterPanel.setFocus();
 
           _this3.aspect.alignAndShowDropDown(event);
-        }, function (event) {
-          return _this3.aspect.setPreventDefaultMultiSelectEvent(event);
+        }, function (f, event) {
+          _this3.window.setTimeout(function () {
+            return f();
+          }, 0);
+
+          _this3.aspect.setPreventDefaultMultiSelectEvent(event);
         });
         this.selectedPanel = this.selectionsPanel.selectedPanel; // TODO remove
 
