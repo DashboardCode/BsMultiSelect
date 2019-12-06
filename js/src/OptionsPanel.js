@@ -1,8 +1,9 @@
 function defDropDownMenuStyleSys(s) {s.listStyleType='none'}; // remove bullets since this is ul
 
-function OptionsPanel(document, container, dropDownItemContent, styling, 
-        getVisibleMultiSelectDataList, resetFilter,updateDropDownLocation, filterPanelSetFocus) {
-    var dropDownMenu = document.createElement('UL');
+function OptionsPanel(createElement, onShow, onHide, dropDownItemContent, styling, 
+        getVisibleMultiSelectDataList, resetFilter, updateDropDownLocation, filterPanelSetFocus) {
+    
+    var dropDownMenu = createElement('UL');
     dropDownMenu.style.display="none";
 
     // prevent heavy understandable styling error
@@ -11,28 +12,13 @@ function OptionsPanel(document, container, dropDownItemContent, styling,
     var hoveredMultiSelectDataIndex = null;
     var candidateToHoveredMultiSelectData=null;
 
-    var skipFocusout = false;
     var inShowDropDown = false;
-    
-    // we want to escape the closing of the menu on a user's click inside the container
-    var containerMousedown = function(){
-        skipFocusout = true;
-    };    
                 
-    // TODO : this.containerMousedown , this.documentMouseup and filterInput.focusOut are actual only when menu is open
-    var documentMouseup = function(event) {
-        // if click outside container - close dropdown
-        if (!(container === event.target || container.contains(event.target))) {
-            hideDropDown();
-            resetFilter();
-        }
-    }
-
     function setInShowDropDown(){
-        inShowDropDown = true;
-            setTimeout( () => {  
-                inShowDropDown = null;
-            }, 0)
+         inShowDropDown = true;
+         setTimeout( () => {  
+             inShowDropDown = null;
+         }, 0)
     }    
 
     function hideDropDown() {
@@ -42,9 +28,7 @@ function OptionsPanel(document, container, dropDownItemContent, styling,
         if (dropDownMenu.style.display != 'none')
         {
             dropDownMenu.style.display = 'none';
-            // remove listeners that manages close dropdown on input's focusout and click outside container
-            container.removeEventListener("mousedown", containerMousedown);
-            document.removeEventListener("mouseup", documentMouseup);
+            onHide();
         }
     }
 
@@ -53,9 +37,7 @@ function OptionsPanel(document, container, dropDownItemContent, styling,
         {
             setInShowDropDown();
             dropDownMenu.style.display = 'block';
-            // remove listeners that manages close dropdown on input's focusout and click outside container
-            container.addEventListener("mousedown", containerMousedown);
-            document.addEventListener("mouseup", documentMouseup);
+            onShow();
         }
     }
 
@@ -134,7 +116,7 @@ function OptionsPanel(document, container, dropDownItemContent, styling,
         }
     }
 
-    var  onDropDownMenuItemElementMouseoverGeneral = function(MultiSelectData, dropDownMenuItemElement)
+    var onDropDownMenuItemElementMouseoverGeneral = function(MultiSelectData, dropDownMenuItemElement)
     {
         if (inShowDropDown)
         {
@@ -159,7 +141,7 @@ function OptionsPanel(document, container, dropDownItemContent, styling,
     }
 
     function insertDropDownItem(MultiSelectData, createSelectedItemGen, triggerChange, isSelected, isOptionDisabled) {
-        var dropDownMenuItemElement = document.createElement('LI');
+        var dropDownMenuItemElement = createElement('LI');
         
         // in chrome it happens on "become visible" so we need to skip it, 
         // for IE11 and edge it doesn't happens, but for IE11 and Edge it doesn't happens on small 
@@ -176,12 +158,12 @@ function OptionsPanel(document, container, dropDownItemContent, styling,
         // note 1: mouseleave preferred to mouseout - which fires on each descendant
         // note 2: since I want add aditional info panels to the dropdown put mouseleave on dropdwon would not work
         var onDropDownMenuItemElementMouseleave = () => {
-            if (! inShowDropDown)
+            if (!inShowDropDown)
             {
-             
                 resetDropDownMenuHover();
             }
         }
+
         dropDownMenuItemElement.addEventListener('mouseleave', onDropDownMenuItemElementMouseleave);
 
         dropDownMenu.appendChild(dropDownMenuItemElement);
@@ -242,15 +224,24 @@ function OptionsPanel(document, container, dropDownItemContent, styling,
     var item = {
         dropDownMenu,
         hoverInInternal,
-        resetDropDownMenuHover,
-        setInShowDropDown, 
+        stopAndResetDropDownMenuHover(){
+            setInShowDropDown(); //disable Hover On MouseEnter - filter's changes should remove hover
+            resetDropDownMenuHover();
+        },
         showDropDown,
         hideDropDown,
         toggleHovered,
-        getSkipFocusout : function() {return skipFocusout},
-        resetSkipFocusout : function() {skipFocusout=false},
+        // getSkipFocusout : function() {
+        //     return skipFocusout;
+        // },
+        // resetSkipFocusout : function() {
+        //     skipFocusout=false;
+        // },
         keyDownArrow,
-        insertDropDownItem
+        insertDropDownItem,
+        getIsVisble(){
+            return dropDownMenu.style.display != 'none';
+        }
         
     }
     return item;

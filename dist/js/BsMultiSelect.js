@@ -1,5 +1,5 @@
 /*!
-  * DashboardCode BsMultiSelect v0.4.8 (https://dashboardcode.github.io/BsMultiSelect/)
+  * DashboardCode BsMultiSelect v0.4.9 (https://dashboardcode.github.io/BsMultiSelect/)
   * Copyright 2017-2019 Roman Pokrovskij (github user rpokrovskij)
   * Licensed under APACHE 2 (https://github.com/DashboardCode/BsMultiSelect/blob/master/LICENSE)
   */
@@ -123,29 +123,15 @@
       s.listStyleType = 'none';
     }
 
-    function OptionsPanel(document, container, dropDownItemContent, styling, getVisibleMultiSelectDataList, resetFilter, updateDropDownLocation, filterPanelSetFocus) {
-      var dropDownMenu = document.createElement('UL');
+    function OptionsPanel(createElement, onShow, onHide, dropDownItemContent, styling, getVisibleMultiSelectDataList, resetFilter, updateDropDownLocation, filterPanelSetFocus) {
+      var dropDownMenu = createElement('UL');
       dropDownMenu.style.display = "none"; // prevent heavy understandable styling error
 
       defDropDownMenuStyleSys(dropDownMenu.style);
       var hoveredMultiSelectData = null;
       var hoveredMultiSelectDataIndex = null;
       var candidateToHoveredMultiSelectData = null;
-      var skipFocusout = false;
-      var inShowDropDown = false; // we want to escape the closing of the menu on a user's click inside the container
-
-      var containerMousedown = function containerMousedown() {
-        skipFocusout = true;
-      }; // TODO : this.containerMousedown , this.documentMouseup and filterInput.focusOut are actual only when menu is open
-
-
-      var documentMouseup = function documentMouseup(event) {
-        // if click outside container - close dropdown
-        if (!(container === event.target || container.contains(event.target))) {
-          hideDropDown();
-          resetFilter();
-        }
-      };
+      var inShowDropDown = false;
 
       function setInShowDropDown() {
         inShowDropDown = true;
@@ -160,20 +146,16 @@
         }
 
         if (dropDownMenu.style.display != 'none') {
-          dropDownMenu.style.display = 'none'; // remove listeners that manages close dropdown on input's focusout and click outside container
-
-          container.removeEventListener("mousedown", containerMousedown);
-          document.removeEventListener("mouseup", documentMouseup);
+          dropDownMenu.style.display = 'none';
+          onHide();
         }
       }
 
       function showDropDown() {
         if (dropDownMenu.style.display != 'block') {
           setInShowDropDown();
-          dropDownMenu.style.display = 'block'; // remove listeners that manages close dropdown on input's focusout and click outside container
-
-          container.addEventListener("mousedown", containerMousedown);
-          document.addEventListener("mouseup", documentMouseup);
+          dropDownMenu.style.display = 'block';
+          onShow();
         }
       }
 
@@ -273,7 +255,7 @@
       };
 
       function insertDropDownItem(MultiSelectData, createSelectedItemGen, triggerChange, isSelected, isOptionDisabled) {
-        var dropDownMenuItemElement = document.createElement('LI'); // in chrome it happens on "become visible" so we need to skip it, 
+        var dropDownMenuItemElement = createElement('LI'); // in chrome it happens on "become visible" so we need to skip it, 
         // for IE11 and edge it doesn't happens, but for IE11 and Edge it doesn't happens on small 
         // mouse moves inside the item. 
         // https://stackoverflow.com/questions/59022563/browser-events-mouseover-doesnt-happen-when-you-make-element-visible-and-mous
@@ -340,19 +322,25 @@
       var item = {
         dropDownMenu: dropDownMenu,
         hoverInInternal: hoverInInternal,
-        resetDropDownMenuHover: resetDropDownMenuHover,
-        setInShowDropDown: setInShowDropDown,
+        stopAndResetDropDownMenuHover: function stopAndResetDropDownMenuHover() {
+          setInShowDropDown(); //disable Hover On MouseEnter - filter's changes should remove hover
+
+          resetDropDownMenuHover();
+        },
         showDropDown: showDropDown,
         hideDropDown: hideDropDown,
         toggleHovered: toggleHovered,
-        getSkipFocusout: function getSkipFocusout() {
-          return skipFocusout;
-        },
-        resetSkipFocusout: function resetSkipFocusout() {
-          skipFocusout = false;
-        },
+        // getSkipFocusout : function() {
+        //     return skipFocusout;
+        // },
+        // resetSkipFocusout : function() {
+        //     skipFocusout=false;
+        // },
         keyDownArrow: keyDownArrow,
-        insertDropDownItem: insertDropDownItem
+        insertDropDownItem: insertDropDownItem,
+        getIsVisble: function getIsVisble() {
+          return dropDownMenu.style.display != 'none';
+        }
       };
       return item;
     }
@@ -456,7 +444,6 @@
         };
 
         var onRemoveSelectedItemEvent = function onRemoveSelectedItemEvent(event) {
-          //setTimeout( () => removeSelectedItemAndCloseDropDown(), 0);
           processRemoveButtonClick(function () {
             return removeSelectedItemAndCloseDropDown();
           }, event);
@@ -524,9 +511,22 @@
       return item;
     }
 
-    function MultiSelectInputAspect(document, container, selectedPanel, filterInputItem, dropDownMenu, showDropDown, isDropDownMenuEmpty, Popper) {
+    function MultiSelectInputAspect(document, container, selectedPanel, filterInputItem, dropDownMenu, showDropDown, hideDropDownAndResetFilter, isDropDownMenuEmpty, Popper) {
       container.appendChild(selectedPanel);
       container.appendChild(dropDownMenu);
+      var skipFocusout = false; // we want to escape the closing of the menu on a user's click inside the container
+
+      var containerMousedown = function containerMousedown() {
+        skipFocusout = true;
+      };
+
+      var documentMouseup = function documentMouseup(event) {
+        // if click outside container - close dropdown
+        if (!(container === event.target || container.contains(event.target))) {
+          hideDropDownAndResetFilter();
+        }
+      };
+
       var popper = new Popper(filterInputItem, dropDownMenu, {
         placement: 'bottom-start',
         modifiers: {
@@ -573,6 +573,22 @@
         alignAndShowDropDown: alignAndShowDropDown,
         setPreventDefaultMultiSelectEvent: function setPreventDefaultMultiSelectEvent(event) {
           preventDefaultClickEvent = event;
+        },
+        onDropDownShow: function onDropDownShow() {
+          // add listeners that manages close dropdown on input's focusout and click outside container
+          //container.removeEventListener("mousedown", containerMousedown);
+          container.addEventListener("mousedown", containerMousedown);
+          document.addEventListener("mouseup", documentMouseup);
+        },
+        onDropDownHide: function onDropDownHide() {
+          container.removeEventListener("mousedown", containerMousedown);
+          document.removeEventListener("mouseup", documentMouseup);
+        },
+        getSkipFocusout: function getSkipFocusout() {
+          return skipFocusout;
+        },
+        resetSkipFocusout: function resetSkipFocusout() {
+          skipFocusout = false;
         }
       };
     }
@@ -849,8 +865,7 @@
           }
         }
         if (isEmpty) this.processEmptyInput();else resetLength();
-        this.optionsPanel.setInShowDropDown();
-        this.optionsPanel.resetDropDownMenuHover();
+        this.optionsPanel.stopAndResetDropDownMenuHover();
 
         if (this.getVisibleMultiSelectDataList().length == 1) {
           this.optionsPanel.hoverInInternal(0);
@@ -886,18 +901,15 @@
           return _this3.styling.FocusIn(_this3.stylingComposite);
         }, // focus in - show dropdown
         function () {
-          if (!_this3.optionsPanel.getSkipFocusout()) // skip initiated by mouse click (we manage it different way)
+          if (!_this3.aspect.getSkipFocusout()) // skip initiated by mouse click (we manage it different way)
             {
               _this3.resetFilter(); // if do not do this we will return to filtered list without text filter in input
 
 
-              _this3.optionsPanel.resetDropDownMenuHover(); // if do not do this tab will select "only one hovered"
-
-
               _this3.styling.FocusOut(_this3.stylingComposite);
-
-              _this3.optionsPanel.resetSkipFocusout();
             }
+
+          _this3.aspect.resetSkipFocusout();
         }, // focus out - hide dropdown
         function () {
           return _this3.optionsPanel.keyDownArrow(false);
@@ -914,7 +926,7 @@
           _this3.aspect.alignToFilterInputItemLocation(false);
         }, // backspace - "remove last"
         function () {
-          return _this3.optionsPanel.toggleHovered();
+          if (_this3.optionsPanel.getIsVisble()) _this3.optionsPanel.toggleHovered();
         }, // tab/enter "compleate hovered"
         function () {
           _this3.optionsPanel.hideDropDown(); // always hide 1st
@@ -949,7 +961,11 @@
         this.selectedPanel = this.selectionsPanel.selectedPanel; // TODO remove
 
         this.filterInputItem = this.selectionsPanel.filterInputItem;
-        this.optionsPanel = OptionsPanel(document, container, this.dropDownItemContent, this.styling, function () {
+        this.optionsPanel = OptionsPanel(createElement, function () {
+          return _this3.aspect.onDropDownShow();
+        }, function () {
+          return _this3.aspect.onDropDownHide();
+        }, this.dropDownItemContent, this.styling, function () {
           return _this3.getVisibleMultiSelectDataList();
         }, function () {
           return _this3.resetFilter();
@@ -960,6 +976,10 @@
         });
         this.aspect = MultiSelectInputAspect(document, this.optionsAdapter.container, this.selectionsPanel.selectedPanel, this.selectionsPanel.filterInputItem, this.optionsPanel.dropDownMenu, function () {
           return _this3.optionsPanel.showDropDown();
+        }, function () {
+          _this3.optionsPanel.hideDropDown();
+
+          _this3.resetFilter();
         }, function () {
           return _this3.getVisibleMultiSelectDataList().length == 0;
         }, Popper);

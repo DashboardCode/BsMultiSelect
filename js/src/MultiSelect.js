@@ -310,9 +310,8 @@ class MultiSelect {
         else
             resetLength();  
         
-        this.optionsPanel.setInShowDropDown();
-
-        this.optionsPanel.resetDropDownMenuHover();
+        
+        this.optionsPanel.stopAndResetDropDownMenuHover();
         if (this.getVisibleMultiSelectDataList().length == 1) {
             this.optionsPanel.hoverInInternal(0)
         }
@@ -342,13 +341,12 @@ class MultiSelect {
             },
             () => this.styling.FocusIn(this.stylingComposite),  // focus in - show dropdown
             () => {
-                if (!this.optionsPanel.getSkipFocusout()) // skip initiated by mouse click (we manage it different way)
+                if (!this.aspect.getSkipFocusout()) // skip initiated by mouse click (we manage it different way)
                 {
                     this.resetFilter(); // if do not do this we will return to filtered list without text filter in input
-                    this.optionsPanel.resetDropDownMenuHover(); // if do not do this tab will select "only one hovered"
                     this.styling.FocusOut(this.stylingComposite)
-                    this.optionsPanel.resetSkipFocusout();
                 }
+                this.aspect.resetSkipFocusout();
             }, // focus out - hide dropdown
             () => this.optionsPanel.keyDownArrow(false), // arrow up
             () => this.optionsPanel.keyDownArrow(true),  // arrow down
@@ -357,7 +355,9 @@ class MultiSelect {
                 this.selectionsPanel.removeSelectedTail();
                 this.aspect.alignToFilterInputItemLocation(false);
             }, // backspace - "remove last"
-            () => this.optionsPanel.toggleHovered(), // tab/enter "compleate hovered"
+            () => { 
+                if (this.optionsPanel.getIsVisble())
+                    this.optionsPanel.toggleHovered() }, // tab/enter "compleate hovered"
             () => {
                 this.optionsPanel.hideDropDown(); // always hide 1st
                 this.resetFilter();
@@ -392,8 +392,9 @@ class MultiSelect {
         this.filterInputItem = this.selectionsPanel.filterInputItem;
 
         this.optionsPanel = OptionsPanel(
-            document,
-            container,
+            createElement,
+            () => this.aspect.onDropDownShow(),
+            () => this.aspect.onDropDownHide(),
             this.dropDownItemContent,
             this.styling, 
             () => this.getVisibleMultiSelectDataList(),
@@ -408,8 +409,12 @@ class MultiSelect {
             this.selectionsPanel.selectedPanel, 
             this.selectionsPanel.filterInputItem, 
             this.optionsPanel.dropDownMenu, 
-            ()=> this.optionsPanel.showDropDown(),
-            ()=>this.getVisibleMultiSelectDataList().length==0, 
+            () => this.optionsPanel.showDropDown(),
+            () => {  
+                this.optionsPanel.hideDropDown();
+                this.resetFilter();
+            },
+            () => this.getVisibleMultiSelectDataList().length==0, 
             Popper
         );
 

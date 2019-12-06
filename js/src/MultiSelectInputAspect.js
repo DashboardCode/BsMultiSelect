@@ -5,12 +5,27 @@ function MultiSelectInputAspect (
     filterInputItem, 
     dropDownMenu, 
     showDropDown,
+    hideDropDownAndResetFilter,
     isDropDownMenuEmpty,
     Popper
     ) {
 
     container.appendChild(selectedPanel);
     container.appendChild(dropDownMenu);
+
+    var skipFocusout = false;
+    
+    // we want to escape the closing of the menu on a user's click inside the container
+    var containerMousedown = function() {
+         skipFocusout = true;
+    }
+
+    var documentMouseup = function(event) {
+        // if click outside container - close dropdown
+        if (!(container === event.target || container.contains(event.target))) {
+            hideDropDownAndResetFilter();
+        }
+    }
 
     var popper = new Popper( 
         filterInputItem, 
@@ -55,6 +70,24 @@ function MultiSelectInputAspect (
         alignAndShowDropDown,
         setPreventDefaultMultiSelectEvent(event){
             preventDefaultClickEvent = event;
+        },
+        onDropDownShow(){
+            // add listeners that manages close dropdown on input's focusout and click outside container
+            //container.removeEventListener("mousedown", containerMousedown);
+
+            container.addEventListener("mousedown", containerMousedown);
+            document.addEventListener("mouseup", documentMouseup);
+            
+        },
+        onDropDownHide(){
+            container.removeEventListener("mousedown", containerMousedown);
+            document.removeEventListener("mouseup", documentMouseup);
+        },
+        getSkipFocusout : function() {
+             return skipFocusout;
+        },
+        resetSkipFocusout : function() {
+             skipFocusout=false;
         }
     }
 }
