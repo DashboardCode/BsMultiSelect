@@ -3,6 +3,7 @@ import FilterPanel from './FilterPanel.js'
 import OptionsPanel from './OptionsPanel.js'
 import SelectionsPanel from './SelectionsPanel.js'
 import MultiSelectInputAspect from './MultiSelectInputAspect.js'
+import EventSkipper from './EventSkipper.js'
 
 function filterMultiSelectData(MultiSelectData, isFiltered, visibleIndex) {
     MultiSelectData.visible = isFiltered;
@@ -63,9 +64,6 @@ class MultiSelect {
         this.configuration = configuration;
         this.onDispose = onDispose;
         this.window = window;
-        this.document = window.document;
-
-        //this.popper = null;
 
         this.visibleCount=10;
 
@@ -75,14 +73,8 @@ class MultiSelect {
 
         this.stylingComposite = null;
 
-        // removable handlers
-        this.documentMouseup = null;
-        this.containerMousedown = null;
-
-        // state
         this.isComponentDisabled = null;
-        this.filterInputItemOffsetLeft = null; // used to detect changes in input field position (by comparision with current value)
-        
+                
         this.resetMultiSelectDataList();
     }
 
@@ -325,7 +317,7 @@ class MultiSelect {
     }
 
     init() {
-        var document = this.document;
+        var document = this.window.document;
         var createElement = (name) => document.createElement(name);
         let container = this.optionsAdapter.container;
 
@@ -379,12 +371,11 @@ class MultiSelect {
             },
             (event) => {
                 if (!this.filterPanel.isEventTarget(event))
-                    this.filterPanel.setFocus();
+                     this.filterPanel.setFocus();
                 this.aspect.alignAndShowDropDown(event);
             },
-            (f, event) => {
-                this.window.setTimeout(()=>f(),0)
-                this.aspect.setPreventDefaultMultiSelectEvent(event)
+            (doUncheck, event) => {
+                this.aspect.processUncheck(doUncheck, event);
             }
         );
         
@@ -395,6 +386,7 @@ class MultiSelect {
             createElement,
             () => this.aspect.onDropDownShow(),
             () => this.aspect.onDropDownHide(),
+            EventSkipper(this.window),
             this.dropDownItemContent,
             this.styling, 
             () => this.getVisibleMultiSelectDataList(),
@@ -404,8 +396,9 @@ class MultiSelect {
         );
 
         this.aspect =  MultiSelectInputAspect(
+            this.window,
             document,
-            this.optionsAdapter.container, 
+            container, 
             this.selectionsPanel.selectedPanel, 
             this.selectionsPanel.filterInputItem, 
             this.optionsPanel.dropDownMenu, 
@@ -428,9 +421,6 @@ class MultiSelect {
 
         if (this.optionsAdapter.afterContainerFilled)
             this.optionsAdapter.afterContainerFilled();
-
-
-        
         
         this.styling.UpdateIsValid(this.stylingComposite, this.optionsAdapter.getIsValid(), this.optionsAdapter.getIsInvalid());
         

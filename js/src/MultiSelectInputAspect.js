@@ -1,4 +1,5 @@
 function MultiSelectInputAspect (
+    window,
     document, 
     container, 
     selectedPanel, 
@@ -40,7 +41,7 @@ function MultiSelectInputAspect (
         }
     );
 
-    var filterInputItemOffsetLeft = null;
+    var filterInputItemOffsetLeft = null; // used to detect changes in input field position (by comparision with current value)
     var preventDefaultClickEvent = null;
 
     function alignAndShowDropDown(event){
@@ -68,8 +69,12 @@ function MultiSelectInputAspect (
         },
         alignToFilterInputItemLocation,
         alignAndShowDropDown,
-        setPreventDefaultMultiSelectEvent(event){
-            preventDefaultClickEvent = event;
+        processUncheck(){
+            // we can't remove item on "click" in the same loop iteration - it is unfrendly for 3PP event handlers (they will get detached element)
+            // never remove elements in the same event iteration
+
+            window.setTimeout(()=>uncheckOption(),0)
+            preventDefaultClickEvent = event; // setPreventDefaultMultiSelectEvent
         },
         onDropDownShow(){
             // add listeners that manages close dropdown on input's focusout and click outside container

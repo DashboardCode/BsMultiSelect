@@ -1,5 +1,5 @@
 /*!
-  * DashboardCode BsMultiSelect v0.4.9 (https://dashboardcode.github.io/BsMultiSelect/)
+  * DashboardCode BsMultiSelect v0.4.10 (https://dashboardcode.github.io/BsMultiSelect/)
   * Copyright 2017-2019 Roman Pokrovskij (github user rpokrovskij)
   * Licensed under APACHE 2 (https://github.com/DashboardCode/BsMultiSelect/blob/master/LICENSE)
   */
@@ -123,7 +123,7 @@
       s.listStyleType = 'none';
     }
 
-    function OptionsPanel(createElement, onShow, onHide, dropDownItemContent, styling, getVisibleMultiSelectDataList, resetFilter, updateDropDownLocation, filterPanelSetFocus) {
+    function OptionsPanel(createElement, onShow, onHide, eventSkipper, dropDownItemContent, styling, getVisibleMultiSelectDataList, resetFilter, updateDropDownLocation, filterPanelSetFocus) {
       var dropDownMenu = createElement('UL');
       dropDownMenu.style.display = "none"; // prevent heavy understandable styling error
 
@@ -131,14 +131,6 @@
       var hoveredMultiSelectData = null;
       var hoveredMultiSelectDataIndex = null;
       var candidateToHoveredMultiSelectData = null;
-      var inShowDropDown = false;
-
-      function setInShowDropDown() {
-        inShowDropDown = true;
-        setTimeout(function () {
-          inShowDropDown = null;
-        }, 0);
-      }
 
       function hideDropDown() {
         if (candidateToHoveredMultiSelectData) {
@@ -153,7 +145,7 @@
 
       function showDropDown() {
         if (dropDownMenu.style.display != 'block') {
-          setInShowDropDown();
+          eventSkipper.setSkippable();
           dropDownMenu.style.display = 'block';
           onShow();
         }
@@ -238,7 +230,7 @@
       }
 
       var onDropDownMenuItemElementMouseoverGeneral = function onDropDownMenuItemElementMouseoverGeneral(MultiSelectData, dropDownMenuItemElement) {
-        if (inShowDropDown) {
+        if (eventSkipper.isSkippable()) {
           if (candidateToHoveredMultiSelectData) resetCandidateToHoveredMultiSelectData();
           candidateToHoveredMultiSelectData = MultiSelectData;
           dropDownMenuItemElement.addEventListener('mousemove', processCandidateToHovered);
@@ -268,7 +260,7 @@
         // note 2: since I want add aditional info panels to the dropdown put mouseleave on dropdwon would not work
 
         var onDropDownMenuItemElementMouseleave = function onDropDownMenuItemElementMouseleave() {
-          if (!inShowDropDown) {
+          if (!eventSkipper.isSkippable()) {
             resetDropDownMenuHover();
           }
         };
@@ -323,19 +315,13 @@
         dropDownMenu: dropDownMenu,
         hoverInInternal: hoverInInternal,
         stopAndResetDropDownMenuHover: function stopAndResetDropDownMenuHover() {
-          setInShowDropDown(); //disable Hover On MouseEnter - filter's changes should remove hover
+          eventSkipper.setSkippable(); //disable Hover On MouseEnter - filter's changes should remove hover
 
           resetDropDownMenuHover();
         },
         showDropDown: showDropDown,
         hideDropDown: hideDropDown,
         toggleHovered: toggleHovered,
-        // getSkipFocusout : function() {
-        //     return skipFocusout;
-        // },
-        // resetSkipFocusout : function() {
-        //     skipFocusout=false;
-        // },
         keyDownArrow: keyDownArrow,
         insertDropDownItem: insertDropDownItem,
         getIsVisble: function getIsVisble() {
@@ -355,16 +341,12 @@
       s.listStyleType = 'none';
     }
 
-    function SelectionsPanel(createElement, init, selectedItemContent, isComponentDisabled, triggerChange, onRemove, onClick, processRemoveButtonClick //,
-    //setTimeout
-    //trySetFilterPanelFocus,
-    //trySetOptionsPanelFocus
-    ) {
-      var selectedPanel = createElement('UL');
-      defSelectedPanelStyleSys(selectedPanel.style);
+    function SelectionsPanel(createElement, init, selectedItemContent, isComponentDisabled, triggerChange, onRemove, onClick, processRemoveButtonClick) {
+      var ulElement = createElement('UL');
+      defSelectedPanelStyleSys(ulElement.style);
       var filterInputItem = createElement('LI'); // detached
 
-      selectedPanel.appendChild(filterInputItem); // located filter in selectionsPanel
+      ulElement.appendChild(filterInputItem); // located filter in selectionsPanel
 
       init(filterInputItem);
       var MultiSelectDataSelectedTail = null;
@@ -425,7 +407,8 @@
           MultiSelectData.selectedItemElement = null;
           removeSelectedFromList(MultiSelectData);
           triggerChange();
-        }; // what is a problem with calling removeSelectedItem directly (not using  setTimeout(removeSelectedItem, 0)):
+        }; // processRemoveButtonClick removes the 
+        // what is a problem with calling removeSelectedItem directly (not using  setTimeout(removeSelectedItem, 0)):
         // consider situation "MultiSelect" on DROPDOWN (that should be closed on the click outside dropdown)
         // therefore we aslo have document's click's handler where we decide to close or leave the DROPDOWN open.
         // because of the event's bubling process removeSelectedItem runs first. 
@@ -461,7 +444,7 @@
         //MultiSelectData.remove  = removeSelectedItemAndCloseDropDown;
 
         MultiSelectData.disable = disable;
-        selectedPanel.insertBefore(selectedItemElement, filterInputItem);
+        ulElement.insertBefore(selectedItemElement, filterInputItem);
 
         MultiSelectData.toggle = function () {
           return removeSelectedItem();
@@ -484,7 +467,7 @@
       }
 
       var item = {
-        selectedPanel: selectedPanel,
+        selectedPanel: ulElement,
         filterInputItem: filterInputItem,
         insert: function insert(selectedItemElement) {
           this.selectedPanel.insertBefore(selectedItemElement, filterInputItem);
@@ -497,21 +480,21 @@
         enable: function enable() {
           filterInputItem.style.display = "list-item";
           iterateAll(false);
-          selectedPanel.addEventListener("click", selectedPanelClick);
+          ulElement.addEventListener("click", selectedPanelClick);
         },
         disable: function disable() {
           filterInputItem.style.display = "none";
           iterateAll(true);
-          selectedPanel.removeEventListener("click", selectedPanelClick);
+          ulElement.removeEventListener("click", selectedPanelClick);
         },
         dispose: function dispose() {
-          selectedPanel.removeEventListener("click", selectedPanelClick); // OPEN dropdown
+          ulElement.removeEventListener("click", selectedPanelClick); // OPEN dropdown
         }
       };
       return item;
     }
 
-    function MultiSelectInputAspect(document, container, selectedPanel, filterInputItem, dropDownMenu, showDropDown, hideDropDownAndResetFilter, isDropDownMenuEmpty, Popper) {
+    function MultiSelectInputAspect(window, document, container, selectedPanel, filterInputItem, dropDownMenu, showDropDown, hideDropDownAndResetFilter, isDropDownMenuEmpty, Popper) {
       container.appendChild(selectedPanel);
       container.appendChild(dropDownMenu);
       var skipFocusout = false; // we want to escape the closing of the menu on a user's click inside the container
@@ -541,7 +524,8 @@
           }
         }
       });
-      var filterInputItemOffsetLeft = null;
+      var filterInputItemOffsetLeft = null; // used to detect changes in input field position (by comparision with current value)
+
       var preventDefaultClickEvent = null;
 
       function alignAndShowDropDown(event) {
@@ -571,8 +555,13 @@
         },
         alignToFilterInputItemLocation: alignToFilterInputItemLocation,
         alignAndShowDropDown: alignAndShowDropDown,
-        setPreventDefaultMultiSelectEvent: function setPreventDefaultMultiSelectEvent(event) {
-          preventDefaultClickEvent = event;
+        processUncheck: function processUncheck() {
+          // we can't remove item on "click" in the same loop iteration - it is unfrendly for 3PP event handlers (they will get detached element)
+          // never remove elements in the same event iteration
+          window.setTimeout(function () {
+            return uncheckOption();
+          }, 0);
+          preventDefaultClickEvent = event; // setPreventDefaultMultiSelectEvent
         },
         onDropDownShow: function onDropDownShow() {
           // add listeners that manages close dropdown on input's focusout and click outside container
@@ -589,6 +578,21 @@
         },
         resetSkipFocusout: function resetSkipFocusout() {
           skipFocusout = false;
+        }
+      };
+    }
+
+    function EventSkipper(window) {
+      var _isSkippable = false;
+      return {
+        isSkippable: function isSkippable() {
+          return _isSkippable;
+        },
+        setSkippable: function setSkippable() {
+          _isSkippable = true;
+          window.setTimeout(function () {
+            _isSkippable = false;
+          }, 0);
         }
       };
     }
@@ -649,20 +653,12 @@
         this.configuration = configuration;
         this.onDispose = onDispose;
         this.window = window;
-        this.document = window.document; //this.popper = null;
-
         this.visibleCount = 10;
         this.selectionsPanel = null;
         this.filterInputItem = null;
         this.optionsPanel = null;
-        this.stylingComposite = null; // removable handlers
-
-        this.documentMouseup = null;
-        this.containerMousedown = null; // state
-
+        this.stylingComposite = null;
         this.isComponentDisabled = null;
-        this.filterInputItemOffsetLeft = null; // used to detect changes in input field position (by comparision with current value)
-
         this.resetMultiSelectDataList();
       }
 
@@ -883,7 +879,7 @@
       _proto.init = function init() {
         var _this3 = this;
 
-        var document = this.document;
+        var document = this.window.document;
 
         var createElement = function createElement(name) {
           return document.createElement(name);
@@ -951,12 +947,8 @@
           if (!_this3.filterPanel.isEventTarget(event)) _this3.filterPanel.setFocus();
 
           _this3.aspect.alignAndShowDropDown(event);
-        }, function (f, event) {
-          _this3.window.setTimeout(function () {
-            return f();
-          }, 0);
-
-          _this3.aspect.setPreventDefaultMultiSelectEvent(event);
+        }, function (doUncheck, event) {
+          _this3.aspect.processUncheck(doUncheck, event);
         });
         this.selectedPanel = this.selectionsPanel.selectedPanel; // TODO remove
 
@@ -965,7 +957,7 @@
           return _this3.aspect.onDropDownShow();
         }, function () {
           return _this3.aspect.onDropDownHide();
-        }, this.dropDownItemContent, this.styling, function () {
+        }, EventSkipper(this.window), this.dropDownItemContent, this.styling, function () {
           return _this3.getVisibleMultiSelectDataList();
         }, function () {
           return _this3.resetFilter();
@@ -974,7 +966,7 @@
         }, function () {
           return _this3.filterPanel.setFocus();
         });
-        this.aspect = MultiSelectInputAspect(document, this.optionsAdapter.container, this.selectionsPanel.selectedPanel, this.selectionsPanel.filterInputItem, this.optionsPanel.dropDownMenu, function () {
+        this.aspect = MultiSelectInputAspect(this.window, document, container, this.selectionsPanel.selectedPanel, this.selectionsPanel.filterInputItem, this.optionsPanel.dropDownMenu, function () {
           return _this3.optionsPanel.showDropDown();
         }, function () {
           _this3.optionsPanel.hideDropDown();

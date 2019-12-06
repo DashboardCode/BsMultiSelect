@@ -1,6 +1,6 @@
 function defDropDownMenuStyleSys(s) {s.listStyleType='none'}; // remove bullets since this is ul
 
-function OptionsPanel(createElement, onShow, onHide, dropDownItemContent, styling, 
+function OptionsPanel(createElement, onShow, onHide, eventSkipper, dropDownItemContent, styling, 
         getVisibleMultiSelectDataList, resetFilter, updateDropDownLocation, filterPanelSetFocus) {
     
     var dropDownMenu = createElement('UL');
@@ -11,15 +11,6 @@ function OptionsPanel(createElement, onShow, onHide, dropDownItemContent, stylin
     var hoveredMultiSelectData=null;
     var hoveredMultiSelectDataIndex = null;
     var candidateToHoveredMultiSelectData=null;
-
-    var inShowDropDown = false;
-                
-    function setInShowDropDown(){
-         inShowDropDown = true;
-         setTimeout( () => {  
-             inShowDropDown = null;
-         }, 0)
-    }    
 
     function hideDropDown() {
         if (candidateToHoveredMultiSelectData){
@@ -35,7 +26,7 @@ function OptionsPanel(createElement, onShow, onHide, dropDownItemContent, stylin
     function showDropDown() {
         if (dropDownMenu.style.display != 'block')
         {
-            setInShowDropDown();
+            eventSkipper.setSkippable();
             dropDownMenu.style.display = 'block';
             onShow();
         }
@@ -118,7 +109,7 @@ function OptionsPanel(createElement, onShow, onHide, dropDownItemContent, stylin
 
     var onDropDownMenuItemElementMouseoverGeneral = function(MultiSelectData, dropDownMenuItemElement)
     {
-        if (inShowDropDown)
+        if (eventSkipper.isSkippable())
         {
             if(candidateToHoveredMultiSelectData)
                 resetCandidateToHoveredMultiSelectData()
@@ -158,7 +149,7 @@ function OptionsPanel(createElement, onShow, onHide, dropDownItemContent, stylin
         // note 1: mouseleave preferred to mouseout - which fires on each descendant
         // note 2: since I want add aditional info panels to the dropdown put mouseleave on dropdwon would not work
         var onDropDownMenuItemElementMouseleave = () => {
-            if (!inShowDropDown)
+            if (!eventSkipper.isSkippable())
             {
                 resetDropDownMenuHover();
             }
@@ -225,18 +216,12 @@ function OptionsPanel(createElement, onShow, onHide, dropDownItemContent, stylin
         dropDownMenu,
         hoverInInternal,
         stopAndResetDropDownMenuHover(){
-            setInShowDropDown(); //disable Hover On MouseEnter - filter's changes should remove hover
+            eventSkipper.setSkippable(); //disable Hover On MouseEnter - filter's changes should remove hover
             resetDropDownMenuHover();
         },
         showDropDown,
         hideDropDown,
         toggleHovered,
-        // getSkipFocusout : function() {
-        //     return skipFocusout;
-        // },
-        // resetSkipFocusout : function() {
-        //     skipFocusout=false;
-        // },
         keyDownArrow,
         insertDropDownItem,
         getIsVisble(){

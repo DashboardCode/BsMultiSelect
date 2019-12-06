@@ -10,16 +10,13 @@ function SelectionsPanel (
     triggerChange, 
     onRemove,
     onClick,
-    processRemoveButtonClick//,
-    //setTimeout
-    //trySetFilterPanelFocus,
-    //trySetOptionsPanelFocus
+    processRemoveButtonClick
     ) 
     {
-    var selectedPanel = createElement('UL');
-    defSelectedPanelStyleSys(selectedPanel.style); 
+    var ulElement = createElement('UL');
+    defSelectedPanelStyleSys(ulElement.style); 
     var filterInputItem = createElement('LI'); // detached
-    selectedPanel.appendChild(filterInputItem); // located filter in selectionsPanel
+    ulElement.appendChild(filterInputItem); // located filter in selectionsPanel
 
     init(filterInputItem);
     var MultiSelectDataSelectedTail = null;
@@ -79,6 +76,7 @@ function SelectionsPanel (
             triggerChange();
         }
 
+        // processRemoveButtonClick removes the 
         // what is a problem with calling removeSelectedItem directly (not using  setTimeout(removeSelectedItem, 0)):
         // consider situation "MultiSelect" on DROPDOWN (that should be closed on the click outside dropdown)
         // therefore we aslo have document's click's handler where we decide to close or leave the DROPDOWN open.
@@ -113,7 +111,7 @@ function SelectionsPanel (
         MultiSelectData.excludedFromSearch = true; // all selected excluded from search
         //MultiSelectData.remove  = removeSelectedItemAndCloseDropDown;
         MultiSelectData.disable = disable;
-        selectedPanel.insertBefore(selectedItemElement, filterInputItem);
+        ulElement.insertBefore(selectedItemElement, filterInputItem);
 
 
         MultiSelectData.toggle = () => removeSelectedItem();
@@ -134,7 +132,7 @@ function SelectionsPanel (
     }
 
     var item = {
-        selectedPanel,
+        selectedPanel: ulElement,
         filterInputItem,
         insert(selectedItemElement){
             this.selectedPanel.insertBefore(selectedItemElement, filterInputItem);
@@ -147,17 +145,17 @@ function SelectionsPanel (
         enable(){
             filterInputItem.style.display = "list-item";
             iterateAll(false);
-            selectedPanel.addEventListener("click", selectedPanelClick);
+            ulElement.addEventListener("click", selectedPanelClick);
 
         },
         disable(){
             filterInputItem.style.display = "none";
             iterateAll(true);
-            selectedPanel.removeEventListener("click", selectedPanelClick);
+            ulElement.removeEventListener("click", selectedPanelClick);
 
         },
         dispose(){
-            selectedPanel.removeEventListener("click", selectedPanelClick); // OPEN dropdown
+            ulElement.removeEventListener("click", selectedPanelClick); // OPEN dropdown
         }
     }
     return item;
