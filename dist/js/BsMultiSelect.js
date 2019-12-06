@@ -1,5 +1,5 @@
 /*!
-  * DashboardCode BsMultiSelect v0.4.10 (https://dashboardcode.github.io/BsMultiSelect/)
+  * DashboardCode BsMultiSelect v0.4.11 (https://dashboardcode.github.io/BsMultiSelect/)
   * Copyright 2017-2019 Roman Pokrovskij (github user rpokrovskij)
   * Licensed under APACHE 2 (https://github.com/DashboardCode/BsMultiSelect/blob/master/LICENSE)
   */
@@ -555,7 +555,7 @@
         },
         alignToFilterInputItemLocation: alignToFilterInputItemLocation,
         alignAndShowDropDown: alignAndShowDropDown,
-        processUncheck: function processUncheck() {
+        processUncheck: function processUncheck(uncheckOption, event) {
           // we can't remove item on "click" in the same loop iteration - it is unfrendly for 3PP event handlers (they will get detached element)
           // never remove elements in the same event iteration
           window.setTimeout(function () {

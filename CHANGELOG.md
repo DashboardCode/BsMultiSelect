@@ -1,5 +1,6 @@
 # CHANGELOG
 ````
+0.4.10 - uncheck selected error has been solved
 0.4.9  - small optimizations.
 0.4.8  - x button on selected items in selections panel bug solved.
 0.4.7  - small problem solved: `mouseleave` event initated by new  filter (that rearrange menu item) resets the default hover (when only one item left by filter) 

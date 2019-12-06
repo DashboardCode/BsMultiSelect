@@ -69,7 +69,7 @@ function MultiSelectInputAspect (
         },
         alignToFilterInputItemLocation,
         alignAndShowDropDown,
-        processUncheck(){
+        processUncheck(uncheckOption, event){
             // we can't remove item on "click" in the same loop iteration - it is unfrendly for 3PP event handlers (they will get detached element)
             // never remove elements in the same event iteration
 
