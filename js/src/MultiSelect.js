@@ -55,7 +55,6 @@ class MultiSelect {
 
         // readonly
         this.optionsAdapter = optionsAdapter;
-        this.container = optionsAdapter.container; // part of published api
         this.styling = styling;
         this.selectedItemContent = selectedItemContent;
         this.dropDownItemContent = dropDownItemContent;
@@ -350,10 +349,14 @@ class MultiSelect {
             () => { 
                 if (this.optionsPanel.getIsVisble())
                     this.optionsPanel.toggleHovered() }, // tab/enter "compleate hovered"
+            (isEmpty, event) => {
+                if (!isEmpty || this.optionsPanel.getIsVisble()) // supports bs modal - stop esc (close modal) propogation
+                    event.stopPropagation();
+            }, // esc keydown
             () => {
                 this.optionsPanel.hideDropDown(); // always hide 1st
                 this.resetFilter();
-            }, // esc  
+            }, // esc keyup 
             (filterInputValue, resetLength) => this.input(filterInputValue, resetLength) // filter
         );
              

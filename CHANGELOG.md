@@ -1,5 +1,6 @@
 # CHANGELOG
 ````
+0.4.12 - esc first close the dropdown then modal (stopPropogation on keydown used)
 0.4.10 - uncheck selected error has been solved
 0.4.9  - small optimizations.
 0.4.8  - x button on selected items in selections panel bug solved.

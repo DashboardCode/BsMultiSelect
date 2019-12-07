@@ -186,6 +186,8 @@ Note, BS allready provide classes like: `h-25`, `bg-light`, `text-primary` that 
 
 * no 'smart tracking' of dynamic changes in options - do detach/attach at the end of changes (this is actally not a issue, but desing feature)
 
+* no form reset event support (related to previous)
+
 * no placeholder support (`data-placeholder` or smth like this)
 
 * `<fieldset disabled>` not supported;

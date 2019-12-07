@@ -1,5 +1,5 @@
 /*!
-  * DashboardCode BsMultiSelect v0.4.11 (https://dashboardcode.github.io/BsMultiSelect/)
+  * DashboardCode BsMultiSelect v0.4.12 (https://dashboardcode.github.io/BsMultiSelect/)
   * Copyright 2017-2019 Roman Pokrovskij (github user rpokrovskij)
   * Licensed under APACHE 2 (https://github.com/DashboardCode/BsMultiSelect/blob/master/LICENSE)
   */
@@ -25,7 +25,7 @@
     onKeyDownArrowUp, onKeyDownArrowDown, onTabForEmpty, // tab on empty
     onBackspace, // backspace alike
     onEnterOrTabToCompleate, // "compleate alike"
-    onEmptyEscape, // "esc" alike
+    onKeyDownEsc, onKeyUpEsc, // "esc" alike
     onInput // filter
     ) {
       var inputElement = createElement('INPUT');
@@ -36,10 +36,15 @@
 
       var onfilterInputKeyDown = function onfilterInputKeyDown(event) {
         if ([38, 40, 13, 27].indexOf(event.which) >= 0 || event.which == 9 && inputElement.value) {
-          event.preventDefault(); // for 9 it enables keyup
+          event.preventDefault(); // preventDefault for tab(9) it enables keyup,
+          // prevent form default button (13-enter) 
+          // but doesn't help with bootsrap modal ESC or ENTER (close behaviour);
+          // esc(27) there is just in case
         }
 
-        if (event.which == 38) {
+        if (event.which == 27) {
+          onKeyDownEsc(inputElement.value ? false : true, event); // support BS do not close modal - event.stopPropagation inside
+        } else if (event.which == 38) {
           onKeyDownArrowUp();
         } else if (event.which == 40) {
           onKeyDownArrowDown();
@@ -67,7 +72,7 @@
           onEnterOrTabToCompleate();
         } else if (event.which == 27) {
           // escape
-          onEmptyEscape();
+          onKeyUpEsc(); // is it always empty (bs x can still it) 
         }
       }; // it can be initated by 3PP functionality
       // sample (1) BS functionality - input x button click - clears input
@@ -643,8 +648,6 @@
 
 
         this.optionsAdapter = optionsAdapter;
-        this.container = optionsAdapter.container; // part of published api
-
         this.styling = styling;
         this.selectedItemContent = selectedItemContent;
         this.dropDownItemContent = dropDownItemContent;
@@ -924,12 +927,16 @@
         function () {
           if (_this3.optionsPanel.getIsVisble()) _this3.optionsPanel.toggleHovered();
         }, // tab/enter "compleate hovered"
+        function (isEmpty, event) {
+          if (!isEmpty || _this3.optionsPanel.getIsVisble()) // supports bs modal - stop esc (close modal) propogation
+            event.stopPropagation();
+        }, // esc keydown
         function () {
           _this3.optionsPanel.hideDropDown(); // always hide 1st
 
 
           _this3.resetFilter();
-        }, // esc  
+        }, // esc keyup 
         function (filterInputValue, resetLength) {
           return _this3.input(filterInputValue, resetLength);
         } // filter
