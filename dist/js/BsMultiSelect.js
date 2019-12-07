@@ -1,5 +1,5 @@
 /*!
-  * DashboardCode BsMultiSelect v0.4.12 (https://dashboardcode.github.io/BsMultiSelect/)
+  * DashboardCode BsMultiSelect v0.4.13 (https://dashboardcode.github.io/BsMultiSelect/)
   * Copyright 2017-2019 Roman Pokrovskij (github user rpokrovskij)
   * Licensed under APACHE 2 (https://github.com/DashboardCode/BsMultiSelect/blob/master/LICENSE)
   */
@@ -307,12 +307,7 @@
             createSelectedItem();
             triggerChange();
           };
-        } // TODO
-        // MultiSelectData.removeDropDownMenuItemElement = () => {
-        //     removeElement(dropDownMenuItemElement);
-        //     if (MultiSelectData.selectedItemElement!=null)
-        //         removeElement(MultiSelectData.selectedItemElement);
-        // }
+        } // TODO: refactore it
 
       }
 
@@ -734,7 +729,8 @@
 
         for (var i = 0; i < this.MultiSelectDataList.length; i++) {
           var multiSelectData = this.MultiSelectDataList[i];
-          if (multiSelectData.removeDropDownMenuItemElement) multiSelectData.removeDropDownMenuItemElement();
+          if (multiSelectData.dropDownMenuItemElement) removeElement(multiSelectData.dropDownMenuItemElement);
+          if (multiSelectData.selectedItemElement) removeElement(multiSelectData.selectedItemElement);
         }
 
         this.resetMultiSelectDataList();
@@ -989,6 +985,11 @@
         this.UpdateSize();
         this.UpdateDisabled();
         this.updateDataImpl();
+        if (this.optionsAdapter.subscribeToReset) this.optionsAdapter.subscribeToReset(function () {
+          return _this3.window.setTimeout(function () {
+            return _this3.UpdateData();
+          });
+        });
       };
 
       return MultiSelect;
@@ -1038,9 +1039,10 @@
       };
     }
 
-    function OptionsAdapterElement(selectElement, trigger) {
+    function OptionsAdapterElement(selectElement, trigger, form) {
       selectElement.style.display = 'none';
       var container = document.createElement('div');
+      var resetHanlder = null;
       return {
         container: container,
         getOptions: function getOptions() {
@@ -1048,6 +1050,7 @@
         },
         dispose: function dispose() {
           container.parentNode.removeChild(container);
+          if (form && resetHanlder) form.removeEventListener('reset', resetHanlder);
         },
         afterContainerFilled: function afterContainerFilled() {
           selectElement.parentNode.insertBefore(container, selectElement.nextSibling);
@@ -1064,6 +1067,10 @@
         },
         getIsInvalid: function getIsInvalid() {
           return selectElement.classList.contains('is-invalid');
+        },
+        subscribeToReset: function subscribeToReset(handler) {
+          resetHanlder = handler;
+          if (form) form.addEventListener('reset', resetHanlder);
         }
       };
     }
@@ -1430,7 +1437,14 @@
               }
             }
 
-            optionsAdapter = OptionsAdapterElement(element, trigger);
+            var $form = $(element).closest('form');
+            var form = null;
+
+            if ($form.length == 1) {
+              form = $form.get(0);
+            }
+
+            optionsAdapter = OptionsAdapterElement(element, trigger, form);
             if (!configuration.createInputId) configuration.createInputId = function () {
               return configuration.containerClass + "-generated-input-" + (element.id ? element.id : element.name).toLowerCase() + "-id";
             };

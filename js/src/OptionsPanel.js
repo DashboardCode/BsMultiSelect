@@ -149,8 +149,7 @@ function OptionsPanel(createElement, onShow, onHide, eventSkipper, dropDownItemC
         // note 1: mouseleave preferred to mouseout - which fires on each descendant
         // note 2: since I want add aditional info panels to the dropdown put mouseleave on dropdwon would not work
         var onDropDownMenuItemElementMouseleave = () => {
-            if (!eventSkipper.isSkippable())
-            {
+            if (!eventSkipper.isSkippable()) {
                 resetDropDownMenuHover();
             }
         }
@@ -204,12 +203,7 @@ function OptionsPanel(createElement, onShow, onHide, eventSkipper, dropDownItemC
                     triggerChange();
                 }
         }
-        // TODO
-        // MultiSelectData.removeDropDownMenuItemElement = () => {
-        //     removeElement(dropDownMenuItemElement);
-        //     if (MultiSelectData.selectedItemElement!=null)
-        //         removeElement(MultiSelectData.selectedItemElement);
-        // }
+        // TODO: refactore it
     }
 
     var item = {

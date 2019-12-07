@@ -71,7 +71,9 @@ For keyboard events `preventDefault` was used to
 
 **`<option hidden>`**: options with `hidden` property are ... hidden. You can't deselect them either. This is exactly how HTML5.2 works, but many other plugins show hidden options;
 
-**change event**: subscribe to original `select` change event;
+**change event**: you can subscribe to original `select` change event;
+
+**form reset**: integrated with HTML Form reset functionality - button type='reset' renew the selected list;  
 
 **`<label>`**: Click on the label puts focus on input and opens the dropdown;
 
@@ -185,8 +187,6 @@ Note, BS allready provide classes like: `h-25`, `bg-light`, `text-primary` that 
 * Tested only for IE11, Chrome 66, Edge 42/17; Browser should support 'display':'flex' (IE 9 doesn't); 
 
 * no 'smart tracking' of dynamic changes in options - do detach/attach at the end of changes (this is actally not a issue, but desing feature)
-
-* no form reset event support (related to previous)
 
 * no placeholder support (`data-placeholder` or smth like this)
 

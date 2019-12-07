@@ -20,14 +20,17 @@ function OptionsAdapterJson(container, options, getDisabled, getIsValid, getIsIn
     }
 }
 
-function OptionsAdapterElement(selectElement, trigger) {
+function OptionsAdapterElement(selectElement, trigger, form) {
     selectElement.style.display='none';
     var container = document.createElement('div');
+    var resetHanlder = null;
     return {
         container,
         getOptions(){return selectElement.getElementsByTagName('OPTION')},
         dispose(){
             container.parentNode.removeChild(container);
+            if (form && resetHanlder)
+                form.removeEventListener('reset', resetHanlder);
         },
         afterContainerFilled(){
             selectElement.parentNode.insertBefore(container, selectElement.nextSibling);
@@ -44,6 +47,11 @@ function OptionsAdapterElement(selectElement, trigger) {
         },
         getIsInvalid(){
             return selectElement.classList.contains('is-invalid');
+        },
+        subscribeToReset(handler){
+            resetHanlder = handler;
+            if (form)
+                form.addEventListener('reset',resetHanlder);
         }
     }
 }

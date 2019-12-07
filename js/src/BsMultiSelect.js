@@ -56,9 +56,14 @@ import { Bs4DropDownItemContent, Bs4DropDownItemContentStylingMethodJs, Bs4DropD
                                 }   
                             }
                         }
-                        optionsAdapter = OptionsAdapterElement(element, trigger);
+                        var $form = $(element).closest('form');
+                        var form = null;
+                        if ($form.length == 1) {
+                            form = $form.get(0);
+                        }
+                        optionsAdapter = OptionsAdapterElement(element, trigger, form);
                         if (!configuration.createInputId)
-                            configuration.createInputId=()=>`${configuration.containerClass}-generated-input-${((element.id)?element.id:element.name).toLowerCase()}-id`;
+                            configuration.createInputId = () => `${configuration.containerClass}-generated-input-${((element.id)?element.id:element.name).toLowerCase()}-id`;
                     }
                 }
 

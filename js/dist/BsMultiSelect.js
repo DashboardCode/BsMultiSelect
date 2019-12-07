@@ -44,7 +44,14 @@ import { Bs4DropDownItemContent, Bs4DropDownItemContentStylingMethodJs, Bs4DropD
           }
         }
 
-        optionsAdapter = OptionsAdapterElement(element, trigger);
+        var $form = $(element).closest('form');
+        var form = null;
+
+        if ($form.length == 1) {
+          form = $form.get(0);
+        }
+
+        optionsAdapter = OptionsAdapterElement(element, trigger, form);
         if (!configuration.createInputId) configuration.createInputId = function () {
           return "".concat(configuration.containerClass, "-generated-input-").concat((element.id ? element.id : element.name).toLowerCase(), "-id");
         };

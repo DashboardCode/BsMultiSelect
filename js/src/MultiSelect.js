@@ -4,6 +4,7 @@ import OptionsPanel from './OptionsPanel.js'
 import SelectionsPanel from './SelectionsPanel.js'
 import MultiSelectInputAspect from './MultiSelectInputAspect.js'
 import EventSkipper from './EventSkipper.js'
+import removeElement from './removeElement.js'
 
 function filterMultiSelectData(MultiSelectData, isFiltered, visibleIndex) {
     MultiSelectData.visible = isFiltered;
@@ -163,8 +164,10 @@ class MultiSelect {
         for(let i=0; i<this.MultiSelectDataList.length; i++)
         {
             let multiSelectData = this.MultiSelectDataList[i];
-            if (multiSelectData.removeDropDownMenuItemElement)
-                multiSelectData.removeDropDownMenuItemElement();
+            if (multiSelectData.dropDownMenuItemElement)
+                removeElement(multiSelectData.dropDownMenuItemElement);
+            if (multiSelectData.selectedItemElement)
+                removeElement(multiSelectData.selectedItemElement);
         }
         this.resetMultiSelectDataList();
         this.selectionsPanel.resetMultiSelectDataSelectedTail();// this.MultiSelectDataSelectedTail = null;
@@ -431,6 +434,9 @@ class MultiSelect {
         this.UpdateDisabled();
         
         this.updateDataImpl();
+
+        if (this.optionsAdapter.subscribeToReset)
+            this.optionsAdapter.subscribeToReset(()=> this.window.setTimeout( ()=>this.UpdateData() ) );
     }
 }
 

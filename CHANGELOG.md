@@ -1,5 +1,6 @@
 # CHANGELOG
 ````
+0.4.13 - form reset support, UpdateData method to push changes in options to component.
 0.4.12 - esc first close the dropdown then modal (stopPropogation on keydown used)
 0.4.10 - uncheck selected error has been solved
 0.4.9  - small optimizations.
