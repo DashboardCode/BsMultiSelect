@@ -1,5 +1,5 @@
 /*!
-  * DashboardCode BsMultiSelect v0.4.13 (https://dashboardcode.github.io/BsMultiSelect/)
+  * DashboardCode BsMultiSelect v0.4.14 (https://dashboardcode.github.io/BsMultiSelect/)
   * Copyright 2017-2019 Roman Pokrovskij (github user rpokrovskij)
   * Licensed under APACHE 2 (https://github.com/DashboardCode/BsMultiSelect/blob/master/LICENSE)
   */
@@ -684,6 +684,10 @@
         this.filteredMultiSelectDataList = null;
       } // -----------------------------------------------------------------------------------------------------------------------
       ;
+
+      _proto.GetContainer = function GetContainer() {
+        return this.optionsAdapter.container;
+      };
 
       _proto.Update = function Update() {
         this.styling.UpdateIsValid(this.stylingComposite, this.optionsAdapter.getIsValid(), this.optionsAdapter.getIsInvalid());

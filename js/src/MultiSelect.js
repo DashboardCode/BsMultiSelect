@@ -105,6 +105,10 @@ class MultiSelect {
     }
 
     // -----------------------------------------------------------------------------------------------------------------------
+    GetContainer(){
+        return this.optionsAdapter.container;
+    }
+    
     Update(){
         this.styling.UpdateIsValid(this.stylingComposite, this.optionsAdapter.getIsValid(), this.optionsAdapter.getIsInvalid());
         this.UpdateSize();
