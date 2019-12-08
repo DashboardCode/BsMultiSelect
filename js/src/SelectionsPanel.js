@@ -106,7 +106,6 @@ function SelectionsPanel (
         var disable = (isDisabled) =>
             MultiSelectData.SelectedItemContent.disable(isDisabled);
         disable(isComponentDisabled);
-
         MultiSelectData.option.selected = true;
         MultiSelectData.excludedFromSearch = true; // all selected excluded from search
         //MultiSelectData.remove  = removeSelectedItemAndCloseDropDown;
@@ -143,12 +142,14 @@ function SelectionsPanel (
             MultiSelectDataSelectedTail = null;
         },
         enable(){
+            isComponentDisabled= false;
             filterInputItem.style.display = "list-item";
             iterateAll(false);
             ulElement.addEventListener("click", selectedPanelClick);
 
         },
         disable(){
+            isComponentDisabled= true;
             filterInputItem.style.display = "none";
             iterateAll(true);
             ulElement.removeEventListener("click", selectedPanelClick);

@@ -1,5 +1,7 @@
 # CHANGELOG
 ````
+0.4.16 - console output removed
+0.4.15 - bug resolved: x button (uncheck selected) on intially disabled component still works
 0.4.14 - breaking change: now "GetContainer" returns container div (field .container removed)
 0.4.13 - form reset support, UpdateData method to push changes in options to component.
 0.4.12 - esc first close the dropdown then modal (stopPropogation on keydown used)

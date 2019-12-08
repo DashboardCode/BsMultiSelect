@@ -108,7 +108,7 @@ class MultiSelect {
     GetContainer(){
         return this.optionsAdapter.container;
     }
-    
+
     Update(){
         this.styling.UpdateIsValid(this.stylingComposite, this.optionsAdapter.getIsValid(), this.optionsAdapter.getIsInvalid());
         this.UpdateSize();
@@ -435,9 +435,10 @@ class MultiSelect {
         this.styling.UpdateIsValid(this.stylingComposite, this.optionsAdapter.getIsValid(), this.optionsAdapter.getIsInvalid());
         
         this.UpdateSize();
-        this.UpdateDisabled();
-        
+        this.UpdateDisabled(); // should be done after updateDataImpl
         this.updateDataImpl();
+        
+        
 
         if (this.optionsAdapter.subscribeToReset)
             this.optionsAdapter.subscribeToReset(()=> this.window.setTimeout( ()=>this.UpdateData() ) );

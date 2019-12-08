@@ -47,8 +47,10 @@ function Bs4SelectedItemContent(stylingMethod, configuration, $) {
             $selectedItem.addClass(configuration.selectedItemClass);
             let $content = $(`<span/>`).text(optionItem.text);
             $content.appendTo($selectedItem);
-            if (optionItem.disabled)
+            if (optionItem.disabled ){
                 stylingMethod.disableSelectedItemContent($content);
+            }
+
             let $button = $('<button aria-label="Close" tabIndex="-1" type="button"><span aria-hidden="true">&times;</span></button>')
                 // bs 'close' class that will be added to button set the float:right, therefore it impossible to configure no-warp policy 
                 // with .css("white-space", "nowrap") or  .css("display", "inline-block"); TODO: migrate to flex? 
@@ -58,7 +60,6 @@ function Bs4SelectedItemContent(stylingMethod, configuration, $) {
                     jqEvent =>    
                         removeSelectedItem(jqEvent.originalEvent)
                     );
-            
             if (stylingMethod.createSelectedItemContent)
                 stylingMethod.createSelectedItemContent($selectedItem, $button);
             return {

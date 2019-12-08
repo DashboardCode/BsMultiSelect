@@ -1,5 +1,5 @@
 /*!
-  * DashboardCode BsMultiSelect v0.4.14 (https://dashboardcode.github.io/BsMultiSelect/)
+  * DashboardCode BsMultiSelect v0.4.16 (https://dashboardcode.github.io/BsMultiSelect/)
   * Copyright 2017-2019 Roman Pokrovskij (github user rpokrovskij)
   * Licensed under APACHE 2 (https://github.com/DashboardCode/BsMultiSelect/blob/master/LICENSE)
   */
@@ -478,11 +478,13 @@
           MultiSelectDataSelectedTail = null;
         },
         enable: function enable() {
+          isComponentDisabled = false;
           filterInputItem.style.display = "list-item";
           iterateAll(false);
           ulElement.addEventListener("click", selectedPanelClick);
         },
         disable: function disable() {
+          isComponentDisabled = true;
           filterInputItem.style.display = "none";
           iterateAll(true);
           ulElement.removeEventListener("click", selectedPanelClick);
@@ -987,7 +989,8 @@
         if (this.optionsAdapter.afterContainerFilled) this.optionsAdapter.afterContainerFilled();
         this.styling.UpdateIsValid(this.stylingComposite, this.optionsAdapter.getIsValid(), this.optionsAdapter.getIsInvalid());
         this.UpdateSize();
-        this.UpdateDisabled();
+        this.UpdateDisabled(); // should be done after updateDataImpl
+
         this.updateDataImpl();
         if (this.optionsAdapter.subscribeToReset) this.optionsAdapter.subscribeToReset(function () {
           return _this3.window.setTimeout(function () {
@@ -1318,7 +1321,11 @@
         $selectedItem.addClass(configuration.selectedItemClass);
         var $content = $("<span/>").text(optionItem.text);
         $content.appendTo($selectedItem);
-        if (optionItem.disabled) stylingMethod.disableSelectedItemContent($content);
+
+        if (optionItem.disabled) {
+          stylingMethod.disableSelectedItemContent($content);
+        }
+
         var $button = $('<button aria-label="Close" tabIndex="-1" type="button"><span aria-hidden="true">&times;</span></button>') // bs 'close' class that will be added to button set the float:right, therefore it impossible to configure no-warp policy 
         // with .css("white-space", "nowrap") or  .css("display", "inline-block"); TODO: migrate to flex? 
         .css("float", "none").appendTo($selectedItem).addClass(configuration.removeSelectedItemButtonClass) // bs close class set the float:right
