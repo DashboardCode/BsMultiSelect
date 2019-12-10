@@ -61,11 +61,25 @@ For keyboard events `preventDefault` was used to
     c) enter `13` to prvent default button action (submit etc.)
     d) esc `27` to not dublicate `clear text` functionlity 
 
+You will need to push changes on original `SELECT` (on `FIELDSET` `disabled`) with methods `UpdateIsValid`, `UpdateDisabled`, `UpdateSize`.
+
+````
+          $('#mySelect').bsMultiSelect("UpdateDisabled"); // bsMultiSelect call the method
+````
+
+Changes in data should be pushed with "Update" e.g.
+
+````
+          var bsMultiSelect = $('#mySelect').BsMultiSelect(); // BsMultiSelect return the object
+          bsMultiSelect.Update();
+````         
+     
+
 ## Features
 
 **multiline**: input can grow vertically;
 
-**disabled / readonly select**: although there is difference between those two attributes for `input`, the HTML 5.2 support only `disabled` for [`select`](https://www.w3.org/TR/2017/REC-html52-20171214/sec-forms.html#the-select-element) element. `Readonly` attribute on original `select` will be ignored;
+**SELECT disabled / readonly / FIELDSET disabled support**: although there is difference between those two attributes for `input`, the HTML 5.2 support only `disabled` for [`select`](https://www.w3.org/TR/2017/REC-html52-20171214/sec-forms.html#the-select-element) element. `Readonly` attribute on original `select` will be ignored;
 
 **`<option disabled selected>`**: option that is `disabled` and `selected` at the same time can be deselected but can't be selected again (just as it is in HTML `select` and unlike `chosen.js`);
 
@@ -75,11 +89,11 @@ For keyboard events `preventDefault` was used to
 
 **form reset**: integrated with HTML Form reset functionality - button type='reset' renew the selected list;  
 
-**`<label>`**: Click on the label puts focus on input and opens the dropdown;
+**`<label>`**: click on the label puts focus on input and opens the dropdown;
 
 **`<optgroup label=".." >`** grouped options will be flatten; there is no sense mixing "Browse Tree" and "Autosuggest popup" UI expirience. Even if it is possible, I consider this as true: "code that don't exist is infinitely performant and extremely easy to maintain and document." (c) Heydon Pickering;
 
-**Dialog and popup** works on Bootrap dialogs and dropdowns
+**dialog and popup** works on Bootrap dialogs and dropdowns
 
 **CSS and SCSS**: you can copy BsMultiSelect.css (included to distribution) and update values manually for your theme.
 Or you can use [./scss/BsMultiSelect.scss](https://github.com/DashboardCode/BsMultiSelect/blob/master/scss/BsMultiSelect.scss) copy it to your project and update reference to your custom BS variables in yout theme); these requires such configuration:
@@ -190,28 +204,23 @@ Note, BS allready provide classes like: `h-25`, `bg-light`, `text-primary` that 
 
 * no placeholder support (`data-placeholder` or smth like this)
 
-* `<fieldset disabled>` not supported;
-
 * no rtl (right to left) - as the whole Boostrap 4;
 
-* no max selected, no "no result" message on empty filter, no ajax as source (but js object coule be a source)
+* no max selected, no "no result" message on empty filter;
 
-* no smart disabling on mobile devices (do it manually)
+* no smart disabling on mobile devices (do it manually);
 
-* Usually you still need css to patch some plugin element's styles to fix unexpected theme effects (e.g. in dark themes BS close button could be made white by theme, when you not expect it, then `.badge > close {color:black;}` fix the problem );
+* usually you still need css to patch some plugin element's styles to fix unexpected theme effects (e.g. in dark themes BS close button could be made white by theme, when you not expect it, then `.badge > close {color:black;}` fix the problem );
 
-* Memory leaks: as I see there is soemthing like several KB memory leak (that can be ignored since as I know every jquery plugin "attach/detach" have same effects) on each attach/detach (compiled objects, not nodes) but I can't identify its source (jquery, bootstrap utilities?). If you have knowledge to solve this puzzle: try yourself and experiment with attach/detach and memory snapshots there https://dashboardcode.github.io/BsMultiSelect/ 
+* memory leaks: as I see there is soemthing like several KB memory leak (that can be ignored since as I know every jquery plugin "attach/detach" have same effects) on each attach/detach (compiled objects, not nodes) but I can't identify its source (jquery, bootstrap utilities?). If you have knowledge to solve this puzzle: try yourself and experiment with attach/detach and memory snapshots there https://dashboardcode.github.io/BsMultiSelect/ ;
 
-* autosuggestions's list could be too long if your filter is weak (and items number in it is not configurable)
+* autosuggestions's list could be too long if your filter is weak (and items number in it is not configurable).
 
 
 ### Future development
 
 Actually plugin is ready for BS 5 that means for "no jquery". 
-Almost ready "option refresh" and "whole data refresh" without the "attach/detach".
-The default dropdown menu (when filter is empty) and limitation of sizes should be provided next.
-Then going to move it to other frameworks: please suggest your options.
-Biggest analytical problem : should it be splitted to several npm packages. Please contact me if you want to discuss it.  
+The default dropdown menu (when filter is empty) and limitation of sizes should be provided also.
 
 ### Alternatives:
 

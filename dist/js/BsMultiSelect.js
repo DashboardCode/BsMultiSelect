@@ -1,5 +1,5 @@
 /*!
-  * DashboardCode BsMultiSelect v0.4.16 (https://dashboardcode.github.io/BsMultiSelect/)
+  * DashboardCode BsMultiSelect v0.4.17 (https://dashboardcode.github.io/BsMultiSelect/)
   * Copyright 2017-2019 Roman Pokrovskij (github user rpokrovskij)
   * Licensed under APACHE 2 (https://github.com/DashboardCode/BsMultiSelect/blob/master/LICENSE)
   */
@@ -641,8 +641,10 @@
       function MultiSelect(optionsAdapter, styling, selectedItemContent, dropDownItemContent, labelAdapter, createStylingComposite, configuration, onDispose, window) {
         if (typeof Popper === 'undefined') {
           throw new TypeError('DashboardCode BsMultiSelect require Popper.js (https://popper.js.org)');
-        } // readonly
+        }
 
+        this.onDispose = onDispose; // public
+        // readonly
 
         this.optionsAdapter = optionsAdapter;
         this.styling = styling;
@@ -651,7 +653,6 @@
         this.labelAdapter = labelAdapter;
         this.createStylingComposite = createStylingComposite;
         this.configuration = configuration;
-        this.onDispose = onDispose;
         this.window = window;
         this.visibleCount = 10;
         this.selectionsPanel = null;
@@ -692,42 +693,59 @@
       };
 
       _proto.Update = function Update() {
-        this.styling.UpdateIsValid(this.stylingComposite, this.optionsAdapter.getIsValid(), this.optionsAdapter.getIsInvalid());
+        this.UpdateIsValid();
         this.UpdateSize();
         this.UpdateDisabled();
-      };
-
-      _proto.UpdateOption = function UpdateOption(index) {
-        var _this = this;
-
-        var multiSelectData = this.MultiSelectDataList[index];
-        var option = multiSelectData.option;
-        multiSelectData.searchText = option.text.toLowerCase().trim();
-
-        if (multiSelectData.isHidden != option.isHidden) {
-          multiSelectData.isHidden = option.isHidden;
-          if (multiSelectData.isHidden) this.optionsPanel.insertDropDownItem(multiSelectData, function (p1, p2, p3) {
-            return _this.selectionsPanel.createSelectedItem(p1, p2, p3);
-          }, function () {
-            return _this.optionsAdapter.triggerChange();
-          }, option.isSelected, option.isDisabled);else multiSelectData.removeDropDownMenuItemElement();
-        } else {
-          if (multiSelectData.isSelected != option.isSelected) {
-            multiSelectData.isSelected = option.isSelected;
-
-            if (multiSelectData.isSelected) ;
+        this.UpdateData();
+      }
+      /*
+      UpdateOption(index){
+          let multiSelectData = this.MultiSelectDataList[index];
+          let option = multiSelectData.option;
+          multiSelectData.searchText = option.text.toLowerCase().trim();
+          if (multiSelectData.isHidden != option.isHidden)
+          {
+              multiSelectData.isHidden=option.isHidden;
+              if (multiSelectData.isHidden)
+                  this.optionsPanel.insertDropDownItem(multiSelectData, 
+                      (p1,p2,p3)=>this.selectionsPanel.createSelectedItem(p1,p2,p3),
+                      ()=>this.optionsAdapter.triggerChange(),
+                      option.isSelected, option.isDisabled);
+              else
+                  multiSelectData.removeDropDownMenuItemElement();
           }
+          else 
+          {
+              if (multiSelectData.isSelected != option.isSelected)
+              {
+                  multiSelectData.isSelected=option.isSelected;
+                  if (multiSelectData.isSelected)
+                  {
+                      // this.insertDropDownItem(multiSelectData, (e)=>this.dropDownMenu.appendChild(e), isSelected, isDisabled);
+                  }
+                  else
+                  {
+                      // multiSelectData.removeDropDownMenuItemElement();
+                  }
+              }
+              if (multiSelectData.isDisabled != option.isDisabled)
+              {
+                  multiSelectData.isDisabled=option.isDisabled;
+                  if (multiSelectData.isDisabled)
+                  {
+                      // this.insertDropDownItem(multiSelectData, (e)=>this.dropDownMenu.appendChild(e), isSelected, isDisabled);
+                  }
+                  else
+                  {
+                      // multiSelectData.removeDropDownMenuItemElement();
+                  }
+              }
+          }    
+          //multiSelectData.updateOption();
+      }*/
+      ;
 
-          if (multiSelectData.isDisabled != option.isDisabled) {
-            multiSelectData.isDisabled = option.isDisabled;
-
-            if (multiSelectData.isDisabled) ;
-          }
-        } //multiSelectData.updateOption();
-
-      };
-
-      _proto.UpdateData = function UpdateData() {
+      _proto.Empty = function Empty() {
         // close drop down , remove filter and listeners
         this.optionsPanel.hideDropDown(); // always hide 1st
 
@@ -741,16 +759,19 @@
 
         this.resetMultiSelectDataList();
         this.selectionsPanel.resetMultiSelectDataSelectedTail(); // this.MultiSelectDataSelectedTail = null;
-        // reinitiate
+      };
+
+      _proto.UpdateData = function UpdateData() {
+        this.Empty(); // reinitiate
 
         this.updateDataImpl();
       };
 
       _proto.updateDataImpl = function updateDataImpl() {
-        var _this2 = this;
+        var _this = this;
 
         var createDropDownItems = function createDropDownItems() {
-          var options = _this2.optionsAdapter.getOptions();
+          var options = _this.optionsAdapter.getOptions();
 
           for (var i = 0; i < options.length; i++) {
             var option = options[i];
@@ -774,21 +795,21 @@
               removeDropDownMenuItemElement: null
             };
 
-            _this2.MultiSelectDataList.push(MultiSelectData);
+            _this.MultiSelectDataList.push(MultiSelectData);
 
             if (!isHidden) {
               MultiSelectData.visible = true;
               MultiSelectData.visibleIndex = i;
 
-              _this2.optionsPanel.insertDropDownItem(MultiSelectData, function (p1, p2, p3) {
-                return _this2.selectionsPanel.createSelectedItem(p1, p2, p3);
+              _this.optionsPanel.insertDropDownItem(MultiSelectData, function (p1, p2, p3) {
+                return _this.selectionsPanel.createSelectedItem(p1, p2, p3);
               }, function () {
-                return _this2.optionsAdapter.triggerChange();
+                return _this.optionsAdapter.triggerChange();
               }, isSelected, isDisabled);
             }
           }
 
-          _this2.aspect.alignToFilterInputItemLocation(false);
+          _this.aspect.alignToFilterInputItemLocation(false);
         }; // some browsers (IE11) can change select value (as part of "autocomplete") after page is loaded but before "ready" event
 
 
@@ -829,6 +850,10 @@
 
       _proto.UpdateSize = function UpdateSize() {
         if (this.styling.UpdateSize) this.styling.UpdateSize(this.stylingComposite);
+      };
+
+      _proto.UpdateIsValid = function UpdateIsValid() {
+        if (this.styling.UpdateIsValid) this.styling.UpdateIsValid(this.stylingComposite, this.optionsAdapter.getIsValid(), this.optionsAdapter.getIsInvalid());
       };
 
       _proto.UpdateDisabled = function UpdateDisabled() {
@@ -882,7 +907,7 @@
       };
 
       _proto.init = function init() {
-        var _this3 = this;
+        var _this2 = this;
 
         var document = this.window.document;
 
@@ -896,105 +921,105 @@
           lazyfilterItemInputElementAtach = function lazyfilterItemInputElementAtach(filterItemElement) {
             filterItemElement.appendChild(filterItemInputElement);
 
-            _this3.labelAdapter.init(filterItemInputElement);
+            _this2.labelAdapter.init(filterItemInputElement);
           };
         }, function () {
-          return _this3.styling.FocusIn(_this3.stylingComposite);
+          return _this2.styling.FocusIn(_this2.stylingComposite);
         }, // focus in - show dropdown
         function () {
-          if (!_this3.aspect.getSkipFocusout()) // skip initiated by mouse click (we manage it different way)
+          if (!_this2.aspect.getSkipFocusout()) // skip initiated by mouse click (we manage it different way)
             {
-              _this3.resetFilter(); // if do not do this we will return to filtered list without text filter in input
+              _this2.resetFilter(); // if do not do this we will return to filtered list without text filter in input
 
 
-              _this3.styling.FocusOut(_this3.stylingComposite);
+              _this2.styling.FocusOut(_this2.stylingComposite);
             }
 
-          _this3.aspect.resetSkipFocusout();
+          _this2.aspect.resetSkipFocusout();
         }, // focus out - hide dropdown
         function () {
-          return _this3.optionsPanel.keyDownArrow(false);
+          return _this2.optionsPanel.keyDownArrow(false);
         }, // arrow up
         function () {
-          return _this3.optionsPanel.keyDownArrow(true);
+          return _this2.optionsPanel.keyDownArrow(true);
         }, // arrow down
         function () {
-          return _this3.optionsPanel.hideDropDown();
+          return _this2.optionsPanel.hideDropDown();
         }, // tab on empty
         function () {
-          _this3.selectionsPanel.removeSelectedTail();
+          _this2.selectionsPanel.removeSelectedTail();
 
-          _this3.aspect.alignToFilterInputItemLocation(false);
+          _this2.aspect.alignToFilterInputItemLocation(false);
         }, // backspace - "remove last"
         function () {
-          if (_this3.optionsPanel.getIsVisble()) _this3.optionsPanel.toggleHovered();
+          if (_this2.optionsPanel.getIsVisble()) _this2.optionsPanel.toggleHovered();
         }, // tab/enter "compleate hovered"
         function (isEmpty, event) {
-          if (!isEmpty || _this3.optionsPanel.getIsVisble()) // supports bs modal - stop esc (close modal) propogation
+          if (!isEmpty || _this2.optionsPanel.getIsVisble()) // supports bs modal - stop esc (close modal) propogation
             event.stopPropagation();
         }, // esc keydown
         function () {
-          _this3.optionsPanel.hideDropDown(); // always hide 1st
+          _this2.optionsPanel.hideDropDown(); // always hide 1st
 
 
-          _this3.resetFilter();
+          _this2.resetFilter();
         }, // esc keyup 
         function (filterInputValue, resetLength) {
-          return _this3.input(filterInputValue, resetLength);
+          return _this2.input(filterInputValue, resetLength);
         } // filter
         );
         this.selectionsPanel = SelectionsPanel(createElement, function (filterItemElement) {
           lazyfilterItemInputElementAtach(filterItemElement);
         }, this.selectedItemContent, this.isComponentDisabled, function () {
-          return _this3.optionsAdapter.triggerChange();
+          return _this2.optionsAdapter.triggerChange();
         }, function () {
-          _this3.optionsPanel.hideDropDown(); // always hide 1st
+          _this2.optionsPanel.hideDropDown(); // always hide 1st
 
 
-          _this3.resetFilter();
+          _this2.resetFilter();
         }, function (event) {
-          if (!_this3.filterPanel.isEventTarget(event)) _this3.filterPanel.setFocus();
+          if (!_this2.filterPanel.isEventTarget(event)) _this2.filterPanel.setFocus();
 
-          _this3.aspect.alignAndShowDropDown(event);
+          _this2.aspect.alignAndShowDropDown(event);
         }, function (doUncheck, event) {
-          _this3.aspect.processUncheck(doUncheck, event);
+          _this2.aspect.processUncheck(doUncheck, event);
         });
         this.selectedPanel = this.selectionsPanel.selectedPanel; // TODO remove
 
         this.filterInputItem = this.selectionsPanel.filterInputItem;
         this.optionsPanel = OptionsPanel(createElement, function () {
-          return _this3.aspect.onDropDownShow();
+          return _this2.aspect.onDropDownShow();
         }, function () {
-          return _this3.aspect.onDropDownHide();
+          return _this2.aspect.onDropDownHide();
         }, EventSkipper(this.window), this.dropDownItemContent, this.styling, function () {
-          return _this3.getVisibleMultiSelectDataList();
+          return _this2.getVisibleMultiSelectDataList();
         }, function () {
-          return _this3.resetFilter();
+          return _this2.resetFilter();
         }, function () {
-          return _this3.aspect.alignToFilterInputItemLocation(true);
+          return _this2.aspect.alignToFilterInputItemLocation(true);
         }, function () {
-          return _this3.filterPanel.setFocus();
+          return _this2.filterPanel.setFocus();
         });
         this.aspect = MultiSelectInputAspect(this.window, document, container, this.selectionsPanel.selectedPanel, this.selectionsPanel.filterInputItem, this.optionsPanel.dropDownMenu, function () {
-          return _this3.optionsPanel.showDropDown();
+          return _this2.optionsPanel.showDropDown();
         }, function () {
-          _this3.optionsPanel.hideDropDown();
+          _this2.optionsPanel.hideDropDown();
 
-          _this3.resetFilter();
+          _this2.resetFilter();
         }, function () {
-          return _this3.getVisibleMultiSelectDataList().length == 0;
+          return _this2.getVisibleMultiSelectDataList().length == 0;
         }, Popper);
         this.stylingComposite = this.createStylingComposite(container, this.selectionsPanel.selectedPanel, this.selectionsPanel.filterInputItem, this.filterPanel.input, this.optionsPanel.dropDownMenu);
         this.styling.Init(this.stylingComposite);
         if (this.optionsAdapter.afterContainerFilled) this.optionsAdapter.afterContainerFilled();
-        this.styling.UpdateIsValid(this.stylingComposite, this.optionsAdapter.getIsValid(), this.optionsAdapter.getIsInvalid());
         this.UpdateSize();
+        this.UpdateIsValid();
         this.UpdateDisabled(); // should be done after updateDataImpl
 
         this.updateDataImpl();
         if (this.optionsAdapter.subscribeToReset) this.optionsAdapter.subscribeToReset(function () {
-          return _this3.window.setTimeout(function () {
-            return _this3.UpdateData();
+          return _this2.window.setTimeout(function () {
+            return _this2.UpdateData();
           });
         });
       };
@@ -1045,9 +1070,33 @@
         }
       };
     }
+    /*
+    <div class="dashboardcode-bsmultiselect">
+        <select name="States1" id="edit-states1-id" class="form-control test" multiple="multiple" 
+                style="display: none;">
+                                <option value="AL">Alabama</option>
+                                <option value="AK" disabled="">Alaska</option>
+        </select>
+        <div class="input-group">
+            <div class="input-group-prepend">
+                <button class="btn btn-outline-secondary" type="button">Button</button>
+                <button class="btn btn-outline-secondary" type="button">Button</button>
+            </div>
+     
+            <ul class="form-control" 
+                style="display: flex; flex-wrap: wrap; list-style-type: none; margin-bottom: 
+                0px; height: auto; min-height: calc(2.25rem + 2px);">
+            </ul>
+        </div>
+    </div>
+    */
 
-    function OptionsAdapterElement(selectElement, trigger, form) {
-      selectElement.style.display = 'none';
+
+    function OptionsAdapterElement(
+    /* container, */
+    selectElement, getDisabled, trigger, form) {
+      selectElement.style.display = 'none'; //if (!container)
+
       var container = document.createElement('div');
       var resetHanlder = null;
       return {
@@ -1066,9 +1115,7 @@
           trigger('change');
           trigger('multiselect:change');
         },
-        getDisabled: function getDisabled() {
-          return selectElement.disabled;
-        },
+        getDisabled: getDisabled,
         getIsValid: function getIsValid() {
           return selectElement.classList.contains('is-valid');
         },
@@ -1455,7 +1502,23 @@
               form = $form.get(0);
             }
 
-            optionsAdapter = OptionsAdapterElement(element, trigger, form);
+            if (!configuration.getDisabled) {
+              var $fieldset = $(element).closest('fieldset');
+
+              if ($fieldset.length == 1) {
+                var fieldset = $fieldset.get(0);
+
+                configuration.getDisabled = function () {
+                  return element.disabled || fieldset.disabled;
+                };
+              } else {
+                configuration.getDisabled = function () {
+                  return element.disabled;
+                };
+              }
+            }
+
+            optionsAdapter = OptionsAdapterElement(element, configuration.getDisabled, trigger, form);
             if (!configuration.createInputId) configuration.createInputId = function () {
               return configuration.containerClass + "-generated-input-" + (element.id ? element.id : element.name).toLowerCase() + "-id";
             };

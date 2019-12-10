@@ -20,8 +20,29 @@ function OptionsAdapterJson(container, options, getDisabled, getIsValid, getIsIn
     }
 }
 
-function OptionsAdapterElement(selectElement, trigger, form) {
+/*
+<div class="dashboardcode-bsmultiselect">
+    <select name="States1" id="edit-states1-id" class="form-control test" multiple="multiple" 
+            style="display: none;">
+                            <option value="AL">Alabama</option>
+                            <option value="AK" disabled="">Alaska</option>
+    </select>
+    <div class="input-group">
+        <div class="input-group-prepend">
+            <button class="btn btn-outline-secondary" type="button">Button</button>
+            <button class="btn btn-outline-secondary" type="button">Button</button>
+        </div>
+ 
+        <ul class="form-control" 
+            style="display: flex; flex-wrap: wrap; list-style-type: none; margin-bottom: 
+            0px; height: auto; min-height: calc(2.25rem + 2px);">
+        </ul>
+    </div>
+</div>
+*/
+function OptionsAdapterElement(/* container, */ selectElement, getDisabled, trigger, form) {
     selectElement.style.display='none';
+    //if (!container)
     var container = document.createElement('div');
     var resetHanlder = null;
     return {
@@ -39,9 +60,7 @@ function OptionsAdapterElement(selectElement, trigger, form) {
             trigger('change');
             trigger('multiselect:change');
         },
-        getDisabled(){
-            return selectElement.disabled;
-        },
+        getDisabled,
         getIsValid(){
             return selectElement.classList.contains('is-valid');
         },

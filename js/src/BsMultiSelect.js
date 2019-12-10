@@ -60,8 +60,21 @@ import { Bs4DropDownItemContent, Bs4DropDownItemContentStylingMethodJs, Bs4DropD
                         var form = null;
                         if ($form.length == 1) {
                             form = $form.get(0);
+
                         }
-                        optionsAdapter = OptionsAdapterElement(element, trigger, form);
+                        
+                        if (!configuration.getDisabled) {
+                            var $fieldset = $(element).closest('fieldset');
+                        
+                            if ($fieldset.length == 1) {
+                                var fieldset = $fieldset.get(0);
+                                configuration.getDisabled = () => element.disabled || fieldset.disabled;
+                            }else{
+                                configuration.getDisabled = () => element.disabled;
+                            }
+                        }
+
+                        optionsAdapter = OptionsAdapterElement(element, configuration.getDisabled, trigger, form);
                         if (!configuration.createInputId)
                             configuration.createInputId = () => `${configuration.containerClass}-generated-input-${((element.id)?element.id:element.name).toLowerCase()}-id`;
                     }
@@ -127,7 +140,7 @@ import { Bs4DropDownItemContent, Bs4DropDownItemContentStylingMethodJs, Bs4DropD
                     configuration,
                     onDispose,
                     window);
-
+                
                 if (configuration.postBuildConfiguration)
                     configuration.postBuildConfiguration(element, multiSelect);
                 

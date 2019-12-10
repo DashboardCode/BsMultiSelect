@@ -54,6 +54,8 @@ class MultiSelect {
             throw new TypeError('DashboardCode BsMultiSelect require Popper.js (https://popper.js.org)')
         }
 
+        this.onDispose = onDispose; // public
+
         // readonly
         this.optionsAdapter = optionsAdapter;
         this.styling = styling;
@@ -62,7 +64,7 @@ class MultiSelect {
         this.labelAdapter = labelAdapter;
         this.createStylingComposite = createStylingComposite;
         this.configuration = configuration;
-        this.onDispose = onDispose;
+        
         this.window = window;
 
         this.visibleCount=10;
@@ -110,11 +112,13 @@ class MultiSelect {
     }
 
     Update(){
-        this.styling.UpdateIsValid(this.stylingComposite, this.optionsAdapter.getIsValid(), this.optionsAdapter.getIsInvalid());
+        this.UpdateIsValid();
         this.UpdateSize();
         this.UpdateDisabled();
+        this.UpdateData();
     }
 
+    /*
     UpdateOption(index){
         let multiSelectData = this.MultiSelectDataList[index];
         let option = multiSelectData.option;
@@ -158,9 +162,9 @@ class MultiSelect {
             }
         }    
         //multiSelectData.updateOption();
-    }
+    }*/
 
-    UpdateData(){
+    Empty(){
         // close drop down , remove filter and listeners
         this.optionsPanel.hideDropDown(); // always hide 1st
         this.resetFilter();
@@ -175,7 +179,10 @@ class MultiSelect {
         }
         this.resetMultiSelectDataList();
         this.selectionsPanel.resetMultiSelectDataSelectedTail();// this.MultiSelectDataSelectedTail = null;
+    }
 
+    UpdateData(){
+        this.Empty();
         // reinitiate
         this.updateDataImpl();
     }
@@ -267,6 +274,11 @@ class MultiSelect {
     UpdateSize(){
         if (this.styling.UpdateSize)
             this.styling.UpdateSize(this.stylingComposite);
+    }
+
+    UpdateIsValid(){
+        if (this.styling.UpdateIsValid)
+            this.styling.UpdateIsValid(this.stylingComposite, this.optionsAdapter.getIsValid(), this.optionsAdapter.getIsInvalid());
     }
 
     UpdateDisabled(){
@@ -431,14 +443,11 @@ class MultiSelect {
 
         if (this.optionsAdapter.afterContainerFilled)
             this.optionsAdapter.afterContainerFilled();
-        
-        this.styling.UpdateIsValid(this.stylingComposite, this.optionsAdapter.getIsValid(), this.optionsAdapter.getIsInvalid());
-        
-        this.UpdateSize();
+
+        this.UpdateSize();            
+        this.UpdateIsValid();
         this.UpdateDisabled(); // should be done after updateDataImpl
         this.updateDataImpl();
-        
-        
 
         if (this.optionsAdapter.subscribeToReset)
             this.optionsAdapter.subscribeToReset(()=> this.window.setTimeout( ()=>this.UpdateData() ) );
