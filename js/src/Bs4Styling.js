@@ -6,7 +6,7 @@ const bs4StylingDefaults = {
     dropDownMenuClass: 'dropdown-menu',
     dropDownItemClass:  'px-2',
     dropDownItemHoverClass: 'text-primary bg-light',
-    selectedPanelClass: 'form-control',
+    selectedPanelClass: 'form-control',  
     selectedItemClass: 'badge',
     removeSelectedItemButtonClass: 'close',
     filterInputItemClass: '',

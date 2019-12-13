@@ -1,5 +1,5 @@
 /*!
-  * DashboardCode BsMultiSelect v0.4.17 (https://dashboardcode.github.io/BsMultiSelect/)
+  * DashboardCode BsMultiSelect v0.4.18 (https://dashboardcode.github.io/BsMultiSelect/)
   * Copyright 2017-2019 Roman Pokrovskij (github user rpokrovskij)
   * Licensed under APACHE 2 (https://github.com/DashboardCode/BsMultiSelect/blob/master/LICENSE)
   */
@@ -128,10 +128,8 @@
       s.listStyleType = 'none';
     }
 
-    function OptionsPanel(createElement, onShow, onHide, eventSkipper, dropDownItemContent, styling, getVisibleMultiSelectDataList, resetFilter, updateDropDownLocation, filterPanelSetFocus) {
-      var dropDownMenu = createElement('UL');
-      dropDownMenu.style.display = "none"; // prevent heavy understandable styling error
-
+    function OptionsPanel(createElement, dropDownMenu, onShow, onHide, eventSkipper, dropDownItemContent, styling, getVisibleMultiSelectDataList, resetFilter, updateDropDownLocation, filterPanelSetFocus) {
+      // prevent heavy understandable styling error
       defDropDownMenuStyleSys(dropDownMenu.style);
       var hoveredMultiSelectData = null;
       var hoveredMultiSelectDataIndex = null;
@@ -312,7 +310,6 @@
       }
 
       var item = {
-        dropDownMenu: dropDownMenu,
         hoverInInternal: hoverInInternal,
         stopAndResetDropDownMenuHover: function stopAndResetDropDownMenuHover() {
           eventSkipper.setSkippable(); //disable Hover On MouseEnter - filter's changes should remove hover
@@ -341,14 +338,13 @@
       s.listStyleType = 'none';
     }
 
-    function SelectionsPanel(createElement, init, selectedItemContent, isComponentDisabled, triggerChange, onRemove, onClick, processRemoveButtonClick) {
-      var ulElement = createElement('UL');
-      defSelectedPanelStyleSys(ulElement.style);
-      var filterInputItem = createElement('LI'); // detached
+    function PicksPanel(createElement, picksElement, init, selectedItemContent, isComponentDisabled, triggerChange, onRemove, onClick, processRemoveButtonClick) {
+      defSelectedPanelStyleSys(picksElement.style);
+      var inputItemElement = createElement('LI'); // detached
 
-      ulElement.appendChild(filterInputItem); // located filter in selectionsPanel
+      picksElement.appendChild(inputItemElement); // located filter in selectionsPanel
 
-      init(filterInputItem);
+      init(inputItemElement);
       var MultiSelectDataSelectedTail = null;
 
       function removeSelectedTail() {
@@ -444,7 +440,7 @@
         //MultiSelectData.remove  = removeSelectedItemAndCloseDropDown;
 
         MultiSelectData.disable = disable;
-        ulElement.insertBefore(selectedItemElement, filterInputItem);
+        picksElement.insertBefore(selectedItemElement, inputItemElement);
 
         MultiSelectData.toggle = function () {
           return removeSelectedItem();
@@ -467,10 +463,9 @@
       }
 
       var item = {
-        selectedPanel: ulElement,
-        filterInputItem: filterInputItem,
+        inputItemElement: inputItemElement,
         insert: function insert(selectedItemElement) {
-          this.selectedPanel.insertBefore(selectedItemElement, filterInputItem);
+          this.selectedPanel.insertBefore(selectedItemElement, inputItemElement);
         },
         createSelectedItem: createSelectedItem,
         removeSelectedTail: removeSelectedTail,
@@ -479,40 +474,48 @@
         },
         enable: function enable() {
           isComponentDisabled = false;
-          filterInputItem.style.display = "list-item";
+          inputItemElement.style.display = "list-item";
           iterateAll(false);
-          ulElement.addEventListener("click", selectedPanelClick);
+          picksElement.addEventListener("click", selectedPanelClick);
         },
         disable: function disable() {
           isComponentDisabled = true;
-          filterInputItem.style.display = "none";
+          inputItemElement.style.display = "none";
           iterateAll(true);
-          ulElement.removeEventListener("click", selectedPanelClick);
+          picksElement.removeEventListener("click", selectedPanelClick);
         },
         dispose: function dispose() {
-          ulElement.removeEventListener("click", selectedPanelClick); // OPEN dropdown
+          var toRemove = picksElement.firstChild;
+
+          while (toRemove) {
+            picksElement.removeChild(toRemove);
+            toRemove = picksElement.firstChild;
+          } //inputItemElement.parentNode.removeChild(inputItemElement);
+
+
+          picksElement.removeEventListener("click", selectedPanelClick); // OPEN dropdown
         }
       };
       return item;
     }
 
-    function MultiSelectInputAspect(window, document, container, selectedPanel, filterInputItem, dropDownMenu, showDropDown, hideDropDownAndResetFilter, isDropDownMenuEmpty, Popper) {
-      container.appendChild(selectedPanel);
-      container.appendChild(dropDownMenu);
-      var skipFocusout = false; // we want to escape the closing of the menu on a user's click inside the container
+    function MultiSelectInputAspect(window, appendToContainer, filterInputItem, picksElement, optionsElement, showDropDown, hideDropDownAndResetFilter, isDropDownMenuEmpty, Popper) {
+      appendToContainer();
+      var document = window.document;
+      var skipFocusout = false; // we want to escape the closing of the menu (because of focus out from) on a user's click inside the container
 
-      var containerMousedown = function containerMousedown() {
+      var skipoutMousedown = function skipoutMousedown() {
         skipFocusout = true;
       };
 
       var documentMouseup = function documentMouseup(event) {
         // if click outside container - close dropdown
-        if (!(container === event.target || container.contains(event.target))) {
+        if (!(optionsElement === event.target || picksElement === event.target || optionsElement.contains(event.target) || picksElement.contains(event.target))) {
           hideDropDownAndResetFilter();
         }
       };
 
-      var popper = new Popper(filterInputItem, dropDownMenu, {
+      var popper = new Popper(filterInputItem, optionsElement, {
         placement: 'bottom-start',
         modifiers: {
           preventOverflow: {
@@ -568,11 +571,13 @@
         onDropDownShow: function onDropDownShow() {
           // add listeners that manages close dropdown on input's focusout and click outside container
           //container.removeEventListener("mousedown", containerMousedown);
-          container.addEventListener("mousedown", containerMousedown);
+          picksElement.addEventListener("mousedown", skipoutMousedown);
+          optionsElement.addEventListener("mousedown", skipoutMousedown);
           document.addEventListener("mouseup", documentMouseup);
         },
         onDropDownHide: function onDropDownHide() {
-          container.removeEventListener("mousedown", containerMousedown);
+          picksElement.removeEventListener("mousedown", skipoutMousedown);
+          optionsElement.addEventListener("mousedown", skipoutMousedown);
           document.removeEventListener("mouseup", documentMouseup);
         },
         getSkipFocusout: function getSkipFocusout() {
@@ -638,7 +643,7 @@
     var MultiSelect =
     /*#__PURE__*/
     function () {
-      function MultiSelect(optionsAdapter, styling, selectedItemContent, dropDownItemContent, labelAdapter, createStylingComposite, configuration, onDispose, window) {
+      function MultiSelect(optionsAdapter, containerAdapter, styling, selectedItemContent, dropDownItemContent, labelAdapter, createStylingComposite, configuration, onDispose, window) {
         if (typeof Popper === 'undefined') {
           throw new TypeError('DashboardCode BsMultiSelect require Popper.js (https://popper.js.org)');
         }
@@ -647,6 +652,7 @@
         // readonly
 
         this.optionsAdapter = optionsAdapter;
+        this.containerAdapter = containerAdapter;
         this.styling = styling;
         this.selectedItemContent = selectedItemContent;
         this.dropDownItemContent = dropDownItemContent;
@@ -655,8 +661,6 @@
         this.configuration = configuration;
         this.window = window;
         this.visibleCount = 10;
-        this.selectionsPanel = null;
-        this.filterInputItem = null;
         this.optionsPanel = null;
         this.stylingComposite = null;
         this.isComponentDisabled = null;
@@ -689,7 +693,7 @@
       ;
 
       _proto.GetContainer = function GetContainer() {
-        return this.optionsAdapter.container;
+        return this.containerAdapter.container;
       };
 
       _proto.Update = function Update() {
@@ -708,7 +712,7 @@
               multiSelectData.isHidden=option.isHidden;
               if (multiSelectData.isHidden)
                   this.optionsPanel.insertDropDownItem(multiSelectData, 
-                      (p1,p2,p3)=>this.selectionsPanel.createSelectedItem(p1,p2,p3),
+                      (p1,p2,p3)=>this.picksPanel.createSelectedItem(p1,p2,p3),
                       ()=>this.optionsAdapter.triggerChange(),
                       option.isSelected, option.isDisabled);
               else
@@ -745,6 +749,28 @@
       }*/
       ;
 
+      _proto.DeselectAll = function DeselectAll() {
+        this.optionsPanel.hideDropDown(); // always hide 1st
+
+        this.resetFilter();
+
+        for (var i = 0; i < this.MultiSelectDataList.length; i++) {
+          var multiSelectData = this.MultiSelectDataList[i];
+          if (multiSelectData.selectedItemElement) multiSelectData.toggle();
+        }
+      };
+
+      _proto.SelectAll = function SelectAll() {
+        this.optionsPanel.hideDropDown(); // always hide 1st
+
+        this.resetFilter();
+
+        for (var i = 0; i < this.MultiSelectDataList.length; i++) {
+          var multiSelectData = this.MultiSelectDataList[i];
+          if (!multiSelectData.excludedFromSearch) multiSelectData.toggle();
+        }
+      };
+
       _proto.Empty = function Empty() {
         // close drop down , remove filter and listeners
         this.optionsPanel.hideDropDown(); // always hide 1st
@@ -758,7 +784,7 @@
         }
 
         this.resetMultiSelectDataList();
-        this.selectionsPanel.resetMultiSelectDataSelectedTail(); // this.MultiSelectDataSelectedTail = null;
+        this.picksPanel.resetMultiSelectDataSelectedTail(); // this.MultiSelectDataSelectedTail = null;
       };
 
       _proto.UpdateData = function UpdateData() {
@@ -775,9 +801,9 @@
 
           for (var i = 0; i < options.length; i++) {
             var option = options[i];
-            var isDisabled = option.disabled;
-            var isHidden = option.hidden;
             var isSelected = option.selected;
+            var isDisabled = option.disabled ? option.disabled : false;
+            var isHidden = option.hidden ? option.hidden : false;
             var MultiSelectData = {
               searchText: option.text.toLowerCase().trim(),
               excludedFromSearch: isSelected || isDisabled || isHidden,
@@ -802,7 +828,7 @@
               MultiSelectData.visibleIndex = i;
 
               _this.optionsPanel.insertDropDownItem(MultiSelectData, function (p1, p2, p3) {
-                return _this.selectionsPanel.createSelectedItem(p1, p2, p3);
+                return _this.picksPanel.createSelectedItem(p1, p2, p3);
               }, function () {
                 return _this.optionsAdapter.triggerChange();
               }, isSelected, isDisabled);
@@ -831,17 +857,18 @@
         // TODO check if open
 
         this.optionsPanel.hideDropDown();
-        this.selectionsPanel.dispose();
+        if (this.optionsAdapter.dispose) this.optionsAdapter.dispose();
+        this.picksPanel.dispose();
         this.filterPanel.dispose();
         this.labelAdapter.dispose();
         this.aspect.dispose();
-
-        if (this.optionsAdapter.dispose) {
-          this.optionsAdapter.dispose();
-        }
+        this.containerAdapter.dispose();
 
         for (var i = 0; i < this.MultiSelectDataList.length; i++) {
           var multiSelectData = this.MultiSelectDataList[i];
+          multiSelectData.toggle = null;
+          multiSelectData.remove = null;
+          multiSelectData.removeDropDownMenuItemElement = null;
           if (multiSelectData.DisposeDropDownMenuItemElement) multiSelectData.DisposeDropDownMenuItemElement();
           if (multiSelectData.SelectedItemContent) multiSelectData.SelectedItemContent.dispose();
           if (multiSelectData.DropDownItemContent) multiSelectData.DropDownItemContent.dispose();
@@ -861,10 +888,10 @@
 
         if (this.isComponentDisabled !== isComponentDisabled) {
           if (isComponentDisabled) {
-            this.selectionsPanel.disable();
+            this.picksPanel.disable();
             this.styling.Disable(this.stylingComposite);
           } else {
-            this.selectionsPanel.enable();
+            this.picksPanel.enable();
             this.styling.Enable(this.stylingComposite);
           }
 
@@ -915,7 +942,7 @@
           return document.createElement(name);
         };
 
-        var container = this.optionsAdapter.container;
+        var container = this.containerAdapter.container;
         var lazyfilterItemInputElementAtach = null;
         this.filterPanel = FilterPanel(createElement, function (filterItemInputElement) {
           lazyfilterItemInputElementAtach = function lazyfilterItemInputElementAtach(filterItemElement) {
@@ -947,7 +974,7 @@
           return _this2.optionsPanel.hideDropDown();
         }, // tab on empty
         function () {
-          _this2.selectionsPanel.removeSelectedTail();
+          _this2.picksPanel.removeSelectedTail();
 
           _this2.aspect.alignToFilterInputItemLocation(false);
         }, // backspace - "remove last"
@@ -968,7 +995,7 @@
           return _this2.input(filterInputValue, resetLength);
         } // filter
         );
-        this.selectionsPanel = SelectionsPanel(createElement, function (filterItemElement) {
+        this.picksPanel = PicksPanel(createElement, this.containerAdapter.picksElement, function (filterItemElement) {
           lazyfilterItemInputElementAtach(filterItemElement);
         }, this.selectedItemContent, this.isComponentDisabled, function () {
           return _this2.optionsAdapter.triggerChange();
@@ -984,10 +1011,7 @@
         }, function (doUncheck, event) {
           _this2.aspect.processUncheck(doUncheck, event);
         });
-        this.selectedPanel = this.selectionsPanel.selectedPanel; // TODO remove
-
-        this.filterInputItem = this.selectionsPanel.filterInputItem;
-        this.optionsPanel = OptionsPanel(createElement, function () {
+        this.optionsPanel = OptionsPanel(createElement, this.containerAdapter.optionsElement, function () {
           return _this2.aspect.onDropDownShow();
         }, function () {
           return _this2.aspect.onDropDownHide();
@@ -1000,7 +1024,9 @@
         }, function () {
           return _this2.filterPanel.setFocus();
         });
-        this.aspect = MultiSelectInputAspect(this.window, document, container, this.selectionsPanel.selectedPanel, this.selectionsPanel.filterInputItem, this.optionsPanel.dropDownMenu, function () {
+        this.aspect = MultiSelectInputAspect(this.window, function () {
+          return _this2.containerAdapter.appendToContainer();
+        }, this.picksPanel.inputItemElement, this.containerAdapter.picksElement, this.containerAdapter.optionsElement, function () {
           return _this2.optionsPanel.showDropDown();
         }, function () {
           _this2.optionsPanel.hideDropDown();
@@ -1009,9 +1035,9 @@
         }, function () {
           return _this2.getVisibleMultiSelectDataList().length == 0;
         }, Popper);
-        this.stylingComposite = this.createStylingComposite(container, this.selectionsPanel.selectedPanel, this.selectionsPanel.filterInputItem, this.filterPanel.input, this.optionsPanel.dropDownMenu);
+        this.stylingComposite = this.createStylingComposite(container, this.containerAdapter.picksElement, this.picksPanel.inputItemElement, this.filterPanel.input, this.containerAdapter.optionsElement);
         this.styling.Init(this.stylingComposite);
-        if (this.optionsAdapter.afterContainerFilled) this.optionsAdapter.afterContainerFilled();
+        this.containerAdapter.attachContainer();
         this.UpdateSize();
         this.UpdateIsValid();
         this.UpdateDisabled(); // should be done after updateDataImpl
@@ -1045,71 +1071,11 @@
       };
     }
 
-    function OptionsAdapterJson(container, options, _getDisabled, _getIsValid, _getIsInvalid, trigger) {
+    function OptionsAdapterElement(selectElement, getDisabled, trigger, form) {
+      var backup;
       return {
-        container: container,
-        getOptions: function getOptions() {
-          return options;
-        },
-        dispose: function dispose() {
-          while (container.firstChild) {
-            container.removeChild(container.firstChild);
-          }
-        },
-        triggerChange: function triggerChange() {
-          trigger('multiselect:change');
-        },
-        getDisabled: function getDisabled() {
-          return _getDisabled ? _getDisabled() : false;
-        },
-        getIsValid: function getIsValid() {
-          return _getIsValid ? _getIsValid() : false;
-        },
-        getIsInvalid: function getIsInvalid() {
-          return _getIsInvalid ? _getIsInvalid() : false;
-        }
-      };
-    }
-    /*
-    <div class="dashboardcode-bsmultiselect">
-        <select name="States1" id="edit-states1-id" class="form-control test" multiple="multiple" 
-                style="display: none;">
-                                <option value="AL">Alabama</option>
-                                <option value="AK" disabled="">Alaska</option>
-        </select>
-        <div class="input-group">
-            <div class="input-group-prepend">
-                <button class="btn btn-outline-secondary" type="button">Button</button>
-                <button class="btn btn-outline-secondary" type="button">Button</button>
-            </div>
-     
-            <ul class="form-control" 
-                style="display: flex; flex-wrap: wrap; list-style-type: none; margin-bottom: 
-                0px; height: auto; min-height: calc(2.25rem + 2px);">
-            </ul>
-        </div>
-    </div>
-    */
-
-
-    function OptionsAdapterElement(
-    /* container, */
-    selectElement, getDisabled, trigger, form) {
-      selectElement.style.display = 'none'; //if (!container)
-
-      var container = document.createElement('div');
-      var resetHanlder = null;
-      return {
-        container: container,
         getOptions: function getOptions() {
           return selectElement.getElementsByTagName('OPTION');
-        },
-        dispose: function dispose() {
-          container.parentNode.removeChild(container);
-          if (form && resetHanlder) form.removeEventListener('reset', resetHanlder);
-        },
-        afterContainerFilled: function afterContainerFilled() {
-          selectElement.parentNode.insertBefore(container, selectElement.nextSibling);
         },
         triggerChange: function triggerChange() {
           trigger('change');
@@ -1123,8 +1089,31 @@
           return selectElement.classList.contains('is-invalid');
         },
         subscribeToReset: function subscribeToReset(handler) {
-          resetHanlder = handler;
-          if (form) form.addEventListener('reset', resetHanlder);
+          backup = handler;
+          if (form) form.addEventListener('reset', backup);
+        },
+        dispose: function dispose() {
+          if (form && backup) form.removeEventListener('reset', backup);
+        }
+      };
+    }
+
+    function OptionsAdapterJson(options, _getDisabled, _getIsValid, _getIsInvalid, trigger) {
+      return {
+        getOptions: function getOptions() {
+          return options;
+        },
+        triggerChange: function triggerChange() {
+          trigger('multiselect:change');
+        },
+        getDisabled: function getDisabled() {
+          return _getDisabled ? _getDisabled() : false;
+        },
+        getIsValid: function getIsValid() {
+          return _getIsValid ? _getIsValid() : false;
+        },
+        getIsInvalid: function getIsInvalid() {
+          return _getIsInvalid ? _getIsInvalid() : false;
         }
       };
     }
@@ -1460,71 +1449,119 @@
       };
     }
 
+    /*
+    // 1
+    <select name="States1" id="edit-states1-id" class="form-control" 
+            multiple="multiple" style="display: none;"> <!-- plugin element-->
+                    <option value="AL">Alabama</option>
+                    <option value="AK" disabled="">Alaska</option>
+    </select>
+
+    // 2
+    <div class="dashboardcode-bsmultiselect"> 
+        <div class="input-group" >
+            <div class="input-group-prepend">
+                <button class="btn btn-outline-secondary" type="button">Button</button>
+            </div>
+
+            <select name="States1" id="edit-states1-id" class="form-control"
+                multiple="multiple" style="display: none;">  <!-- plugin element-->
+                    <option value="AL">Alabama</option>
+                    <option value="AK" disabled="">Alaska</option>
+            </select>
+
+            <ul class="form-control"></ul> <!-- optional - for "no flick" -->
+        </div>
+    </div>
+
+    // 2
+    <div></div> 
+
+    // 3
+    <div class="dashboardcode-bsmultiselect">
+        <div class="input-group" >
+            <div class="input-group-prepend">
+                <button class="btn btn-outline-secondary" type="button">Button</button>
+            </div>
+
+            <ul class="form-control"></ul> <!-- json plugin key element -->
+        </div>
+    </div>
+    */
+    function ContainerAdapter(createElement, selectElement, containerElement, picksElement) {
+      // select
+      var ownContainerElement = false;
+      var ownPicksElement = false;
+      var backupDisplay = null;
+
+      if (!containerElement) {
+        containerElement = createElement('div');
+        ownContainerElement = true;
+      }
+
+      if (!picksElement) {
+        picksElement = createElement('UL');
+        ownPicksElement = true;
+      }
+
+      var optionsElement = createElement('UL');
+      optionsElement.style.display = "none";
+
+      if (selectElement) {
+        backupDisplay = selectElement.style.display;
+        selectElement.style.display = 'none';
+      }
+
+      return {
+        container: containerElement,
+        picksElement: picksElement,
+        optionsElement: optionsElement,
+        init: function init() {
+          if (ownPicksElement) containerElement.appendChild(picksElement);
+        },
+        appendToContainer: function appendToContainer() {
+          if (ownContainerElement || !selectElement) {
+            containerElement.appendChild(picksElement);
+            containerElement.appendChild(optionsElement);
+          } else {
+            if (selectElement) {
+              selectElement.parentNode.insertBefore(optionsElement, selectElement.nextSibling);
+              selectElement.parentNode.insertBefore(picksElement, optionsElement);
+            }
+          }
+        },
+        attachContainer: function attachContainer() {
+          if (ownContainerElement) selectElement.parentNode.insertBefore(containerElement, selectElement.nextSibling);
+        },
+        dispose: function dispose() {
+          if (ownContainerElement) containerElement.parentNode.removeChild(containerElement);
+          if (ownPicksElement) picksElement.parentNode.removeChild(picksElement);
+          optionsElement.parentNode.removeChild(optionsElement);
+          if (selectElement) selectElement.style.display = backupDisplay;
+        }
+      };
+    }
+
+    function FindDirectChildByTagName(element, tagName) {
+      var returnValue = null;
+
+      for (var i = 0; i < element.children.length; i++) {
+        var tmp = element.children[i];
+
+        if (tmp.tagName == tagName) {
+          returnValue = tmp;
+          break;
+        }
+      }
+
+      return returnValue;
+    }
+
     (function (window, $) {
       AddToJQueryPrototype('BsMultiSelect', function (element, settings, onDispose) {
         var configuration = $.extend({}, settings); // settings used per jQuery intialization, configuration per element
 
         if (configuration.preBuildConfiguration) configuration.preBuildConfiguration(element, configuration);
-        var $element = $(element);
-        var optionsAdapter = null;
-        if (configuration.optionsAdapter) optionsAdapter = configuration.optionsAdapter;else {
-          var trigger = function trigger(eventName) {
-            $element.trigger(eventName);
-          };
-
-          if (configuration.options) {
-            optionsAdapter = OptionsAdapterJson(element, configuration.options, configuration.getDisabled, configuration.getIsValid, configuration.getIsInvalid, trigger);
-            if (!configuration.createInputId) configuration.createInputId = function () {
-              return configuration.containerClass + "-generated-filter-" + element.id;
-            };
-          } else {
-            if (!configuration.label) {
-              var $formGroup = $(element).closest('.form-group');
-
-              if ($formGroup.length == 1) {
-                var $label = $formGroup.find("label[for=\"" + element.id + "\"]");
-
-                if ($label.length > 0) {
-                  var label = $label.get(0);
-                  var forId = label.getAttribute('for');
-
-                  if (forId == element.id) {
-                    configuration.label = label;
-                  }
-                }
-              }
-            }
-
-            var $form = $(element).closest('form');
-            var form = null;
-
-            if ($form.length == 1) {
-              form = $form.get(0);
-            }
-
-            if (!configuration.getDisabled) {
-              var $fieldset = $(element).closest('fieldset');
-
-              if ($fieldset.length == 1) {
-                var fieldset = $fieldset.get(0);
-
-                configuration.getDisabled = function () {
-                  return element.disabled || fieldset.disabled;
-                };
-              } else {
-                configuration.getDisabled = function () {
-                  return element.disabled;
-                };
-              }
-            }
-
-            optionsAdapter = OptionsAdapterElement(element, configuration.getDisabled, trigger, form);
-            if (!configuration.createInputId) configuration.createInputId = function () {
-              return configuration.containerClass + "-generated-input-" + (element.id ? element.id : element.name).toLowerCase() + "-id";
-            };
-          }
-        }
-        var labelAdapter = LabelAdapter(configuration.label, configuration.createInputId);
         var useCss = configuration.useCss;
         var styling = configuration.styling;
 
@@ -1538,6 +1575,89 @@
           styling = Bs4Styling(stylingMethod, configuration, $);
         }
 
+        var optionsAdapter = null;
+        var containerAdapter = null;
+        if (configuration.optionsAdapter) optionsAdapter = configuration.optionsAdapter;else {
+          var createElement = function createElement(name) {
+            return window.document.createElement(name);
+          };
+
+          var trigger = function trigger(eventName) {
+            $(element).trigger(eventName);
+          };
+
+          if (configuration.options) {
+            optionsAdapter = OptionsAdapterJson(configuration.options, configuration.getDisabled, configuration.getIsValid, configuration.getIsInvalid, trigger);
+            if (!configuration.createInputId) configuration.createInputId = function () {
+              return configuration.containerClass + "-generated-filter-" + element.id;
+            }; // find direct child by tagName
+
+            var picksElement = FindDirectChildByTagName(element, "UL");
+            containerAdapter = ContainerAdapter(createElement, null, element, picksElement);
+          } else {
+            var selectElement = null;
+            var containerElement = null;
+            if (element.tagName == "SELECT") selectElement = element;else {
+              selectElement = FindDirectChildByTagName(element, "SELECT");
+              if (!selectElement) throw "No SELECT element or options in configuraion found";
+              containerElement = element;
+            }
+
+            if (!containerElement && configuration.containerClass) {
+              var $container = $(selectElement).closest('.' + configuration.containerClass);
+              if ($container.length > 0) containerElement = $container.get(0);
+            }
+
+            if (!configuration.label) {
+              var $formGroup = $(selectElement).closest('.form-group');
+
+              if ($formGroup.length == 1) {
+                var $label = $formGroup.find("label[for=\"" + selectElement.id + "\"]");
+
+                if ($label.length > 0) {
+                  var label = $label.get(0);
+                  var forId = label.getAttribute('for');
+
+                  if (forId == selectElement.id) {
+                    configuration.label = label;
+                  }
+                }
+              }
+            }
+
+            var $form = $(selectElement).closest('form');
+            var form = null;
+
+            if ($form.length == 1) {
+              form = $form.get(0);
+            }
+
+            if (!configuration.getDisabled) {
+              var $fieldset = $(selectElement).closest('fieldset');
+
+              if ($fieldset.length == 1) {
+                var fieldset = $fieldset.get(0);
+
+                configuration.getDisabled = function () {
+                  return selectElement.disabled || fieldset.disabled;
+                };
+              } else {
+                configuration.getDisabled = function () {
+                  return selectElement.disabled;
+                };
+              }
+            }
+
+            optionsAdapter = OptionsAdapterElement(selectElement, configuration.getDisabled, trigger, form);
+            if (!configuration.createInputId) configuration.createInputId = function () {
+              return configuration.containerClass + "-generated-input-" + (selectElement.id ? selectElement.id : selectElement.name).toLowerCase() + "-id";
+            };
+            var picksElement = null;
+            if (containerElement) picksElement = FindDirectChildByTagName(containerElement, "UL");
+            containerAdapter = ContainerAdapter(createElement, selectElement, containerElement, picksElement);
+          }
+        }
+        var labelAdapter = LabelAdapter(configuration.label, configuration.createInputId);
         var selectedItemContent = configuration.selectedItemContent;
 
         if (!selectedItemContent) {
@@ -1568,7 +1688,7 @@
           };
         };
 
-        var multiSelect = new MultiSelect(optionsAdapter, styling, selectedItemContent, dropDownItemContent, labelAdapter, createStylingComposite, configuration, onDispose, window);
+        var multiSelect = new MultiSelect(optionsAdapter, containerAdapter, styling, selectedItemContent, dropDownItemContent, labelAdapter, createStylingComposite, configuration, onDispose, window);
         if (configuration.postBuildConfiguration) configuration.postBuildConfiguration(element, multiSelect);
         multiSelect.init();
         return multiSelect;

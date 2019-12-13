@@ -2,23 +2,23 @@ import removeElement from './removeElement.js'
 
 function defSelectedPanelStyleSys(s) {s.display='flex'; s.flexWrap='wrap'; s.listStyleType='none'};  // remove bullets since this is ul
 
-function SelectionsPanel (
-    createElement, 
-    init, 
-    selectedItemContent, 
-    isComponentDisabled, 
-    triggerChange, 
-    onRemove,
-    onClick,
-    processRemoveButtonClick
-    ) 
-    {
-    var ulElement = createElement('UL');
-    defSelectedPanelStyleSys(ulElement.style); 
-    var filterInputItem = createElement('LI'); // detached
-    ulElement.appendChild(filterInputItem); // located filter in selectionsPanel
+function PicksPanel (
+        createElement,
+        picksElement, 
+        init, 
+        selectedItemContent, 
+        isComponentDisabled, 
+        triggerChange, 
+        onRemove,
+        onClick,
+        processRemoveButtonClick
+) 
+{
+    defSelectedPanelStyleSys(picksElement.style); 
+    var inputItemElement = createElement('LI'); // detached
+    picksElement.appendChild(inputItemElement); // located filter in selectionsPanel
 
-    init(filterInputItem);
+    init(inputItemElement);
     var MultiSelectDataSelectedTail = null;
 
     function removeSelectedTail(){
@@ -110,7 +110,7 @@ function SelectionsPanel (
         MultiSelectData.excludedFromSearch = true; // all selected excluded from search
         //MultiSelectData.remove  = removeSelectedItemAndCloseDropDown;
         MultiSelectData.disable = disable;
-        ulElement.insertBefore(selectedItemElement, filterInputItem);
+        picksElement.insertBefore(selectedItemElement, inputItemElement);
 
 
         MultiSelectData.toggle = () => removeSelectedItem();
@@ -131,10 +131,9 @@ function SelectionsPanel (
     }
 
     var item = {
-        selectedPanel: ulElement,
-        filterInputItem,
+        inputItemElement,
         insert(selectedItemElement){
-            this.selectedPanel.insertBefore(selectedItemElement, filterInputItem);
+            this.selectedPanel.insertBefore(selectedItemElement, inputItemElement);
         },
         createSelectedItem,
         removeSelectedTail,
@@ -143,23 +142,29 @@ function SelectionsPanel (
         },
         enable(){
             isComponentDisabled= false;
-            filterInputItem.style.display = "list-item";
+            inputItemElement.style.display = "list-item";
             iterateAll(false);
-            ulElement.addEventListener("click", selectedPanelClick);
+            picksElement.addEventListener("click", selectedPanelClick);
 
         },
         disable(){
             isComponentDisabled= true;
-            filterInputItem.style.display = "none";
+            inputItemElement.style.display = "none";
             iterateAll(true);
-            ulElement.removeEventListener("click", selectedPanelClick);
+            picksElement.removeEventListener("click", selectedPanelClick);
 
         },
         dispose(){
-            ulElement.removeEventListener("click", selectedPanelClick); // OPEN dropdown
+            var toRemove = picksElement.firstChild;
+            while( toRemove ) {
+                picksElement.removeChild( toRemove );
+                toRemove = picksElement.firstChild;
+            }
+            //inputItemElement.parentNode.removeChild(inputItemElement);
+            picksElement.removeEventListener("click", selectedPanelClick); // OPEN dropdown
         }
     }
     return item;
 }
 
-export default SelectionsPanel;
+export default PicksPanel;

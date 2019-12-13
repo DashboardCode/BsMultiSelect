@@ -1,5 +1,6 @@
 # CHANGELOG
 ````
+0.4.18 - "no flick" dom elements instantioning in html;  bootstrap prepend, append; select all and deselect all methods
 0.4.17 - fieldset disabled supported
 0.4.16 - console output removed
 0.4.15 - bug resolved: x button (uncheck selected) on intially disabled component still works

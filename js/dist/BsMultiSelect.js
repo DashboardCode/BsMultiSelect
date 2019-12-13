@@ -8,72 +8,28 @@ import Bs4Styling from './Bs4Styling';
 import AddToJQueryPrototype from './AddToJQueryPrototype';
 import { Bs4SelectedItemContent, Bs4SelectedItemContentStylingMethodJs, Bs4SelectedItemContentStylingMethodCss } from './Bs4SelectedItemContent';
 import { Bs4DropDownItemContent, Bs4DropDownItemContentStylingMethodJs, Bs4DropDownItemContentStylingMethodCss } from './Bs4DropDownItemContent';
+import ContainerAdapter from './ContainerAdapter';
+
+function FindDirectChildByTagName(element, tagName) {
+  var returnValue = null;
+
+  for (var i = 0; i < element.children.length; i++) {
+    var tmp = element.children[i];
+
+    if (tmp.tagName == tagName) {
+      returnValue = tmp;
+      break;
+    }
+  }
+
+  return returnValue;
+}
 
 (function (window, $) {
   AddToJQueryPrototype('BsMultiSelect', function (element, settings, onDispose) {
     var configuration = $.extend({}, settings); // settings used per jQuery intialization, configuration per element
 
     if (configuration.preBuildConfiguration) configuration.preBuildConfiguration(element, configuration);
-    var $element = $(element);
-    var optionsAdapter = null;
-    if (configuration.optionsAdapter) optionsAdapter = configuration.optionsAdapter;else {
-      var trigger = function trigger(eventName) {
-        $element.trigger(eventName);
-      };
-
-      if (configuration.options) {
-        optionsAdapter = OptionsAdapterJson(element, configuration.options, configuration.getDisabled, configuration.getIsValid, configuration.getIsInvalid, trigger);
-        if (!configuration.createInputId) configuration.createInputId = function () {
-          return "".concat(configuration.containerClass, "-generated-filter-").concat(element.id);
-        };
-      } else {
-        if (!configuration.label) {
-          var $formGroup = $(element).closest('.form-group');
-
-          if ($formGroup.length == 1) {
-            var $label = $formGroup.find("label[for=\"".concat(element.id, "\"]"));
-
-            if ($label.length > 0) {
-              var label = $label.get(0);
-              var forId = label.getAttribute('for');
-
-              if (forId == element.id) {
-                configuration.label = label;
-              }
-            }
-          }
-        }
-
-        var $form = $(element).closest('form');
-        var form = null;
-
-        if ($form.length == 1) {
-          form = $form.get(0);
-        }
-
-        if (!configuration.getDisabled) {
-          var $fieldset = $(element).closest('fieldset');
-
-          if ($fieldset.length == 1) {
-            var fieldset = $fieldset.get(0);
-
-            configuration.getDisabled = function () {
-              return element.disabled || fieldset.disabled;
-            };
-          } else {
-            configuration.getDisabled = function () {
-              return element.disabled;
-            };
-          }
-        }
-
-        optionsAdapter = OptionsAdapterElement(element, configuration.getDisabled, trigger, form);
-        if (!configuration.createInputId) configuration.createInputId = function () {
-          return "".concat(configuration.containerClass, "-generated-input-").concat((element.id ? element.id : element.name).toLowerCase(), "-id");
-        };
-      }
-    }
-    var labelAdapter = LabelAdapter(configuration.label, configuration.createInputId);
     var useCss = configuration.useCss;
     var styling = configuration.styling;
 
@@ -87,6 +43,89 @@ import { Bs4DropDownItemContent, Bs4DropDownItemContentStylingMethodJs, Bs4DropD
       styling = Bs4Styling(stylingMethod, configuration, $);
     }
 
+    var optionsAdapter = null;
+    var containerAdapter = null;
+    if (configuration.optionsAdapter) optionsAdapter = configuration.optionsAdapter;else {
+      var createElement = function createElement(name) {
+        return window.document.createElement(name);
+      };
+
+      var trigger = function trigger(eventName) {
+        $(element).trigger(eventName);
+      };
+
+      if (configuration.options) {
+        optionsAdapter = OptionsAdapterJson(configuration.options, configuration.getDisabled, configuration.getIsValid, configuration.getIsInvalid, trigger);
+        if (!configuration.createInputId) configuration.createInputId = function () {
+          return "".concat(configuration.containerClass, "-generated-filter-").concat(element.id);
+        }; // find direct child by tagName
+
+        var picksElement = FindDirectChildByTagName(element, "UL");
+        containerAdapter = ContainerAdapter(createElement, null, element, picksElement);
+      } else {
+        var selectElement = null;
+        var containerElement = null;
+        if (element.tagName == "SELECT") selectElement = element;else {
+          selectElement = FindDirectChildByTagName(element, "SELECT");
+          if (!selectElement) throw "No SELECT element or options in configuraion found";
+          containerElement = element;
+        }
+
+        if (!containerElement && configuration.containerClass) {
+          var $container = $(selectElement).closest('.' + configuration.containerClass);
+          if ($container.length > 0) containerElement = $container.get(0);
+        }
+
+        if (!configuration.label) {
+          var $formGroup = $(selectElement).closest('.form-group');
+
+          if ($formGroup.length == 1) {
+            var $label = $formGroup.find("label[for=\"".concat(selectElement.id, "\"]"));
+
+            if ($label.length > 0) {
+              var label = $label.get(0);
+              var forId = label.getAttribute('for');
+
+              if (forId == selectElement.id) {
+                configuration.label = label;
+              }
+            }
+          }
+        }
+
+        var $form = $(selectElement).closest('form');
+        var form = null;
+
+        if ($form.length == 1) {
+          form = $form.get(0);
+        }
+
+        if (!configuration.getDisabled) {
+          var $fieldset = $(selectElement).closest('fieldset');
+
+          if ($fieldset.length == 1) {
+            var fieldset = $fieldset.get(0);
+
+            configuration.getDisabled = function () {
+              return selectElement.disabled || fieldset.disabled;
+            };
+          } else {
+            configuration.getDisabled = function () {
+              return selectElement.disabled;
+            };
+          }
+        }
+
+        optionsAdapter = OptionsAdapterElement(selectElement, configuration.getDisabled, trigger, form);
+        if (!configuration.createInputId) configuration.createInputId = function () {
+          return "".concat(configuration.containerClass, "-generated-input-").concat((selectElement.id ? selectElement.id : selectElement.name).toLowerCase(), "-id");
+        };
+        var picksElement = null;
+        if (containerElement) picksElement = FindDirectChildByTagName(containerElement, "UL");
+        containerAdapter = ContainerAdapter(createElement, selectElement, containerElement, picksElement);
+      }
+    }
+    var labelAdapter = LabelAdapter(configuration.label, configuration.createInputId);
     var selectedItemContent = configuration.selectedItemContent;
 
     if (!selectedItemContent) {
@@ -117,7 +156,7 @@ import { Bs4DropDownItemContent, Bs4DropDownItemContentStylingMethodJs, Bs4DropD
       };
     };
 
-    var multiSelect = new MultiSelect(optionsAdapter, styling, selectedItemContent, dropDownItemContent, labelAdapter, createStylingComposite, configuration, onDispose, window);
+    var multiSelect = new MultiSelect(optionsAdapter, containerAdapter, styling, selectedItemContent, dropDownItemContent, labelAdapter, createStylingComposite, configuration, onDispose, window);
     if (configuration.postBuildConfiguration) configuration.postBuildConfiguration(element, multiSelect);
     multiSelect.init();
     return multiSelect;

@@ -1,36 +1,40 @@
 function MultiSelectInputAspect (
     window,
-    document, 
-    container, 
-    selectedPanel, 
+    appendToContainer, 
     filterInputItem, 
-    dropDownMenu, 
+    picksElement,
+    optionsElement, 
     showDropDown,
     hideDropDownAndResetFilter,
     isDropDownMenuEmpty,
     Popper
     ) {
 
-    container.appendChild(selectedPanel);
-    container.appendChild(dropDownMenu);
+        appendToContainer();
+        var document = window.document;
 
     var skipFocusout = false;
     
-    // we want to escape the closing of the menu on a user's click inside the container
-    var containerMousedown = function() {
+    // we want to escape the closing of the menu (because of focus out from) on a user's click inside the container
+    var skipoutMousedown = function() {
          skipFocusout = true;
     }
 
     var documentMouseup = function(event) {
         // if click outside container - close dropdown
-        if (!(container === event.target || container.contains(event.target))) {
+        if (  !(optionsElement === event.target 
+                || picksElement === event.target 
+                || optionsElement.contains(event.target)
+                || picksElement.contains(event.target)
+               )
+            ) {
             hideDropDownAndResetFilter();
         }
     }
 
     var popper = new Popper( 
         filterInputItem, 
-        dropDownMenu, 
+        optionsElement, 
         {
             placement: 'bottom-start',
             modifiers: {
@@ -80,12 +84,14 @@ function MultiSelectInputAspect (
             // add listeners that manages close dropdown on input's focusout and click outside container
             //container.removeEventListener("mousedown", containerMousedown);
 
-            container.addEventListener("mousedown", containerMousedown);
+            picksElement.addEventListener("mousedown", skipoutMousedown);
+            optionsElement.addEventListener("mousedown", skipoutMousedown);
             document.addEventListener("mouseup", documentMouseup);
             
         },
         onDropDownHide(){
-            container.removeEventListener("mousedown", containerMousedown);
+            picksElement.removeEventListener("mousedown", skipoutMousedown);
+            optionsElement.addEventListener("mousedown", skipoutMousedown);
             document.removeEventListener("mouseup", documentMouseup);
         },
         getSkipFocusout : function() {

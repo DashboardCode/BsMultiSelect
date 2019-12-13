@@ -59,21 +59,30 @@ For keyboard events `preventDefault` was used to
     a) handle tab `9`  as autocompleate 
     b) arrows `38`, `40` to prevent browser still them; 
     c) enter `13` to prvent default button action (submit etc.)
-    d) esc `27` to not dublicate `clear text` functionlity 
+    d) esc `27` to avoi `clear text on esc` functionlity dublication
 
-You will need to push changes on original `SELECT` (on `FIELDSET` `disabled`) with methods `UpdateIsValid`, `UpdateDisabled`, `UpdateSize`.
+There are no MutationObserver defined inside (component does not track properties on original `SELECT`, `FIELDSET`). If you change  properties on original `SELECT` or `FIELDSET`, then you will need to push changes to component with methods `UpdateIsValid`, `UpdateDisabled`, `UpdateSize`.
 
 ````
-          $('#mySelect').bsMultiSelect("UpdateDisabled"); // bsMultiSelect call the method
+          $('#mySelect').bsMultiSelect("UpdateDisabled"); // bsMultiSelect call the method directly
 ````
 
-Changes in data should be pushed with "Update" e.g.
+Changes in options should be pushed with "Update" e.g.
 
 ````
           var bsMultiSelect = $('#mySelect').BsMultiSelect(); // BsMultiSelect return the object
           bsMultiSelect.Update();
 ````         
-     
+
+Other way to access the component object is using `data` :
+
+````
+          var bsMultiSelect = $('#mySelect').data('DashboardCode.BsMultiSelect');
+          if (bsMultiSelect){
+              // there you are sure that component is attached
+          }
+````         
+
 
 ## Features
 
@@ -92,6 +101,23 @@ Changes in data should be pushed with "Update" e.g.
 **`<label>`**: click on the label puts focus on input and opens the dropdown;
 
 **`<optgroup label=".." >`** grouped options will be flatten; there is no sense mixing "Browse Tree" and "Autosuggest popup" UI expirience. Even if it is possible, I consider this as true: "code that don't exist is infinitely performant and extremely easy to maintain and document." (c) Heydon Pickering;
+
+**no flick** optionally it is possible to add UL element (component's picks/selections/badges list) manually to HTML; then you will see less flicks on page load 
+
+**bootstrap input-group + prepend + append support**  but you will need to give more infromation about dom (mark container)
+````
+          <div class="input-group dashboardcode-bsmultiselect"> <!-- mark the container with dashboardcode-bsmultiselect"  -->
+                <div class="input-group-prepend">
+                    <span class="input-group-text">:-)</span>
+                </div>
+                <select name="Languages" id="languages-id" class="form-control"  multiple="multiple" style="display: none;">
+                    <option value="EN">English</option>
+                    <option value="ES">Spanish</option>
+                </select>
+                <ul class="form-control"></ul> <!-- optionally but recommended: component's  picks/selections/badges list -->
+          </div>
+            
+````
 
 **dialog and popup** works on Bootrap dialogs and dropdowns
 

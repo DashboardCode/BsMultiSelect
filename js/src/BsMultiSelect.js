@@ -11,6 +11,21 @@ import AddToJQueryPrototype from './AddToJQueryPrototype'
 
 import { Bs4SelectedItemContent, Bs4SelectedItemContentStylingMethodJs, Bs4SelectedItemContentStylingMethodCss} from './Bs4SelectedItemContent';
 import { Bs4DropDownItemContent, Bs4DropDownItemContentStylingMethodJs, Bs4DropDownItemContentStylingMethodCss} from './Bs4DropDownItemContent';
+import ContainerAdapter from './ContainerAdapter';
+
+function FindDirectChildByTagName(element, tagName){
+    var returnValue = null;
+    for (var i = 0; i<element.children.length;i++)
+    {
+        let tmp = element.children[i];
+        if (tmp.tagName==tagName)
+        {
+            returnValue = tmp;
+            break;
+        }
+    }
+    return returnValue;
+}
 
 (
     (window, $) => {
@@ -20,68 +35,6 @@ import { Bs4DropDownItemContent, Bs4DropDownItemContentStylingMethodJs, Bs4DropD
                 if (configuration.preBuildConfiguration)
                     configuration.preBuildConfiguration(element, configuration);
                 
-                var $element= $(element);
-                let optionsAdapter = null;
-                if (configuration.optionsAdapter)
-                    optionsAdapter = configuration.optionsAdapter;
-                else
-                {
-                    var trigger = function(eventName){
-                        $element.trigger(eventName);
-                    }
-                    if (configuration.options){
-                        optionsAdapter = OptionsAdapterJson(
-                            element,
-                            configuration.options,
-                            configuration.getDisabled,
-                            configuration.getIsValid,
-                            configuration.getIsInvalid,
-                            trigger );
-                        if (!configuration.createInputId)
-                            configuration.createInputId=()=>`${configuration.containerClass}-generated-filter-${element.id}`;
-            
-                    }else {
-                        if (!configuration.label)
-                        {
-                            let $formGroup = $(element).closest('.form-group');
-                            if ($formGroup.length == 1) {
-                                let $label = $formGroup.find(`label[for="${element.id}"]`);
-                                if ($label.length>0)
-                                {   
-                                    let label = $label.get(0);
-                                    let forId = label.getAttribute('for');
-                                    if (forId == element.id) {
-                                        configuration.label = label;
-                                    }
-                                }   
-                            }
-                        }
-                        var $form = $(element).closest('form');
-                        var form = null;
-                        if ($form.length == 1) {
-                            form = $form.get(0);
-
-                        }
-                        
-                        if (!configuration.getDisabled) {
-                            var $fieldset = $(element).closest('fieldset');
-                        
-                            if ($fieldset.length == 1) {
-                                var fieldset = $fieldset.get(0);
-                                configuration.getDisabled = () => element.disabled || fieldset.disabled;
-                            }else{
-                                configuration.getDisabled = () => element.disabled;
-                            }
-                        }
-
-                        optionsAdapter = OptionsAdapterElement(element, configuration.getDisabled, trigger, form);
-                        if (!configuration.createInputId)
-                            configuration.createInputId = () => `${configuration.containerClass}-generated-input-${((element.id)?element.id:element.name).toLowerCase()}-id`;
-                    }
-                }
-
-                let labelAdapter = LabelAdapter(configuration.label, configuration.createInputId);
-
                 let useCss = configuration.useCss;
                 let styling = configuration.styling;
                 if (!configuration.adapter)
@@ -96,6 +49,99 @@ import { Bs4DropDownItemContent, Bs4DropDownItemContentStylingMethodJs, Bs4DropD
                     }
                     styling = Bs4Styling(stylingMethod, configuration, $);
                 }
+
+                let optionsAdapter = null;
+                let containerAdapter = null;
+                if (configuration.optionsAdapter)
+                    optionsAdapter = configuration.optionsAdapter;
+                else
+                {
+                    var createElement = function(name){
+                        return window.document.createElement(name);
+                    }
+                    var trigger = function(eventName){
+                        $(element).trigger(eventName);
+                    }
+                    if (configuration.options){
+                        optionsAdapter = OptionsAdapterJson(
+                            configuration.options,
+                            configuration.getDisabled,
+                            configuration.getIsValid,
+                            configuration.getIsInvalid,
+                            trigger );
+                        if (!configuration.createInputId)
+                            configuration.createInputId = () => `${configuration.containerClass}-generated-filter-${element.id}`;
+                        // find direct child by tagName
+                        var picksElement = FindDirectChildByTagName(element, "UL");
+                        containerAdapter = ContainerAdapter(createElement, null, element, picksElement);
+                    } 
+                    else  
+                    {
+                        var selectElement = null;
+                        var containerElement = null;
+                        if (element.tagName=="SELECT")
+                            selectElement = element;
+                        else 
+                        { 
+                            selectElement = FindDirectChildByTagName(element, "SELECT");
+                            if (!selectElement)
+                                throw "No SELECT element or options in configuraion found";
+                            containerElement = element;
+                        }
+
+                        if (!containerElement && configuration.containerClass)
+                        {
+                            var $container = $(selectElement).closest('.'+configuration.containerClass);
+                            if ($container.length>0)
+                                containerElement =  $container.get(0);
+                        }
+
+
+                        if (!configuration.label)
+                        {
+                            let $formGroup = $(selectElement).closest('.form-group');
+                            if ($formGroup.length == 1) {
+                                let $label = $formGroup.find(`label[for="${selectElement.id}"]`);
+                                if ($label.length>0)
+                                {   
+                                    let label = $label.get(0);
+                                    let forId = label.getAttribute('for');
+                                    if (forId == selectElement.id) {
+                                        configuration.label = label;
+                                    }
+                                }   
+                            }
+                        }
+                        var $form = $(selectElement).closest('form');
+                        var form = null;
+                        if ($form.length == 1) {
+                            form = $form.get(0);
+                        }
+                        
+                        if (!configuration.getDisabled) {
+                            var $fieldset = $(selectElement).closest('fieldset');
+                        
+                            if ($fieldset.length == 1) {
+                                var fieldset = $fieldset.get(0);
+                                configuration.getDisabled = () => selectElement.disabled || fieldset.disabled;
+                            }else{
+                                configuration.getDisabled = () => selectElement.disabled;
+                            }
+                        }
+                        optionsAdapter = OptionsAdapterElement(selectElement, configuration.getDisabled, trigger, form);
+
+                        if (!configuration.createInputId)
+                            configuration.createInputId = () => `${configuration.containerClass}-generated-input-${((selectElement.id)?selectElement.id:selectElement.name).toLowerCase()}-id`;
+
+                        
+                        var picksElement = null;
+                        if (containerElement)
+                            picksElement = FindDirectChildByTagName(containerElement, "UL");
+                        containerAdapter = ContainerAdapter(createElement, selectElement, containerElement, picksElement);
+                        
+                    }
+                }
+                let labelAdapter = LabelAdapter(configuration.label, configuration.createInputId);
 
                 let selectedItemContent = configuration.selectedItemContent;
                 if (!selectedItemContent){
@@ -132,6 +178,7 @@ import { Bs4DropDownItemContent, Bs4DropDownItemContentStylingMethodJs, Bs4DropD
 
                 let multiSelect = new MultiSelect(
                     optionsAdapter,
+                    containerAdapter,
                     styling,
                     selectedItemContent,
                     dropDownItemContent,

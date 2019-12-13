@@ -1,11 +1,8 @@
 function defDropDownMenuStyleSys(s) {s.listStyleType='none'}; // remove bullets since this is ul
 
-function OptionsPanel(createElement, onShow, onHide, eventSkipper, dropDownItemContent, styling, 
+function OptionsPanel(createElement, dropDownMenu, onShow, onHide, eventSkipper, dropDownItemContent, styling, 
         getVisibleMultiSelectDataList, resetFilter, updateDropDownLocation, filterPanelSetFocus) {
     
-    var dropDownMenu = createElement('UL');
-    dropDownMenu.style.display="none";
-
     // prevent heavy understandable styling error
     defDropDownMenuStyleSys(dropDownMenu.style);
     var hoveredMultiSelectData=null;
@@ -207,7 +204,6 @@ function OptionsPanel(createElement, onShow, onHide, eventSkipper, dropDownItemC
     }
 
     var item = {
-        dropDownMenu,
         hoverInInternal,
         stopAndResetDropDownMenuHover(){
             eventSkipper.setSkippable(); //disable Hover On MouseEnter - filter's changes should remove hover
