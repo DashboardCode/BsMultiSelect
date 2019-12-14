@@ -1,6 +1,7 @@
 import removeElement from './removeElement.js'
 
 function defSelectedPanelStyleSys(s) {s.display='flex'; s.flexWrap='wrap'; s.listStyleType='none'};  // remove bullets since this is ul
+function defPlaceholderStyleSys(s) {s.position='absolute';};
 
 function PicksPanel (
         createElement,
@@ -11,12 +12,29 @@ function PicksPanel (
         triggerChange, 
         onRemove,
         onClick,
-        processRemoveButtonClick
+        processRemoveButtonClick,
+        filterIsEmpty,
+        placeholderText
 ) 
 {
+    var picksCount = 0;
+
     defSelectedPanelStyleSys(picksElement.style); 
+    var placeholderItemElement = createElement('LI');
+    placeholderItemElement.textContent = placeholderText;
+    defPlaceholderStyleSys(placeholderItemElement.style); 
+
     var inputItemElement = createElement('LI'); // detached
     picksElement.appendChild(inputItemElement); // located filter in selectionsPanel
+
+    function showPlacehodler(isVisible){
+        placeholderItemElement.style.display= isVisible?"block":"none";
+    }
+    function updatePlacehodlerVisibility(){
+        showPlacehodler(picksCount==0 && filterIsEmpty());
+    }
+    
+    picksElement.appendChild(placeholderItemElement);
 
     init(inputItemElement);
     var MultiSelectDataSelectedTail = null;
@@ -43,6 +61,7 @@ function PicksPanel (
 
 
     function createSelectedItem(MultiSelectData, isOptionDisabled, setDropDownItemContentDisabled) {
+        
         var selectedItemElement = createElement('LI');
         MultiSelectData.selectedItemElement = selectedItemElement;
         if (MultiSelectDataSelectedTail){
@@ -73,6 +92,8 @@ function PicksPanel (
             MultiSelectData.selectedItemElement=null;
 
             removeSelectedFromList(MultiSelectData);
+            picksCount--;
+            updatePlacehodlerVisibility();
             triggerChange();
         }
 
@@ -115,7 +136,8 @@ function PicksPanel (
 
         MultiSelectData.toggle = () => removeSelectedItem();
         MultiSelectData.DropDownItemContent.select(true);
-        
+        picksCount++;
+        updatePlacehodlerVisibility();
     }
 
     var selectedPanelClick = event => {
@@ -132,6 +154,7 @@ function PicksPanel (
 
     var item = {
         inputItemElement,
+        placeholderItemElement,
         insert(selectedItemElement){
             this.selectedPanel.insertBefore(selectedItemElement, inputItemElement);
         },
@@ -140,6 +163,7 @@ function PicksPanel (
         resetMultiSelectDataSelectedTail() {
             MultiSelectDataSelectedTail = null;
         },
+        updatePlacehodlerVisibility,
         enable(){
             isComponentDisabled= false;
             inputItemElement.style.display = "list-item";
@@ -163,6 +187,7 @@ function PicksPanel (
             //inputItemElement.parentNode.removeChild(inputItemElement);
             picksElement.removeEventListener("click", selectedPanelClick); // OPEN dropdown
         }
+        
     }
     return item;
 }

@@ -9,8 +9,9 @@ const bs4StylingDefaults = {
     selectedPanelClass: 'form-control',  
     selectedItemClass: 'badge',
     removeSelectedItemButtonClass: 'close',
+    placeholderItemClass: '',
     filterInputItemClass: '',
-    filterInputClass: ''
+    filterInputClass: '',
 }
 
 function Bs4Styling(stylingMethod, configuration, $) {

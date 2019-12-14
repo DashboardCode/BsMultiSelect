@@ -102,7 +102,9 @@ Other way to access the component object is using `data` :
 
 **`<optgroup label=".." >`** grouped options will be flatten; there is no sense mixing "Browse Tree" and "Autosuggest popup" UI expirience. Even if it is possible, I consider this as true: "code that don't exist is infinitely performant and extremely easy to maintain and document." (c) Heydon Pickering;
 
-**no flick** optionally it is possible to add UL element (component's picks/selections/badges list) manually to HTML; then you will see less flicks on page load 
+**no flick** optionally it is possible to add UL element (component's picks/selections/badges list) manually to HTML; then you will see less flicks during the page load 
+
+**placeholder** use `data--bsmultiselect-placeholder` or configuration `{placeholder:"select something.."}`
 
 **bootstrap input-group + prepend + append support**  but you will need to give more infromation about dom (mark container)
 ````
@@ -119,7 +121,7 @@ Other way to access the component object is using `data` :
             
 ````
 
-**dialog and popup** works on Bootrap dialogs and dropdowns
+**dialog and popup** works on Bootstrap dialogs and dropdowns
 
 **CSS and SCSS**: you can copy BsMultiSelect.css (included to distribution) and update values manually for your theme.
 Or you can use [./scss/BsMultiSelect.scss](https://github.com/DashboardCode/BsMultiSelect/blob/master/scss/BsMultiSelect.scss) copy it to your project and update reference to your custom BS variables in yout theme); these requires such configuration:
@@ -227,8 +229,6 @@ Note, BS allready provide classes like: `h-25`, `bg-light`, `text-primary` that 
 * Tested only for IE11, Chrome 66, Edge 42/17; Browser should support 'display':'flex' (IE 9 doesn't); 
 
 * no 'smart tracking' of dynamic changes in options - do detach/attach at the end of changes (this is actally not a issue, but desing feature)
-
-* no placeholder support (`data-placeholder` or smth like this)
 
 * no rtl (right to left) - as the whole Boostrap 4;
 

@@ -39,6 +39,9 @@ ul.form-control.form-control-lg {
 ul.form-control.form-control-lg input {
   font-size: 1.25rem;
 }
+ul.form-control > li:first-child {
+  background-color: #6c757d;
+}
 
 .was-validated ul.form-control:valid, ul.form-control.is-valid {
   border-color: #28a745;

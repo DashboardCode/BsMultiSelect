@@ -146,17 +146,24 @@ function FindDirectChildByTagName(element, tagName) {
       dropDownItemContent = Bs4DropDownItemContent(dropDownItemContentStylingMethod, configuration, $);
     }
 
-    var createStylingComposite = function createStylingComposite(container, selectedPanel, filterInputItem, filterInput, dropDownMenu) {
+    var createStylingComposite = function createStylingComposite(container, selectedPanel, placeholder, filterInputItem, filterInput, dropDownMenu) {
       return {
         $container: $(container),
         $selectedPanel: $(selectedPanel),
+        $placeholder: $(placeholder),
         $filterInputItem: $(filterInputItem),
         $filterInput: $(filterInput),
         $dropDownMenu: $(dropDownMenu)
       };
     };
 
-    var multiSelect = new MultiSelect(optionsAdapter, containerAdapter, styling, selectedItemContent, dropDownItemContent, labelAdapter, createStylingComposite, configuration, onDispose, window);
+    var placeholderText = configuration.placeholderText;
+
+    if (!placeholderText) {
+      if (selectElement) placeholderText = $(selectElement).data("bsmultiselect-placeholder");else if (containerElement) placeholderText = $(containerElement).data("bsmultiselect-placeholder");
+    }
+
+    var multiSelect = new MultiSelect(optionsAdapter, containerAdapter, styling, selectedItemContent, dropDownItemContent, labelAdapter, createStylingComposite, placeholderText, configuration, onDispose, window);
     if (configuration.postBuildConfiguration) configuration.postBuildConfiguration(element, multiSelect);
     multiSelect.init();
     return multiSelect;

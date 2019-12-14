@@ -43,6 +43,7 @@ ul.form-control {
     &.disabled{
         background-color: $input-disabled-bg;
     }
+    
     .badge {
         padding-left: 0;
         line-height: 1.5em;
@@ -69,6 +70,10 @@ ul.form-control {
         input{
             font-size: $font-size-lg;
         }
+    }
+    
+    > li:first-child {
+        background-color: $input-placeholder-color;
     }
 }
 @include form-validation-state("valid", $form-feedback-valid-color);

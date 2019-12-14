@@ -166,14 +166,23 @@ function FindDirectChildByTagName(element, tagName){
                     dropDownItemContent = Bs4DropDownItemContent(dropDownItemContentStylingMethod, configuration, $)
                 }
 
-                let createStylingComposite = function(container, selectedPanel, filterInputItem, filterInput, dropDownMenu){
+                let createStylingComposite = function(container, selectedPanel, placeholder, filterInputItem, filterInput, dropDownMenu){
                     return {
                         $container:$(container),
                         $selectedPanel:$(selectedPanel),
+                        $placeholder:$(placeholder),
                         $filterInputItem:$(filterInputItem),
                         $filterInput:$(filterInput),
                         $dropDownMenu:$(dropDownMenu)
                     };
+                }
+                var placeholderText = configuration.placeholderText;
+                if (!placeholderText)
+                {
+                    if (selectElement)
+                        placeholderText = $(selectElement).data("bsmultiselect-placeholder");
+                    else if (containerElement)
+                        placeholderText = $(containerElement).data("bsmultiselect-placeholder");
                 }
 
                 let multiSelect = new MultiSelect(
@@ -184,6 +193,7 @@ function FindDirectChildByTagName(element, tagName){
                     dropDownItemContent,
                     labelAdapter,
                     createStylingComposite,
+                    placeholderText,
                     configuration,
                     onDispose,
                     window);

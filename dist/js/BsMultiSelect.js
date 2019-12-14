@@ -1,5 +1,5 @@
 /*!
-  * DashboardCode BsMultiSelect v0.4.18 (https://dashboardcode.github.io/BsMultiSelect/)
+  * DashboardCode BsMultiSelect v0.4.19 (https://dashboardcode.github.io/BsMultiSelect/)
   * Copyright 2017-2019 Roman Pokrovskij (github user rpokrovskij)
   * Licensed under APACHE 2 (https://github.com/DashboardCode/BsMultiSelect/blob/master/LICENSE)
   */
@@ -338,12 +338,29 @@
       s.listStyleType = 'none';
     }
 
-    function PicksPanel(createElement, picksElement, init, selectedItemContent, isComponentDisabled, triggerChange, onRemove, onClick, processRemoveButtonClick) {
+    function defPlaceholderStyleSys(s) {
+      s.position = 'absolute';
+    }
+
+    function PicksPanel(createElement, picksElement, init, selectedItemContent, isComponentDisabled, triggerChange, onRemove, onClick, processRemoveButtonClick, filterIsEmpty, placeholderText) {
+      var picksCount = 0;
       defSelectedPanelStyleSys(picksElement.style);
+      var placeholderItemElement = createElement('LI');
+      placeholderItemElement.textContent = placeholderText;
+      defPlaceholderStyleSys(placeholderItemElement.style);
       var inputItemElement = createElement('LI'); // detached
 
       picksElement.appendChild(inputItemElement); // located filter in selectionsPanel
 
+      function showPlacehodler(isVisible) {
+        placeholderItemElement.style.display = isVisible ? "block" : "none";
+      }
+
+      function updatePlacehodlerVisibility() {
+        showPlacehodler(picksCount == 0 && filterIsEmpty());
+      }
+
+      picksElement.appendChild(placeholderItemElement);
       init(inputItemElement);
       var MultiSelectDataSelectedTail = null;
 
@@ -402,6 +419,8 @@
           MultiSelectData.SelectedItemContent = null;
           MultiSelectData.selectedItemElement = null;
           removeSelectedFromList(MultiSelectData);
+          picksCount--;
+          updatePlacehodlerVisibility();
           triggerChange();
         }; // processRemoveButtonClick removes the 
         // what is a problem with calling removeSelectedItem directly (not using  setTimeout(removeSelectedItem, 0)):
@@ -447,6 +466,8 @@
         };
 
         MultiSelectData.DropDownItemContent.select(true);
+        picksCount++;
+        updatePlacehodlerVisibility();
       }
 
       var selectedPanelClick = function selectedPanelClick(event) {
@@ -464,6 +485,7 @@
 
       var item = {
         inputItemElement: inputItemElement,
+        placeholderItemElement: placeholderItemElement,
         insert: function insert(selectedItemElement) {
           this.selectedPanel.insertBefore(selectedItemElement, inputItemElement);
         },
@@ -472,6 +494,7 @@
         resetMultiSelectDataSelectedTail: function resetMultiSelectDataSelectedTail() {
           MultiSelectDataSelectedTail = null;
         },
+        updatePlacehodlerVisibility: updatePlacehodlerVisibility,
         enable: function enable() {
           isComponentDisabled = false;
           inputItemElement.style.display = "list-item";
@@ -643,7 +666,7 @@
     var MultiSelect =
     /*#__PURE__*/
     function () {
-      function MultiSelect(optionsAdapter, containerAdapter, styling, selectedItemContent, dropDownItemContent, labelAdapter, createStylingComposite, configuration, onDispose, window) {
+      function MultiSelect(optionsAdapter, containerAdapter, styling, selectedItemContent, dropDownItemContent, labelAdapter, createStylingComposite, placeholderText, configuration, onDispose, window) {
         if (typeof Popper === 'undefined') {
           throw new TypeError('DashboardCode BsMultiSelect require Popper.js (https://popper.js.org)');
         }
@@ -659,6 +682,7 @@
         this.labelAdapter = labelAdapter;
         this.createStylingComposite = createStylingComposite;
         this.configuration = configuration;
+        this.placeholderText = placeholderText;
         this.window = window;
         this.visibleCount = 10;
         this.optionsPanel = null;
@@ -951,7 +975,7 @@
             _this2.labelAdapter.init(filterItemInputElement);
           };
         }, function () {
-          return _this2.styling.FocusIn(_this2.stylingComposite);
+          _this2.styling.FocusIn(_this2.stylingComposite);
         }, // focus in - show dropdown
         function () {
           if (!_this2.aspect.getSkipFocusout()) // skip initiated by mouse click (we manage it different way)
@@ -992,7 +1016,9 @@
           _this2.resetFilter();
         }, // esc keyup 
         function (filterInputValue, resetLength) {
-          return _this2.input(filterInputValue, resetLength);
+          _this2.picksPanel.updatePlacehodlerVisibility();
+
+          _this2.input(filterInputValue, resetLength);
         } // filter
         );
         this.picksPanel = PicksPanel(createElement, this.containerAdapter.picksElement, function (filterItemElement) {
@@ -1010,7 +1036,9 @@
           _this2.aspect.alignAndShowDropDown(event);
         }, function (doUncheck, event) {
           _this2.aspect.processUncheck(doUncheck, event);
-        });
+        }, function () {
+          return _this2.filterPanel.isEmpty();
+        }, this.placeholderText);
         this.optionsPanel = OptionsPanel(createElement, this.containerAdapter.optionsElement, function () {
           return _this2.aspect.onDropDownShow();
         }, function () {
@@ -1035,7 +1063,7 @@
         }, function () {
           return _this2.getVisibleMultiSelectDataList().length == 0;
         }, Popper);
-        this.stylingComposite = this.createStylingComposite(container, this.containerAdapter.picksElement, this.picksPanel.inputItemElement, this.filterPanel.input, this.containerAdapter.optionsElement);
+        this.stylingComposite = this.createStylingComposite(container, this.containerAdapter.picksElement, this.picksPanel.placeholderItemElement, this.picksPanel.inputItemElement, this.filterPanel.input, this.containerAdapter.optionsElement);
         this.styling.Init(this.stylingComposite);
         this.containerAdapter.attachContainer();
         this.UpdateSize();
@@ -1161,8 +1189,8 @@
       selectedPanelFocusBoxShadow: '0 0 0 0.2rem rgba(0, 123, 255, 0.25)',
       selectedPanelFocusValidBoxShadow: '0 0 0 0.2rem rgba(40, 167, 69, 0.25)',
       selectedPanelFocusInvalidBoxShadow: '0 0 0 0.2rem rgba(220, 53, 69, 0.25)',
-      filterInputColor: '#495057' //selectedItemContentDisabledOpacity: '.65'
-
+      filterInputColor: '#495057',
+      placeholderItemElementColor: '#6c757d'
     };
 
     function Bs4StylingMethodJs(configuration) {
@@ -1171,6 +1199,7 @@
         OnInit: function OnInit(composite) {
           composite.$selectedPanel.css(defSelectedPanelStyle);
           composite.$filterInput.css("color", configuration.filterInputColor);
+          composite.$placeholder.css("color", configuration.placeholderItemElementColor);
         },
         UpdateSize: function UpdateSize($selectedPanel) {
           if ($selectedPanel.hasClass("form-control-lg")) {
@@ -1210,6 +1239,7 @@
       selectedPanelClass: 'form-control',
       selectedItemClass: 'badge',
       removeSelectedItemButtonClass: 'close',
+      placeholderItemClass: '',
       filterInputItemClass: '',
       filterInputClass: ''
     };
@@ -1678,17 +1708,24 @@
           dropDownItemContent = Bs4DropDownItemContent(dropDownItemContentStylingMethod, configuration, $);
         }
 
-        var createStylingComposite = function createStylingComposite(container, selectedPanel, filterInputItem, filterInput, dropDownMenu) {
+        var createStylingComposite = function createStylingComposite(container, selectedPanel, placeholder, filterInputItem, filterInput, dropDownMenu) {
           return {
             $container: $(container),
             $selectedPanel: $(selectedPanel),
+            $placeholder: $(placeholder),
             $filterInputItem: $(filterInputItem),
             $filterInput: $(filterInput),
             $dropDownMenu: $(dropDownMenu)
           };
         };
 
-        var multiSelect = new MultiSelect(optionsAdapter, containerAdapter, styling, selectedItemContent, dropDownItemContent, labelAdapter, createStylingComposite, configuration, onDispose, window);
+        var placeholderText = configuration.placeholderText;
+
+        if (!placeholderText) {
+          if (selectElement) placeholderText = $(selectElement).data("bsmultiselect-placeholder");else if (containerElement) placeholderText = $(containerElement).data("bsmultiselect-placeholder");
+        }
+
+        var multiSelect = new MultiSelect(optionsAdapter, containerAdapter, styling, selectedItemContent, dropDownItemContent, labelAdapter, createStylingComposite, placeholderText, configuration, onDispose, window);
         if (configuration.postBuildConfiguration) configuration.postBuildConfiguration(element, multiSelect);
         multiSelect.init();
         return multiSelect;

@@ -12,7 +12,7 @@ const bs4StylingMethodJsDefaults = {
     selectedPanelFocusValidBoxShadow: '0 0 0 0.2rem rgba(40, 167, 69, 0.25)',
     selectedPanelFocusInvalidBoxShadow: '0 0 0 0.2rem rgba(220, 53, 69, 0.25)',
     filterInputColor: '#495057',
-    //selectedItemContentDisabledOpacity: '.65'
+    placeholderItemElementColor: '#6c757d'
 };
 
 function Bs4StylingMethodJs(configuration){
@@ -22,6 +22,7 @@ function Bs4StylingMethodJs(configuration){
         OnInit(composite){
             composite.$selectedPanel.css(defSelectedPanelStyle);
             composite.$filterInput.css("color", configuration.filterInputColor);
+            composite.$placeholder.css("color", configuration.placeholderItemElementColor);
         },
     
         UpdateSize($selectedPanel){

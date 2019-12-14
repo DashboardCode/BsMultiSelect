@@ -48,7 +48,7 @@ function collectFilterDropDownMenu(MultiSelectDataList, text) {
 class MultiSelect {
     constructor(optionsAdapter, containerAdapter, styling, 
         selectedItemContent, dropDownItemContent, 
-        labelAdapter, createStylingComposite,
+        labelAdapter, createStylingComposite, placeholderText,
         configuration, onDispose, window) {
         if (typeof Popper === 'undefined') {
             throw new TypeError('DashboardCode BsMultiSelect require Popper.js (https://popper.js.org)')
@@ -65,7 +65,7 @@ class MultiSelect {
         this.labelAdapter = labelAdapter;
         this.createStylingComposite = createStylingComposite;
         this.configuration = configuration;
-        
+        this.placeholderText = placeholderText;
         this.window = window;
 
         this.visibleCount=10;
@@ -375,7 +375,9 @@ class MultiSelect {
                     this.labelAdapter.init(filterItemInputElement); 
                 };
             },
-            () => this.styling.FocusIn(this.stylingComposite),  // focus in - show dropdown
+            () => {
+                this.styling.FocusIn(this.stylingComposite)
+            },  // focus in - show dropdown
             () => {
                 if (!this.aspect.getSkipFocusout()) // skip initiated by mouse click (we manage it different way)
                 {
@@ -402,7 +404,11 @@ class MultiSelect {
                 this.optionsPanel.hideDropDown(); // always hide 1st
                 this.resetFilter();
             }, // esc keyup 
-            (filterInputValue, resetLength) => this.input(filterInputValue, resetLength) // filter
+            (filterInputValue, resetLength) =>
+            { 
+                this.picksPanel.updatePlacehodlerVisibility();
+                this.input(filterInputValue, resetLength) 
+            }// filter
         );
         
         this.picksPanel =  PicksPanel(
@@ -421,11 +427,13 @@ class MultiSelect {
             (event) => {
                 if (!this.filterPanel.isEventTarget(event))
                      this.filterPanel.setFocus();
-                this.aspect.alignAndShowDropDown(event);
+                this.aspect.alignAndShowDropDown(event); 
             },
             (doUncheck, event) => {
                 this.aspect.processUncheck(doUncheck, event);
-            }
+            },
+            () => this.filterPanel.isEmpty(),
+            this.placeholderText
         );
 
         this.optionsPanel = OptionsPanel(
@@ -459,6 +467,7 @@ class MultiSelect {
 
         this.stylingComposite = this.createStylingComposite(container, 
             this.containerAdapter.picksElement,
+            this.picksPanel.placeholderItemElement, 
             this.picksPanel.inputItemElement, 
             this.filterPanel.input, 
             this.containerAdapter.optionsElement);
