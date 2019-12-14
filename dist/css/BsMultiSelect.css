@@ -40,7 +40,7 @@ ul.form-control.form-control-lg input {
   font-size: 1.25rem;
 }
 ul.form-control > li:last-child {
-  background-color: #6c757d;
+  color: #6c757d;
 }
 
 .was-validated ul.form-control:valid, ul.form-control.is-valid {

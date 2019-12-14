@@ -2,7 +2,7 @@ import removeElement from './removeElement.js'
 
 function defSelectedPanelStyleSys(s) {s.display='flex'; s.flexWrap='nowrap'; s.listStyleType='none'};  // remove bullets since this is ul
 //function defPlaceholderStyleSys(s) {s.position='absolute'; s.overflow='hidden'; s.whiteSpace='nowrap' };
-function defPlaceholderStyleSys(s) {s.position='relative'; s.overflow='hidden'; s.whiteSpace='nowrap'; s.left="-16px" };
+function defPlaceholderStyleSys(s) {s.position='relative'; s.overflow='hidden'; s.whiteSpace='nowrap'; };
 
 function PicksPanel (
         createElement,
@@ -30,6 +30,7 @@ function PicksPanel (
 
     function showPlacehodler(isVisible){
         placeholderItemElement.style.display= isVisible?"block":"none";
+        placeholderItemElement.style.left=isComponentDisabled?"auto":"-1rem";
         picksElement.style.flexWrap= isVisible?"nowrap":"wrap";
     }
 
@@ -173,8 +174,9 @@ function PicksPanel (
         updatePlacehodlerVisibility,
         enable(){
             isComponentDisabled= false;
-            inputItemElement.style.display = "list-item";
+            inputItemElement.style.display = "block";
             iterateAll(false);
+            updatePlacehodlerVisibility();
             picksElement.addEventListener("click", selectedPanelClick);
 
         },
@@ -182,6 +184,7 @@ function PicksPanel (
             isComponentDisabled= true;
             inputItemElement.style.display = "none";
             iterateAll(true);
+            updatePlacehodlerVisibility();
             picksElement.removeEventListener("click", selectedPanelClick);
 
         },

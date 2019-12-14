@@ -1,5 +1,7 @@
 # CHANGELOG
 ````
+0.4.24 - placeholder color in css error; update bsmultiselect.css;
+0.4.23 - placeholder on disabled looks better
 0.4.22 - problem solved: after Form Reset/UpdataData the placeholder was not shown
 0.4.21 - configuration .placeholderText renamed to .placeholder; placeholder white space break fixed; update bsmultiselect.css;
 0.4.20 - placeholder on IE11 looks better

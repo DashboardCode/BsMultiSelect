@@ -1,5 +1,5 @@
 /*!
-  * DashboardCode BsMultiSelect v0.4.22 (https://dashboardcode.github.io/BsMultiSelect/)
+  * DashboardCode BsMultiSelect v0.4.24 (https://dashboardcode.github.io/BsMultiSelect/)
   * Copyright 2017-2019 Roman Pokrovskij (github user rpokrovskij)
   * Licensed under APACHE 2 (https://github.com/DashboardCode/BsMultiSelect/blob/master/LICENSE)
   */
@@ -93,7 +93,7 @@
       inputElement.addEventListener('input', onFilterInputInput);
 
       function setEmptyLength() {
-        inputElement.style.width = "16px";
+        inputElement.style.width = "1rem";
       }
 
       setEmptyLength();
@@ -344,7 +344,6 @@
       s.position = 'relative';
       s.overflow = 'hidden';
       s.whiteSpace = 'nowrap';
-      s.left = "-16px";
     }
 
     function PicksPanel(createElement, picksElement, init, selectedItemContent, isComponentDisabled, triggerChange, onRemove, onClick, processRemoveButtonClick, filterIsEmpty, placeholderText) {
@@ -357,6 +356,7 @@
 
       function showPlacehodler(isVisible) {
         placeholderItemElement.style.display = isVisible ? "block" : "none";
+        placeholderItemElement.style.left = isComponentDisabled ? "auto" : "-1rem";
         picksElement.style.flexWrap = isVisible ? "nowrap" : "wrap";
       }
 
@@ -505,14 +505,16 @@
         updatePlacehodlerVisibility: updatePlacehodlerVisibility,
         enable: function enable() {
           isComponentDisabled = false;
-          inputItemElement.style.display = "list-item";
+          inputItemElement.style.display = "block";
           iterateAll(false);
+          updatePlacehodlerVisibility();
           picksElement.addEventListener("click", selectedPanelClick);
         },
         disable: function disable() {
           isComponentDisabled = true;
           inputItemElement.style.display = "none";
           iterateAll(true);
+          updatePlacehodlerVisibility();
           picksElement.removeEventListener("click", selectedPanelClick);
         },
         dispose: function dispose() {

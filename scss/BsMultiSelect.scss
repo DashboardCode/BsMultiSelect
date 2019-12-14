@@ -73,7 +73,7 @@ ul.form-control {
     }
     
     > li:last-child {
-        background-color: $input-placeholder-color;
+        color: $input-placeholder-color;
     }
 }
 @include form-validation-state("valid", $form-feedback-valid-color);

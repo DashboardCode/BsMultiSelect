@@ -88,7 +88,7 @@ function FilterPanel(
     inputElement.addEventListener('input', onFilterInputInput);
 
     function setEmptyLength(){
-        inputElement.style.width="16px";
+        inputElement.style.width="1rem";
     }
     setEmptyLength();
 
