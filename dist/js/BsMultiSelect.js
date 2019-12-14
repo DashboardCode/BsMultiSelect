@@ -1,5 +1,5 @@
 /*!
-  * DashboardCode BsMultiSelect v0.4.19 (https://dashboardcode.github.io/BsMultiSelect/)
+  * DashboardCode BsMultiSelect v0.4.20 (https://dashboardcode.github.io/BsMultiSelect/)
   * Copyright 2017-2019 Roman Pokrovskij (github user rpokrovskij)
   * Licensed under APACHE 2 (https://github.com/DashboardCode/BsMultiSelect/blob/master/LICENSE)
   */
@@ -350,8 +350,6 @@
       defPlaceholderStyleSys(placeholderItemElement.style);
       var inputItemElement = createElement('LI'); // detached
 
-      picksElement.appendChild(inputItemElement); // located filter in selectionsPanel
-
       function showPlacehodler(isVisible) {
         placeholderItemElement.style.display = isVisible ? "block" : "none";
       }
@@ -360,7 +358,10 @@
         showPlacehodler(picksCount == 0 && filterIsEmpty());
       }
 
-      picksElement.appendChild(placeholderItemElement);
+      picksElement.appendChild(placeholderItemElement); // placeholder should be first! this is used in css
+
+      picksElement.appendChild(inputItemElement); // located filter in selectionsPanel
+
       init(inputItemElement);
       var MultiSelectDataSelectedTail = null;
 

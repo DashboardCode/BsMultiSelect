@@ -25,7 +25,7 @@ function PicksPanel (
     defPlaceholderStyleSys(placeholderItemElement.style); 
 
     var inputItemElement = createElement('LI'); // detached
-    picksElement.appendChild(inputItemElement); // located filter in selectionsPanel
+    
 
     function showPlacehodler(isVisible){
         placeholderItemElement.style.display= isVisible?"block":"none";
@@ -34,7 +34,8 @@ function PicksPanel (
         showPlacehodler(picksCount==0 && filterIsEmpty());
     }
     
-    picksElement.appendChild(placeholderItemElement);
+    picksElement.appendChild(placeholderItemElement); // placeholder should be first! this is used in css
+    picksElement.appendChild(inputItemElement); // located filter in selectionsPanel
 
     init(inputItemElement);
     var MultiSelectDataSelectedTail = null;
