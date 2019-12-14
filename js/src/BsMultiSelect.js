@@ -181,7 +181,7 @@ function FindDirectChildByTagName(element, tagName){
                 {
                     if (selectElement)
                         placeholderText = $(selectElement).data("bsmultiselect-placeholder");
-                    else if (containerElement)
+                    else if (containerElement)                 
                         placeholderText = $(containerElement).data("bsmultiselect-placeholder");
                 }
 
