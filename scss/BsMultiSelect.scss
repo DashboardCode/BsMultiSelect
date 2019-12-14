@@ -72,7 +72,7 @@ ul.form-control {
         }
     }
     
-    > li:first-child {
+    > li:last-child {
         background-color: $input-placeholder-color;
     }
 }

@@ -1,5 +1,5 @@
 /*!
-  * DashboardCode BsMultiSelect v0.4.20 (https://dashboardcode.github.io/BsMultiSelect/)
+  * DashboardCode BsMultiSelect v0.4.21 (https://dashboardcode.github.io/BsMultiSelect/)
   * Copyright 2017-2019 Roman Pokrovskij (github user rpokrovskij)
   * Licensed under APACHE 2 (https://github.com/DashboardCode/BsMultiSelect/blob/master/LICENSE)
   */
@@ -13,7 +13,6 @@
     Popper = Popper && Popper.hasOwnProperty('default') ? Popper['default'] : Popper;
 
     function defFilterInputStyleSys(s) {
-      s.width = '2ch';
       s.border = '0';
       s.padding = '0';
       s.outline = 'none';
@@ -94,8 +93,10 @@
       inputElement.addEventListener('input', onFilterInputInput);
 
       function setEmptyLength() {
-        inputElement.style.width = "2ch";
+        inputElement.style.width = "16px";
       }
+
+      setEmptyLength();
 
       function setEmpty() {
         inputElement.value = '';
@@ -334,12 +335,16 @@
 
     function defSelectedPanelStyleSys(s) {
       s.display = 'flex';
-      s.flexWrap = 'wrap';
+      s.flexWrap = 'nowrap';
       s.listStyleType = 'none';
     }
+    //function defPlaceholderStyleSys(s) {s.position='absolute'; s.overflow='hidden'; s.whiteSpace='nowrap' };
 
     function defPlaceholderStyleSys(s) {
-      s.position = 'absolute';
+      s.position = 'relative';
+      s.overflow = 'hidden';
+      s.whiteSpace = 'nowrap';
+      s.left = "-16px";
     }
 
     function PicksPanel(createElement, picksElement, init, selectedItemContent, isComponentDisabled, triggerChange, onRemove, onClick, processRemoveButtonClick, filterIsEmpty, placeholderText) {
@@ -352,15 +357,16 @@
 
       function showPlacehodler(isVisible) {
         placeholderItemElement.style.display = isVisible ? "block" : "none";
+        picksElement.style.flexWrap = isVisible ? "nowrap" : "wrap";
       }
 
       function updatePlacehodlerVisibility() {
         showPlacehodler(picksCount == 0 && filterIsEmpty());
       }
 
-      picksElement.appendChild(placeholderItemElement); // placeholder should be first! this is used in css
-
       picksElement.appendChild(inputItemElement); // located filter in selectionsPanel
+
+      picksElement.appendChild(placeholderItemElement); // placeholder should be first! this is used in css
 
       init(inputItemElement);
       var MultiSelectDataSelectedTail = null;
@@ -1720,7 +1726,7 @@
           };
         };
 
-        var placeholderText = configuration.placeholderText;
+        var placeholderText = configuration.placeholder;
 
         if (!placeholderText) {
           if (selectElement) placeholderText = $(selectElement).data("bsmultiselect-placeholder");else if (containerElement) placeholderText = $(containerElement).data("bsmultiselect-placeholder");

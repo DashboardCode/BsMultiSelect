@@ -176,7 +176,7 @@ function FindDirectChildByTagName(element, tagName){
                         $dropDownMenu:$(dropDownMenu)
                     };
                 }
-                var placeholderText = configuration.placeholderText;
+                var placeholderText = configuration.placeholder;
                 if (!placeholderText)
                 {
                     if (selectElement)

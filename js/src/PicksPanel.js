@@ -1,7 +1,8 @@
 import removeElement from './removeElement.js'
 
-function defSelectedPanelStyleSys(s) {s.display='flex'; s.flexWrap='wrap'; s.listStyleType='none'};  // remove bullets since this is ul
-function defPlaceholderStyleSys(s) {s.position='absolute';};
+function defSelectedPanelStyleSys(s) {s.display='flex'; s.flexWrap='nowrap'; s.listStyleType='none'};  // remove bullets since this is ul
+//function defPlaceholderStyleSys(s) {s.position='absolute'; s.overflow='hidden'; s.whiteSpace='nowrap' };
+function defPlaceholderStyleSys(s) {s.position='relative'; s.overflow='hidden'; s.whiteSpace='nowrap'; s.left="-16px" };
 
 function PicksPanel (
         createElement,
@@ -29,13 +30,17 @@ function PicksPanel (
 
     function showPlacehodler(isVisible){
         placeholderItemElement.style.display= isVisible?"block":"none";
+        picksElement.style.flexWrap= isVisible?"nowrap":"wrap";
     }
+
     function updatePlacehodlerVisibility(){
         showPlacehodler(picksCount==0 && filterIsEmpty());
     }
     
-    picksElement.appendChild(placeholderItemElement); // placeholder should be first! this is used in css
+    
     picksElement.appendChild(inputItemElement); // located filter in selectionsPanel
+    picksElement.appendChild(placeholderItemElement); // placeholder should be first! this is used in css
+    
 
     init(inputItemElement);
     var MultiSelectDataSelectedTail = null;

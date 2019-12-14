@@ -157,7 +157,7 @@ function FindDirectChildByTagName(element, tagName) {
       };
     };
 
-    var placeholderText = configuration.placeholderText;
+    var placeholderText = configuration.placeholder;
 
     if (!placeholderText) {
       if (selectElement) placeholderText = $(selectElement).data("bsmultiselect-placeholder");else if (containerElement) placeholderText = $(containerElement).data("bsmultiselect-placeholder");

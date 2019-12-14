@@ -1,4 +1,4 @@
-function defFilterInputStyleSys(s) {s.width='2ch'; s.border='0'; s.padding='0'; s.outline='none'; s.backgroundColor='transparent' };
+function defFilterInputStyleSys(s) {s.border='0'; s.padding='0'; s.outline='none'; s.backgroundColor='transparent' };
 
 function FilterPanel(
         createElement,
@@ -88,8 +88,9 @@ function FilterPanel(
     inputElement.addEventListener('input', onFilterInputInput);
 
     function setEmptyLength(){
-        inputElement.style.width="2ch";
+        inputElement.style.width="16px";
     }
+    setEmptyLength();
 
     function setEmpty(){
         inputElement.value ='';
