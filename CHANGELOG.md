@@ -1,5 +1,6 @@
 # CHANGELOG
 ````
+0.4.22 - problem solved: after Form Reset/UpdataData the placeholder was not shown
 0.4.21 - configuration .placeholderText renamed to .placeholder; placeholder white space break fixed; update bsmultiselect.css;
 0.4.20 - placeholder on IE11 looks better
 0.4.19 - placeholder support added (through configuration "placeholder" or "data-bsmultiselect-placeholder"); update bsmultiselect.css if you use it

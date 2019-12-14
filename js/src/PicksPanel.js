@@ -167,6 +167,7 @@ function PicksPanel (
         createSelectedItem,
         removeSelectedTail,
         resetMultiSelectDataSelectedTail() {
+            picksCount =0;
             MultiSelectDataSelectedTail = null;
         },
         updatePlacehodlerVisibility,

@@ -187,7 +187,7 @@ class MultiSelect {
         }
     }
 
-    Empty(){
+    empty(){
         // close drop down , remove filter and listeners
         this.optionsPanel.hideDropDown(); // always hide 1st
         this.resetFilter();
@@ -205,7 +205,7 @@ class MultiSelect {
     }
 
     UpdateData(){
-        this.Empty();
+        this.empty();
         // reinitiate
         this.updateDataImpl();
     }

@@ -1,5 +1,5 @@
 /*!
-  * DashboardCode BsMultiSelect v0.4.21 (https://dashboardcode.github.io/BsMultiSelect/)
+  * DashboardCode BsMultiSelect v0.4.22 (https://dashboardcode.github.io/BsMultiSelect/)
   * Copyright 2017-2019 Roman Pokrovskij (github user rpokrovskij)
   * Licensed under APACHE 2 (https://github.com/DashboardCode/BsMultiSelect/blob/master/LICENSE)
   */
@@ -499,6 +499,7 @@
         createSelectedItem: createSelectedItem,
         removeSelectedTail: removeSelectedTail,
         resetMultiSelectDataSelectedTail: function resetMultiSelectDataSelectedTail() {
+          picksCount = 0;
           MultiSelectDataSelectedTail = null;
         },
         updatePlacehodlerVisibility: updatePlacehodlerVisibility,
@@ -802,7 +803,7 @@
         }
       };
 
-      _proto.Empty = function Empty() {
+      _proto.empty = function empty() {
         // close drop down , remove filter and listeners
         this.optionsPanel.hideDropDown(); // always hide 1st
 
@@ -819,7 +820,7 @@
       };
 
       _proto.UpdateData = function UpdateData() {
-        this.Empty(); // reinitiate
+        this.empty(); // reinitiate
 
         this.updateDataImpl();
       };
