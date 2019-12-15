@@ -12,7 +12,7 @@ function filterMultiSelectData(MultiSelectData, isFiltered, visibleIndex) {
     MultiSelectData.dropDownMenuItemElement.style.display = isFiltered ? 'block': 'none';
 } 
 
-function resetFilterDropDownMenu(MultiSelectDataList) {
+function resetDropDownMenu(MultiSelectDataList) {
     for(let i=0; i<MultiSelectDataList.length; i++)
     {
         let multiSelectData = MultiSelectDataList[i];
@@ -96,12 +96,13 @@ class MultiSelect {
         if (!this.filterPanel.isEmpty()) {
             this.filterPanel.setEmpty();
             this.processEmptyInput();
+            this.picksPanel.updatePlacehodlerVisibility();
         }
     }
 
     processEmptyInput(){
         this.filterPanel.setEmptyLength();
-        resetFilterDropDownMenu(this.MultiSelectDataList);
+        resetDropDownMenu(this.MultiSelectDataList);
         this.filteredMultiSelectDataList = null;
     }
 
@@ -165,7 +166,6 @@ class MultiSelect {
 
     DeselectAll(){
         this.optionsPanel.hideDropDown(); // always hide 1st
-        this.resetFilter();
 
         for(let i=0; i<this.MultiSelectDataList.length; i++)
         {
@@ -173,11 +173,12 @@ class MultiSelect {
             if (multiSelectData.selectedItemElement)
                 multiSelectData.toggle();
         }
+        this.resetFilter();
+        
     }
 
     SelectAll(){
         this.optionsPanel.hideDropDown(); // always hide 1st
-        this.resetFilter();
 
         for(let i=0; i<this.MultiSelectDataList.length; i++)
         {
@@ -185,6 +186,7 @@ class MultiSelect {
             if (!multiSelectData.excludedFromSearch)
                 multiSelectData.toggle();
         }
+        this.resetFilter();
     }
 
     empty(){

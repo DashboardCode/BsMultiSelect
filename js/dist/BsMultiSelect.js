@@ -67,7 +67,7 @@ function FindDirectChildByTagName(element, tagName) {
         var containerElement = null;
         if (element.tagName == "SELECT") selectElement = element;else {
           selectElement = FindDirectChildByTagName(element, "SELECT");
-          if (!selectElement) throw "No SELECT element or options in configuraion found";
+          if (!selectElement) throw "There are no SELECT element or options in the configuraion";
           containerElement = element;
         }
 

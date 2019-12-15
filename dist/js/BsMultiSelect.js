@@ -1,5 +1,5 @@
 /*!
-  * DashboardCode BsMultiSelect v0.4.24 (https://dashboardcode.github.io/BsMultiSelect/)
+  * DashboardCode BsMultiSelect v0.4.25 (https://dashboardcode.github.io/BsMultiSelect/)
   * Copyright 2017-2019 Roman Pokrovskij (github user rpokrovskij)
   * Licensed under APACHE 2 (https://github.com/DashboardCode/BsMultiSelect/blob/master/LICENSE)
   */
@@ -643,7 +643,7 @@
       MultiSelectData.dropDownMenuItemElement.style.display = isFiltered ? 'block' : 'none';
     }
 
-    function resetFilterDropDownMenu(MultiSelectDataList) {
+    function resetDropDownMenu(MultiSelectDataList) {
       for (var i = 0; i < MultiSelectDataList.length; i++) {
         var multiSelectData = MultiSelectDataList[i];
 
@@ -716,12 +716,13 @@
         if (!this.filterPanel.isEmpty()) {
           this.filterPanel.setEmpty();
           this.processEmptyInput();
+          this.picksPanel.updatePlacehodlerVisibility();
         }
       };
 
       _proto.processEmptyInput = function processEmptyInput() {
         this.filterPanel.setEmptyLength();
-        resetFilterDropDownMenu(this.MultiSelectDataList);
+        resetDropDownMenu(this.MultiSelectDataList);
         this.filteredMultiSelectDataList = null;
       } // -----------------------------------------------------------------------------------------------------------------------
       ;
@@ -786,23 +787,23 @@
       _proto.DeselectAll = function DeselectAll() {
         this.optionsPanel.hideDropDown(); // always hide 1st
 
-        this.resetFilter();
-
         for (var i = 0; i < this.MultiSelectDataList.length; i++) {
           var multiSelectData = this.MultiSelectDataList[i];
           if (multiSelectData.selectedItemElement) multiSelectData.toggle();
         }
+
+        this.resetFilter();
       };
 
       _proto.SelectAll = function SelectAll() {
         this.optionsPanel.hideDropDown(); // always hide 1st
 
-        this.resetFilter();
-
         for (var i = 0; i < this.MultiSelectDataList.length; i++) {
           var multiSelectData = this.MultiSelectDataList[i];
           if (!multiSelectData.excludedFromSearch) multiSelectData.toggle();
         }
+
+        this.resetFilter();
       };
 
       _proto.empty = function empty() {
@@ -1639,7 +1640,7 @@
             var containerElement = null;
             if (element.tagName == "SELECT") selectElement = element;else {
               selectElement = FindDirectChildByTagName(element, "SELECT");
-              if (!selectElement) throw "No SELECT element or options in configuraion found";
+              if (!selectElement) throw "There are no SELECT element or options in the configuraion";
               containerElement = element;
             }
 

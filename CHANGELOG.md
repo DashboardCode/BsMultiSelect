@@ -1,5 +1,6 @@
 # CHANGELOG
 ````
+0.4.25 - problem  has been solved : placeholder absent after "esc"
 0.4.24 - placeholder color in css error; update bsmultiselect.css;
 0.4.23 - placeholder on disabled looks better
 0.4.22 - problem solved: after Form Reset/UpdataData the placeholder was not shown
