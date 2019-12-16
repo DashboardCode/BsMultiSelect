@@ -1,4 +1,5 @@
 @import "./../node_modules/bootstrap/scss/_functions";
+@import "./../node_modules/bootstrap/scss/vendor/_rfs";
 @import "./../node_modules/bootstrap/scss/mixins/_box-shadow";
 @import "./../node_modules/bootstrap/scss/mixins/_transition";
 @import "./../node_modules/bootstrap/scss/mixins/_forms";
@@ -38,12 +39,18 @@ ul.form-control {
     margin-bottom: 0;
 
     input {
-        color: $input-color;
+        font-weight: inherit;
+        color: inherit;
     }
     &.disabled{
         background-color: $input-disabled-bg;
     }
-    
+    &::placeholder {
+        color: $input-placeholder-color;
+        // BS Override Firefox's unusual default opacity; see https://github.com/twbs/bootstrap/pull/11526.
+        opacity: 1;
+    }
+
     .badge {
         padding-left: 0;
         line-height: 1.5em;

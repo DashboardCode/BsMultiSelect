@@ -4,10 +4,31 @@ ul.form-control {
   margin-bottom: 0;
 }
 ul.form-control input {
-  color: #495057;
+  font-weight: inherit;
+  color: inherit;
 }
 ul.form-control.disabled {
   background-color: #e9ecef;
+}
+ul.form-control::-webkit-input-placeholder {
+  color: #6c757d;
+  opacity: 1;
+}
+ul.form-control::-moz-placeholder {
+  color: #6c757d;
+  opacity: 1;
+}
+ul.form-control:-ms-input-placeholder {
+  color: #6c757d;
+  opacity: 1;
+}
+ul.form-control::-ms-input-placeholder {
+  color: #6c757d;
+  opacity: 1;
+}
+ul.form-control::placeholder {
+  color: #6c757d;
+  opacity: 1;
 }
 ul.form-control .badge {
   padding-left: 0;

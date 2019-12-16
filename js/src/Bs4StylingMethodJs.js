@@ -11,7 +11,8 @@ const bs4StylingMethodJsDefaults = {
     selectedPanelFocusBoxShadow: '0 0 0 0.2rem rgba(0, 123, 255, 0.25)',
     selectedPanelFocusValidBoxShadow: '0 0 0 0.2rem rgba(40, 167, 69, 0.25)',
     selectedPanelFocusInvalidBoxShadow: '0 0 0 0.2rem rgba(220, 53, 69, 0.25)',
-    filterInputColor: '#495057',
+    filterInputColor: 'inherit', //'#495057',
+    filterInputFontWeight: 'inherit', //'#495057',
     placeholderItemColor: '#6c757d'
 };
 
@@ -22,6 +23,7 @@ function Bs4StylingMethodJs(configuration){
         OnInit(composite){
             composite.$selectedPanel.css(defSelectedPanelStyle);
             composite.$filterInput.css("color", configuration.filterInputColor);
+            composite.$filterInput.css("font-weight", configuration.filterInputFontWeight);
             if (composite.placeholderItem)
                 composite.$placeholderItem.css("color", configuration.placeholderItemColor);
         },

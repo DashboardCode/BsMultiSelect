@@ -1,5 +1,6 @@
 # CHANGELOG
 ````
+0.4.27 - better look on phone devices
 0.4.26 - second placeholder realisation (through filter input traceholder)
 0.4.25 - problem  has been solved : placeholder absent after "esc"
 0.4.24 - placeholder color in css error; update bsmultiselect.css;

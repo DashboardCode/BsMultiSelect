@@ -213,6 +213,7 @@ class MultiSelect {
         this.empty();
         // reinitiate
         this.updateDataImpl();
+        
     }
 
     updateDataImpl(){
@@ -254,6 +255,7 @@ class MultiSelect {
                 }
             } 
             this.aspect.alignToFilterInputItemLocation(false);
+            //this.placeholderAspect.updatePlacehodlerVisibility();
         }
 
         // some browsers (IE11) can change select value (as part of "autocomplete") after page is loaded but before "ready" event
@@ -415,7 +417,7 @@ class MultiSelect {
             { 
                 this.placeholderAspect.updatePlacehodlerVisibility();
                 this.input(filterInputValue, resetLength) 
-            },// filter
+            }, // filter
             () => {
                 this.placeholderAspect.setEmptyLength();
             }
@@ -475,11 +477,13 @@ class MultiSelect {
             () => this.picksPanel.isEmpty(), 
             () => this.filterPanel.isEmpty(), 
             this.containerAdapter.picksElement, 
-            this.filterPanel.inputElement)
+            this.filterPanel.inputElement,
+            () => this.placeholderAspect.setEmptyLength()
+        )
 
         this.placeholderAspect.init();
         this.placeholderAspect.setEmptyLength();
-        this.placeholderAspect.updatePlacehodlerVisibility();
+        
 
         this.aspect =  MultiSelectInputAspect(
             this.window,

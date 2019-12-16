@@ -1,5 +1,5 @@
 /*!
-  * DashboardCode BsMultiSelect v0.4.26 (https://dashboardcode.github.io/BsMultiSelect/)
+  * DashboardCode BsMultiSelect v0.4.27 (https://dashboardcode.github.io/BsMultiSelect/)
   * Copyright 2017-2019 Roman Pokrovskij (github user rpokrovskij)
   * Licensed under APACHE 2 (https://github.com/DashboardCode/BsMultiSelect/blob/master/LICENSE)
   */
@@ -609,10 +609,12 @@
       };
     }
 
-    function PlaceholderAsInputAspect(placeholderText, picksIsEmpty, filterIsEmpty, picksElement, inputElement) {
-      function showPlacehodler(isVisible) {
-        console.log("showPlacehodler " + isVisible + " " + placeholderText);
+    function PlaceholderAsInputAspect(placeholderText, picksIsEmpty, filterIsEmpty, picksElement, inputElement, setLengthInput) {
+      inputElement.placeholder = placeholderText ? placeholderText : "";
+      picksElement.style.display = "block";
+      inputElement.style.width = "100%";
 
+      function showPlacehodler(isVisible) {
         if (isVisible) {
           var compStyles = window.getComputedStyle(picksElement);
           var padding = compStyles.getPropertyValue("padding");
@@ -625,8 +627,9 @@
           inputElement.placeholder = "";
           picksElement.style.padding = null;
           picksElement.style.display = "flex";
-          inputElement.style.width = null;
         }
+
+        setLengthInput();
       }
 
       return {
@@ -893,7 +896,8 @@
             }
           }
 
-          _this.aspect.alignToFilterInputItemLocation(false);
+          _this.aspect.alignToFilterInputItemLocation(false); //this.placeholderAspect.updatePlacehodlerVisibility();
+
         }; // some browsers (IE11) can change select value (as part of "autocomplete") after page is loaded but before "ready" event
 
 
@@ -1103,10 +1107,11 @@
           return _this2.picksPanel.isEmpty();
         }, function () {
           return _this2.filterPanel.isEmpty();
-        }, this.containerAdapter.picksElement, this.filterPanel.inputElement);
+        }, this.containerAdapter.picksElement, this.filterPanel.inputElement, function () {
+          return _this2.placeholderAspect.setEmptyLength();
+        });
         this.placeholderAspect.init();
         this.placeholderAspect.setEmptyLength();
-        this.placeholderAspect.updatePlacehodlerVisibility();
         this.aspect = MultiSelectInputAspect(this.window, function () {
           return _this2.containerAdapter.appendToContainer();
         }, this.picksPanel.inputItemElement, this.containerAdapter.picksElement, this.containerAdapter.optionsElement, function () {
@@ -1244,7 +1249,10 @@
       selectedPanelFocusBoxShadow: '0 0 0 0.2rem rgba(0, 123, 255, 0.25)',
       selectedPanelFocusValidBoxShadow: '0 0 0 0.2rem rgba(40, 167, 69, 0.25)',
       selectedPanelFocusInvalidBoxShadow: '0 0 0 0.2rem rgba(220, 53, 69, 0.25)',
-      filterInputColor: '#495057',
+      filterInputColor: 'inherit',
+      //'#495057',
+      filterInputFontWeight: 'inherit',
+      //'#495057',
       placeholderItemColor: '#6c757d'
     };
 
@@ -1254,6 +1262,7 @@
         OnInit: function OnInit(composite) {
           composite.$selectedPanel.css(defSelectedPanelStyle);
           composite.$filterInput.css("color", configuration.filterInputColor);
+          composite.$filterInput.css("font-weight", configuration.filterInputFontWeight);
           if (composite.placeholderItem) composite.$placeholderItem.css("color", configuration.placeholderItemColor);
         },
         UpdateSize: function UpdateSize($selectedPanel) {

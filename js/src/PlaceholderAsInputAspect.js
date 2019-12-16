@@ -1,7 +1,8 @@
-export default function PlaceholderAsInputAspect(placeholderText, picksIsEmpty, filterIsEmpty, picksElement, inputElement){
-    
+export default function PlaceholderAsInputAspect(placeholderText, picksIsEmpty, filterIsEmpty, picksElement, inputElement, setLengthInput ){
+    inputElement.placeholder = placeholderText?placeholderText:"";
+    picksElement.style.display= "block";
+    inputElement.style.width="100%";
     function showPlacehodler(isVisible){
-        console.log("showPlacehodler "+isVisible + " "+placeholderText);
         if (isVisible)
         {
             let compStyles = window.getComputedStyle(picksElement);
@@ -11,16 +12,14 @@ export default function PlaceholderAsInputAspect(placeholderText, picksIsEmpty, 
             picksElement.style.display= "block";
             inputElement.style.width="100%";
             picksElement.style.padding=padding;
-            
         }
         else
         {
             inputElement.placeholder = "";
             picksElement.style.padding=null;
             picksElement.style.display= "flex";
-            inputElement.style.width=null;    
-            
         }
+        setLengthInput();
     }
     return {
         updatePlacehodlerVisibility(){
