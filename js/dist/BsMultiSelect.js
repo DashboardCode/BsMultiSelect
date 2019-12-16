@@ -146,11 +146,11 @@ function FindDirectChildByTagName(element, tagName) {
       dropDownItemContent = Bs4DropDownItemContent(dropDownItemContentStylingMethod, configuration, $);
     }
 
-    var createStylingComposite = function createStylingComposite(container, selectedPanel, placeholder, filterInputItem, filterInput, dropDownMenu) {
+    var createStylingComposite = function createStylingComposite(container, selectedPanel, placeholderItemElement, filterInputItem, filterInput, dropDownMenu) {
       return {
         $container: $(container),
         $selectedPanel: $(selectedPanel),
-        $placeholder: $(placeholder),
+        $placeholderItem: placeholderItemElement ? $(placeholderItemElement) : null,
         $filterInputItem: $(filterInputItem),
         $filterInput: $(filterInput),
         $dropDownMenu: $(dropDownMenu)

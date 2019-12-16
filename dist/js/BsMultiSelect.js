@@ -1,5 +1,5 @@
 /*!
-  * DashboardCode BsMultiSelect v0.4.25 (https://dashboardcode.github.io/BsMultiSelect/)
+  * DashboardCode BsMultiSelect v0.4.26 (https://dashboardcode.github.io/BsMultiSelect/)
   * Copyright 2017-2019 Roman Pokrovskij (github user rpokrovskij)
   * Licensed under APACHE 2 (https://github.com/DashboardCode/BsMultiSelect/blob/master/LICENSE)
   */
@@ -13,8 +13,8 @@
     Popper = Popper && Popper.hasOwnProperty('default') ? Popper['default'] : Popper;
 
     function defFilterInputStyleSys(s) {
-      s.border = '0';
-      s.padding = '0';
+      s.border = '0px';
+      s.padding = '0px';
       s.outline = 'none';
       s.backgroundColor = 'transparent';
     }
@@ -25,8 +25,8 @@
     onBackspace, // backspace alike
     onEnterOrTabToCompleate, // "compleate alike"
     onKeyDownEsc, onKeyUpEsc, // "esc" alike
-    onInput // filter
-    ) {
+    onInput, // filter
+    setEmptyLength) {
       var inputElement = createElement('INPUT');
       inputElement.setAttribute("type", "search");
       inputElement.setAttribute("autocomplete", "off");
@@ -90,20 +90,17 @@
       inputElement.addEventListener('focusout', onFocusOut);
       inputElement.addEventListener('keydown', onfilterInputKeyDown);
       inputElement.addEventListener('keyup', onFilterInputKeyUp);
-      inputElement.addEventListener('input', onFilterInputInput);
-
-      function setEmptyLength() {
-        inputElement.style.width = "1rem";
-      }
-
-      setEmptyLength();
+      inputElement.addEventListener('input', onFilterInputInput); // function setEmptyLength(){
+      //     inputElement.style.width= "100%"; //--"1rem";
+      // }
+      //setEmptyLength();
 
       function setEmpty() {
         inputElement.value = '';
         setEmptyLength();
       }
       return {
-        input: inputElement,
+        inputElement: inputElement,
         isEmpty: function isEmpty() {
           return inputElement.value ? false : true;
         },
@@ -335,38 +332,36 @@
 
     function defSelectedPanelStyleSys(s) {
       s.display = 'flex';
-      s.flexWrap = 'nowrap';
+      s.flexWrap = 'wrap';
       s.listStyleType = 'none';
     }
-    //function defPlaceholderStyleSys(s) {s.position='absolute'; s.overflow='hidden'; s.whiteSpace='nowrap' };
 
-    function defPlaceholderStyleSys(s) {
-      s.position = 'relative';
-      s.overflow = 'hidden';
-      s.whiteSpace = 'nowrap';
-    }
-
-    function PicksPanel(createElement, picksElement, init, selectedItemContent, isComponentDisabled, triggerChange, onRemove, onClick, processRemoveButtonClick, filterIsEmpty, placeholderText) {
+    function PicksPanel(createElement, picksElement, init, selectedItemContent, isComponentDisabled, triggerChange, onRemove, onClick, onPicksEmptyChanged, //placeholderAspect.updatePlacehodlerVisibility(); call the same on enable/disable
+    processRemoveButtonClick) {
       var picksCount = 0;
+
+      function inc() {
+        picksCount++;
+        if (picksCount == 1) onPicksEmptyChanged();
+      }
+
+      function dec() {
+        picksCount--;
+        if (picksCount == 0) onPicksEmptyChanged();
+      }
+
+      function reset() {
+        picksCount = 0;
+        onPicksEmptyChanged();
+      }
+
+      function isEmpty() {
+        return picksCount == 0;
+      }
       defSelectedPanelStyleSys(picksElement.style);
-      var placeholderItemElement = createElement('LI');
-      placeholderItemElement.textContent = placeholderText;
-      defPlaceholderStyleSys(placeholderItemElement.style);
       var inputItemElement = createElement('LI'); // detached
 
-      function showPlacehodler(isVisible) {
-        placeholderItemElement.style.display = isVisible ? "block" : "none";
-        placeholderItemElement.style.left = isComponentDisabled ? "auto" : "-1rem";
-        picksElement.style.flexWrap = isVisible ? "nowrap" : "wrap";
-      }
-
-      function updatePlacehodlerVisibility() {
-        showPlacehodler(picksCount == 0 && filterIsEmpty());
-      }
-
       picksElement.appendChild(inputItemElement); // located filter in selectionsPanel
-
-      picksElement.appendChild(placeholderItemElement); // placeholder should be first! this is used in css
 
       init(inputItemElement);
       var MultiSelectDataSelectedTail = null;
@@ -426,8 +421,7 @@
           MultiSelectData.SelectedItemContent = null;
           MultiSelectData.selectedItemElement = null;
           removeSelectedFromList(MultiSelectData);
-          picksCount--;
-          updatePlacehodlerVisibility();
+          dec();
           triggerChange();
         }; // processRemoveButtonClick removes the 
         // what is a problem with calling removeSelectedItem directly (not using  setTimeout(removeSelectedItem, 0)):
@@ -473,8 +467,7 @@
         };
 
         MultiSelectData.DropDownItemContent.select(true);
-        picksCount++;
-        updatePlacehodlerVisibility();
+        inc();
       }
 
       var selectedPanelClick = function selectedPanelClick(event) {
@@ -492,29 +485,24 @@
 
       var item = {
         inputItemElement: inputItemElement,
-        placeholderItemElement: placeholderItemElement,
         insert: function insert(selectedItemElement) {
           this.selectedPanel.insertBefore(selectedItemElement, inputItemElement);
         },
         createSelectedItem: createSelectedItem,
         removeSelectedTail: removeSelectedTail,
         resetMultiSelectDataSelectedTail: function resetMultiSelectDataSelectedTail() {
-          picksCount = 0;
+          reset();
           MultiSelectDataSelectedTail = null;
         },
-        updatePlacehodlerVisibility: updatePlacehodlerVisibility,
+        isEmpty: isEmpty,
         enable: function enable() {
           isComponentDisabled = false;
-          inputItemElement.style.display = "block";
           iterateAll(false);
-          updatePlacehodlerVisibility();
           picksElement.addEventListener("click", selectedPanelClick);
         },
         disable: function disable() {
           isComponentDisabled = true;
-          inputItemElement.style.display = "none";
           iterateAll(true);
-          updatePlacehodlerVisibility();
           picksElement.removeEventListener("click", selectedPanelClick);
         },
         dispose: function dispose() {
@@ -523,8 +511,7 @@
           while (toRemove) {
             picksElement.removeChild(toRemove);
             toRemove = picksElement.firstChild;
-          } //inputItemElement.parentNode.removeChild(inputItemElement);
-
+          }
 
           picksElement.removeEventListener("click", selectedPanelClick); // OPEN dropdown
         }
@@ -618,6 +605,42 @@
         },
         resetSkipFocusout: function resetSkipFocusout() {
           skipFocusout = false;
+        }
+      };
+    }
+
+    function PlaceholderAsInputAspect(placeholderText, picksIsEmpty, filterIsEmpty, picksElement, inputElement) {
+      function showPlacehodler(isVisible) {
+        console.log("showPlacehodler " + isVisible + " " + placeholderText);
+
+        if (isVisible) {
+          var compStyles = window.getComputedStyle(picksElement);
+          var padding = compStyles.getPropertyValue("padding");
+          inputElement.placeholder = placeholderText ? placeholderText : "";
+          picksElement.style.padding = "0px";
+          picksElement.style.display = "block";
+          inputElement.style.width = "100%";
+          picksElement.style.padding = padding;
+        } else {
+          inputElement.placeholder = "";
+          picksElement.style.padding = null;
+          picksElement.style.display = "flex";
+          inputElement.style.width = null;
+        }
+      }
+
+      return {
+        updatePlacehodlerVisibility: function updatePlacehodlerVisibility() {
+          showPlacehodler(picksIsEmpty() && filterIsEmpty());
+        },
+        showPlacehodler: showPlacehodler,
+        init: function init() {},
+        placeholderItemElement: null,
+        adjustForDisabled: function adjustForDisabled(isDisabled) {
+          inputElement.disabled = isDisabled;
+        },
+        setEmptyLength: function setEmptyLength() {
+          if (picksIsEmpty() && filterIsEmpty()) inputElement.style.width = "100%";else inputElement.style.width = "2ch";
         }
       };
     }
@@ -716,7 +739,7 @@
         if (!this.filterPanel.isEmpty()) {
           this.filterPanel.setEmpty();
           this.processEmptyInput();
-          this.picksPanel.updatePlacehodlerVisibility();
+          this.placeholderAspect.updatePlacehodlerVisibility();
         }
       };
 
@@ -924,9 +947,11 @@
         if (this.isComponentDisabled !== isComponentDisabled) {
           if (isComponentDisabled) {
             this.picksPanel.disable();
+            this.placeholderAspect.adjustForDisabled(true);
             this.styling.Disable(this.stylingComposite);
           } else {
             this.picksPanel.enable();
+            this.placeholderAspect.adjustForDisabled(false);
             this.styling.Enable(this.stylingComposite);
           }
 
@@ -1027,11 +1052,13 @@
           _this2.resetFilter();
         }, // esc keyup 
         function (filterInputValue, resetLength) {
-          _this2.picksPanel.updatePlacehodlerVisibility();
+          _this2.placeholderAspect.updatePlacehodlerVisibility();
 
           _this2.input(filterInputValue, resetLength);
-        } // filter
-        );
+        }, // filter
+        function () {
+          _this2.placeholderAspect.setEmptyLength();
+        });
         this.picksPanel = PicksPanel(createElement, this.containerAdapter.picksElement, function (filterItemElement) {
           lazyfilterItemInputElementAtach(filterItemElement);
         }, this.selectedItemContent, this.isComponentDisabled, function () {
@@ -1045,11 +1072,11 @@
           if (!_this2.filterPanel.isEventTarget(event)) _this2.filterPanel.setFocus();
 
           _this2.aspect.alignAndShowDropDown(event);
+        }, function () {
+          return _this2.placeholderAspect.updatePlacehodlerVisibility();
         }, function (doUncheck, event) {
           _this2.aspect.processUncheck(doUncheck, event);
-        }, function () {
-          return _this2.filterPanel.isEmpty();
-        }, this.placeholderText);
+        });
         this.optionsPanel = OptionsPanel(createElement, this.containerAdapter.optionsElement, function () {
           return _this2.aspect.onDropDownShow();
         }, function () {
@@ -1062,7 +1089,24 @@
           return _this2.aspect.alignToFilterInputItemLocation(true);
         }, function () {
           return _this2.filterPanel.setFocus();
-        });
+        }); // this.placeholderAspect = PlaceholderAsElementAspect(
+        //     this.placeholderText, 
+        //     () => this.picksPanel.isEmpty(),
+        //     () => this.filterPanel.isEmpty(), 
+        //     this.containerAdapter.picksElement,
+        //     this.filterPanel.inputElement, 
+        //     createElement, 
+        //     ()=>this.isComponentDisabled,
+        //     this.picksPanel.inputItemElement);
+
+        this.placeholderAspect = PlaceholderAsInputAspect(this.placeholderText, function () {
+          return _this2.picksPanel.isEmpty();
+        }, function () {
+          return _this2.filterPanel.isEmpty();
+        }, this.containerAdapter.picksElement, this.filterPanel.inputElement);
+        this.placeholderAspect.init();
+        this.placeholderAspect.setEmptyLength();
+        this.placeholderAspect.updatePlacehodlerVisibility();
         this.aspect = MultiSelectInputAspect(this.window, function () {
           return _this2.containerAdapter.appendToContainer();
         }, this.picksPanel.inputItemElement, this.containerAdapter.picksElement, this.containerAdapter.optionsElement, function () {
@@ -1074,7 +1118,7 @@
         }, function () {
           return _this2.getVisibleMultiSelectDataList().length == 0;
         }, Popper);
-        this.stylingComposite = this.createStylingComposite(container, this.containerAdapter.picksElement, this.picksPanel.placeholderItemElement, this.picksPanel.inputItemElement, this.filterPanel.input, this.containerAdapter.optionsElement);
+        this.stylingComposite = this.createStylingComposite(container, this.containerAdapter.picksElement, this.picksPanel.placeholderItemElement, this.picksPanel.inputItemElement, this.filterPanel.inputElement, this.containerAdapter.optionsElement);
         this.styling.Init(this.stylingComposite);
         this.containerAdapter.attachContainer();
         this.UpdateSize();
@@ -1201,7 +1245,7 @@
       selectedPanelFocusValidBoxShadow: '0 0 0 0.2rem rgba(40, 167, 69, 0.25)',
       selectedPanelFocusInvalidBoxShadow: '0 0 0 0.2rem rgba(220, 53, 69, 0.25)',
       filterInputColor: '#495057',
-      placeholderItemElementColor: '#6c757d'
+      placeholderItemColor: '#6c757d'
     };
 
     function Bs4StylingMethodJs(configuration) {
@@ -1210,7 +1254,7 @@
         OnInit: function OnInit(composite) {
           composite.$selectedPanel.css(defSelectedPanelStyle);
           composite.$filterInput.css("color", configuration.filterInputColor);
-          composite.$placeholder.css("color", configuration.placeholderItemElementColor);
+          if (composite.placeholderItem) composite.$placeholderItem.css("color", configuration.placeholderItemColor);
         },
         UpdateSize: function UpdateSize($selectedPanel) {
           if ($selectedPanel.hasClass("form-control-lg")) {
@@ -1719,11 +1763,11 @@
           dropDownItemContent = Bs4DropDownItemContent(dropDownItemContentStylingMethod, configuration, $);
         }
 
-        var createStylingComposite = function createStylingComposite(container, selectedPanel, placeholder, filterInputItem, filterInput, dropDownMenu) {
+        var createStylingComposite = function createStylingComposite(container, selectedPanel, placeholderItemElement, filterInputItem, filterInput, dropDownMenu) {
           return {
             $container: $(container),
             $selectedPanel: $(selectedPanel),
-            $placeholder: $(placeholder),
+            $placeholderItem: placeholderItemElement ? $(placeholderItemElement) : null,
             $filterInputItem: $(filterInputItem),
             $filterInput: $(filterInput),
             $dropDownMenu: $(dropDownMenu)

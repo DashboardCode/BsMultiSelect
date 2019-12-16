@@ -1,8 +1,7 @@
 import removeElement from './removeElement.js'
 
-function defSelectedPanelStyleSys(s) {s.display='flex'; s.flexWrap='nowrap'; s.listStyleType='none'};  // remove bullets since this is ul
-//function defPlaceholderStyleSys(s) {s.position='absolute'; s.overflow='hidden'; s.whiteSpace='nowrap' };
-function defPlaceholderStyleSys(s) {s.position='relative'; s.overflow='hidden'; s.whiteSpace='nowrap'; };
+function defSelectedPanelStyleSys(s) {s.display='flex'; s.flexWrap='wrap'; s.listStyleType='none'};  // remove bullets since this is ul
+
 
 function PicksPanel (
         createElement,
@@ -13,35 +12,25 @@ function PicksPanel (
         triggerChange, 
         onRemove,
         onClick,
-        processRemoveButtonClick,
-        filterIsEmpty,
-        placeholderText
+        onPicksEmptyChanged, //placeholderAspect.updatePlacehodlerVisibility(); call the same on enable/disable
+        processRemoveButtonClick
 ) 
 {
     var picksCount = 0;
+    function inc(){picksCount++; if (picksCount==1) onPicksEmptyChanged()};
+    function dec(){picksCount--; if (picksCount==0) onPicksEmptyChanged()};
+    function reset(){picksCount=0; ; onPicksEmptyChanged()}
+    function isEmpty(){return picksCount==0};
 
     defSelectedPanelStyleSys(picksElement.style); 
-    var placeholderItemElement = createElement('LI');
-    placeholderItemElement.textContent = placeholderText;
-    defPlaceholderStyleSys(placeholderItemElement.style); 
 
     var inputItemElement = createElement('LI'); // detached
-    
-
-    function showPlacehodler(isVisible){
-        placeholderItemElement.style.display= isVisible?"block":"none";
-        placeholderItemElement.style.left=isComponentDisabled?"auto":"-1rem";
-        picksElement.style.flexWrap= isVisible?"nowrap":"wrap";
-    }
-
-    function updatePlacehodlerVisibility(){
-        showPlacehodler(picksCount==0 && filterIsEmpty());
-    }
+  
     
     
     picksElement.appendChild(inputItemElement); // located filter in selectionsPanel
-    picksElement.appendChild(placeholderItemElement); // placeholder should be first! this is used in css
     
+   
 
     init(inputItemElement);
     var MultiSelectDataSelectedTail = null;
@@ -99,8 +88,7 @@ function PicksPanel (
             MultiSelectData.selectedItemElement=null;
 
             removeSelectedFromList(MultiSelectData);
-            picksCount--;
-            updatePlacehodlerVisibility();
+            dec();
             triggerChange();
         }
 
@@ -143,8 +131,7 @@ function PicksPanel (
 
         MultiSelectData.toggle = () => removeSelectedItem();
         MultiSelectData.DropDownItemContent.select(true);
-        picksCount++;
-        updatePlacehodlerVisibility();
+        inc();
     }
 
     var selectedPanelClick = event => {
@@ -161,30 +148,25 @@ function PicksPanel (
 
     var item = {
         inputItemElement,
-        placeholderItemElement,
         insert(selectedItemElement){
             this.selectedPanel.insertBefore(selectedItemElement, inputItemElement);
         },
         createSelectedItem,
         removeSelectedTail,
         resetMultiSelectDataSelectedTail() {
-            picksCount =0;
+            reset();
             MultiSelectDataSelectedTail = null;
         },
-        updatePlacehodlerVisibility,
+        isEmpty,
         enable(){
             isComponentDisabled= false;
-            inputItemElement.style.display = "block";
             iterateAll(false);
-            updatePlacehodlerVisibility();
             picksElement.addEventListener("click", selectedPanelClick);
 
         },
         disable(){
             isComponentDisabled= true;
-            inputItemElement.style.display = "none";
             iterateAll(true);
-            updatePlacehodlerVisibility();
             picksElement.removeEventListener("click", selectedPanelClick);
 
         },
@@ -194,7 +176,6 @@ function PicksPanel (
                 picksElement.removeChild( toRemove );
                 toRemove = picksElement.firstChild;
             }
-            //inputItemElement.parentNode.removeChild(inputItemElement);
             picksElement.removeEventListener("click", selectedPanelClick); // OPEN dropdown
         }
         

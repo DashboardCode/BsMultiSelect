@@ -3,6 +3,9 @@ import FilterPanel from './FilterPanel.js'
 import OptionsPanel from './OptionsPanel.js'
 import PicksPanel from './PicksPanel.js'
 import MultiSelectInputAspect from './MultiSelectInputAspect.js'
+//import PlaceholderAsElementAspect from './PlaceholderAsElementAspect.js'
+import PlaceholderAsInputAspect from './PlaceholderAsInputAspect.js'
+
 import EventSkipper from './EventSkipper.js'
 import removeElement from './removeElement.js'
 
@@ -96,7 +99,7 @@ class MultiSelect {
         if (!this.filterPanel.isEmpty()) {
             this.filterPanel.setEmpty();
             this.processEmptyInput();
-            this.picksPanel.updatePlacehodlerVisibility();
+            this.placeholderAspect.updatePlacehodlerVisibility();
         }
     }
 
@@ -314,9 +317,11 @@ class MultiSelect {
         if (this.isComponentDisabled!==isComponentDisabled){
             if (isComponentDisabled) {
                 this.picksPanel.disable();
+                this.placeholderAspect.adjustForDisabled(true);
                 this.styling.Disable(this.stylingComposite);
             } else {
                 this.picksPanel.enable();
+                this.placeholderAspect.adjustForDisabled(false);
                 this.styling.Enable(this.stylingComposite);
             }
             this.isComponentDisabled=isComponentDisabled;
@@ -408,9 +413,12 @@ class MultiSelect {
             }, // esc keyup 
             (filterInputValue, resetLength) =>
             { 
-                this.picksPanel.updatePlacehodlerVisibility();
+                this.placeholderAspect.updatePlacehodlerVisibility();
                 this.input(filterInputValue, resetLength) 
-            }// filter
+            },// filter
+            () => {
+                this.placeholderAspect.setEmptyLength();
+            }
         );
         
         this.picksPanel =  PicksPanel(
@@ -426,16 +434,16 @@ class MultiSelect {
                 this.optionsPanel.hideDropDown(); // always hide 1st
                 this.resetFilter();
             },
+
             (event) => {
                 if (!this.filterPanel.isEventTarget(event))
                      this.filterPanel.setFocus();
                 this.aspect.alignAndShowDropDown(event); 
             },
+            ()=> this.placeholderAspect.updatePlacehodlerVisibility(),
             (doUncheck, event) => {
                 this.aspect.processUncheck(doUncheck, event);
-            },
-            () => this.filterPanel.isEmpty(),
-            this.placeholderText
+            }
         );
 
         this.optionsPanel = OptionsPanel(
@@ -452,6 +460,27 @@ class MultiSelect {
             () => this.filterPanel.setFocus()
         );
 
+        // this.placeholderAspect = PlaceholderAsElementAspect(
+        //     this.placeholderText, 
+        //     () => this.picksPanel.isEmpty(),
+        //     () => this.filterPanel.isEmpty(), 
+        //     this.containerAdapter.picksElement,
+        //     this.filterPanel.inputElement, 
+        //     createElement, 
+        //     ()=>this.isComponentDisabled,
+        //     this.picksPanel.inputItemElement);
+
+        this.placeholderAspect = PlaceholderAsInputAspect(
+            this.placeholderText, 
+            () => this.picksPanel.isEmpty(), 
+            () => this.filterPanel.isEmpty(), 
+            this.containerAdapter.picksElement, 
+            this.filterPanel.inputElement)
+
+        this.placeholderAspect.init();
+        this.placeholderAspect.setEmptyLength();
+        this.placeholderAspect.updatePlacehodlerVisibility();
+
         this.aspect =  MultiSelectInputAspect(
             this.window,
             ()=>this.containerAdapter.appendToContainer(), 
@@ -466,12 +495,12 @@ class MultiSelect {
             () => this.getVisibleMultiSelectDataList().length==0, 
             Popper
         );
-
+        
         this.stylingComposite = this.createStylingComposite(container, 
             this.containerAdapter.picksElement,
             this.picksPanel.placeholderItemElement, 
             this.picksPanel.inputItemElement, 
-            this.filterPanel.input, 
+            this.filterPanel.inputElement, 
             this.containerAdapter.optionsElement);
         
         this.styling.Init(this.stylingComposite);

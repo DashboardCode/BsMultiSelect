@@ -1,4 +1,4 @@
-function defFilterInputStyleSys(s) {s.border='0'; s.padding='0'; s.outline='none'; s.backgroundColor='transparent' };
+function defFilterInputStyleSys(s) {s.border='0px'; s.padding='0px'; s.outline='none'; s.backgroundColor='transparent' };
 
 function FilterPanel(
         createElement,
@@ -12,7 +12,8 @@ function FilterPanel(
         onEnterOrTabToCompleate, // "compleate alike"
         onKeyDownEsc, 
         onKeyUpEsc, // "esc" alike
-        onInput // filter
+        onInput, // filter
+        setEmptyLength
     ) {
     
     var inputElement = createElement('INPUT'); 
@@ -87,10 +88,10 @@ function FilterPanel(
     inputElement.addEventListener('keyup', onFilterInputKeyUp);
     inputElement.addEventListener('input', onFilterInputInput);
 
-    function setEmptyLength(){
-        inputElement.style.width="1rem";
-    }
-    setEmptyLength();
+    // function setEmptyLength(){
+    //     inputElement.style.width= "100%"; //--"1rem";
+    // }
+    //setEmptyLength();
 
     function setEmpty(){
         inputElement.value ='';
@@ -98,7 +99,7 @@ function FilterPanel(
     };
     
     return {
-        input:inputElement,
+        inputElement,
         isEmpty(){
             return inputElement.value ? false:true;
         },

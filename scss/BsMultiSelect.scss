@@ -71,10 +71,10 @@ ul.form-control {
             font-size: $font-size-lg;
         }
     }
-    
-    > li:last-child {
-        color: $input-placeholder-color;
-    }
+    // for first PlaceholderAsElementAspect realistation
+    // > li:last-child {
+    //     color: $input-placeholder-color;
+    // }
 }
 @include form-validation-state("valid", $form-feedback-valid-color);
 @include form-validation-state("invalid", $form-feedback-invalid-color);

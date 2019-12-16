@@ -262,9 +262,12 @@ BsMultiSelect was created because at the moment when bootstrap 4 was released al
 
 * Bootstrap-select: https://silviomoreto.github.io/bootstrap-select/ - (ver. 1.12.4) BS 4 supported, but SCSS is not integrated with BS4 variables, also badges line can't be multiline (33KB+7KB js+css minified)
 
+* Choices https://github.com/jshjohnson/Choices
+
 Other Bootstrap extension ideas:
 https://github.com/trumbitta/bootstrap-css-utils
 https://github.com/tarkhov/postboot
+
 
 
 Used tools:
