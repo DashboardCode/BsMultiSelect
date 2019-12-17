@@ -29,9 +29,9 @@ function Bs4StylingMethodJs(configuration){
         },
     
         UpdateSize($container, $selectedPanel){
-            if ($container.hasClass("form-control-lg") || $container.hasClass("input-group-lg")){
+            if ($selectedPanel.hasClass("form-control-lg") || $container.hasClass("input-group-lg")){
                 $selectedPanel.css("min-height", configuration.selectedPanelLgMinHeight);
-            } else if ($container.hasClass("form-control-sm") || $container.hasClass("input-group-sm")){
+            } else if ($selectedPanel.hasClass("form-control-sm") || $container.hasClass("input-group-sm")){
                 $selectedPanel.css("min-height", configuration.selectedPanelSmMinHeight);
             } else {
                 $selectedPanel.css("min-height", configuration.selectedPanelDefMinHeight);

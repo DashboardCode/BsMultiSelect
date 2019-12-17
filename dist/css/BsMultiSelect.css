@@ -48,6 +48,18 @@
   outline: 0;
   box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
 }
+.dashboardcode-bsmultiselect ul.form-control.form-control-sm {
+  min-height: calc(1.5em + 0.5rem + 2px);
+}
+.dashboardcode-bsmultiselect ul.form-control.form-control-sm input {
+  font-size: 0.875rem;
+}
+.dashboardcode-bsmultiselect ul.form-control.form-control-lg {
+  min-height: calc(1.5em + 1rem + 2px);
+}
+.dashboardcode-bsmultiselect ul.form-control.form-control-lg input {
+  font-size: 1.25rem;
+}
 .was-validated .dashboardcode-bsmultiselect ul.form-control:valid, .dashboardcode-bsmultiselect ul.form-control.is-valid {
   border-color: #28a745;
 }
@@ -75,18 +87,6 @@
   min-height: calc(1.5em + 1rem + 2px);
 }
 .dashboardcode-bsmultiselect.input-group.input-group-lg ul.form-control input {
-  font-size: 1.25rem;
-}
-.dashboardcode-bsmultiselect.form-control-sm ul.form-control {
-  min-height: calc(1.5em + 0.5rem + 2px);
-}
-.dashboardcode-bsmultiselect.form-control-sm ul.form-control input {
-  font-size: 0.875rem;
-}
-.dashboardcode-bsmultiselect.form-control-lg ul.form-control {
-  min-height: calc(1.5em + 1rem + 2px);
-}
-.dashboardcode-bsmultiselect.form-control-lg ul.form-control input {
   font-size: 1.25rem;
 }
 

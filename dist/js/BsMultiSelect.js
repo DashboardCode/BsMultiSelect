@@ -1,5 +1,5 @@
 /*!
-  * DashboardCode BsMultiSelect v0.4.28 (https://dashboardcode.github.io/BsMultiSelect/)
+  * DashboardCode BsMultiSelect v0.4.29 (https://dashboardcode.github.io/BsMultiSelect/)
   * Copyright 2017-2019 Roman Pokrovskij (github user rpokrovskij)
   * Licensed under APACHE 2 (https://github.com/DashboardCode/BsMultiSelect/blob/master/LICENSE)
   */
@@ -1268,9 +1268,9 @@
           if (composite.placeholderItem) composite.$placeholderItem.css("color", configuration.placeholderItemColor);
         },
         UpdateSize: function UpdateSize($container, $selectedPanel) {
-          if ($container.hasClass("form-control-lg") || $container.hasClass("input-group-lg")) {
+          if ($selectedPanel.hasClass("form-control-lg") || $container.hasClass("input-group-lg")) {
             $selectedPanel.css("min-height", configuration.selectedPanelLgMinHeight);
-          } else if ($container.hasClass("form-control-sm") || $container.hasClass("input-group-sm")) {
+          } else if ($selectedPanel.hasClass("form-control-sm") || $container.hasClass("input-group-sm")) {
             $selectedPanel.css("min-height", configuration.selectedPanelSmMinHeight);
           } else {
             $selectedPanel.css("min-height", configuration.selectedPanelDefMinHeight);

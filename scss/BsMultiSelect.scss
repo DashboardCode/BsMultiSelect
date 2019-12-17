@@ -66,7 +66,20 @@
 
         @include form-control-focus-class();
 
-        
+        &.form-control-sm {
+                min-height: #{$input-height-sm};
+                input{
+                    font-size: $font-size-sm;
+                }
+        }
+    
+        &.form-control-lg {
+                min-height: #{$input-height-lg};
+                input{
+                    font-size: $font-size-lg;
+                }
+        }
+
         // for first PlaceholderAsElementAspect realistation
         // > li:last-child {
         //     color: $input-placeholder-color;
@@ -93,24 +106,6 @@
     }
 
     &.input-group.input-group-lg {
-        ul.form-control {
-            min-height: #{$input-height-lg};
-            input{
-                font-size: $font-size-lg;
-            }
-        }
-    }
-
-    &.form-control-sm {
-        ul.form-control {
-            min-height: #{$input-height-sm};
-            input{
-                font-size: $font-size-sm;
-            }
-        }
-    }
-
-    &.form-control-lg {
         ul.form-control {
             min-height: #{$input-height-lg};
             input{
