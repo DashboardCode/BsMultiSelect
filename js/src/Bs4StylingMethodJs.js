@@ -28,10 +28,10 @@ function Bs4StylingMethodJs(configuration){
                 composite.$placeholderItem.css("color", configuration.placeholderItemColor);
         },
     
-        UpdateSize($selectedPanel){
-            if ($selectedPanel.hasClass("form-control-lg")){
+        UpdateSize($container, $selectedPanel){
+            if ($container.hasClass("form-control-lg") || $container.hasClass("input-group-lg")){
                 $selectedPanel.css("min-height", configuration.selectedPanelLgMinHeight);
-            } else if ($selectedPanel.hasClass("form-control-sm")){
+            } else if ($container.hasClass("form-control-sm") || $container.hasClass("input-group-sm")){
                 $selectedPanel.css("min-height", configuration.selectedPanelSmMinHeight);
             } else {
                 $selectedPanel.css("min-height", configuration.selectedPanelDefMinHeight);

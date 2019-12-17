@@ -33,63 +33,89 @@
     }
 }
 
-ul.form-control {
-    height: auto;
-    min-height: #{$input-height};
-    margin-bottom: 0;
+.dashboardcode-bsmultiselect {
+    ul.form-control {
+        height: auto;
+        min-height: #{$input-height};
+        margin-bottom: 0;
 
-    input {
-        font-weight: inherit;
-        color: inherit;
-    }
-    &.disabled{
-        background-color: $input-disabled-bg;
-    }
-    &::placeholder {
-        color: $input-placeholder-color;
-        // BS Override Firefox's unusual default opacity; see https://github.com/twbs/bootstrap/pull/11526.
-        opacity: 1;
-    }
-
-    .badge {
-        padding-left: 0;
-        line-height: 1.5em;
-        button.close {
-            font-size: 1.5em;
-            line-height: .9em;
+        input {
+            font-weight: inherit;
+            color: inherit;
         }
-        span.disabled {
-            opacity: $btn-disabled-opacity;
+        &.disabled{
+            background-color: $input-disabled-bg;
+        }
+        &::placeholder {
+            color: $input-placeholder-color;
+            // BS Override Firefox's unusual default opacity; see https://github.com/twbs/bootstrap/pull/11526.
+            opacity: 1;
+        }
+
+        .badge {
+            padding-left: 0;
+            line-height: 1.5em;
+            button.close {
+                font-size: 1.5em;
+                line-height: .9em;
+            }
+            span.disabled {
+                opacity: $btn-disabled-opacity;
+            }
+        }
+
+        @include form-control-focus-class();
+
+        
+        // for first PlaceholderAsElementAspect realistation
+        // > li:last-child {
+        //     color: $input-placeholder-color;
+        // }
+    }
+    @include form-validation-state("valid", $form-feedback-valid-color);
+    @include form-validation-state("invalid", $form-feedback-invalid-color);
+
+    ul.dropdown-menu {
+        li{
+            .custom-control-input.disabled ~ .custom-control-label {
+                color: $custom-control-label-disabled-color;
+            }
         }
     }
 
-    @include form-control-focus-class();
+    &.input-group.input-group-sm {
+        ul.form-control {
+            min-height: #{$input-height-sm};
+            input{
+                font-size: $font-size-sm;
+            }
+        }
+    }
+
+    &.input-group.input-group-lg {
+        ul.form-control {
+            min-height: #{$input-height-lg};
+            input{
+                font-size: $font-size-lg;
+            }
+        }
+    }
 
     &.form-control-sm {
-        min-height: #{$input-height-sm};
-        input{
-            font-size: $font-size-sm;
+        ul.form-control {
+            min-height: #{$input-height-sm};
+            input{
+                font-size: $font-size-sm;
+            }
         }
     }
 
     &.form-control-lg {
-        min-height: #{$input-height-lg};
-        input{
-            font-size: $font-size-lg;
-        }
-    }
-    // for first PlaceholderAsElementAspect realistation
-    // > li:last-child {
-    //     color: $input-placeholder-color;
-    // }
-}
-@include form-validation-state("valid", $form-feedback-valid-color);
-@include form-validation-state("invalid", $form-feedback-invalid-color);
-
-ul.dropdown-menu {
-    li{
-        .custom-control-input.disabled ~ .custom-control-label {
-            color: $custom-control-label-disabled-color;
+        ul.form-control {
+            min-height: #{$input-height-lg};
+            input{
+                font-size: $font-size-lg;
+            }
         }
     }
 }

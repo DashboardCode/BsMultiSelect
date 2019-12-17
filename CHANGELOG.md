@@ -1,5 +1,6 @@
 # CHANGELOG
 ````
+0.4.28 - supports input-group-lg and input-group-sm (on container) - call UpdateSize is required; update bsmultiselect.css if you use it
 0.4.27 - better look on phone devices
 0.4.26 - second placeholder realisation (through filter input traceholder)
 0.4.25 - problem  has been solved : placeholder absent after "esc"

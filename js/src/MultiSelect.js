@@ -305,8 +305,9 @@ class MultiSelect {
     }
 
     UpdateSize(){
-        if (this.styling.UpdateSize)
+        if (this.styling.UpdateSize){
             this.styling.UpdateSize(this.stylingComposite);
+        }
     }
 
     UpdateIsValid(){

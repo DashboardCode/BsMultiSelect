@@ -38,7 +38,7 @@ function Bs4Styling(stylingMethod, configuration, $) {
 
         UpdateSize(composite){
             if(stylingMethod.UpdateSize)
-               stylingMethod.UpdateSize(composite.$selectedPanel)
+               stylingMethod.UpdateSize(composite.$container, composite.$selectedPanel)
         },
 
         Enable(composite){
