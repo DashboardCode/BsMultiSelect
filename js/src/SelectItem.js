@@ -1,5 +1,5 @@
 function SelectItem( 
-    MultiSelectData, dropDownItemContentSelect, dropDownItemContentDisable, 
+    setSelected, MultiSelectData, dropDownItemContentSelect, dropDownItemContentDisable, 
     document, triggerChange, 
     ) {
 
@@ -11,9 +11,9 @@ function SelectItem(
             changeTail(MultiSelectData);
             
             let adjustPair = (isSelected, toggle, remove, disable) => {
+                //MultiSelectData.option.selected=isSelected;
+                setSelected(option, isSelected);
                 MultiSelectData.excludedFromSearch = isSelected || isOptionDisabled;
-                MultiSelectData.option.selected=isSelected;
-
                 dropDownItemContentSelect(isSelected);
                 MultiSelectData.toggle=toggle;
                 MultiSelectData.remove=remove;

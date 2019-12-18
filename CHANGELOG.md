@@ -1,5 +1,6 @@
 # CHANGELOG
 ````
+0.4.30 - configuration.setSelected as hook for pre and post selection events
 0.4.29 - return to the support of form-control-lg/sm on ul.form-control 
 0.4.28 - supports input-group-lg and input-group-sm (on container) - call UpdateSize is required; update bsmultiselect.css if you use it
 0.4.27 - better look on phone devices

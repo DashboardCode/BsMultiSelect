@@ -32,8 +32,8 @@ function FindDirectChildByTagName(element, tagName){
         AddToJQueryPrototype('BsMultiSelect',
             (element, settings, onDispose) => {
                 let configuration = $.extend({}, settings); // settings used per jQuery intialization, configuration per element
-                if (configuration.preBuildConfiguration)
-                    configuration.preBuildConfiguration(element, configuration);
+                if (configuration.buildConfiguration)
+                    configuration.buildConfiguration(element, configuration);
                 
                 let useCss = configuration.useCss;
                 let styling = configuration.styling;
@@ -184,9 +184,15 @@ function FindDirectChildByTagName(element, tagName){
                     else if (containerElement)                 
                         placeholderText = $(containerElement).data("bsmultiselect-placeholder");
                 }
+                
+                let setSelected = configuration.setSelected;
+                if (!setSelected){
+                    setSelected = (option, value)=> { option.selected = value;}
+                }
 
                 let multiSelect = new MultiSelect(
                     optionsAdapter,
+                    setSelected,
                     containerAdapter,
                     styling,
                     selectedItemContent,
@@ -198,8 +204,8 @@ function FindDirectChildByTagName(element, tagName){
                     onDispose,
                     window);
                 
-                if (configuration.postBuildConfiguration)
-                    configuration.postBuildConfiguration(element, multiSelect);
+                if (configuration.init)
+                    configuration.init(element, multiSelect);
                 
                 multiSelect.init();
                 return multiSelect;

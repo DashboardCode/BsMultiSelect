@@ -128,7 +128,7 @@ function OptionsPanel(createElement, dropDownMenu, onShow, onHide, eventSkipper,
         }
     }
 
-    function insertDropDownItem(MultiSelectData, createSelectedItemGen, triggerChange, isSelected, isOptionDisabled) {
+    function insertDropDownItem(MultiSelectData, createSelectedItemGen, setSelected, triggerChange, isSelected, isOptionDisabled) {
         var dropDownMenuItemElement = createElement('LI');
         
         // in chrome it happens on "become visible" so we need to skip it, 
@@ -196,8 +196,11 @@ function OptionsPanel(createElement, dropDownMenu, onShow, onHide, eventSkipper,
                 MultiSelectData.toggle = () => { }
             else
                 MultiSelectData.toggle = () =>  {
-                    createSelectedItem();
-                    triggerChange();
+                    var confirmed = setSelected(MultiSelectData.option, true);
+                    if (confirmed==null || confirmed) {
+                        createSelectedItem();
+                        triggerChange();
+                    }
                 }
         }
         // TODO: refactore it

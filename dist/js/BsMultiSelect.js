@@ -1,5 +1,5 @@
 /*!
-  * DashboardCode BsMultiSelect v0.4.29 (https://dashboardcode.github.io/BsMultiSelect/)
+  * DashboardCode BsMultiSelect v0.4.30 (https://dashboardcode.github.io/BsMultiSelect/)
   * Copyright 2017-2019 Roman Pokrovskij (github user rpokrovskij)
   * Licensed under APACHE 2 (https://github.com/DashboardCode/BsMultiSelect/blob/master/LICENSE)
   */
@@ -247,7 +247,7 @@
         }
       };
 
-      function insertDropDownItem(MultiSelectData, createSelectedItemGen, triggerChange, isSelected, isOptionDisabled) {
+      function insertDropDownItem(MultiSelectData, createSelectedItemGen, setSelected, triggerChange, isSelected, isOptionDisabled) {
         var dropDownMenuItemElement = createElement('LI'); // in chrome it happens on "become visible" so we need to skip it, 
         // for IE11 and edge it doesn't happens, but for IE11 and Edge it doesn't happens on small 
         // mouse moves inside the item. 
@@ -300,8 +300,12 @@
         } else {
           MultiSelectData.excludedFromSearch = isOptionDisabled;
           if (isOptionDisabled) MultiSelectData.toggle = function () {};else MultiSelectData.toggle = function () {
-            createSelectedItem();
-            triggerChange();
+            var confirmed = setSelected(MultiSelectData.option, true);
+
+            if (confirmed == null || confirmed) {
+              createSelectedItem();
+              triggerChange();
+            }
           };
         } // TODO: refactore it
 
@@ -336,7 +340,7 @@
       s.listStyleType = 'none';
     }
 
-    function PicksPanel(createElement, picksElement, init, selectedItemContent, isComponentDisabled, triggerChange, onRemove, onClick, onPicksEmptyChanged, //placeholderAspect.updatePlacehodlerVisibility(); call the same on enable/disable
+    function PicksPanel(setSelected, createElement, picksElement, init, selectedItemContent, isComponentDisabled, triggerChange, onRemove, onClick, onPicksEmptyChanged, //placeholderAspect.updatePlacehodlerVisibility(); call the same on enable/disable
     processRemoveButtonClick) {
       var picksCount = 0;
 
@@ -401,28 +405,35 @@
         MultiSelectDataSelectedTail = MultiSelectData;
 
         var removeSelectedItem = function removeSelectedItem() {
-          MultiSelectData.option.selected = false;
-          MultiSelectData.excludedFromSearch = isOptionDisabled;
+          var confirmed = setSelected(MultiSelectData.option, false);
 
-          if (isOptionDisabled) {
-            setDropDownItemContentDisabled(MultiSelectData.DropDownItemContent, false);
+          if (confirmed == null || confirmed) {
+            MultiSelectData.excludedFromSearch = isOptionDisabled;
 
-            MultiSelectData.toggle = function () {};
-          } else {
-            MultiSelectData.toggle = function () {
-              createSelectedItem(MultiSelectData, isOptionDisabled, setDropDownItemContentDisabled);
-              triggerChange();
-            };
+            if (isOptionDisabled) {
+              setDropDownItemContentDisabled(MultiSelectData.DropDownItemContent, false);
+
+              MultiSelectData.toggle = function () {};
+            } else {
+              MultiSelectData.toggle = function () {
+                var confirmed = setSelected(MultiSelectData.option, true);
+
+                if (confirmed == null || confirmed) {
+                  createSelectedItem(MultiSelectData, isOptionDisabled, setDropDownItemContentDisabled);
+                  triggerChange();
+                }
+              };
+            }
+
+            MultiSelectData.DropDownItemContent.select(false);
+            removeElement(selectedItemElement);
+            MultiSelectData.SelectedItemContent.dispose();
+            MultiSelectData.SelectedItemContent = null;
+            MultiSelectData.selectedItemElement = null;
+            removeSelectedFromList(MultiSelectData);
+            dec();
+            triggerChange();
           }
-
-          MultiSelectData.DropDownItemContent.select(false);
-          removeElement(selectedItemElement);
-          MultiSelectData.SelectedItemContent.dispose();
-          MultiSelectData.SelectedItemContent = null;
-          MultiSelectData.selectedItemElement = null;
-          removeSelectedFromList(MultiSelectData);
-          dec();
-          triggerChange();
         }; // processRemoveButtonClick removes the 
         // what is a problem with calling removeSelectedItem directly (not using  setTimeout(removeSelectedItem, 0)):
         // consider situation "MultiSelect" on DROPDOWN (that should be closed on the click outside dropdown)
@@ -455,9 +466,7 @@
         };
 
         disable(isComponentDisabled);
-        MultiSelectData.option.selected = true;
         MultiSelectData.excludedFromSearch = true; // all selected excluded from search
-        //MultiSelectData.remove  = removeSelectedItemAndCloseDropDown;
 
         MultiSelectData.disable = disable;
         picksElement.insertBefore(selectedItemElement, inputItemElement);
@@ -702,7 +711,7 @@
     var MultiSelect =
     /*#__PURE__*/
     function () {
-      function MultiSelect(optionsAdapter, containerAdapter, styling, selectedItemContent, dropDownItemContent, labelAdapter, createStylingComposite, placeholderText, configuration, onDispose, window) {
+      function MultiSelect(optionsAdapter, setSelected, containerAdapter, styling, selectedItemContent, dropDownItemContent, labelAdapter, createStylingComposite, placeholderText, configuration, onDispose, window) {
         if (typeof Popper === 'undefined') {
           throw new TypeError('DashboardCode BsMultiSelect require Popper.js (https://popper.js.org)');
         }
@@ -719,6 +728,8 @@
         this.createStylingComposite = createStylingComposite;
         this.configuration = configuration;
         this.placeholderText = placeholderText;
+        this.setSelected = setSelected; // should I rebind this for callbacks? setSelected.bind(this);
+
         this.window = window;
         this.visibleCount = 10;
         this.optionsPanel = null;
@@ -890,6 +901,8 @@
 
               _this.optionsPanel.insertDropDownItem(MultiSelectData, function (p1, p2, p3) {
                 return _this.picksPanel.createSelectedItem(p1, p2, p3);
+              }, function (o, i) {
+                return _this.setSelected(o, i);
               }, function () {
                 return _this.optionsAdapter.triggerChange();
               }, isSelected, isDisabled);
@@ -1065,7 +1078,7 @@
         function () {
           _this2.placeholderAspect.setEmptyLength();
         });
-        this.picksPanel = PicksPanel(createElement, this.containerAdapter.picksElement, function (filterItemElement) {
+        this.picksPanel = PicksPanel(this.setSelected, createElement, this.containerAdapter.picksElement, function (filterItemElement) {
           lazyfilterItemInputElementAtach(filterItemElement);
         }, this.selectedItemContent, this.isComponentDisabled, function () {
           return _this2.optionsAdapter.triggerChange();
@@ -1588,7 +1601,6 @@
       // select
       var ownContainerElement = false;
       var ownPicksElement = false;
-      var backupDisplay = null;
 
       if (!containerElement) {
         containerElement = createElement('div');
@@ -1602,6 +1614,7 @@
 
       var optionsElement = createElement('UL');
       optionsElement.style.display = "none";
+      var backupDisplay = null;
 
       if (selectElement) {
         backupDisplay = selectElement.style.display;
@@ -1657,7 +1670,7 @@
       AddToJQueryPrototype('BsMultiSelect', function (element, settings, onDispose) {
         var configuration = $.extend({}, settings); // settings used per jQuery intialization, configuration per element
 
-        if (configuration.preBuildConfiguration) configuration.preBuildConfiguration(element, configuration);
+        if (configuration.buildConfiguration) configuration.buildConfiguration(element, configuration);
         var useCss = configuration.useCss;
         var styling = configuration.styling;
 
@@ -1791,8 +1804,16 @@
           if (selectElement) placeholderText = $(selectElement).data("bsmultiselect-placeholder");else if (containerElement) placeholderText = $(containerElement).data("bsmultiselect-placeholder");
         }
 
-        var multiSelect = new MultiSelect(optionsAdapter, containerAdapter, styling, selectedItemContent, dropDownItemContent, labelAdapter, createStylingComposite, placeholderText, configuration, onDispose, window);
-        if (configuration.postBuildConfiguration) configuration.postBuildConfiguration(element, multiSelect);
+        var setSelected = configuration.setSelected;
+
+        if (!setSelected) {
+          setSelected = function setSelected(option, value) {
+            option.selected = value;
+          };
+        }
+
+        var multiSelect = new MultiSelect(optionsAdapter, setSelected, containerAdapter, styling, selectedItemContent, dropDownItemContent, labelAdapter, createStylingComposite, placeholderText, configuration, onDispose, window);
+        if (configuration.init) configuration.init(element, multiSelect);
         multiSelect.init();
         return multiSelect;
       }, $);

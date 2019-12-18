@@ -41,7 +41,7 @@
 export default function ContainerAdapter(createElement, selectElement, containerElement, picksElement) { // select
     var ownContainerElement = false;
     var ownPicksElement = false;
-    var backupDisplay = null;
+    
     if (!containerElement){
         containerElement = createElement('div');
         ownContainerElement= true;
@@ -52,6 +52,8 @@ export default function ContainerAdapter(createElement, selectElement, container
     }
     var optionsElement = createElement('UL');
     optionsElement.style.display="none";
+    
+    var backupDisplay = null;
     if (selectElement)
     { 
         backupDisplay = selectElement.style.display;

@@ -4,6 +4,7 @@ function defSelectedPanelStyleSys(s) {s.display='flex'; s.flexWrap='wrap'; s.lis
 
 
 function PicksPanel (
+        setSelected,
         createElement,
         picksElement, 
         init, 
@@ -67,29 +68,34 @@ function PicksPanel (
         MultiSelectDataSelectedTail = MultiSelectData;
 
         var removeSelectedItem = () => {
-            MultiSelectData.option.selected = false;
-            MultiSelectData.excludedFromSearch = isOptionDisabled;
-            if (isOptionDisabled)
-            {
-                setDropDownItemContentDisabled(MultiSelectData.DropDownItemContent, false);
-                MultiSelectData.toggle = ()=> {};
-            }
-            else
-            {
-                MultiSelectData.toggle = ()=>{
-                    createSelectedItem(MultiSelectData, isOptionDisabled, setDropDownItemContentDisabled);
-                    triggerChange();
-                };
-            }
-            MultiSelectData.DropDownItemContent.select(false);
-            removeElement(selectedItemElement);
-            MultiSelectData.SelectedItemContent.dispose();
-            MultiSelectData.SelectedItemContent=null;
-            MultiSelectData.selectedItemElement=null;
+            let confirmed = setSelected(MultiSelectData.option, false);
+            if (confirmed==null || confirmed) {
+                MultiSelectData.excludedFromSearch = isOptionDisabled;
+                if (isOptionDisabled)
+                {
+                    setDropDownItemContentDisabled(MultiSelectData.DropDownItemContent, false);
+                    MultiSelectData.toggle = ()=> {};
+                }
+                else
+                {
+                    MultiSelectData.toggle = ()=>{
+                        let confirmed = setSelected(MultiSelectData.option, true);
+                        if (confirmed==null || confirmed){
+                            createSelectedItem(MultiSelectData, isOptionDisabled, setDropDownItemContentDisabled);
+                            triggerChange();
+                        }
+                    };
+                }
+                MultiSelectData.DropDownItemContent.select(false);
+                removeElement(selectedItemElement);
+                MultiSelectData.SelectedItemContent.dispose();
+                MultiSelectData.SelectedItemContent=null;
+                MultiSelectData.selectedItemElement=null;
 
-            removeSelectedFromList(MultiSelectData);
-            dec();
-            triggerChange();
+                removeSelectedFromList(MultiSelectData);
+                dec();
+                triggerChange();
+            }
         }
 
         // processRemoveButtonClick removes the 
@@ -122,13 +128,11 @@ function PicksPanel (
         var disable = (isDisabled) =>
             MultiSelectData.SelectedItemContent.disable(isDisabled);
         disable(isComponentDisabled);
-        MultiSelectData.option.selected = true;
+
         MultiSelectData.excludedFromSearch = true; // all selected excluded from search
-        //MultiSelectData.remove  = removeSelectedItemAndCloseDropDown;
         MultiSelectData.disable = disable;
         picksElement.insertBefore(selectedItemElement, inputItemElement);
-
-
+         
         MultiSelectData.toggle = () => removeSelectedItem();
         MultiSelectData.DropDownItemContent.select(true);
         inc();

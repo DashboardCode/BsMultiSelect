@@ -49,7 +49,7 @@ function collectFilterDropDownMenu(MultiSelectDataList, text) {
 }
 
 class MultiSelect {
-    constructor(optionsAdapter, containerAdapter, styling, 
+    constructor(optionsAdapter, setSelected, containerAdapter, styling, 
         selectedItemContent, dropDownItemContent, 
         labelAdapter, createStylingComposite, placeholderText,
         configuration, onDispose, window) {
@@ -69,6 +69,7 @@ class MultiSelect {
         this.createStylingComposite = createStylingComposite;
         this.configuration = configuration;
         this.placeholderText = placeholderText;
+        this.setSelected=setSelected; // should I rebind this for callbacks? setSelected.bind(this);
         this.window = window;
 
         this.visibleCount=10;
@@ -249,9 +250,13 @@ class MultiSelect {
                 if (!isHidden){
                     MultiSelectData.visible = true;
                     MultiSelectData.visibleIndex=i;
-                    this.optionsPanel.insertDropDownItem(MultiSelectData, 
-                        (p1,p2,p3)=>this.picksPanel.createSelectedItem(p1,p2,p3),
-                        ()=>this.optionsAdapter.triggerChange(), isSelected, isDisabled);
+                    this.optionsPanel.insertDropDownItem(
+                        MultiSelectData, 
+                        (p1,p2,p3) => this.picksPanel.createSelectedItem(p1,p2,p3),
+                        (o,i) => this.setSelected(o,i),
+                        () => this.optionsAdapter.triggerChange(), 
+                        isSelected, 
+                        isDisabled);
                 }
             } 
             this.aspect.alignToFilterInputItemLocation(false);
@@ -425,6 +430,7 @@ class MultiSelect {
         );
         
         this.picksPanel =  PicksPanel(
+            this.setSelected,
             createElement,
             this.containerAdapter.picksElement,
             (filterItemElement) => {
