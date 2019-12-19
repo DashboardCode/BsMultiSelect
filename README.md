@@ -106,6 +106,10 @@ Other way to access the component object is using `data` :
 
 **placeholder**: use `data-placeholder` or configuration `{placeholder:"select something.."}`
 
+**is-valid and is-invalid**: supports bootstrap validation appearance of original `select`
+
+**sizes**: supports bootstrap `custom-select-lg`, `custom-select-sm` or `input-group-lg`, `input-group-sm` on original `select`
+
 **bootstrap input-group + prepend + append support**  but you will need to setup more infromation about the dom  - to mark a container
 ````
           <div class="input-group dashboardcode-bsmultiselect"> <!-- mark the container with dashboardcode-bsmultiselect"  -->
