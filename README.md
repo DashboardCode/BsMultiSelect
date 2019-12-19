@@ -25,7 +25,7 @@ Other BS4 classes were used:
 
 * `badge` class - selected items, each item contains BS4 `close` button
 
-This plugin doesn't aim to bring its own styles. This was a clear design goal but unfortunatly it can be achived only by a trick. Not all bootstrap styles varibales can be accessed from a plugin as classes, therefore we need to setup them in javascript. Those variables are:
+This plugin doesn't aim to bring its own styles. This was a clear design goal but unfortunatly it can be achived only with some exceptions. Not all bootstrap styles varibales can be accessed from a plugin as classes, therefore we need to setup them in javascript (or reference the BS scss files). Those variables are:
 
 * $input-height - we need it for DIV `form-control`'s min-height; default value is "calc(2.25rem + 2px)",
 
@@ -35,7 +35,7 @@ This plugin doesn't aim to bring its own styles. This was a clear design goal bu
 
 * focus for `isvalid`, focus for `isinvalid` effects (mixins)
 
-If your theme changes those variables, you need to update them on the plugin initialization.
+If your theme changes those variables, you need to update them on the plugin initialization (option 1).
 
 ````
           $("select[multiple='multiple']").bsMultiSelect({
@@ -53,7 +53,9 @@ If your theme changes those variables, you need to update them on the plugin ini
             
 ````
 
-BsMultiSelect handles click events friendly to modals and popups. Important: `preventDefault`, `stopPropagation` were not used (for mouse events), but to simplify the identification of click event's target during the bubling I remove dom elments (intiated by the click on "x" button) using setTimeout(..,0); 
+or (option 2) use `useCss=true` option and load the customized copy `BsMultiselect.css` or referencing `BsMultiselect.scss` in your css project.
+
+BsMultiSelect handles click events friendly to modals and popups. Important: `preventDefault`, `stopPropagation` were not used (for mouse events), but I remove dom elments (intiated by the click on "x" button) using setTimeout(..,0) - to simplify the identification of click event's target during the bubling; 
 
 For keyboard events `preventDefault` was used to 
     a) handle tab `9`  as autocompleate 
@@ -61,20 +63,20 @@ For keyboard events `preventDefault` was used to
     c) enter `13` to prvent default button action (submit etc.)
     d) esc `27` to avoi `clear text on esc` functionlity dublication
 
-There are no MutationObserver defined inside (component does not track properties on original `SELECT`, `FIELDSET`). If you change  properties on original `SELECT` or `FIELDSET`, then you will need to push changes to component with methods `UpdateIsValid`, `UpdateDisabled`, `UpdateSize`.
+Inspite plugin have form `reset` event listener, there are no MutationObserver defined inside (component does not track properties on original `SELECT`, `FIELDSET`). If you change  properties on original `SELECT` or `FIELDSET`, then you will need to push changes to component with methods `UpdateIsValid`, `UpdateDisabled`, `UpdateSize`, `UpdataData` or just `Update` (works like "update all") .
 
 ````
           $('#mySelect').bsMultiSelect("UpdateDisabled"); // bsMultiSelect call the method directly
 ````
 
-Changes in options should be pushed with "Update" e.g.
+Or this way.
 
 ````
           var bsMultiSelect = $('#mySelect').BsMultiSelect(); // BsMultiSelect return the object
           bsMultiSelect.Update();
 ````         
 
-Other way to access the component object is using `data` :
+Other way to access the component's instance is using `data` :
 
 ````
           var bsMultiSelect = $('#mySelect').data('DashboardCode.BsMultiSelect');
@@ -102,11 +104,15 @@ Other way to access the component object is using `data` :
 
 **`<optgroup label=".." >`** grouped options will be flatten; there is no sense mixing "Browse Tree" and "Autosuggest popup" UI expirience. Even if it is possible, I consider this as true: "code that don't exist is infinitely performant and extremely easy to maintain and document." (c) Heydon Pickering;
 
-**no flick** optionally it is possible to add UL element (component's picks/selections/badges list) manually to HTML; then you will see less flicks during the page load 
+**no flick**: optionally it is possible to add UL element (component's picks/selections/badges list) manually to HTML; then you will see less flicks during the page load 
 
-**placeholder** use `data--bsmultiselect-placeholder` or configuration `{placeholder:"select something.."}`
+**placeholder**: use `data-placeholder` or configuration `{placeholder:"select something.."}`
 
-**bootstrap input-group + prepend + append support**  but you will need to give more infromation about dom (mark container)
+**.is-valid and .is-invalid**: supports bootstrap validation appearance of original `select`
+
+**sizes**: supports bootstrap `custom-select-lg`, `custom-select-sm` or `input-group-lg`, `input-group-sm` on original `select`
+
+**bootstrap input-group + prepend + append support**  but you will need to setup more infromation about the dom  - to mark a container
 ````
           <div class="input-group dashboardcode-bsmultiselect"> <!-- mark the container with dashboardcode-bsmultiselect"  -->
                 <div class="input-group-prepend">
@@ -116,23 +122,23 @@ Other way to access the component object is using `data` :
                     <option value="EN">English</option>
                     <option value="ES">Spanish</option>
                 </select>
-                <ul class="form-control"></ul> <!-- optionally but recommended: component's  picks/selections/badges list -->
+                <ul class="form-control"></ul> <!-- optionally but recommended: component's  picks/selections/badges list for "no flick load" -->
           </div>
             
 ````
 
-**dialog and popup** works on Bootstrap dialogs and dropdowns
+**dialog and popup** works on Bootstrap dialogs and dropdowns (BS dropdowns require additional click event filtering)
 
 **CSS and SCSS**: you can copy BsMultiSelect.css (included to distribution) and update values manually for your theme.
 Or you can use [./scss/BsMultiSelect.scss](https://github.com/DashboardCode/BsMultiSelect/blob/master/scss/BsMultiSelect.scss) copy it to your project and update reference to your custom BS variables in yout theme); these requires such configuration:
 
 ````
           $("select[multiple='multiple']").bsMultiSelect({
-                         useCss: true
+                         useCss: true // this disables many style's manipulation in js; and relly on classes
                      });
             
 ````
- Also `useCss: true` allows you to go to heavy styling (and even use plugin without bootstrap). Those additional options are available (you see default values):
+Also `useCss: true` allows you to go to heavy styling (and even use plugin without bootstrap). Those additional options are available (you see default values):
 
 
 ````
@@ -201,8 +207,6 @@ $('div.#bsMultiSelectJson').bsMultiSelect(
 
 Note: all options should contais all propoerties (text, value, hidden, disabled, selected) - you can't ommit them.
 
-
-
 ### Proposal to Bootstrap
 
 It would be very nice if Bootstrap could provide those SASS variables as classes :
@@ -226,33 +230,33 @@ Note, BS allready provide classes like: `h-25`, `bg-light`, `text-primary` that 
 
 
 ### Known issues
-* Tested only for IE11, Chrome 66, Edge 42/17; Browser should support 'display':'flex' (IE 9 doesn't); 
+* Tested only for IE11, Chrome 66, Edge 42/17, IPhone Safari; Browser should support 'display':'flex' (IE 9 doesn't); 
 
 * dropdown options list could be too long if your filter is weak (and items number is not configurable); there are no scroller.
 
-* no 'smart tracking' of dynamic changes in options - do detach/attach at the end of changes or call 'Update' method (this is actally not a issue, but desing feature)
+* no 'smart tracking' of dynamic changes in options - do detach/attach at the end of changes or call 'Update/UpdateData' method (this is actally not a issue, but desing feature)
 
 * no rtl (right to left) - as the whole Boostrap 4;
 
-* no max selected, no "no result" message on empty filter;
+* no max selected option, no "X selected" message, or no "no result" message on empty filter;
 
 * no smart disabling on mobile devices (manage it manually);
 
+* validation through pseudo-classes `:invalid` , `:valid`, .was-validated class applied to form are not supported; 
+
 * usually you still need css to patch some plugin element's styles to fix unexpected theme effects (e.g. in dark themes BS close button could be made white by theme, when you not expect it, then `.badge > close {color:black;}` fix the problem );
 
-* memory leaks: as I see there is something like several KB memory leak (that can be ignored since as I know every jquery plugin "attach/detach" have same effects) on each attach/detach (compiled objects, not nodes) but I can't identify its source (jquery, bootstrap utilities?). If you have knowledge to solve this puzzle: you can identify source of memory leak and inform me. Here is a quick way to experiment with attach/detach and memory snapshots: https://dashboardcode.github.io/BsMultiSelect/snippetLeaks.html ;
-
-* placeholder on IE11 works like on Chrome and Edge (it is dissapeared on input, when on IE11 standard behaviour is "to hide on focus")
-
+* memory leaks: as I see there is something like several KB memory leak on each attach/detach  (that can be ignored since as I see every jquery plugin "attach/detach" have the same effect). Memory leak is in the compiled objects, not nodes category. But I can't identify its source (jquery, bootstrap utilities?). If you have knowledge how to explain it: help me. Here is a quick way to experiment with attach/detach and memory snapshots: https://dashboardcode.github.io/BsMultiSelect/snippetLeaks.html ;
 
 ### Future development
 
-Actually plugin is ready for BS 5 that means for "no jquery". 
-The default dropdown menu (when filter is empty) and limitation of sizes should be provided also.
+Actually plugin is ready for BS 5 that means for "no jquery".
+The better dropdown menu (two different looks for with and without filters;  limitation of size) should be provided soon.
 
 ### Alternatives:
 
 BsMultiSelect was created because at the moment when bootstrap 4 was released all existed multi select plugins had strange side effects. It was just simpler to try to combine several BS 4 tools together: `form-control`, `dropdown-menu`, `close` button, `badge` then trying to understand internals of mature projects.
+
 
 * Chosen.js: https://harvesthq.github.io/chosen/ - (ver 1.8.5), strange multiple "Consider marking event handler as 'passive' to make the page more responsive" warnings to console, not integrated to bootstrap theme (30KB+10KB js+css minified);
 
@@ -268,7 +272,7 @@ Other Bootstrap extension ideas:
 https://github.com/trumbitta/bootstrap-css-utils
 https://github.com/tarkhov/postboot
 
-
+For use case "search some enitities in remote data source" (this is not the same as "select the option") I highly recommend to use the 'typeahead.js' and 'bloodhound.js' combination.
 
 Used tools:
 VS Code https://code.visualstudio.com/
