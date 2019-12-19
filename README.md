@@ -25,7 +25,7 @@ Other BS4 classes were used:
 
 * `badge` class - selected items, each item contains BS4 `close` button
 
-This plugin doesn't aim to bring its own styles. This was a clear design goal but unfortunatly it can be achived only by a trick. Not all bootstrap styles varibales can be accessed from a plugin as classes, therefore we need to setup them in javascript. Those variables are:
+This plugin doesn't aim to bring its own styles. This was a clear design goal but unfortunatly it can be achived only with some exceptions. Not all bootstrap styles varibales can be accessed from a plugin as classes, therefore we need to setup them in javascript (or reference the BS scss files). Those variables are:
 
 * $input-height - we need it for DIV `form-control`'s min-height; default value is "calc(2.25rem + 2px)",
 
@@ -35,7 +35,7 @@ This plugin doesn't aim to bring its own styles. This was a clear design goal bu
 
 * focus for `isvalid`, focus for `isinvalid` effects (mixins)
 
-If your theme changes those variables, you need to update them on the plugin initialization.
+If your theme changes those variables, you need to update them on the plugin initialization (option 1).
 
 ````
           $("select[multiple='multiple']").bsMultiSelect({
@@ -53,7 +53,9 @@ If your theme changes those variables, you need to update them on the plugin ini
             
 ````
 
-BsMultiSelect handles click events friendly to modals and popups. Important: `preventDefault`, `stopPropagation` were not used (for mouse events), but to simplify the identification of click event's target during the bubling I remove dom elments (intiated by the click on "x" button) using setTimeout(..,0); 
+or (option 2) use `useCss=true` option and load the customized copy `BsMultiselect.css` or referencing `BsMultiselect.scss` in your css project.
+
+BsMultiSelect handles click events friendly to modals and popups. Important: `preventDefault`, `stopPropagation` were not used (for mouse events), but I remove dom elments (intiated by the click on "x" button) using setTimeout(..,0) - to simplify the identification of click event's target during the bubling; 
 
 For keyboard events `preventDefault` was used to 
     a) handle tab `9`  as autocompleate 
@@ -61,20 +63,20 @@ For keyboard events `preventDefault` was used to
     c) enter `13` to prvent default button action (submit etc.)
     d) esc `27` to avoi `clear text on esc` functionlity dublication
 
-There are no MutationObserver defined inside (component does not track properties on original `SELECT`, `FIELDSET`). If you change  properties on original `SELECT` or `FIELDSET`, then you will need to push changes to component with methods `UpdateIsValid`, `UpdateDisabled`, `UpdateSize`.
+Inspite plugin have form `reset` event listener, there are no MutationObserver defined inside (component does not track properties on original `SELECT`, `FIELDSET`). If you change  properties on original `SELECT` or `FIELDSET`, then you will need to push changes to component with methods `UpdateIsValid`, `UpdateDisabled`, `UpdateSize`, `UpdataData` or just `Update` (works like "update all") .
 
 ````
           $('#mySelect').bsMultiSelect("UpdateDisabled"); // bsMultiSelect call the method directly
 ````
 
-Changes in options should be pushed with "Update" e.g.
+Or this way.
 
 ````
           var bsMultiSelect = $('#mySelect').BsMultiSelect(); // BsMultiSelect return the object
           bsMultiSelect.Update();
 ````         
 
-Other way to access the component object is using `data` :
+Other way to access the component's instance is using `data` :
 
 ````
           var bsMultiSelect = $('#mySelect').data('DashboardCode.BsMultiSelect');
@@ -106,7 +108,7 @@ Other way to access the component object is using `data` :
 
 **placeholder**: use `data-placeholder` or configuration `{placeholder:"select something.."}`
 
-**is-valid and is-invalid**: supports bootstrap validation appearance of original `select`
+**.is-valid and .is-invalid**: supports bootstrap validation appearance of original `select`
 
 **sizes**: supports bootstrap `custom-select-lg`, `custom-select-sm` or `input-group-lg`, `input-group-sm` on original `select`
 
@@ -240,9 +242,11 @@ Note, BS allready provide classes like: `h-25`, `bg-light`, `text-primary` that 
 
 * no smart disabling on mobile devices (manage it manually);
 
+* validation through pseudo-classes `:invalid` , `:valid`, .was-validated class applied to form are not supported; 
+
 * usually you still need css to patch some plugin element's styles to fix unexpected theme effects (e.g. in dark themes BS close button could be made white by theme, when you not expect it, then `.badge > close {color:black;}` fix the problem );
 
-* memory leaks: as I see there is something like several KB memory leak on each attach/detach  (that can be ignored since as I see every jquery plugin "attach/detach" have same effects). Memory leak is in the compiled objects, not nodes category. But I can't identify its source (jquery, bootstrap utilities?). If you have knowledge how to explain it: help me. Here is a quick way to experiment with attach/detach and memory snapshots: https://dashboardcode.github.io/BsMultiSelect/snippetLeaks.html ;
+* memory leaks: as I see there is something like several KB memory leak on each attach/detach  (that can be ignored since as I see every jquery plugin "attach/detach" have the same effect). Memory leak is in the compiled objects, not nodes category. But I can't identify its source (jquery, bootstrap utilities?). If you have knowledge how to explain it: help me. Here is a quick way to experiment with attach/detach and memory snapshots: https://dashboardcode.github.io/BsMultiSelect/snippetLeaks.html ;
 
 ### Future development
 
