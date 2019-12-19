@@ -313,6 +313,7 @@ class MultiSelect {
         if (this.styling.UpdateSize){
             this.styling.UpdateSize(this.stylingComposite);
         }
+        //this.placeholderAspect.updatePadding();
     }
 
     UpdateIsValid(){
@@ -425,7 +426,7 @@ class MultiSelect {
                 this.input(filterInputValue, resetLength) 
             }, // filter
             () => {
-                this.placeholderAspect.setEmptyLength();
+                this.placeholderAspect.updateEmptyInputWidth();
             }
         );
         
@@ -484,12 +485,11 @@ class MultiSelect {
             () => this.picksPanel.isEmpty(), 
             () => this.filterPanel.isEmpty(), 
             this.containerAdapter.picksElement, 
-            this.filterPanel.inputElement,
-            () => this.placeholderAspect.setEmptyLength()
+            this.filterPanel.inputElement
         )
 
         this.placeholderAspect.init();
-        this.placeholderAspect.setEmptyLength();
+        this.placeholderAspect.updateEmptyInputWidth();
         
 
         this.aspect =  MultiSelectInputAspect(

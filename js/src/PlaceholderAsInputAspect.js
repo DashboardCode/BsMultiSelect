@@ -1,31 +1,47 @@
-export default function PlaceholderAsInputAspect(placeholderText, picksIsEmpty, filterIsEmpty, picksElement, inputElement, setLengthInput ){
+export default function PlaceholderAsInputAspect(placeholderText, picksIsEmpty, filterIsEmpty, picksElement, inputElement ){
     inputElement.placeholder = placeholderText?placeholderText:"";
     picksElement.style.display= "block";
     inputElement.style.width="100%";
+    
+    function setEmptyInputWidth(isVisible){
+        if(isVisible)
+            inputElement.style.width="100%"
+        else
+            inputElement.style.width="2ch";
+    }
+
+    // function setPadding(isVisible){
+    //     // if (isVisible){
+    //     //     let compStyles = window.getComputedStyle(picksElement);
+    //     //     var padding = compStyles.getPropertyValue("padding");
+    //     //     picksElement.style.padding=padding;
+    //     // }
+    //     // else {
+    //     //     picksElement.style.padding=null;
+    //     // }
+    //     console.log(picksElement.style.padding);
+    // }
+
     function showPlacehodler(isVisible){
         if (isVisible)
         {
-            let compStyles = window.getComputedStyle(picksElement);
-            var padding = compStyles.getPropertyValue("padding");
             inputElement.placeholder = placeholderText?placeholderText:"";
-            picksElement.style.padding="0px";
             picksElement.style.display= "block";
-            inputElement.style.width="100%";
-            picksElement.style.padding=padding;
+            //inputElement.style.width="100%";
         }
         else
         {
             inputElement.placeholder = "";
-            picksElement.style.padding=null;
             picksElement.style.display= "flex";
         }
-        setLengthInput();
+        //setPadding(isVisible);
+        setEmptyInputWidth(isVisible);
     }
+
     return {
         updatePlacehodlerVisibility(){
             showPlacehodler(picksIsEmpty() && filterIsEmpty());
         },
-        showPlacehodler,
         init(){
         },
         placeholderItemElement:null,
@@ -33,11 +49,11 @@ export default function PlaceholderAsInputAspect(placeholderText, picksIsEmpty, 
         { 
             inputElement.disabled = isDisabled;
         },
-        setEmptyLength(){
-            if(picksIsEmpty() && filterIsEmpty())
-                inputElement.style.width="100%"
-            else
-                inputElement.style.width="2ch";
-        }
+        updateEmptyInputWidth(){
+            setEmptyInputWidth(picksIsEmpty() && filterIsEmpty())
+        }//,
+        // updatePadding(){
+        //     setPadding(picksIsEmpty() && filterIsEmpty())
+        // }
     }
 }

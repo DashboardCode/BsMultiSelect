@@ -1,5 +1,5 @@
 /*!
-  * DashboardCode BsMultiSelect v0.4.30 (https://dashboardcode.github.io/BsMultiSelect/)
+  * DashboardCode BsMultiSelect v0.4.31 (https://dashboardcode.github.io/BsMultiSelect/)
   * Copyright 2017-2019 Roman Pokrovskij (github user rpokrovskij)
   * Licensed under APACHE 2 (https://github.com/DashboardCode/BsMultiSelect/blob/master/LICENSE)
   */
@@ -618,42 +618,55 @@
       };
     }
 
-    function PlaceholderAsInputAspect(placeholderText, picksIsEmpty, filterIsEmpty, picksElement, inputElement, setLengthInput) {
+    function PlaceholderAsInputAspect(placeholderText, picksIsEmpty, filterIsEmpty, picksElement, inputElement) {
       inputElement.placeholder = placeholderText ? placeholderText : "";
       picksElement.style.display = "block";
       inputElement.style.width = "100%";
 
+      function setEmptyInputWidth(isVisible) {
+        if (isVisible) inputElement.style.width = "100%";else inputElement.style.width = "2ch";
+      } // function setPadding(isVisible){
+      //     // if (isVisible){
+      //     //     let compStyles = window.getComputedStyle(picksElement);
+      //     //     var padding = compStyles.getPropertyValue("padding");
+      //     //     picksElement.style.padding=padding;
+      //     // }
+      //     // else {
+      //     //     picksElement.style.padding=null;
+      //     // }
+      //     console.log(picksElement.style.padding);
+      // }
+
+
       function showPlacehodler(isVisible) {
         if (isVisible) {
-          var compStyles = window.getComputedStyle(picksElement);
-          var padding = compStyles.getPropertyValue("padding");
           inputElement.placeholder = placeholderText ? placeholderText : "";
-          picksElement.style.padding = "0px";
-          picksElement.style.display = "block";
-          inputElement.style.width = "100%";
-          picksElement.style.padding = padding;
+          picksElement.style.display = "block"; //inputElement.style.width="100%";
         } else {
           inputElement.placeholder = "";
-          picksElement.style.padding = null;
           picksElement.style.display = "flex";
-        }
+        } //setPadding(isVisible);
 
-        setLengthInput();
+
+        setEmptyInputWidth(isVisible);
       }
 
       return {
         updatePlacehodlerVisibility: function updatePlacehodlerVisibility() {
           showPlacehodler(picksIsEmpty() && filterIsEmpty());
         },
-        showPlacehodler: showPlacehodler,
         init: function init() {},
         placeholderItemElement: null,
         adjustForDisabled: function adjustForDisabled(isDisabled) {
           inputElement.disabled = isDisabled;
         },
-        setEmptyLength: function setEmptyLength() {
-          if (picksIsEmpty() && filterIsEmpty()) inputElement.style.width = "100%";else inputElement.style.width = "2ch";
-        }
+        updateEmptyInputWidth: function updateEmptyInputWidth() {
+          setEmptyInputWidth(picksIsEmpty() && filterIsEmpty());
+        } //,
+        // updatePadding(){
+        //     setPadding(picksIsEmpty() && filterIsEmpty())
+        // }
+
       };
     }
 
@@ -953,7 +966,8 @@
       _proto.UpdateSize = function UpdateSize() {
         if (this.styling.UpdateSize) {
           this.styling.UpdateSize(this.stylingComposite);
-        }
+        } //this.placeholderAspect.updatePadding();
+
       };
 
       _proto.UpdateIsValid = function UpdateIsValid() {
@@ -1076,7 +1090,7 @@
           _this2.input(filterInputValue, resetLength);
         }, // filter
         function () {
-          _this2.placeholderAspect.setEmptyLength();
+          _this2.placeholderAspect.updateEmptyInputWidth();
         });
         this.picksPanel = PicksPanel(this.setSelected, createElement, this.containerAdapter.picksElement, function (filterItemElement) {
           lazyfilterItemInputElementAtach(filterItemElement);
@@ -1122,11 +1136,9 @@
           return _this2.picksPanel.isEmpty();
         }, function () {
           return _this2.filterPanel.isEmpty();
-        }, this.containerAdapter.picksElement, this.filterPanel.inputElement, function () {
-          return _this2.placeholderAspect.setEmptyLength();
-        });
+        }, this.containerAdapter.picksElement, this.filterPanel.inputElement);
         this.placeholderAspect.init();
-        this.placeholderAspect.setEmptyLength();
+        this.placeholderAspect.updateEmptyInputWidth();
         this.aspect = MultiSelectInputAspect(this.window, function () {
           return _this2.containerAdapter.appendToContainer();
         }, this.picksPanel.inputItemElement, this.containerAdapter.picksElement, this.containerAdapter.optionsElement, function () {
