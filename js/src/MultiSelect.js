@@ -311,7 +311,7 @@ class MultiSelect {
 
     UpdateSize(){
         if (this.styling.UpdateSize){
-            this.styling.UpdateSize(this.stylingComposite);
+            this.styling.UpdateSize(this.stylingComposite, this.optionsAdapter.getSize() );
         }
         //this.placeholderAspect.updatePadding();
     }
@@ -326,11 +326,11 @@ class MultiSelect {
         if (this.isComponentDisabled!==isComponentDisabled){
             if (isComponentDisabled) {
                 this.picksPanel.disable();
-                this.placeholderAspect.adjustForDisabled(true);
+                this.placeholderAspect.setDisabled(true);
                 this.styling.Disable(this.stylingComposite);
             } else {
                 this.picksPanel.enable();
-                this.placeholderAspect.adjustForDisabled(false);
+                this.placeholderAspect.setDisabled(false);
                 this.styling.Enable(this.stylingComposite);
             }
             this.isComponentDisabled=isComponentDisabled;

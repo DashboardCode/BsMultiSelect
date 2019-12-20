@@ -66,6 +66,7 @@ function FindDirectChildByTagName(element, tagName){
                         optionsAdapter = OptionsAdapterJson(
                             configuration.options,
                             configuration.getDisabled,
+                            configuration.getSize,
                             configuration.getIsValid,
                             configuration.getIsInvalid,
                             trigger );
@@ -128,7 +129,33 @@ function FindDirectChildByTagName(element, tagName){
                                 configuration.getDisabled = () => selectElement.disabled;
                             }
                         }
-                        optionsAdapter = OptionsAdapterElement(selectElement, configuration.getDisabled, trigger, form);
+
+                        if (!configuration.getSize) {
+                            configuration.getSize = function(){
+                                var value=null;
+                                if (selectElement.classList.contains('custom-select-lg') || selectElement.classList.contains('form-control-lg') )
+                                    value='custom-select-lg';
+                                else if (selectElement.classList.contains('custom-select-sm')  || selectElement.classList.contains('form-control-sm')  )
+                                    value='custom-select-sm';
+                                else if (containerElement && containerElement.classList.contains('input-group-lg'))
+                                    value='input-group-lg';
+                                else if (containerElement && containerElement.classList.contains('input-group-sm'))
+                                    value='input-group-sm';
+                                return value;
+                            }
+                        }
+                        if (!configuration.getIsValid) {
+                            configuration.getIsValid = function()
+                            { return selectElement.classList.contains('is-valid')}
+                        }
+                        if (!configuration.getIsInvalid) {
+                            configuration.getIsInvalid = function()
+                            { return selectElement.classList.contains('is-invalid')}
+                        }
+                        optionsAdapter = OptionsAdapterElement(selectElement, configuration.getDisabled, 
+                            configuration.getSize, 
+                            configuration.getIsValid, configuration.getIsInvalid,
+                            trigger, form);
 
                         if (!configuration.createInputId)
                             configuration.createInputId = () => `${configuration.containerClass}-generated-input-${((selectElement.id)?selectElement.id:selectElement.name).toLowerCase()}-id`;
@@ -208,6 +235,7 @@ function FindDirectChildByTagName(element, tagName){
                     configuration.init(element, multiSelect);
                 
                 multiSelect.init();
+
                 return multiSelect;
             }, $);
     }

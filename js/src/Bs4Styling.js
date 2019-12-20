@@ -36,9 +36,21 @@ function Bs4Styling(stylingMethod, configuration, $) {
                 composite.$selectedPanel.addClass('is-invalid');
         },
 
-        UpdateSize(composite){
+        UpdateSize(composite, size){
+                if (size=="custom-select-lg"){
+                    composite.$selectedPanel.addClass('form-control-lg');
+                    composite.$selectedPanel.removeClass('form-control-sm');
+                }
+                else if (size=="custom-select-sm"){
+                    composite.$selectedPanel.removeClass('form-control-lg');
+                    composite.$selectedPanel.addClass('form-control-sm');
+                }
+                else{
+                    composite.$selectedPanel.removeClass('form-control-lg');
+                    composite.$selectedPanel.removeClass('form-control-sm');
+                }
             if(stylingMethod.UpdateSize)
-               stylingMethod.UpdateSize(composite.$container, composite.$selectedPanel)
+               stylingMethod.UpdateSize(composite.$selectedPanel, size)
         },
 
         Enable(composite){

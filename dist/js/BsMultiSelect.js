@@ -1,5 +1,5 @@
 /*!
-  * DashboardCode BsMultiSelect v0.4.31 (https://dashboardcode.github.io/BsMultiSelect/)
+  * DashboardCode BsMultiSelect v0.4.32 (https://dashboardcode.github.io/BsMultiSelect/)
   * Copyright 2017-2019 Roman Pokrovskij (github user rpokrovskij)
   * Licensed under APACHE 2 (https://github.com/DashboardCode/BsMultiSelect/blob/master/LICENSE)
   */
@@ -619,54 +619,34 @@
     }
 
     function PlaceholderAsInputAspect(placeholderText, picksIsEmpty, filterIsEmpty, picksElement, inputElement) {
-      inputElement.placeholder = placeholderText ? placeholderText : "";
-      picksElement.style.display = "block";
-      inputElement.style.width = "100%";
-
       function setEmptyInputWidth(isVisible) {
         if (isVisible) inputElement.style.width = "100%";else inputElement.style.width = "2ch";
-      } // function setPadding(isVisible){
-      //     // if (isVisible){
-      //     //     let compStyles = window.getComputedStyle(picksElement);
-      //     //     var padding = compStyles.getPropertyValue("padding");
-      //     //     picksElement.style.padding=padding;
-      //     // }
-      //     // else {
-      //     //     picksElement.style.padding=null;
-      //     // }
-      //     console.log(picksElement.style.padding);
-      // }
-
+      }
 
       function showPlacehodler(isVisible) {
         if (isVisible) {
           inputElement.placeholder = placeholderText ? placeholderText : "";
-          picksElement.style.display = "block"; //inputElement.style.width="100%";
+          picksElement.style.display = "block";
         } else {
           inputElement.placeholder = "";
           picksElement.style.display = "flex";
-        } //setPadding(isVisible);
-
+        }
 
         setEmptyInputWidth(isVisible);
       }
 
+      showPlacehodler(true);
       return {
+        init: function init() {},
         updatePlacehodlerVisibility: function updatePlacehodlerVisibility() {
           showPlacehodler(picksIsEmpty() && filterIsEmpty());
         },
-        init: function init() {},
-        placeholderItemElement: null,
-        adjustForDisabled: function adjustForDisabled(isDisabled) {
-          inputElement.disabled = isDisabled;
-        },
         updateEmptyInputWidth: function updateEmptyInputWidth() {
           setEmptyInputWidth(picksIsEmpty() && filterIsEmpty());
-        } //,
-        // updatePadding(){
-        //     setPadding(picksIsEmpty() && filterIsEmpty())
-        // }
-
+        },
+        setDisabled: function setDisabled(isDisabled) {
+          inputElement.disabled = isDisabled;
+        }
       };
     }
 
@@ -965,7 +945,7 @@
 
       _proto.UpdateSize = function UpdateSize() {
         if (this.styling.UpdateSize) {
-          this.styling.UpdateSize(this.stylingComposite);
+          this.styling.UpdateSize(this.stylingComposite, this.optionsAdapter.getSize());
         } //this.placeholderAspect.updatePadding();
 
       };
@@ -980,11 +960,11 @@
         if (this.isComponentDisabled !== isComponentDisabled) {
           if (isComponentDisabled) {
             this.picksPanel.disable();
-            this.placeholderAspect.adjustForDisabled(true);
+            this.placeholderAspect.setDisabled(true);
             this.styling.Disable(this.stylingComposite);
           } else {
             this.picksPanel.enable();
-            this.placeholderAspect.adjustForDisabled(false);
+            this.placeholderAspect.setDisabled(false);
             this.styling.Enable(this.stylingComposite);
           }
 
@@ -1186,7 +1166,7 @@
       };
     }
 
-    function OptionsAdapterElement(selectElement, getDisabled, trigger, form) {
+    function OptionsAdapterElement(selectElement, getDisabled, getSize, getIsValid, getIsInvalid, trigger, form) {
       var backup;
       return {
         getOptions: function getOptions() {
@@ -1197,12 +1177,9 @@
           trigger('multiselect:change');
         },
         getDisabled: getDisabled,
-        getIsValid: function getIsValid() {
-          return selectElement.classList.contains('is-valid');
-        },
-        getIsInvalid: function getIsInvalid() {
-          return selectElement.classList.contains('is-invalid');
-        },
+        getSize: getSize,
+        getIsValid: getIsValid,
+        getIsInvalid: getIsInvalid,
         subscribeToReset: function subscribeToReset(handler) {
           backup = handler;
           if (form) form.addEventListener('reset', backup);
@@ -1213,7 +1190,7 @@
       };
     }
 
-    function OptionsAdapterJson(options, _getDisabled, _getIsValid, _getIsInvalid, trigger) {
+    function OptionsAdapterJson(options, _getDisabled, _getSize, _getIsValid, _getIsInvalid, trigger) {
       return {
         getOptions: function getOptions() {
           return options;
@@ -1223,6 +1200,9 @@
         },
         getDisabled: function getDisabled() {
           return _getDisabled ? _getDisabled() : false;
+        },
+        getSize: function getSize() {
+          return _getSize ? _getSize() : null;
         },
         getIsValid: function getIsValid() {
           return _getIsValid ? _getIsValid() : false;
@@ -1292,10 +1272,10 @@
           composite.$filterInput.css("font-weight", configuration.filterInputFontWeight);
           if (composite.placeholderItem) composite.$placeholderItem.css("color", configuration.placeholderItemColor);
         },
-        UpdateSize: function UpdateSize($container, $selectedPanel) {
-          if ($selectedPanel.hasClass("form-control-lg") || $container.hasClass("input-group-lg")) {
+        UpdateSize: function UpdateSize($selectedPanel, size) {
+          if (size == "custom-select-lg" || size == "input-group-lg") {
             $selectedPanel.css("min-height", configuration.selectedPanelLgMinHeight);
-          } else if ($selectedPanel.hasClass("form-control-sm") || $container.hasClass("input-group-sm")) {
+          } else if (size == "custom-select-sm" || size == "input-group-sm") {
             $selectedPanel.css("min-height", configuration.selectedPanelSmMinHeight);
           } else {
             $selectedPanel.css("min-height", configuration.selectedPanelDefMinHeight);
@@ -1350,8 +1330,19 @@
           if (isValid) composite.$selectedPanel.addClass('is-valid');
           if (isInvalid) composite.$selectedPanel.addClass('is-invalid');
         },
-        UpdateSize: function UpdateSize(composite) {
-          if (stylingMethod.UpdateSize) stylingMethod.UpdateSize(composite.$container, composite.$selectedPanel);
+        UpdateSize: function UpdateSize(composite, size) {
+          if (size == "custom-select-lg") {
+            composite.$selectedPanel.addClass('form-control-lg');
+            composite.$selectedPanel.removeClass('form-control-sm');
+          } else if (size == "custom-select-sm") {
+            composite.$selectedPanel.removeClass('form-control-lg');
+            composite.$selectedPanel.addClass('form-control-sm');
+          } else {
+            composite.$selectedPanel.removeClass('form-control-lg');
+            composite.$selectedPanel.removeClass('form-control-sm');
+          }
+
+          if (stylingMethod.UpdateSize) stylingMethod.UpdateSize(composite.$selectedPanel, size);
         },
         Enable: function Enable(composite) {
           stylingMethod.Enable(composite.$selectedPanel);
@@ -1708,7 +1699,7 @@
           };
 
           if (configuration.options) {
-            optionsAdapter = OptionsAdapterJson(configuration.options, configuration.getDisabled, configuration.getIsValid, configuration.getIsInvalid, trigger);
+            optionsAdapter = OptionsAdapterJson(configuration.options, configuration.getDisabled, configuration.getSize, configuration.getIsValid, configuration.getIsInvalid, trigger);
             if (!configuration.createInputId) configuration.createInputId = function () {
               return configuration.containerClass + "-generated-filter-" + element.id;
             }; // find direct child by tagName
@@ -1769,7 +1760,27 @@
               }
             }
 
-            optionsAdapter = OptionsAdapterElement(selectElement, configuration.getDisabled, trigger, form);
+            if (!configuration.getSize) {
+              configuration.getSize = function () {
+                var value = null;
+                if (selectElement.classList.contains('custom-select-lg') || selectElement.classList.contains('form-control-lg')) value = 'custom-select-lg';else if (selectElement.classList.contains('custom-select-sm') || selectElement.classList.contains('form-control-sm')) value = 'custom-select-sm';else if (containerElement && containerElement.classList.contains('input-group-lg')) value = 'input-group-lg';else if (containerElement && containerElement.classList.contains('input-group-sm')) value = 'input-group-sm';
+                return value;
+              };
+            }
+
+            if (!configuration.getIsValid) {
+              configuration.getIsValid = function () {
+                return selectElement.classList.contains('is-valid');
+              };
+            }
+
+            if (!configuration.getIsInvalid) {
+              configuration.getIsInvalid = function () {
+                return selectElement.classList.contains('is-invalid');
+              };
+            }
+
+            optionsAdapter = OptionsAdapterElement(selectElement, configuration.getDisabled, configuration.getSize, configuration.getIsValid, configuration.getIsInvalid, trigger, form);
             if (!configuration.createInputId) configuration.createInputId = function () {
               return configuration.containerClass + "-generated-input-" + (selectElement.id ? selectElement.id : selectElement.name).toLowerCase() + "-id";
             };

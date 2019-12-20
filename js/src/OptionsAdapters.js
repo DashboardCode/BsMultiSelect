@@ -1,4 +1,4 @@
-function OptionsAdapterElement(selectElement, getDisabled, trigger, form) {
+function OptionsAdapterElement(selectElement, getDisabled, getSize, getIsValid, getIsInvalid, trigger, form) {
     var backup;
     return {
         getOptions(){
@@ -9,12 +9,9 @@ function OptionsAdapterElement(selectElement, getDisabled, trigger, form) {
             trigger('multiselect:change')
         },
         getDisabled,
-        getIsValid(){
-            return selectElement.classList.contains('is-valid')
-        },
-        getIsInvalid(){
-            return selectElement.classList.contains('is-invalid')
-        },
+        getSize,
+        getIsValid,
+        getIsInvalid,
         subscribeToReset(handler){
             backup = handler;
             if (form)
@@ -27,7 +24,7 @@ function OptionsAdapterElement(selectElement, getDisabled, trigger, form) {
     }
 }
 
-function OptionsAdapterJson(options, getDisabled, getIsValid, getIsInvalid, trigger) {
+function OptionsAdapterJson(options, getDisabled, getSize, getIsValid, getIsInvalid, trigger) {
     return {
         getOptions(){
             return options
@@ -38,9 +35,13 @@ function OptionsAdapterJson(options, getDisabled, getIsValid, getIsInvalid, trig
         getDisabled(){
             return getDisabled?getDisabled():false
         },
+        getSize(){
+            return getSize?getSize():null
+        },
         getIsValid(){
             return getIsValid?getIsValid():false
         },
+        
         getIsInvalid(){
             return getIsInvalid?getIsInvalid():false
         }
