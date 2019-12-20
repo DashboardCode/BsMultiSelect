@@ -50,6 +50,7 @@ export default function ContainerAdapter(createElement, selectElement, container
         picksElement = createElement('UL');
         ownPicksElement = true;
     }
+
     var optionsElement = createElement('UL');
     optionsElement.style.display="none";
     
@@ -71,7 +72,8 @@ export default function ContainerAdapter(createElement, selectElement, container
         appendToContainer(){
             if (ownContainerElement || !selectElement)            
             {
-                containerElement.appendChild(picksElement);
+                if (ownPicksElement)
+                    containerElement.appendChild(picksElement);
                 containerElement.appendChild(optionsElement);
             }
             else
@@ -79,7 +81,8 @@ export default function ContainerAdapter(createElement, selectElement, container
                 if (selectElement)
                 {
                     selectElement.parentNode.insertBefore(optionsElement, selectElement.nextSibling);
-                    selectElement.parentNode.insertBefore(picksElement, optionsElement);
+                    if (ownPicksElement)
+                        selectElement.parentNode.insertBefore(picksElement, optionsElement);
                 }
             }
         },

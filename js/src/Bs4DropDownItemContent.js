@@ -41,7 +41,7 @@ function Bs4DropDownItemContent(stylingMethod, configuration, $) {
         $dropDownItem.addClass(configuration.dropDownItemClass);
         let $dropDownItemContent= $(`<div class="custom-control custom-checkbox">
             <input type="checkbox" class="custom-control-input">
-            <label class="custom-control-label"></label>
+            <label class="custom-control-label justify-content-start"></label>
         </div>`);
         $dropDownItemContent.appendTo(dropDownItem);
         let $checkBox = $dropDownItemContent.find(`INPUT[type="checkbox"]`);

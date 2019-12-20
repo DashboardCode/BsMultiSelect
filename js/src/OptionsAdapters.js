@@ -41,7 +41,6 @@ function OptionsAdapterJson(options, getDisabled, getSize, getIsValid, getIsInva
         getIsValid(){
             return getIsValid?getIsValid():false
         },
-        
         getIsInvalid(){
             return getIsInvalid?getIsInvalid():false
         }

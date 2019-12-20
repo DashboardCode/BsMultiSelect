@@ -1,5 +1,5 @@
 /*!
-  * DashboardCode BsMultiSelect v0.4.32 (https://dashboardcode.github.io/BsMultiSelect/)
+  * DashboardCode BsMultiSelect v0.4.33 (https://dashboardcode.github.io/BsMultiSelect/)
   * Copyright 2017-2019 Roman Pokrovskij (github user rpokrovskij)
   * Licensed under APACHE 2 (https://github.com/DashboardCode/BsMultiSelect/blob/master/LICENSE)
   */
@@ -1528,7 +1528,7 @@
       return function (dropDownItem, option) {
         var $dropDownItem = $(dropDownItem);
         $dropDownItem.addClass(configuration.dropDownItemClass);
-        var $dropDownItemContent = $("<div class=\"custom-control custom-checkbox\">\n            <input type=\"checkbox\" class=\"custom-control-input\">\n            <label class=\"custom-control-label\"></label>\n        </div>");
+        var $dropDownItemContent = $("<div class=\"custom-control custom-checkbox\">\n            <input type=\"checkbox\" class=\"custom-control-input\">\n            <label class=\"custom-control-label justify-content-start\"></label>\n        </div>");
         $dropDownItemContent.appendTo(dropDownItem);
         var $checkBox = $dropDownItemContent.find("INPUT[type=\"checkbox\"]");
         var $checkBoxLabel = $dropDownItemContent.find("label");
@@ -1633,12 +1633,12 @@
         },
         appendToContainer: function appendToContainer() {
           if (ownContainerElement || !selectElement) {
-            containerElement.appendChild(picksElement);
+            if (ownPicksElement) containerElement.appendChild(picksElement);
             containerElement.appendChild(optionsElement);
           } else {
             if (selectElement) {
               selectElement.parentNode.insertBefore(optionsElement, selectElement.nextSibling);
-              selectElement.parentNode.insertBefore(picksElement, optionsElement);
+              if (ownPicksElement) selectElement.parentNode.insertBefore(picksElement, optionsElement);
             }
           }
         },
