@@ -4,11 +4,41 @@ import LabelAdapter from './LabelAdapter';
 import { OptionsAdapterJson, OptionsAdapterElement } from './OptionsAdapters';
 import Bs4StylingMethodCss from './Bs4StylingMethodCss';
 import Bs4StylingMethodJs from './Bs4StylingMethodJs';
-import Bs4Styling from './Bs4Styling';
+import { Bs4Styling, MultiSelectСlassesDefaults } from './Bs4Styling';
 import AddToJQueryPrototype from './AddToJQueryPrototype';
 import { Bs4SelectedItemContent, Bs4SelectedItemContentStylingMethodJs, Bs4SelectedItemContentStylingMethodCss } from './Bs4SelectedItemContent';
 import { Bs4DropDownItemContent, Bs4DropDownItemContentStylingMethodJs, Bs4DropDownItemContentStylingMethodCss } from './Bs4DropDownItemContent';
 import ContainerAdapter from './ContainerAdapter';
+
+function UpdateIsValid(selectedPanel, isValid, isInvalid) {
+  if (isValid) selectedPanel.classList.add('is-valid');else selectedPanel.classList.remove('is-valid');
+  if (isInvalid) selectedPanel.classList.add('is-invalid');else selectedPanel.classList.remove('is-invalid');
+}
+
+function UpdateSize(selectedPanel, size) {
+  if (size == "custom-select-lg") {
+    selectedPanel.classList.add('form-control-lg');
+    selectedPanel.classList.remove('form-control-sm');
+  } else if (size == "custom-select-sm") {
+    selectedPanel.classList.remove('form-control-lg');
+    selectedPanel.classList.add('form-control-sm');
+  } else {
+    selectedPanel.classList.remove('form-control-lg');
+    selectedPanel.classList.remove('form-control-sm');
+  }
+}
+
+function UpdateSizeJs(selectedPanel, size, configuration) {
+  UpdateSize(selectedPanel, size);
+
+  if (size == "custom-select-lg" || size == "input-group-lg") {
+    selectedPanel.style.minHeight = configuration.selectedPanelLgMinHeight;
+  } else if (size == "custom-select-sm" || size == "input-group-sm") {
+    selectedPanel.style.minHeight = configuration.selectedPanelSmMinHeight;
+  } else {
+    selectedPanel.style.minHeight = configuration.selectedPanelDefMinHeight;
+  }
+}
 
 function FindDirectChildByTagName(element, tagName) {
   var returnValue = null;
@@ -26,7 +56,8 @@ function FindDirectChildByTagName(element, tagName) {
 }
 
 (function (window, $) {
-  AddToJQueryPrototype('BsMultiSelect', function (element, settings, onDispose) {
+  // $.fn.bsMultiSelect.defaults. // TODO - set defaults parameters from there
+  var createPlugin = function createPlugin(element, settings, onDispose) {
     var configuration = $.extend({}, settings); // settings used per jQuery intialization, configuration per element
 
     if (configuration.buildConfiguration) configuration.buildConfiguration(element, configuration);
@@ -40,7 +71,7 @@ function FindDirectChildByTagName(element, tagName) {
         if (useCss) stylingMethod = Bs4StylingMethodCss(configuration);else stylingMethod = Bs4StylingMethodJs(configuration);
       }
 
-      styling = Bs4Styling(stylingMethod, configuration, $);
+      styling = Bs4Styling(stylingMethod, configuration);
     }
 
     var optionsAdapter = null;
@@ -168,6 +199,11 @@ function FindDirectChildByTagName(element, tagName) {
 
     var createStylingComposite = function createStylingComposite(container, selectedPanel, placeholderItemElement, filterInputItem, filterInput, dropDownMenu) {
       return {
+        container: container,
+        selectedPanel: selectedPanel,
+        filterInputItem: filterInputItem,
+        filterInput: filterInput,
+        dropDownMenu: dropDownMenu,
         $container: $(container),
         $selectedPanel: $(selectedPanel),
         $placeholderItem: placeholderItemElement ? $(placeholderItemElement) : null,
@@ -191,11 +227,41 @@ function FindDirectChildByTagName(element, tagName) {
       };
     }
 
-    var multiSelect = new MultiSelect(optionsAdapter, setSelected, containerAdapter, styling, selectedItemContent, dropDownItemContent, labelAdapter, createStylingComposite, placeholderText, configuration, onDispose, window);
+    var updateSize = null;
+
+    if (configuration.useCss) {
+      updateSize = function updateSize() {
+        return UpdateSize(containerAdapter.picksElement, optionsAdapter.getSize());
+      };
+    } else {
+      updateSize = function updateSize() {
+        return UpdateSizeJs(containerAdapter.picksElement, optionsAdapter.getSize(), configuration);
+      };
+    }
+
+    ;
+
+    var updateIsValid = function updateIsValid() {
+      return UpdateIsValid(containerAdapter.picksElement, optionsAdapter.getIsValid(), optionsAdapter.getIsInvalid());
+    };
+
+    var onUpdate = function onUpdate() {
+      updateSize();
+      updateIsValid();
+    };
+
+    var multiSelect = new MultiSelect(optionsAdapter, setSelected, containerAdapter, styling, selectedItemContent, dropDownItemContent, labelAdapter, createStylingComposite, placeholderText, configuration, onUpdate, onDispose, window);
+    multiSelect.UpdateSize = updateSize;
+    multiSelect.UpdateIsValid = updateIsValid;
     if (configuration.init) configuration.init(element, multiSelect);
     multiSelect.init();
     return multiSelect;
-  }, $);
+  };
+
+  var defaults = {
+    classes: MultiSelectСlassesDefaults
+  };
+  AddToJQueryPrototype('BsMultiSelect', createPlugin, defaults, $);
 })(window, $);
 
 //# sourceMappingURL=BsMultiSelect.js.map

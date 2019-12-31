@@ -49,15 +49,16 @@ function collectFilterDropDownMenu(MultiSelectDataList, text) {
 }
 
 class MultiSelect {
+
     constructor(optionsAdapter, setSelected, containerAdapter, styling, 
         selectedItemContent, dropDownItemContent, 
         labelAdapter, createStylingComposite, placeholderText,
-        configuration, onDispose, window) {
+        configuration, onUpdate, onDispose, window) {
         if (typeof Popper === 'undefined') {
             throw new TypeError('DashboardCode BsMultiSelect require Popper.js (https://popper.js.org)')
         }
-
-        this.onDispose = onDispose; // public
+        this.onUpdate = onUpdate;
+        this.onDispose = onDispose; 
 
         // readonly
         this.optionsAdapter = optionsAdapter;
@@ -116,8 +117,7 @@ class MultiSelect {
     }
 
     Update(){
-        this.UpdateIsValid();
-        this.UpdateSize();
+        this.onUpdate();
         this.UpdateDisabled();
         this.UpdateData();
     }
@@ -307,18 +307,6 @@ class MultiSelect {
             if (multiSelectData.DropDownItemContent)
                 multiSelectData.DropDownItemContent.dispose();
         }
-    }
-
-    UpdateSize(){
-        if (this.styling.UpdateSize){
-            this.styling.UpdateSize(this.stylingComposite, this.optionsAdapter.getSize() );
-        }
-        //this.placeholderAspect.updatePadding();
-    }
-
-    UpdateIsValid(){
-        if (this.styling.UpdateIsValid)
-            this.styling.UpdateIsValid(this.stylingComposite, this.optionsAdapter.getIsValid(), this.optionsAdapter.getIsInvalid());
     }
 
     UpdateDisabled(){
@@ -518,8 +506,7 @@ class MultiSelect {
 
         this.containerAdapter.attachContainer();
 
-        this.UpdateSize();            
-        this.UpdateIsValid();
+        this.onUpdate();
         this.UpdateDisabled(); // should be done after updateDataImpl
         this.updateDataImpl();
 

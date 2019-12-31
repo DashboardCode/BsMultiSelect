@@ -1,7 +1,7 @@
 import  { ExtendIfUndefined} from './Tools';
 
 const bs4StylingMethodCssDefaults = {
-    selectedItemContentDisabledClass: 'disabled',
+    checkBoxDisabledClass: 'disabled',
 };
 
 function Bs4DropDownItemContentStylingMethodCss(configuration) {
@@ -9,23 +9,22 @@ function Bs4DropDownItemContentStylingMethodCss(configuration) {
     return {
         disabledStyle($checkBox, $checkBoxLabel, isDisbaled){
             if (isDisbaled) 
-                $checkBox.addClass(configuration.dropDownItemDisabledClass);
+                $checkBox.addClass(configuration.checkBoxDisabledClass);
             else
-                $checkBox.removeClass(configuration.dropDownItemDisabledClass);
+                $checkBox.removeClass(configuration.checkBoxDisabledClass);
         }
     }
 }
 
 const bs4StylingMethodJsDefaults = {
-    selectedItemContentDisabledOpacity: '.65',
-    dropdDownLabelDisabledColor: '#6c757d'
+    checkBoxLabelDisabledColor: '#6c757d'
 };
 
 function Bs4DropDownItemContentStylingMethodJs(configuration) {
     ExtendIfUndefined(configuration, bs4StylingMethodJsDefaults);
     return{
         disabledStyle($checkBox, $checkBoxLabel, isDisbaled){
-            $checkBoxLabel.css('color', isDisbaled?configuration.dropdDownLabelDisabledColor:'')
+            $checkBoxLabel.css('color', isDisbaled?configuration.checkBoxLabelDisabledColor:'')
         }
     }
 }

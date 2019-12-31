@@ -16,6 +16,7 @@ function Bs4SelectedItemContentStylingMethodCss(configuration) {
 
 const defSelectedItemStyle = {'padding-left': '0px', 'line-height': '1.5em'};
 const defRemoveSelectedItemButtonStyle = {'font-size':'1.5em', 'line-height': '.9em'};
+
 const bs4StylingMethodJsDefaults = {
     selectedItemContentDisabledOpacity: '.65'
  };

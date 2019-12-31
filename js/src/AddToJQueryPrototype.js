@@ -1,4 +1,4 @@
-function AddToJQueryPrototype(pluginName, createPlugin, $){
+function AddToJQueryPrototype(pluginName, createPlugin, defaults, $){
     const firstChar = pluginName.charAt(0);
     const firstCharLower = firstChar.toLowerCase();
     if (firstCharLower == firstChar) {
@@ -38,7 +38,7 @@ function AddToJQueryPrototype(pluginName, createPlugin, $){
 
     $.fn[prototypableName] = prototypable;
 
-    // pluginName with first capitalized letter - return plugin instance for 1st $selected item
+    // pluginName with first capitalized letter - return plugin instance (for 1st $selected item)
     $.fn[pluginName] = function () {
         return $(this).data(dataKey);
     };
@@ -47,6 +47,8 @@ function AddToJQueryPrototype(pluginName, createPlugin, $){
         $.fn[prototypableName] = noConflictPrototypable
         return prototypable;
     }
+
+    $.fn[prototypableName].defaults = defaults;
 }
 
 export default AddToJQueryPrototype;

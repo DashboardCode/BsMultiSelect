@@ -1,6 +1,6 @@
 {
   "name": "@dashboardcode/bsmultiselect",
-  "version": "0.4.33",
+  "version": "0.4.34-beta",
   "private": false,
   "description": "Bootstrap 4 component - MultiSelect",
   "homepage": "https://dashboardcode.github.io/BsMultiSelect/",
