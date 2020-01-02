@@ -1,4 +1,6 @@
-function defFilterInputStyleSys(s) {s.border='0px'; s.padding='0px'; s.outline='none'; s.backgroundColor='transparent' };
+import {setStyles} from './DomTools';
+
+const defFilterInputStyleSys = {border:'0px', padding:'0px', outline:'none', backgroundColor:'transparent' };
 
 function FilterPanel(
         createElement,
@@ -21,7 +23,7 @@ function FilterPanel(
     inputElement.setAttribute("type","search");
     inputElement.setAttribute("autocomplete","off");
 
-    defFilterInputStyleSys(inputElement.style);
+    setStyles(inputElement, defFilterInputStyleSys);
 
     insertIntoDom(inputElement);
 

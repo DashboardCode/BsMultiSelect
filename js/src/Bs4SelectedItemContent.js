@@ -1,55 +1,27 @@
-import  { ExtendIfUndefined } from './Tools';
-
-const bs4StylingMethodCssdefaults = {
-    selectedItemContentDisabledClass: 'disabled'
-};
-
-function Bs4SelectedItemContentStylingMethodCss(configuration) {
-    ExtendIfUndefined(configuration, bs4StylingMethodCssdefaults);
-
-    return {
-        disableSelectedItemContent($content){
-            $content.addClass(configuration.selectedItemContentDisabledClass )
-        }
-    }
-}
-
-const defSelectedItemStyle = {'padding-left': '0px', 'line-height': '1.5em'};
-const defRemoveSelectedItemButtonStyle = {'font-size':'1.5em', 'line-height': '.9em'};
-
-const bs4StylingMethodJsDefaults = {
-    selectedItemContentDisabledOpacity: '.65'
- };
-
 function Bs4SelectedItemContentStylingMethodJs(configuration) {
-    ExtendIfUndefined(configuration, bs4StylingMethodJsDefaults);
     return {
         disableSelectedItemContent($content){
             $content.css("opacity", configuration.selectedItemContentDisabledOpacity )
         },
     
         createSelectedItemContent($selectedItem, $button){
-            $selectedItem.css(defSelectedItemStyle);
+            $selectedItem.css(configuration.defSelectedItemStyle);
             if ($button)
-                $button.css(defRemoveSelectedItemButtonStyle);
+                $button.css(configuration.defRemoveSelectedItemButtonStyle);
         }
     }
 }
 
-const bs4SelectedItemContentDefaults = {
-    selectedItemClass: 'badge',
-    removeSelectedItemButtonClass: 'close'
-};
-function Bs4SelectedItemContent(stylingMethod, configuration, $) {
-    ExtendIfUndefined(configuration, bs4SelectedItemContentDefaults);
-    
+function Bs4SelectedItemContent(configuration, stylingMethod, $) {
     return function (selectedItem, optionItem, removeSelectedItem){
             let $selectedItem = $(selectedItem)
             $selectedItem.addClass(configuration.selectedItemClass);
             let $content = $(`<span/>`).text(optionItem.text);
             $content.appendTo($selectedItem);
             if (optionItem.disabled ){
-                stylingMethod.disableSelectedItemContent($content);
+                $content.addClass(configuration.selectedItemContentDisabledClass )
+                if (stylingMethod && stylingMethod.disableSelectedItemContent)
+                    stylingMethod.disableSelectedItemContent($content);
             }
 
             let $button = $('<button aria-label="Close" tabIndex="-1" type="button"><span aria-hidden="true">&times;</span></button>')
@@ -61,7 +33,7 @@ function Bs4SelectedItemContent(stylingMethod, configuration, $) {
                     jqEvent =>    
                         removeSelectedItem(jqEvent.originalEvent)
                     );
-            if (stylingMethod.createSelectedItemContent)
+            if (stylingMethod && stylingMethod.createSelectedItemContent)
                 stylingMethod.createSelectedItemContent($selectedItem, $button);
             return {
                 disable(isDisabled){ 
@@ -74,4 +46,4 @@ function Bs4SelectedItemContent(stylingMethod, configuration, $) {
         }
 }
 
-export { Bs4SelectedItemContent as Bs4SelectedItemContent, Bs4SelectedItemContentStylingMethodJs, Bs4SelectedItemContentStylingMethodCss};
+export { Bs4SelectedItemContent, Bs4SelectedItemContentStylingMethodJs};

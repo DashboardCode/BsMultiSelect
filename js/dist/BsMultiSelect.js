@@ -1,63 +1,77 @@
 import $ from 'jquery';
+import { ExtendIfUndefined } from './JsTools';
 import MultiSelect from './MultiSelect';
 import LabelAdapter from './LabelAdapter';
 import { OptionsAdapterJson, OptionsAdapterElement } from './OptionsAdapters';
-import Bs4StylingMethodCss from './Bs4StylingMethodCss';
 import Bs4StylingMethodJs from './Bs4StylingMethodJs';
-import { Bs4Styling, MultiSelectСlassesDefaults } from './Bs4Styling';
+import { Styling } from './Styling';
 import AddToJQueryPrototype from './AddToJQueryPrototype';
-import { Bs4SelectedItemContent, Bs4SelectedItemContentStylingMethodJs, Bs4SelectedItemContentStylingMethodCss } from './Bs4SelectedItemContent';
-import { Bs4DropDownItemContent, Bs4DropDownItemContentStylingMethodJs, Bs4DropDownItemContentStylingMethodCss } from './Bs4DropDownItemContent';
+import { Bs4SelectedItemContent, Bs4SelectedItemContentStylingMethodJs } from './Bs4SelectedItemContent';
+import { Bs4DropDownItemContent, Bs4DropDownItemContentStylingMethodJs } from './Bs4DropDownItemContent';
 import ContainerAdapter from './ContainerAdapter';
+import { createBsAppearance } from './BsAppearance';
+import { findDirectChildByTagName } from './DomTools';
+var classesDefaults = {
+  containerClass: 'dashboardcode-bsmultiselect',
+  dropDownMenuClass: 'dropdown-menu',
+  dropDownItemHoverClass: 'text-primary bg-light',
+  // TODO looks like bullshit
+  dropDownItemSelectedClass: '',
+  // not used? should be used in OptionsPanel.js
+  dropDownItemDisabledClass: '',
+  // not used? should be used in OptionsPanel.js
+  selectedPanelClass: 'form-control',
+  selectedPanelFocusClass: 'focus',
+  // internal, not bs4, used in scss
+  selectedPanelDisabledClass: 'disabled',
+  // internal, not bs4, used in scss
+  selectedItemDisabledClass: '',
+  // not used? should be used in PicksPanel.js
+  selectedItemFilterClass: '',
+  filterInputClass: ''
+};
+var bs4SelectedItemContentDefaults = {
+  selectedItemClass: 'badge',
+  removeSelectedItemButtonClass: 'close',
+  selectedItemContentDisabledClass: 'disabled' // internal, not bs4, used in scss
 
-function UpdateIsValid(selectedPanel, isValid, isInvalid) {
-  if (isValid) selectedPanel.classList.add('is-valid');else selectedPanel.classList.remove('is-valid');
-  if (isInvalid) selectedPanel.classList.add('is-invalid');else selectedPanel.classList.remove('is-invalid');
-}
+};
+var bs4DropDownItemContentDefaults = {
+  dropDownItemClass: 'px-2',
+  checkBoxDisabledClass: 'disabled' // internal, not bs4, used in scss
 
-function UpdateSize(selectedPanel, size) {
-  if (size == "custom-select-lg") {
-    selectedPanel.classList.add('form-control-lg');
-    selectedPanel.classList.remove('form-control-sm');
-  } else if (size == "custom-select-sm") {
-    selectedPanel.classList.remove('form-control-lg');
-    selectedPanel.classList.add('form-control-sm');
-  } else {
-    selectedPanel.classList.remove('form-control-lg');
-    selectedPanel.classList.remove('form-control-sm');
+};
+var stylingDefaults = {
+  selectedPanelDefMinHeight: 'calc(2.25rem + 2px)',
+  selectedPanelLgMinHeight: 'calc(2.875rem + 2px)',
+  selectedPanelSmMinHeight: 'calc(1.8125rem + 2px)',
+  selectedPanelDisabledBackgroundColor: '#e9ecef',
+  selectedPanelFocusBorderColor: '#80bdff',
+  selectedPanelFocusBoxShadow: '0 0 0 0.2rem rgba(0, 123, 255, 0.25)',
+  selectedPanelFocusValidBoxShadow: '0 0 0 0.2rem rgba(40, 167, 69, 0.25)',
+  selectedPanelFocusInvalidBoxShadow: '0 0 0 0.2rem rgba(220, 53, 69, 0.25)',
+  filterInputColor: 'inherit',
+  //'#495057',
+  filterInputFontWeight: 'inherit' //'#495057',
+
+};
+var bs4SelectedItemContentStylingMethodJsDefaults = {
+  selectedItemContentDisabledOpacity: '.65',
+  defSelectedItemStyle: {
+    'padding-left': '0px',
+    'line-height': '1.5em'
+  },
+  defRemoveSelectedItemButtonStyle: {
+    'font-size': '1.5em',
+    'line-height': '.9em'
   }
-}
-
-function UpdateSizeJs(selectedPanel, size, configuration) {
-  UpdateSize(selectedPanel, size);
-
-  if (size == "custom-select-lg" || size == "input-group-lg") {
-    selectedPanel.style.minHeight = configuration.selectedPanelLgMinHeight;
-  } else if (size == "custom-select-sm" || size == "input-group-sm") {
-    selectedPanel.style.minHeight = configuration.selectedPanelSmMinHeight;
-  } else {
-    selectedPanel.style.minHeight = configuration.selectedPanelDefMinHeight;
-  }
-}
-
-function FindDirectChildByTagName(element, tagName) {
-  var returnValue = null;
-
-  for (var i = 0; i < element.children.length; i++) {
-    var tmp = element.children[i];
-
-    if (tmp.tagName == tagName) {
-      returnValue = tmp;
-      break;
-    }
-  }
-
-  return returnValue;
-}
+};
+var bs4DropDownItemContentStylingMethodJsDefaults = {
+  checkBoxLabelDisabledColor: '#6c757d'
+};
 
 (function (window, $) {
-  // $.fn.bsMultiSelect.defaults. // TODO - set defaults parameters from there
-  var createPlugin = function createPlugin(element, settings, onDispose) {
+  function createPlugin(element, settings, onDispose) {
     var configuration = $.extend({}, settings); // settings used per jQuery intialization, configuration per element
 
     if (configuration.buildConfiguration) configuration.buildConfiguration(element, configuration);
@@ -68,10 +82,14 @@ function FindDirectChildByTagName(element, tagName) {
       var stylingMethod = configuration.stylingMethod;
 
       if (!stylingMethod) {
-        if (useCss) stylingMethod = Bs4StylingMethodCss(configuration);else stylingMethod = Bs4StylingMethodJs(configuration);
+        if (!useCss) {
+          ExtendIfUndefined(configuration, stylingDefaults);
+          stylingMethod = Bs4StylingMethodJs(configuration);
+        }
       }
 
-      styling = Bs4Styling(stylingMethod, configuration);
+      ExtendIfUndefined(configuration, classesDefaults);
+      styling = Styling(configuration, stylingMethod);
     }
 
     var optionsAdapter = null;
@@ -91,13 +109,13 @@ function FindDirectChildByTagName(element, tagName) {
           return "".concat(configuration.containerClass, "-generated-filter-").concat(element.id);
         }; // find direct child by tagName
 
-        var picksElement = FindDirectChildByTagName(element, "UL");
+        var picksElement = findDirectChildByTagName(element, "UL");
         containerAdapter = ContainerAdapter(createElement, null, element, picksElement);
       } else {
         var selectElement = null;
         var containerElement = null;
         if (element.tagName == "SELECT") selectElement = element;else {
-          selectElement = FindDirectChildByTagName(element, "SELECT");
+          selectElement = findDirectChildByTagName(element, "SELECT");
           if (!selectElement) throw "There are no SELECT element or options in the configuraion";
           containerElement = element;
         }
@@ -172,7 +190,7 @@ function FindDirectChildByTagName(element, tagName) {
           return "".concat(configuration.containerClass, "-generated-input-").concat((selectElement.id ? selectElement.id : selectElement.name).toLowerCase(), "-id");
         };
         var picksElement = null;
-        if (containerElement) picksElement = FindDirectChildByTagName(containerElement, "UL");
+        if (containerElement) picksElement = findDirectChildByTagName(containerElement, "UL");
         containerAdapter = ContainerAdapter(createElement, selectElement, containerElement, picksElement);
       }
     }
@@ -183,40 +201,50 @@ function FindDirectChildByTagName(element, tagName) {
       var selectedItemContentStylingMethod = configuration.selectedItemContentStylingMethod;
 
       if (!selectedItemContentStylingMethod) {
-        if (useCss) selectedItemContentStylingMethod = Bs4SelectedItemContentStylingMethodCss(configuration, $);else selectedItemContentStylingMethod = Bs4SelectedItemContentStylingMethodJs(configuration, $);
+        if (!useCss) {
+          ExtendIfUndefined(configuration, bs4SelectedItemContentStylingMethodJsDefaults);
+          selectedItemContentStylingMethod = Bs4SelectedItemContentStylingMethodJs(configuration, $);
+        }
       }
 
-      selectedItemContent = Bs4SelectedItemContent(selectedItemContentStylingMethod, configuration, $);
+      ExtendIfUndefined(configuration, bs4SelectedItemContentDefaults);
+      selectedItemContent = Bs4SelectedItemContent(configuration, selectedItemContentStylingMethod, $);
     }
 
     var dropDownItemContent = configuration.bs4DropDownItemContent;
 
     if (!dropDownItemContent) {
       var dropDownItemContentStylingMethod = configuration.dropDownItemContentStylingMethod;
-      if (useCss) dropDownItemContentStylingMethod = Bs4DropDownItemContentStylingMethodCss(configuration, $);else dropDownItemContentStylingMethod = Bs4DropDownItemContentStylingMethodJs(configuration, $);
-      dropDownItemContent = Bs4DropDownItemContent(dropDownItemContentStylingMethod, configuration, $);
+
+      if (!useCss) {
+        ExtendIfUndefined(configuration, bs4DropDownItemContentStylingMethodJsDefaults);
+        dropDownItemContentStylingMethod = Bs4DropDownItemContentStylingMethodJs(configuration, $);
+      }
+
+      ExtendIfUndefined(configuration, bs4DropDownItemContentDefaults);
+      dropDownItemContent = Bs4DropDownItemContent(configuration, dropDownItemContentStylingMethod, $);
     }
 
-    var createStylingComposite = function createStylingComposite(container, selectedPanel, placeholderItemElement, filterInputItem, filterInput, dropDownMenu) {
+    var createStylingComposite = function createStylingComposite(inputItemElement, inputElement, optionsElement) {
       return {
-        container: container,
-        selectedPanel: selectedPanel,
-        filterInputItem: filterInputItem,
-        filterInput: filterInput,
-        dropDownMenu: dropDownMenu,
-        $container: $(container),
-        $selectedPanel: $(selectedPanel),
-        $placeholderItem: placeholderItemElement ? $(placeholderItemElement) : null,
-        $filterInputItem: $(filterInputItem),
-        $filterInput: $(filterInput),
-        $dropDownMenu: $(dropDownMenu)
+        container: containerAdapter.containerElement,
+        picks: containerAdapter.picksElement,
+        inputItem: inputItemElement,
+        input: inputElement,
+        options: optionsElement
       };
     };
 
     var placeholderText = configuration.placeholder;
 
     if (!placeholderText) {
-      if (selectElement) placeholderText = $(selectElement).data("bsmultiselect-placeholder");else if (containerElement) placeholderText = $(containerElement).data("bsmultiselect-placeholder");
+      if (selectElement) {
+        placeholderText = $(selectElement).data("bsmultiselect-placeholder");
+        if (!placeholderText) placeholderText = $(selectElement).data("placeholder");
+      } else if (containerElement) {
+        placeholderText = $(containerElement).data("bsmultiselect-placeholder");
+        if (!placeholderText) placeholderText = $(containerElement).data("placeholder");
+      }
     }
 
     var setSelected = configuration.setSelected;
@@ -227,39 +255,25 @@ function FindDirectChildByTagName(element, tagName) {
       };
     }
 
-    var updateSize = null;
-
-    if (configuration.useCss) {
-      updateSize = function updateSize() {
-        return UpdateSize(containerAdapter.picksElement, optionsAdapter.getSize());
-      };
-    } else {
-      updateSize = function updateSize() {
-        return UpdateSizeJs(containerAdapter.picksElement, optionsAdapter.getSize(), configuration);
-      };
-    }
-
-    ;
-
-    var updateIsValid = function updateIsValid() {
-      return UpdateIsValid(containerAdapter.picksElement, optionsAdapter.getIsValid(), optionsAdapter.getIsInvalid());
-    };
+    var bsAppearance = createBsAppearance(containerAdapter.picksElement, configuration, optionsAdapter);
 
     var onUpdate = function onUpdate() {
-      updateSize();
-      updateIsValid();
+      bsAppearance.updateSize();
+      bsAppearance.updateIsValid();
     };
 
     var multiSelect = new MultiSelect(optionsAdapter, setSelected, containerAdapter, styling, selectedItemContent, dropDownItemContent, labelAdapter, createStylingComposite, placeholderText, configuration, onUpdate, onDispose, window);
-    multiSelect.UpdateSize = updateSize;
-    multiSelect.UpdateIsValid = updateIsValid;
+    multiSelect.UpdateSize = bsAppearance.updateSize;
+    multiSelect.UpdateIsValid = bsAppearance.updateIsValid;
     if (configuration.init) configuration.init(element, multiSelect);
     multiSelect.init();
     return multiSelect;
-  };
+  }
 
+  ;
   var defaults = {
-    classes: MultiSelectСlassesDefaults
+    classes: classesDefaults,
+    styling: stylingDefaults
   };
   AddToJQueryPrototype('BsMultiSelect', createPlugin, defaults, $);
 })(window, $);

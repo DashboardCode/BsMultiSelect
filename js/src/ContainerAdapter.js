@@ -1,43 +1,3 @@
-/*
-// 1
-<select name="States1" id="edit-states1-id" class="form-control" 
-        multiple="multiple" style="display: none;"> <!-- plugin element-->
-                <option value="AL">Alabama</option>
-                <option value="AK" disabled="">Alaska</option>
-</select>
-
-// 2
-<div class="dashboardcode-bsmultiselect"> 
-    <div class="input-group" >
-        <div class="input-group-prepend">
-            <button class="btn btn-outline-secondary" type="button">Button</button>
-        </div>
-
-        <select name="States1" id="edit-states1-id" class="form-control"
-            multiple="multiple" style="display: none;">  <!-- plugin element-->
-                <option value="AL">Alabama</option>
-                <option value="AK" disabled="">Alaska</option>
-        </select>
-
-        <ul class="form-control"></ul> <!-- optional - for "no flick" -->
-    </div>
-</div>
-
-// 2
-<div></div> 
-
-// 3
-<div class="dashboardcode-bsmultiselect">
-    <div class="input-group" >
-        <div class="input-group-prepend">
-            <button class="btn btn-outline-secondary" type="button">Button</button>
-        </div>
-
-        <ul class="form-control"></ul> <!-- json plugin key element -->
-    </div>
-</div>
-*/
-
 export default function ContainerAdapter(createElement, selectElement, containerElement, picksElement) { // select
     var ownContainerElement = false;
     var ownPicksElement = false;
@@ -62,7 +22,7 @@ export default function ContainerAdapter(createElement, selectElement, container
     }
     
     return {
-        container: containerElement,
+        containerElement,
         picksElement,
         optionsElement,
         init(){

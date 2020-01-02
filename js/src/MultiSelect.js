@@ -7,7 +7,7 @@ import MultiSelectInputAspect from './MultiSelectInputAspect.js'
 import PlaceholderAsInputAspect from './PlaceholderAsInputAspect.js'
 
 import EventSkipper from './EventSkipper.js'
-import removeElement from './removeElement.js'
+import {removeElement} from './DomTools'
 
 function filterMultiSelectData(MultiSelectData, isFiltered, visibleIndex) {
     MultiSelectData.visible = isFiltered;
@@ -113,7 +113,7 @@ class MultiSelect {
 
     // -----------------------------------------------------------------------------------------------------------------------
     GetContainer(){
-        return this.containerAdapter.container;
+        return this.containerAdapter.containerElement;
     }
 
     Update(){
@@ -367,7 +367,7 @@ class MultiSelect {
     init() {
         var document = this.window.document;
         var createElement = (name) => document.createElement(name);
-        let container = this.containerAdapter.container;
+        let container = this.containerAdapter.containerElement;
 
         var lazyfilterItemInputElementAtach=null;
         
@@ -495,9 +495,7 @@ class MultiSelect {
             Popper
         );
         
-        this.stylingComposite = this.createStylingComposite(container, 
-            this.containerAdapter.picksElement,
-            this.picksPanel.placeholderItemElement, 
+        this.stylingComposite = this.createStylingComposite(
             this.picksPanel.inputItemElement, 
             this.filterPanel.inputElement, 
             this.containerAdapter.optionsElement);

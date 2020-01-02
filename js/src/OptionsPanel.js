@@ -1,10 +1,13 @@
-function defDropDownMenuStyleSys(s) {s.listStyleType='none'}; // remove bullets since this is ul
+import {setStyles} from './DomTools';
+
+const defDropDownMenuStyleSys= {listStyleType:'none'}; // remove bullets since this is ul
+
 
 function OptionsPanel(createElement, dropDownMenu, onShow, onHide, eventSkipper, dropDownItemContent, styling, 
         getVisibleMultiSelectDataList, resetFilter, updateDropDownLocation, filterPanelSetFocus) {
     
     // prevent heavy understandable styling error
-    defDropDownMenuStyleSys(dropDownMenu.style);
+    setStyles(dropDownMenu, defDropDownMenuStyleSys);
     var hoveredMultiSelectData=null;
     var hoveredMultiSelectDataIndex = null;
     var candidateToHoveredMultiSelectData=null;
@@ -32,12 +35,14 @@ function OptionsPanel(createElement, dropDownMenu, onShow, onHide, eventSkipper,
     var hoverInInternal = function(index){
         hoveredMultiSelectDataIndex = index;
         hoveredMultiSelectData = getVisibleMultiSelectDataList()[index];
-        styling.HoverIn(hoveredMultiSelectData.dropDownMenuItemElement);
+        hoveredMultiSelectData.DropDownItemContent.hoverIn()
+        //styling.HoverIn(hoveredMultiSelectData.dropDownMenuItemElement);
     }
 
     function resetDropDownMenuHover() {
         if (hoveredMultiSelectData) {
-            styling.HoverOut(hoveredMultiSelectData.dropDownMenuItemElement);
+            hoveredMultiSelectData.DropDownItemContent.hoverOut()
+            //styling.HoverOut(hoveredMultiSelectData.dropDownMenuItemElement);
             hoveredMultiSelectData = null;
             hoveredMultiSelectDataIndex = null;
         }
@@ -97,7 +102,8 @@ function OptionsPanel(createElement, dropDownMenu, onShow, onHide, eventSkipper,
         if (newIndex!=null)
         {
             if (hoveredMultiSelectData)
-                styling.HoverOut(hoveredMultiSelectData.dropDownMenuItemElement);
+                hoveredMultiSelectData.DropDownItemContent.hoverOut()
+                //styling.HoverOut(hoveredMultiSelectData.dropDownMenuItemElement);
             updateDropDownLocation();
             showDropDown(); 
             hoverInInternal(newIndex);

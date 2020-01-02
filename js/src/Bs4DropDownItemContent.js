@@ -1,27 +1,6 @@
-import  { ExtendIfUndefined} from './Tools';
-
-const bs4StylingMethodCssDefaults = {
-    checkBoxDisabledClass: 'disabled',
-};
-
-function Bs4DropDownItemContentStylingMethodCss(configuration) {
-    ExtendIfUndefined(configuration, bs4StylingMethodCssDefaults);
-    return {
-        disabledStyle($checkBox, $checkBoxLabel, isDisbaled){
-            if (isDisbaled) 
-                $checkBox.addClass(configuration.checkBoxDisabledClass);
-            else
-                $checkBox.removeClass(configuration.checkBoxDisabledClass);
-        }
-    }
-}
-
-const bs4StylingMethodJsDefaults = {
-    checkBoxLabelDisabledColor: '#6c757d'
-};
+import {addClasses,removeClasses} from './DomTools';
 
 function Bs4DropDownItemContentStylingMethodJs(configuration) {
-    ExtendIfUndefined(configuration, bs4StylingMethodJsDefaults);
     return{
         disabledStyle($checkBox, $checkBoxLabel, isDisbaled){
             $checkBoxLabel.css('color', isDisbaled?configuration.checkBoxLabelDisabledColor:'')
@@ -29,12 +8,8 @@ function Bs4DropDownItemContentStylingMethodJs(configuration) {
     }
 }
 
-const bs4DropDownItemContentDefaults = {
-    dropDownItemClass:  'px-2',
-}
-
-function Bs4DropDownItemContent(stylingMethod, configuration, $) {
-    ExtendIfUndefined(configuration, bs4DropDownItemContentDefaults);
+function Bs4DropDownItemContent(configuration, stylingMethod, $) {
+   
     return function(dropDownItem, option){
         let $dropDownItem = $(dropDownItem);
         $dropDownItem.addClass(configuration.dropDownItemClass);
@@ -51,8 +26,20 @@ function Bs4DropDownItemContent(stylingMethod, configuration, $) {
             select(isSelected){ $checkBox.prop('checked', isSelected); }, 
             // --- distinct disable and disabledStyle to provide a possibility to unselect disabled option
             disable(isDisabled){ $checkBox.prop('disabled', isDisabled); },
-            disabledStyle(isDisbaled){ stylingMethod.disabledStyle($checkBox, $checkBoxLabel, isDisbaled); },
-
+            disabledStyle(isDisbaled){ 
+                if (isDisbaled) 
+                    $checkBox.addClass(configuration.checkBoxDisabledClass);
+                else
+                    $checkBox.removeClass(configuration.checkBoxDisabledClass);
+                if (stylingMethod && stylingMethod.disabledStyle)
+                    stylingMethod.disabledStyle($checkBox, $checkBoxLabel, isDisbaled); 
+            },
+            hoverIn(){
+                addClasses(dropDownItem, configuration.dropDownItemHoverClass);
+            },
+            hoverOut(){
+                removeClasses(dropDownItem, configuration.dropDownItemHoverClass);
+            },
             onSelected(toggle) {
                 $checkBox.on("change", toggle)
                 $dropDownItem.on("click", event => {
@@ -71,4 +58,4 @@ function Bs4DropDownItemContent(stylingMethod, configuration, $) {
     }
 }
 
-export { Bs4DropDownItemContent, Bs4DropDownItemContentStylingMethodJs, Bs4DropDownItemContentStylingMethodCss };
+ export { Bs4DropDownItemContent, Bs4DropDownItemContentStylingMethodJs };

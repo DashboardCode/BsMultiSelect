@@ -1,7 +1,6 @@
-import removeElement from './removeElement.js'
+import {removeElement, setStyles} from './DomTools'
 
-function defSelectedPanelStyleSys(s) {s.display='flex'; s.flexWrap='wrap'; s.listStyleType='none'};  // remove bullets since this is ul
-
+const defSelectedPanelStyleSys = {display:'flex', flexWrap:'wrap',listStyleType:'none'};  // remove bullets since this is ul
 
 function PicksPanel (
         setSelected,
@@ -23,15 +22,11 @@ function PicksPanel (
     function reset(){picksCount=0; ; onPicksEmptyChanged()}
     function isEmpty(){return picksCount==0};
 
-    defSelectedPanelStyleSys(picksElement.style); 
+    setStyles(picksElement, defSelectedPanelStyleSys); 
 
     var inputItemElement = createElement('LI'); // detached
-  
-    
-    
+        
     picksElement.appendChild(inputItemElement); // located filter in selectionsPanel
-    
-   
 
     init(inputItemElement);
     var MultiSelectDataSelectedTail = null;

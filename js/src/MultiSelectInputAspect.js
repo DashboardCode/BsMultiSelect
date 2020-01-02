@@ -9,7 +9,6 @@ function MultiSelectInputAspect (
     isDropDownMenuEmpty,
     Popper
     ) {
-
         appendToContainer();
         var document = window.document;
 
