@@ -1,13 +1,13 @@
 import {removeElement, setStyles} from './DomTools'
 
-const defSelectedPanelStyleSys = {display:'flex', flexWrap:'wrap',listStyleType:'none'};  // remove bullets since this is ul
+const picksStyle = {display:'flex', flexWrap:'wrap', listStyleType:'none'};  // remove bullets since this is ul
 
-function PicksPanel (
+export function PicksPanel (
         setSelected,
         createElement,
         picksElement, 
         init, 
-        selectedItemContent, 
+        pickContentGenerator, 
         isComponentDisabled, 
         triggerChange, 
         onRemove,
@@ -19,19 +19,19 @@ function PicksPanel (
     var picksCount = 0;
     function inc(){picksCount++; if (picksCount==1) onPicksEmptyChanged()};
     function dec(){picksCount--; if (picksCount==0) onPicksEmptyChanged()};
-    function reset(){picksCount=0; ; onPicksEmptyChanged()}
+    function reset(){picksCount=0; onPicksEmptyChanged()}
     function isEmpty(){return picksCount==0};
 
-    setStyles(picksElement, defSelectedPanelStyleSys); 
+    setStyles(picksElement, picksStyle); 
 
-    var inputItemElement = createElement('LI'); // detached
+    var pickFilterElement = createElement('LI'); // detached
         
-    picksElement.appendChild(inputItemElement); // located filter in selectionsPanel
+    picksElement.appendChild(pickFilterElement); // located filter in selectionsPanel
 
-    init(inputItemElement);
+    init(pickFilterElement);
     var MultiSelectDataSelectedTail = null;
 
-    function removeSelectedTail(){
+    function removePicksTail(){
         if (MultiSelectDataSelectedTail){ 
             MultiSelectDataSelectedTail.toggle(); // always remove in this case
         }
@@ -52,10 +52,10 @@ function PicksPanel (
     }
 
 
-    function createSelectedItem(MultiSelectData, isOptionDisabled, setDropDownItemContentDisabled) {
+    function createPick(MultiSelectData, isOptionDisabled, setDropDownItemContentDisabled) {
         
-        var selectedItemElement = createElement('LI');
-        MultiSelectData.selectedItemElement = selectedItemElement;
+        var pickElement = createElement('LI');
+        MultiSelectData.pickElement = pickElement;
         if (MultiSelectDataSelectedTail){
             MultiSelectDataSelectedTail.selectedNext = MultiSelectData;
             MultiSelectData.selectedPrev = MultiSelectDataSelectedTail;
@@ -76,16 +76,16 @@ function PicksPanel (
                     MultiSelectData.toggle = ()=>{
                         let confirmed = setSelected(MultiSelectData.option, true);
                         if (confirmed==null || confirmed){
-                            createSelectedItem(MultiSelectData, isOptionDisabled, setDropDownItemContentDisabled);
+                            createPick(MultiSelectData, isOptionDisabled, setDropDownItemContentDisabled);
                             triggerChange();
                         }
                     };
                 }
                 MultiSelectData.DropDownItemContent.select(false);
-                removeElement(selectedItemElement);
-                MultiSelectData.SelectedItemContent.dispose();
-                MultiSelectData.SelectedItemContent=null;
-                MultiSelectData.selectedItemElement=null;
+                removeElement(pickElement);
+                MultiSelectData.PickContent.dispose();
+                MultiSelectData.PickContent=null;
+                MultiSelectData.pickElement=null;
 
                 removeSelectedFromList(MultiSelectData);
                 dec();
@@ -115,25 +115,25 @@ function PicksPanel (
             processRemoveButtonClick(() => removeSelectedItemAndCloseDropDown(), event);
         };
 
-        MultiSelectData.SelectedItemContent = selectedItemContent(
-            selectedItemElement,
+        MultiSelectData.PickContent = pickContentGenerator(
+            pickElement,
             MultiSelectData.option,
             onRemoveSelectedItemEvent);
 
         var disable = (isDisabled) =>
-            MultiSelectData.SelectedItemContent.disable(isDisabled);
+            MultiSelectData.PickContent.disable(isDisabled);
         disable(isComponentDisabled);
 
         MultiSelectData.excludedFromSearch = true; // all selected excluded from search
         MultiSelectData.disable = disable;
-        picksElement.insertBefore(selectedItemElement, inputItemElement);
+        picksElement.insertBefore(pickElement, pickFilterElement);
          
         MultiSelectData.toggle = () => removeSelectedItem();
         MultiSelectData.DropDownItemContent.select(true);
         inc();
     }
 
-    var selectedPanelClick = event => {
+    var picksClick = event => {
         onClick(event);
     };
 
@@ -146,12 +146,9 @@ function PicksPanel (
     }
 
     var item = {
-        inputItemElement,
-        insert(selectedItemElement){
-            this.selectedPanel.insertBefore(selectedItemElement, inputItemElement);
-        },
-        createSelectedItem,
-        removeSelectedTail,
+        pickFilterElement,
+        createPick,
+        removePicksTail,
         resetMultiSelectDataSelectedTail() {
             reset();
             MultiSelectDataSelectedTail = null;
@@ -160,13 +157,13 @@ function PicksPanel (
         enable(){
             isComponentDisabled= false;
             iterateAll(false);
-            picksElement.addEventListener("click", selectedPanelClick);
+            picksElement.addEventListener("click", picksClick);
 
         },
         disable(){
             isComponentDisabled= true;
             iterateAll(true);
-            picksElement.removeEventListener("click", selectedPanelClick);
+            picksElement.removeEventListener("click", picksClick);
 
         },
         dispose(){
@@ -175,11 +172,9 @@ function PicksPanel (
                 picksElement.removeChild( toRemove );
                 toRemove = picksElement.firstChild;
             }
-            picksElement.removeEventListener("click", selectedPanelClick); // OPEN dropdown
+            picksElement.removeEventListener("click", picksClick); // OPEN dropdown
         }
         
     }
     return item;
 }
-
-export default PicksPanel;

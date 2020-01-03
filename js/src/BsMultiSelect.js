@@ -1,73 +1,74 @@
 import $ from 'jquery'
 
-import  { ExtendIfUndefined } from './JsTools';
-import MultiSelect from './MultiSelect'
-import LabelAdapter from './LabelAdapter';
+import {extendIfUndefined} from './JsTools';
+import {MultiSelect} from './MultiSelect'
+import {LabelAdapter} from './LabelAdapter';
+import {addToJQueryPrototype} from './AddToJQueryPrototype'
+
 import {OptionsAdapterJson,OptionsAdapterElement} from './OptionsAdapters';
 
-import Bs4StylingMethodJs from './Bs4StylingMethodJs'
+import {StylingCorrector} from './StylingCorrector'
 import {Styling} from './Styling';
-import AddToJQueryPrototype from './AddToJQueryPrototype'
 
-import { Bs4SelectedItemContent, Bs4SelectedItemContentStylingMethodJs} from './Bs4SelectedItemContent';
-import { Bs4DropDownItemContent, Bs4DropDownItemContentStylingMethodJs} from './Bs4DropDownItemContent';
-import ContainerAdapter from './ContainerAdapter';
+import {BsPickContentGenerator, BsPickContentStylingCorrector} from './BsPickContentGenerator';
+import {BsChoiceContentGenerator, BsChoiceContentStylingCorrector} from './BsChoiceContentGenerator';
+import {ContainerAdapter} from './ContainerAdapter';
 
 import {createBsAppearance} from './BsAppearance';
-import {findDirectChildByTagName} from './DomTools';
+import {findDirectChildByTagName, setStyles} from './DomTools';
 
 const classesDefaults = {
     containerClass: 'dashboardcode-bsmultiselect',
-    dropDownMenuClass: 'dropdown-menu',
+    choicesClass: 'dropdown-menu',
 
-    dropDownItemHoverClass: 'text-primary bg-light', // TODO looks like bullshit
-    dropDownItemSelectedClass: '', // not used? should be used in OptionsPanel.js
-    dropDownItemDisabledClass: '', // not used? should be used in OptionsPanel.js
+    choiceClassHover: 'text-primary bg-light', // TODO looks like bullshit
+    choiceClassSelected: '', // not used? should be used in OptionsPanel.js
+    choiceClassDisabled: '', // not used? should be used in OptionsPanel.js
 
-    selectedPanelClass: 'form-control',  
-    selectedPanelFocusClass: 'focus', // internal, not bs4, used in scss
-    selectedPanelDisabledClass: 'disabled', // internal, not bs4, used in scss
+    picksClass: 'form-control',  
+    picksClassFocus: 'focus', // internal, not bs4, used in scss
+    picksClassDisabled: 'disabled', // internal, not bs4, used in scss
 
-    selectedItemDisabledClass: '', // not used? should be used in PicksPanel.js
+    pickClassDisabled: '', // not used? should be used in PicksPanel.js
     
-    selectedItemFilterClass: '',
-    filterInputClass: ''
-};
+    pickFilterClass: '', 
+    filterInputClass: '',
 
-const bs4SelectedItemContentDefaults = {
-    selectedItemClass: 'badge',
-    removeSelectedItemButtonClass: 'close',
-    selectedItemContentDisabledClass: 'disabled' // internal, not bs4, used in scss
-};
+    // used in BsPickContentStylingCorrector
+    pickClass: 'badge',
+    pickRemoveButtonClass: 'close',
+    pickContentClassDisabled: 'disabled', // internal, not bs4, used in scss
 
-const bs4DropDownItemContentDefaults = {
-    dropDownItemClass:  'px-2',
-    checkBoxDisabledClass: 'disabled' // internal, not bs4, used in scss
-}
+    // used in BsChoiceContentStylingCorrector
+    choiceClass:  'px-2',
+    choiceCheckBoxClassDisabled: 'disabled' // internal, not bs4, used in scss
+
+};
 
 const stylingDefaults = {
-    selectedPanelDefMinHeight: 'calc(2.25rem + 2px)',
-    selectedPanelLgMinHeight:  'calc(2.875rem + 2px)',
-    selectedPanelSmMinHeight:  'calc(1.8125rem + 2px)',
-    selectedPanelDisabledBackgroundColor: '#e9ecef',
-    selectedPanelFocusBorderColor: '#80bdff',
-    selectedPanelFocusBoxShadow: '0 0 0 0.2rem rgba(0, 123, 255, 0.25)',
-    selectedPanelFocusValidBoxShadow: '0 0 0 0.2rem rgba(40, 167, 69, 0.25)',
-    selectedPanelFocusInvalidBoxShadow: '0 0 0 0.2rem rgba(220, 53, 69, 0.25)',
-    filterInputColor: 'inherit', //'#495057',
-    filterInputFontWeight: 'inherit' //'#495057',
-};
+    // used in StylingCorrector
+    picksStyle: {marginBottom: 0, height: 'auto'},
+    picksStyleDisabled: {backgroundColor: '#e9ecef'},
 
-const bs4SelectedItemContentStylingMethodJsDefaults = {
-    selectedItemContentDisabledOpacity: '.65',
-    defSelectedItemStyle: {'padding-left': '0px', 'line-height': '1.5em'},
-    defRemoveSelectedItemButtonStyle: {'font-size':'1.5em', 'line-height': '.9em'}
-};
+    picksStyleFocus: {borderColor: '#80bdff', boxShadow: '0 0 0 0.2rem rgba(0, 123, 255, 0.25)'},
+    picksStyleFocusValid: {boxShadow: '0 0 0 0.2rem rgba(40, 167, 69, 0.25)'},
+    picksStyleFocusInvalid: {boxShadow: '0 0 0 0.2rem rgba(220, 53, 69, 0.25)'},
+    
+    filterInputStyle: {color: 'inherit' /*#495057 for default BS*/, fontWeight : 'inherit'},
 
-const bs4DropDownItemContentStylingMethodJsDefaults = {
-    checkBoxLabelDisabledColor: '#6c757d'
-};
+    // used in BsAppearance
+    picksStyleDef: {minHeight: 'calc(2.25rem + 2px)'},
+    picksStyleLg:  {minHeight: 'calc(2.875rem + 2px)'},
+    picksStyleSm:  {minHeight: 'calc(1.8125rem + 2px)'},
 
+    // used in BsPickContentStylingCorrector
+    pickStyle: {paddingLeft: '0px', lineHeight: '1.5em'},
+    pickButtonStyle: {fontSize:'1.5em', lineHeight: '.9em'},
+    pickContentStyleDisabled: {opacity: '.65'},
+
+    // used in BsChoiceContentStylingCorrector
+    choiceLabelStyleDisabled: {color: '#6c757d'}
+};
 
 (
     (window, $) => {
@@ -80,17 +81,27 @@ const bs4DropDownItemContentStylingMethodJsDefaults = {
             let styling = configuration.styling;
             if (!configuration.adapter)
             {
-                let stylingMethod = configuration.stylingMethod;
-                if (!stylingMethod)
+                let stylingCorrector = configuration.stylingCorrector;
+                if (!stylingCorrector)
                 {
                     if (!useCss)
                     {
-                        ExtendIfUndefined(configuration, stylingDefaults);
-                        stylingMethod = Bs4StylingMethodJs(configuration);
+                        extendIfUndefined(configuration, stylingDefaults);
+                        stylingCorrector = StylingCorrector(configuration);
+                        var defFocusIn = stylingCorrector.focusIn;
+                        stylingCorrector.focusIn = (picksElement) => {
+                            if (picksElement.classList.contains("is-valid")){
+                                setStyles(picksElement, configuration.picksStyleFocusValid)
+                            } else if (picksElement.classList.contains("is-invalid")){
+                                setStyles(picksElement, configuration.picksStyleFocusInvalid)
+                            } else {
+                                defFocusIn(picksElement)
+                            }
+                        }
                     }
                 }
-                ExtendIfUndefined(configuration, classesDefaults);
-                styling = Styling(configuration, stylingMethod);
+                extendIfUndefined(configuration, classesDefaults);
+                styling = Styling(configuration, stylingCorrector);
             }
 
             let optionsAdapter = null;
@@ -212,38 +223,44 @@ const bs4DropDownItemContentStylingMethodJsDefaults = {
             }
             let labelAdapter = LabelAdapter(configuration.label, configuration.createInputId);
 
-            let selectedItemContent = configuration.selectedItemContent;
-            if (!selectedItemContent){
-                let selectedItemContentStylingMethod = configuration.selectedItemContentStylingMethod;
-                if (!selectedItemContentStylingMethod)
+            let pickContentGenerator = configuration.pickContentGenerator;
+            if (!pickContentGenerator){
+                let pickContentStylingCorrector = configuration.pickContentStylingCorrector;
+                if (!pickContentStylingCorrector)
                 {
                     if (!useCss){
-                        ExtendIfUndefined(configuration, bs4SelectedItemContentStylingMethodJsDefaults);
-                        selectedItemContentStylingMethod=Bs4SelectedItemContentStylingMethodJs(configuration, $);
+                        var  {pickStyle, pickButtonStyle, pickContentStyleDisabled} = stylingDefaults;
+                        extendIfUndefined(configuration,  {pickStyle, pickButtonStyle, pickContentStyleDisabled});
+                        pickContentStylingCorrector=BsPickContentStylingCorrector(configuration, $);
                     }
                 }
-                ExtendIfUndefined(configuration, bs4SelectedItemContentDefaults);
-                selectedItemContent = Bs4SelectedItemContent(configuration, selectedItemContentStylingMethod, $);
+                
+                var  {pickClass, pickRemoveButtonClass, pickContentClassDisabled} = classesDefaults;
+                extendIfUndefined(configuration, {pickClass, pickRemoveButtonClass, pickContentClassDisabled});
+                pickContentGenerator = BsPickContentGenerator(configuration, pickContentStylingCorrector, $);
             }
 
-            let dropDownItemContent = configuration.bs4DropDownItemContent;
-            if (!dropDownItemContent){
-                let dropDownItemContentStylingMethod = configuration.dropDownItemContentStylingMethod;
+            let choiceContentGenerator = configuration.choiceContentGenerator;
+            if (!choiceContentGenerator){
+                let choiceContentStylingCorrector = configuration.choiceContentStylingCorrector;
                 if (!useCss){
-                    ExtendIfUndefined(configuration, bs4DropDownItemContentStylingMethodJsDefaults);
-                    dropDownItemContentStylingMethod=Bs4DropDownItemContentStylingMethodJs(configuration, $);
+                    var {choiceLabelStyleDisabled} = stylingDefaults;
+                    extendIfUndefined(configuration, {choiceLabelStyleDisabled});
+                    choiceContentStylingCorrector=BsChoiceContentStylingCorrector(configuration, $);
                 }
-                ExtendIfUndefined(configuration, bs4DropDownItemContentDefaults);
-                dropDownItemContent = Bs4DropDownItemContent(configuration, dropDownItemContentStylingMethod, $)
+                
+                var  {choiceClass, choiceCheckBoxClassDisabled} = classesDefaults;
+                extendIfUndefined(configuration, {choiceClass, choiceCheckBoxClassDisabled});
+                choiceContentGenerator = BsChoiceContentGenerator(configuration, choiceContentStylingCorrector, $)
             }
 
-            let createStylingComposite = function(inputItemElement, inputElement, optionsElement){
+            let createStylingComposite = function(pickFilterElement, inputElement, choicesElement){
                 return {
                     container: containerAdapter.containerElement,
                     picks: containerAdapter.picksElement,
-                    inputItem: inputItemElement,
+                    pickFilter: pickFilterElement,
                     input: inputElement,
-                    options: optionsElement
+                    choices: choicesElement
                 };
             }
             var placeholderText = configuration.placeholder;
@@ -280,8 +297,8 @@ const bs4DropDownItemContentStylingMethodJsDefaults = {
                 setSelected,
                 containerAdapter,
                 styling,
-                selectedItemContent,
-                dropDownItemContent,
+                pickContentGenerator,
+                choiceContentGenerator,
                 labelAdapter,
                 createStylingComposite,
                 placeholderText,
@@ -304,6 +321,6 @@ const bs4DropDownItemContentStylingMethodJsDefaults = {
             classes: classesDefaults,
             styling: stylingDefaults
         };
-        AddToJQueryPrototype('BsMultiSelect', createPlugin, defaults, $);
+        addToJQueryPrototype('BsMultiSelect', createPlugin, defaults, $);
     }
 )(window, $)

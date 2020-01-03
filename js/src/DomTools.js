@@ -35,6 +35,7 @@ export function setStyles(element, styles){
         element.style[property] = styles[property];
 }
 
+
 function modifyClasses(classes, modify){
     if (classes){
         if (Array.isArray(classes))

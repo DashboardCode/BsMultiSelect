@@ -1,13 +1,12 @@
 import {setStyles} from './DomTools';
 
-const defDropDownMenuStyleSys= {listStyleType:'none'}; // remove bullets since this is ul
+const choicesStyle = {listStyleType:'none'}; // remove bullets since this is ul
 
-
-function OptionsPanel(createElement, dropDownMenu, onShow, onHide, eventSkipper, dropDownItemContent, styling, 
+export function ChoicesPanel(createElement, choicesElement, onShow, onHide, eventSkipper, dropDownItemContent, 
         getVisibleMultiSelectDataList, resetFilter, updateDropDownLocation, filterPanelSetFocus) {
     
     // prevent heavy understandable styling error
-    setStyles(dropDownMenu, defDropDownMenuStyleSys);
+    setStyles(choicesElement, choicesStyle);
     var hoveredMultiSelectData=null;
     var hoveredMultiSelectDataIndex = null;
     var candidateToHoveredMultiSelectData=null;
@@ -16,18 +15,18 @@ function OptionsPanel(createElement, dropDownMenu, onShow, onHide, eventSkipper,
         if (candidateToHoveredMultiSelectData){
             resetCandidateToHoveredMultiSelectData();
         }
-        if (dropDownMenu.style.display != 'none')
+        if (choicesElement.style.display != 'none')
         {
-            dropDownMenu.style.display = 'none';
+            choicesElement.style.display = 'none';
             onHide();
         }
     }
 
     function showDropDown() {
-        if (dropDownMenu.style.display != 'block')
+        if (choicesElement.style.display != 'block')
         {
             eventSkipper.setSkippable();
-            dropDownMenu.style.display = 'block';
+            choicesElement.style.display = 'block';
             onShow();
         }
     }
@@ -36,13 +35,11 @@ function OptionsPanel(createElement, dropDownMenu, onShow, onHide, eventSkipper,
         hoveredMultiSelectDataIndex = index;
         hoveredMultiSelectData = getVisibleMultiSelectDataList()[index];
         hoveredMultiSelectData.DropDownItemContent.hoverIn()
-        //styling.HoverIn(hoveredMultiSelectData.dropDownMenuItemElement);
     }
 
     function resetDropDownMenuHover() {
         if (hoveredMultiSelectData) {
             hoveredMultiSelectData.DropDownItemContent.hoverOut()
-            //styling.HoverOut(hoveredMultiSelectData.dropDownMenuItemElement);
             hoveredMultiSelectData = null;
             hoveredMultiSelectDataIndex = null;
         }
@@ -159,7 +156,7 @@ function OptionsPanel(createElement, dropDownMenu, onShow, onHide, eventSkipper,
 
         dropDownMenuItemElement.addEventListener('mouseleave', onDropDownMenuItemElementMouseleave);
 
-        dropDownMenu.appendChild(dropDownMenuItemElement);
+        choicesElement.appendChild(dropDownMenuItemElement);
 
         let content = dropDownItemContent(dropDownMenuItemElement, MultiSelectData.option); 
         MultiSelectData.dropDownMenuItemElement = dropDownMenuItemElement;
@@ -224,11 +221,9 @@ function OptionsPanel(createElement, dropDownMenu, onShow, onHide, eventSkipper,
         keyDownArrow,
         insertDropDownItem,
         getIsVisble(){
-            return dropDownMenu.style.display != 'none';
+            return choicesElement.style.display != 'none';
         }
         
     }
     return item;
 }
-
-export default OptionsPanel;

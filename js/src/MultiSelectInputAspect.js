@@ -1,9 +1,9 @@
-function MultiSelectInputAspect (
+export function MultiSelectInputAspect (
     window,
     appendToContainer, 
-    filterInputItem, 
+    choiceFilterInputElement, 
     picksElement,
-    optionsElement, 
+    choicesElement, 
     showDropDown,
     hideDropDownAndResetFilter,
     isDropDownMenuEmpty,
@@ -21,9 +21,9 @@ function MultiSelectInputAspect (
 
     var documentMouseup = function(event) {
         // if click outside container - close dropdown
-        if (  !(optionsElement === event.target 
+        if (  !(choicesElement === event.target 
                 || picksElement === event.target 
-                || optionsElement.contains(event.target)
+                || choicesElement.contains(event.target)
                 || picksElement.contains(event.target)
                )
             ) {
@@ -32,8 +32,8 @@ function MultiSelectInputAspect (
     }
 
     var popper = new Popper( 
-        filterInputItem, 
-        optionsElement, 
+        choiceFilterInputElement, 
+        choicesElement, 
         {
             placement: 'bottom-start',
             modifiers: {
@@ -59,7 +59,7 @@ function MultiSelectInputAspect (
     }
     
     function alignToFilterInputItemLocation(force) {
-        let offsetLeft = filterInputItem.offsetLeft;
+        let offsetLeft = choiceFilterInputElement.offsetLeft;
         if (force || filterInputItemOffsetLeft != offsetLeft){ // position changed
             popper.update();
             filterInputItemOffsetLeft = offsetLeft;
@@ -84,13 +84,13 @@ function MultiSelectInputAspect (
             //container.removeEventListener("mousedown", containerMousedown);
 
             picksElement.addEventListener("mousedown", skipoutMousedown);
-            optionsElement.addEventListener("mousedown", skipoutMousedown);
+            choicesElement.addEventListener("mousedown", skipoutMousedown);
             document.addEventListener("mouseup", documentMouseup);
             
         },
         onDropDownHide(){
             picksElement.removeEventListener("mousedown", skipoutMousedown);
-            optionsElement.addEventListener("mousedown", skipoutMousedown);
+            choicesElement.addEventListener("mousedown", skipoutMousedown);
             document.removeEventListener("mouseup", documentMouseup);
         },
         getSkipFocusout : function() {
@@ -101,5 +101,3 @@ function MultiSelectInputAspect (
         }
     }
 }
-
-export default MultiSelectInputAspect;

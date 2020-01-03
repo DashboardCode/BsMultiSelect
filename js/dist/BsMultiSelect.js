@@ -1,73 +1,95 @@
 import $ from 'jquery';
-import { ExtendIfUndefined } from './JsTools';
-import MultiSelect from './MultiSelect';
-import LabelAdapter from './LabelAdapter';
+import { extendIfUndefined } from './JsTools';
+import { MultiSelect } from './MultiSelect';
+import { LabelAdapter } from './LabelAdapter';
+import { addToJQueryPrototype } from './AddToJQueryPrototype';
 import { OptionsAdapterJson, OptionsAdapterElement } from './OptionsAdapters';
-import Bs4StylingMethodJs from './Bs4StylingMethodJs';
+import { StylingCorrector } from './StylingCorrector';
 import { Styling } from './Styling';
-import AddToJQueryPrototype from './AddToJQueryPrototype';
-import { Bs4SelectedItemContent, Bs4SelectedItemContentStylingMethodJs } from './Bs4SelectedItemContent';
-import { Bs4DropDownItemContent, Bs4DropDownItemContentStylingMethodJs } from './Bs4DropDownItemContent';
-import ContainerAdapter from './ContainerAdapter';
+import { BsPickContentGenerator, BsPickContentStylingCorrector } from './BsPickContentGenerator';
+import { BsChoiceContentGenerator, BsChoiceContentStylingCorrector } from './BsChoiceContentGenerator';
+import { ContainerAdapter } from './ContainerAdapter';
 import { createBsAppearance } from './BsAppearance';
-import { findDirectChildByTagName } from './DomTools';
+import { findDirectChildByTagName, setStyles } from './DomTools';
 var classesDefaults = {
   containerClass: 'dashboardcode-bsmultiselect',
-  dropDownMenuClass: 'dropdown-menu',
-  dropDownItemHoverClass: 'text-primary bg-light',
+  choicesClass: 'dropdown-menu',
+  choiceClassHover: 'text-primary bg-light',
   // TODO looks like bullshit
-  dropDownItemSelectedClass: '',
+  choiceClassSelected: '',
   // not used? should be used in OptionsPanel.js
-  dropDownItemDisabledClass: '',
+  choiceClassDisabled: '',
   // not used? should be used in OptionsPanel.js
-  selectedPanelClass: 'form-control',
-  selectedPanelFocusClass: 'focus',
+  picksClass: 'form-control',
+  picksClassFocus: 'focus',
   // internal, not bs4, used in scss
-  selectedPanelDisabledClass: 'disabled',
+  picksClassDisabled: 'disabled',
   // internal, not bs4, used in scss
-  selectedItemDisabledClass: '',
+  pickClassDisabled: '',
   // not used? should be used in PicksPanel.js
-  selectedItemFilterClass: '',
-  filterInputClass: ''
-};
-var bs4SelectedItemContentDefaults = {
-  selectedItemClass: 'badge',
-  removeSelectedItemButtonClass: 'close',
-  selectedItemContentDisabledClass: 'disabled' // internal, not bs4, used in scss
-
-};
-var bs4DropDownItemContentDefaults = {
-  dropDownItemClass: 'px-2',
-  checkBoxDisabledClass: 'disabled' // internal, not bs4, used in scss
+  pickFilterClass: '',
+  filterInputClass: '',
+  // used in BsPickContentStylingCorrector
+  pickClass: 'badge',
+  pickRemoveButtonClass: 'close',
+  pickContentClassDisabled: 'disabled',
+  // internal, not bs4, used in scss
+  // used in BsChoiceContentStylingCorrector
+  choiceClass: 'px-2',
+  choiceCheckBoxClassDisabled: 'disabled' // internal, not bs4, used in scss
 
 };
 var stylingDefaults = {
-  selectedPanelDefMinHeight: 'calc(2.25rem + 2px)',
-  selectedPanelLgMinHeight: 'calc(2.875rem + 2px)',
-  selectedPanelSmMinHeight: 'calc(1.8125rem + 2px)',
-  selectedPanelDisabledBackgroundColor: '#e9ecef',
-  selectedPanelFocusBorderColor: '#80bdff',
-  selectedPanelFocusBoxShadow: '0 0 0 0.2rem rgba(0, 123, 255, 0.25)',
-  selectedPanelFocusValidBoxShadow: '0 0 0 0.2rem rgba(40, 167, 69, 0.25)',
-  selectedPanelFocusInvalidBoxShadow: '0 0 0 0.2rem rgba(220, 53, 69, 0.25)',
-  filterInputColor: 'inherit',
-  //'#495057',
-  filterInputFontWeight: 'inherit' //'#495057',
-
-};
-var bs4SelectedItemContentStylingMethodJsDefaults = {
-  selectedItemContentDisabledOpacity: '.65',
-  defSelectedItemStyle: {
-    'padding-left': '0px',
-    'line-height': '1.5em'
+  // used in StylingCorrector
+  picksStyle: {
+    marginBottom: 0,
+    height: 'auto'
   },
-  defRemoveSelectedItemButtonStyle: {
-    'font-size': '1.5em',
-    'line-height': '.9em'
+  picksStyleDisabled: {
+    backgroundColor: '#e9ecef'
+  },
+  picksStyleFocus: {
+    borderColor: '#80bdff',
+    boxShadow: '0 0 0 0.2rem rgba(0, 123, 255, 0.25)'
+  },
+  picksStyleFocusValid: {
+    boxShadow: '0 0 0 0.2rem rgba(40, 167, 69, 0.25)'
+  },
+  picksStyleFocusInvalid: {
+    boxShadow: '0 0 0 0.2rem rgba(220, 53, 69, 0.25)'
+  },
+  filterInputStyle: {
+    color: 'inherit'
+    /*#495057 for default BS*/
+    ,
+    fontWeight: 'inherit'
+  },
+  // used in BsAppearance
+  picksStyleDef: {
+    minHeight: 'calc(2.25rem + 2px)'
+  },
+  picksStyleLg: {
+    minHeight: 'calc(2.875rem + 2px)'
+  },
+  picksStyleSm: {
+    minHeight: 'calc(1.8125rem + 2px)'
+  },
+  // used in BsPickContentStylingCorrector
+  pickStyle: {
+    paddingLeft: '0px',
+    lineHeight: '1.5em'
+  },
+  pickButtonStyle: {
+    fontSize: '1.5em',
+    lineHeight: '.9em'
+  },
+  pickContentStyleDisabled: {
+    opacity: '.65'
+  },
+  // used in BsChoiceContentStylingCorrector
+  choiceLabelStyleDisabled: {
+    color: '#6c757d'
   }
-};
-var bs4DropDownItemContentStylingMethodJsDefaults = {
-  checkBoxLabelDisabledColor: '#6c757d'
 };
 
 (function (window, $) {
@@ -79,17 +101,28 @@ var bs4DropDownItemContentStylingMethodJsDefaults = {
     var styling = configuration.styling;
 
     if (!configuration.adapter) {
-      var stylingMethod = configuration.stylingMethod;
+      var stylingCorrector = configuration.stylingCorrector;
 
-      if (!stylingMethod) {
+      if (!stylingCorrector) {
         if (!useCss) {
-          ExtendIfUndefined(configuration, stylingDefaults);
-          stylingMethod = Bs4StylingMethodJs(configuration);
+          extendIfUndefined(configuration, stylingDefaults);
+          stylingCorrector = StylingCorrector(configuration);
+          var defFocusIn = stylingCorrector.focusIn;
+
+          stylingCorrector.focusIn = function (picksElement) {
+            if (picksElement.classList.contains("is-valid")) {
+              setStyles(picksElement, configuration.picksStyleFocusValid);
+            } else if (picksElement.classList.contains("is-invalid")) {
+              setStyles(picksElement, configuration.picksStyleFocusInvalid);
+            } else {
+              defFocusIn(picksElement);
+            }
+          };
         }
       }
 
-      ExtendIfUndefined(configuration, classesDefaults);
-      styling = Styling(configuration, stylingMethod);
+      extendIfUndefined(configuration, classesDefaults);
+      styling = Styling(configuration, stylingCorrector);
     }
 
     var optionsAdapter = null;
@@ -195,43 +228,65 @@ var bs4DropDownItemContentStylingMethodJsDefaults = {
       }
     }
     var labelAdapter = LabelAdapter(configuration.label, configuration.createInputId);
-    var selectedItemContent = configuration.selectedItemContent;
+    var pickContentGenerator = configuration.pickContentGenerator;
 
-    if (!selectedItemContent) {
-      var selectedItemContentStylingMethod = configuration.selectedItemContentStylingMethod;
+    if (!pickContentGenerator) {
+      var pickContentStylingCorrector = configuration.pickContentStylingCorrector;
 
-      if (!selectedItemContentStylingMethod) {
+      if (!pickContentStylingCorrector) {
         if (!useCss) {
-          ExtendIfUndefined(configuration, bs4SelectedItemContentStylingMethodJsDefaults);
-          selectedItemContentStylingMethod = Bs4SelectedItemContentStylingMethodJs(configuration, $);
+          var pickStyle = stylingDefaults.pickStyle,
+              pickButtonStyle = stylingDefaults.pickButtonStyle,
+              pickContentStyleDisabled = stylingDefaults.pickContentStyleDisabled;
+          extendIfUndefined(configuration, {
+            pickStyle: pickStyle,
+            pickButtonStyle: pickButtonStyle,
+            pickContentStyleDisabled: pickContentStyleDisabled
+          });
+          pickContentStylingCorrector = BsPickContentStylingCorrector(configuration, $);
         }
       }
 
-      ExtendIfUndefined(configuration, bs4SelectedItemContentDefaults);
-      selectedItemContent = Bs4SelectedItemContent(configuration, selectedItemContentStylingMethod, $);
+      var pickClass = classesDefaults.pickClass,
+          pickRemoveButtonClass = classesDefaults.pickRemoveButtonClass,
+          pickContentClassDisabled = classesDefaults.pickContentClassDisabled;
+      extendIfUndefined(configuration, {
+        pickClass: pickClass,
+        pickRemoveButtonClass: pickRemoveButtonClass,
+        pickContentClassDisabled: pickContentClassDisabled
+      });
+      pickContentGenerator = BsPickContentGenerator(configuration, pickContentStylingCorrector, $);
     }
 
-    var dropDownItemContent = configuration.bs4DropDownItemContent;
+    var choiceContentGenerator = configuration.choiceContentGenerator;
 
-    if (!dropDownItemContent) {
-      var dropDownItemContentStylingMethod = configuration.dropDownItemContentStylingMethod;
+    if (!choiceContentGenerator) {
+      var choiceContentStylingCorrector = configuration.choiceContentStylingCorrector;
 
       if (!useCss) {
-        ExtendIfUndefined(configuration, bs4DropDownItemContentStylingMethodJsDefaults);
-        dropDownItemContentStylingMethod = Bs4DropDownItemContentStylingMethodJs(configuration, $);
+        var choiceLabelStyleDisabled = stylingDefaults.choiceLabelStyleDisabled;
+        extendIfUndefined(configuration, {
+          choiceLabelStyleDisabled: choiceLabelStyleDisabled
+        });
+        choiceContentStylingCorrector = BsChoiceContentStylingCorrector(configuration, $);
       }
 
-      ExtendIfUndefined(configuration, bs4DropDownItemContentDefaults);
-      dropDownItemContent = Bs4DropDownItemContent(configuration, dropDownItemContentStylingMethod, $);
+      var choiceClass = classesDefaults.choiceClass,
+          choiceCheckBoxClassDisabled = classesDefaults.choiceCheckBoxClassDisabled;
+      extendIfUndefined(configuration, {
+        choiceClass: choiceClass,
+        choiceCheckBoxClassDisabled: choiceCheckBoxClassDisabled
+      });
+      choiceContentGenerator = BsChoiceContentGenerator(configuration, choiceContentStylingCorrector, $);
     }
 
-    var createStylingComposite = function createStylingComposite(inputItemElement, inputElement, optionsElement) {
+    var createStylingComposite = function createStylingComposite(pickFilterElement, inputElement, choicesElement) {
       return {
         container: containerAdapter.containerElement,
         picks: containerAdapter.picksElement,
-        inputItem: inputItemElement,
+        pickFilter: pickFilterElement,
         input: inputElement,
-        options: optionsElement
+        choices: choicesElement
       };
     };
 
@@ -262,7 +317,7 @@ var bs4DropDownItemContentStylingMethodJsDefaults = {
       bsAppearance.updateIsValid();
     };
 
-    var multiSelect = new MultiSelect(optionsAdapter, setSelected, containerAdapter, styling, selectedItemContent, dropDownItemContent, labelAdapter, createStylingComposite, placeholderText, configuration, onUpdate, onDispose, window);
+    var multiSelect = new MultiSelect(optionsAdapter, setSelected, containerAdapter, styling, pickContentGenerator, choiceContentGenerator, labelAdapter, createStylingComposite, placeholderText, configuration, onUpdate, onDispose, window);
     multiSelect.UpdateSize = bsAppearance.updateSize;
     multiSelect.UpdateIsValid = bsAppearance.updateIsValid;
     if (configuration.init) configuration.init(element, multiSelect);
@@ -275,7 +330,7 @@ var bs4DropDownItemContentStylingMethodJsDefaults = {
     classes: classesDefaults,
     styling: stylingDefaults
   };
-  AddToJQueryPrototype('BsMultiSelect', createPlugin, defaults, $);
+  addToJQueryPrototype('BsMultiSelect', createPlugin, defaults, $);
 })(window, $);
 
 //# sourceMappingURL=BsMultiSelect.js.map

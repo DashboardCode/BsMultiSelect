@@ -1,12 +1,11 @@
 import Popper from 'popper.js'
-import FilterPanel from './FilterPanel.js'
-import OptionsPanel from './OptionsPanel.js'
-import PicksPanel from './PicksPanel.js'
-import MultiSelectInputAspect from './MultiSelectInputAspect.js'
-//import PlaceholderAsElementAspect from './PlaceholderAsElementAspect.js'
-import PlaceholderAsInputAspect from './PlaceholderAsInputAspect.js'
+import {FilterPanel} from './FilterPanel'
+import {ChoicesPanel} from './ChoicesPanel'
+import {PicksPanel} from './PicksPanel'
+import {MultiSelectInputAspect} from './MultiSelectInputAspect'
+import {PlaceholderAspect} from './PlaceholderAspect'
 
-import EventSkipper from './EventSkipper.js'
+import {EventSkipper} from './EventSkipper'
 import {removeElement} from './DomTools'
 
 function filterMultiSelectData(MultiSelectData, isFiltered, visibleIndex) {
@@ -48,10 +47,10 @@ function collectFilterDropDownMenu(MultiSelectDataList, text) {
     return list;
 }
 
-class MultiSelect {
+export class MultiSelect {
 
     constructor(optionsAdapter, setSelected, containerAdapter, styling, 
-        selectedItemContent, dropDownItemContent, 
+        pickContentGenerator, choiceContentGenerator, 
         labelAdapter, createStylingComposite, placeholderText,
         configuration, onUpdate, onDispose, window) {
         if (typeof Popper === 'undefined') {
@@ -64,8 +63,8 @@ class MultiSelect {
         this.optionsAdapter = optionsAdapter;
         this.containerAdapter = containerAdapter;
         this.styling = styling;
-        this.selectedItemContent = selectedItemContent;
-        this.dropDownItemContent = dropDownItemContent;
+        this.pickContentGenerator = pickContentGenerator;
+        this.choiceContentGenerator = choiceContentGenerator;
         this.labelAdapter = labelAdapter;
         this.createStylingComposite = createStylingComposite;
         this.configuration = configuration;
@@ -75,7 +74,7 @@ class MultiSelect {
 
         this.visibleCount=10;
 
-        this.optionsPanel = null;
+        this.choicesPanel = null;
 
         this.stylingComposite = null;
 
@@ -132,7 +131,7 @@ class MultiSelect {
             multiSelectData.isHidden=option.isHidden;
             if (multiSelectData.isHidden)
                 this.optionsPanel.insertDropDownItem(multiSelectData, 
-                    (p1,p2,p3)=>this.picksPanel.createSelectedItem(p1,p2,p3),
+                    (p1,p2,p3)=>this.picksPanel.createPick(p1,p2,p3),
                     ()=>this.optionsAdapter.triggerChange(),
                     option.isSelected, option.isDisabled);
             else
@@ -169,12 +168,12 @@ class MultiSelect {
     }*/
 
     DeselectAll(){
-        this.optionsPanel.hideDropDown(); // always hide 1st
+        this.choicesPanel.hideDropDown(); // always hide 1st
 
         for(let i=0; i<this.MultiSelectDataList.length; i++)
         {
             let multiSelectData = this.MultiSelectDataList[i];
-            if (multiSelectData.selectedItemElement)
+            if (multiSelectData.pickElement)
                 multiSelectData.toggle();
         }
         this.resetFilter();
@@ -182,7 +181,7 @@ class MultiSelect {
     }
 
     SelectAll(){
-        this.optionsPanel.hideDropDown(); // always hide 1st
+        this.choicesPanel.hideDropDown(); // always hide 1st
 
         for(let i=0; i<this.MultiSelectDataList.length; i++)
         {
@@ -195,7 +194,7 @@ class MultiSelect {
 
     empty(){
         // close drop down , remove filter and listeners
-        this.optionsPanel.hideDropDown(); // always hide 1st
+        this.choicesPanel.hideDropDown(); // always hide 1st
         this.resetFilter();
 
         for(let i=0; i<this.MultiSelectDataList.length; i++)
@@ -203,8 +202,8 @@ class MultiSelect {
             let multiSelectData = this.MultiSelectDataList[i];
             if (multiSelectData.dropDownMenuItemElement)
                 removeElement(multiSelectData.dropDownMenuItemElement);
-            if (multiSelectData.selectedItemElement)
-                removeElement(multiSelectData.selectedItemElement);
+            if (multiSelectData.pickElement)
+                removeElement(multiSelectData.pickElement);
         }
         this.resetMultiSelectDataList();
         this.picksPanel.resetMultiSelectDataSelectedTail();// this.MultiSelectDataSelectedTail = null;
@@ -240,7 +239,7 @@ class MultiSelect {
                     selectedNext: null,
                     visible: false,
                     toggle: null,
-                    selectedItemElement: null,
+                    pickElement: null,
                     remove: null,
                     disable: null,
                     removeDropDownMenuItemElement: null
@@ -250,9 +249,9 @@ class MultiSelect {
                 if (!isHidden){
                     MultiSelectData.visible = true;
                     MultiSelectData.visibleIndex=i;
-                    this.optionsPanel.insertDropDownItem(
+                    this.choicesPanel.insertDropDownItem(
                         MultiSelectData, 
-                        (p1,p2,p3) => this.picksPanel.createSelectedItem(p1,p2,p3),
+                        (p1,p2,p3) => this.picksPanel.createPick(p1,p2,p3),
                         (o,i) => this.setSelected(o,i),
                         () => this.optionsAdapter.triggerChange(), 
                         isSelected, 
@@ -281,7 +280,7 @@ class MultiSelect {
         
         // remove event listeners
         // TODO check if open
-        this.optionsPanel.hideDropDown();
+        this.choicesPanel.hideDropDown();
         if (this.optionsAdapter.dispose)
             this.optionsAdapter.dispose();
         this.picksPanel.dispose();
@@ -302,8 +301,8 @@ class MultiSelect {
             if (multiSelectData.DisposeDropDownMenuItemElement)
                 multiSelectData.DisposeDropDownMenuItemElement();
             
-            if (multiSelectData.SelectedItemContent)
-                multiSelectData.SelectedItemContent.dispose();
+            if (multiSelectData.PickContent)
+                multiSelectData.PickContent.dispose();
             if (multiSelectData.DropDownItemContent)
                 multiSelectData.DropDownItemContent.dispose();
         }
@@ -351,23 +350,22 @@ class MultiSelect {
             resetLength();  
         
         
-        this.optionsPanel.stopAndResetDropDownMenuHover();
+        this.choicesPanel.stopAndResetDropDownMenuHover();
         if (this.getVisibleMultiSelectDataList().length == 1) {
-            this.optionsPanel.hoverInInternal(0)
+            this.choicesPanel.hoverInInternal(0)
         }
 
         if (this.getVisibleMultiSelectDataList().length > 0) {
             this.aspect.alignToFilterInputItemLocation(true); // we need it to support case when textbox changes its place because of line break (texbox grow with each key press)
-            this.optionsPanel.showDropDown();
+            this.choicesPanel.showDropDown();
         } else {
-            this.optionsPanel.hideDropDown();
+            this.choicesPanel.hideDropDown();
         }
     }
 
     init() {
         var document = this.window.document;
         var createElement = (name) => document.createElement(name);
-        let container = this.containerAdapter.containerElement;
 
         var lazyfilterItemInputElementAtach=null;
         
@@ -390,22 +388,22 @@ class MultiSelect {
                 }
                 this.aspect.resetSkipFocusout();
             }, // focus out - hide dropdown
-            () => this.optionsPanel.keyDownArrow(false), // arrow up
-            () => this.optionsPanel.keyDownArrow(true),  // arrow down
-            () => this.optionsPanel.hideDropDown(),  // tab on empty
+            () => this.choicesPanel.keyDownArrow(false), // arrow up
+            () => this.choicesPanel.keyDownArrow(true),  // arrow down
+            () => this.choicesPanel.hideDropDown(),  // tab on empty
             () => {
-                this.picksPanel.removeSelectedTail();
+                this.picksPanel.removePicksTail();
                 this.aspect.alignToFilterInputItemLocation(false);
             }, // backspace - "remove last"
             () => { 
-                if (this.optionsPanel.getIsVisble())
-                    this.optionsPanel.toggleHovered() }, // tab/enter "compleate hovered"
+                if (this.choicesPanel.getIsVisble())
+                    this.choicesPanel.toggleHovered() }, // tab/enter "compleate hovered"
             (isEmpty, event) => {
-                if (!isEmpty || this.optionsPanel.getIsVisble()) // supports bs modal - stop esc (close modal) propogation
+                if (!isEmpty || this.choicesPanel.getIsVisble()) // supports bs modal - stop esc (close modal) propogation
                     event.stopPropagation();
             }, // esc keydown
             () => {
-                this.optionsPanel.hideDropDown(); // always hide 1st
+                this.choicesPanel.hideDropDown(); // always hide 1st
                 this.resetFilter();
             }, // esc keyup 
             (filterInputValue, resetLength) =>
@@ -425,14 +423,13 @@ class MultiSelect {
             (filterItemElement) => {
                 lazyfilterItemInputElementAtach(filterItemElement);
             },
-            this.selectedItemContent,
+            this.pickContentGenerator,
             this.isComponentDisabled,
             () => this.optionsAdapter.triggerChange(),
             () => {
-                this.optionsPanel.hideDropDown(); // always hide 1st
+                this.choicesPanel.hideDropDown(); // always hide 1st
                 this.resetFilter();
             },
-
             (event) => {
                 if (!this.filterPanel.isEventTarget(event))
                      this.filterPanel.setFocus();
@@ -444,36 +441,25 @@ class MultiSelect {
             }
         );
 
-        this.optionsPanel = OptionsPanel(
+        this.choicesPanel = ChoicesPanel(
             createElement,
-            this.containerAdapter.optionsElement,
+            this.containerAdapter.choicesElement,
             () => this.aspect.onDropDownShow(),
             () => this.aspect.onDropDownHide(),
             EventSkipper(this.window),
-            this.dropDownItemContent,
-            this.styling, 
+            this.choiceContentGenerator,
             () => this.getVisibleMultiSelectDataList(),
             () => this.resetFilter(),
             () => this.aspect.alignToFilterInputItemLocation(true),
             () => this.filterPanel.setFocus()
         );
 
-        // this.placeholderAspect = PlaceholderAsElementAspect(
-        //     this.placeholderText, 
-        //     () => this.picksPanel.isEmpty(),
-        //     () => this.filterPanel.isEmpty(), 
-        //     this.containerAdapter.picksElement,
-        //     this.filterPanel.inputElement, 
-        //     createElement, 
-        //     ()=>this.isComponentDisabled,
-        //     this.picksPanel.inputItemElement);
-
-        this.placeholderAspect = PlaceholderAsInputAspect(
+        this.placeholderAspect = PlaceholderAspect(
             this.placeholderText, 
             () => this.picksPanel.isEmpty(), 
             () => this.filterPanel.isEmpty(), 
             this.containerAdapter.picksElement, 
-            this.filterPanel.inputElement
+            this.filterPanel.filterInputElement
         )
 
         this.placeholderAspect.init();
@@ -483,12 +469,12 @@ class MultiSelect {
         this.aspect =  MultiSelectInputAspect(
             this.window,
             ()=>this.containerAdapter.appendToContainer(), 
-            this.picksPanel.inputItemElement, 
+            this.picksPanel.pickFilterElement, 
             this.containerAdapter.picksElement, 
-            this.containerAdapter.optionsElement, 
-            () => this.optionsPanel.showDropDown(),
+            this.containerAdapter.choicesElement, 
+            () => this.choicesPanel.showDropDown(),
             () => {  
-                this.optionsPanel.hideDropDown();
+                this.choicesPanel.hideDropDown();
                 this.resetFilter();
             },
             () => this.getVisibleMultiSelectDataList().length==0, 
@@ -496,9 +482,9 @@ class MultiSelect {
         );
         
         this.stylingComposite = this.createStylingComposite(
-            this.picksPanel.inputItemElement, 
-            this.filterPanel.inputElement, 
-            this.containerAdapter.optionsElement);
+            this.picksPanel.pickFilterElement, 
+            this.filterPanel.filterInputElement, 
+            this.containerAdapter.choicesElement);
         
         this.styling.Init(this.stylingComposite);
 
@@ -512,5 +498,3 @@ class MultiSelect {
             this.optionsAdapter.subscribeToReset(()=> this.window.setTimeout( ()=>this.UpdateData() ) );
     }
 }
-
-export default MultiSelect;

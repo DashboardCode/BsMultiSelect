@@ -1,4 +1,4 @@
-import {addClass, removeClass} from './DomTools';
+import {addClass, removeClass, setStyles} from './DomTools';
 
 function updateIsValid(picksElement, isValid, isInvalid){
     if (isValid)
@@ -11,6 +11,7 @@ function updateIsValid(picksElement, isValid, isInvalid){
     else
         removeClass(picksElement,'is-invalid');
 }
+
 
 function updateSize(picksElement, size){
     if (size=="custom-select-lg"){
@@ -27,46 +28,42 @@ function updateSize(picksElement, size){
     }
 }
 
-function updateSizeJs(picksElement, lgMinHeight, smMinHeight, defMinHeight, size){
+function updateSizeJs(picksElement, picksStyleLg, picksStyleSm, picksStyleDef, size){
     updateSize(picksElement, size);
     if (size=="custom-select-lg" || size=="input-group-lg"){
-        picksElement.style.minHeight=lgMinHeight; 
+        setStyles(picksElement, picksStyleLg);
     } else if (size=="custom-select-sm" || size=="input-group-sm"){
-        picksElement.style.minHeight=smMinHeight; 
+        setStyles(picksElement, picksStyleSm);
     } else {
-        picksElement.style.minHeight=defMinHeight;
+        setStyles(picksElement, picksStyleDef);
     }
 }
 
-function createBsAppearanceWithCss(picksElement){
-    return Object.create({
-        updateIsValid: (isValid, isInvalid) => updateIsValid(picksElement, isValid, isInvalid),
-        updateSize: (size) => updateSize(picksElement, size)
-    });
+function updateIsValidForAdapter(picksElement, optionsAdapter){
+    updateIsValid(picksElement, optionsAdapter.getIsValid(), optionsAdapter.getIsInvalid())
 }
 
-function createBsAppearanceWithJs(picksElement, lgMinHeight, smMinHeight, defMinHeight){
-    return Object.create({
-        updateIsValid: (isValid, isInvalid) => updateIsValid(picksElement, isValid, isInvalid),
-        updateSize: (size) => updateSizeJs(picksElement, lgMinHeight, smMinHeight, defMinHeight, size)
-    });
+function updateSizeForAdapter(picksElement, optionsAdapter){
+    updateSize(picksElement, optionsAdapter.getSize())
 }
 
-function createBsAppearanceForConfiguration(picksElement, configuration){
-    if (configuration.useCss){
-        return createBsAppearanceWithCss(picksElement);
-    }else{
-        return createBsAppearanceWithJs(picksElement
-            ,configuration.selectedPanelLgMinHeight
-            ,configuration.selectedPanelSmMinHeight
-            ,configuration.selectedPanelDefMinHeight)
-    }
+function updateSizeJsForAdapter(picksElement, picksStyleLg, picksStyleSm, picksStyleDef, optionsAdapter){
+    updateSizeJs(picksElement, picksStyleLg, picksStyleSm, picksStyleDef,  optionsAdapter.getSize())
 }
 
 export function createBsAppearance(picksElement, configuration, optionsAdapter){
-    var internal = createBsAppearanceForConfiguration(picksElement, configuration);
-    return Object.create({
-        updateIsValid: () => internal.updateIsValid(optionsAdapter.getIsValid(), optionsAdapter.getIsInvalid()),
-        updateSize: () => internal.updateSize(optionsAdapter.getSize())
-    });
+    var updateIsValid = () => updateIsValidForAdapter(picksElement, optionsAdapter);
+    if (configuration.useCss){
+        return Object.create({
+            updateIsValid,
+            updateSize: () => updateSizeForAdapter(picksElement, optionsAdapter)
+        });
+    }else{
+        const {picksStyleLg, picksStyleSm, picksStyleDef} = configuration;
+        return Object.create({
+            updateIsValid,
+            updateSize: () => updateSizeJsForAdapter(picksElement, 
+                picksStyleLg, picksStyleSm, picksStyleDef, optionsAdapter)
+        });
+    }
 }

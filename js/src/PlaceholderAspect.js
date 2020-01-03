@@ -1,4 +1,4 @@
-export default function PlaceholderAsInputAspect(placeholderText, picksIsEmpty, filterIsEmpty, picksElement, inputElement ){
+export function PlaceholderAspect(placeholderText, picksIsEmpty, filterIsEmpty, picksElement, inputElement ){
     function setEmptyInputWidth(isVisible){
         if(isVisible)
             inputElement.style.width="100%"

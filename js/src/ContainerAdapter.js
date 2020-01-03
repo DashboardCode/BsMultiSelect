@@ -1,4 +1,4 @@
-export default function ContainerAdapter(createElement, selectElement, containerElement, picksElement) { // select
+export function ContainerAdapter(createElement, selectElement, containerElement, picksElement) { // select
     var ownContainerElement = false;
     var ownPicksElement = false;
     
@@ -11,8 +11,8 @@ export default function ContainerAdapter(createElement, selectElement, container
         ownPicksElement = true;
     }
 
-    var optionsElement = createElement('UL');
-    optionsElement.style.display="none";
+    var choicesElement = createElement('UL');
+    choicesElement.style.display="none";
     
     var backupDisplay = null;
     if (selectElement)
@@ -24,7 +24,7 @@ export default function ContainerAdapter(createElement, selectElement, container
     return {
         containerElement,
         picksElement,
-        optionsElement,
+        choicesElement,
         init(){
             if (ownPicksElement)
                 containerElement.appendChild(picksElement);
@@ -34,15 +34,15 @@ export default function ContainerAdapter(createElement, selectElement, container
             {
                 if (ownPicksElement)
                     containerElement.appendChild(picksElement);
-                containerElement.appendChild(optionsElement);
+                containerElement.appendChild(choicesElement);
             }
             else
             {
                 if (selectElement)
                 {
-                    selectElement.parentNode.insertBefore(optionsElement, selectElement.nextSibling);
+                    selectElement.parentNode.insertBefore(choicesElement, selectElement.nextSibling);
                     if (ownPicksElement)
-                        selectElement.parentNode.insertBefore(picksElement, optionsElement);
+                        selectElement.parentNode.insertBefore(picksElement, choicesElement);
                 }
             }
         },
@@ -55,7 +55,7 @@ export default function ContainerAdapter(createElement, selectElement, container
                 containerElement.parentNode.removeChild(containerElement);
             if (ownPicksElement)
                 picksElement.parentNode.removeChild(picksElement);
-            optionsElement.parentNode.removeChild(optionsElement);
+            choicesElement.parentNode.removeChild(choicesElement);
             if (selectElement)
                 selectElement.style.display = backupDisplay;
         }

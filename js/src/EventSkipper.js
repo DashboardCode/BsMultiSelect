@@ -1,4 +1,4 @@
-export default function EventSkipper(window) {
+export function EventSkipper(window) {
     var isSkippable = false;
     return {
         isSkippable(){

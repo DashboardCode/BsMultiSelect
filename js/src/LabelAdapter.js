@@ -1,19 +1,17 @@
-function LabelAdapter(label, createInputId){
-    var backupedFor = null; // state saved between init and dispose
+export function LabelAdapter(labelElement, createInputId){
+    var backupedForAttribute = null; // state saved between init and dispose
     return {
-        init(filterInput) {
-            if (label) {
-                backupedFor = label.getAttribute('for');
+        init(filterInputElement) {
+            if (labelElement) {
+                backupedForAttribute = labelElement.getAttribute('for');
                 var newId = createInputId();
-                filterInput.setAttribute('id', newId);
-                label.setAttribute('for',newId);
+                filterInputElement.setAttribute('id', newId);
+                labelElement.setAttribute('for',newId);
             }
         },
         dispose(){
-            if(backupedFor)
-                label.setAttribute('for',backupedFor);
+            if(backupedForAttribute)
+                labelElement.setAttribute('for',backupedForAttribute);
         }
     }
 }
-
-export default LabelAdapter;
