@@ -429,7 +429,7 @@ export class MultiSelect {
                      this.filterPanel.setFocus();
                 this.aspect.alignAndShowChoices(event); 
             },
-            /*onPickCreated*/ (multiSelectData, count, removePick) => {
+            /*onPickCreated*/ (multiSelectData, removePick, count) => {
                 multiSelectData.excludedFromSearch = true; // all selected excluded from search
                 multiSelectData.toggle = () => removePick();
                 multiSelectData.ChoiceContent.select(true);

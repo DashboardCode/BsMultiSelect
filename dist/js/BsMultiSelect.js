@@ -552,7 +552,7 @@
         item.pickContent = pickContentGenerator(pickElement, option, onRemoveSelectedItemEvent);
         item.pickContent.disable(isComponentDisabled);
         picksElement.insertBefore(pickElement, pickFilterElement);
-        onPickCreated(multiSelectData, list.getCount(), removeSelectedItem);
+        onPickCreated(multiSelectData, removeSelectedItem, list.getCount());
       }
 
       var eventBinder = EventBinder();
@@ -1157,11 +1157,7 @@
         this.picksPanel = PicksPanel( //this.setSelected,
         createElement, this.containerAdapter.picksElement, function (filterItemElement) {
           lazyfilterItemInputElementAtach(filterItemElement);
-        }, this.pickContentGenerator, this.isComponentDisabled, // /*afterRemove*/() => {
-        //     this.choicesPanel.hideChoices(); // always hide 1st
-        //     this.resetFilter();
-        // },
-
+        }, this.pickContentGenerator, this.isComponentDisabled,
         /*onClick*/
         function (event) {
           if (!_this2.filterPanel.isEventTarget(event)) _this2.filterPanel.setFocus();
@@ -1169,7 +1165,7 @@
           _this2.aspect.alignAndShowChoices(event);
         },
         /*onPickCreated*/
-        function (multiSelectData, count, removePick) {
+        function (multiSelectData, removePick, count) {
           multiSelectData.excludedFromSearch = true; // all selected excluded from search
 
           multiSelectData.toggle = function () {

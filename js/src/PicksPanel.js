@@ -74,7 +74,7 @@ export function PicksPanel (
         item.pickContent.disable(isComponentDisabled);
         picksElement.insertBefore(pickElement, pickFilterElement);
 
-        onPickCreated(multiSelectData, list.getCount(), removeSelectedItem);
+        onPickCreated(multiSelectData, removeSelectedItem, list.getCount());
     }
 
     var eventBinder = EventBinder();
