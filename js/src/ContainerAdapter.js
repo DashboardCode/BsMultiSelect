@@ -1,3 +1,7 @@
+import {setStyles} from './ToolsDom'
+
+const picksStyle = {display:'flex', flexWrap:'wrap', listStyleType:'none'};  // remove bullets since this is ul
+
 export function ContainerAdapter(createElement, selectElement, containerElement, picksElement) { // select
     var ownContainerElement = false;
     var ownPicksElement = false;
@@ -10,7 +14,8 @@ export function ContainerAdapter(createElement, selectElement, containerElement,
         picksElement = createElement('UL');
         ownPicksElement = true;
     }
-
+    setStyles(picksElement, picksStyle); 
+    
     var choicesElement = createElement('UL');
     choicesElement.style.display="none";
     

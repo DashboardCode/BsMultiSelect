@@ -4,9 +4,9 @@ export function MultiSelectInputAspect (
     choiceFilterInputElement, 
     picksElement,
     choicesElement, 
-    showDropDown,
-    hideDropDownAndResetFilter,
-    isDropDownMenuEmpty,
+    showChoices,
+    hideChoicesAndResetFilter,
+    isChoiceEmpty,
     Popper
     ) {
         appendToContainer();
@@ -27,32 +27,50 @@ export function MultiSelectInputAspect (
                 || picksElement.contains(event.target)
                )
             ) {
-            hideDropDownAndResetFilter();
+            hideChoicesAndResetFilter();
         }
     }
 
-    var popper = new Popper( 
-        choiceFilterInputElement, 
-        choicesElement, 
-        {
-            placement: 'bottom-start',
-            modifiers: {
-                preventOverflow: {enabled:false},
-                hide: {enabled:false},
-                flip: {enabled:false}
+    var popper = null;
+    //if (!!Popper.prototype && !!Popper.prototype.constructor.name) {
+        popper=new Popper( 
+            choiceFilterInputElement, 
+            choicesElement, 
+            {
+                placement: 'bottom-start',
+                modifiers: {
+                    preventOverflow: {enabled:false},
+                    hide: {enabled:false},
+                    flip: {enabled:false}
+                }
             }
-        }
-    );
+        );
+    /*}else{
+        popper=Popper.createPopper( 
+            choiceFilterInputElement, 
+            choicesElement
+            // ,  https://github.com/popperjs/popper.js/blob/next/docs/src/pages/docs/modifiers/prevent-overflow.mdx#mainaxis
+            // {
+            //     placement: 'bottom-start',
+            //     modifiers: {
+            //         preventOverflow: {enabled:false},
+            //         hide: {enabled:false},
+            //         flip: {enabled:false}
+            //     }
+            // }
+        );
+    }*/
+     
 
     var filterInputItemOffsetLeft = null; // used to detect changes in input field position (by comparision with current value)
     var preventDefaultClickEvent = null;
 
-    function alignAndShowDropDown(event){
+    function alignAndShowChoices(event){
         if (preventDefaultClickEvent != event) {
-            if (!isDropDownMenuEmpty())
+            if (!isChoiceEmpty())
             {
                 alignToFilterInputItemLocation(true);
-                showDropDown();
+                showChoices();
             }
         }
         preventDefaultClickEvent=null;
@@ -71,7 +89,7 @@ export function MultiSelectInputAspect (
             popper.destroy();
         },
         alignToFilterInputItemLocation,
-        alignAndShowDropDown,
+        alignAndShowChoices,
         processUncheck(uncheckOption, event){
             // we can't remove item on "click" in the same loop iteration - it is unfrendly for 3PP event handlers (they will get detached element)
             // never remove elements in the same event iteration
@@ -79,7 +97,7 @@ export function MultiSelectInputAspect (
             window.setTimeout(()=>uncheckOption(),0)
             preventDefaultClickEvent = event; // setPreventDefaultMultiSelectEvent
         },
-        onDropDownShow(){
+        onChoicesShow(){
             // add listeners that manages close dropdown on input's focusout and click outside container
             //container.removeEventListener("mousedown", containerMousedown);
 
@@ -88,7 +106,7 @@ export function MultiSelectInputAspect (
             document.addEventListener("mouseup", documentMouseup);
             
         },
-        onDropDownHide(){
+        onChoicesHide(){
             picksElement.removeEventListener("mousedown", skipoutMousedown);
             choicesElement.addEventListener("mousedown", skipoutMousedown);
             document.removeEventListener("mouseup", documentMouseup);

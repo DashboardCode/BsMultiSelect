@@ -1,61 +1,70 @@
-import {addClasses, removeClasses, setStyles} from './DomTools';
-import {createEmpty} from './JsTools'
+import {addClasses, removeClasses, setStyles, EventBinder} from './ToolsDom';
+import {createEmpty} from './ToolsJs'
 
 export function BsChoiceContentStylingCorrector(configuration) {
     var resetStyle = createEmpty(resetStyle, configuration.choiceLabelStyleDisabled, '');
     return{
-        disabledStyle(checkBox, checkBoxLabel, isDisbaled){
-            setStyles(checkBoxLabel, isDisbaled? configuration.choiceLabelStyleDisabled : resetStyle)
+        disabledStyle(choiceLabelElement, isDisbaled){
+            setStyles(choiceLabelElement, isDisbaled? configuration.choiceLabelStyleDisabled : resetStyle)
         }
     }
 }
 
-export function BsChoiceContentGenerator(configuration, stylingCorrector, $) {
-   
-    return function(choiceElement, option){
-        let $choiceElement = $(choiceElement);
-        $choiceElement.addClass(configuration.choiceClass);
-        let $choiceContent= $(`<div class="custom-control custom-checkbox">
-            <input type="checkbox" class="custom-control-input">
-            <label class="custom-control-label justify-content-start"></label>
-        </div>`);
-        $choiceContent.appendTo(choiceElement);
-        let $checkBox = $choiceContent.find(`INPUT[type="checkbox"]`);
-        let $checkBoxLabel = $choiceContent.find(`label`);
-        $checkBoxLabel.text(option.text);
+function bsChoiceContentGenerator(choiceElement, option, configuration, stylingCorrector){
+    addClasses(choiceElement, configuration.choiceClass);
+    choiceElement.innerHTML = '<div><input type="checkbox"><label></label></div>';
+    let choiceCheckBoxElement = choiceElement.querySelector('INPUT');
+    let choiceLabelElement = choiceElement.querySelector('LABEL');
+    let choiceContentElement = choiceElement.querySelector('DIV');
+    addClasses(choiceContentElement, configuration.choiceContentClass); 
+    addClasses(choiceCheckBoxElement, configuration.choiceCheckBoxClass); 
+    addClasses(choiceLabelElement, configuration.choiceLabelClass); 
 
-        var tmp = { 
-            select(isSelected){ $checkBox.prop('checked', isSelected); }, 
-            // --- distinct disable and disabledStyle to provide a possibility to unselect disabled option
-            disable(isDisabled){ $checkBox.prop('disabled', isDisabled); },
-            disabledStyle(isDisbaled){ 
-                if (isDisbaled) 
-                    $checkBox.addClass(configuration.choiceCheckBoxClassDisabled);
-                else
-                    $checkBox.removeClass(configuration.choiceCheckBoxClassDisabled);
-                if (stylingCorrector && stylingCorrector.disabledStyle)
-                    stylingCorrector.disabledStyle($checkBox.get(0), $checkBoxLabel.get(0), isDisbaled); 
-            },
-            hoverIn(){
-                addClasses(choiceElement, configuration.choiceClassHover);
-            },
-            hoverOut(){
-                removeClasses(choiceElement, configuration.choiceClassHover);
-            },
-            onSelected(toggle) {
-                $checkBox.on("change", toggle)
-                $choiceElement.on("click", event => {
-                    if (choiceElement === event.target || $.contains(choiceElement, event.target)) {
+    choiceLabelElement.textContent =option.text;
+    let eventBinder = EventBinder();
+
+    function disabledStyle(isDisabled){
+        if (isDisabled) 
+                addClasses(choiceCheckBoxElement, configuration.choiceCheckBoxClassDisabled);
+            else
+                removeClasses(choiceCheckBoxElement, configuration.choiceCheckBoxClassDisabled);
+            if (stylingCorrector && stylingCorrector.disabledStyle)
+                stylingCorrector.disabledStyle(choiceLabelElement, isDisabled);  
+    };
+    return { 
+        select(isSelected){ choiceCheckBoxElement.checked = isSelected }, 
+        // --- distinct disable and disabledStyle to provide a possibility to unselect disabled option
+        //disable,//disable(isDisabled){ choiceCheckBoxElement.disabled = isDisabled },
+        //disabledStyle,
+        setChoiceContentDisabled : (isSelected) => {
+            disabledStyle(true); // TODO add option update
+            // do not desable checkBix if selected! there should be possibility to unselect "disabled"
+            choiceCheckBoxElement.disabled = !isSelected;
+        },
+        hoverIn(){
+            addClasses(choiceElement, configuration.choiceClassHover);
+        },
+        hoverOut(){
+            removeClasses(choiceElement, configuration.choiceClassHover);
+        },
+        onSelected(toggle) {
+            eventBinder.bind(choiceCheckBoxElement, "change", toggle);
+            eventBinder.bind(choiceElement, "click", 
+                event => {
+                    if (choiceElement === event.target || choiceElement.contains(event.target)) {
                         toggle();
                     }
-                })
-            },
-            dispose(){
-                $checkBox.unbind();
-                $choiceElement.unbind();
-            }
+                }
+            );
+        },
+        dispose(){
+            eventBinder.unbind();
         }
-        
-        return tmp;
+    }
+}
+
+export function BsChoiceContentGenerator(configuration, stylingCorrector) {
+    return function(choiceElement, option){
+        return bsChoiceContentGenerator(choiceElement, option, configuration, stylingCorrector)
     }
 }

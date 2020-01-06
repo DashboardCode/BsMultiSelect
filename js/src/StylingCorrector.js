@@ -1,5 +1,5 @@
-import {setStyles} from './DomTools';
-import {createEmpty} from './JsTools';
+import {setStyles} from './ToolsDom';
+import {createEmpty} from './ToolsJs';
 
 export function StylingCorrector(configuration){
     var resetDisable = createEmpty(configuration.picksStyleDisabled, "");
@@ -7,7 +7,6 @@ export function StylingCorrector(configuration){
     return {
         init(elements){
             setStyles(elements.picks, configuration.picksStyle);
-            setStyles(elements.input, configuration.filterInputStyle);
         },
     
         enable(picksElement){

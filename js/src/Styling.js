@@ -1,4 +1,4 @@
-import {addClasses, removeClasses} from './DomTools';
+import {addClasses, removeClasses} from './ToolsDom';
 
 export function Styling(configuration, stylingCorrector) {
     return {

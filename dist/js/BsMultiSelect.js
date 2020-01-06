@@ -27,6 +27,66 @@
       return destination;
     }
 
+    function forEachRecursion(f, i) {
+      if (!i) return;
+      f(i.value);
+      forEachRecursion(f, i.prev);
+    }
+    function List() {
+      var tail = null;
+      var count = 0;
+      return {
+        add: function add(e) {
+          if (tail) {
+            tail.next = {
+              value: e,
+              prev: tail
+            };
+            tail = tail.next;
+          } else tail = {
+            value: e
+          };
+
+          count++;
+          var node = tail;
+
+          function remove() {
+            if (node.prev) {
+              node.prev.next = node.next;
+            }
+
+            if (node.next) {
+              node.next.prev = node.prev;
+            }
+
+            if (tail == node) {
+              tail = node.prev;
+            }
+
+            count--;
+          }
+
+          return remove;
+        },
+        forEach: function forEach(f) {
+          forEachRecursion(f, tail);
+        },
+        getTail: function getTail() {
+          return tail ? tail.value : null;
+        },
+        getCount: function getCount() {
+          return count;
+        },
+        isEmpty: function isEmpty() {
+          return count == 0;
+        },
+        reset: function reset() {
+          tail = null;
+          count = 0;
+        }
+      };
+    }
+
     function removeElement(e) {
       e.parentNode.removeChild(e);
     }
@@ -79,9 +139,42 @@
       }
     }
 
+    function removeChildren(element) {
+      var toRemove = element.firstChild;
+
+      while (toRemove) {
+        element.removeChild(toRemove);
+        toRemove = element.firstChild;
+      }
+    }
+    function EventBinder() {
+      var list = [];
+      return {
+        bind: function bind(element, eventName, handler) {
+          element.addEventListener(eventName, handler);
+          list.push({
+            element: element,
+            eventName: eventName,
+            handler: handler
+          });
+        },
+        unbind: function unbind() {
+          list.forEach(function (e) {
+            var element = e.element,
+                eventName = e.eventName,
+                handler = e.handler;
+            element.removeEventListener(eventName, handler);
+          });
+        }
+      };
+    }
+
     var filterInputStyle = {
       border: '0px',
+      height: 'auto',
+      boxShadow: 'none',
       padding: '0px',
+      margin: '0px',
       outline: 'none',
       backgroundColor: 'transparent'
     };
@@ -192,14 +285,14 @@
       listStyleType: 'none'
     }; // remove bullets since this is ul
 
-    function ChoicesPanel(createElement, choicesElement, onShow, onHide, eventSkipper, dropDownItemContent, getVisibleMultiSelectDataList, resetFilter, updateDropDownLocation, filterPanelSetFocus) {
+    function ChoicesPanel(createElement, choicesElement, onShow, onHide, eventSkipper, choiceContentGenerator, getVisibleMultiSelectDataList, resetFilter, updateChoicesLocation, filterPanelSetFocus) {
       // prevent heavy understandable styling error
       setStyles(choicesElement, choicesStyle);
       var hoveredMultiSelectData = null;
       var hoveredMultiSelectDataIndex = null;
       var candidateToHoveredMultiSelectData = null;
 
-      function hideDropDown() {
+      function hideChoices() {
         if (candidateToHoveredMultiSelectData) {
           resetCandidateToHoveredMultiSelectData();
         }
@@ -210,7 +303,7 @@
         }
       }
 
-      function showDropDown() {
+      function showChoices() {
         if (choicesElement.style.display != 'block') {
           eventSkipper.setSkippable();
           choicesElement.style.display = 'block';
@@ -221,26 +314,26 @@
       var hoverInInternal = function hoverInInternal(index) {
         hoveredMultiSelectDataIndex = index;
         hoveredMultiSelectData = getVisibleMultiSelectDataList()[index];
-        hoveredMultiSelectData.DropDownItemContent.hoverIn();
+        hoveredMultiSelectData.ChoiceContent.hoverIn();
       };
 
-      function resetDropDownMenuHover() {
+      function resetChoicesHover() {
         if (hoveredMultiSelectData) {
-          hoveredMultiSelectData.DropDownItemContent.hoverOut();
+          hoveredMultiSelectData.ChoiceContent.hoverOut();
           hoveredMultiSelectData = null;
           hoveredMultiSelectDataIndex = null;
         }
       }
 
       var resetCandidateToHoveredMultiSelectData = function resetCandidateToHoveredMultiSelectData() {
-        candidateToHoveredMultiSelectData.dropDownMenuItemElement.removeEventListener('mousemove', processCandidateToHovered);
-        candidateToHoveredMultiSelectData.dropDownMenuItemElement.removeEventListener('mousedown', processCandidateToHovered);
+        candidateToHoveredMultiSelectData.choiceElement.removeEventListener('mousemove', processCandidateToHovered);
+        candidateToHoveredMultiSelectData.choiceElement.removeEventListener('mousedown', processCandidateToHovered);
         candidateToHoveredMultiSelectData = null;
       };
 
       var processCandidateToHovered = function processCandidateToHovered() {
         if (hoveredMultiSelectData != candidateToHoveredMultiSelectData) {
-          resetDropDownMenuHover();
+          resetChoicesHover();
           hoverInInternal(candidateToHoveredMultiSelectData.visibleIndex);
         }
 
@@ -250,8 +343,8 @@
       function toggleHovered() {
         if (hoveredMultiSelectData) {
           hoveredMultiSelectData.toggle();
-          resetDropDownMenuHover();
-          hideDropDown(); // always hide 1st
+          resetChoicesHover();
+          hideChoices(); // always hide 1st
 
           resetFilter();
         }
@@ -289,84 +382,87 @@
         }
 
         if (newIndex != null) {
-          if (hoveredMultiSelectData) hoveredMultiSelectData.DropDownItemContent.hoverOut(); //styling.HoverOut(hoveredMultiSelectData.dropDownMenuItemElement);
+          if (hoveredMultiSelectData) hoveredMultiSelectData.ChoiceContent.hoverOut(); // styling.HoverOut(hoveredMultiSelectData.choiceElement);
 
-          updateDropDownLocation();
-          showDropDown();
+          updateChoicesLocation();
+          showChoices();
           hoverInInternal(newIndex);
         }
       }
 
-      var onDropDownMenuItemElementMouseoverGeneral = function onDropDownMenuItemElementMouseoverGeneral(MultiSelectData, dropDownMenuItemElement) {
+      var onChoiceElementMouseoverGeneral = function onChoiceElementMouseoverGeneral(MultiSelectData, choiceElement) {
         if (eventSkipper.isSkippable()) {
           if (candidateToHoveredMultiSelectData) resetCandidateToHoveredMultiSelectData();
           candidateToHoveredMultiSelectData = MultiSelectData;
-          dropDownMenuItemElement.addEventListener('mousemove', processCandidateToHovered);
-          dropDownMenuItemElement.addEventListener('mousedown', processCandidateToHovered);
+          choiceElement.addEventListener('mousemove', processCandidateToHovered);
+          choiceElement.addEventListener('mousedown', processCandidateToHovered);
         } else {
           if (hoveredMultiSelectData != MultiSelectData) {
             // mouseleave is not enough to guarantee remove hover styles in situations
             // when style was setuped without mouse (keyboard arrows)
             // therefore force reset manually
-            resetDropDownMenuHover();
+            resetChoicesHover();
             hoverInInternal(MultiSelectData.visibleIndex);
           }
         }
       };
 
-      function insertDropDownItem(MultiSelectData, createSelectedItemGen, setSelected, triggerChange, isSelected, isOptionDisabled) {
-        var dropDownMenuItemElement = createElement('LI'); // in chrome it happens on "become visible" so we need to skip it, 
+      function insertChoice(MultiSelectData, createSelectedItemGen, setSelected, triggerChange, isSelected
+      /*, isOptionDisabled*/
+      ) {
+        var choiceElement = createElement('LI'); // in chrome it happens on "become visible" so we need to skip it, 
         // for IE11 and edge it doesn't happens, but for IE11 and Edge it doesn't happens on small 
         // mouse moves inside the item. 
         // https://stackoverflow.com/questions/59022563/browser-events-mouseover-doesnt-happen-when-you-make-element-visible-and-mous
 
-        var onDropDownMenuItemElementMouseover = function onDropDownMenuItemElementMouseover() {
-          return onDropDownMenuItemElementMouseoverGeneral(MultiSelectData, dropDownMenuItemElement);
+        var onChoiceElementMouseover = function onChoiceElementMouseover() {
+          return onChoiceElementMouseoverGeneral(MultiSelectData, choiceElement);
         };
 
-        dropDownMenuItemElement.addEventListener('mouseover', onDropDownMenuItemElementMouseover); // note 1: mouseleave preferred to mouseout - which fires on each descendant
+        choiceElement.addEventListener('mouseover', onChoiceElementMouseover); // note 1: mouseleave preferred to mouseout - which fires on each descendant
         // note 2: since I want add aditional info panels to the dropdown put mouseleave on dropdwon would not work
 
-        var onDropDownMenuItemElementMouseleave = function onDropDownMenuItemElementMouseleave() {
+        var onChoiceElementMouseleave = function onChoiceElementMouseleave() {
           if (!eventSkipper.isSkippable()) {
-            resetDropDownMenuHover();
+            resetChoicesHover();
           }
         };
 
-        dropDownMenuItemElement.addEventListener('mouseleave', onDropDownMenuItemElementMouseleave);
-        choicesElement.appendChild(dropDownMenuItemElement);
-        var content = dropDownItemContent(dropDownMenuItemElement, MultiSelectData.option);
-        MultiSelectData.dropDownMenuItemElement = dropDownMenuItemElement;
-        MultiSelectData.DropDownItemContent = content;
+        choiceElement.addEventListener('mouseleave', onChoiceElementMouseleave);
+        choicesElement.appendChild(choiceElement);
+        var choiceContent = choiceContentGenerator(choiceElement, MultiSelectData.option);
+        MultiSelectData.choiceElement = choiceElement;
+        MultiSelectData.ChoiceContent = choiceContent;
 
-        MultiSelectData.DisposeDropDownMenuItemElement = function () {
-          dropDownMenuItemElement.removeEventListener('mouseover', onDropDownMenuItemElementMouseover);
-          dropDownMenuItemElement.removeEventListener('mouseleave', onDropDownMenuItemElementMouseleave);
-        };
+        MultiSelectData.DisposeChoiceElement = function () {
+          choiceElement.removeEventListener('mouseover', onChoiceElementMouseover);
+          choiceElement.removeEventListener('mouseleave', onChoiceElementMouseleave);
+        }; // var setChoiceContentDisabled = (isSelected) => {
+        //     choiceContent.disabledStyle(true);
+        //     // do not desable if selected! there should be possibility to unselect "disabled"
+        //     choiceContent.disable(!isSelected);
+        // }
+        // choiceContent.setChoiceContentDisabled= setChoiceContentDisabled;
 
-        var setDropDownItemContentDisabled = function setDropDownItemContentDisabled(content, isSelected) {
-          content.disabledStyle(true); // do not desable if selected! there should be possibility to unselect "disabled"
 
-          content.disable(!isSelected);
-        };
-
-        if (isOptionDisabled) setDropDownItemContentDisabled(content, isSelected);
-        content.onSelected(function () {
+        if (MultiSelectData.isOptionDisabled) choiceContent.setChoiceContentDisabled(isSelected);
+        choiceContent.onSelected(function () {
           MultiSelectData.toggle();
           filterPanelSetFocus();
         }); // ------------------------------------------------------------------------------
 
         var createSelectedItem = function createSelectedItem() {
-          return createSelectedItemGen(MultiSelectData, isOptionDisabled, function () {
-            return setDropDownItemContentDisabled(content, false);
-          });
+          return createSelectedItemGen(MultiSelectData //,
+          //MultiSelectData.isOptionDisabled,
+          //() => setChoiceContentDisabled(content, false)
+          );
         };
 
         if (isSelected) {
           createSelectedItem();
         } else {
-          MultiSelectData.excludedFromSearch = isOptionDisabled;
-          if (isOptionDisabled) MultiSelectData.toggle = function () {};else MultiSelectData.toggle = function () {
+          MultiSelectData.excludedFromSearch = MultiSelectData.isOptionDisabled;
+          if (MultiSelectData.isOptionDisabled) MultiSelectData.toggle = function () {};else MultiSelectData.toggle = function () {
             var confirmed = setSelected(MultiSelectData.option, true);
 
             if (confirmed == null || confirmed) {
@@ -380,16 +476,16 @@
 
       var item = {
         hoverInInternal: hoverInInternal,
-        stopAndResetDropDownMenuHover: function stopAndResetDropDownMenuHover() {
+        stopAndResetChoicesHover: function stopAndResetChoicesHover() {
           eventSkipper.setSkippable(); //disable Hover On MouseEnter - filter's changes should remove hover
 
-          resetDropDownMenuHover();
+          resetChoicesHover();
         },
-        showDropDown: showDropDown,
-        hideDropDown: hideDropDown,
+        showChoices: showChoices,
+        hideChoices: hideChoices,
         toggleHovered: toggleHovered,
         keyDownArrow: keyDownArrow,
-        insertDropDownItem: insertDropDownItem,
+        insertChoice: insertChoice,
         getIsVisble: function getIsVisble() {
           return choicesElement.style.display != 'none';
         }
@@ -397,107 +493,40 @@
       return item;
     }
 
-    var picksStyle = {
-      display: 'flex',
-      flexWrap: 'wrap',
-      listStyleType: 'none'
-    }; // remove bullets since this is ul
-
-    function PicksPanel(setSelected, createElement, picksElement, init, pickContentGenerator, isComponentDisabled, triggerChange, onRemove, onClick, onPicksEmptyChanged, //placeholderAspect.updatePlacehodlerVisibility(); call the same on enable/disable
-    processRemoveButtonClick) {
-      var picksCount = 0;
-
-      function inc() {
-        picksCount++;
-        if (picksCount == 1) onPicksEmptyChanged();
-      }
-
-      function dec() {
-        picksCount--;
-        if (picksCount == 0) onPicksEmptyChanged();
-      }
-
-      function reset() {
-        picksCount = 0;
-        onPicksEmptyChanged();
-      }
-
-      function isEmpty() {
-        return picksCount == 0;
-      }
-      setStyles(picksElement, picksStyle);
+    function PicksPanel(createElement, picksElement, init, pickContentGenerator, isComponentDisabled, //afterRemove,
+    onClick, // click to open dropdown
+    onPickCreated, onPickRemoved, processRemoveButtonClick // click to remove button
+    ) {
+      var list = List();
       var pickFilterElement = createElement('LI'); // detached
 
       picksElement.appendChild(pickFilterElement); // located filter in selectionsPanel
 
       init(pickFilterElement);
-      var MultiSelectDataSelectedTail = null;
 
-      function removePicksTail() {
-        if (MultiSelectDataSelectedTail) {
-          MultiSelectDataSelectedTail.toggle(); // always remove in this case
-        }
-      }
-
-      function removeSelectedFromList(MultiSelectData) {
-        if (MultiSelectData.selectedPrev) {
-          MultiSelectData.selectedPrev.selectedNext = MultiSelectData.selectedNext;
-        }
-
-        if (MultiSelectData.selectedNext) {
-          MultiSelectData.selectedNext.selectedPrev = MultiSelectData.selectedPrev;
-        }
-
-        if (MultiSelectDataSelectedTail == MultiSelectData) {
-          MultiSelectDataSelectedTail = MultiSelectData.selectedPrev;
-        }
-
-        MultiSelectData.selectedNext = null;
-        MultiSelectData.selectedPrev = null;
-      }
-
-      function createPick(MultiSelectData, isOptionDisabled, setDropDownItemContentDisabled) {
+      function createPick(multiSelectData, option) {
         var pickElement = createElement('LI');
-        MultiSelectData.pickElement = pickElement;
-
-        if (MultiSelectDataSelectedTail) {
-          MultiSelectDataSelectedTail.selectedNext = MultiSelectData;
-          MultiSelectData.selectedPrev = MultiSelectDataSelectedTail;
-        }
-
-        MultiSelectDataSelectedTail = MultiSelectData;
+        var item = {
+          pickElement: pickElement
+        };
+        var removeFromList = list.add(item);
 
         var removeSelectedItem = function removeSelectedItem() {
-          var confirmed = setSelected(MultiSelectData.option, false);
-
-          if (confirmed == null || confirmed) {
-            MultiSelectData.excludedFromSearch = isOptionDisabled;
-
-            if (isOptionDisabled) {
-              setDropDownItemContentDisabled(MultiSelectData.DropDownItemContent, false);
-
-              MultiSelectData.toggle = function () {};
-            } else {
-              MultiSelectData.toggle = function () {
-                var confirmed = setSelected(MultiSelectData.option, true);
-
-                if (confirmed == null || confirmed) {
-                  createPick(MultiSelectData, isOptionDisabled, setDropDownItemContentDisabled);
-                  triggerChange();
-                }
-              };
-            }
-
-            MultiSelectData.DropDownItemContent.select(false);
+          onPickRemoved(multiSelectData, function () {
             removeElement(pickElement);
-            MultiSelectData.PickContent.dispose();
-            MultiSelectData.PickContent = null;
-            MultiSelectData.pickElement = null;
-            removeSelectedFromList(MultiSelectData);
-            dec();
-            triggerChange();
-          }
-        }; // processRemoveButtonClick removes the 
+            item.pickContent.dispose();
+            removeFromList();
+            return {
+              createSelectedItem: function createSelectedItem() {
+                createPick(multiSelectData, option);
+                onPickCreated(multiSelectData, removeSelectedItem, list.getCount());
+              },
+              count: list.getCount()
+            };
+          });
+        };
+
+        item.removeSelectedItem = removeSelectedItem; // processRemoveButtonClick removes the 
         // what is a problem with calling removeSelectedItem directly (not using  setTimeout(removeSelectedItem, 0)):
         // consider situation "MultiSelect" on DROPDOWN (that should be closed on the click outside dropdown)
         // therefore we aslo have document's click's handler where we decide to close or leave the DROPDOWN open.
@@ -509,86 +538,70 @@
         // important 2: we can't change the dropdown's event handler to leave dropdown open if event's target is null because of
         // the situation described above: click outside dropdown on the same component.
         // Alternatively it could be possible to use stopPropogate but together create custom click event setting new target that belomgs to DOM (e.g. panel)
-
-
-        var removeSelectedItemAndCloseDropDown = function removeSelectedItemAndCloseDropDown() {
-          removeSelectedItem();
-          onRemove();
-        };
+        // let removePickAndCloseChoices = () => {
+        //     removeSelectedItem();
+        //     //afterRemove();
+        // };
 
         var onRemoveSelectedItemEvent = function onRemoveSelectedItemEvent(event) {
-          processRemoveButtonClick(function () {
-            return removeSelectedItemAndCloseDropDown();
-          }, event);
+          processRemoveButtonClick(removeSelectedItem
+          /*() => removePickAndCloseChoices()*/
+          , event);
         };
 
-        MultiSelectData.PickContent = pickContentGenerator(pickElement, MultiSelectData.option, onRemoveSelectedItemEvent);
-
-        var disable = function disable(isDisabled) {
-          return MultiSelectData.PickContent.disable(isDisabled);
-        };
-
-        disable(isComponentDisabled);
-        MultiSelectData.excludedFromSearch = true; // all selected excluded from search
-
-        MultiSelectData.disable = disable;
+        item.pickContent = pickContentGenerator(pickElement, option, onRemoveSelectedItemEvent);
+        item.pickContent.disable(isComponentDisabled);
         picksElement.insertBefore(pickElement, pickFilterElement);
-
-        MultiSelectData.toggle = function () {
-          return removeSelectedItem();
-        };
-
-        MultiSelectData.DropDownItemContent.select(true);
-        inc();
+        onPickCreated(multiSelectData, list.getCount(), removeSelectedItem);
       }
 
-      var picksClick = function picksClick(event) {
-        onClick(event);
-      };
-
-      function iterateAll(isDisabled) {
-        var i = MultiSelectDataSelectedTail;
-
-        while (i) {
-          i.disable(isDisabled);
-          i = i.selectedPrev;
-        }
-      }
-
-      var item = {
+      var eventBinder = EventBinder();
+      return {
         pickFilterElement: pickFilterElement,
         createPick: createPick,
-        removePicksTail: removePicksTail,
-        resetMultiSelectDataSelectedTail: function resetMultiSelectDataSelectedTail() {
-          reset();
-          MultiSelectDataSelectedTail = null;
+        removePicksTail: function removePicksTail() {
+          var item = list.getTail();
+          if (item) item.removeSelectedItem(); // always remove in this case
         },
-        isEmpty: isEmpty,
+        isEmpty: list.isEmpty,
         enable: function enable() {
           isComponentDisabled = false;
-          iterateAll(false);
-          picksElement.addEventListener("click", picksClick);
+          list.forEach(function (i) {
+            return i.pickContent.disable(false);
+          });
+          eventBinder.bind(picksElement, "click", function (event) {
+            return onClick(event);
+          }); // OPEN dropdown
         },
         disable: function disable() {
           isComponentDisabled = true;
-          iterateAll(true);
-          picksElement.removeEventListener("click", picksClick);
+          list.forEach(function (i) {
+            return i.pickContent.disable(true);
+          });
+          eventBinder.unbind();
+        },
+        deselectAll: function deselectAll() {
+          list.forEach(function (i) {
+            return i.removeSelectedItem();
+          });
+        },
+        clear: function clear() {
+          list.forEach(function (i) {
+            return removeElement(i.pickElement);
+          });
+          list.reset();
         },
         dispose: function dispose() {
-          var toRemove = picksElement.firstChild;
-
-          while (toRemove) {
-            picksElement.removeChild(toRemove);
-            toRemove = picksElement.firstChild;
-          }
-
-          picksElement.removeEventListener("click", picksClick); // OPEN dropdown
+          removeChildren(picksElement);
+          eventBinder.unbind();
+          list.forEach(function (i) {
+            return i.pickContent.dispose();
+          });
         }
       };
-      return item;
     }
 
-    function MultiSelectInputAspect(window, appendToContainer, choiceFilterInputElement, picksElement, choicesElement, showDropDown, hideDropDownAndResetFilter, isDropDownMenuEmpty, Popper) {
+    function MultiSelectInputAspect(window, appendToContainer, choiceFilterInputElement, picksElement, choicesElement, showChoices, hideChoicesAndResetFilter, isChoiceEmpty, Popper) {
       appendToContainer();
       var document = window.document;
       var skipFocusout = false; // we want to escape the closing of the menu (because of focus out from) on a user's click inside the container
@@ -600,11 +613,13 @@
       var documentMouseup = function documentMouseup(event) {
         // if click outside container - close dropdown
         if (!(choicesElement === event.target || picksElement === event.target || choicesElement.contains(event.target) || picksElement.contains(event.target))) {
-          hideDropDownAndResetFilter();
+          hideChoicesAndResetFilter();
         }
       };
 
-      var popper = new Popper(choiceFilterInputElement, choicesElement, {
+      var popper = null; //if (!!Popper.prototype && !!Popper.prototype.constructor.name) {
+
+      popper = new Popper(choiceFilterInputElement, choicesElement, {
         placement: 'bottom-start',
         modifiers: {
           preventOverflow: {
@@ -618,15 +633,31 @@
           }
         }
       });
+      /*}else{
+          popper=Popper.createPopper( 
+              choiceFilterInputElement, 
+              choicesElement
+              // ,  https://github.com/popperjs/popper.js/blob/next/docs/src/pages/docs/modifiers/prevent-overflow.mdx#mainaxis
+              // {
+              //     placement: 'bottom-start',
+              //     modifiers: {
+              //         preventOverflow: {enabled:false},
+              //         hide: {enabled:false},
+              //         flip: {enabled:false}
+              //     }
+              // }
+          );
+      }*/
+
       var filterInputItemOffsetLeft = null; // used to detect changes in input field position (by comparision with current value)
 
       var preventDefaultClickEvent = null;
 
-      function alignAndShowDropDown(event) {
+      function alignAndShowChoices(event) {
         if (preventDefaultClickEvent != event) {
-          if (!isDropDownMenuEmpty()) {
+          if (!isChoiceEmpty()) {
             alignToFilterInputItemLocation(true);
-            showDropDown();
+            showChoices();
           }
         }
 
@@ -648,7 +679,7 @@
           popper.destroy();
         },
         alignToFilterInputItemLocation: alignToFilterInputItemLocation,
-        alignAndShowDropDown: alignAndShowDropDown,
+        alignAndShowChoices: alignAndShowChoices,
         processUncheck: function processUncheck(uncheckOption, event) {
           // we can't remove item on "click" in the same loop iteration - it is unfrendly for 3PP event handlers (they will get detached element)
           // never remove elements in the same event iteration
@@ -657,14 +688,14 @@
           }, 0);
           preventDefaultClickEvent = event; // setPreventDefaultMultiSelectEvent
         },
-        onDropDownShow: function onDropDownShow() {
+        onChoicesShow: function onChoicesShow() {
           // add listeners that manages close dropdown on input's focusout and click outside container
           //container.removeEventListener("mousedown", containerMousedown);
           picksElement.addEventListener("mousedown", skipoutMousedown);
           choicesElement.addEventListener("mousedown", skipoutMousedown);
           document.addEventListener("mouseup", documentMouseup);
         },
-        onDropDownHide: function onDropDownHide() {
+        onChoicesHide: function onChoicesHide() {
           picksElement.removeEventListener("mousedown", skipoutMousedown);
           choicesElement.addEventListener("mousedown", skipoutMousedown);
           document.removeEventListener("mouseup", documentMouseup);
@@ -728,10 +759,10 @@
     function filterMultiSelectData(MultiSelectData, isFiltered, visibleIndex) {
       MultiSelectData.visible = isFiltered;
       MultiSelectData.visibleIndex = visibleIndex;
-      MultiSelectData.dropDownMenuItemElement.style.display = isFiltered ? 'block' : 'none';
+      MultiSelectData.choiceElement.style.display = isFiltered ? 'block' : 'none';
     }
 
-    function resetDropDownMenu(MultiSelectDataList) {
+    function resetChoices(MultiSelectDataList) {
       for (var i = 0; i < MultiSelectDataList.length; i++) {
         var multiSelectData = MultiSelectDataList[i];
 
@@ -741,7 +772,7 @@
       }
     }
 
-    function collectFilterDropDownMenu(MultiSelectDataList, text) {
+    function collectFilterChoices(MultiSelectDataList, text) {
       var list = [];
       var j = 0;
 
@@ -764,11 +795,7 @@
     var MultiSelect =
     /*#__PURE__*/
     function () {
-      function MultiSelect(optionsAdapter, setSelected, containerAdapter, styling, pickContentGenerator, choiceContentGenerator, labelAdapter, createStylingComposite, placeholderText, configuration, onUpdate, onDispose, window) {
-        if (typeof Popper === 'undefined') {
-          throw new TypeError('DashboardCode BsMultiSelect require Popper.js (https://popper.js.org)');
-        }
-
+      function MultiSelect(optionsAdapter, setSelected, containerAdapter, styling, pickContentGenerator, choiceContentGenerator, labelAdapter, createStylingComposite, placeholderText, configuration, onUpdate, onDispose, popper, window) {
         this.onUpdate = onUpdate;
         this.onDispose = onDispose; // readonly
 
@@ -783,6 +810,7 @@
         this.placeholderText = placeholderText;
         this.setSelected = setSelected; // should I rebind this for callbacks? setSelected.bind(this);
 
+        this.popper = popper;
         this.window = window;
         this.visibleCount = 10;
         this.choicesPanel = null;
@@ -812,7 +840,7 @@
 
       _proto.processEmptyInput = function processEmptyInput() {
         this.filterPanel.setEmptyLength();
-        resetDropDownMenu(this.MultiSelectDataList);
+        resetChoices(this.MultiSelectDataList);
         this.filteredMultiSelectDataList = null;
       } // -----------------------------------------------------------------------------------------------------------------------
       ;
@@ -835,12 +863,12 @@
           {
               multiSelectData.isHidden=option.isHidden;
               if (multiSelectData.isHidden)
-                  this.optionsPanel.insertDropDownItem(multiSelectData, 
+                  this.optionsPanel.insertChoice(multiSelectData, 
                       (p1,p2,p3)=>this.picksPanel.createPick(p1,p2,p3),
                       ()=>this.optionsAdapter.triggerChange(),
                       option.isSelected, option.isDisabled);
               else
-                  multiSelectData.removeDropDownMenuItemElement();
+                  multiSelectData.removeChoiceElement();
           }
           else 
           {
@@ -849,11 +877,11 @@
                   multiSelectData.isSelected=option.isSelected;
                   if (multiSelectData.isSelected)
                   {
-                      // this.insertDropDownItem(multiSelectData, (e)=>this.dropDownMenu.appendChild(e), isSelected, isDisabled);
+                      // this.insertChoice(multiSelectData, (e)=>this.choicesElement.appendChild(e), isSelected, isDisabled);
                   }
                   else
                   {
-                      // multiSelectData.removeDropDownMenuItemElement();
+                      // multiSelectData.removeChoiceElement();
                   }
               }
               if (multiSelectData.isDisabled != option.isDisabled)
@@ -861,11 +889,11 @@
                   multiSelectData.isDisabled=option.isDisabled;
                   if (multiSelectData.isDisabled)
                   {
-                      // this.insertDropDownItem(multiSelectData, (e)=>this.dropDownMenu.appendChild(e), isSelected, isDisabled);
+                      // this.insertChoice(multiSelectData, (e)=>this.choicesElement.appendChild(e), isSelected, isDisabled);
                   }
                   else
                   {
-                      // multiSelectData.removeDropDownMenuItemElement();
+                      // multiSelectData.removeChoiceElement();
                   }
               }
           }    
@@ -874,18 +902,14 @@
       ;
 
       _proto.DeselectAll = function DeselectAll() {
-        this.choicesPanel.hideDropDown(); // always hide 1st
+        this.choicesPanel.hideChoices(); // always hide 1st
 
-        for (var i = 0; i < this.MultiSelectDataList.length; i++) {
-          var multiSelectData = this.MultiSelectDataList[i];
-          if (multiSelectData.pickElement) multiSelectData.toggle();
-        }
-
+        this.picksPanel.deselectAll();
         this.resetFilter();
       };
 
       _proto.SelectAll = function SelectAll() {
-        this.choicesPanel.hideDropDown(); // always hide 1st
+        this.choicesPanel.hideChoices(); // always hide 1st
 
         for (var i = 0; i < this.MultiSelectDataList.length; i++) {
           var multiSelectData = this.MultiSelectDataList[i];
@@ -896,19 +920,19 @@
       };
 
       _proto.empty = function empty() {
-        // close drop down , remove filter and listeners
-        this.choicesPanel.hideDropDown(); // always hide 1st
+        // close drop down , remove filter
+        this.choicesPanel.hideChoices(); // always hide 1st
 
         this.resetFilter();
 
         for (var i = 0; i < this.MultiSelectDataList.length; i++) {
           var multiSelectData = this.MultiSelectDataList[i];
-          if (multiSelectData.dropDownMenuItemElement) removeElement(multiSelectData.dropDownMenuItemElement);
-          if (multiSelectData.pickElement) removeElement(multiSelectData.pickElement);
+          if (multiSelectData.choiceElement) removeElement(multiSelectData.choiceElement);
         }
 
         this.resetMultiSelectDataList();
-        this.picksPanel.resetMultiSelectDataSelectedTail(); // this.MultiSelectDataSelectedTail = null;
+        this.picksPanel.clear();
+        this.placeholderAspect.updatePlacehodlerVisibility();
       };
 
       _proto.UpdateData = function UpdateData() {
@@ -920,44 +944,56 @@
       _proto.updateDataImpl = function updateDataImpl() {
         var _this = this;
 
-        var createDropDownItems = function createDropDownItems() {
+        var fillChoices = function fillChoices() {
           var options = _this.optionsAdapter.getOptions();
 
           for (var i = 0; i < options.length; i++) {
             var option = options[i];
             var isSelected = option.selected;
-            var isDisabled = option.disabled ? option.disabled : false;
-            var isHidden = option.hidden ? option.hidden : false;
+            var isOptionDisabled = option.disabled ? option.disabled : false;
+            var isOptionHidden = option.hidden ? option.hidden : false;
             var MultiSelectData = {
               searchText: option.text.toLowerCase().trim(),
-              excludedFromSearch: isSelected || isDisabled || isHidden,
+              excludedFromSearch: isSelected || isOptionDisabled || isOptionHidden,
               option: option,
-              isHidden: isHidden,
-              dropDownMenuItemElement: null,
-              dropDownItemContent: null,
-              selectedPrev: null,
-              selectedNext: null,
+              isOptionDisabled: isOptionDisabled,
+              isHidden: isOptionHidden,
+              choiceElement: null,
+              choiceContent: null,
+              //selectedPrev: null,
+              //selectedNext: null,
               visible: false,
               toggle: null,
               pickElement: null,
               remove: null,
               disable: null,
-              removeDropDownMenuItemElement: null
+              removeChoiceElement: null
             };
 
             _this.MultiSelectDataList.push(MultiSelectData);
 
-            if (!isHidden) {
+            if (!isOptionHidden) {
               MultiSelectData.visible = true;
               MultiSelectData.visibleIndex = i;
 
-              _this.choicesPanel.insertDropDownItem(MultiSelectData, function (p1, p2, p3) {
-                return _this.picksPanel.createPick(p1, p2, p3);
+              _this.choicesPanel.insertChoice(MultiSelectData,
+              /*createSelectedItemGen*/
+              function (multiSelectData
+              /*,isOptionDisabled,setChoiceContentDisabled*/
+              ) {
+                _this.picksPanel.createPick(multiSelectData, multiSelectData.option
+                /*,
+                isOptionDisabled,
+                setChoiceContentDisabled
+                */
+                ); //
+
               }, function (o, i) {
                 return _this.setSelected(o, i);
               }, function () {
                 return _this.optionsAdapter.triggerChange();
-              }, isSelected, isDisabled);
+              }, isSelected //,isOptionDisabled
+              );
             }
           }
 
@@ -967,14 +1003,14 @@
 
 
         if (document.readyState != 'loading') {
-          createDropDownItems();
+          fillChoices();
         } else {
-          var createDropDownItemsHandler = function createDropDownItemsHandler() {
-            createDropDownItems();
-            document.removeEventListener("DOMContentLoaded", createDropDownItemsHandler);
+          var domContentLoadedHandler = function domContentLoadedHandler() {
+            fillChoices();
+            document.removeEventListener("DOMContentLoaded", domContentLoadedHandler);
           };
 
-          document.addEventListener('DOMContentLoaded', createDropDownItemsHandler); // IE9+
+          document.addEventListener('DOMContentLoaded', domContentLoadedHandler); // IE9+
         }
       };
 
@@ -983,7 +1019,7 @@
         // remove event listeners
         // TODO check if open
 
-        this.choicesPanel.hideDropDown();
+        this.choicesPanel.hideChoices();
         if (this.optionsAdapter.dispose) this.optionsAdapter.dispose();
         this.picksPanel.dispose();
         this.filterPanel.dispose();
@@ -995,10 +1031,9 @@
           var multiSelectData = this.MultiSelectDataList[i];
           multiSelectData.toggle = null;
           multiSelectData.remove = null;
-          multiSelectData.removeDropDownMenuItemElement = null;
-          if (multiSelectData.DisposeDropDownMenuItemElement) multiSelectData.DisposeDropDownMenuItemElement();
-          if (multiSelectData.PickContent) multiSelectData.PickContent.dispose();
-          if (multiSelectData.DropDownItemContent) multiSelectData.DropDownItemContent.dispose();
+          multiSelectData.removeChoiceElement = null;
+          if (multiSelectData.DisposeChoiceElement) multiSelectData.DisposeChoiceElement();
+          if (multiSelectData.ChoiceContent) multiSelectData.ChoiceContent.dispose();
         }
       };
 
@@ -1025,7 +1060,7 @@
         var isEmpty = false;
         if (text == '') isEmpty = true;else {
           // check if exact match, otherwise new search
-          this.filteredMultiSelectDataList = collectFilterDropDownMenu(this.MultiSelectDataList, text);
+          this.filteredMultiSelectDataList = collectFilterChoices(this.MultiSelectDataList, text);
 
           if (this.filteredMultiSelectDataList.length == 1) {
             var fullMatchMultiSelectData = this.filteredMultiSelectDataList[0];
@@ -1039,7 +1074,7 @@
           }
         }
         if (isEmpty) this.processEmptyInput();else resetLength();
-        this.choicesPanel.stopAndResetDropDownMenuHover();
+        this.choicesPanel.stopAndResetChoicesHover();
 
         if (this.getVisibleMultiSelectDataList().length == 1) {
           this.choicesPanel.hoverInInternal(0);
@@ -1048,9 +1083,9 @@
         if (this.getVisibleMultiSelectDataList().length > 0) {
           this.aspect.alignToFilterInputItemLocation(true); // we need it to support case when textbox changes its place because of line break (texbox grow with each key press)
 
-          this.choicesPanel.showDropDown();
+          this.choicesPanel.showChoices();
         } else {
-          this.choicesPanel.hideDropDown();
+          this.choicesPanel.hideChoices();
         }
       };
 
@@ -1091,7 +1126,7 @@
           return _this2.choicesPanel.keyDownArrow(true);
         }, // arrow down
         function () {
-          return _this2.choicesPanel.hideDropDown();
+          return _this2.choicesPanel.hideChoices();
         }, // tab on empty
         function () {
           _this2.picksPanel.removePicksTail();
@@ -1106,7 +1141,7 @@
             event.stopPropagation();
         }, // esc keydown
         function () {
-          _this2.choicesPanel.hideDropDown(); // always hide 1st
+          _this2.choicesPanel.hideChoices(); // always hide 1st
 
 
           _this2.resetFilter();
@@ -1119,28 +1154,75 @@
         function () {
           _this2.placeholderAspect.updateEmptyInputWidth();
         });
-        this.picksPanel = PicksPanel(this.setSelected, createElement, this.containerAdapter.picksElement, function (filterItemElement) {
+        this.picksPanel = PicksPanel( //this.setSelected,
+        createElement, this.containerAdapter.picksElement, function (filterItemElement) {
           lazyfilterItemInputElementAtach(filterItemElement);
-        }, this.pickContentGenerator, this.isComponentDisabled, function () {
-          return _this2.optionsAdapter.triggerChange();
-        }, function () {
-          _this2.choicesPanel.hideDropDown(); // always hide 1st
+        }, this.pickContentGenerator, this.isComponentDisabled, // /*afterRemove*/() => {
+        //     this.choicesPanel.hideChoices(); // always hide 1st
+        //     this.resetFilter();
+        // },
+
+        /*onClick*/
+        function (event) {
+          if (!_this2.filterPanel.isEventTarget(event)) _this2.filterPanel.setFocus();
+
+          _this2.aspect.alignAndShowChoices(event);
+        },
+        /*onPickCreated*/
+        function (multiSelectData, count, removePick) {
+          multiSelectData.excludedFromSearch = true; // all selected excluded from search
+
+          multiSelectData.toggle = function () {
+            return removePick();
+          };
+
+          multiSelectData.ChoiceContent.select(true);
+          if (count == 1) _this2.placeholderAspect.updatePlacehodlerVisibility();
+        },
+        /*onPickRemoved*/
+        function (multiSelectData, removePick) {
+          var confirmed = _this2.setSelected(multiSelectData.option, false);
+
+          if (confirmed == null || confirmed) {
+            var _removePick = removePick(),
+                createSelectedItem = _removePick.createSelectedItem,
+                count = _removePick.count;
+
+            multiSelectData.excludedFromSearch = multiSelectData.isOptionDisabled;
+
+            if (multiSelectData.isOptionDisabled) {
+              multiSelectData.ChoiceContent.setChoiceContentDisabled(false);
+
+              multiSelectData.toggle = function () {};
+            } else {
+              multiSelectData.toggle = function () {
+                var confirmed = _this2.setSelected(multiSelectData.option, true);
+
+                if (confirmed == null || confirmed) {
+                  createSelectedItem(multiSelectData, multiSelectData.option);
+
+                  _this2.optionsAdapter.triggerChange();
+                }
+              };
+            }
+
+            multiSelectData.ChoiceContent.select(false);
+            if (count == 0) _this2.placeholderAspect.updatePlacehodlerVisibility();
+
+            _this2.optionsAdapter.triggerChange();
+          }
+        }, function (doUncheck, event) {
+          _this2.aspect.processUncheck(doUncheck, event);
+
+          _this2.choicesPanel.hideChoices(); // always hide 1st
 
 
           _this2.resetFilter();
-        }, function (event) {
-          if (!_this2.filterPanel.isEventTarget(event)) _this2.filterPanel.setFocus();
-
-          _this2.aspect.alignAndShowDropDown(event);
-        }, function () {
-          return _this2.placeholderAspect.updatePlacehodlerVisibility();
-        }, function (doUncheck, event) {
-          _this2.aspect.processUncheck(doUncheck, event);
         });
         this.choicesPanel = ChoicesPanel(createElement, this.containerAdapter.choicesElement, function () {
-          return _this2.aspect.onDropDownShow();
+          return _this2.aspect.onChoicesShow();
         }, function () {
-          return _this2.aspect.onDropDownHide();
+          return _this2.aspect.onChoicesHide();
         }, EventSkipper(this.window), this.choiceContentGenerator, function () {
           return _this2.getVisibleMultiSelectDataList();
         }, function () {
@@ -1160,14 +1242,14 @@
         this.aspect = MultiSelectInputAspect(this.window, function () {
           return _this2.containerAdapter.appendToContainer();
         }, this.picksPanel.pickFilterElement, this.containerAdapter.picksElement, this.containerAdapter.choicesElement, function () {
-          return _this2.choicesPanel.showDropDown();
+          return _this2.choicesPanel.showChoices();
         }, function () {
-          _this2.choicesPanel.hideDropDown();
+          _this2.choicesPanel.hideChoices();
 
           _this2.resetFilter();
         }, function () {
           return _this2.getVisibleMultiSelectDataList().length == 0;
-        }, Popper);
+        }, this.popper);
         this.stylingComposite = this.createStylingComposite(this.picksPanel.pickFilterElement, this.filterPanel.filterInputElement, this.containerAdapter.choicesElement);
         this.styling.Init(this.stylingComposite);
         this.containerAdapter.attachContainer();
@@ -1312,7 +1394,6 @@
       return {
         init: function init(elements) {
           setStyles(elements.picks, configuration.picksStyle);
-          setStyles(elements.input, configuration.filterInputStyle);
         },
         enable: function enable(picksElement) {
           setStyles(picksElement, resetDisable);
@@ -1360,97 +1441,123 @@
 
     function BsPickContentStylingCorrector(configuration) {
       return {
-        disablePickContent: function disablePickContent(content) {
-          setStyles(content, configuration.pickContentStyleDisabled);
+        disablePickContent: function disablePickContent(pickContentElement) {
+          setStyles(pickContentElement, configuration.pickContentStyleDisabled);
         },
-        createPickContent: function createPickContent(selectedItem, button) {
-          setStyles(selectedItem, configuration.pickStyle);
-          setStyles(button, configuration.pickButtonStyle);
+        createPickContent: function createPickContent(pickElement, pickButtonElement) {
+          setStyles(pickElement, configuration.pickStyle);
+          setStyles(pickButtonElement, configuration.pickButtonStyle);
         }
       };
     }
-    function BsPickContentGenerator(configuration, stylingCorrector, $) {
-      return function (selectedItem, optionItem, removeSelectedItem) {
-        var $selectedItem = $(selectedItem);
-        addClasses(selectedItem, configuration.pickClass);
-        var $content = $("<span/>").text(optionItem.text);
-        var content = $content.get(0);
-        $content.appendTo($selectedItem);
 
-        if (optionItem.disabled) {
-          addClasses(content, configuration.pickContentClassDisabled);
-          if (stylingCorrector && stylingCorrector.disablePickContent) stylingCorrector.disablePickContent(content);
+    function bsPickContentGenerator(pickElement, option, removePick, configuration, stylingCorrector) {
+      addClasses(pickElement, configuration.pickClass);
+      pickElement.innerHTML = '<span></span><button aria-label="Remove" tabIndex="-1" type="button"><span aria-hidden="true">&times;</span></button>';
+      var pickContentElement = pickElement.querySelector("SPAN");
+      pickContentElement.textContent = option.text;
+
+      if (option.disabled) {
+        addClasses(pickContentElement, configuration.pickContentClassDisabled);
+        if (stylingCorrector && stylingCorrector.disablePickContent) stylingCorrector.disablePickContent(pickContentElement);
+      }
+
+      var pickButtonElement = pickElement.querySelector("BUTTON"); // bs 'close' class that will be added to button set the float:right, therefore it impossible to configure no-warp policy 
+      // with .css("white-space", "nowrap") or  .css("display", "inline-block"); TODO: migrate to flex? 
+
+      pickButtonElement.style.float = "none";
+      addClasses(pickButtonElement, configuration.pickButtonClass); // bs close class set the float:right
+
+      var eventBinder = EventBinder();
+      eventBinder.bind(pickButtonElement, "click", function (event) {
+        return removePick(event);
+      });
+      if (stylingCorrector && stylingCorrector.createPickContent) stylingCorrector.createPickContent(pickElement, pickButtonElement);
+      return {
+        disable: function disable(isDisabled) {
+          pickButtonElement.disabled = isDisabled;
+        },
+        dispose: function dispose() {
+          eventBinder.unbind();
         }
+      };
+    }
 
-        var $button = $('<button aria-label="Close" tabIndex="-1" type="button"><span aria-hidden="true">&times;</span></button>') // bs 'close' class that will be added to button set the float:right, therefore it impossible to configure no-warp policy 
-        // with .css("white-space", "nowrap") or  .css("display", "inline-block"); TODO: migrate to flex? 
-        .css("float", "none").appendTo($selectedItem).addClass(configuration.pickRemoveButtonClass) // bs close class set the float:right
-        .on("click", function (jqEvent) {
-          return removeSelectedItem(jqEvent.originalEvent);
-        });
-        if (stylingCorrector && stylingCorrector.createPickContent) stylingCorrector.createPickContent(selectedItem, $button.get(0));
-        return {
-          disable: function disable(isDisabled) {
-            $button.prop('disabled', isDisabled);
-          },
-          dispose: function dispose() {
-            $button.unbind();
-          }
-        };
+    function BsPickContentGenerator(configuration, stylingCorrector) {
+      return function (pickElement, option, removePick) {
+        return bsPickContentGenerator(pickElement, option, removePick, configuration, stylingCorrector);
       };
     }
 
     function BsChoiceContentStylingCorrector(configuration) {
       var resetStyle = createEmpty(resetStyle, configuration.choiceLabelStyleDisabled);
       return {
-        disabledStyle: function disabledStyle(checkBox, checkBoxLabel, isDisbaled) {
-          setStyles(checkBoxLabel, isDisbaled ? configuration.choiceLabelStyleDisabled : resetStyle);
+        disabledStyle: function disabledStyle(choiceLabelElement, isDisbaled) {
+          setStyles(choiceLabelElement, isDisbaled ? configuration.choiceLabelStyleDisabled : resetStyle);
         }
       };
     }
-    function BsChoiceContentGenerator(configuration, stylingCorrector, $) {
-      return function (choiceElement, option) {
-        var $choiceElement = $(choiceElement);
-        $choiceElement.addClass(configuration.choiceClass);
-        var $choiceContent = $("<div class=\"custom-control custom-checkbox\">\n            <input type=\"checkbox\" class=\"custom-control-input\">\n            <label class=\"custom-control-label justify-content-start\"></label>\n        </div>");
-        $choiceContent.appendTo(choiceElement);
-        var $checkBox = $choiceContent.find("INPUT[type=\"checkbox\"]");
-        var $checkBoxLabel = $choiceContent.find("label");
-        $checkBoxLabel.text(option.text);
-        var tmp = {
-          select: function select(isSelected) {
-            $checkBox.prop('checked', isSelected);
-          },
-          // --- distinct disable and disabledStyle to provide a possibility to unselect disabled option
-          disable: function disable(isDisabled) {
-            $checkBox.prop('disabled', isDisabled);
-          },
-          disabledStyle: function disabledStyle(isDisbaled) {
-            if (isDisbaled) $checkBox.addClass(configuration.choiceCheckBoxClassDisabled);else $checkBox.removeClass(configuration.choiceCheckBoxClassDisabled);
-            if (stylingCorrector && stylingCorrector.disabledStyle) stylingCorrector.disabledStyle($checkBox.get(0), $checkBoxLabel.get(0), isDisbaled);
-          },
-          hoverIn: function hoverIn() {
-            addClasses(choiceElement, configuration.choiceClassHover);
-          },
-          hoverOut: function hoverOut() {
-            removeClasses(choiceElement, configuration.choiceClassHover);
-          },
-          onSelected: function onSelected(toggle) {
-            $checkBox.on("change", toggle);
-            $choiceElement.on("click", function (event) {
-              if (choiceElement === event.target || $.contains(choiceElement, event.target)) {
-                toggle();
-              }
-            });
-          },
-          dispose: function dispose() {
-            $checkBox.unbind();
-            $choiceElement.unbind();
-          }
-        };
-        return tmp;
+
+    function bsChoiceContentGenerator(choiceElement, option, configuration, stylingCorrector) {
+      addClasses(choiceElement, configuration.choiceClass);
+      choiceElement.innerHTML = '<div><input type="checkbox"><label></label></div>';
+      var choiceCheckBoxElement = choiceElement.querySelector('INPUT');
+      var choiceLabelElement = choiceElement.querySelector('LABEL');
+      var choiceContentElement = choiceElement.querySelector('DIV');
+      addClasses(choiceContentElement, configuration.choiceContentClass);
+      addClasses(choiceCheckBoxElement, configuration.choiceCheckBoxClass);
+      addClasses(choiceLabelElement, configuration.choiceLabelClass);
+      choiceLabelElement.textContent = option.text;
+      var eventBinder = EventBinder();
+
+      function disabledStyle(isDisabled) {
+        if (isDisabled) addClasses(choiceCheckBoxElement, configuration.choiceCheckBoxClassDisabled);else removeClasses(choiceCheckBoxElement, configuration.choiceCheckBoxClassDisabled);
+        if (stylingCorrector && stylingCorrector.disabledStyle) stylingCorrector.disabledStyle(choiceLabelElement, isDisabled);
+      }
+      return {
+        select: function select(isSelected) {
+          choiceCheckBoxElement.checked = isSelected;
+        },
+        // --- distinct disable and disabledStyle to provide a possibility to unselect disabled option
+        //disable,//disable(isDisabled){ choiceCheckBoxElement.disabled = isDisabled },
+        //disabledStyle,
+        setChoiceContentDisabled: function setChoiceContentDisabled(isSelected) {
+          disabledStyle(true); // TODO add option update
+          // do not desable checkBix if selected! there should be possibility to unselect "disabled"
+
+          choiceCheckBoxElement.disabled = !isSelected;
+        },
+        hoverIn: function hoverIn() {
+          addClasses(choiceElement, configuration.choiceClassHover);
+        },
+        hoverOut: function hoverOut() {
+          removeClasses(choiceElement, configuration.choiceClassHover);
+        },
+        onSelected: function onSelected(toggle) {
+          eventBinder.bind(choiceCheckBoxElement, "change", toggle);
+          eventBinder.bind(choiceElement, "click", function (event) {
+            if (choiceElement === event.target || choiceElement.contains(event.target)) {
+              toggle();
+            }
+          });
+        },
+        dispose: function dispose() {
+          eventBinder.unbind();
+        }
       };
     }
+
+    function BsChoiceContentGenerator(configuration, stylingCorrector) {
+      return function (choiceElement, option) {
+        return bsChoiceContentGenerator(choiceElement, option, configuration, stylingCorrector);
+      };
+    }
+
+    var picksStyle = {
+      display: 'flex',
+      flexWrap: 'wrap',
+      listStyleType: 'none'
+    }; // remove bullets since this is ul
 
     function ContainerAdapter(createElement, selectElement, containerElement, picksElement) {
       // select
@@ -1467,6 +1574,7 @@
         ownPicksElement = true;
       }
 
+      setStyles(picksElement, picksStyle);
       var choicesElement = createElement('UL');
       choicesElement.style.display = "none";
       var backupDisplay = null;
@@ -1577,7 +1685,7 @@
       containerClass: 'dashboardcode-bsmultiselect',
       choicesClass: 'dropdown-menu',
       choiceClassHover: 'text-primary bg-light',
-      // TODO looks like bullshit
+      // dirty but BS doesn't provide better choices
       choiceClassSelected: '',
       // not used? should be used in OptionsPanel.js
       choiceClassDisabled: '',
@@ -1590,16 +1698,19 @@
       pickClassDisabled: '',
       // not used? should be used in PicksPanel.js
       pickFilterClass: '',
-      filterInputClass: '',
+      filterInputClass: 'form-control',
       // used in BsPickContentStylingCorrector
       pickClass: 'badge',
-      pickRemoveButtonClass: 'close',
       pickContentClassDisabled: 'disabled',
       // internal, not bs4, used in scss
+      pickButtonClass: 'close',
       // used in BsChoiceContentStylingCorrector
       choiceClass: 'px-2',
-      choiceCheckBoxClassDisabled: 'disabled' // internal, not bs4, used in scss
-
+      choiceCheckBoxClassDisabled: 'disabled',
+      // internal, not bs4, used in scss
+      choiceContentClass: 'custom-control custom-checkbox',
+      choiceCheckBoxClass: 'custom-control-input',
+      choiceLabelClass: 'custom-control-label justify-content-start'
     };
     var stylingDefaults = {
       // used in StylingCorrector
@@ -1620,12 +1731,7 @@
       picksStyleFocusInvalid: {
         boxShadow: '0 0 0 0.2rem rgba(220, 53, 69, 0.25)'
       },
-      filterInputStyle: {
-        color: 'inherit'
-        /*#495057 for default BS*/
-        ,
-        fontWeight: 'inherit'
-      },
+      //filterInputStyle: {color: 'inherit' /*#495057 for default BS*/, fontWeight : 'inherit'},
       // used in BsAppearance
       picksStyleDef: {
         minHeight: 'calc(2.25rem + 2px)'
@@ -1648,14 +1754,20 @@
       pickContentStyleDisabled: {
         opacity: '.65'
       },
+      // avoid opacity on pickElement's border
       // used in BsChoiceContentStylingCorrector
       choiceLabelStyleDisabled: {
-        color: '#6c757d'
-      }
+        opacity: '.65'
+      } // more flexible than {color: '#6c757d'}
+
     };
 
     (function (window, $) {
       function createPlugin(element, settings, onDispose) {
+        if (typeof Popper === 'undefined') {
+          throw new TypeError('DashboardCode BsMultiSelect require Popper.js (https://popper.js.org)');
+        }
+
         var configuration = $.extend({}, settings); // settings used per jQuery intialization, configuration per element
 
         if (configuration.buildConfiguration) configuration.buildConfiguration(element, configuration);
@@ -1810,14 +1922,14 @@
           }
 
           var pickClass = classesDefaults.pickClass,
-              pickRemoveButtonClass = classesDefaults.pickRemoveButtonClass,
+              pickButtonClass = classesDefaults.pickButtonClass,
               pickContentClassDisabled = classesDefaults.pickContentClassDisabled;
           extendIfUndefined(configuration, {
             pickClass: pickClass,
-            pickRemoveButtonClass: pickRemoveButtonClass,
+            pickButtonClass: pickButtonClass,
             pickContentClassDisabled: pickContentClassDisabled
           });
-          pickContentGenerator = BsPickContentGenerator(configuration, pickContentStylingCorrector, $);
+          pickContentGenerator = BsPickContentGenerator(configuration, pickContentStylingCorrector);
         }
 
         var choiceContentGenerator = configuration.choiceContentGenerator;
@@ -1839,7 +1951,7 @@
             choiceClass: choiceClass,
             choiceCheckBoxClassDisabled: choiceCheckBoxClassDisabled
           });
-          choiceContentGenerator = BsChoiceContentGenerator(configuration, choiceContentStylingCorrector, $);
+          choiceContentGenerator = BsChoiceContentGenerator(configuration, choiceContentStylingCorrector);
         }
 
         var createStylingComposite = function createStylingComposite(pickFilterElement, inputElement, choicesElement) {
@@ -1879,7 +1991,7 @@
           bsAppearance.updateIsValid();
         };
 
-        var multiSelect = new MultiSelect(optionsAdapter, setSelected, containerAdapter, styling, pickContentGenerator, choiceContentGenerator, labelAdapter, createStylingComposite, placeholderText, configuration, onUpdate, onDispose, window);
+        var multiSelect = new MultiSelect(optionsAdapter, setSelected, containerAdapter, styling, pickContentGenerator, choiceContentGenerator, labelAdapter, createStylingComposite, placeholderText, configuration, onUpdate, onDispose, Popper, window);
         multiSelect.UpdateSize = bsAppearance.updateSize;
         multiSelect.UpdateIsValid = bsAppearance.updateIsValid;
         if (configuration.init) configuration.init(element, multiSelect);

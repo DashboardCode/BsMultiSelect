@@ -1,9 +1,10 @@
-import {setStyles} from './DomTools';
+import {setStyles} from './ToolsDom';
 
 const choicesStyle = {listStyleType:'none'}; // remove bullets since this is ul
 
-export function ChoicesPanel(createElement, choicesElement, onShow, onHide, eventSkipper, dropDownItemContent, 
-        getVisibleMultiSelectDataList, resetFilter, updateDropDownLocation, filterPanelSetFocus) {
+export function ChoicesPanel(createElement, choicesElement, onShow, onHide, eventSkipper, choiceContentGenerator, 
+        getVisibleMultiSelectDataList, 
+        resetFilter, updateChoicesLocation, filterPanelSetFocus) {
     
     // prevent heavy understandable styling error
     setStyles(choicesElement, choicesStyle);
@@ -11,7 +12,7 @@ export function ChoicesPanel(createElement, choicesElement, onShow, onHide, even
     var hoveredMultiSelectDataIndex = null;
     var candidateToHoveredMultiSelectData=null;
 
-    function hideDropDown() {
+    function hideChoices() {
         if (candidateToHoveredMultiSelectData){
             resetCandidateToHoveredMultiSelectData();
         }
@@ -22,7 +23,7 @@ export function ChoicesPanel(createElement, choicesElement, onShow, onHide, even
         }
     }
 
-    function showDropDown() {
+    function showChoices() {
         if (choicesElement.style.display != 'block')
         {
             eventSkipper.setSkippable();
@@ -34,27 +35,27 @@ export function ChoicesPanel(createElement, choicesElement, onShow, onHide, even
     var hoverInInternal = function(index){
         hoveredMultiSelectDataIndex = index;
         hoveredMultiSelectData = getVisibleMultiSelectDataList()[index];
-        hoveredMultiSelectData.DropDownItemContent.hoverIn()
+        hoveredMultiSelectData.ChoiceContent.hoverIn()
     }
 
-    function resetDropDownMenuHover() {
+    function resetChoicesHover() {
         if (hoveredMultiSelectData) {
-            hoveredMultiSelectData.DropDownItemContent.hoverOut()
+            hoveredMultiSelectData.ChoiceContent.hoverOut()
             hoveredMultiSelectData = null;
             hoveredMultiSelectDataIndex = null;
         }
     }
 
     var resetCandidateToHoveredMultiSelectData = function(){
-        candidateToHoveredMultiSelectData.dropDownMenuItemElement.removeEventListener('mousemove', processCandidateToHovered);
-        candidateToHoveredMultiSelectData.dropDownMenuItemElement.removeEventListener('mousedown', processCandidateToHovered);
+        candidateToHoveredMultiSelectData.choiceElement.removeEventListener('mousemove', processCandidateToHovered);
+        candidateToHoveredMultiSelectData.choiceElement.removeEventListener('mousedown', processCandidateToHovered);
         candidateToHoveredMultiSelectData = null;
     }
 
     var processCandidateToHovered = function() {
         if (hoveredMultiSelectData != candidateToHoveredMultiSelectData)
         {
-            resetDropDownMenuHover(); 
+            resetChoicesHover(); 
             hoverInInternal(candidateToHoveredMultiSelectData.visibleIndex);
         }
         if(candidateToHoveredMultiSelectData) 
@@ -64,8 +65,8 @@ export function ChoicesPanel(createElement, choicesElement, onShow, onHide, even
     function toggleHovered(){
         if (hoveredMultiSelectData) {
             hoveredMultiSelectData.toggle();
-            resetDropDownMenuHover();
-            hideDropDown(); // always hide 1st
+            resetChoicesHover();
+            hideChoices(); // always hide 1st
             resetFilter();
         } 
     }
@@ -99,15 +100,15 @@ export function ChoicesPanel(createElement, choicesElement, onShow, onHide, even
         if (newIndex!=null)
         {
             if (hoveredMultiSelectData)
-                hoveredMultiSelectData.DropDownItemContent.hoverOut()
-                //styling.HoverOut(hoveredMultiSelectData.dropDownMenuItemElement);
-            updateDropDownLocation();
-            showDropDown(); 
+                hoveredMultiSelectData.ChoiceContent.hoverOut()
+                // styling.HoverOut(hoveredMultiSelectData.choiceElement);
+            updateChoicesLocation();
+            showChoices(); 
             hoverInInternal(newIndex);
         }
     }
 
-    var onDropDownMenuItemElementMouseoverGeneral = function(MultiSelectData, dropDownMenuItemElement)
+    var onChoiceElementMouseoverGeneral = function(MultiSelectData, choiceElement)
     {
         if (eventSkipper.isSkippable())
         {
@@ -115,8 +116,8 @@ export function ChoicesPanel(createElement, choicesElement, onShow, onHide, even
                 resetCandidateToHoveredMultiSelectData()
 
             candidateToHoveredMultiSelectData = MultiSelectData;
-            dropDownMenuItemElement.addEventListener('mousemove', processCandidateToHovered);
-            dropDownMenuItemElement.addEventListener('mousedown', processCandidateToHovered);
+            choiceElement.addEventListener('mousemove', processCandidateToHovered);
+            choiceElement.addEventListener('mousedown', processCandidateToHovered);
         }
         else
         {
@@ -125,67 +126,67 @@ export function ChoicesPanel(createElement, choicesElement, onShow, onHide, even
                 // mouseleave is not enough to guarantee remove hover styles in situations
                 // when style was setuped without mouse (keyboard arrows)
                 // therefore force reset manually
-                resetDropDownMenuHover(); 
+                resetChoicesHover(); 
                 hoverInInternal(MultiSelectData.visibleIndex);
             }                
         }
     }
 
-    function insertDropDownItem(MultiSelectData, createSelectedItemGen, setSelected, triggerChange, isSelected, isOptionDisabled) {
-        var dropDownMenuItemElement = createElement('LI');
+    function insertChoice(MultiSelectData, createSelectedItemGen, setSelected, triggerChange, isSelected/*, isOptionDisabled*/) {
+        var choiceElement = createElement('LI');
         
         // in chrome it happens on "become visible" so we need to skip it, 
         // for IE11 and edge it doesn't happens, but for IE11 and Edge it doesn't happens on small 
         // mouse moves inside the item. 
         // https://stackoverflow.com/questions/59022563/browser-events-mouseover-doesnt-happen-when-you-make-element-visible-and-mous
         
-        var onDropDownMenuItemElementMouseover = () => onDropDownMenuItemElementMouseoverGeneral(
+        var onChoiceElementMouseover = () => onChoiceElementMouseoverGeneral(
             MultiSelectData,
-            dropDownMenuItemElement
+            choiceElement
         )
 
-        dropDownMenuItemElement.addEventListener('mouseover', onDropDownMenuItemElementMouseover);
+        choiceElement.addEventListener('mouseover', onChoiceElementMouseover);
         
         // note 1: mouseleave preferred to mouseout - which fires on each descendant
         // note 2: since I want add aditional info panels to the dropdown put mouseleave on dropdwon would not work
-        var onDropDownMenuItemElementMouseleave = () => {
+        var onChoiceElementMouseleave = () => {
             if (!eventSkipper.isSkippable()) {
-                resetDropDownMenuHover();
+                resetChoicesHover();
             }
         }
 
-        dropDownMenuItemElement.addEventListener('mouseleave', onDropDownMenuItemElementMouseleave);
+        choiceElement.addEventListener('mouseleave', onChoiceElementMouseleave);
 
-        choicesElement.appendChild(dropDownMenuItemElement);
+        choicesElement.appendChild(choiceElement);
 
-        let content = dropDownItemContent(dropDownMenuItemElement, MultiSelectData.option); 
-        MultiSelectData.dropDownMenuItemElement = dropDownMenuItemElement;
-        MultiSelectData.DropDownItemContent = content;
+        let choiceContent = choiceContentGenerator(choiceElement, MultiSelectData.option); 
+        MultiSelectData.choiceElement = choiceElement;
+        MultiSelectData.ChoiceContent = choiceContent;
 
-        MultiSelectData.DisposeDropDownMenuItemElement = ()=> {
-            dropDownMenuItemElement.removeEventListener('mouseover',  onDropDownMenuItemElementMouseover);
-            dropDownMenuItemElement.removeEventListener('mouseleave', onDropDownMenuItemElementMouseleave);
+        MultiSelectData.DisposeChoiceElement = ()=> {
+            choiceElement.removeEventListener('mouseover',  onChoiceElementMouseover);
+            choiceElement.removeEventListener('mouseleave', onChoiceElementMouseleave);
         }
 
-        var setDropDownItemContentDisabled = (content,  isSelected) => {
-            content.disabledStyle(true);
-            // do not desable if selected! there should be possibility to unselect "disabled"
-            content.disable(!isSelected);
-        }
+        // var setChoiceContentDisabled = (isSelected) => {
+        //     choiceContent.disabledStyle(true);
+        //     // do not desable if selected! there should be possibility to unselect "disabled"
+        //     choiceContent.disable(!isSelected);
+        // }
+        // choiceContent.setChoiceContentDisabled= setChoiceContentDisabled;
+        if (MultiSelectData.isOptionDisabled)
+            choiceContent.setChoiceContentDisabled(isSelected )
 
-        if (isOptionDisabled)
-            setDropDownItemContentDisabled(content, isSelected )
-
-        content.onSelected( () => {
+        choiceContent.onSelected( () => {
             MultiSelectData.toggle();
             filterPanelSetFocus();
         });
         // ------------------------------------------------------------------------------
         
         var createSelectedItem = () => createSelectedItemGen(
-            MultiSelectData,
-            isOptionDisabled,
-            () => setDropDownItemContentDisabled(content, false)
+            MultiSelectData//,
+            //MultiSelectData.isOptionDisabled,
+            //() => setChoiceContentDisabled(content, false)
         );
         
         if (isSelected)
@@ -194,8 +195,8 @@ export function ChoicesPanel(createElement, choicesElement, onShow, onHide, even
         }
         else
         {
-            MultiSelectData.excludedFromSearch =  isOptionDisabled;
-            if (isOptionDisabled)
+            MultiSelectData.excludedFromSearch =  MultiSelectData.isOptionDisabled;
+            if (MultiSelectData.isOptionDisabled)
                 MultiSelectData.toggle = () => { }
             else
                 MultiSelectData.toggle = () =>  {
@@ -211,19 +212,18 @@ export function ChoicesPanel(createElement, choicesElement, onShow, onHide, even
 
     var item = {
         hoverInInternal,
-        stopAndResetDropDownMenuHover(){
+        stopAndResetChoicesHover(){
             eventSkipper.setSkippable(); //disable Hover On MouseEnter - filter's changes should remove hover
-            resetDropDownMenuHover();
+            resetChoicesHover();
         },
-        showDropDown,
-        hideDropDown,
+        showChoices,
+        hideChoices,
         toggleHovered,
         keyDownArrow,
-        insertDropDownItem,
+        insertChoice,
         getIsVisble(){
             return choicesElement.style.display != 'none';
         }
-        
     }
     return item;
 }

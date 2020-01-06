@@ -1,4 +1,4 @@
-import {addClass, removeClass, setStyles} from './DomTools';
+import {addClass, removeClass, setStyles} from './ToolsDom';
 
 function updateIsValid(picksElement, isValid, isInvalid){
     if (isValid)

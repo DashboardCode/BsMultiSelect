@@ -35,7 +35,6 @@ export function setStyles(element, styles){
         element.style[property] = styles[property];
 }
 
-
 function modifyClasses(classes, modify){
     if (classes){
         if (Array.isArray(classes))
@@ -43,6 +42,31 @@ function modifyClasses(classes, modify){
         else{
             var array = classes.split(" ");
             array.forEach(e => modify(e))
+        }
+    }
+}
+
+export function removeChildren(element){
+    var toRemove = element.firstChild;
+    while( toRemove ) {
+        element.removeChild( toRemove );
+        toRemove = element.firstChild;
+    }
+}
+
+export function EventBinder(){
+    var list = [];
+    return {
+        bind(element, eventName, handler){
+            element.addEventListener(eventName, handler)
+            list.push( {element, eventName, handler} )
+        },
+        unbind(){
+            list.forEach( e=>
+            {
+                let {element, eventName, handler}=e;
+                element.removeEventListener(eventName, handler)
+            })
         }
     }
 }

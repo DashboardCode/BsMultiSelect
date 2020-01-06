@@ -1,4 +1,3 @@
-import Popper from 'popper.js'
 import {FilterPanel} from './FilterPanel'
 import {ChoicesPanel} from './ChoicesPanel'
 import {PicksPanel} from './PicksPanel'
@@ -6,15 +5,15 @@ import {MultiSelectInputAspect} from './MultiSelectInputAspect'
 import {PlaceholderAspect} from './PlaceholderAspect'
 
 import {EventSkipper} from './EventSkipper'
-import {removeElement} from './DomTools'
+import {removeElement} from './ToolsDom'
 
 function filterMultiSelectData(MultiSelectData, isFiltered, visibleIndex) {
     MultiSelectData.visible = isFiltered;
     MultiSelectData.visibleIndex = visibleIndex;
-    MultiSelectData.dropDownMenuItemElement.style.display = isFiltered ? 'block': 'none';
+    MultiSelectData.choiceElement.style.display = isFiltered ? 'block': 'none';
 } 
 
-function resetDropDownMenu(MultiSelectDataList) {
+function resetChoices(MultiSelectDataList) {
     for(let i=0; i<MultiSelectDataList.length; i++)
     {
         let multiSelectData = MultiSelectDataList[i];
@@ -25,7 +24,7 @@ function resetDropDownMenu(MultiSelectDataList) {
     }
 }
 
-function collectFilterDropDownMenu(MultiSelectDataList, text) {
+function collectFilterChoices(MultiSelectDataList, text) {
     var list = [];
     var j = 0;
     for(let i=0; i<MultiSelectDataList.length; i++)
@@ -52,10 +51,8 @@ export class MultiSelect {
     constructor(optionsAdapter, setSelected, containerAdapter, styling, 
         pickContentGenerator, choiceContentGenerator, 
         labelAdapter, createStylingComposite, placeholderText,
-        configuration, onUpdate, onDispose, window) {
-        if (typeof Popper === 'undefined') {
-            throw new TypeError('DashboardCode BsMultiSelect require Popper.js (https://popper.js.org)')
-        }
+        configuration, onUpdate, onDispose, popper, window) {
+
         this.onUpdate = onUpdate;
         this.onDispose = onDispose; 
 
@@ -70,6 +67,7 @@ export class MultiSelect {
         this.configuration = configuration;
         this.placeholderText = placeholderText;
         this.setSelected=setSelected; // should I rebind this for callbacks? setSelected.bind(this);
+        this.popper = popper;
         this.window = window;
 
         this.visibleCount=10;
@@ -106,7 +104,7 @@ export class MultiSelect {
 
     processEmptyInput(){
         this.filterPanel.setEmptyLength();
-        resetDropDownMenu(this.MultiSelectDataList);
+        resetChoices(this.MultiSelectDataList);
         this.filteredMultiSelectDataList = null;
     }
 
@@ -130,12 +128,12 @@ export class MultiSelect {
         {
             multiSelectData.isHidden=option.isHidden;
             if (multiSelectData.isHidden)
-                this.optionsPanel.insertDropDownItem(multiSelectData, 
+                this.optionsPanel.insertChoice(multiSelectData, 
                     (p1,p2,p3)=>this.picksPanel.createPick(p1,p2,p3),
                     ()=>this.optionsAdapter.triggerChange(),
                     option.isSelected, option.isDisabled);
             else
-                multiSelectData.removeDropDownMenuItemElement();
+                multiSelectData.removeChoiceElement();
         }
         else 
         {
@@ -144,11 +142,11 @@ export class MultiSelect {
                 multiSelectData.isSelected=option.isSelected;
                 if (multiSelectData.isSelected)
                 {
-                    // this.insertDropDownItem(multiSelectData, (e)=>this.dropDownMenu.appendChild(e), isSelected, isDisabled);
+                    // this.insertChoice(multiSelectData, (e)=>this.choicesElement.appendChild(e), isSelected, isDisabled);
                 }
                 else
                 {
-                    // multiSelectData.removeDropDownMenuItemElement();
+                    // multiSelectData.removeChoiceElement();
                 }
             }
             if (multiSelectData.isDisabled != option.isDisabled)
@@ -156,11 +154,11 @@ export class MultiSelect {
                 multiSelectData.isDisabled=option.isDisabled;
                 if (multiSelectData.isDisabled)
                 {
-                    // this.insertDropDownItem(multiSelectData, (e)=>this.dropDownMenu.appendChild(e), isSelected, isDisabled);
+                    // this.insertChoice(multiSelectData, (e)=>this.choicesElement.appendChild(e), isSelected, isDisabled);
                 }
                 else
                 {
-                    // multiSelectData.removeDropDownMenuItemElement();
+                    // multiSelectData.removeChoiceElement();
                 }
             }
         }    
@@ -168,20 +166,13 @@ export class MultiSelect {
     }*/
 
     DeselectAll(){
-        this.choicesPanel.hideDropDown(); // always hide 1st
-
-        for(let i=0; i<this.MultiSelectDataList.length; i++)
-        {
-            let multiSelectData = this.MultiSelectDataList[i];
-            if (multiSelectData.pickElement)
-                multiSelectData.toggle();
-        }
+        this.choicesPanel.hideChoices(); // always hide 1st
+        this.picksPanel.deselectAll();
         this.resetFilter();
-        
     }
 
     SelectAll(){
-        this.choicesPanel.hideDropDown(); // always hide 1st
+        this.choicesPanel.hideChoices(); // always hide 1st
 
         for(let i=0; i<this.MultiSelectDataList.length; i++)
         {
@@ -193,31 +184,29 @@ export class MultiSelect {
     }
 
     empty(){
-        // close drop down , remove filter and listeners
-        this.choicesPanel.hideDropDown(); // always hide 1st
+        // close drop down , remove filter
+        this.choicesPanel.hideChoices(); // always hide 1st
         this.resetFilter();
 
         for(let i=0; i<this.MultiSelectDataList.length; i++)
         {
             let multiSelectData = this.MultiSelectDataList[i];
-            if (multiSelectData.dropDownMenuItemElement)
-                removeElement(multiSelectData.dropDownMenuItemElement);
-            if (multiSelectData.pickElement)
-                removeElement(multiSelectData.pickElement);
+            if (multiSelectData.choiceElement)
+                removeElement(multiSelectData.choiceElement);
         }
         this.resetMultiSelectDataList();
-        this.picksPanel.resetMultiSelectDataSelectedTail();// this.MultiSelectDataSelectedTail = null;
+        this.picksPanel.clear();
+        this.placeholderAspect.updatePlacehodlerVisibility();
     }
 
     UpdateData(){
         this.empty();
         // reinitiate
         this.updateDataImpl();
-        
     }
 
     updateDataImpl(){
-        var createDropDownItems = () => {
+        var fillChoices = () => {
             let options = this.optionsAdapter.getOptions();
             var j = 0;
             for(let i = 0; i<options.length; i++) {
@@ -225,37 +214,49 @@ export class MultiSelect {
 
                 let isSelected = option.selected;
 
-                let isDisabled = (option.disabled)?option.disabled:false;
-                let isHidden   = (option.hidden)?option.hidden:false;
+                let isOptionDisabled = (option.disabled)?option.disabled:false;
+                let isOptionHidden   = (option.hidden)?option.hidden:false;
                 
                 var MultiSelectData = {
                     searchText: option.text.toLowerCase().trim(),
-                    excludedFromSearch: isSelected || isDisabled || isHidden,
+                    excludedFromSearch: isSelected || isOptionDisabled || isOptionHidden,
                     option: option,
-                    isHidden: isHidden,
-                    dropDownMenuItemElement: null,
-                    dropDownItemContent: null,
-                    selectedPrev: null,
-                    selectedNext: null,
+                    isOptionDisabled: isOptionDisabled,
+                    isHidden: isOptionHidden,
+                    choiceElement: null,
+                    choiceContent: null,
+                    //selectedPrev: null,
+                    //selectedNext: null,
                     visible: false,
                     toggle: null,
                     pickElement: null,
                     remove: null,
                     disable: null,
-                    removeDropDownMenuItemElement: null
+                    removeChoiceElement: null
                 };
 
                 this.MultiSelectDataList.push(MultiSelectData);
-                if (!isHidden){
+                if (!isOptionHidden){
                     MultiSelectData.visible = true;
                     MultiSelectData.visibleIndex=i;
-                    this.choicesPanel.insertDropDownItem(
+                    this.choicesPanel.insertChoice(
                         MultiSelectData, 
-                        (p1,p2,p3) => this.picksPanel.createPick(p1,p2,p3),
+                        /*createSelectedItemGen*/ (multiSelectData/*,isOptionDisabled,setChoiceContentDisabled*/) => {
+                            this.picksPanel.createPick(
+                                multiSelectData,
+                                multiSelectData.option
+                                /*,
+                                isOptionDisabled,
+                                setChoiceContentDisabled
+                                */
+                                )
+                            //
+                        },
                         (o,i) => this.setSelected(o,i),
-                        () => this.optionsAdapter.triggerChange(), 
-                        isSelected, 
-                        isDisabled);
+                        () => this.optionsAdapter.triggerChange()
+                        ,isSelected
+                        //,isOptionDisabled
+                        );
                 }
             } 
             this.aspect.alignToFilterInputItemLocation(false);
@@ -264,13 +265,13 @@ export class MultiSelect {
 
         // some browsers (IE11) can change select value (as part of "autocomplete") after page is loaded but before "ready" event
         if (document.readyState != 'loading'){
-            createDropDownItems();
+            fillChoices();
         } else {
-            var createDropDownItemsHandler = function(){
-                createDropDownItems();
-                document.removeEventListener("DOMContentLoaded", createDropDownItemsHandler);
+            var domContentLoadedHandler = function(){
+                fillChoices();
+                document.removeEventListener("DOMContentLoaded", domContentLoadedHandler);
             }
-            document.addEventListener('DOMContentLoaded', createDropDownItemsHandler); // IE9+
+            document.addEventListener('DOMContentLoaded', domContentLoadedHandler); // IE9+
         }
     }
 
@@ -280,7 +281,7 @@ export class MultiSelect {
         
         // remove event listeners
         // TODO check if open
-        this.choicesPanel.hideDropDown();
+        this.choicesPanel.hideChoices();
         if (this.optionsAdapter.dispose)
             this.optionsAdapter.dispose();
         this.picksPanel.dispose();
@@ -297,14 +298,12 @@ export class MultiSelect {
             let multiSelectData = this.MultiSelectDataList[i];
             multiSelectData.toggle = null;
             multiSelectData.remove = null; 
-            multiSelectData.removeDropDownMenuItemElement = null;
-            if (multiSelectData.DisposeDropDownMenuItemElement)
-                multiSelectData.DisposeDropDownMenuItemElement();
+            multiSelectData.removeChoiceElement = null;
+            if (multiSelectData.DisposeChoiceElement)
+                multiSelectData.DisposeChoiceElement();
             
-            if (multiSelectData.PickContent)
-                multiSelectData.PickContent.dispose();
-            if (multiSelectData.DropDownItemContent)
-                multiSelectData.DropDownItemContent.dispose();
+            if (multiSelectData.ChoiceContent)
+                multiSelectData.ChoiceContent.dispose();
         }
     }
 
@@ -332,7 +331,7 @@ export class MultiSelect {
         else
         {
             // check if exact match, otherwise new search
-            this.filteredMultiSelectDataList = collectFilterDropDownMenu(this.MultiSelectDataList, text);
+            this.filteredMultiSelectDataList = collectFilterChoices(this.MultiSelectDataList, text);
             if (this.filteredMultiSelectDataList.length == 1)
             {
                 let fullMatchMultiSelectData =  this.filteredMultiSelectDataList[0];
@@ -350,16 +349,16 @@ export class MultiSelect {
             resetLength();  
         
         
-        this.choicesPanel.stopAndResetDropDownMenuHover();
+        this.choicesPanel.stopAndResetChoicesHover();
         if (this.getVisibleMultiSelectDataList().length == 1) {
             this.choicesPanel.hoverInInternal(0)
         }
 
         if (this.getVisibleMultiSelectDataList().length > 0) {
             this.aspect.alignToFilterInputItemLocation(true); // we need it to support case when textbox changes its place because of line break (texbox grow with each key press)
-            this.choicesPanel.showDropDown();
+            this.choicesPanel.showChoices();
         } else {
-            this.choicesPanel.hideDropDown();
+            this.choicesPanel.hideChoices();
         }
     }
 
@@ -390,7 +389,7 @@ export class MultiSelect {
             }, // focus out - hide dropdown
             () => this.choicesPanel.keyDownArrow(false), // arrow up
             () => this.choicesPanel.keyDownArrow(true),  // arrow down
-            () => this.choicesPanel.hideDropDown(),  // tab on empty
+            () => this.choicesPanel.hideChoices(),  // tab on empty
             () => {
                 this.picksPanel.removePicksTail();
                 this.aspect.alignToFilterInputItemLocation(false);
@@ -403,7 +402,7 @@ export class MultiSelect {
                     event.stopPropagation();
             }, // esc keydown
             () => {
-                this.choicesPanel.hideDropDown(); // always hide 1st
+                this.choicesPanel.hideChoices(); // always hide 1st
                 this.resetFilter();
             }, // esc keyup 
             (filterInputValue, resetLength) =>
@@ -417,7 +416,7 @@ export class MultiSelect {
         );
         
         this.picksPanel =  PicksPanel(
-            this.setSelected,
+            //this.setSelected,
             createElement,
             this.containerAdapter.picksElement,
             (filterItemElement) => {
@@ -425,27 +424,56 @@ export class MultiSelect {
             },
             this.pickContentGenerator,
             this.isComponentDisabled,
-            () => this.optionsAdapter.triggerChange(),
-            () => {
-                this.choicesPanel.hideDropDown(); // always hide 1st
-                this.resetFilter();
-            },
-            (event) => {
+            /*onClick*/(event) => {
                 if (!this.filterPanel.isEventTarget(event))
                      this.filterPanel.setFocus();
-                this.aspect.alignAndShowDropDown(event); 
+                this.aspect.alignAndShowChoices(event); 
             },
-            ()=> this.placeholderAspect.updatePlacehodlerVisibility(),
+            /*onPickCreated*/ (multiSelectData, count, removePick) => {
+                multiSelectData.excludedFromSearch = true; // all selected excluded from search
+                multiSelectData.toggle = () => removePick();
+                multiSelectData.ChoiceContent.select(true);
+                if (count==1) 
+                    this.placeholderAspect.updatePlacehodlerVisibility()
+            },
+            /*onPickRemoved*/ (multiSelectData, removePick) => {
+                let confirmed = this.setSelected(multiSelectData.option, false);
+                if (confirmed==null || confirmed) {
+                    var {createSelectedItem, count} = removePick();
+                    multiSelectData.excludedFromSearch = multiSelectData.isOptionDisabled;
+                    if (multiSelectData.isOptionDisabled)
+                    {
+                        multiSelectData.ChoiceContent.setChoiceContentDisabled(false);
+                        multiSelectData.toggle = ()=> {};
+                    }
+                    else
+                    {
+                        multiSelectData.toggle = ()=>{
+                            let confirmed = this.setSelected(multiSelectData.option, true);
+                            if (confirmed==null || confirmed){
+                                createSelectedItem(multiSelectData, multiSelectData.option);
+                                this.optionsAdapter.triggerChange();
+                            }
+                        };
+                    }
+                    multiSelectData.ChoiceContent.select(false);
+                    if (count==0) 
+                        this.placeholderAspect.updatePlacehodlerVisibility()
+                    this.optionsAdapter.triggerChange();
+                }
+            },
             (doUncheck, event) => {
                 this.aspect.processUncheck(doUncheck, event);
+                this.choicesPanel.hideChoices(); // always hide 1st
+                this.resetFilter();
             }
         );
 
         this.choicesPanel = ChoicesPanel(
             createElement,
             this.containerAdapter.choicesElement,
-            () => this.aspect.onDropDownShow(),
-            () => this.aspect.onDropDownHide(),
+            () => this.aspect.onChoicesShow(),
+            () => this.aspect.onChoicesHide(),
             EventSkipper(this.window),
             this.choiceContentGenerator,
             () => this.getVisibleMultiSelectDataList(),
@@ -464,7 +492,6 @@ export class MultiSelect {
 
         this.placeholderAspect.init();
         this.placeholderAspect.updateEmptyInputWidth();
-        
 
         this.aspect =  MultiSelectInputAspect(
             this.window,
@@ -472,13 +499,13 @@ export class MultiSelect {
             this.picksPanel.pickFilterElement, 
             this.containerAdapter.picksElement, 
             this.containerAdapter.choicesElement, 
-            () => this.choicesPanel.showDropDown(),
+            () => this.choicesPanel.showChoices(),
             () => {  
-                this.choicesPanel.hideDropDown();
+                this.choicesPanel.hideChoices();
                 this.resetFilter();
             },
             () => this.getVisibleMultiSelectDataList().length==0, 
-            Popper
+            this.popper
         );
         
         this.stylingComposite = this.createStylingComposite(

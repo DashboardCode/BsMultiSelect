@@ -1,5 +1,6 @@
 import $ from 'jquery';
-import { extendIfUndefined } from './JsTools';
+import Popper from 'popper.js';
+import { extendIfUndefined } from './ToolsJs';
 import { MultiSelect } from './MultiSelect';
 import { LabelAdapter } from './LabelAdapter';
 import { addToJQueryPrototype } from './AddToJQueryPrototype';
@@ -10,12 +11,12 @@ import { BsPickContentGenerator, BsPickContentStylingCorrector } from './BsPickC
 import { BsChoiceContentGenerator, BsChoiceContentStylingCorrector } from './BsChoiceContentGenerator';
 import { ContainerAdapter } from './ContainerAdapter';
 import { createBsAppearance } from './BsAppearance';
-import { findDirectChildByTagName, setStyles } from './DomTools';
+import { findDirectChildByTagName, setStyles } from './ToolsDom';
 var classesDefaults = {
   containerClass: 'dashboardcode-bsmultiselect',
   choicesClass: 'dropdown-menu',
   choiceClassHover: 'text-primary bg-light',
-  // TODO looks like bullshit
+  // dirty but BS doesn't provide better choices
   choiceClassSelected: '',
   // not used? should be used in OptionsPanel.js
   choiceClassDisabled: '',
@@ -28,16 +29,19 @@ var classesDefaults = {
   pickClassDisabled: '',
   // not used? should be used in PicksPanel.js
   pickFilterClass: '',
-  filterInputClass: '',
+  filterInputClass: 'form-control',
   // used in BsPickContentStylingCorrector
   pickClass: 'badge',
-  pickRemoveButtonClass: 'close',
   pickContentClassDisabled: 'disabled',
   // internal, not bs4, used in scss
+  pickButtonClass: 'close',
   // used in BsChoiceContentStylingCorrector
   choiceClass: 'px-2',
-  choiceCheckBoxClassDisabled: 'disabled' // internal, not bs4, used in scss
-
+  choiceCheckBoxClassDisabled: 'disabled',
+  // internal, not bs4, used in scss
+  choiceContentClass: 'custom-control custom-checkbox',
+  choiceCheckBoxClass: 'custom-control-input',
+  choiceLabelClass: 'custom-control-label justify-content-start'
 };
 var stylingDefaults = {
   // used in StylingCorrector
@@ -58,12 +62,7 @@ var stylingDefaults = {
   picksStyleFocusInvalid: {
     boxShadow: '0 0 0 0.2rem rgba(220, 53, 69, 0.25)'
   },
-  filterInputStyle: {
-    color: 'inherit'
-    /*#495057 for default BS*/
-    ,
-    fontWeight: 'inherit'
-  },
+  //filterInputStyle: {color: 'inherit' /*#495057 for default BS*/, fontWeight : 'inherit'},
   // used in BsAppearance
   picksStyleDef: {
     minHeight: 'calc(2.25rem + 2px)'
@@ -86,14 +85,20 @@ var stylingDefaults = {
   pickContentStyleDisabled: {
     opacity: '.65'
   },
+  // avoid opacity on pickElement's border
   // used in BsChoiceContentStylingCorrector
   choiceLabelStyleDisabled: {
-    color: '#6c757d'
-  }
+    opacity: '.65'
+  } // more flexible than {color: '#6c757d'}
+
 };
 
 (function (window, $) {
   function createPlugin(element, settings, onDispose) {
+    if (typeof Popper === 'undefined') {
+      throw new TypeError('DashboardCode BsMultiSelect require Popper.js (https://popper.js.org)');
+    }
+
     var configuration = $.extend({}, settings); // settings used per jQuery intialization, configuration per element
 
     if (configuration.buildConfiguration) configuration.buildConfiguration(element, configuration);
@@ -248,11 +253,11 @@ var stylingDefaults = {
       }
 
       var pickClass = classesDefaults.pickClass,
-          pickRemoveButtonClass = classesDefaults.pickRemoveButtonClass,
+          pickButtonClass = classesDefaults.pickButtonClass,
           pickContentClassDisabled = classesDefaults.pickContentClassDisabled;
       extendIfUndefined(configuration, {
         pickClass: pickClass,
-        pickRemoveButtonClass: pickRemoveButtonClass,
+        pickButtonClass: pickButtonClass,
         pickContentClassDisabled: pickContentClassDisabled
       });
       pickContentGenerator = BsPickContentGenerator(configuration, pickContentStylingCorrector, $);
@@ -268,7 +273,7 @@ var stylingDefaults = {
         extendIfUndefined(configuration, {
           choiceLabelStyleDisabled: choiceLabelStyleDisabled
         });
-        choiceContentStylingCorrector = BsChoiceContentStylingCorrector(configuration, $);
+        choiceContentStylingCorrector = BsChoiceContentStylingCorrector(configuration);
       }
 
       var choiceClass = classesDefaults.choiceClass,
@@ -277,7 +282,7 @@ var stylingDefaults = {
         choiceClass: choiceClass,
         choiceCheckBoxClassDisabled: choiceCheckBoxClassDisabled
       });
-      choiceContentGenerator = BsChoiceContentGenerator(configuration, choiceContentStylingCorrector, $);
+      choiceContentGenerator = BsChoiceContentGenerator(configuration, choiceContentStylingCorrector);
     }
 
     var createStylingComposite = function createStylingComposite(pickFilterElement, inputElement, choicesElement) {
@@ -317,7 +322,7 @@ var stylingDefaults = {
       bsAppearance.updateIsValid();
     };
 
-    var multiSelect = new MultiSelect(optionsAdapter, setSelected, containerAdapter, styling, pickContentGenerator, choiceContentGenerator, labelAdapter, createStylingComposite, placeholderText, configuration, onUpdate, onDispose, window);
+    var multiSelect = new MultiSelect(optionsAdapter, setSelected, containerAdapter, styling, pickContentGenerator, choiceContentGenerator, labelAdapter, createStylingComposite, placeholderText, configuration, onUpdate, onDispose, Popper, window);
     multiSelect.UpdateSize = bsAppearance.updateSize;
     multiSelect.UpdateIsValid = bsAppearance.updateIsValid;
     if (configuration.init) configuration.init(element, multiSelect);
@@ -331,6 +336,6 @@ var stylingDefaults = {
     styling: stylingDefaults
   };
   addToJQueryPrototype('BsMultiSelect', createPlugin, defaults, $);
-})(window, $);
+})(window, $, Popper);
 
 //# sourceMappingURL=BsMultiSelect.js.map

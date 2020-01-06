@@ -1,6 +1,7 @@
-import {setStyles} from './DomTools';
+import {setStyles} from './ToolsDom';
 
-const filterInputStyle = {border:'0px', padding:'0px', outline:'none', backgroundColor:'transparent' };
+const filterInputStyle = {border:'0px', height: 'auto', boxShadow:'none', 
+    padding:'0px', margin:'0px', outline:'none', backgroundColor:'transparent' };
 
 export function FilterPanel(
         createElement,

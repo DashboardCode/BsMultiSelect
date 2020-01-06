@@ -1,97 +1,48 @@
-import {removeElement, setStyles} from './DomTools'
-
-const picksStyle = {display:'flex', flexWrap:'wrap', listStyleType:'none'};  // remove bullets since this is ul
+import {removeElement, removeChildren, EventBinder} from './ToolsDom'
+import {List} from './ToolsJs'
 
 export function PicksPanel (
-        setSelected,
         createElement,
         picksElement, 
         init, 
         pickContentGenerator, 
-        isComponentDisabled, 
-        triggerChange, 
-        onRemove,
-        onClick,
-        onPicksEmptyChanged, //placeholderAspect.updatePlacehodlerVisibility(); call the same on enable/disable
-        processRemoveButtonClick
+        isComponentDisabled,
+        //afterRemove,
+        onClick, // click to open dropdown
+        onPickCreated,
+        onPickRemoved,
+        processRemoveButtonClick // click to remove button
 ) 
 {
-    var picksCount = 0;
-    function inc(){picksCount++; if (picksCount==1) onPicksEmptyChanged()};
-    function dec(){picksCount--; if (picksCount==0) onPicksEmptyChanged()};
-    function reset(){picksCount=0; onPicksEmptyChanged()}
-    function isEmpty(){return picksCount==0};
-
-    setStyles(picksElement, picksStyle); 
+    var list = List();
 
     var pickFilterElement = createElement('LI'); // detached
-        
     picksElement.appendChild(pickFilterElement); // located filter in selectionsPanel
-
     init(pickFilterElement);
-    var MultiSelectDataSelectedTail = null;
 
-    function removePicksTail(){
-        if (MultiSelectDataSelectedTail){ 
-            MultiSelectDataSelectedTail.toggle(); // always remove in this case
-        }
-    }
-
-    function removeSelectedFromList(MultiSelectData){
-        if (MultiSelectData.selectedPrev){
-            (MultiSelectData.selectedPrev).selectedNext = MultiSelectData.selectedNext;
-        }
-        if (MultiSelectData.selectedNext){
-           (MultiSelectData.selectedNext).selectedPrev = MultiSelectData.selectedPrev;
-        }
-        if (MultiSelectDataSelectedTail == MultiSelectData){
-            MultiSelectDataSelectedTail = MultiSelectData.selectedPrev;
-        }
-        MultiSelectData.selectedNext=null;
-        MultiSelectData.selectedPrev=null;
-    }
-
-
-    function createPick(MultiSelectData, isOptionDisabled, setDropDownItemContentDisabled) {
-        
+    function createPick(multiSelectData, option) {
         var pickElement = createElement('LI');
-        MultiSelectData.pickElement = pickElement;
-        if (MultiSelectDataSelectedTail){
-            MultiSelectDataSelectedTail.selectedNext = MultiSelectData;
-            MultiSelectData.selectedPrev = MultiSelectDataSelectedTail;
-        }
-        MultiSelectDataSelectedTail = MultiSelectData;
+        var item = {pickElement}
+        var removeFromList = list.add(item);
 
         var removeSelectedItem = () => {
-            let confirmed = setSelected(MultiSelectData.option, false);
-            if (confirmed==null || confirmed) {
-                MultiSelectData.excludedFromSearch = isOptionDisabled;
-                if (isOptionDisabled)
-                {
-                    setDropDownItemContentDisabled(MultiSelectData.DropDownItemContent, false);
-                    MultiSelectData.toggle = ()=> {};
-                }
-                else
-                {
-                    MultiSelectData.toggle = ()=>{
-                        let confirmed = setSelected(MultiSelectData.option, true);
-                        if (confirmed==null || confirmed){
-                            createPick(MultiSelectData, isOptionDisabled, setDropDownItemContentDisabled);
-                            triggerChange();
-                        }
+            onPickRemoved(
+                multiSelectData, 
+                ()=>{
+                    removeElement(pickElement);
+                    item.pickContent.dispose();
+                    removeFromList();
+                    return {
+                        createSelectedItem: ()=> {
+                            createPick(multiSelectData, option);
+                            onPickCreated(multiSelectData, removeSelectedItem, list.getCount());
+                        },
+                        count: list.getCount()
                     };
                 }
-                MultiSelectData.DropDownItemContent.select(false);
-                removeElement(pickElement);
-                MultiSelectData.PickContent.dispose();
-                MultiSelectData.PickContent=null;
-                MultiSelectData.pickElement=null;
-
-                removeSelectedFromList(MultiSelectData);
-                dec();
-                triggerChange();
-            }
+            );
         }
+        item.removeSelectedItem = removeSelectedItem;
 
         // processRemoveButtonClick removes the 
         // what is a problem with calling removeSelectedItem directly (not using  setTimeout(removeSelectedItem, 0)):
@@ -106,75 +57,57 @@ export function PicksPanel (
         // the situation described above: click outside dropdown on the same component.
         // Alternatively it could be possible to use stopPropogate but together create custom click event setting new target that belomgs to DOM (e.g. panel)
 
-        let removeSelectedItemAndCloseDropDown = () => {
-            removeSelectedItem();
-            onRemove();
-        };
+        // let removePickAndCloseChoices = () => {
+        //     removeSelectedItem();
+        //     //afterRemove();
+        // };
     
         let onRemoveSelectedItemEvent = (event) => {
-            processRemoveButtonClick(() => removeSelectedItemAndCloseDropDown(), event);
+             processRemoveButtonClick(removeSelectedItem/*() => removePickAndCloseChoices()*/, event);
         };
 
-        MultiSelectData.PickContent = pickContentGenerator(
+        item.pickContent = pickContentGenerator(
             pickElement,
-            MultiSelectData.option,
+            option,
             onRemoveSelectedItemEvent);
 
-        var disable = (isDisabled) =>
-            MultiSelectData.PickContent.disable(isDisabled);
-        disable(isComponentDisabled);
-
-        MultiSelectData.excludedFromSearch = true; // all selected excluded from search
-        MultiSelectData.disable = disable;
+        item.pickContent.disable(isComponentDisabled);
         picksElement.insertBefore(pickElement, pickFilterElement);
-         
-        MultiSelectData.toggle = () => removeSelectedItem();
-        MultiSelectData.DropDownItemContent.select(true);
-        inc();
+
+        onPickCreated(multiSelectData, list.getCount(), removeSelectedItem);
     }
 
-    var picksClick = event => {
-        onClick(event);
-    };
-
-    function iterateAll(isDisabled){
-        let i = MultiSelectDataSelectedTail;
-        while(i){
-            i.disable(isDisabled); 
-            i = i.selectedPrev;
-        }
-    }
-
-    var item = {
+    var eventBinder = EventBinder();
+    return {
         pickFilterElement,
         createPick,
-        removePicksTail,
-        resetMultiSelectDataSelectedTail() {
-            reset();
-            MultiSelectDataSelectedTail = null;
+        removePicksTail(){  
+            var item = list.getTail();
+            if (item) 
+                item.removeSelectedItem(); // always remove in this case
         },
-        isEmpty,
+        isEmpty: list.isEmpty,
         enable(){
             isComponentDisabled= false;
-            iterateAll(false);
-            picksElement.addEventListener("click", picksClick);
-
+            list.forEach(i=>i.pickContent.disable(false))
+            eventBinder.bind(picksElement,"click", event => onClick(event));  // OPEN dropdown
         },
         disable(){
             isComponentDisabled= true;
-            iterateAll(true);
-            picksElement.removeEventListener("click", picksClick);
-
+            list.forEach(i=>i.pickContent.disable(true))
+            eventBinder.unbind();
+        },
+        deselectAll(){
+            list.forEach(i =>i.removeSelectedItem())
+        },
+        clear() {
+            list.forEach(i=>removeElement(i.pickElement));
+            list.reset();
         },
         dispose(){
-            var toRemove = picksElement.firstChild;
-            while( toRemove ) {
-                picksElement.removeChild( toRemove );
-                toRemove = picksElement.firstChild;
-            }
-            picksElement.removeEventListener("click", picksClick); // OPEN dropdown
+            removeChildren(picksElement);
+            eventBinder.unbind();
+            list.forEach(i=>i.pickContent.dispose());
         }
-        
     }
-    return item;
 }
