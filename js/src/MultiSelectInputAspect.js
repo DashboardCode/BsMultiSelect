@@ -1,12 +1,15 @@
+import {EventBinder} from './ToolsDom'
+
 export function MultiSelectInputAspect (
     window,
     appendToContainer, 
-    choiceFilterInputElement, 
+    filterInputElement, 
     picksElement,
     choicesElement, 
     showChoices,
     hideChoicesAndResetFilter,
     isChoiceEmpty,
+    onClick,
     Popper
     ) {
         appendToContainer();
@@ -34,7 +37,7 @@ export function MultiSelectInputAspect (
     var popper = null;
     //if (!!Popper.prototype && !!Popper.prototype.constructor.name) {
         popper=new Popper( 
-            choiceFilterInputElement, 
+            filterInputElement, 
             choicesElement, 
             {
                 placement: 'bottom-start',
@@ -77,19 +80,19 @@ export function MultiSelectInputAspect (
     }
     
     function alignToFilterInputItemLocation(force) {
-        let offsetLeft = choiceFilterInputElement.offsetLeft;
+        let offsetLeft = filterInputElement.offsetLeft;
         if (force || filterInputItemOffsetLeft != offsetLeft){ // position changed
             popper.update();
             filterInputItemOffsetLeft = offsetLeft;
         }
     }
-
+    var componentDisabledEventBinder = EventBinder();
     return {
         dispose(){
             popper.destroy();
+            componentDisabledEventBinder.unbind();
         },
         alignToFilterInputItemLocation,
-        alignAndShowChoices,
         processUncheck(uncheckOption, event){
             // we can't remove item on "click" in the same loop iteration - it is unfrendly for 3PP event handlers (they will get detached element)
             // never remove elements in the same event iteration
@@ -116,6 +119,15 @@ export function MultiSelectInputAspect (
         },
         resetSkipFocusout : function() {
              skipFocusout=false;
+        },
+        enable(){
+            componentDisabledEventBinder.bind(picksElement,"click", event => {
+                onClick(event);
+                alignAndShowChoices(event);
+            });  // OPEN dropdown
+        },
+        disable(){
+            componentDisabledEventBinder.unbind();
         }
     }
 }

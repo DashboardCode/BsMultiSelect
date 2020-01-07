@@ -1,42 +1,31 @@
-import {removeElement, removeChildren, EventBinder} from './ToolsDom'
+import {removeElement} from './ToolsDom'
 import {List} from './ToolsJs'
 
 export function PicksPanel (
         createElement,
-        picksElement, 
-        init, 
         pickContentGenerator, 
         isComponentDisabled,
-        //afterRemove,
-        onClick, // click to open dropdown
-        onPickCreated,
-        onPickRemoved,
+        requestPickCreate,
+        requestPickRemove,
         processRemoveButtonClick // click to remove button
 ) 
 {
     var list = List();
 
-    var pickFilterElement = createElement('LI'); // detached
-    picksElement.appendChild(pickFilterElement); // located filter in selectionsPanel
-    init(pickFilterElement);
-
     function createPick(multiSelectData, option) {
-        var pickElement = createElement('LI');
+        var {pickElement, attach} = createElement();
         var item = {pickElement}
         var removeFromList = list.add(item);
 
         var removeSelectedItem = () => {
-            onPickRemoved(
+            requestPickRemove(
                 multiSelectData, 
-                ()=>{
+                () => {
                     removeElement(pickElement);
                     item.pickContent.dispose();
                     removeFromList();
                     return {
-                        createSelectedItem: ()=> {
-                            createPick(multiSelectData, option);
-                            onPickCreated(multiSelectData, removeSelectedItem, list.getCount());
-                        },
+                        createPick: ()=> createPick(multiSelectData, option),
                         count: list.getCount()
                     };
                 }
@@ -63,7 +52,7 @@ export function PicksPanel (
         // };
     
         let onRemoveSelectedItemEvent = (event) => {
-             processRemoveButtonClick(removeSelectedItem/*() => removePickAndCloseChoices()*/, event);
+             processRemoveButtonClick(removeSelectedItem, event);
         };
 
         item.pickContent = pickContentGenerator(
@@ -72,14 +61,11 @@ export function PicksPanel (
             onRemoveSelectedItemEvent);
 
         item.pickContent.disable(isComponentDisabled);
-        picksElement.insertBefore(pickElement, pickFilterElement);
-
-        onPickCreated(multiSelectData, removeSelectedItem, list.getCount());
+        attach();
+        requestPickCreate(multiSelectData, removeSelectedItem, list.getCount());
     }
 
-    var eventBinder = EventBinder();
     return {
-        pickFilterElement,
         createPick,
         removePicksTail(){  
             var item = list.getTail();
@@ -90,12 +76,10 @@ export function PicksPanel (
         enable(){
             isComponentDisabled= false;
             list.forEach(i=>i.pickContent.disable(false))
-            eventBinder.bind(picksElement,"click", event => onClick(event));  // OPEN dropdown
         },
         disable(){
             isComponentDisabled= true;
             list.forEach(i=>i.pickContent.disable(true))
-            eventBinder.unbind();
         },
         deselectAll(){
             list.forEach(i =>i.removeSelectedItem())
@@ -105,9 +89,10 @@ export function PicksPanel (
             list.reset();
         },
         dispose(){
-            removeChildren(picksElement);
-            eventBinder.unbind();
-            list.forEach(i=>i.pickContent.dispose());
+            list.forEach(i=>{
+                i.pickContent.dispose();
+                removeElement(i.pickElement);
+            });
         }
     }
 }

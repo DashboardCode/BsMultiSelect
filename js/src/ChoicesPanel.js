@@ -1,13 +1,8 @@
-import {setStyles} from './ToolsDom';
-
-const choicesStyle = {listStyleType:'none'}; // remove bullets since this is ul
-
-export function ChoicesPanel(createElement, choicesElement, onShow, onHide, eventSkipper, choiceContentGenerator, 
+export function ChoicesPanel(createElement, choicesElement, onShow, onHide, 
+        eventSkipper, choiceContentGenerator, 
         getVisibleMultiSelectDataList, 
         resetFilter, updateChoicesLocation, filterPanelSetFocus) {
     
-    // prevent heavy understandable styling error
-    setStyles(choicesElement, choicesStyle);
     var hoveredMultiSelectData=null;
     var hoveredMultiSelectDataIndex = null;
     var candidateToHoveredMultiSelectData=null;
@@ -132,7 +127,8 @@ export function ChoicesPanel(createElement, choicesElement, onShow, onHide, even
         }
     }
 
-    function insertChoice(MultiSelectData, createSelectedItemGen, setSelected, triggerChange, isSelected/*, isOptionDisabled*/) {
+    function insertChoice(MultiSelectData, createSelectedItemGen, setSelected, triggerChange, isSelected/*, isOptionDisabled*/) 
+    {
         var choiceElement = createElement('LI');
         
         // in chrome it happens on "become visible" so we need to skip it, 

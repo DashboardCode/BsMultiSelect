@@ -285,6 +285,7 @@ export class MultiSelect {
         if (this.optionsAdapter.dispose)
             this.optionsAdapter.dispose();
         this.picksPanel.dispose();
+        removeElement(this.pickFilterElement);
         this.filterPanel.dispose();
         
         this.labelAdapter.dispose();
@@ -312,10 +313,12 @@ export class MultiSelect {
         if (this.isComponentDisabled!==isComponentDisabled){
             if (isComponentDisabled) {
                 this.picksPanel.disable();
+                this.aspect.disable();
                 this.placeholderAspect.setDisabled(true);
                 this.styling.Disable(this.stylingComposite);
             } else {
                 this.picksPanel.enable();
+                this.aspect.enable();
                 this.placeholderAspect.setDisabled(false);
                 this.styling.Enable(this.stylingComposite);
             }
@@ -366,15 +369,14 @@ export class MultiSelect {
         var document = this.window.document;
         var createElement = (name) => document.createElement(name);
 
-        var lazyfilterItemInputElementAtach=null;
-        
+        var pickFilterElement = createElement('LI'); // detached
+        this.pickFilterElement=pickFilterElement;
         this.filterPanel = FilterPanel(
             createElement,
-            (filterItemInputElement) => {
-                lazyfilterItemInputElementAtach = (filterItemElement)=>{
-                    filterItemElement.appendChild(filterItemInputElement);
-                    this.labelAdapter.init(filterItemInputElement); 
-                };
+            (filterInputElement) => {
+                pickFilterElement.appendChild(filterInputElement);
+                this.labelAdapter.init(filterInputElement); 
+                this.containerAdapter.picksElement.appendChild(pickFilterElement); // located filter in selectionsPanel                    
             },
             () => {
                 this.styling.FocusIn(this.stylingComposite)
@@ -416,19 +418,15 @@ export class MultiSelect {
         );
         
         this.picksPanel =  PicksPanel(
-            //this.setSelected,
-            createElement,
-            this.containerAdapter.picksElement,
-            (filterItemElement) => {
-                lazyfilterItemInputElementAtach(filterItemElement);
+            /*createElement*/ () => {
+                var pickElement= createElement('LI');
+                return {
+                    pickElement,
+                    attach: ()=>this.containerAdapter.picksElement.insertBefore(pickElement, pickFilterElement)
+                }
             },
             this.pickContentGenerator,
             this.isComponentDisabled,
-            /*onClick*/(event) => {
-                if (!this.filterPanel.isEventTarget(event))
-                     this.filterPanel.setFocus();
-                this.aspect.alignAndShowChoices(event); 
-            },
             /*onPickCreated*/ (multiSelectData, removePick, count) => {
                 multiSelectData.excludedFromSearch = true; // all selected excluded from search
                 multiSelectData.toggle = () => removePick();
@@ -439,7 +437,7 @@ export class MultiSelect {
             /*onPickRemoved*/ (multiSelectData, removePick) => {
                 let confirmed = this.setSelected(multiSelectData.option, false);
                 if (confirmed==null || confirmed) {
-                    var {createSelectedItem, count} = removePick();
+                    var {createPick, count} = removePick();
                     multiSelectData.excludedFromSearch = multiSelectData.isOptionDisabled;
                     if (multiSelectData.isOptionDisabled)
                     {
@@ -451,7 +449,7 @@ export class MultiSelect {
                         multiSelectData.toggle = ()=>{
                             let confirmed = this.setSelected(multiSelectData.option, true);
                             if (confirmed==null || confirmed){
-                                createSelectedItem(multiSelectData, multiSelectData.option);
+                                createPick(multiSelectData, multiSelectData.option);
                                 this.optionsAdapter.triggerChange();
                             }
                         };
@@ -496,7 +494,7 @@ export class MultiSelect {
         this.aspect =  MultiSelectInputAspect(
             this.window,
             ()=>this.containerAdapter.appendToContainer(), 
-            this.picksPanel.pickFilterElement, 
+            this.filterPanel.filterInputElement, 
             this.containerAdapter.picksElement, 
             this.containerAdapter.choicesElement, 
             () => this.choicesPanel.showChoices(),
@@ -505,6 +503,10 @@ export class MultiSelect {
                 this.resetFilter();
             },
             () => this.getVisibleMultiSelectDataList().length==0, 
+            /*onClick*/(event) => {
+                if (!this.filterPanel.isEventTarget(event))
+                     this.filterPanel.setFocus();
+            },
             this.popper
         );
         
