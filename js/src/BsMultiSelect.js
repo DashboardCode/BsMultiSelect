@@ -8,116 +8,136 @@ import {addToJQueryPrototype} from './AddToJQueryPrototype'
 
 import {OptionsAdapterJson,OptionsAdapterElement} from './OptionsAdapters';
 
-import {StylingCorrector} from './StylingCorrector'
-import {Styling} from './Styling';
 
-import {BsPickContentGenerator, BsPickContentStylingCorrector} from './BsPickContentGenerator';
-import {BsChoiceContentGenerator, BsChoiceContentStylingCorrector} from './BsChoiceContentGenerator';
-import {ContainerAdapter} from './ContainerAdapter';
+import {pickContentGenerator} from './PickContentGenerator';
+import {choiceContentGenerator} from './ChoiceContentGenerator';
+import {staticContentGenerator} from './StaticContentGenerator';
 
 import {createBsAppearance} from './BsAppearance';
-import {findDirectChildByTagName, setStyles} from './ToolsDom';
+import {findDirectChildByTagName, setStyles, setClassAndStyle} from './ToolsDom';
 
-const classesDefaults = {
-    containerClass: 'dashboardcode-bsmultiselect',
-    choicesClass: 'dropdown-menu',
+import {cloneStyling} from './ToolsStyling';
 
-    choiceClassHover: 'text-primary bg-light', // dirty but BS doesn't provide better choices
-    choiceClassSelected: '', // not used? should be used in OptionsPanel.js
-    choiceClassDisabled: '', // not used? should be used in OptionsPanel.js
+import {adjustConfiguration} from './BsMultiSelectDepricatedParameters'
 
-    picksClass: 'form-control',  
-    picksClassFocus: 'focus', // internal, not bs4, used in scss
-    picksClassDisabled: 'disabled', // internal, not bs4, used in scss
+const stylings = {
+    choices: 'dropdown-menu', // bs4, in bsmultiselect.scss as ul.dropdown-menu
 
-    pickClassDisabled: '', // not used? should be used in PicksPanel.js
+    choice_hover:  'hover',  //  not bs4, in scss as 'ul.dropdown-menu li.hover'
+    // TODO
+    choice_selected: '', // not used? should be used in OptionsPanel.js
+    choice_disabled: '', // not used? should be used in OptionsPanel.js
+
+    picks: 'form-control',  // bs4, in scss 'ul.form-control'
+    picks_focus: 'focus', // not bs4, in scss 'ul.form-control.focus'
+    picks_disabled: 'disabled', //  not bs4, in scss 'ul.form-control.disabled'
+    pick_disabled: '',  
     
-    pickFilterClass: '', 
-    filterInputClass: 'form-control',
+    pickFilter: '', 
+    filterInput: '',
 
     // used in BsPickContentStylingCorrector
-    pickClass: 'badge',
-    pickContentClassDisabled: 'disabled', // internal, not bs4, used in scss
-    pickButtonClass: 'close',
+    pick: 'badge', // bs4
+    pickContent_disabled: 'disabled', // not bs4, in scss 'ul.form-control li span.disabled'
+    pickButton: 'close', // bs4
 
     // used in BsChoiceContentStylingCorrector
-    choiceClass:  'px-2',
-    choiceCheckBoxClassDisabled: 'disabled', // internal, not bs4, used in scss
-    choiceContentClass: 'custom-control custom-checkbox',
-    choiceCheckBoxClass: 'custom-control-input',
-    choiceLabelClass: 'custom-control-label justify-content-start'
+    choice:  '',
+    choiceCheckBox_disabled: 'disabled', //  not bs4, in scss as 'ul.form-control li .custom-control-input.disabled ~ .custom-control-label'
+    choiceContent: 'custom-control custom-checkbox', // bs4
+    choiceCheckBox: 'custom-control-input', // bs4
+    choiceLabel: 'custom-control-label justify-content-start' // 
+}
 
-};
+const compensation = {
+    choices: { listStyleType:'none'},
+    picks: { listStyleType:'none', display:'flex', flexWrap:'wrap'},
+    choice: 'px-2' ,  
+    choice_hover: 'text-primary bg-light', 
+    filterInput: { 
+        class: 'form-control', 
+        style: {display:'flex', flexWrap:'wrap', listStyleType:'none', marginBottom: 0, height: 'auto'}
+    },
 
-const stylingDefaults = {
     // used in StylingCorrector
-    picksStyle: {marginBottom: 0, height: 'auto'},
-    picksStyleDisabled: {backgroundColor: '#e9ecef'},
+    picks_disabled: {backgroundColor: '#e9ecef'},
 
-    picksStyleFocus: {borderColor: '#80bdff', boxShadow: '0 0 0 0.2rem rgba(0, 123, 255, 0.25)'},
-    picksStyleFocusValid: {boxShadow: '0 0 0 0.2rem rgba(40, 167, 69, 0.25)'},
-    picksStyleFocusInvalid: {boxShadow: '0 0 0 0.2rem rgba(220, 53, 69, 0.25)'},
+    picks_focus: {borderColor: '#80bdff', boxShadow: '0 0 0 0.2rem rgba(0, 123, 255, 0.25)'},
+    picks_focus_valid: {boxShadow: '0 0 0 0.2rem rgba(40, 167, 69, 0.25)'},
+    picks_focus_invalid: {boxShadow: '0 0 0 0.2rem rgba(220, 53, 69, 0.25)'},
     
-    //filterInputStyle: {color: 'inherit' /*#495057 for default BS*/, fontWeight : 'inherit'},
-
     // used in BsAppearance
-    picksStyleDef: {minHeight: 'calc(2.25rem + 2px)'},
-    picksStyleLg:  {minHeight: 'calc(2.875rem + 2px)'},
-    picksStyleSm:  {minHeight: 'calc(1.8125rem + 2px)'},
-
+    picks_def: {minHeight: 'calc(2.25rem + 2px)'},
+    picks_lg:  {minHeight: 'calc(2.875rem + 2px)'},
+    picks_sm:  {minHeight: 'calc(1.8125rem + 2px)'},
+    
     // used in BsPickContentStylingCorrector
-    pickStyle: {paddingLeft: '0px', lineHeight: '1.5em'},
-    pickButtonStyle: {fontSize:'1.5em', lineHeight: '.9em'},
-    pickContentStyleDisabled: {opacity: '.65'}, // avoid opacity on pickElement's border
-
+    pick: {paddingLeft: '0px', lineHeight: '1.5em'},
+    pickButton: {fontSize:'1.5em', lineHeight: '.9em'},
+    pickContent_disabled: {opacity: '.65'}, // avoid opacity on pickElement's border
+    
     // used in BsChoiceContentStylingCorrector
-    choiceLabelStyleDisabled: {opacity: '.65'} // more flexible than {color: '#6c757d'}
-};
+    choiceLabel_disabled: {opacity: '.65'}  // more flexible than {color: '#6c757d'}
+}
 
+// 1) do not use css - classes  + styling js + prediction clases + compensation js
+// 2) use scss - classes only 
 (
     (window, $) => {
+        var defaults = {
+            useCss = false,
+            containerClass = "dashboardcode-bsmultiselect",
+            stylings: stylings,
+            compensation: compensation,
+            placeholder: null,
+            pickContentGenerator: pickContentGenerator,
+            choiceContentGenerator : choiceContentGenerator,
+            buildConfiguration: (element, configuration)=>(multiselect)=>{},
+            setSelected: (option, value)=> { option.selected = value;}
+            // configuration.init
+
+            // configuration.label
+            // configuration.createInputId
+
+            // configuration.options
+            // configuration.getDisabled
+            // configuration.getSize
+            // configuration.getIsValid
+            // configuration.getIsInvalid
+        };
+
         function createPlugin(element, settings, onDispose){
 
             if (typeof Popper === 'undefined') {
-                throw new TypeError('DashboardCode BsMultiSelect require Popper.js (https://popper.js.org)')
+                throw "BsMultiSelect: Popper.js (https://popper.js.org) is required"
             }
     
+            // containerClass: 'dashboardcode-bsmultiselect'
             let configuration = $.extend({}, settings); // settings used per jQuery intialization, configuration per element
-            if (configuration.buildConfiguration)
-                configuration.buildConfiguration(element, configuration);
+            adjustConfiguration(configuration)
+            if (configuration.useCss==undefined )
+                configuration.useCss=defaults.useCss;
             
-            let useCss = configuration.useCss;
-            let styling = configuration.styling;
-            if (!configuration.adapter)
-            {
-                let stylingCorrector = configuration.stylingCorrector;
-                if (!stylingCorrector)
-                {
-                    if (!useCss)
-                    {
-                        extendIfUndefined(configuration, stylingDefaults);
-                        stylingCorrector = StylingCorrector(configuration);
-                        var defFocusIn = stylingCorrector.focusIn;
-                        stylingCorrector.focusIn = (picksElement) => {
-                            if (picksElement.classList.contains("is-valid")){
-                                setStyles(picksElement, configuration.picksStyleFocusValid)
-                            } else if (picksElement.classList.contains("is-invalid")){
-                                setStyles(picksElement, configuration.picksStyleFocusInvalid)
-                            } else {
-                                defFocusIn(picksElement)
-                            }
-                        }
-                    }
-                }
-                extendIfUndefined(configuration, classesDefaults);
-                styling = Styling(configuration, stylingCorrector);
-            }
+            if (configuration.containerClass==undefined )
+                configuration.containerClass=defaults.containerClass; 
 
+            configuration.styles=extendStyling(defaults.styles); // TODO: copy instance
+            configuration.compensation=cloneStyling(defaults.compensation); // TODO: copy instance
+
+            // --------------------------------------------------------------
+            var init = configuration.buildConfiguration(element, configuration);
+            // --------------------------------------------------------------
+            var useCss = configuration.useCss;
+            
+            var stylings = constructStyling(configuration.stylings);
+            if (!useCss){
+                merge(stylings, configuration.compensation);
+                // TODO merge  with variables
+            }
+                
             let optionsAdapter = null;
-            let containerAdapter = null;
-            if (configuration.optionsAdapter)
-                optionsAdapter = configuration.optionsAdapter;
-            else
+            let staticContent = null;
+            if (!configuration.optionsAdapter)
             {
                 var createElement = function(name){
                     return window.document.createElement(name);
@@ -126,18 +146,18 @@ const stylingDefaults = {
                     $(element).trigger(eventName);
                 }
                 if (configuration.options){
-                    optionsAdapter = OptionsAdapterJson(
+                    configuration.optionsAdapter = OptionsAdapterJson(
                         configuration.options,
                         configuration.getDisabled,
                         configuration.getSize,
                         configuration.getIsValid,
                         configuration.getIsInvalid,
-                        trigger );
+                        trigger);
                     if (!configuration.createInputId)
                         configuration.createInputId = () => `${configuration.containerClass}-generated-filter-${element.id}`;
                     // find direct child by tagName
                     var picksElement = findDirectChildByTagName(element, "UL");
-                    containerAdapter = ContainerAdapter(createElement, null, element, picksElement);
+                    staticContent = staticContentGenerator(configuration.containerClass, stylings, createElement, null, element, picksElement);
                 } 
                 else  
                 {
@@ -145,12 +165,18 @@ const stylingDefaults = {
                     var containerElement = null;
                     if (element.tagName=="SELECT")
                         selectElement = element;
-                    else 
+                    else if (element.tagName=="DIV")
                     { 
                         selectElement = findDirectChildByTagName(element, "SELECT");
                         if (!selectElement)
-                            throw "There are no SELECT element or options in the configuraion";
+                            throw "BsMultiSelect: There are no SELECT element or options in the configuraion";
                         containerElement = element;
+                    }
+                    else 
+                    {
+                        element.style.backgroundColor='red';
+                        element.style.color='white';
+                        throw 'BsMultiSelect: Only DIV and SELECT supported';
                     }
 
                     if (!containerElement && configuration.containerClass)
@@ -165,8 +191,7 @@ const stylingDefaults = {
                         let $formGroup = $(selectElement).closest('.form-group');
                         if ($formGroup.length == 1) {
                             let $label = $formGroup.find(`label[for="${selectElement.id}"]`);
-                            if ($label.length>0)
-                            {   
+                            if ($label.length>0) {   
                                 let label = $label.get(0);
                                 let forId = label.getAttribute('for');
                                 if (forId == selectElement.id) {
@@ -214,10 +239,14 @@ const stylingDefaults = {
                         configuration.getIsInvalid = function()
                         { return selectElement.classList.contains('is-invalid')}
                     }
-                    optionsAdapter = OptionsAdapterElement(selectElement, configuration.getDisabled, 
+                    configuration.optionsAdapter = OptionsAdapterElement(
+                        selectElement, 
+                        configuration.getDisabled, 
                         configuration.getSize, 
-                        configuration.getIsValid, configuration.getIsInvalid,
-                        trigger, form);
+                        configuration.getIsValid, 
+                        configuration.getIsInvalid,
+                        trigger, 
+                        form);
 
                     if (!configuration.createInputId)
                         configuration.createInputId = () => `${configuration.containerClass}-generated-input-${((selectElement.id)?selectElement.id:selectElement.name).toLowerCase()}-id`;
@@ -226,75 +255,37 @@ const stylingDefaults = {
                     var picksElement = null;
                     if (containerElement)
                         picksElement = findDirectChildByTagName(containerElement, "UL");
-                    containerAdapter = ContainerAdapter(createElement, selectElement, containerElement, picksElement);
+                    staticContent = staticContentGenerator(configuration.containerClass, stylings, createElement, selectElement, containerElement, picksElement);
                     
                 }
             }
-            let labelAdapter = LabelAdapter(configuration.label, configuration.createInputId);
 
-            let pickContentGenerator = configuration.pickContentGenerator;
-            if (!pickContentGenerator){
-                let pickContentStylingCorrector = configuration.pickContentStylingCorrector;
-                if (!pickContentStylingCorrector)
-                {
-                    if (!useCss){
-                        var  {pickStyle, pickButtonStyle, pickContentStyleDisabled} = stylingDefaults;
-                        extendIfUndefined(configuration,  {pickStyle, pickButtonStyle, pickContentStyleDisabled});
-                        pickContentStylingCorrector=BsPickContentStylingCorrector(configuration, $);
+            if (!useCss)
+            {
+                var defFocusIn = staticContent.focusIn;
+                staticContent.focusIn = () => {
+                    var picksElement = staticContent.picksElement;
+                    if (picksElement.classList.contains("is-valid")){ 
+                        setStyling(picksElement, configuration.stylings.picks_focus_valid)
+                    } else if (picksElement.classList.contains("is-invalid")){
+                        setStyling(picksElement, configuration.stylings.picks_focus_invalid)
+                    } else {
+                        defFocusIn()
                     }
                 }
-                
-                var  {pickClass, pickButtonClass, pickContentClassDisabled} = classesDefaults;
-                extendIfUndefined(configuration, {pickClass, pickButtonClass, pickContentClassDisabled});
-                pickContentGenerator = BsPickContentGenerator(configuration, pickContentStylingCorrector, $);
             }
 
-            let choiceContentGenerator = configuration.choiceContentGenerator;
-            if (!choiceContentGenerator){
-                let choiceContentStylingCorrector = configuration.choiceContentStylingCorrector;
-                if (!useCss){
-                    var {choiceLabelStyleDisabled} = stylingDefaults;
-                    extendIfUndefined(configuration, {choiceLabelStyleDisabled});
-                    choiceContentStylingCorrector=BsChoiceContentStylingCorrector(configuration);
-                }
-                
-                var  {choiceClass, choiceCheckBoxClassDisabled} = classesDefaults;
-                extendIfUndefined(configuration, {choiceClass, choiceCheckBoxClassDisabled});
-                choiceContentGenerator = BsChoiceContentGenerator(configuration, choiceContentStylingCorrector)
-            }
+            let labelAdapter = LabelAdapter(configuration.label, configuration.createInputId);
 
-            let createStylingComposite = function(pickFilterElement, inputElement, choicesElement){
-                return {
-                    container: containerAdapter.containerElement,
-                    picks: containerAdapter.picksElement,
-                    pickFilter: pickFilterElement,
-                    input: inputElement,
-                    choices: choicesElement
-                };
-            }
-            var placeholderText = configuration.placeholder;
-            if (!placeholderText)
+
+            if (!configuration.placeholder)
             {
-                if (selectElement)
-                {
-                    placeholderText = $(selectElement).data("bsmultiselect-placeholder");
-                    if (!placeholderText)
-                        placeholderText = $(selectElement).data("placeholder");
-                }
-                else if (containerElement)                 
-                {
-                    placeholderText = $(containerElement).data("bsmultiselect-placeholder");
-                    if (!placeholderText)
-                        placeholderText = $(containerElement).data("placeholder");
-                }
+                configuration.placeholder = $(element).data("bsmultiselect-placeholder");
+                if (!configuration.placeholder)
+                    configuration.placeholder = $(element).data("placeholder");
             }
             
-            let setSelected = configuration.setSelected;
-            if (!setSelected){
-                setSelected = (option, value)=> { option.selected = value;}
-            }
-
-            var bsAppearance =  createBsAppearance(containerAdapter.picksElement, configuration, optionsAdapter);
+            var bsAppearance =  createBsAppearance(staticContent.picksElement, stylesFunctions, optionsAdapter);
 
             var onUpdate = () => {
                 bsAppearance.updateSize();
@@ -303,15 +294,15 @@ const stylingDefaults = {
 
             let multiSelect = new MultiSelect(
                 optionsAdapter,
-                setSelected,
-                containerAdapter,
-                styling,
-                pickContentGenerator,
-                choiceContentGenerator,
+                configuration.setSelected,
+                staticContent,
+                (option, pickElement) => configuration.pickContentGenerator(option, pickElement, stylings),
+                (option, choiceElement) => configuration.choiceContentGenerator(option, choiceElement, stylings),
+                pickContentGeneratorInst,
+                choiceContentGeneratorInst,
                 labelAdapter,
                 createStylingComposite,
-                placeholderText,
-                configuration,
+                configuration.placeholder,
                 onUpdate,
                 onDispose,
                 Popper,
@@ -320,17 +311,13 @@ const stylingDefaults = {
             multiSelect.UpdateSize = bsAppearance.updateSize;
             multiSelect.UpdateIsValid = bsAppearance.updateIsValid;
             
-            if (configuration.init)
-                configuration.init(element, multiSelect);
+            if (init && init instanceof Function)
+                init(multiSelect);
             
             multiSelect.init();
 
             return multiSelect;
-        };
-        var defaults = {
-            classes: classesDefaults,
-            styling: stylingDefaults
-        };
+            };
         addToJQueryPrototype('BsMultiSelect', createPlugin, defaults, $);
     }
 )(window, $, Popper)

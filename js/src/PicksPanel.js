@@ -1,4 +1,4 @@
-import {removeElement} from './ToolsDom'
+import {removeElement, addClass} from './ToolsDom'
 import {List} from './ToolsJs'
 
 export function PicksPanel (
@@ -51,14 +51,11 @@ export function PicksPanel (
         //     //afterRemove();
         // };
     
-        let onRemoveSelectedItemEvent = (event) => {
-             processRemoveButtonClick(removeSelectedItem, event);
-        };
-
         item.pickContent = pickContentGenerator(
-            pickElement,
-            option,
-            onRemoveSelectedItemEvent);
+            option, pickElement);
+        item.pickContent.onRemove( (event) => {
+            processRemoveButtonClick(removeSelectedItem, event);
+        });
 
         item.pickContent.disable(isComponentDisabled);
         attach();
@@ -75,11 +72,17 @@ export function PicksPanel (
         isEmpty: list.isEmpty,
         enable(){
             isComponentDisabled= false;
-            list.forEach(i=>i.pickContent.disable(false))
+            list.forEach(i=>{
+                removeClass(i.pickElement,)
+                i.pickContent.disable(false)
+            })
         },
         disable(){
             isComponentDisabled= true;
-            list.forEach(i=>i.pickContent.disable(true))
+            list.forEach(i=>{
+                addClass(i.pickElement,configuration.pickClassDisabled)
+                i.pickContent.disable(true)
+            })
         },
         deselectAll(){
             list.forEach(i =>i.removeSelectedItem())

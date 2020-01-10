@@ -53,3 +53,20 @@ export function List(){
         reset(){tail=null;count=0;}
     }
 }
+
+export function pushUnique(array, item){
+    if(array.indexOf(item) == -1) {
+        array.push(item);
+            return true;
+        }
+    return false;
+} 
+
+export function sync(...functions){
+    functions.forEach(
+        function(f){
+            if (f)
+                f();
+        }
+    )
+}

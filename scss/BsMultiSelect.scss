@@ -3,7 +3,7 @@
 @import "./../node_modules/bootstrap/scss/mixins/_box-shadow";
 @import "./../node_modules/bootstrap/scss/mixins/_transition";
 @import "./../node_modules/bootstrap/scss/mixins/_forms";
-
+@import "./../node_modules/bootstrap/scss/mixins/_gradients";
 @import "./../node_modules/bootstrap/scss/_variables"; // update it after copy, reference your custom theme variables
 
 @mixin form-control-focus-class() {
@@ -38,10 +38,19 @@
         height: auto;
         min-height: #{$input-height};
         margin-bottom: 0;
-
+        display:'flex'; 
+        flex-wrap:'wrap';
+        list-style-type:'none';
+        
         input {
             font-weight: inherit;
             color: inherit;
+            padding:'0px'; 
+            margin:'0px';
+            height:'auto'; 
+            border:'0px';
+            box-shadow:'none'; 
+            outline:'none';
         }
         &.disabled{
             background-color: $input-disabled-bg;
@@ -52,7 +61,7 @@
             opacity: 1;
         }
 
-        .badge {
+        >li.badge {
             padding-left: 0;
             line-height: 1.5em;
             button.close {
@@ -79,22 +88,24 @@
                     font-size: $font-size-lg;
                 }
         }
-
-        // for first PlaceholderAsElementAspect realistation
-        // > li:last-child {
-        //     color: $input-placeholder-color;
-        // }
     }
     @include form-validation-state("valid", $form-feedback-valid-color);
     @include form-validation-state("invalid", $form-feedback-invalid-color);
 
     ul.dropdown-menu {
-        li{
+        list-style-type:'none';
+        //'px-2'
+        >li{
             .custom-control-input.disabled ~ .custom-control-label {
                 color: $custom-control-label-disabled-color;
-            }
+            };
+            
+        }.hover{
+            // from bs4 _dropdown.scss
+            color: $dropdown-link-hover-color;
+            @include gradient-bg($dropdown-link-hover-bg);
         }
-    }
+    } 
 
     &.input-group.input-group-sm {
         ul.form-control {

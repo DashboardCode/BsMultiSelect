@@ -155,7 +155,7 @@ export function ChoicesPanel(createElement, choicesElement, onShow, onHide,
 
         choicesElement.appendChild(choiceElement);
 
-        let choiceContent = choiceContentGenerator(choiceElement, MultiSelectData.option); 
+        let choiceContent = choiceContentGenerator(MultiSelectData.option, choiceElement); 
         MultiSelectData.choiceElement = choiceElement;
         MultiSelectData.ChoiceContent = choiceContent;
 

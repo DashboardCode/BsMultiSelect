@@ -1,7 +1,8 @@
 
+import {EventBinder} from './ToolsDom';
 
 function OptionsAdapterElement(selectElement, getDisabled, getSize, getIsValid, getIsInvalid, trigger, form) {
-    var backup;
+    var eventBuilder = EventBinder();
     return {
         getOptions(){
             return selectElement.getElementsByTagName('OPTION')
@@ -14,14 +15,13 @@ function OptionsAdapterElement(selectElement, getDisabled, getSize, getIsValid, 
         getSize,
         getIsValid,
         getIsInvalid,
-        subscribeToReset(handler){
-            backup = handler;
+        onReset(handler){
             if (form)
-                form.addEventListener('reset', backup)
+                eventBuilder.bind(form, 'reset', handler)
         },
         dispose(){
-            if (form && backup)
-                form.removeEventListener('reset', backup)
+            if (form)
+                eventBuilder.unbind()
         }
     }
 }

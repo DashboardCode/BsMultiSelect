@@ -1,10 +1,10 @@
 import {setStyles} from './ToolsDom';
 
 const filterInputStyle = {border:'0px', height: 'auto', boxShadow:'none', 
-    padding:'0px', margin:'0px', outline:'none', backgroundColor:'transparent' };
+     padding:'0px', margin:'0px', outline:'none', backgroundColor:'transparent' };
 
 export function FilterPanel(
-        createElement,
+        filterInputElement,
         insertIntoDom,
         onFocusIn,  // show dropdown
         onFocusOut, // hide dropdown
@@ -18,8 +18,6 @@ export function FilterPanel(
         onInput, // filter
         setEmptyLength
     ) {
-    
-    var filterInputElement = createElement('INPUT'); 
     
     filterInputElement.setAttribute("type","search");
     filterInputElement.setAttribute("autocomplete","off");
@@ -102,7 +100,6 @@ export function FilterPanel(
     };
     
     return {
-        filterInputElement,
         isEmpty(){
             return filterInputElement.value ? false:true;
         },
