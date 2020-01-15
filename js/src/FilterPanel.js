@@ -1,4 +1,4 @@
-import {setStyles} from './ToolsDom';
+import {setStyle} from './ToolsDom';
 
 const filterInputStyle = {border:'0px', height: 'auto', boxShadow:'none', 
      padding:'0px', margin:'0px', outline:'none', backgroundColor:'transparent' };
@@ -22,7 +22,7 @@ export function FilterPanel(
     filterInputElement.setAttribute("type","search");
     filterInputElement.setAttribute("autocomplete","off");
 
-    setStyles(filterInputElement, filterInputStyle);
+    setStyle(filterInputElement, filterInputStyle);
 
     insertIntoDom(filterInputElement);
 
@@ -79,7 +79,7 @@ export function FilterPanel(
         var filterInputValue = filterInputElement.value;
         onInput(
             filterInputValue, 
-            ()=> filterInputElement.style.width = filterInputValue.length*1.3 + 2 + "ch"
+            ()=> {filterInputElement.style.width = filterInputValue.length*1.3 + 2 + "ch"}
         );
     }
     
@@ -97,7 +97,7 @@ export function FilterPanel(
     function setEmpty(){
         filterInputElement.value ='';
         setEmptyLength();
-    };
+    }
     
     return {
         isEmpty(){

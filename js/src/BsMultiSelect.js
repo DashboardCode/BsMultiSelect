@@ -1,24 +1,22 @@
 import $ from 'jquery'
 import Popper from 'popper.js'
 
-import {extendIfUndefined} from './ToolsJs';
 import {MultiSelect} from './MultiSelect'
 import {LabelAdapter} from './LabelAdapter';
 import {addToJQueryPrototype} from './AddToJQueryPrototype'
 
-import {OptionsAdapterJson,OptionsAdapterElement} from './OptionsAdapters';
+import {OptionsAdapterJson} from './OptionsAdapters';
 
 
 import {pickContentGenerator} from './PickContentGenerator';
 import {choiceContentGenerator} from './ChoiceContentGenerator';
 import {staticContentGenerator} from './StaticContentGenerator';
 
-import {createBsAppearance} from './BsAppearance';
-import {findDirectChildByTagName, setStyles, setClassAndStyle} from './ToolsDom';
+import {createBsAppearance, createBsOptionAdapter} from './BsAppearance';
 
-import {cloneStyling} from './ToolsStyling';
+import {cloneStyling,setStyling} from './ToolsStyling';
 
-import {adjustConfiguration} from './BsMultiSelectDepricatedParameters'
+import {adjustLegacyConfiguration, injectConfigurationStyleValues, replaceConfigurationClassValues} from './BsMultiSelectDepricatedParameters'
 
 const stylings = {
     choices: 'dropdown-menu', // bs4, in bsmultiselect.scss as ul.dropdown-menu
@@ -85,14 +83,14 @@ const compensation = {
 (
     (window, $) => {
         var defaults = {
-            useCss = false,
-            containerClass = "dashboardcode-bsmultiselect",
+            useOwnCss : false,
+            containerClass : "dashboardcode-bsmultiselect",
             stylings: stylings,
             compensation: compensation,
             placeholder: null,
             pickContentGenerator: pickContentGenerator,
             choiceContentGenerator : choiceContentGenerator,
-            buildConfiguration: (element, configuration)=>(multiselect)=>{},
+            buildConfiguration: null,
             setSelected: (option, value)=> { option.selected = value;}
             // configuration.init
 
@@ -109,154 +107,75 @@ const compensation = {
         function createPlugin(element, settings, onDispose){
 
             if (typeof Popper === 'undefined') {
-                throw "BsMultiSelect: Popper.js (https://popper.js.org) is required"
+                throw new Error("BsMultiSelect: Popper.js (https://popper.js.org) is required")
             }
     
             // containerClass: 'dashboardcode-bsmultiselect'
             let configuration = $.extend({}, settings); // settings used per jQuery intialization, configuration per element
-            adjustConfiguration(configuration)
+            
+            configuration.styles=extendStyling(defaults.styles); // TODO: copy instance
+            configuration.compensation=cloneStyling(defaults.compensation); // TODO: copy instance
+
+            adjustLegacyConfiguration(configuration)
+            injectConfigurationStyleValues(configuration.stylings , configuration);
+            replaceConfigurationClassValues(configuration.stylings, configuration);
             if (configuration.useCss==undefined )
                 configuration.useCss=defaults.useCss;
             
             if (configuration.containerClass==undefined )
                 configuration.containerClass=defaults.containerClass; 
 
-            configuration.styles=extendStyling(defaults.styles); // TODO: copy instance
-            configuration.compensation=cloneStyling(defaults.compensation); // TODO: copy instance
+            
 
             // --------------------------------------------------------------
             var init = configuration.buildConfiguration(element, configuration);
             // --------------------------------------------------------------
-            var useCss = configuration.useCss;
+            var useCss = configuration.useCss; // useOwnCss
             
             var stylings = constructStyling(configuration.stylings);
             if (!useCss){
                 merge(stylings, configuration.compensation);
                 // TODO merge  with variables
             }
-                
-            let optionsAdapter = null;
-            let staticContent = null;
-            if (!configuration.optionsAdapter)
+            
+            let staticContent = configuration.staticContent;
+            if (!staticContent){
+                staticContent = staticContentGenerator(configuration.containerClass, stylings, 
+                    (name)=>window.document.createElement(name), element);
+            }
+
+            let optionsAdapter = configuration.optionsAdapter;
+            if (!optionsAdapter)
             {
-                var createElement = function(name){
-                    return window.document.createElement(name);
-                }
                 var trigger = function(eventName){
                     $(element).trigger(eventName);
                 }
+                
                 if (configuration.options){
-                    configuration.optionsAdapter = OptionsAdapterJson(
+                    optionsAdapter = OptionsAdapterJson(
                         configuration.options,
                         configuration.getDisabled,
                         configuration.getSize,
                         configuration.getIsValid,
                         configuration.getIsInvalid,
                         trigger);
-                    if (!configuration.createInputId)
-                        configuration.createInputId = () => `${configuration.containerClass}-generated-filter-${element.id}`;
-                    // find direct child by tagName
-                    var picksElement = findDirectChildByTagName(element, "UL");
-                    staticContent = staticContentGenerator(configuration.containerClass, stylings, createElement, null, element, picksElement);
+
                 } 
                 else  
                 {
-                    var selectElement = null;
-                    var containerElement = null;
-                    if (element.tagName=="SELECT")
-                        selectElement = element;
-                    else if (element.tagName=="DIV")
-                    { 
-                        selectElement = findDirectChildByTagName(element, "SELECT");
-                        if (!selectElement)
-                            throw "BsMultiSelect: There are no SELECT element or options in the configuraion";
-                        containerElement = element;
-                    }
-                    else 
-                    {
-                        element.style.backgroundColor='red';
-                        element.style.color='white';
-                        throw 'BsMultiSelect: Only DIV and SELECT supported';
-                    }
-
-                    if (!containerElement && configuration.containerClass)
-                    {
-                        var $container = $(selectElement).closest('.' + configuration.containerClass);
-                        if ($container.length>0)
-                            containerElement =  $container.get(0);
-                    }
-
-                    if (!configuration.label)
-                    {
-                        let $formGroup = $(selectElement).closest('.form-group');
-                        if ($formGroup.length == 1) {
-                            let $label = $formGroup.find(`label[for="${selectElement.id}"]`);
-                            if ($label.length>0) {   
-                                let label = $label.get(0);
-                                let forId = label.getAttribute('for');
-                                if (forId == selectElement.id) {
-                                    configuration.label = label;
-                                }
-                            }   
-                        }
-                    }
-                    var $form = $(selectElement).closest('form');
-                    var form = null;
-                    if ($form.length == 1) {
-                        form = $form.get(0);
-                    }
-                    
-                    if (!configuration.getDisabled) {
-                        var $fieldset = $(selectElement).closest('fieldset');
-                    
-                        if ($fieldset.length == 1) {
-                            var fieldset = $fieldset.get(0);
-                            configuration.getDisabled = () => selectElement.disabled || fieldset.disabled;
-                        }else{
-                            configuration.getDisabled = () => selectElement.disabled;
-                        }
-                    }
-
-                    if (!configuration.getSize) {
-                        configuration.getSize = function(){
-                            var value=null;
-                            if (selectElement.classList.contains('custom-select-lg') || selectElement.classList.contains('form-control-lg') )
-                                value='custom-select-lg';
-                            else if (selectElement.classList.contains('custom-select-sm')  || selectElement.classList.contains('form-control-sm')  )
-                                value='custom-select-sm';
-                            else if (containerElement && containerElement.classList.contains('input-group-lg'))
-                                value='input-group-lg';
-                            else if (containerElement && containerElement.classList.contains('input-group-sm'))
-                                value='input-group-sm';
+                    optionsAdapter = createBsOptionAdapter(
+                        configuration,
+                        staticContent.selectElement, 
+                        staticContent.containerElement,
+                        trigger,
+                        (element, selector) => { 
+                            var q = $(element).closest(selector);
+                            var value = null;
+                            if (q.length>0)
+                                value= q.get(0);
                             return value;
                         }
-                    }
-                    if (!configuration.getIsValid) {
-                        configuration.getIsValid = function()
-                        { return selectElement.classList.contains('is-valid')}
-                    }
-                    if (!configuration.getIsInvalid) {
-                        configuration.getIsInvalid = function()
-                        { return selectElement.classList.contains('is-invalid')}
-                    }
-                    configuration.optionsAdapter = OptionsAdapterElement(
-                        selectElement, 
-                        configuration.getDisabled, 
-                        configuration.getSize, 
-                        configuration.getIsValid, 
-                        configuration.getIsInvalid,
-                        trigger, 
-                        form);
-
-                    if (!configuration.createInputId)
-                        configuration.createInputId = () => `${configuration.containerClass}-generated-input-${((selectElement.id)?selectElement.id:selectElement.name).toLowerCase()}-id`;
-
-                    
-                    var picksElement = null;
-                    if (containerElement)
-                        picksElement = findDirectChildByTagName(containerElement, "UL");
-                    staticContent = staticContentGenerator(configuration.containerClass, stylings, createElement, selectElement, containerElement, picksElement);
-                    
+                    )
                 }
             }
 
@@ -275,7 +194,7 @@ const compensation = {
                 }
             }
 
-            let labelAdapter = LabelAdapter(configuration.label, configuration.createInputId);
+            let labelAdapter = LabelAdapter(configuration.label, staticContent.createInputId);
 
 
             if (!configuration.placeholder)
@@ -285,7 +204,7 @@ const compensation = {
                     configuration.placeholder = $(element).data("placeholder");
             }
             
-            var bsAppearance =  createBsAppearance(staticContent.picksElement, stylesFunctions, optionsAdapter);
+            var bsAppearance =  createBsAppearance(staticContent.picksElement, configuration, optionsAdapter);
 
             var onUpdate = () => {
                 bsAppearance.updateSize();
@@ -298,10 +217,10 @@ const compensation = {
                 staticContent,
                 (option, pickElement) => configuration.pickContentGenerator(option, pickElement, stylings),
                 (option, choiceElement) => configuration.choiceContentGenerator(option, choiceElement, stylings),
-                pickContentGeneratorInst,
-                choiceContentGeneratorInst,
+                //pickContentGeneratorInst,
+                //choiceContentGeneratorInst,
                 labelAdapter,
-                createStylingComposite,
+                //createStylingComposite,
                 configuration.placeholder,
                 onUpdate,
                 onDispose,
@@ -317,7 +236,7 @@ const compensation = {
             multiSelect.init();
 
             return multiSelect;
-            };
+            }
         addToJQueryPrototype('BsMultiSelect', createPlugin, defaults, $);
     }
 )(window, $, Popper)

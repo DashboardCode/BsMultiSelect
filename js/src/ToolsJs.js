@@ -1,12 +1,12 @@
 export function extendIfUndefined(destination, source) {
-    for (var property in source)
+    for (let property in source)
         if (destination[property] === undefined)
             destination[property] = source[property];
 }
 
 export function createEmpty(source, value) {
     var destination={};
-    for (var property in source)
+    for (let property in source)
          destination[property] = value;
     return destination;
 }
@@ -16,7 +16,7 @@ function forEachRecursion(f, i){
         return;
     f(i.value); 
     forEachRecursion(f, i.prev);
-};
+}
 
 export function List(){
     var tail = null;
@@ -24,7 +24,7 @@ export function List(){
     return {
         add(e){
             if (tail){
-                tail.next = {value:e , prev:tail};
+                tail.next = {value:e, prev:tail};
                 tail = tail.next;
             } else 
                 tail = {value:e}
@@ -45,12 +45,13 @@ export function List(){
             return remove;
         },
         forEach(f){
-            forEachRecursion(f,tail);
+            forEachRecursion(f, tail);
         },
-        getTail(){return (tail)?tail.value:null},
-        getCount(){return count},
-        isEmpty(){return count==0},
-        reset(){tail=null;count=0;}
+        getTail(){ return (tail)?tail.value:null },
+        getCount(){ return count },
+        isEmpty(){ return count==0 },
+        reset(){ tail=null; 
+            count = 0 }
     }
 }
 
@@ -64,7 +65,7 @@ export function pushUnique(array, item){
 
 export function sync(...functions){
     functions.forEach(
-        function(f){
+        (f) => {
             if (f)
                 f();
         }

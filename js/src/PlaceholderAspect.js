@@ -22,8 +22,6 @@ export function PlaceholderAspect(placeholderText, picksIsEmpty, filterIsEmpty, 
     showPlacehodler(true);
 
     return {
-        init(){
-        },
         updatePlacehodlerVisibility(){
             showPlacehodler(picksIsEmpty() && filterIsEmpty());
         },

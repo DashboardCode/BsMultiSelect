@@ -1,157 +1,143 @@
-export function adjustConfiguration(configuration){
-    if (!configuration.classes)
-        configuration.classes={}
+import {setStylingStyle,  setStylingСlass} from './ToolsStyling';
 
-    if (configuration["selectedPanelDisabledBackgroundColor"]){
-        console.log("DashboarCode.BsMultiSelect: selectedPanelDisabledBackgroundColor is depricated, use - picks_disabled: {backgroundColor: '#e9ecef'}");
-        if(!configuration["picks_disabled"]){
-            configuration.picks_disabled={backgroundColor: configuration["selectedPanelDisabledBackgroundColor"]}
+const transformStyles = [
+    {old:'selectedPanelDisabledBackgroundColor', opt:'nocss_picks_disabled', style:"backgroundColor", samplVal:"'myValue'"},
+    {old:'selectedPanelFocusValidBoxShadow', opt:'nocss_picks_focus_valid', style:"boxShadow", samplVal:"'myValue'"},
+    {old:'selectedPanelFocusInvalidBoxShadow', opt:'nocss_picks_focus_invalid', style:"boxShadow", samplVal:"'myValue'"},
+    {old:'selectedPanelDefMinHeight', opt:'nocss_picks_def', style:"minHeight", samplVal:"'myValue'"},
+    {old:'selectedPanelLgMinHeight', opt:'nocss_picks_lg', style:"minHeight", samplVal:"'myValue'"},
+    {old:'selectedPanelSmMinHeight', opt:'nocss_picks_sm', style:"minHeight", samplVal:"'myValue'"},
+    {old:'selectedItemContentDisabledOpacity', opt:'nocss_choiceLabel_disabled', style:"opacity", samplVal:"'myValue'"}
+]
+
+const transformClasses = [
+    {old:'dropDownMenuClass', opt:'choices', samplVal:"'myValue'"},
+    {old:'dropDownItemClass', opt:'choice', samplVal:"'myValue'"},
+    {old:'dropDownItemHoverClass', opt:'choice_hover', samplVal:"'myValue'"},
+    {old:'selectedPanelClass', opt:'picks', samplVal:"'myValue'"},
+    {old:'selectedItemClass', opt:'pick', samplVal:"'myValue'"},
+    {old:'removeSelectedItemButtonClass', opt:'pickButton', samplVal:"'myValue'"},
+    {old:'filterInputItemClass', opt:'pickFilter', samplVal:"'myValue'"},
+    {old:'filterInputClass', opt:'filterInput', samplVal:"'myValue'"},
+    {old:'selectedPanelFocusClass', opt:'picks_focus', samplVal:"'myValue'"},
+    {old:'selectedPanelDisabledClass', opt:'picks_disabled', samplVal:"'myValue'"},
+    {old:'selectedItemContentDisabledClass', opt:'pick_disabled', samplVal:"'myValue'"}
+]
+
+export function adjustLegacyConfiguration(configuration){
+    if (configuration.selectedPanelFocusBorderColor || configuration.selectedPanelFocusBoxShadow){
+        console.log("DashboarCode.BsMultiSelect: selectedPanelFocusBorderColor and selectedPanelFocusBoxShadow are depricated, use - nocss_picks_focus:{borderColor:'myValue', boxShadow:'myValue'}");
+        if(!configuration.nocss_picks_focus){
+            configuration.nocss_picks_focus = {boxShadow: configuration.selectedPanelFocusBoxShadow, borderColor: configuration.selectedPanelFocusBorderColor}
         }
-        delete person.selectedPanelDisabledBackgroundColor;
-    }
-    if (configuration["selectedPanelFocusBorderColor"] || configuration["selectedPanelFocusBoxShadow"]){
-        console.log("DashboarCode.BsMultiSelect: selectedPanelFocusBorderColor and selectedPanelFocusBoxShadow are depricated, use - picks_focus: {borderColor: '#80bdff', boxShadow: '0 0 0 0.2rem rgba(0, 123, 255, 0.25)'}");
-        if(!configuration["picks_focus"]){
-            configuration.picks_focus= {boxShadow:  configuration["selectedPanelFocusBoxShadow"], borderColor: configuration["selectedPanelFocusBorderColor"]}
-        }
-        delete person.selectedPanelFocusBorderColor;
-        delete person.selectedPanelFocusBoxShadow;
+        delete configuration.selectedPanelFocusBorderColor;
+        delete configuration.selectedPanelFocusBoxShadow;
     }
 
-    if (configuration["selectedPanelFocusValidBoxShadow"]){
-        console.log("DashboarCode.BsMultiSelect: selectedPanelFocusValidBoxShadow is depricated, use - picks_focus_valid: {boxShadow: '0 0 0 0.2rem rgba(40, 167, 69, 0.25)'}");
-        if(!configuration["picks_focus_valid"]){
-            configuration.picks_focus_valid= {boxShadow:  configuration["selectedPanelFocusValidBoxShadow"]}
+    transformStyles.forEach(
+        (i)=>{
+            if (configuration[i.old]){
+                console.log(`DashboarCode.BsMultiSelect: ${i.old} is depricated, use - ${i.opt}:{${i.style}:'${i.samplVal}'}`);
+                if(!configuration[i.opt]){
+                    let opt = {}
+                    opt[i.style] = configuration[i.old]
+                    configuration[i.opt]=opt.xx;
+                }
+                delete configuration[i.old];
+            }
         }
-        delete person.selectedPanelFocusValidBoxShadow;
-    }
-    if (configuration["selectedPanelFocusInvalidBoxShadow"]){
-        console.log("DashboarCode.BsMultiSelect: selectedPanelFocusInvalidBoxShadow is depricated, use - picks_focus_invalid: {boxShadow: '0 0 0 0.2rem rgba(220, 53, 69, 0.25)'}");
-        if(!configuration["picks_focus_invalid"]){
-            configuration.picks_focus_invalid= {boxShadow:  configuration["selectedPanelFocusInvalidBoxShadow"]}
-        }
-        delete person.selectedPanelFocusInvalidBoxShadow;
-    }
-    if (configuration["selectedPanelDefMinHeight"]){
-        console.log("DashboarCode.BsMultiSelect: selectedPanelDefMinHeight is depricated, use - picks_def: {minHeight: 'calc(2.25rem + 2px)'}");
-        if(!configuration["picks_def"]){
-            configuration.picks_def= {minHeight:  configuration["selectedPanelDefMinHeight"]}
-        }
-        delete person.selectedPanelDefMinHeight;
-    }
-    if (configuration["selectedPanelLgMinHeight"]){
-        console.log("DashboarCode.BsMultiSelect: selectedPanelLgMinHeight is depricated, use - picks_lg:  {minHeight: 'calc(2.875rem + 2px)'}");
-        if(!configuration["picks_lg"]){
-            configuration.picks_lg= {minHeight:  configuration["selectedPanelLgMinHeight"]}
-        }
-        delete person.selectedPanelLgMinHeight;
-    }
-    if (configuration["selectedPanelSmMinHeight"]){
-        console.log("DashboarCode.BsMultiSelect: selectedPanelSmMinHeight is depricated, use - picks_sm:  {minHeight: 'calc(1.8125rem + 2px)'}");
-        if(!configuration["picks_sm"]){
-            configuration.picks_sm= {minHeight:  configuration["selectedPanelSmMinHeight"]}
-        }
-        delete person.selectedPanelSmMinHeight;
-    }
-    if (configuration["selectedItemContentDisabledOpacity"]){
-        console.log("DashboarCode.BsMultiSelect: selectedItemContentDisabledOpacity is depricated, use - choiceLabel_disabled: {opacity: '.65'}");
-        if(!configuration["choiceLabel_disabled"]){
-            configuration.choiceLabel_disabled= {opacity:  configuration["selectedItemContentDisabledOpacity"]}
-        }
-        delete person.selectedItemContentDisabledOpacity;
-    }
-    if (configuration["inputColor"]){
-        console.log("inputColor is depricated, remove parameter");
-        delete person.inputColor;
+    )
+    
+    if (configuration.inputColor){
+        console.log("DashboarCode.BsMultiSelect: inputColor is depricated, remove parameter");
+        delete configuration.inputColor;
     }
     
-    if (!configuration.styling)
-        configuration.styling={}
-    var styling =configuration.styling;
-    if (configuration["dropDownMenuClass"]){
-        console.log("DashboarCode.BsMultiSelect: dropDownMenuClass is depricated, use - styling.choices: 'dropdown-menu'");
-        if(!styling["choices"]){
-            styling.choices= configuration["dropDownMenuClass"]
+    transformClasses.forEach( (i) => {
+        if (configuration[i.old]){
+            console.log(`DashboarCode.BsMultiSelect: ${i.old} is depricated, use - stylings:{${i.opt}:${i.samplVal}}`);
+            if(!stylings[i.opt]){
+                stylings[i.opt]= configuration[i.old]
+            }
+            delete configuration[i.old];
         }
-        delete person.dropDownMenuClass;
-    }
-    if (configuration["dropDownItemClass"]){
-        console.log("DashboarCode.BsMultiSelect: dropDownItemClass is depricated, use - styling.choice: 'px-2'");
-        if(!styling["choice"]){
-            styling.choice= configuration["dropDownItemClass"]
-        }
-        delete person.dropDownItemClass;
-    }
+    })
+    
+    if (!configuration.stylings)
+        configuration.stylings={}
+    var stylings =configuration.stylings;
 
-    if (configuration["dropDownItemHoverClass"]){
-        console.log("DashboarCode.BsMultiSelect: dropDownItemHoverClass is depricated, use - styling.choice_hover: 'text-primary bg-light'");
-        if(!styling["choice_hover"]){
-            styling.choice_hover= configuration["dropDownItemHoverClass"]
+    if (configuration.useCss){
+        console.log("DashboarCode.BsMultiSelect: useCss is depricated, use - 'useOwnCss: false|true'");
+        if(!stylings.pick_disabled){
+            configuration.useOwnCss= configuration.useCss
         }
-        delete person.dropDownItemHoverClass;
-    }
-
-    if (configuration["selectedPanelClass"]){
-        console.log("DashboarCode.BsMultiSelect: selectedPanelClass is depricated, use - styling.picks: 'form-control'");
-        if(!styling["picks"]){
-            styling.picks= configuration["selectedPanelClass"]
-        }
-        delete person.selectedPanelClass;
-    }
-
-    if (configuration["selectedItemClass"]){
-        console.log("DashboarCode.BsMultiSelect: selectedItemClass is depricated, use - styling.pick: 'badge'");
-        if(!styling["pick"]){
-            styling.pick= configuration["selectedItemClass"]
-        }
-        delete person.selectedItemClass;
-    }
-
-    if (configuration["removeSelectedItemButtonClass"]){
-        console.log("DashboarCode.BsMultiSelect: removeSelectedItemButtonClass is depricated, use - styling.pickButton: 'close'");
-        if(!styling["pickButton"]){
-            styling.pickButton= configuration["removeSelectedItemButtonClass"]
-        }
-        delete person.removeSelectedItemButtonClass;
-    }    
-
-    if (configuration["filterInputItemClass"]){
-        console.log("DashboarCode.BsMultiSelect: filterInputItemClass is depricated, use - styling.pickFilter: ''");
-        if(!styling["pickFilter"]){
-            styling.pickFilter= configuration["filterInputItemClass"]
-        }
-        delete person.filterInputItemClass;
-    }    
-
-    if (configuration["filterInputClass"]){
-        console.log("DashboarCode.BsMultiSelect: filterInputClass is depricated, use - styling.filterInput: ''");
-        if(!styling["filterInput"]){
-            styling.filterInput= configuration["filterInputClass"]
-        }
-        delete person.filterInputClass;
-    }    
-
-    if (configuration["selectedPanelFocusClass"]){
-        console.log("DashboarCode.BsMultiSelect: selectedPanelFocusClass is depricated, use - styling.picks_focus : 'focus'");
-        if(!styling["picks_focus"]){
-            styling.picks_focus= configuration["selectedPanelFocusClass"]
-        }
-        delete person.selectedPanelFocusClass;
+        delete configuration.useCss;
     }  
-
-    if (configuration["selectedPanelDisabledClass"]){
-        console.log("DashboarCode.BsMultiSelect: selectedPanelDisabledClass is depricated, use - styling.picks_disabled: 'disabled'");
-        if(!styling["picks_focus"]){
-            styling.picks_focus= configuration["selectedPanelDisabledClass"]
+}
+export function replaceConfigurationClassValues(stylings, configuration){
+    var cfgStylings = configuration.stylings;
+    if (cfgStylings)
+    {
+        if (cfgStylings.choices){
+            setStylingСlass(stylings.choices.classes, cfgStylings.choices);
         }
-        delete person.selectedPanelDisabledClass;
-    }  
-
-    if (configuration["selectedItemContentDisabledClass"]){
-        console.log("DashboarCode.BsMultiSelect: selectedItemContentDisabledClass is depricated, use - styling.pick_disabled: 'disabled'");
-        if(!styling["pick_disabled"]){
-            styling.pick_disabled= configuration["selectedItemContentDisabledClass"]
+        if (cfgStylings.choice){
+            setStylingСlass(stylings.choice.classes, cfgStylings.choice);
         }
-        delete person.selectedItemContentDisabledClass;
-    }  
+        if (cfgStylings.choice_hover){
+            setStylingСlass(stylings.choice_hover.classes, cfgStylings.choice_hover);
+        }
+        if (cfgStylings.picks){
+            setStylingСlass(stylings.picks.classes, cfgStylings.picks);
+        }
+        if (cfgStylings.pick){
+            setStylingСlass(stylings.pick.classes, cfgStylings.pick);
+        }
+        if (cfgStylings.pickButton){
+            setStylingСlass(stylings.pickButton.classes, cfgStylings.pickButton);
+        }
+        if (cfgStylings.pickFilter){
+            setStylingСlass(stylings.pickFilter.classes, cfgStylings.pickFilter);
+        }
+        if (cfgStylings.filterInput){
+            setStylingСlass(stylings.filterInput.classes, cfgStylings.filterInput);
+        }
+        if (cfgStylings.picks_focus){
+            setStylingСlass(stylings.picks_focus.classes, cfgStylings.picks_focus);
+        }
+        if (cfgStylings.picks_disabled){
+            setStylingСlass(stylings.picks_disabled.classes, cfgStylings.picks_disabled);
+        }
+        if (cfgStylings.pick_disabled){
+            setStylingСlass(stylings.pick_disabled.classes, cfgStylings.pick_disabled);
+        }
+    }
+}
+
+export function injectConfigurationStyleValues(stylings, configuration){
+    if (configuration.nocss_picks_disabled){
+        setStylingStyle(stylings, "picks_disabled", configuration.nocss_picks_disabled);
+    }
+    if (configuration.nocss_picks_focus){
+        setStylingStyle(stylings, "picks_focus", configuration.nocss_picks_focus);
+    }
+    if (configuration.nocss_picks_focus_valid){
+        setStylingStyle(stylings, "picks_focus_valid", configuration.nocss_picks_focus_valid);
+    }
+    if (configuration.nocss_picks_focus_invalid){
+        setStylingStyle(stylings, "picks_focus_invalid", configuration.nocss_picks_focus_invalid);
+    }
+    if (configuration.nocss_picks_def){
+        setStylingStyle(stylings, "picks_def", configuration.nocss_picks_def);
+    }
+    if (configuration.nocss_picks_lg){
+        setStylingStyle(stylings, "picks_lg", configuration.nocss_picks_lg);
+    }
+    if (configuration.nocss_picks_sm){
+        setStylingStyle(stylings, "picks_sm", configuration.nocss_picks_sm);
+    }
+    if (configuration.nocss_choiceLabel_disabled){
+        setStylingStyle(stylings, "choiceLabel_disabled", configuration.nocss_choiceLabel_disabled);
+    }
 }

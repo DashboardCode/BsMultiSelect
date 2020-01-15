@@ -51,7 +51,9 @@ export class MultiSelect {
 
     constructor(optionsAdapter, setSelected, staticContent, /* styling, */
         pickContentGenerator, choiceContentGenerator, 
-        labelAdapter, createStylingComposite, placeholderText,
+        labelAdapter, 
+        //MultiSelect, 
+        placeholderText,
         onUpdate, onDispose, popper, window) {
 
         this.onUpdate = onUpdate;
@@ -64,7 +66,7 @@ export class MultiSelect {
         this.pickContentGenerator = pickContentGenerator;
         this.choiceContentGenerator = choiceContentGenerator;
         this.labelAdapter = labelAdapter;
-        this.createStylingComposite = createStylingComposite;
+        //this.createStylingComposite = createStylingComposite;
         this.placeholderText = placeholderText;
         this.setSelected=setSelected; // should I rebind this for callbacks? setSelected.bind(this);
         this.popper = popper;
@@ -88,10 +90,9 @@ export class MultiSelect {
 
     
     getVisibleMultiSelectDataList(){
-        if (this.filteredMultiSelectDataList)
-            return this.filteredMultiSelectDataList;
-        else
-            return this.MultiSelectDataList;
+        return (this.filteredMultiSelectDataList)? 
+            this.filteredMultiSelectDataList:
+            this.MultiSelectDataList
     }
 
     resetFilter(){
@@ -178,7 +179,8 @@ export class MultiSelect {
         {
             let multiSelectData = this.MultiSelectDataList[i];
             if (!multiSelectData.excludedFromSearch)
-                multiSelectData.toggle();
+                if (multiSelectData.toggle)
+                    multiSelectData.toggle();
         }
         this.resetFilter();
     }
@@ -208,7 +210,6 @@ export class MultiSelect {
     updateDataImpl(){
         var fillChoices = () => {
             let options = this.optionsAdapter.getOptions();
-            var j = 0;
             for(let i = 0; i<options.length; i++) {
                 let option = options[i];
 
@@ -323,12 +324,12 @@ export class MultiSelect {
         let isComponentDisabled = this.optionsAdapter.getDisabled();
         if (this.isComponentDisabled!==isComponentDisabled){
             if (isComponentDisabled) {
-                this.picksPanel.disable();
+                this.picksPanel.disable(true);
                 this.aspect.disable();
                 this.placeholderAspect.setDisabled(true);
                 this.staticContent.disable();
             } else {
-                this.picksPanel.enable();
+                this.picksPanel.disable(false);
                 this.aspect.enable();
                 this.placeholderAspect.setDisabled(false);
                 this.staticContent.enable();
@@ -351,7 +352,8 @@ export class MultiSelect {
                 let fullMatchMultiSelectData =  this.filteredMultiSelectDataList[0];
                 if (fullMatchMultiSelectData.searchText == text)
                 {
-                    fullMatchMultiSelectData.toggle();
+                    if (fullMatchMultiSelectData.toggle)
+                        fullMatchMultiSelectData.toggle();
                     this.filterPanel.setEmpty(); // clear
                     isEmpty=true;
                 }
@@ -449,19 +451,19 @@ export class MultiSelect {
             },
             /*onPickRemoved*/ (multiSelectData, removePick) => {
                 let confirmed = this.setSelected(multiSelectData.option, false);
-                if (confirmed==null || confirmed) {
+                if (confirmed===null || confirmed) {
                     var {createPick, count} = removePick();
                     multiSelectData.excludedFromSearch = multiSelectData.isOptionDisabled;
                     if (multiSelectData.isOptionDisabled)
                     {
                         multiSelectData.ChoiceContent.disable( /*isDisabled*/ true, /*isSelected*/ true); // TODO test it, THERE SHOULD BE SOMETHING WRONGGGG
-                        multiSelectData.toggle = ()=> {};
+                        multiSelectData.toggle = null;
                     }
                     else
                     {
                         multiSelectData.toggle = ()=>{
                             let confirmed = this.setSelected(multiSelectData.option, true);
-                            if (confirmed==null || confirmed){
+                            if (confirmed===null || confirmed){
                                 createPick(multiSelectData, multiSelectData.option);
                                 this.optionsAdapter.triggerChange();
                             }
@@ -479,8 +481,6 @@ export class MultiSelect {
                 this.resetFilter();
             }
         );
-
-        
 
         this.choicesPanel = ChoicesPanel(
             createElement,
@@ -503,7 +503,6 @@ export class MultiSelect {
             this.staticContent.filterInputElement
         )
 
-        this.placeholderAspect.init();
         this.placeholderAspect.updateEmptyInputWidth();
 
         this.aspect =  MultiSelectInputAspect(

@@ -4,7 +4,7 @@ export function removeElement(e) {e.parentNode.removeChild(e)}
 
 export function findDirectChildByTagName(element, tagName){
     var returnValue = null;
-    for (var i = 0; i<element.children.length; i++)
+    for (let i = 0; i<element.children.length; i++)
     {
         let tmp = element.children[i];
         if (tmp.tagName==tagName)
@@ -32,9 +32,9 @@ export function removeClasses(element, classes){
     modifyClasses(classes, e=>removeClass(element,e))
 }
 
-export function setStyles(element, styles){
-    for (var property in styles)
-        element.style[property] = styles[property];
+export function setStyle(element, style){
+    for (let property in style)
+        element.style[property] = style[property];
 }
 
 function modifyClasses(classes, modify){
@@ -42,7 +42,7 @@ function modifyClasses(classes, modify){
         if (Array.isArray(classes))
             classes.forEach(e => modify(e))
         else{
-            var array = classes.split(" ");
+            let array = classes.split(" ");
             array.forEach(e => modify(e))
         }
     }
@@ -62,7 +62,7 @@ export function setClassAndStyle(element, classes, styles){
             element.classList.add(e);
         }
     )
-    for (var property in styles)
+    for (let property in styles)
         element.style[property]  = styles[property];
 }
 
@@ -72,7 +72,7 @@ export function unsetClassAndStyle(element, classes, styles){
             element.classList.remove(e);
         }
     )
-    for (var property in styles)
+    for (let property in styles)
         element.style[property]  = '';
 }
 
@@ -156,32 +156,31 @@ const compensation = {
 */
 
 
-
 export function constructStyling(source){
     var destination = {classes:[], styles:{}};
     if (source)
     {
         if (source instanceof String){
-            source.split(" ").forEach(e => pushUnique(destination.classes))
+            source.split(" ").forEach(e => pushUnique(destination.classes, e))
         } else if (source instanceof Array){
-            source.forEach(e => pushUnique(destination.classes))
+            source.forEach(e => pushUnique(destination.classes, e))
         } else if (source instanceof Object){
             if (source.classes){
-                var classes = source.classes;
+                let classes = source.classes;
                 if (source instanceof String){
-                    classes.split(" ").forEach(e => pushUnique(destination.classes))
+                    classes.split(" ").forEach(e => pushUnique(destination.classes, e))
                 } else if (classes instanceof Array){
-                    classes.forEach(e => pushUnique(destination.classes))
+                    classes.forEach(e => pushUnique(destination.classes, e))
                 }
             } else
             {
-                var styles = null;
+                let styles = null;
                 if (source.styles) {
                     styles = source.styles;
                 } else {
                     styles = source;
                 }
-                for (var property in styles)
+                for (let property in styles)
                     destination.styles[property] = styles[property];
             }
         }
@@ -198,7 +197,7 @@ export function addStyling(element, classes, styles){
         )
     }
     if (styles){
-        for (var property in styles)
+        for (let property in styles)
            element.style[property]='';
     }
 }
@@ -212,7 +211,7 @@ export function removeStyling(element, classes, styles){
         )
     }
     if (styles){
-        for (var property in styles)
+        for (let property in styles)
            element.style[property]=styles[property];
     }    
 }

@@ -1,24 +1,52 @@
-import {setStyles, setStyling, unsetStyling} from './ToolsDom';
+import {findDirectChildByTagName, setStyle, setStyling, unsetStyling} from './ToolsDom';
 
-export function staticContentGenerator(containerClass, stylings, createElement, selectElement, containerElement, picksElement) { 
-    var ownContainerElement = false;
-    
+export function staticContentGenerator(containerClass, stylings, createElement, element) { 
+    var selectElement = null;
+    var containerElement = null;
+    if (element.tagName=="SELECT"){
+        selectElement = element;
+        if (containerClass){
+            if (selectElement.parentNode && selectElement.parentNode.classList.contains(containerClass) )
+                containerElement = selectElement.parentNode;
+            // TODO: do I need this?    
+            //if (selectElement.nextSibling  && selectElement.nextSibling.classList.contains(containerClass) )
+            //    containerElement = selectElement.parentNode;
+        }
+    }
+    else if (element.tagName=="DIV")
+    { 
+        containerElement = element;
+        selectElement = findDirectChildByTagName(element, "SELECT");
+        if (!selectElement)
+            throw new Error("BsMultiSelect: There are no SELECT element or options in the configuraion");
+
+    }
+    else 
+    {
+        element.style.backgroundColor='red';
+        element.style.color='white';
+        throw new Error('BsMultiSelect: Only DIV and SELECT supported');
+    }
+
+
+    var picksElement = null;
+    var ownPicksElement = false;
+    if (containerElement)
+        picksElement = findDirectChildByTagName(containerElement, "UL");
+    if (!picksElement){
+        picksElement = createElement('UL');
+        ownPicksElement = true;
+    }
+
+    var ownContainerElement = false;        
     if (!containerElement){
         containerElement = createElement('div');
         ownContainerElement= true;
     }
     setStyling(containerElement, containerClass);
 
-    var ownPicksElement = false;
-    if (!picksElement){
-        picksElement = createElement('UL');
-        ownPicksElement = true;
-    }
-
-
     var choicesElement = createElement('UL');
     choicesElement.style.display="none";
-
     
     var backupDisplay = null;
     if (selectElement)
@@ -35,15 +63,26 @@ export function staticContentGenerator(containerClass, stylings, createElement, 
     setStyling(pickFilterElement,  stylings.pickFilter);
     setStyling(filterInputElement, stylings.filterInput);
 
+    var createInputId = null;
+    if(selectElement)
+        createInputId = () => `${containerClass}-generated-input-${((selectElement.id)?selectElement.id:selectElement.name).toLowerCase()}-id`;
+    else
+        createInputId = () => `${containerClass}-generated-filter-${containerElement.id}`;
+
     return {
         containerElement,
         picksElement,
         choicesElement,
         pickFilterElement,
         filterInputElement,
-        init(){
-            if (ownPicksElement)
-                containerElement.appendChild(picksElement);
+        createInputId,
+        // init(){
+        //     if (ownPicksElement)
+        //         containerElement.appendChild(picksElement);
+        // },
+        attachContainer(){
+            if (ownContainerElement)
+                selectElement.parentNode.insertBefore(containerElement, selectElement.nextSibling);
         },
         appendToContainer(){
             if (ownContainerElement || !selectElement)            
@@ -56,26 +95,23 @@ export function staticContentGenerator(containerClass, stylings, createElement, 
             {
                 if (selectElement)
                 {
+                    // TODO picksElement element should be moved to attach
                     selectElement.parentNode.insertBefore(choicesElement, selectElement.nextSibling);
                     if (ownPicksElement)
                         selectElement.parentNode.insertBefore(picksElement, choicesElement);
                 }
             }
         },
-        attachContainer(){
-            if (ownContainerElement)
-                selectElement.parentNode.insertBefore(containerElement, selectElement.nextSibling);
-        },
         enable(){
             unsetStyling(picksElement, stylings.picks_disabled)
         },
 
         disable(){
-            setStyles(picksElement, stylings.picks_disabled)
+            setStyle(picksElement, stylings.picks_disabled)
         },
 
         focusIn(){
-            setStyles(picksElement, stylings.picks_focus)
+            setStyle(picksElement, stylings.picks_focus)
         },
 
         focusOut(){

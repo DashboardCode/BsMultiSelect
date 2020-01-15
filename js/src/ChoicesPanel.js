@@ -59,7 +59,8 @@ export function ChoicesPanel(createElement, choicesElement, onShow, onHide,
 
     function toggleHovered(){
         if (hoveredMultiSelectData) {
-            hoveredMultiSelectData.toggle();
+            if (hoveredMultiSelectData.toggle)
+                hoveredMultiSelectData.toggle();
             resetChoicesHover();
             hideChoices(); // always hide 1st
             resetFilter();
@@ -72,7 +73,7 @@ export function ChoicesPanel(createElement, choicesElement, onShow, onHide,
         let newIndex=null;
         if (length > 0) {
             if (down) {
-                let i = hoveredMultiSelectDataIndex==null?0:hoveredMultiSelectDataIndex+1;
+                let i = hoveredMultiSelectDataIndex===null?0:hoveredMultiSelectDataIndex+1;
                 while(i<length){
                     if (visibleMultiSelectDataList[i].visible){
                         newIndex=i;
@@ -81,7 +82,7 @@ export function ChoicesPanel(createElement, choicesElement, onShow, onHide,
                     i++;
                 }
             } else {
-                let i = hoveredMultiSelectDataIndex==null?length-1:hoveredMultiSelectDataIndex-1;
+                let i = hoveredMultiSelectDataIndex===null?length-1:hoveredMultiSelectDataIndex-1;
                 while(i>=0){
                     if (visibleMultiSelectDataList[i].visible){
                         newIndex=i;
@@ -92,7 +93,7 @@ export function ChoicesPanel(createElement, choicesElement, onShow, onHide,
             }
         }
         
-        if (newIndex!=null)
+        if (newIndex!==null)
         {
             if (hoveredMultiSelectData)
                 hoveredMultiSelectData.ChoiceContent.hoverOut()
@@ -174,7 +175,8 @@ export function ChoicesPanel(createElement, choicesElement, onShow, onHide,
             choiceContent.setChoiceContentDisabled(isSelected )
 
         choiceContent.onSelected( () => {
-            MultiSelectData.toggle();
+            if (MultiSelectData.toggle)
+                MultiSelectData.toggle();
             filterPanelSetFocus();
         });
         // ------------------------------------------------------------------------------
@@ -193,11 +195,11 @@ export function ChoicesPanel(createElement, choicesElement, onShow, onHide,
         {
             MultiSelectData.excludedFromSearch =  MultiSelectData.isOptionDisabled;
             if (MultiSelectData.isOptionDisabled)
-                MultiSelectData.toggle = () => { }
+                MultiSelectData.toggle = null;
             else
                 MultiSelectData.toggle = () =>  {
                     var confirmed = setSelected(MultiSelectData.option, true);
-                    if (confirmed==null || confirmed) {
+                    if (confirmed===null || confirmed) {
                         createSelectedItem();
                         triggerChange();
                     }
