@@ -4,6 +4,11 @@ export function extendIfUndefined(destination, source) {
             destination[property] = source[property];
 }
 
+export function extendAndOverride(destination, source) {
+    for (let property in source)
+        destination[property] = source[property];
+}
+
 export function createEmpty(source, value) {
     var destination={};
     for (let property in source)

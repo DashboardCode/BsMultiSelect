@@ -3,17 +3,31 @@ import {pushUnique} from './ToolsJs';
 export function removeElement(e) {e.parentNode.removeChild(e)}
 
 export function findDirectChildByTagName(element, tagName){
-    var returnValue = null;
+    let value = null;
     for (let i = 0; i<element.children.length; i++)
     {
         let tmp = element.children[i];
         if (tmp.tagName==tagName)
         {
-            returnValue = tmp;
+            value = tmp;
             break;
         }
     }
-    return returnValue;
+    return value;
+}
+
+export function closestByTagName(element, tagName){
+    return closest(element, e => e.tagName===tagName)
+}
+
+export function closestByClassName(element, className){
+    return closest(element, e => e.classList.contains(className))
+}
+
+export function closest(element, predicate){
+    if (!element) return null;
+    if (predicate(element)) return element;
+    return closest(element.parentNode, predicate);
 }
 
 export function addClass(element, c){
@@ -92,6 +106,8 @@ export function EventBinder(){
         }
     }
 }
+
+
 
 /*
 const styling = {

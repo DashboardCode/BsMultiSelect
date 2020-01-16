@@ -1,7 +1,8 @@
 
-import {EventBinder} from './ToolsDom';
+import {EventBinder, closestByTagName} from './ToolsDom';
 
-function OptionsAdapterElement(selectElement, getDisabled, getSize, getIsValid, getIsInvalid, trigger, form) {
+function OptionsAdapterElement(selectElement, getDisabled, getSize, getIsValid, getIsInvalid, trigger) {
+    var form = closestByTagName(selectElement, 'form');
     var eventBuilder = EventBinder();
     return {
         getOptions(){

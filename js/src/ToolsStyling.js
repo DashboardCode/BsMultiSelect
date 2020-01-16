@@ -1,27 +1,46 @@
-import {setClassAndStyle, unsetClassAndStyle} from './ToolsJs';
-import {setStyle} from './ToolsDom';
+import {extendAndOverride} from './ToolsJs';
+import {setClassAndStyle, unsetClassAndStyle} from './ToolsDom';
 
-function cloneStylingItem(source){
-    var destination = null;
-    if (source)
+
+function extractClasses(styling){
+    var value=[];
+    if (styling instanceof String){
+        value = [...styling.split(' ')];
+    } else if (styling instanceof Array){
+        value = [...styling];
+    } else if (styling instanceof Object){
+        if (styling.classes){
+            if (styling.classes instanceof String){
+                value = [...styling.classes.split(' ')];
+            } else if (styling.classes instanceof Array){
+                value = [...styling.classes];
+            }
+        }
+    }
+    return value; 
+}
+
+function mergeStylingItem(destination, styling){
+    if (styling)
     {
-        if (source instanceof String){
-            destination.classes = source;
-        } else if (source instanceof Array){
-            destination = [...source];
-        } else if (source instanceof Object){
-            if (source.classes){
-                if (source instanceof String){
-                    destination.classes = source;
-                } else if (destination.classes instanceof Array){
-                    destination.classes = [...source];
+        if (styling instanceof String){
+            destination.classes = [...styling.split(' ')];
+        } else if (styling instanceof Array){
+            destination.classes = [...styling];
+        } else if (styling instanceof Object){
+            if (styling.classes){
+                if (styling.classes instanceof String){
+                    destination.classes = [...styling.classes.split(' ')];
+                } else if (styling.classes instanceof Array){
+                    destination.classes = [...styling.classes];
                 }
-            } else
+            } 
+            else
             {
-                if (source.styles) {
-                    destination.styles= { ...source.styles }
+                if (styling.styles) {
+                    extendAndOverride(destination.styles, styling.styles)
                 } else {
-                    destination= { ...source.styles } //Object.assign({},source.styles);
+                    extendAndOverride(destination.styles, styling)
                 }
             }
         }
@@ -29,36 +48,48 @@ function cloneStylingItem(source){
     return destination;
 }
 
-export function cloneStyling(source){
-    var destination = null;
-    if (source)
+export function cloneStylings(stylings){
+    var destination = {};
+    if (stylings)
     {
-        for (let property in source)
-            destination.property = cloneStylingItem(source[property]);
+        for (let property in stylings)
+        {
+            destination[property] = {classes:[], styles:{}};
+            mergeStylingItem(destination[property], stylings[property]);
+        }
     }
     return destination;
 }
 
-export function extendStyling(destination, source){
-    if (source)
+export function mergeStylings(stylings, compensations){
+    if (compensations)
     {
-        for (let property in source)
-            if (destination.property==undefined)
-                destination.property=cloneStylingItem(source[property]);
+        for (let property in compensations)
+        {
+            mergeStylingItem(stylings[property], compensations[property]);
+        }
     }
-    return destination;
+    return stylings;
 }
 
-
-export function setStylingStyle(stylings, name, style){
-    var s = stylings[name]
-    if (!s){
-        s = {style:{}}
-        s = stylings[s]
+export function setStylingStyles(stylings, name, styles){
+    var styling = stylings[name]
+    if (!styling){
+        styling = {styles:{}, classe:[]}
+        stylings[name] = styling
     }
-    setStyle(s, style);
+    extendAndOverride(styling.styles, styles);
 }
 
+export function setStylingСlasses(destStylings, name, sourceStylings){
+    if (!sourceStylings[name]){
+        sourceStylings[name] =  {styles:{}, classe:[]}
+    }
+    if (!destStylings[name])
+        destStylings[name] = {styles:{}, classe:[]}
+    var classes = extractClasses(sourceStylings[name]);
+    destStylings[name].classes=classes;
+}
 
 export function setStyling(styling){
     setClassAndStyle(styling.classes, styling.styles)

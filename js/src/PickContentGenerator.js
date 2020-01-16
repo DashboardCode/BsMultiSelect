@@ -1,4 +1,5 @@
-import  {setStyling, unsetStyling, EventBinder} from './ToolsDom';
+import  {EventBinder} from './ToolsDom';
+import  {setStyling, unsetStyling} from './ToolsStyling';
 
 export function pickContentGenerator(option, pickElement, stylings){
     setStyling(pickElement, stylings.pick);

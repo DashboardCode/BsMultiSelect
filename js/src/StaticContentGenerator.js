@@ -1,13 +1,13 @@
-import {findDirectChildByTagName, setStyle, setStyling, unsetStyling} from './ToolsDom';
-
-export function staticContentGenerator(containerClass, stylings, createElement, element) { 
+import {findDirectChildByTagName, setStyle, closestByClassName} from './ToolsDom';
+import  {setStyling, unsetStyling} from './ToolsStyling';
+                                      // option, choiceElement, stylings
+export function staticContentGenerator(element, createElement, containerClass, stylings) { 
     var selectElement = null;
     var containerElement = null;
-    if (element.tagName=="SELECT"){
+    if (element.tagName=='SELECT'){
         selectElement = element;
         if (containerClass){
-            if (selectElement.parentNode && selectElement.parentNode.classList.contains(containerClass) )
-                containerElement = selectElement.parentNode;
+            containerElement = closestByClassName(selectElement, containerClass)
             // TODO: do I need this?    
             //if (selectElement.nextSibling  && selectElement.nextSibling.classList.contains(containerClass) )
             //    containerElement = selectElement.parentNode;
@@ -16,15 +16,15 @@ export function staticContentGenerator(containerClass, stylings, createElement, 
     else if (element.tagName=="DIV")
     { 
         containerElement = element;
-        selectElement = findDirectChildByTagName(element, "SELECT");
+        selectElement = findDirectChildByTagName(element, 'SELECT');
         if (!selectElement)
             throw new Error("BsMultiSelect: There are no SELECT element or options in the configuraion");
 
     }
     else 
     {
-        element.style.backgroundColor='red';
-        element.style.color='white';
+        element.style.backgroundColor = 'red';
+        element.style.color = 'white';
         throw new Error('BsMultiSelect: Only DIV and SELECT supported');
     }
 
@@ -32,7 +32,7 @@ export function staticContentGenerator(containerClass, stylings, createElement, 
     var picksElement = null;
     var ownPicksElement = false;
     if (containerElement)
-        picksElement = findDirectChildByTagName(containerElement, "UL");
+        picksElement = findDirectChildByTagName(containerElement, 'UL');
     if (!picksElement){
         picksElement = createElement('UL');
         ownPicksElement = true;
@@ -40,7 +40,7 @@ export function staticContentGenerator(containerClass, stylings, createElement, 
 
     var ownContainerElement = false;        
     if (!containerElement){
-        containerElement = createElement('div');
+        containerElement = createElement('DIV');
         ownContainerElement= true;
     }
     setStyling(containerElement, containerClass);

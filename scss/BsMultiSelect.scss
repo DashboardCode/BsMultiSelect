@@ -35,22 +35,23 @@
 
 .dashboardcode-bsmultiselect {
     ul.form-control {
+        display: flex;
+        flex-wrap: wrap;
         height: auto;
         min-height: #{$input-height};
         margin-bottom: 0;
-        display:'flex'; 
-        flex-wrap:'wrap';
-        list-style-type:'none';
+        
+        list-style-type: none;
         
         input {
+            height: auto;
+            padding: 0;
+            margin: 0;
             font-weight: inherit;
             color: inherit;
-            padding:'0px'; 
-            margin:'0px';
-            height:'auto'; 
-            border:'0px';
-            box-shadow:'none'; 
-            outline:'none';
+            border: 0;
+            outline: none;
+            box-shadow: none;
         }
         &.disabled{
             background-color: $input-disabled-bg;
@@ -61,7 +62,7 @@
             opacity: 1;
         }
 
-        >li.badge {
+        > li.badge {
             padding-left: 0;
             line-height: 1.5em;
             button.close {
@@ -93,19 +94,19 @@
     @include form-validation-state("invalid", $form-feedback-invalid-color);
 
     ul.dropdown-menu {
-        list-style-type:'none';
+        list-style-type: none;
         //'px-2'
-        >li{
+        > li{
             .custom-control-input.disabled ~ .custom-control-label {
                 color: $custom-control-label-disabled-color;
-            };
+            }
             
         }.hover{
             // from bs4 _dropdown.scss
             color: $dropdown-link-hover-color;
             @include gradient-bg($dropdown-link-hover-bg);
         }
-    } 
+    }
 
     &.input-group.input-group-sm {
         ul.form-control {

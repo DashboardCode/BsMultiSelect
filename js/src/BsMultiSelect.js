@@ -12,9 +12,9 @@ import {pickContentGenerator} from './PickContentGenerator';
 import {choiceContentGenerator} from './ChoiceContentGenerator';
 import {staticContentGenerator} from './StaticContentGenerator';
 
-import {createBsAppearance, createBsOptionAdapter} from './BsAppearance';
+import {createBsAppearance, adjustBsOptionAdapterConfiguration, pushIsValidClassToPicks, getLabelElement} from './BsAppearance';
 
-import {cloneStyling,setStyling} from './ToolsStyling';
+import {cloneStylings, mergeStylings} from './ToolsStyling';
 
 import {adjustLegacyConfiguration, injectConfigurationStyleValues, replaceConfigurationClassValues} from './BsMultiSelectDepricatedParameters'
 
@@ -87,21 +87,21 @@ const compensation = {
             containerClass : "dashboardcode-bsmultiselect",
             stylings: stylings,
             compensation: compensation,
-            placeholder: null,
+            placeholder: '',
+            staticContentGenerator : staticContentGenerator,
+            getLabelElement: getLabelElement,
             pickContentGenerator: pickContentGenerator,
             choiceContentGenerator : choiceContentGenerator,
+
             buildConfiguration: null,
-            setSelected: (option, value)=> { option.selected = value;}
-            // configuration.init
+            setSelected: (option, value)=> { option.selected = value; },
 
-            // configuration.label
-            // configuration.createInputId
-
-            // configuration.options
-            // configuration.getDisabled
-            // configuration.getSize
-            // configuration.getIsValid
-            // configuration.getIsInvalid
+            optionsAdapter: null,
+            options: null,
+            getDisabled: null,
+            getSize: null,
+            getIsValid: null,
+            getIsInvalid: null
         };
 
         function createPlugin(element, settings, onDispose){
@@ -110,39 +110,33 @@ const compensation = {
                 throw new Error("BsMultiSelect: Popper.js (https://popper.js.org) is required")
             }
     
-            // containerClass: 'dashboardcode-bsmultiselect'
             let configuration = $.extend({}, settings); // settings used per jQuery intialization, configuration per element
-            
-            configuration.styles=extendStyling(defaults.styles); // TODO: copy instance
-            configuration.compensation=cloneStyling(defaults.compensation); // TODO: copy instance
+            adjustLegacyConfiguration(configuration);            
+            let cfgStylings = configuration.stylings;
+            let cfgCompensation = configuration.compensation;
+            configuration.stylings = null;
+            configuration.compensation = null;
+            $.extend(settings, defaults);
+            configuration.stylings = cloneStylings(defaults.stylings); // TODO
+            configuration.compensation = cloneStylings(defaults.compensation); // TODO
+            //TODO: do something with cfgStylings and cfgCompensation
 
-            adjustLegacyConfiguration(configuration)
             injectConfigurationStyleValues(configuration.stylings , configuration);
             replaceConfigurationClassValues(configuration.stylings, configuration);
-            if (configuration.useCss==undefined )
-                configuration.useCss=defaults.useCss;
-            
-            if (configuration.containerClass==undefined )
-                configuration.containerClass=defaults.containerClass; 
-
-            
 
             // --------------------------------------------------------------
             var init = configuration.buildConfiguration(element, configuration);
             // --------------------------------------------------------------
-            var useCss = configuration.useCss; // useOwnCss
-            
-            var stylings = constructStyling(configuration.stylings);
-            if (!useCss){
-                merge(stylings, configuration.compensation);
-                // TODO merge  with variables
+            var stylings = configuration.stylings;
+
+            var useOwnCss = configuration.useOwnCss; // useOwnCss
+            if (!useOwnCss){
+                mergeStylings(stylings, configuration.compensation); // TODO merge
             }
             
-            let staticContent = configuration.staticContent;
-            if (!staticContent){
-                staticContent = staticContentGenerator(configuration.containerClass, stylings, 
-                    (name)=>window.document.createElement(name), element);
-            }
+            let staticContent = configuration.staticContentGenerator(
+                element, (name)=>window.document.createElement(name), stylings, configuration.containerClass
+            );
 
             let optionsAdapter = configuration.optionsAdapter;
             if (!optionsAdapter)
@@ -163,39 +157,27 @@ const compensation = {
                 } 
                 else  
                 {
-                    optionsAdapter = createBsOptionAdapter(
+                    adjustBsOptionAdapterConfiguration(
                         configuration,
                         staticContent.selectElement, 
-                        staticContent.containerElement,
-                        trigger,
-                        (element, selector) => { 
-                            var q = $(element).closest(selector);
-                            var value = null;
-                            if (q.length>0)
-                                value= q.get(0);
-                            return value;
-                        }
+                        staticContent.containerElement
                     )
+                    optionsAdapter = OptionsAdapterElement(
+                        staticContent.selectElement, 
+                        configuration.getDisabled, 
+                        configuration.getSize, 
+                        configuration.getIsValid, 
+                        configuration.getIsInvalid,
+                        trigger);
                 }
             }
 
-            if (!useCss)
+            if (!useOwnCss)
             {
-                var defFocusIn = staticContent.focusIn;
-                staticContent.focusIn = () => {
-                    var picksElement = staticContent.picksElement;
-                    if (picksElement.classList.contains("is-valid")){ 
-                        setStyling(picksElement, configuration.stylings.picks_focus_valid)
-                    } else if (picksElement.classList.contains("is-invalid")){
-                        setStyling(picksElement, configuration.stylings.picks_focus_invalid)
-                    } else {
-                        defFocusIn()
-                    }
-                }
+                pushIsValidClassToPicks(staticContent, stylings);
             }
 
-            let labelAdapter = LabelAdapter(configuration.label, staticContent.createInputId);
-
+            let labelAdapter = LabelAdapter(configuration.labelElement, staticContent.createInputId);
 
             if (!configuration.placeholder)
             {

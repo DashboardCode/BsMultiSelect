@@ -1,5 +1,5 @@
 import {OptionsAdapterElement} from './OptionsAdapters';
-import {addClass, removeClass, setStyle} from './ToolsDom';
+import {addClass, removeClass, setStyle, closestByTagName, closestByClassName} from './ToolsDom';
 
 function updateIsValid(picksElement, isValid, isInvalid){
     if (isValid)
@@ -71,24 +71,23 @@ export function createBsAppearance(picksElement, configuration, optionsAdapter){
     return value;
 }
 
-export function createBsOptionAdapter(configuration, selectElement, containerElement, trigger, closest){
-    if (!configuration.label)
-    {
-        let formGroup = closest(selectElement, '.form-group');
-        if (formGroup) {
-            let label = formGroup.querySelector(`label[for="${selectElement.id}"]`);
-            if (label) {   
-                let forId = label.getAttribute('for');
-                if (forId == selectElement.id) {
-                    configuration.label = label;
-                }
-            }   
+export function pushIsValidClassToPicks(staticContent, stylings){
+    var defFocusIn = staticContent.focusIn;
+    staticContent.focusIn = () => {
+        var picksElement = staticContent.picksElement;
+        if (picksElement.classList.contains("is-valid")){ 
+            setStyling(picksElement, stylings.picks_focus_valid)
+        } else if (picksElement.classList.contains("is-invalid")){
+            setStyling(picksElement, stylings.picks_focus_invalid)
+        } else {
+            defFocusIn()
         }
     }
-    var form = closest(selectElement, 'form');
-    
+}
+
+export function adjustBsOptionAdapterConfiguration(configuration, selectElement, containerElement){
     if (!configuration.getDisabled) {
-        var fieldset = closest(selectElement, 'fieldset');
+        var fieldset = closestByTagName(selectElement, 'fieldset');
         if (fieldset) {
             configuration.getDisabled = () => selectElement.disabled || fieldset.disabled;
         }else{
@@ -118,13 +117,13 @@ export function createBsOptionAdapter(configuration, selectElement, containerEle
         configuration.getIsInvalid = function()
         { return selectElement.classList.contains('is-invalid')}
     }
-    var optionsAdapter = OptionsAdapterElement(
-        selectElement, 
-        configuration.getDisabled, 
-        configuration.getSize, 
-        configuration.getIsValid, 
-        configuration.getIsInvalid,
-        trigger, 
-        form);
-    return optionsAdapter;
+}
+
+export function getLabelElement(selectElement){
+    let value = null;
+    let formGroup = closestByClassName(selectElement,'form-group');
+    if (formGroup) {
+        value = formGroup.querySelector(`label[for="${selectElement.id}"]`);
+    }
+    return value;
 }

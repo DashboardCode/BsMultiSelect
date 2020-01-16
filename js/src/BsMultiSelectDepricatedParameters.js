@@ -1,4 +1,4 @@
-import {setStylingStyle,  setStylingСlass} from './ToolsStyling';
+import {setStylingStyles,  setStylingСlasses} from './ToolsStyling';
 
 const transformStyles = [
     {old:'selectedPanelDisabledBackgroundColor', opt:'nocss_picks_disabled', style:"backgroundColor", samplVal:"'myValue'"},
@@ -80,64 +80,64 @@ export function replaceConfigurationClassValues(stylings, configuration){
     if (cfgStylings)
     {
         if (cfgStylings.choices){
-            setStylingСlass(stylings.choices.classes, cfgStylings.choices);
+            setStylingСlasses(stylings, "choices", cfgStylings);
         }
         if (cfgStylings.choice){
-            setStylingСlass(stylings.choice.classes, cfgStylings.choice);
+            setStylingСlasses(stylings, "choice", cfgStylings);
         }
         if (cfgStylings.choice_hover){
-            setStylingСlass(stylings.choice_hover.classes, cfgStylings.choice_hover);
+            setStylingСlasses(stylings, "choice_hover", cfgStylings);
         }
         if (cfgStylings.picks){
-            setStylingСlass(stylings.picks.classes, cfgStylings.picks);
+            setStylingСlasses(stylings, "picks", cfgStylings);
         }
         if (cfgStylings.pick){
-            setStylingСlass(stylings.pick.classes, cfgStylings.pick);
+            setStylingСlasses(stylings, "classes", cfgStylings);
         }
         if (cfgStylings.pickButton){
-            setStylingСlass(stylings.pickButton.classes, cfgStylings.pickButton);
+            setStylingСlasses(stylings, "pickButton", cfgStylings);
         }
         if (cfgStylings.pickFilter){
-            setStylingСlass(stylings.pickFilter.classes, cfgStylings.pickFilter);
+            setStylingСlasses(stylings, "pickFilter", cfgStylings);
         }
         if (cfgStylings.filterInput){
-            setStylingСlass(stylings.filterInput.classes, cfgStylings.filterInput);
+            setStylingСlasses(stylings, "filterInput", cfgStylings);
         }
         if (cfgStylings.picks_focus){
-            setStylingСlass(stylings.picks_focus.classes, cfgStylings.picks_focus);
+            setStylingСlasses(stylings, "picks_focus", cfgStylings);
         }
         if (cfgStylings.picks_disabled){
-            setStylingСlass(stylings.picks_disabled.classes, cfgStylings.picks_disabled);
+            setStylingСlasses(stylings, "picks_disabled", cfgStylings);
         }
         if (cfgStylings.pick_disabled){
-            setStylingСlass(stylings.pick_disabled.classes, cfgStylings.pick_disabled);
+            setStylingСlasses(stylings, "pick_disabled", cfgStylings);
         }
     }
 }
 
 export function injectConfigurationStyleValues(stylings, configuration){
     if (configuration.nocss_picks_disabled){
-        setStylingStyle(stylings, "picks_disabled", configuration.nocss_picks_disabled);
+        setStylingStyles(stylings, "picks_disabled", configuration.nocss_picks_disabled);
     }
     if (configuration.nocss_picks_focus){
-        setStylingStyle(stylings, "picks_focus", configuration.nocss_picks_focus);
+        setStylingStyles(stylings, "picks_focus", configuration.nocss_picks_focus);
     }
     if (configuration.nocss_picks_focus_valid){
-        setStylingStyle(stylings, "picks_focus_valid", configuration.nocss_picks_focus_valid);
+        setStylingStyles(stylings, "picks_focus_valid", configuration.nocss_picks_focus_valid);
     }
     if (configuration.nocss_picks_focus_invalid){
-        setStylingStyle(stylings, "picks_focus_invalid", configuration.nocss_picks_focus_invalid);
+        setStylingStyles(stylings, "picks_focus_invalid", configuration.nocss_picks_focus_invalid);
     }
     if (configuration.nocss_picks_def){
-        setStylingStyle(stylings, "picks_def", configuration.nocss_picks_def);
+        setStylingStyles(stylings, "picks_def", configuration.nocss_picks_def);
     }
     if (configuration.nocss_picks_lg){
-        setStylingStyle(stylings, "picks_lg", configuration.nocss_picks_lg);
+        setStylingStyles(stylings, "picks_lg", configuration.nocss_picks_lg);
     }
     if (configuration.nocss_picks_sm){
-        setStylingStyle(stylings, "picks_sm", configuration.nocss_picks_sm);
+        setStylingStyles(stylings, "picks_sm", configuration.nocss_picks_sm);
     }
     if (configuration.nocss_choiceLabel_disabled){
-        setStylingStyle(stylings, "choiceLabel_disabled", configuration.nocss_choiceLabel_disabled);
+        setStylingStyles(stylings, "choiceLabel_disabled", configuration.nocss_choiceLabel_disabled);
     }
 }

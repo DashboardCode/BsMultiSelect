@@ -261,7 +261,7 @@
     "selector-max-empty-lines": 1,
     "selector-max-id": 0,
     "selector-max-specificity": null,
-    "selector-max-type": 2,
+    "selector-max-type": 3,
     "selector-max-universal": 1,
     "selector-no-qualifying-type": [true, {"ignore": ["attribute", "class", "id"]}],
     "selector-no-vendor-prefix": true,
