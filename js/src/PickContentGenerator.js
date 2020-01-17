@@ -5,7 +5,8 @@ export function pickContentGenerator(option, pickElement, stylings){
     setStyling(pickElement, stylings.pick);
 
     pickElement.innerHTML = '<span></span><button aria-label="Remove" tabIndex="-1" type="button"><span aria-hidden="true">&times;</span></button>'
-    var pickContentElement = pickElement.querySelector(`SPAN`);
+    var pickContentElement = pickElement.querySelector('SPAN');
+    var pickButtonElement = pickElement.querySelector('BUTTON');
     pickContentElement.textContent= option.text;
     var disable = function(isDisabled){ 
         if (isDisabled)
@@ -15,7 +16,7 @@ export function pickContentGenerator(option, pickElement, stylings){
         pickButtonElement.disabled=isDisabled; 
     }
     disable(option.disabled);
-    var pickButtonElement = pickContentElement.querySelector(`BUTTON`);
+    
     // bs 'close' class that will be added to button set the float:right, therefore it impossible to configure no-warp policy 
         // with .css("white-space", "nowrap") or  .css("display", "inline-block"); TODO: migrate to flex? 
     pickButtonElement.style.float= "none";

@@ -1,3 +1,11 @@
+export function isString(value){
+    return value instanceof String || typeof(value) === 'string';
+}
+
+export function notStrictFalse(value){
+    return typeof(value) !== 'boolean' || value;
+}
+
 export function extendIfUndefined(destination, source) {
     for (let property in source)
         if (destination[property] === undefined)

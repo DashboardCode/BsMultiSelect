@@ -1,4 +1,4 @@
-import {pushUnique} from './ToolsJs';
+import {pushUnique, isString} from './ToolsJs';
 
 export function removeElement(e) {e.parentNode.removeChild(e)}
 
@@ -25,7 +25,8 @@ export function closestByClassName(element, className){
 }
 
 export function closest(element, predicate){
-    if (!element) return null;
+    if (!element || !(element instanceof Element)) return null; // should be element, not document (TODO: check iframe)
+     
     if (predicate(element)) return element;
     return closest(element.parentNode, predicate);
 }
@@ -176,14 +177,14 @@ export function constructStyling(source){
     var destination = {classes:[], styles:{}};
     if (source)
     {
-        if (source instanceof String){
+        if (isString(source)){
             source.split(" ").forEach(e => pushUnique(destination.classes, e))
         } else if (source instanceof Array){
             source.forEach(e => pushUnique(destination.classes, e))
         } else if (source instanceof Object){
             if (source.classes){
                 let classes = source.classes;
-                if (source instanceof String){
+                if (isString(classes)){
                     classes.split(" ").forEach(e => pushUnique(destination.classes, e))
                 } else if (classes instanceof Array){
                     classes.forEach(e => pushUnique(destination.classes, e))

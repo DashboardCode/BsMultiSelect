@@ -17,16 +17,15 @@ export function FilterPanel(
         onKeyUpEsc, // "esc" alike
         onInput, // filter
         setEmptyLength
-    ) {
-    
-    filterInputElement.setAttribute("type","search");
-    filterInputElement.setAttribute("autocomplete","off");
+    ){
+        filterInputElement.setAttribute("type","search");
+        filterInputElement.setAttribute("autocomplete","off");
 
-    setStyle(filterInputElement, filterInputStyle);
+        setStyle(filterInputElement, filterInputStyle);
 
-    insertIntoDom(filterInputElement);
+        insertIntoDom();
 
-    var onfilterInputKeyDown = (event) => {
+        var onfilterInputKeyDown = (event) => {
         if ([38, 40, 13 ,27].indexOf(event.which)>=0 
             || (event.which == 9 && filterInputElement.value) ) {
             event.preventDefault(); 

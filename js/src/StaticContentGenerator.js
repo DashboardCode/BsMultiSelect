@@ -43,7 +43,7 @@ export function staticContentGenerator(element, createElement, containerClass, s
         containerElement = createElement('DIV');
         ownContainerElement= true;
     }
-    setStyling(containerElement, containerClass);
+    containerElement.classList.add(containerClass);
 
     var choicesElement = createElement('UL');
     choicesElement.style.display="none";
@@ -70,6 +70,7 @@ export function staticContentGenerator(element, createElement, containerClass, s
         createInputId = () => `${containerClass}-generated-filter-${containerElement.id}`;
 
     return {
+        selectElement, 
         containerElement,
         picksElement,
         choicesElement,

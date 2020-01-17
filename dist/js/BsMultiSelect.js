@@ -12,6 +12,17 @@
     $ = $ && $.hasOwnProperty('default') ? $['default'] : $;
     Popper = Popper && Popper.hasOwnProperty('default') ? Popper['default'] : Popper;
 
+    function isString(value) {
+      return value instanceof String || typeof value === 'string';
+    }
+    function notStrictFalse(value) {
+      return typeof value !== 'boolean' || value;
+    }
+    function extendIfUndefined(destination, source) {
+      for (var property in source) {
+        if (destination[property] === undefined) destination[property] = source[property];
+      }
+    }
     function extendAndOverride(destination, source) {
       for (var property in source) {
         destination[property] = source[property];
@@ -116,7 +127,8 @@
       });
     }
     function closest(element, predicate) {
-      if (!element) return null;
+      if (!element || !(element instanceof Element)) return null; // should be element, not document (TODO: check iframe)
+
       if (predicate(element)) return element;
       return closest(element.parentNode, predicate);
     }
@@ -191,7 +203,7 @@
       filterInputElement.setAttribute("type", "search");
       filterInputElement.setAttribute("autocomplete", "off");
       setStyle(filterInputElement, filterInputStyle);
-      insertIntoDom(filterInputElement);
+      insertIntoDom();
 
       var onfilterInputKeyDown = function onfilterInputKeyDown(event) {
         if ([38, 40, 13, 27].indexOf(event.which) >= 0 || event.which == 9 && filterInputElement.value) {
@@ -440,7 +452,7 @@
         // choiceContent.setChoiceContentDisabled= setChoiceContentDisabled;
 
 
-        if (MultiSelectData.isOptionDisabled) choiceContent.setChoiceContentDisabled(isSelected);
+        if (MultiSelectData.isOptionDisabled) choiceContent.disable(true, isSelected);
         choiceContent.onSelected(function () {
           if (MultiSelectData.toggle) MultiSelectData.toggle();
           filterPanelSetFocus();
@@ -460,7 +472,7 @@
           if (MultiSelectData.isOptionDisabled) MultiSelectData.toggle = null;else MultiSelectData.toggle = function () {
             var confirmed = setSelected(MultiSelectData.option, true);
 
-            if (confirmed === null || confirmed) {
+            if (notStrictFalse(confirmed)) {
               createSelectedItem();
               triggerChange();
             }
@@ -1089,11 +1101,16 @@
         }; //var pickFilterElement = createElement('LI'); // detached
         //this.pickFilterElement=pickFilterElement;
 
+        /*
+            filterInputElement,
+            insertIntoDom,
+        */
 
-        this.filterPanel = FilterPanel(createElement, function (filterInputElement) {
-          _this2.staticContent.pickFilterElement.appendChild(filterInputElement);
 
-          _this2.labelAdapter.init(filterInputElement);
+        this.filterPanel = FilterPanel(this.staticContent.filterInputElement, function () {
+          _this2.staticContent.pickFilterElement.appendChild(_this2.staticContent.filterInputElement);
+
+          _this2.labelAdapter.init(_this2.staticContent.filterInputElement);
 
           _this2.staticContent.picksElement.appendChild(_this2.staticContent.pickFilterElement); // located filter in selectionsPanel                    
 
@@ -1172,7 +1189,7 @@
         function (multiSelectData, removePick) {
           var confirmed = _this2.setSelected(multiSelectData.option, false);
 
-          if (confirmed === null || confirmed) {
+          if (notStrictFalse(confirmed)) {
             var _removePick = removePick(),
                 createPick = _removePick.createPick,
                 count = _removePick.count;
@@ -1191,7 +1208,7 @@
               multiSelectData.toggle = function () {
                 var confirmed = _this2.setSelected(multiSelectData.option, true);
 
-                if (confirmed === null || confirmed) {
+                if (notStrictFalse(confirmed)) {
                   createPick(multiSelectData, multiSelectData.option);
 
                   _this2.optionsAdapter.triggerChange();
@@ -1335,6 +1352,30 @@
       $.fn[prototypableName].defaults = defaults;
     }
 
+    function OptionsAdapterElement(selectElement, getDisabled, getSize, getIsValid, getIsInvalid, trigger) {
+      var form = closestByTagName(selectElement, 'form');
+      var eventBuilder = EventBinder();
+      return {
+        getOptions: function getOptions() {
+          return selectElement.getElementsByTagName('OPTION');
+        },
+        triggerChange: function triggerChange() {
+          trigger('change');
+          trigger('multiselect:change');
+        },
+        getDisabled: getDisabled,
+        getSize: getSize,
+        getIsValid: getIsValid,
+        getIsInvalid: getIsInvalid,
+        onReset: function onReset(handler) {
+          if (form) eventBuilder.bind(form, 'reset', handler);
+        },
+        dispose: function dispose() {
+          if (form) eventBuilder.unbind();
+        }
+      };
+    }
+
     function OptionsAdapterJson(options, _getDisabled, _getSize, _getIsValid, _getIsInvalid, trigger) {
       return {
         getOptions: function getOptions() {
@@ -1361,13 +1402,13 @@
     function extractClasses(styling) {
       var value = [];
 
-      if (styling instanceof String) {
+      if (isString(styling)) {
         value = [].concat(styling.split(' '));
       } else if (styling instanceof Array) {
         value = [].concat(styling);
       } else if (styling instanceof Object) {
         if (styling.classes) {
-          if (styling.classes instanceof String) {
+          if (isString(styling.classes)) {
             value = [].concat(styling.classes.split(' '));
           } else if (styling.classes instanceof Array) {
             value = [].concat(styling.classes);
@@ -1380,23 +1421,49 @@
 
     function mergeStylingItem(destination, styling) {
       if (styling) {
-        if (styling instanceof String) {
-          destination.classes = [].concat(styling.split(' '));
+        if (isString(styling)) {
+          destination.classes = destination.classes.concat(styling.split(' '));
         } else if (styling instanceof Array) {
-          destination.classes = [].concat(styling);
+          destination.classes = destination.classes.concat(styling);
         } else if (styling instanceof Object) {
           if (styling.classes) {
-            if (styling.classes instanceof String) {
-              destination.classes = [].concat(styling.classes.split(' '));
+            if (isString(styling.classes)) {
+              destination.classes = destination.classes.concat(styling.classes.split(' '));
             } else if (styling.classes instanceof Array) {
-              destination.classes = [].concat(styling.classes);
+              destination.classes = destination.classes.concat(styling.classes);
             }
-          } else {
-            if (styling.styles) {
-              extendAndOverride(destination.styles, styling.styles);
-            } else {
-              extendAndOverride(destination.styles, styling);
+          }
+
+          if (styling.styles) {
+            extendAndOverride(destination.styles, styling.styles);
+          } else if (!styling.classes) {
+            extendAndOverride(destination.styles, styling);
+          }
+        }
+      }
+
+      return destination;
+    }
+
+    function copyStylingItem(destination, styling) {
+      if (styling) {
+        if (isString(styling)) {
+          destination.classes = styling.split(' ');
+        } else if (styling instanceof Array) {
+          destination.classes = styling.slice();
+        } else if (styling instanceof Object) {
+          if (styling.classes) {
+            if (isString(styling.classes)) {
+              destination.classes = styling.classes.split(' ');
+            } else if (styling.classes instanceof Array) {
+              destination.classes = styling.classes.slice();
             }
+          }
+
+          if (styling.styles) {
+            extendAndOverride(destination.styles, styling.styles);
+          } else if (!styling.classes) {
+            extendAndOverride(destination.styles, styling);
           }
         }
       }
@@ -1413,7 +1480,7 @@
             classes: [],
             styles: {}
           };
-          mergeStylingItem(destination[property], stylings[property]);
+          copyStylingItem(destination[property], stylings[property]);
         }
       }
 
@@ -1422,6 +1489,10 @@
     function mergeStylings(stylings, compensations) {
       if (compensations) {
         for (var property in compensations) {
+          if (!stylings[property]) stylings[property] = {
+            classes: [],
+            styles: {}
+          };
           mergeStylingItem(stylings[property], compensations[property]);
         }
       }
@@ -1445,28 +1516,29 @@
       if (!sourceStylings[name]) {
         sourceStylings[name] = {
           styles: {},
-          classe: []
+          classes: []
         };
       }
 
       if (!destStylings[name]) destStylings[name] = {
         styles: {},
-        classe: []
+        classes: []
       };
       var classes = extractClasses(sourceStylings[name]);
       destStylings[name].classes = classes;
     }
-    function setStyling$1(styling) {
-      setClassAndStyle(styling.classes, styling.styles);
+    function setStyling$1(element, styling) {
+      setClassAndStyle(element, styling.classes, styling.styles);
     }
-    function unsetStyling(styling) {
-      unsetClassAndStyle(styling.classes, styling.styles);
+    function unsetStyling(element, styling) {
+      unsetClassAndStyle(element, styling.classes, styling.styles);
     }
 
     function pickContentGenerator(option, pickElement, stylings) {
       setStyling$1(pickElement, stylings.pick);
       pickElement.innerHTML = '<span></span><button aria-label="Remove" tabIndex="-1" type="button"><span aria-hidden="true">&times;</span></button>';
-      var pickContentElement = pickElement.querySelector("SPAN");
+      var pickContentElement = pickElement.querySelector('SPAN');
+      var pickButtonElement = pickElement.querySelector('BUTTON');
       pickContentElement.textContent = option.text;
 
       var disable = function disable(isDisabled) {
@@ -1474,8 +1546,7 @@
         pickButtonElement.disabled = isDisabled;
       };
 
-      disable(option.disabled);
-      var pickButtonElement = pickContentElement.querySelector("BUTTON"); // bs 'close' class that will be added to button set the float:right, therefore it impossible to configure no-warp policy 
+      disable(option.disabled); // bs 'close' class that will be added to button set the float:right, therefore it impossible to configure no-warp policy 
       // with .css("white-space", "nowrap") or  .css("display", "inline-block"); TODO: migrate to flex? 
 
       pickButtonElement.style.float = "none";
@@ -1577,7 +1648,7 @@
         ownContainerElement = true;
       }
 
-      setStyling$1(containerElement);
+      containerElement.classList.add(containerClass);
       var choicesElement = createElement('UL');
       choicesElement.style.display = "none";
       var backupDisplay = null;
@@ -1600,6 +1671,7 @@
         return containerClass + "-generated-filter-" + containerElement.id;
       };
       return {
+        selectElement: selectElement,
         containerElement: containerElement,
         picksElement: picksElement,
         choicesElement: choicesElement,
@@ -2048,7 +2120,7 @@
         flexWrap: 'wrap'
       },
       choice: 'px-2',
-      choice_hover: 'text-primary bg-light',
+      choice_hover: 'hover text-primary bg-light',
       filterInput: {
         class: 'form-control',
         style: {
@@ -2101,9 +2173,30 @@
         opacity: '.65'
       } // more flexible than {color: '#6c757d'}
 
+    };
+
+    function extendConfigurtion(configuration, defaults) {
+      var cfgStylings = configuration.stylings;
+      var cfgCompensation = configuration.compensation;
+      configuration.stylings = null;
+      configuration.compensation = null;
+      extendIfUndefined(configuration, defaults);
+      var defStylings = cloneStylings(defaults.stylings); // TODO
+
+      var defCompensation = cloneStylings(defaults.compensation); // TODO
+      //TODO: do something with cfgStylings and cfgCompensation
+
+      injectConfigurationStyleValues(defCompensation, configuration);
+      replaceConfigurationClassValues(defStylings, configuration);
+      configuration.stylings = defStylings;
+      configuration.compensation = defCompensation;
+      console.log("1");
+      console.log(configuration);
     } // 1) do not use css - classes  + styling js + prediction clases + compensation js
     // 2) use scss - classes only 
-    (function (window, $) {
+
+
+    (function (window, $, Popper) {
       var defaults = {
         useOwnCss: false,
         containerClass: "dashboardcode-bsmultiselect",
@@ -2131,34 +2224,33 @@
           throw new Error("BsMultiSelect: Popper.js (https://popper.js.org) is required");
         }
 
-        var configuration = $.extend({}, settings); // settings used per jQuery intialization, configuration per element
+        var configuration = {};
+        var init = null;
 
-        adjustLegacyConfiguration(configuration);
-        var cfgStylings = configuration.stylings;
-        var cfgCompensation = configuration.compensation;
-        configuration.stylings = null;
-        configuration.compensation = null;
-        $.extend(settings, defaults);
-        configuration.stylings = cloneStylings(defaults.stylings); // TODO
+        if (settings instanceof Function) {
+          extendConfigurtion(configuration, defaults);
+          init = settings(element, configuration);
+        } else {
+          if (settings) extendAndOverride(configuration, settings); // settings used per jQuery intialization, configuration per element
 
-        configuration.compensation = cloneStylings(defaults.compensation); // TODO
-        //TODO: do something with cfgStylings and cfgCompensation
+          adjustLegacyConfiguration(configuration);
+          extendConfigurtion(configuration, defaults);
+        } // -----------------------------------------------------------------
 
-        injectConfigurationStyleValues(configuration.stylings, configuration);
-        replaceConfigurationClassValues(configuration.stylings, configuration); // --------------------------------------------------------------
 
-        var init = configuration.buildConfiguration(element, configuration); // --------------------------------------------------------------
+        if (configuration.buildConfiguration) init = configuration.buildConfiguration(element, configuration);
+        var stylings = configuration.stylings; // -----------------------------------------------------------------
 
-        var stylings = configuration.stylings;
         var useOwnCss = configuration.useOwnCss; // useOwnCss
 
         if (!useOwnCss) {
           mergeStylings(stylings, configuration.compensation); // TODO merge
         }
 
+        console.log(stylings);
         var staticContent = configuration.staticContentGenerator(element, function (name) {
           return window.document.createElement(name);
-        }, stylings, configuration.containerClass);
+        }, configuration.containerClass, stylings);
         var optionsAdapter = configuration.optionsAdapter;
 
         if (!optionsAdapter) {

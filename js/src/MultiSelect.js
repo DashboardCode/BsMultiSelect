@@ -6,7 +6,7 @@ import {PlaceholderAspect} from './PlaceholderAspect'
 
 import {EventSkipper} from './EventSkipper'
 import {removeElement} from './ToolsDom'
-import {sync} from './ToolsJs'
+import {sync, notStrictFalse} from './ToolsJs'
 
 function filterMultiSelectData(MultiSelectData, isFiltered, visibleIndex) {
     MultiSelectData.visible = isFiltered;
@@ -384,11 +384,15 @@ export class MultiSelect {
 
         //var pickFilterElement = createElement('LI'); // detached
         //this.pickFilterElement=pickFilterElement;
+        /*
+            filterInputElement,
+            insertIntoDom,
+        */
         this.filterPanel = FilterPanel(
-            createElement,
-            (filterInputElement) => {
-                this.staticContent.pickFilterElement.appendChild(filterInputElement);
-                this.labelAdapter.init(filterInputElement); 
+            this.staticContent.filterInputElement,
+            () => {
+                this.staticContent.pickFilterElement.appendChild(this.staticContent.filterInputElement);
+                this.labelAdapter.init(this.staticContent.filterInputElement); 
                 this.staticContent.picksElement.appendChild(
                     this.staticContent.pickFilterElement); // located filter in selectionsPanel                    
             },
@@ -451,7 +455,7 @@ export class MultiSelect {
             },
             /*onPickRemoved*/ (multiSelectData, removePick) => {
                 let confirmed = this.setSelected(multiSelectData.option, false);
-                if (confirmed===null || confirmed) {
+                if (notStrictFalse(confirmed)) {
                     var {createPick, count} = removePick();
                     multiSelectData.excludedFromSearch = multiSelectData.isOptionDisabled;
                     if (multiSelectData.isOptionDisabled)
@@ -463,7 +467,7 @@ export class MultiSelect {
                     {
                         multiSelectData.toggle = ()=>{
                             let confirmed = this.setSelected(multiSelectData.option, true);
-                            if (confirmed===null || confirmed){
+                            if (notStrictFalse(confirmed)){
                                 createPick(multiSelectData, multiSelectData.option);
                                 this.optionsAdapter.triggerChange();
                             }

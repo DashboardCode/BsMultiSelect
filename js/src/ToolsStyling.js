@@ -1,16 +1,16 @@
-import {extendAndOverride} from './ToolsJs';
+import {extendAndOverride, isString} from './ToolsJs';
 import {setClassAndStyle, unsetClassAndStyle} from './ToolsDom';
 
 
 function extractClasses(styling){
     var value=[];
-    if (styling instanceof String){
+    if (isString(styling)){
         value = [...styling.split(' ')];
     } else if (styling instanceof Array){
         value = [...styling];
     } else if (styling instanceof Object){
         if (styling.classes){
-            if (styling.classes instanceof String){
+            if (isString(styling.classes)){
                 value = [...styling.classes.split(' ')];
             } else if (styling.classes instanceof Array){
                 value = [...styling.classes];
@@ -23,30 +23,53 @@ function extractClasses(styling){
 function mergeStylingItem(destination, styling){
     if (styling)
     {
-        if (styling instanceof String){
-            destination.classes = [...styling.split(' ')];
+        if (isString(styling)){
+            destination.classes=destination.classes.concat(styling.split(' '));
         } else if (styling instanceof Array){
-            destination.classes = [...styling];
+            destination.classes=destination.classes.concat(styling);
         } else if (styling instanceof Object){
             if (styling.classes){
-                if (styling.classes instanceof String){
-                    destination.classes = [...styling.classes.split(' ')];
+                if (isString(styling.classes)){
+                    destination.classes=destination.classes.concat(styling.classes.split(' '))
                 } else if (styling.classes instanceof Array){
-                    destination.classes = [...styling.classes];
+                    destination.classes=destination.classes.concat(styling.classes)
                 }
             } 
-            else
-            {
-                if (styling.styles) {
-                    extendAndOverride(destination.styles, styling.styles)
-                } else {
-                    extendAndOverride(destination.styles, styling)
-                }
+            if (styling.styles) {
+                extendAndOverride(destination.styles, styling.styles);
+            } else if (!styling.classes){
+                extendAndOverride(destination.styles, styling)
             }
         }
     }
     return destination;
 }
+
+function copyStylingItem(destination, styling){
+    if (styling)
+    {
+        if (isString(styling)){
+            destination.classes = styling.split(' ');
+        } else if (styling instanceof Array){
+            destination.classes = styling.slice();
+        } else if (styling instanceof Object){
+            if (styling.classes){
+                if (isString(styling.classes)){
+                    destination.classes = styling.classes.split(' ')
+                } else if (styling.classes instanceof Array){
+                    destination.classes = styling.classes.slice()
+                }
+            } 
+            if (styling.styles) {
+                extendAndOverride(destination.styles, styling.styles);
+            } else if (!styling.classes) {
+                extendAndOverride(destination.styles, styling)
+            }
+        }
+    }
+    return destination;
+}
+
 
 export function cloneStylings(stylings){
     var destination = {};
@@ -55,7 +78,7 @@ export function cloneStylings(stylings){
         for (let property in stylings)
         {
             destination[property] = {classes:[], styles:{}};
-            mergeStylingItem(destination[property], stylings[property]);
+            copyStylingItem(destination[property], stylings[property]);
         }
     }
     return destination;
@@ -66,7 +89,9 @@ export function mergeStylings(stylings, compensations){
     {
         for (let property in compensations)
         {
-            mergeStylingItem(stylings[property], compensations[property]);
+            if (!stylings[property])
+                stylings[property] = {classes:[], styles:{}};
+                mergeStylingItem(stylings[property], compensations[property]);
         }
     }
     return stylings;
@@ -83,18 +108,18 @@ export function setStylingStyles(stylings, name, styles){
 
 export function setStylingСlasses(destStylings, name, sourceStylings){
     if (!sourceStylings[name]){
-        sourceStylings[name] =  {styles:{}, classe:[]}
+        sourceStylings[name] =  {styles:{}, classes:[]}
     }
     if (!destStylings[name])
-        destStylings[name] = {styles:{}, classe:[]}
+        destStylings[name] = {styles:{}, classes:[]}
     var classes = extractClasses(sourceStylings[name]);
     destStylings[name].classes=classes;
 }
 
-export function setStyling(styling){
-    setClassAndStyle(styling.classes, styling.styles)
+export function setStyling(element, styling){
+    setClassAndStyle(element, styling.classes, styling.styles)
 }
 
-export function unsetStyling(styling){
-    unsetClassAndStyle(styling.classes, styling.styles)
+export function unsetStyling(element, styling){
+    unsetClassAndStyle(element, styling.classes, styling.styles)
 }

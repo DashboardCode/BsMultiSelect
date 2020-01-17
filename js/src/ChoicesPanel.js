@@ -1,3 +1,5 @@
+import {notStrictFalse} from './ToolsJs'
+
 export function ChoicesPanel(createElement, choicesElement, onShow, onHide, 
         eventSkipper, choiceContentGenerator, 
         getVisibleMultiSelectDataList, 
@@ -172,7 +174,7 @@ export function ChoicesPanel(createElement, choicesElement, onShow, onHide,
         // }
         // choiceContent.setChoiceContentDisabled= setChoiceContentDisabled;
         if (MultiSelectData.isOptionDisabled)
-            choiceContent.setChoiceContentDisabled(isSelected )
+            choiceContent.disable(true, isSelected )
 
         choiceContent.onSelected( () => {
             if (MultiSelectData.toggle)
@@ -199,7 +201,7 @@ export function ChoicesPanel(createElement, choicesElement, onShow, onHide,
             else
                 MultiSelectData.toggle = () =>  {
                     var confirmed = setSelected(MultiSelectData.option, true);
-                    if (confirmed===null || confirmed) {
+                    if (notStrictFalse(confirmed)) {
                         createSelectedItem();
                         triggerChange();
                     }

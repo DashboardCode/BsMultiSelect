@@ -5,7 +5,7 @@ import {MultiSelect} from './MultiSelect'
 import {LabelAdapter} from './LabelAdapter';
 import {addToJQueryPrototype} from './AddToJQueryPrototype'
 
-import {OptionsAdapterJson} from './OptionsAdapters';
+import {OptionsAdapterJson, OptionsAdapterElement} from './OptionsAdapters';
 
 
 import {pickContentGenerator} from './PickContentGenerator';
@@ -15,6 +15,7 @@ import {staticContentGenerator} from './StaticContentGenerator';
 import {createBsAppearance, adjustBsOptionAdapterConfiguration, pushIsValidClassToPicks, getLabelElement} from './BsAppearance';
 
 import {cloneStylings, mergeStylings} from './ToolsStyling';
+import {extendAndOverride, extendIfUndefined} from './ToolsJs';
 
 import {adjustLegacyConfiguration, injectConfigurationStyleValues, replaceConfigurationClassValues} from './BsMultiSelectDepricatedParameters'
 
@@ -51,7 +52,7 @@ const compensation = {
     choices: { listStyleType:'none'},
     picks: { listStyleType:'none', display:'flex', flexWrap:'wrap'},
     choice: 'px-2' ,  
-    choice_hover: 'text-primary bg-light', 
+    choice_hover: 'hover text-primary bg-light', 
     filterInput: { 
         class: 'form-control', 
         style: {display:'flex', flexWrap:'wrap', listStyleType:'none', marginBottom: 0, height: 'auto'}
@@ -76,12 +77,33 @@ const compensation = {
     
     // used in BsChoiceContentStylingCorrector
     choiceLabel_disabled: {opacity: '.65'}  // more flexible than {color: '#6c757d'}
+};
+
+function extendConfigurtion(configuration, defaults){
+    let cfgStylings = configuration.stylings;
+    let cfgCompensation = configuration.compensation;
+    configuration.stylings = null;
+    configuration.compensation = null;
+    extendIfUndefined(configuration, defaults);
+    var defStylings = cloneStylings(defaults.stylings); // TODO
+    var defCompensation = cloneStylings(defaults.compensation); // TODO
+
+    //TODO: do something with cfgStylings and cfgCompensation
+    injectConfigurationStyleValues(defCompensation , configuration);
+    replaceConfigurationClassValues(defStylings, configuration);
+    
+    configuration.stylings = defStylings;
+    configuration.compensation = defCompensation;
+    console.log("1");
+    console.log(configuration);
+
+    
 }
 
 // 1) do not use css - classes  + styling js + prediction clases + compensation js
 // 2) use scss - classes only 
 (
-    (window, $) => {
+    (window, $, Popper) => {
         var defaults = {
             useOwnCss : false,
             containerClass : "dashboardcode-bsmultiselect",
@@ -94,7 +116,7 @@ const compensation = {
             choiceContentGenerator : choiceContentGenerator,
 
             buildConfiguration: null,
-            setSelected: (option, value)=> { option.selected = value; },
+            setSelected: (option, value)=> {option.selected = value; },
 
             optionsAdapter: null,
             options: null,
@@ -110,32 +132,33 @@ const compensation = {
                 throw new Error("BsMultiSelect: Popper.js (https://popper.js.org) is required")
             }
     
-            let configuration = $.extend({}, settings); // settings used per jQuery intialization, configuration per element
-            adjustLegacyConfiguration(configuration);            
-            let cfgStylings = configuration.stylings;
-            let cfgCompensation = configuration.compensation;
-            configuration.stylings = null;
-            configuration.compensation = null;
-            $.extend(settings, defaults);
-            configuration.stylings = cloneStylings(defaults.stylings); // TODO
-            configuration.compensation = cloneStylings(defaults.compensation); // TODO
-            //TODO: do something with cfgStylings and cfgCompensation
+            let configuration = {};
+            let init = null;
+            if (settings instanceof Function){
+                extendConfigurtion(configuration, defaults);
+                init = settings(element, configuration);
+            }
+            else
+            { 
+                if (settings)
+                    extendAndOverride(configuration, settings); // settings used per jQuery intialization, configuration per element
+                adjustLegacyConfiguration(configuration);            
+                extendConfigurtion(configuration, defaults);
+            }
+            
 
-            injectConfigurationStyleValues(configuration.stylings , configuration);
-            replaceConfigurationClassValues(configuration.stylings, configuration);
-
-            // --------------------------------------------------------------
-            var init = configuration.buildConfiguration(element, configuration);
-            // --------------------------------------------------------------
+            // -----------------------------------------------------------------
+            if (configuration.buildConfiguration)
+                init = configuration.buildConfiguration(element, configuration);
             var stylings = configuration.stylings;
-
+            // -----------------------------------------------------------------
             var useOwnCss = configuration.useOwnCss; // useOwnCss
             if (!useOwnCss){
                 mergeStylings(stylings, configuration.compensation); // TODO merge
             }
-            
+            console.log(stylings);
             let staticContent = configuration.staticContentGenerator(
-                element, (name)=>window.document.createElement(name), stylings, configuration.containerClass
+                element, (name)=>window.document.createElement(name), configuration.containerClass, stylings
             );
 
             let optionsAdapter = configuration.optionsAdapter;
@@ -218,7 +241,7 @@ const compensation = {
             multiSelect.init();
 
             return multiSelect;
-            }
+        }
         addToJQueryPrototype('BsMultiSelect', createPlugin, defaults, $);
     }
 )(window, $, Popper)
