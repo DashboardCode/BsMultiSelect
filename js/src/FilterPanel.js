@@ -1,7 +1,4 @@
-import {setStyle} from './ToolsDom';
-
-const filterInputStyle = {border:'0px', height: 'auto', boxShadow:'none', 
-     padding:'0px', margin:'0px', outline:'none', backgroundColor:'transparent' };
+//import {setStyle} from './ToolsDom';
 
 export function FilterPanel(
         filterInputElement,
@@ -21,7 +18,7 @@ export function FilterPanel(
         filterInputElement.setAttribute("type","search");
         filterInputElement.setAttribute("autocomplete","off");
 
-        setStyle(filterInputElement, filterInputStyle);
+        //setStyle(filterInputElement, filterInputStyle);
 
         insertIntoDom();
 

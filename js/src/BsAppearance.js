@@ -1,5 +1,5 @@
-import {OptionsAdapterElement} from './OptionsAdapters';
 import {addClass, removeClass, setStyle, closestByTagName, closestByClassName} from './ToolsDom';
+import {setStyling} from './ToolsStyling'
 
 function updateIsValid(picksElement, isValid, isInvalid){
     if (isValid)
@@ -13,13 +13,30 @@ function updateIsValid(picksElement, isValid, isInvalid){
         removeClass(picksElement,'is-invalid');
 }
 
+function updateIsValidForAdapter(picksElement, optionsAdapter){
+    updateIsValid(picksElement, optionsAdapter.getIsValid(), optionsAdapter.getIsInvalid())
+}
+
+export function pushIsValidClassToPicks(staticContent, stylings){
+    var defFocusIn = staticContent.focusIn;
+    staticContent.focusIn = () => {
+        var picksElement = staticContent.picksElement;
+        if (picksElement.classList.contains("is-valid")) { 
+            setStyling(picksElement, stylings.picks_focus_valid)
+        } else if (picksElement.classList.contains("is-invalid")) {
+            setStyling(picksElement, stylings.picks_focus_invalid)
+        } else {
+            defFocusIn()
+        }
+    }
+}
 
 function updateSize(picksElement, size){
-    if (size=="custom-select-lg"){
+    if (size=="lg"){
         addClass(picksElement,'form-control-lg');
         removeClass(picksElement,'form-control-sm');
     }
-    else if (size=="custom-select-sm"){
+    else if (size=="sm"){
         removeClass(picksElement,'form-control-lg');
         addClass(picksElement,'form-control-sm');
     }
@@ -29,86 +46,77 @@ function updateSize(picksElement, size){
     }
 }
 
-function updateSizeJs(picksElement, picksStyleLg, picksStyleSm, picksStyleDef, size){
+function updateSizeJs(picksElement, picksLgStyling, picksSmStyling, picksDefStyling, size){
     updateSize(picksElement, size);
-    if (size=="custom-select-lg" || size=="input-group-lg"){
-        setStyle(picksElement, picksStyleLg);
-    } else if (size=="custom-select-sm" || size=="input-group-sm"){
-        setStyle(picksElement, picksStyleSm);
+    if (size=="lg"){
+        setStyling(picksElement, picksLgStyling);
+    } else if (size=="sm"){
+        setStyling(picksElement, picksSmStyling);
     } else {
-        setStyle(picksElement, picksStyleDef);
+        setStyling(picksElement, picksDefStyling);
     }
-}
-
-function updateIsValidForAdapter(picksElement, optionsAdapter){
-    updateIsValid(picksElement, optionsAdapter.getIsValid(), optionsAdapter.getIsInvalid())
 }
 
 function updateSizeForAdapter(picksElement, optionsAdapter){
     updateSize(picksElement, optionsAdapter.getSize())
 }
 
-function updateSizeJsForAdapter(picksElement, picksStyleLg, picksStyleSm, picksStyleDef, optionsAdapter){
-    updateSizeJs(picksElement, picksStyleLg, picksStyleSm, picksStyleDef,  optionsAdapter.getSize())
+function updateSizeJsForAdapter(picksElement, picksLgStyling, picksSmStyling, picksDefStyling, optionsAdapter){
+    updateSizeJs(picksElement, picksLgStyling, picksSmStyling, picksDefStyling,  optionsAdapter.getSize())
 }
 
-export function createBsAppearance(picksElement, configuration, optionsAdapter){
+export function createBsAppearance(picksElement, optionsAdapter, useOwnCss, stylings){
     var value=null;
     var updateIsValid = () => updateIsValidForAdapter(picksElement, optionsAdapter);
-    if (configuration.useCss){
+    if (useOwnCss){
         value= Object.create({
             updateIsValid,
             updateSize: () => updateSizeForAdapter(picksElement, optionsAdapter)
         });
     }else{
-        const {picksStyleLg, picksStyleSm, picksStyleDef} = configuration;
+        const {picks_lg, picks_sm, picks_def} = stylings;
         value= Object.create({
             updateIsValid,
             updateSize: () => updateSizeJsForAdapter(picksElement, 
-                picksStyleLg, picksStyleSm, picksStyleDef, optionsAdapter)
+                picks_lg, picks_sm, picks_def, optionsAdapter)
         });
     }
     return value;
 }
 
-export function pushIsValidClassToPicks(staticContent, stylings){
-    var defFocusIn = staticContent.focusIn;
-    staticContent.focusIn = () => {
-        var picksElement = staticContent.picksElement;
-        if (picksElement.classList.contains("is-valid")){ 
-            setStyling(picksElement, stylings.picks_focus_valid)
-        } else if (picksElement.classList.contains("is-invalid")){
-            setStyling(picksElement, stylings.picks_focus_invalid)
-        } else {
-            defFocusIn()
-        }
-    }
-}
 
-export function adjustBsOptionAdapterConfiguration(configuration, selectElement, containerElement){
+export function adjustBsOptionAdapterConfiguration(configuration, selectElement){
     if (!configuration.getDisabled) {
-        var fieldset = closestByTagName(selectElement, 'fieldset');
-        if (fieldset) {
-            configuration.getDisabled = () => selectElement.disabled || fieldset.disabled;
-        }else{
+        var fieldsetElement = closestByTagName(selectElement, 'fieldset');
+        if (fieldsetElement) {
+            configuration.getDisabled = () => selectElement.disabled || fieldsetElement.disabled;
+        } else {
             configuration.getDisabled = () => selectElement.disabled;
         }
     }
 
     if (!configuration.getSize) {
-        configuration.getSize = function(){
-            var value=null;
-            if (selectElement.classList.contains('custom-select-lg') || selectElement.classList.contains('form-control-lg') )
-                value='custom-select-lg';
-            else if (selectElement.classList.contains('custom-select-sm')  || selectElement.classList.contains('form-control-sm')  )
-                value='custom-select-sm';
-            else if (containerElement && containerElement.classList.contains('input-group-lg'))
-                value='input-group-lg';
-            else if (containerElement && containerElement.classList.contains('input-group-sm'))
-                value='input-group-sm';
-            return value;
+        var inputGroupElement = closestByClassName(selectElement, 'input-group');
+        if (inputGroupElement)
+            configuration.getSize = function(){
+                var value = null;
+                if (inputGroupElement.classList.contains('input-group-lg'))
+                    value = 'lg';
+                else if (inputGroupElement.classList.contains('input-group-sm'))
+                    value = 'sm';
+                return value;
+            }
+        else 
+            configuration.getSize = function(){
+                var value = null;
+                if (selectElement.classList.contains('custom-select-lg') || selectElement.classList.contains('form-control-lg'))
+                    value = 'lg';
+                else if (selectElement.classList.contains('custom-select-sm') || selectElement.classList.contains('form-control-sm'))
+                    value = 'sm'; 
+                return value;
         }
     }
+
     if (!configuration.getIsValid) {
         configuration.getIsValid = function()
         { return selectElement.classList.contains('is-valid')}

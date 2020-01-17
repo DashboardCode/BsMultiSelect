@@ -45,8 +45,8 @@ var stylings = {
   // bs4
   choiceCheckBox: 'custom-control-input',
   // bs4
-  choiceLabel: 'custom-control-label justify-content-start' // 
-
+  choiceLabel: 'custom-control-label justify-content-start',
+  choiceLabel_disabled: ''
 };
 var compensation = {
   choices: {
@@ -55,18 +55,22 @@ var compensation = {
   picks: {
     listStyleType: 'none',
     display: 'flex',
-    flexWrap: 'wrap'
+    flexWrap: 'wrap',
+    height: 'auto',
+    marginBottom: '0'
   },
   choice: 'px-2',
   choice_hover: 'hover text-primary bg-light',
   filterInput: {
-    class: 'form-control',
-    style: {
-      display: 'flex',
-      flexWrap: 'wrap',
-      listStyleType: 'none',
-      marginBottom: 0,
-      height: 'auto'
+    classes: 'form-control',
+    styles: {
+      border: '0px',
+      height: 'auto',
+      boxShadow: 'none',
+      padding: '0',
+      margin: '0',
+      outline: 'none',
+      backgroundColor: 'transparent'
     }
   },
   // used in StylingCorrector
@@ -100,16 +104,16 @@ var compensation = {
   },
   pickButton: {
     fontSize: '1.5em',
-    lineHeight: '.9em'
+    lineHeight: '.9em',
+    float: "none"
   },
   pickContent_disabled: {
     opacity: '.65'
   },
-  // avoid opacity on pickElement's border
   // used in BsChoiceContentStylingCorrector
   choiceLabel_disabled: {
     opacity: '.65'
-  } // more flexible than {color: '#6c757d'}
+  } // more flexible than {color: '#6c757d'}, avoid opacity on pickElement's border
 
 };
 
@@ -128,8 +132,6 @@ function extendConfigurtion(configuration, defaults) {
   replaceConfigurationClassValues(defStylings, configuration);
   configuration.stylings = defStylings;
   configuration.compensation = defCompensation;
-  console.log("1");
-  console.log(configuration);
 } // 1) do not use css - classes  + styling js + prediction clases + compensation js
 // 2) use scss - classes only 
 
@@ -183,9 +185,9 @@ function extendConfigurtion(configuration, defaults) {
 
     if (!useOwnCss) {
       mergeStylings(stylings, configuration.compensation); // TODO merge
-    }
+    } //console.log(stylings);
 
-    console.log(stylings);
+
     var staticContent = configuration.staticContentGenerator(element, function (name) {
       return window.document.createElement(name);
     }, configuration.containerClass, stylings);
@@ -199,7 +201,7 @@ function extendConfigurtion(configuration, defaults) {
       if (configuration.options) {
         optionsAdapter = OptionsAdapterJson(configuration.options, configuration.getDisabled, configuration.getSize, configuration.getIsValid, configuration.getIsInvalid, trigger);
       } else {
-        adjustBsOptionAdapterConfiguration(configuration, staticContent.selectElement, staticContent.containerElement);
+        adjustBsOptionAdapterConfiguration(configuration, staticContent.selectElement);
         optionsAdapter = OptionsAdapterElement(staticContent.selectElement, configuration.getDisabled, configuration.getSize, configuration.getIsValid, configuration.getIsInvalid, trigger);
       }
     }
@@ -215,21 +217,18 @@ function extendConfigurtion(configuration, defaults) {
       if (!configuration.placeholder) configuration.placeholder = $(element).data("placeholder");
     }
 
-    var bsAppearance = createBsAppearance(staticContent.picksElement, configuration, optionsAdapter);
+    var bsAppearance = createBsAppearance(staticContent.picksElement, optionsAdapter, useOwnCss, stylings);
 
     var onUpdate = function onUpdate() {
       bsAppearance.updateSize();
       bsAppearance.updateIsValid();
     };
 
-    var multiSelect = new MultiSelect(optionsAdapter, configuration.setSelected, staticContent, function (option, pickElement) {
-      return configuration.pickContentGenerator(option, pickElement, stylings);
-    }, function (option, choiceElement) {
-      return configuration.choiceContentGenerator(option, choiceElement, stylings);
-    }, //pickContentGeneratorInst,
-    //choiceContentGeneratorInst,
-    labelAdapter, //createStylingComposite,
-    configuration.placeholder, onUpdate, onDispose, Popper, window);
+    var multiSelect = new MultiSelect(optionsAdapter, configuration.setSelected, staticContent, function (pickElement) {
+      return configuration.pickContentGenerator(pickElement, stylings);
+    }, function (choiceElement) {
+      return configuration.choiceContentGenerator(choiceElement, stylings);
+    }, labelAdapter, configuration.placeholder, onUpdate, onDispose, Popper, window);
     multiSelect.UpdateSize = bsAppearance.updateSize;
     multiSelect.UpdateIsValid = bsAppearance.updateIsValid;
     if (init && init instanceof Function) init(multiSelect);

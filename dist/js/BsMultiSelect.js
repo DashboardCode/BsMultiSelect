@@ -12,186 +12,7 @@
     $ = $ && $.hasOwnProperty('default') ? $['default'] : $;
     Popper = Popper && Popper.hasOwnProperty('default') ? Popper['default'] : Popper;
 
-    function isString(value) {
-      return value instanceof String || typeof value === 'string';
-    }
-    function notStrictFalse(value) {
-      return typeof value !== 'boolean' || value;
-    }
-    function extendIfUndefined(destination, source) {
-      for (var property in source) {
-        if (destination[property] === undefined) destination[property] = source[property];
-      }
-    }
-    function extendAndOverride(destination, source) {
-      for (var property in source) {
-        destination[property] = source[property];
-      }
-    }
-
-    function forEachRecursion(f, i) {
-      if (!i) return;
-      f(i.value);
-      forEachRecursion(f, i.prev);
-    }
-
-    function List() {
-      var tail = null;
-      var count = 0;
-      return {
-        add: function add(e) {
-          if (tail) {
-            tail.next = {
-              value: e,
-              prev: tail
-            };
-            tail = tail.next;
-          } else tail = {
-            value: e
-          };
-
-          count++;
-          var node = tail;
-
-          function remove() {
-            if (node.prev) {
-              node.prev.next = node.next;
-            }
-
-            if (node.next) {
-              node.next.prev = node.prev;
-            }
-
-            if (tail == node) {
-              tail = node.prev;
-            }
-
-            count--;
-          }
-
-          return remove;
-        },
-        forEach: function forEach(f) {
-          forEachRecursion(f, tail);
-        },
-        getTail: function getTail() {
-          return tail ? tail.value : null;
-        },
-        getCount: function getCount() {
-          return count;
-        },
-        isEmpty: function isEmpty() {
-          return count == 0;
-        },
-        reset: function reset() {
-          tail = null;
-          count = 0;
-        }
-      };
-    }
-    function sync() {
-      for (var _len = arguments.length, functions = new Array(_len), _key = 0; _key < _len; _key++) {
-        functions[_key] = arguments[_key];
-      }
-
-      functions.forEach(function (f) {
-        if (f) f();
-      });
-    }
-
-    function removeElement(e) {
-      e.parentNode.removeChild(e);
-    }
-    function findDirectChildByTagName(element, tagName) {
-      var value = null;
-
-      for (var i = 0; i < element.children.length; i++) {
-        var tmp = element.children[i];
-
-        if (tmp.tagName == tagName) {
-          value = tmp;
-          break;
-        }
-      }
-
-      return value;
-    }
-    function closestByTagName(element, tagName) {
-      return closest(element, function (e) {
-        return e.tagName === tagName;
-      });
-    }
-    function closestByClassName(element, className) {
-      return closest(element, function (e) {
-        return e.classList.contains(className);
-      });
-    }
-    function closest(element, predicate) {
-      if (!element || !(element instanceof Element)) return null; // should be element, not document (TODO: check iframe)
-
-      if (predicate(element)) return element;
-      return closest(element.parentNode, predicate);
-    }
-    function addClass(element, c) {
-      element.classList.add(c);
-    }
-    function removeClass(element, c) {
-      element.classList.remove(c);
-    }
-    function setStyle(element, style) {
-      for (var property in style) {
-        element.style[property] = style[property];
-      }
-    }
-    function setClassAndStyle(element, classes, styles) {
-      classes.forEach(function (e) {
-        element.classList.add(e);
-      });
-
-      for (var property in styles) {
-        element.style[property] = styles[property];
-      }
-    }
-    function unsetClassAndStyle(element, classes, styles) {
-      classes.forEach(function (e) {
-        element.classList.remove(e);
-      });
-
-      for (var property in styles) {
-        element.style[property] = '';
-      }
-    }
-    function EventBinder() {
-      var list = [];
-      return {
-        bind: function bind(element, eventName, handler) {
-          element.addEventListener(eventName, handler);
-          list.push({
-            element: element,
-            eventName: eventName,
-            handler: handler
-          });
-        },
-        unbind: function unbind() {
-          list.forEach(function (e) {
-            var element = e.element,
-                eventName = e.eventName,
-                handler = e.handler;
-            element.removeEventListener(eventName, handler);
-          });
-        }
-      };
-    }
-
-    var filterInputStyle = {
-      border: '0px',
-      height: 'auto',
-      boxShadow: 'none',
-      padding: '0px',
-      margin: '0px',
-      outline: 'none',
-      backgroundColor: 'transparent'
-    };
+    //import {setStyle} from './ToolsDom';
     function FilterPanel(filterInputElement, insertIntoDom, onFocusIn, // show dropdown
     onFocusOut, // hide dropdown
     onKeyDownArrowUp, onKeyDownArrowDown, onTabForEmpty, // tab on empty
@@ -201,8 +22,8 @@
     onInput, // filter
     setEmptyLength) {
       filterInputElement.setAttribute("type", "search");
-      filterInputElement.setAttribute("autocomplete", "off");
-      setStyle(filterInputElement, filterInputStyle);
+      filterInputElement.setAttribute("autocomplete", "off"); //setStyle(filterInputElement, filterInputStyle);
+
       insertIntoDom();
 
       var onfilterInputKeyDown = function onfilterInputKeyDown(event) {
@@ -292,6 +113,93 @@
           filterInputElement.removeEventListener('input', onFilterInputInput);
         }
       };
+    }
+
+    function isString(value) {
+      return value instanceof String || typeof value === 'string';
+    }
+    function notStrictFalse(value) {
+      return typeof value !== 'boolean' || value;
+    }
+    function extendIfUndefined(destination, source) {
+      for (var property in source) {
+        if (destination[property] === undefined) destination[property] = source[property];
+      }
+    }
+    function extendAndOverride(destination, source) {
+      for (var property in source) {
+        destination[property] = source[property];
+      }
+    }
+
+    function forEachRecursion(f, i) {
+      if (!i) return;
+      f(i.value);
+      forEachRecursion(f, i.prev);
+    }
+
+    function List() {
+      var tail = null;
+      var count = 0;
+      return {
+        add: function add(e) {
+          if (tail) {
+            tail.next = {
+              value: e,
+              prev: tail
+            };
+            tail = tail.next;
+          } else tail = {
+            value: e
+          };
+
+          count++;
+          var node = tail;
+
+          function remove() {
+            if (node.prev) {
+              node.prev.next = node.next;
+            }
+
+            if (node.next) {
+              node.next.prev = node.prev;
+            }
+
+            if (tail == node) {
+              tail = node.prev;
+            }
+
+            count--;
+          }
+
+          return remove;
+        },
+        forEach: function forEach(f) {
+          forEachRecursion(f, tail);
+        },
+        getTail: function getTail() {
+          return tail ? tail.value : null;
+        },
+        getCount: function getCount() {
+          return count;
+        },
+        isEmpty: function isEmpty() {
+          return count == 0;
+        },
+        reset: function reset() {
+          tail = null;
+          count = 0;
+        }
+      };
+    }
+    function sync() {
+      for (var _len = arguments.length, functions = new Array(_len), _key = 0; _key < _len; _key++) {
+        functions[_key] = arguments[_key];
+      }
+
+      functions.forEach(function (f) {
+        if (f) f();
+      });
     }
 
     function ChoicesPanel(createElement, choicesElement, onShow, onHide, eventSkipper, choiceContentGenerator, getVisibleMultiSelectDataList, resetFilter, updateChoicesLocation, filterPanelSetFocus) {
@@ -437,7 +345,8 @@
 
         choiceElement.addEventListener('mouseleave', onChoiceElementMouseleave);
         choicesElement.appendChild(choiceElement);
-        var choiceContent = choiceContentGenerator(MultiSelectData.option, choiceElement);
+        var choiceContent = choiceContentGenerator(choiceElement);
+        choiceContent.setData(MultiSelectData.option);
         MultiSelectData.choiceElement = choiceElement;
         MultiSelectData.ChoiceContent = choiceContent;
 
@@ -500,11 +409,90 @@
       return item;
     }
 
-    function PicksPanel(createElement, pickContentGenerator, isComponentDisabled, requestPickCreate, requestPickRemove, processRemoveButtonClick // click to remove button
+    function removeElement(e) {
+      e.parentNode.removeChild(e);
+    }
+    function findDirectChildByTagName(element, tagName) {
+      var value = null;
+
+      for (var i = 0; i < element.children.length; i++) {
+        var tmp = element.children[i];
+
+        if (tmp.tagName == tagName) {
+          value = tmp;
+          break;
+        }
+      }
+
+      return value;
+    }
+    function closestByTagName(element, tagName) {
+      return closest(element, function (e) {
+        return e.tagName === tagName;
+      });
+    }
+    function closestByClassName(element, className) {
+      return closest(element, function (e) {
+        return e.classList.contains(className);
+      });
+    }
+    function closest(element, predicate) {
+      if (!element || !(element instanceof Element)) return null; // should be element, not document (TODO: check iframe)
+
+      if (predicate(element)) return element;
+      return closest(element.parentNode, predicate);
+    }
+    function addClass(element, c) {
+      element.classList.add(c);
+    }
+    function removeClass(element, c) {
+      element.classList.remove(c);
+    }
+    function setClassAndStyle(element, classes, styles) {
+      classes.forEach(function (e) {
+        element.classList.add(e);
+      });
+
+      for (var property in styles) {
+        element.style[property] = styles[property];
+      }
+    }
+    function unsetClassAndStyle(element, classes, styles) {
+      classes.forEach(function (e) {
+        element.classList.remove(e);
+      });
+
+      for (var property in styles) {
+        element.style[property] = '';
+      }
+    }
+    function EventBinder() {
+      var list = [];
+      return {
+        bind: function bind(element, eventName, handler) {
+          element.addEventListener(eventName, handler);
+          list.push({
+            element: element,
+            eventName: eventName,
+            handler: handler
+          });
+        },
+        unbind: function unbind() {
+          list.forEach(function (e) {
+            var element = e.element,
+                eventName = e.eventName,
+                handler = e.handler;
+            element.removeEventListener(eventName, handler);
+          });
+        }
+      };
+    }
+
+    function PicksPanel(createElement, pickContentGenerator, requestPickCreate, requestPickRemove, processRemoveButtonClick // click to remove button
     ) {
       var list = List();
 
-      function _createPick(multiSelectData, option) {
+      function createPick(multiSelectData, option, isComponentDisabled) {
         var _createElement = createElement(),
             pickElement = _createElement.pickElement,
             attach = _createElement.attach;
@@ -520,9 +508,7 @@
             item.pickContent.dispose();
             removeFromList();
             return {
-              createPick: function createPick() {
-                return _createPick(multiSelectData, option);
-              },
+              createPick: createPick,
               count: list.getCount()
             };
           });
@@ -545,26 +531,26 @@
         //     //afterRemove();
         // };
 
-        item.pickContent = pickContentGenerator(option, pickElement);
+        item.pickContent = pickContentGenerator(pickElement);
+        item.pickContent.setData(option);
+        item.pickContent.disable(isComponentDisabled);
         item.pickContent.onRemove(function (event) {
           processRemoveButtonClick(removeSelectedItem, event);
         });
-        item.pickContent.disable(isComponentDisabled);
         attach();
         requestPickCreate(multiSelectData, removeSelectedItem, list.getCount());
       }
 
       return {
-        createPick: _createPick,
+        createPick: createPick,
         removePicksTail: function removePicksTail() {
           var item = list.getTail();
           if (item) item.removeSelectedItem(); // always remove in this case
         },
         isEmpty: list.isEmpty,
-        disable: function disable(isDisabled) {
-          isComponentDisabled = isDisabled;
+        disable: function disable(isComponentDisabled) {
           list.forEach(function (i) {
-            return i.pickContent.disable(isDisabled);
+            return i.pickContent.disable(isComponentDisabled);
           });
         },
         deselectAll: function deselectAll() {
@@ -978,7 +964,7 @@
               function (multiSelectData
               /*,isOptionDisabled,setChoiceContentDisabled*/
               ) {
-                _this.picksPanel.createPick(multiSelectData, multiSelectData.option
+                _this.picksPanel.createPick(multiSelectData, multiSelectData.option, _this.isComponentDisabled
                 /*,
                 isOptionDisabled,
                 setChoiceContentDisabled
@@ -1173,7 +1159,8 @@
               return _this2.staticContent.picksElement.insertBefore(pickElement, _this2.staticContent.pickFilterElement);
             }
           };
-        }, this.pickContentGenerator, this.isComponentDisabled,
+        }, this.pickContentGenerator, //this.isComponentDisabled,
+
         /*onPickCreated*/
         function (multiSelectData, removePick, count) {
           multiSelectData.excludedFromSearch = true; // all selected excluded from search
@@ -1209,7 +1196,7 @@
                 var confirmed = _this2.setSelected(multiSelectData.option, true);
 
                 if (notStrictFalse(confirmed)) {
-                  createPick(multiSelectData, multiSelectData.option);
+                  createPick(multiSelectData, multiSelectData.option, _this2.isComponentDisabled);
 
                   _this2.optionsAdapter.triggerChange();
                 }
@@ -1265,9 +1252,9 @@
         }, this.popper);
         this.staticContent.attachContainer();
         this.onUpdate();
+        this.updateDataImpl();
         this.UpdateDisabled(); // should be done after updateDataImpl
 
-        this.updateDataImpl();
         if (this.optionsAdapter.onReset) this.optionsAdapter.onReset(function () {
           return _this2.window.setTimeout(function () {
             return _this2.UpdateData();
@@ -1527,36 +1514,29 @@
       var classes = extractClasses(sourceStylings[name]);
       destStylings[name].classes = classes;
     }
-    function setStyling$1(element, styling) {
-      setClassAndStyle(element, styling.classes, styling.styles);
+    function setStyling(element, styling) {
+      if (styling) setClassAndStyle(element, styling.classes, styling.styles);
     }
     function unsetStyling(element, styling) {
-      unsetClassAndStyle(element, styling.classes, styling.styles);
+      if (styling) unsetClassAndStyle(element, styling.classes, styling.styles);
     }
 
-    function pickContentGenerator(option, pickElement, stylings) {
-      setStyling$1(pickElement, stylings.pick);
+    function pickContentGenerator(pickElement, stylings) {
+      setStyling(pickElement, stylings.pick);
       pickElement.innerHTML = '<span></span><button aria-label="Remove" tabIndex="-1" type="button"><span aria-hidden="true">&times;</span></button>';
       var pickContentElement = pickElement.querySelector('SPAN');
       var pickButtonElement = pickElement.querySelector('BUTTON');
-      pickContentElement.textContent = option.text;
-
-      var disable = function disable(isDisabled) {
-        if (isDisabled) setStyling$1(pickElement, stylings.pickContent_disabled);else unsetStyling(pickElement, stylings.pickContent_disabled);
-        pickButtonElement.disabled = isDisabled;
-      };
-
-      disable(option.disabled); // bs 'close' class that will be added to button set the float:right, therefore it impossible to configure no-warp policy 
-      // with .css("white-space", "nowrap") or  .css("display", "inline-block"); TODO: migrate to flex? 
-
-      pickButtonElement.style.float = "none";
-      setStyling$1(pickButtonElement, stylings.pickButton); // bs close class set the float:right
-
+      setStyling(pickButtonElement, stylings.pickButton);
       var eventBinder = EventBinder();
-      setStyling$1(pickElement, stylings.pick);
-      setStyling$1(pickButtonElement, stylings.pickButton);
       return {
-        disable: disable,
+        setData: function setData(option) {
+          pickContentElement.textContent = option.text;
+          var action = option.disabled ? setStyling : unsetStyling;
+          action(pickContentElement, stylings.pickContent_disabled);
+        },
+        disable: function disable(isRemoveDisabled) {
+          pickButtonElement.disabled = isRemoveDisabled;
+        },
         onRemove: function onRemove(removePick) {
           eventBinder.bind(pickButtonElement, "click", function (event) {
             return removePick(event);
@@ -1568,30 +1548,32 @@
       };
     }
 
-    function choiceContentGenerator(option, choiceElement, stylings) {
-      setStyling$1(choiceElement, stylings.choice);
+    function choiceContentGenerator(choiceElement, stylings) {
+      setStyling(choiceElement, stylings.choice);
       choiceElement.innerHTML = '<div><input type="checkbox"><label></label></div>';
       var choiceContentElement = choiceElement.querySelector('DIV');
       var choiceCheckBoxElement = choiceContentElement.querySelector('INPUT');
       var choiceLabelElement = choiceContentElement.querySelector('LABEL');
-      setStyling$1(choiceContentElement, stylings.choiceContent);
-      setStyling$1(choiceCheckBoxElement, stylings.choiceCheckBox);
-      setStyling$1(choiceLabelElement, stylings.choiceLabel);
-      choiceLabelElement.textContent = option.text;
+      setStyling(choiceContentElement, stylings.choiceContent);
+      setStyling(choiceCheckBoxElement, stylings.choiceCheckBox);
+      setStyling(choiceLabelElement, stylings.choiceLabel);
       var eventBinder = EventBinder();
       return {
+        setData: function setData(option) {
+          choiceLabelElement.textContent = option.text;
+        },
         select: function select(isSelected) {
           choiceCheckBoxElement.checked = isSelected;
         },
         disable: function disable(isDisabled, isSelected) {
-          var action = isDisabled ? setStyling$1 : unsetStyling;
+          var action = isDisabled ? setStyling : unsetStyling;
           action(choiceCheckBoxElement, stylings.choiceCheckBox_disabled);
           action(choiceLabelElement, stylings.choiceLabel_disabled); // do not desable checkBox if option is selected! there should be possibility to unselect "disabled"
 
           choiceCheckBoxElement.disabled = isDisabled && !isSelected;
         },
         hoverIn: function hoverIn() {
-          setStyling$1(choiceElement, stylings.choice_hover);
+          setStyling(choiceElement, stylings.choice_hover);
         },
         hoverOut: function hoverOut() {
           unsetStyling(choiceElement, stylings.choice_hover);
@@ -1625,7 +1607,6 @@
       } else if (element.tagName == "DIV") {
         containerElement = element;
         selectElement = findDirectChildByTagName(element, 'SELECT');
-        if (!selectElement) throw new Error("BsMultiSelect: There are no SELECT element or options in the configuraion");
       } else {
         element.style.backgroundColor = 'red';
         element.style.color = 'white';
@@ -1660,10 +1641,10 @@
 
       var pickFilterElement = createElement('LI');
       var filterInputElement = createElement('INPUT');
-      setStyling$1(picksElement, stylings.picks);
-      setStyling$1(choicesElement, stylings.choices);
-      setStyling$1(pickFilterElement, stylings.pickFilter);
-      setStyling$1(filterInputElement, stylings.filterInput);
+      setStyling(picksElement, stylings.picks);
+      setStyling(choicesElement, stylings.choices);
+      setStyling(pickFilterElement, stylings.pickFilter);
+      setStyling(filterInputElement, stylings.filterInput);
       var createInputId = null;
       if (selectElement) createInputId = function createInputId() {
         return containerClass + "-generated-input-" + (selectElement.id ? selectElement.id : selectElement.name).toLowerCase() + "-id";
@@ -1683,7 +1664,8 @@
         //         containerElement.appendChild(picksElement);
         // },
         attachContainer: function attachContainer() {
-          if (ownContainerElement) selectElement.parentNode.insertBefore(containerElement, selectElement.nextSibling);
+          if (ownContainerElement && selectElement) // otherwise it is attached
+            selectElement.parentNode.insertBefore(containerElement, selectElement.nextSibling);
         },
         appendToContainer: function appendToContainer() {
           if (ownContainerElement || !selectElement) {
@@ -1701,10 +1683,10 @@
           unsetStyling(picksElement, stylings.picks_disabled);
         },
         disable: function disable() {
-          setStyle(picksElement, stylings.picks_disabled);
+          setStyling(picksElement, stylings.picks_disabled);
         },
         focusIn: function focusIn() {
-          setStyle(picksElement, stylings.picks_focus);
+          setStyling(picksElement, stylings.picks_focus);
         },
         focusOut: function focusOut() {
           unsetStyling(picksElement, stylings.picks_focus);
@@ -1725,71 +1707,10 @@
       if (isInvalid) addClass(picksElement, 'is-invalid');else removeClass(picksElement, 'is-invalid');
     }
 
-    function updateSize(picksElement, size) {
-      if (size == "custom-select-lg") {
-        addClass(picksElement, 'form-control-lg');
-        removeClass(picksElement, 'form-control-sm');
-      } else if (size == "custom-select-sm") {
-        removeClass(picksElement, 'form-control-lg');
-        addClass(picksElement, 'form-control-sm');
-      } else {
-        removeClass(picksElement, 'form-control-lg');
-        removeClass(picksElement, 'form-control-sm');
-      }
-    }
-
-    function updateSizeJs(picksElement, picksStyleLg, picksStyleSm, picksStyleDef, size) {
-      updateSize(picksElement, size);
-
-      if (size == "custom-select-lg" || size == "input-group-lg") {
-        setStyle(picksElement, picksStyleLg);
-      } else if (size == "custom-select-sm" || size == "input-group-sm") {
-        setStyle(picksElement, picksStyleSm);
-      } else {
-        setStyle(picksElement, picksStyleDef);
-      }
-    }
-
     function updateIsValidForAdapter(picksElement, optionsAdapter) {
       updateIsValid(picksElement, optionsAdapter.getIsValid(), optionsAdapter.getIsInvalid());
     }
 
-    function updateSizeForAdapter(picksElement, optionsAdapter) {
-      updateSize(picksElement, optionsAdapter.getSize());
-    }
-
-    function updateSizeJsForAdapter(picksElement, picksStyleLg, picksStyleSm, picksStyleDef, optionsAdapter) {
-      updateSizeJs(picksElement, picksStyleLg, picksStyleSm, picksStyleDef, optionsAdapter.getSize());
-    }
-
-    function createBsAppearance(picksElement, configuration, optionsAdapter) {
-      var value = null;
-
-      var updateIsValid = function updateIsValid() {
-        return updateIsValidForAdapter(picksElement, optionsAdapter);
-      };
-
-      if (configuration.useCss) {
-        value = Object.create({
-          updateIsValid: updateIsValid,
-          updateSize: function updateSize() {
-            return updateSizeForAdapter(picksElement, optionsAdapter);
-          }
-        });
-      } else {
-        var picksStyleLg = configuration.picksStyleLg,
-            picksStyleSm = configuration.picksStyleSm,
-            picksStyleDef = configuration.picksStyleDef;
-        value = Object.create({
-          updateIsValid: updateIsValid,
-          updateSize: function updateSize() {
-            return updateSizeJsForAdapter(picksElement, picksStyleLg, picksStyleSm, picksStyleDef, optionsAdapter);
-          }
-        });
-      }
-
-      return value;
-    }
     function pushIsValidClassToPicks(staticContent, stylings) {
       var defFocusIn = staticContent.focusIn;
 
@@ -1805,13 +1726,75 @@
         }
       };
     }
-    function adjustBsOptionAdapterConfiguration(configuration, selectElement, containerElement) {
-      if (!configuration.getDisabled) {
-        var fieldset = closestByTagName(selectElement, 'fieldset');
 
-        if (fieldset) {
+    function updateSize(picksElement, size) {
+      if (size == "lg") {
+        addClass(picksElement, 'form-control-lg');
+        removeClass(picksElement, 'form-control-sm');
+      } else if (size == "sm") {
+        removeClass(picksElement, 'form-control-lg');
+        addClass(picksElement, 'form-control-sm');
+      } else {
+        removeClass(picksElement, 'form-control-lg');
+        removeClass(picksElement, 'form-control-sm');
+      }
+    }
+
+    function updateSizeJs(picksElement, picksLgStyling, picksSmStyling, picksDefStyling, size) {
+      updateSize(picksElement, size);
+
+      if (size == "lg") {
+        setStyling(picksElement, picksLgStyling);
+      } else if (size == "sm") {
+        setStyling(picksElement, picksSmStyling);
+      } else {
+        setStyling(picksElement, picksDefStyling);
+      }
+    }
+
+    function updateSizeForAdapter(picksElement, optionsAdapter) {
+      updateSize(picksElement, optionsAdapter.getSize());
+    }
+
+    function updateSizeJsForAdapter(picksElement, picksLgStyling, picksSmStyling, picksDefStyling, optionsAdapter) {
+      updateSizeJs(picksElement, picksLgStyling, picksSmStyling, picksDefStyling, optionsAdapter.getSize());
+    }
+
+    function createBsAppearance(picksElement, optionsAdapter, useOwnCss, stylings) {
+      var value = null;
+
+      var updateIsValid = function updateIsValid() {
+        return updateIsValidForAdapter(picksElement, optionsAdapter);
+      };
+
+      if (useOwnCss) {
+        value = Object.create({
+          updateIsValid: updateIsValid,
+          updateSize: function updateSize() {
+            return updateSizeForAdapter(picksElement, optionsAdapter);
+          }
+        });
+      } else {
+        var picks_lg = stylings.picks_lg,
+            picks_sm = stylings.picks_sm,
+            picks_def = stylings.picks_def;
+        value = Object.create({
+          updateIsValid: updateIsValid,
+          updateSize: function updateSize() {
+            return updateSizeJsForAdapter(picksElement, picks_lg, picks_sm, picks_def, optionsAdapter);
+          }
+        });
+      }
+
+      return value;
+    }
+    function adjustBsOptionAdapterConfiguration(configuration, selectElement) {
+      if (!configuration.getDisabled) {
+        var fieldsetElement = closestByTagName(selectElement, 'fieldset');
+
+        if (fieldsetElement) {
           configuration.getDisabled = function () {
-            return selectElement.disabled || fieldset.disabled;
+            return selectElement.disabled || fieldsetElement.disabled;
           };
         } else {
           configuration.getDisabled = function () {
@@ -1821,9 +1804,14 @@
       }
 
       if (!configuration.getSize) {
-        configuration.getSize = function () {
+        var inputGroupElement = closestByClassName(selectElement, 'input-group');
+        if (inputGroupElement) configuration.getSize = function () {
           var value = null;
-          if (selectElement.classList.contains('custom-select-lg') || selectElement.classList.contains('form-control-lg')) value = 'custom-select-lg';else if (selectElement.classList.contains('custom-select-sm') || selectElement.classList.contains('form-control-sm')) value = 'custom-select-sm';else if (containerElement && containerElement.classList.contains('input-group-lg')) value = 'input-group-lg';else if (containerElement && containerElement.classList.contains('input-group-sm')) value = 'input-group-sm';
+          if (inputGroupElement.classList.contains('input-group-lg')) value = 'lg';else if (inputGroupElement.classList.contains('input-group-sm')) value = 'sm';
+          return value;
+        };else configuration.getSize = function () {
+          var value = null;
+          if (selectElement.classList.contains('custom-select-lg') || selectElement.classList.contains('form-control-lg')) value = 'lg';else if (selectElement.classList.contains('custom-select-sm') || selectElement.classList.contains('form-control-sm')) value = 'sm';
           return value;
         };
       }
@@ -2107,8 +2095,8 @@
       // bs4
       choiceCheckBox: 'custom-control-input',
       // bs4
-      choiceLabel: 'custom-control-label justify-content-start' // 
-
+      choiceLabel: 'custom-control-label justify-content-start',
+      choiceLabel_disabled: ''
     };
     var compensation = {
       choices: {
@@ -2117,18 +2105,22 @@
       picks: {
         listStyleType: 'none',
         display: 'flex',
-        flexWrap: 'wrap'
+        flexWrap: 'wrap',
+        height: 'auto',
+        marginBottom: '0'
       },
       choice: 'px-2',
       choice_hover: 'hover text-primary bg-light',
       filterInput: {
-        class: 'form-control',
-        style: {
-          display: 'flex',
-          flexWrap: 'wrap',
-          listStyleType: 'none',
-          marginBottom: 0,
-          height: 'auto'
+        classes: 'form-control',
+        styles: {
+          border: '0px',
+          height: 'auto',
+          boxShadow: 'none',
+          padding: '0',
+          margin: '0',
+          outline: 'none',
+          backgroundColor: 'transparent'
         }
       },
       // used in StylingCorrector
@@ -2162,16 +2154,16 @@
       },
       pickButton: {
         fontSize: '1.5em',
-        lineHeight: '.9em'
+        lineHeight: '.9em',
+        float: "none"
       },
       pickContent_disabled: {
         opacity: '.65'
       },
-      // avoid opacity on pickElement's border
       // used in BsChoiceContentStylingCorrector
       choiceLabel_disabled: {
         opacity: '.65'
-      } // more flexible than {color: '#6c757d'}
+      } // more flexible than {color: '#6c757d'}, avoid opacity on pickElement's border
 
     };
 
@@ -2190,8 +2182,6 @@
       replaceConfigurationClassValues(defStylings, configuration);
       configuration.stylings = defStylings;
       configuration.compensation = defCompensation;
-      console.log("1");
-      console.log(configuration);
     } // 1) do not use css - classes  + styling js + prediction clases + compensation js
     // 2) use scss - classes only 
 
@@ -2245,9 +2235,9 @@
 
         if (!useOwnCss) {
           mergeStylings(stylings, configuration.compensation); // TODO merge
-        }
+        } //console.log(stylings);
 
-        console.log(stylings);
+
         var staticContent = configuration.staticContentGenerator(element, function (name) {
           return window.document.createElement(name);
         }, configuration.containerClass, stylings);
@@ -2261,7 +2251,7 @@
           if (configuration.options) {
             optionsAdapter = OptionsAdapterJson(configuration.options, configuration.getDisabled, configuration.getSize, configuration.getIsValid, configuration.getIsInvalid, trigger);
           } else {
-            adjustBsOptionAdapterConfiguration(configuration, staticContent.selectElement, staticContent.containerElement);
+            adjustBsOptionAdapterConfiguration(configuration, staticContent.selectElement);
             optionsAdapter = OptionsAdapterElement(staticContent.selectElement, configuration.getDisabled, configuration.getSize, configuration.getIsValid, configuration.getIsInvalid, trigger);
           }
         }
@@ -2277,21 +2267,18 @@
           if (!configuration.placeholder) configuration.placeholder = $(element).data("placeholder");
         }
 
-        var bsAppearance = createBsAppearance(staticContent.picksElement, configuration, optionsAdapter);
+        var bsAppearance = createBsAppearance(staticContent.picksElement, optionsAdapter, useOwnCss, stylings);
 
         var onUpdate = function onUpdate() {
           bsAppearance.updateSize();
           bsAppearance.updateIsValid();
         };
 
-        var multiSelect = new MultiSelect(optionsAdapter, configuration.setSelected, staticContent, function (option, pickElement) {
-          return configuration.pickContentGenerator(option, pickElement, stylings);
-        }, function (option, choiceElement) {
-          return configuration.choiceContentGenerator(option, choiceElement, stylings);
-        }, //pickContentGeneratorInst,
-        //choiceContentGeneratorInst,
-        labelAdapter, //createStylingComposite,
-        configuration.placeholder, onUpdate, onDispose, Popper, window);
+        var multiSelect = new MultiSelect(optionsAdapter, configuration.setSelected, staticContent, function (pickElement) {
+          return configuration.pickContentGenerator(pickElement, stylings);
+        }, function (choiceElement) {
+          return configuration.choiceContentGenerator(choiceElement, stylings);
+        }, labelAdapter, configuration.placeholder, onUpdate, onDispose, Popper, window);
         multiSelect.UpdateSize = bsAppearance.updateSize;
         multiSelect.UpdateIsValid = bsAppearance.updateIsValid;
         if (init && init instanceof Function) init(multiSelect);

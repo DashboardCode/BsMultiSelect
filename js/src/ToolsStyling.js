@@ -117,9 +117,11 @@ export function setStylingСlasses(destStylings, name, sourceStylings){
 }
 
 export function setStyling(element, styling){
+    if (styling)
     setClassAndStyle(element, styling.classes, styling.styles)
 }
 
 export function unsetStyling(element, styling){
+    if (styling)
     unsetClassAndStyle(element, styling.classes, styling.styles)
 }

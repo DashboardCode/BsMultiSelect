@@ -4,15 +4,13 @@ import {List} from './ToolsJs'
 export function PicksPanel (
         createElement,
         pickContentGenerator, 
-        isComponentDisabled,
         requestPickCreate,
         requestPickRemove,
         processRemoveButtonClick // click to remove button
 ) 
 {
     var list = List();
-
-    function createPick(multiSelectData, option) {
+    function createPick(multiSelectData, option, isComponentDisabled) {
         var {pickElement, attach} = createElement();
         var item = {pickElement}
         var removeFromList = list.add(item);
@@ -25,7 +23,7 @@ export function PicksPanel (
                     item.pickContent.dispose();
                     removeFromList();
                     return {
-                        createPick: ()=> createPick(multiSelectData, option),
+                        createPick: createPick,
                         count: list.getCount()
                     };
                 }
@@ -51,13 +49,12 @@ export function PicksPanel (
         //     //afterRemove();
         // };
     
-        item.pickContent = pickContentGenerator(
-            option, pickElement);
+        item.pickContent = pickContentGenerator(pickElement);
+        item.pickContent.setData(option);
+        item.pickContent.disable(isComponentDisabled);
         item.pickContent.onRemove( (event) => {
             processRemoveButtonClick(removeSelectedItem, event);
         });
-
-        item.pickContent.disable(isComponentDisabled);
         attach();
         requestPickCreate(multiSelectData, removeSelectedItem, list.getCount());
     }
@@ -70,9 +67,8 @@ export function PicksPanel (
                 item.removeSelectedItem(); // always remove in this case
         },
         isEmpty: list.isEmpty,
-        disable(isDisabled){
-            isComponentDisabled= isDisabled;
-            list.forEach(i=>i.pickContent.disable(isDisabled))
+        disable(isComponentDisabled){
+            list.forEach(i=>i.pickContent.disable(isComponentDisabled))
         },
         deselectAll(){
             list.forEach(i =>i.removeSelectedItem())

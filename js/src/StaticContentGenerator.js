@@ -1,6 +1,6 @@
-import {findDirectChildByTagName, setStyle, closestByClassName} from './ToolsDom';
+import {findDirectChildByTagName, closestByClassName} from './ToolsDom';
 import  {setStyling, unsetStyling} from './ToolsStyling';
-                                      // option, choiceElement, stylings
+
 export function staticContentGenerator(element, createElement, containerClass, stylings) { 
     var selectElement = null;
     var containerElement = null;
@@ -17,9 +17,6 @@ export function staticContentGenerator(element, createElement, containerClass, s
     { 
         containerElement = element;
         selectElement = findDirectChildByTagName(element, 'SELECT');
-        if (!selectElement)
-            throw new Error("BsMultiSelect: There are no SELECT element or options in the configuraion");
-
     }
     else 
     {
@@ -82,7 +79,7 @@ export function staticContentGenerator(element, createElement, containerClass, s
         //         containerElement.appendChild(picksElement);
         // },
         attachContainer(){
-            if (ownContainerElement)
+            if (ownContainerElement && selectElement) // otherwise it is attached
                 selectElement.parentNode.insertBefore(containerElement, selectElement.nextSibling);
         },
         appendToContainer(){
@@ -108,11 +105,11 @@ export function staticContentGenerator(element, createElement, containerClass, s
         },
 
         disable(){
-            setStyle(picksElement, stylings.picks_disabled)
+            setStyling(picksElement, stylings.picks_disabled)
         },
 
         focusIn(){
-            setStyle(picksElement, stylings.picks_focus)
+            setStyling(picksElement, stylings.picks_focus)
         },
 
         focusOut(){

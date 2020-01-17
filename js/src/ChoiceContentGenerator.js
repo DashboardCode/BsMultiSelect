@@ -1,7 +1,7 @@
 import  {EventBinder} from './ToolsDom';
 import  {setStyling, unsetStyling} from './ToolsStyling';
 
-export function choiceContentGenerator(option, choiceElement, stylings){
+export function choiceContentGenerator(choiceElement, stylings){
     setStyling(choiceElement, stylings.choice);
     choiceElement.innerHTML = '<div><input type="checkbox"><label></label></div>';
     let choiceContentElement = choiceElement.querySelector('DIV');
@@ -12,9 +12,9 @@ export function choiceContentGenerator(option, choiceElement, stylings){
     setStyling(choiceCheckBoxElement, stylings.choiceCheckBox); 
     setStyling(choiceLabelElement, stylings.choiceLabel); 
 
-    choiceLabelElement.textContent =option.text;
     let eventBinder = EventBinder();
-    return { 
+    return {
+        setData(option) {choiceLabelElement.textContent =option.text;},
         select(isSelected){ choiceCheckBoxElement.checked = isSelected }, 
         disable : (isDisabled, isSelected) => {
             var action = isDisabled?setStyling:unsetStyling;

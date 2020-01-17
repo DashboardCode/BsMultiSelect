@@ -49,6 +49,7 @@
             margin: 0;
             font-weight: inherit;
             color: inherit;
+            background-color: transparent;
             border: 0;
             outline: none;
             box-shadow: none;
@@ -66,8 +67,11 @@
             padding-left: 0;
             line-height: 1.5em;
             button.close {
+                float: none;
                 font-size: 1.5em;
                 line-height: .9em;
+                // BS close orginally float:right, therefore it impossible to configure no-warp policy
+                // with .css("white-space", "nowrap") or  .css("display", "inline-block"); TODO: migrate to flex?
             }
             span.disabled {
                 opacity: $btn-disabled-opacity;

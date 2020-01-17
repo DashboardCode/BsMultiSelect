@@ -45,17 +45,18 @@ const stylings = {
     choiceCheckBox_disabled: 'disabled', //  not bs4, in scss as 'ul.form-control li .custom-control-input.disabled ~ .custom-control-label'
     choiceContent: 'custom-control custom-checkbox', // bs4
     choiceCheckBox: 'custom-control-input', // bs4
-    choiceLabel: 'custom-control-label justify-content-start' // 
+    choiceLabel: 'custom-control-label justify-content-start',
+    choiceLabel_disabled: ''  
 }
 
 const compensation = {
     choices: { listStyleType:'none'},
-    picks: { listStyleType:'none', display:'flex', flexWrap:'wrap'},
+    picks: { listStyleType:'none', display:'flex', flexWrap:'wrap',  height: 'auto', marginBottom: '0' },
     choice: 'px-2' ,  
     choice_hover: 'hover text-primary bg-light', 
     filterInput: { 
-        class: 'form-control', 
-        style: {display:'flex', flexWrap:'wrap', listStyleType:'none', marginBottom: 0, height: 'auto'}
+        classes: 'form-control', 
+        styles: {border:'0px', height: 'auto', boxShadow:'none', padding:'0', margin:'0', outline:'none', backgroundColor:'transparent'}
     },
 
     // used in StylingCorrector
@@ -72,11 +73,11 @@ const compensation = {
     
     // used in BsPickContentStylingCorrector
     pick: {paddingLeft: '0px', lineHeight: '1.5em'},
-    pickButton: {fontSize:'1.5em', lineHeight: '.9em'},
-    pickContent_disabled: {opacity: '.65'}, // avoid opacity on pickElement's border
+    pickButton: {fontSize:'1.5em', lineHeight: '.9em', float : "none"},
+    pickContent_disabled: {opacity: '.65'}, 
     
     // used in BsChoiceContentStylingCorrector
-    choiceLabel_disabled: {opacity: '.65'}  // more flexible than {color: '#6c757d'}
+    choiceLabel_disabled: {opacity: '.65'}  // more flexible than {color: '#6c757d'}, avoid opacity on pickElement's border
 };
 
 function extendConfigurtion(configuration, defaults){
@@ -94,10 +95,7 @@ function extendConfigurtion(configuration, defaults){
     
     configuration.stylings = defStylings;
     configuration.compensation = defCompensation;
-    console.log("1");
-    console.log(configuration);
-
-    
+   
 }
 
 // 1) do not use css - classes  + styling js + prediction clases + compensation js
@@ -156,7 +154,7 @@ function extendConfigurtion(configuration, defaults){
             if (!useOwnCss){
                 mergeStylings(stylings, configuration.compensation); // TODO merge
             }
-            console.log(stylings);
+            //console.log(stylings);
             let staticContent = configuration.staticContentGenerator(
                 element, (name)=>window.document.createElement(name), configuration.containerClass, stylings
             );
@@ -182,8 +180,7 @@ function extendConfigurtion(configuration, defaults){
                 {
                     adjustBsOptionAdapterConfiguration(
                         configuration,
-                        staticContent.selectElement, 
-                        staticContent.containerElement
+                        staticContent.selectElement
                     )
                     optionsAdapter = OptionsAdapterElement(
                         staticContent.selectElement, 
@@ -209,7 +206,7 @@ function extendConfigurtion(configuration, defaults){
                     configuration.placeholder = $(element).data("placeholder");
             }
             
-            var bsAppearance =  createBsAppearance(staticContent.picksElement, configuration, optionsAdapter);
+            var bsAppearance =  createBsAppearance(staticContent.picksElement, optionsAdapter, useOwnCss, stylings);
 
             var onUpdate = () => {
                 bsAppearance.updateSize();
@@ -220,12 +217,9 @@ function extendConfigurtion(configuration, defaults){
                 optionsAdapter,
                 configuration.setSelected,
                 staticContent,
-                (option, pickElement) => configuration.pickContentGenerator(option, pickElement, stylings),
-                (option, choiceElement) => configuration.choiceContentGenerator(option, choiceElement, stylings),
-                //pickContentGeneratorInst,
-                //choiceContentGeneratorInst,
+                (pickElement) => configuration.pickContentGenerator(pickElement, stylings),
+                (choiceElement) => configuration.choiceContentGenerator(choiceElement, stylings),
                 labelAdapter,
-                //createStylingComposite,
                 configuration.placeholder,
                 onUpdate,
                 onDispose,

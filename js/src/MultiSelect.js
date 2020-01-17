@@ -245,7 +245,8 @@ export class MultiSelect {
                         /*createSelectedItemGen*/ (multiSelectData/*,isOptionDisabled,setChoiceContentDisabled*/) => {
                             this.picksPanel.createPick(
                                 multiSelectData,
-                                multiSelectData.option
+                                multiSelectData.option,
+                                this.isComponentDisabled
                                 /*,
                                 isOptionDisabled,
                                 setChoiceContentDisabled
@@ -445,7 +446,7 @@ export class MultiSelect {
                 }
             },
             this.pickContentGenerator,
-            this.isComponentDisabled,
+            //this.isComponentDisabled,
             /*onPickCreated*/ (multiSelectData, removePick, count) => {
                 multiSelectData.excludedFromSearch = true; // all selected excluded from search
                 multiSelectData.toggle = () => removePick();
@@ -468,7 +469,7 @@ export class MultiSelect {
                         multiSelectData.toggle = ()=>{
                             let confirmed = this.setSelected(multiSelectData.option, true);
                             if (notStrictFalse(confirmed)){
-                                createPick(multiSelectData, multiSelectData.option);
+                                createPick(multiSelectData, multiSelectData.option, this.isComponentDisabled );
                                 this.optionsAdapter.triggerChange();
                             }
                         };
@@ -532,8 +533,8 @@ export class MultiSelect {
         this.staticContent.attachContainer();
 
         this.onUpdate();
-        this.UpdateDisabled(); // should be done after updateDataImpl
         this.updateDataImpl();
+        this.UpdateDisabled(); // should be done after updateDataImpl
 
         if (this.optionsAdapter.onReset)
             this.optionsAdapter.onReset(()=> this.window.setTimeout( ()=>this.UpdateData() ) );

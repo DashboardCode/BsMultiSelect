@@ -13,6 +13,7 @@
   margin: 0;
   font-weight: inherit;
   color: inherit;
+  background-color: transparent;
   border: 0;
   outline: none;
   box-shadow: none;
@@ -45,6 +46,7 @@
   line-height: 1.5em;
 }
 .dashboardcode-bsmultiselect ul.form-control > li.badge button.close {
+  float: none;
   font-size: 1.5em;
   line-height: 0.9em;
 }
