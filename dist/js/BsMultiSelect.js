@@ -115,93 +115,6 @@
       };
     }
 
-    function isString(value) {
-      return value instanceof String || typeof value === 'string';
-    }
-    function notStrictFalse(value) {
-      return typeof value !== 'boolean' || value;
-    }
-    function extendIfUndefined(destination, source) {
-      for (var property in source) {
-        if (destination[property] === undefined) destination[property] = source[property];
-      }
-    }
-    function extendAndOverride(destination, source) {
-      for (var property in source) {
-        destination[property] = source[property];
-      }
-    }
-
-    function forEachRecursion(f, i) {
-      if (!i) return;
-      f(i.value);
-      forEachRecursion(f, i.prev);
-    }
-
-    function List() {
-      var tail = null;
-      var count = 0;
-      return {
-        add: function add(e) {
-          if (tail) {
-            tail.next = {
-              value: e,
-              prev: tail
-            };
-            tail = tail.next;
-          } else tail = {
-            value: e
-          };
-
-          count++;
-          var node = tail;
-
-          function remove() {
-            if (node.prev) {
-              node.prev.next = node.next;
-            }
-
-            if (node.next) {
-              node.next.prev = node.prev;
-            }
-
-            if (tail == node) {
-              tail = node.prev;
-            }
-
-            count--;
-          }
-
-          return remove;
-        },
-        forEach: function forEach(f) {
-          forEachRecursion(f, tail);
-        },
-        getTail: function getTail() {
-          return tail ? tail.value : null;
-        },
-        getCount: function getCount() {
-          return count;
-        },
-        isEmpty: function isEmpty() {
-          return count == 0;
-        },
-        reset: function reset() {
-          tail = null;
-          count = 0;
-        }
-      };
-    }
-    function sync() {
-      for (var _len = arguments.length, functions = new Array(_len), _key = 0; _key < _len; _key++) {
-        functions[_key] = arguments[_key];
-      }
-
-      functions.forEach(function (f) {
-        if (f) f();
-      });
-    }
-
     function ChoicesPanel(createElement, choicesElement, onShow, onHide, eventSkipper, choiceContentGenerator, getVisibleMultiSelectDataList, resetFilter, updateChoicesLocation, filterPanelSetFocus) {
       var hoveredMultiSelectData = null;
       var hoveredMultiSelectDataIndex = null;
@@ -381,7 +294,7 @@
           if (MultiSelectData.isOptionDisabled) MultiSelectData.toggle = null;else MultiSelectData.toggle = function () {
             var confirmed = setSelected(MultiSelectData.option, true);
 
-            if (notStrictFalse(confirmed)) {
+            if (!(confirmed === false)) {
               createSelectedItem();
               triggerChange();
             }
@@ -407,6 +320,108 @@
         }
       };
       return item;
+    }
+
+    function isString(value) {
+      return value instanceof String || typeof value === 'string';
+    }
+    function extendIfUndefined(destination, source) {
+      for (var property in source) {
+        if (destination[property] === undefined) destination[property] = source[property];
+      }
+    }
+    function extendOverriding(destination, source) {
+      for (var property in source) {
+        destination[property] = source[property];
+      }
+    }
+    function shallowClone(source) {
+      var destination = {};
+
+      for (var property in source) {
+        destination[property] = source[property];
+      }
+
+      for (var _len = arguments.length, sources = new Array(_len > 1 ? _len - 1 : 0), _key = 1; _key < _len; _key++) {
+        sources[_key - 1] = arguments[_key];
+      }
+
+      if (sources) sources.forEach(function (s) {
+        for (var _property in s) {
+          destination[_property] = s[_property];
+        }
+      });
+      return destination;
+    }
+
+    function forEachRecursion(f, i) {
+      if (!i) return;
+      f(i.value);
+      forEachRecursion(f, i.prev);
+    }
+
+    function List() {
+      var tail = null;
+      var count = 0;
+      return {
+        add: function add(e) {
+          if (tail) {
+            tail.next = {
+              value: e,
+              prev: tail
+            };
+            tail = tail.next;
+          } else tail = {
+            value: e
+          };
+
+          count++;
+          var node = tail;
+
+          function remove() {
+            if (node.prev) {
+              node.prev.next = node.next;
+            }
+
+            if (node.next) {
+              node.next.prev = node.prev;
+            }
+
+            if (tail == node) {
+              tail = node.prev;
+            }
+
+            count--;
+          }
+
+          return remove;
+        },
+        forEach: function forEach(f) {
+          forEachRecursion(f, tail);
+        },
+        getTail: function getTail() {
+          return tail ? tail.value : null;
+        },
+        getCount: function getCount() {
+          return count;
+        },
+        isEmpty: function isEmpty() {
+          return count == 0;
+        },
+        reset: function reset() {
+          tail = null;
+          count = 0;
+        }
+      };
+    }
+    function sync() {
+      for (var _len2 = arguments.length, functions = new Array(_len2), _key2 = 0; _key2 < _len2; _key2++) {
+        functions[_key2] = arguments[_key2];
+      }
+
+      functions.forEach(function (f) {
+        if (f) f();
+      });
     }
 
     function removeElement(e) {
@@ -436,18 +451,28 @@
         return e.classList.contains(className);
       });
     }
+
     function closest(element, predicate) {
       if (!element || !(element instanceof Element)) return null; // should be element, not document (TODO: check iframe)
 
       if (predicate(element)) return element;
       return closest(element.parentNode, predicate);
     }
+
     function addClass(element, c) {
       element.classList.add(c);
     }
     function removeClass(element, c) {
       element.classList.remove(c);
     }
+    //     var toRemove = element.firstChild;
+    //     while( toRemove ) {
+    //         element.removeChild( toRemove );
+    //         toRemove = element.firstChild;
+    //     }
+    // }
+
+
     function setClassAndStyle(element, classes, styles) {
       classes.forEach(function (e) {
         element.classList.add(e);
@@ -1176,7 +1201,7 @@
         function (multiSelectData, removePick) {
           var confirmed = _this2.setSelected(multiSelectData.option, false);
 
-          if (notStrictFalse(confirmed)) {
+          if (!(confirmed === false)) {
             var _removePick = removePick(),
                 createPick = _removePick.createPick,
                 count = _removePick.count;
@@ -1195,7 +1220,7 @@
               multiSelectData.toggle = function () {
                 var confirmed = _this2.setSelected(multiSelectData.option, true);
 
-                if (notStrictFalse(confirmed)) {
+                if (!(confirmed === false)) {
                   createPick(multiSelectData, multiSelectData.option, _this2.isComponentDisabled);
 
                   _this2.optionsAdapter.triggerChange();
@@ -1386,134 +1411,6 @@
       };
     }
 
-    function extractClasses(styling) {
-      var value = [];
-
-      if (isString(styling)) {
-        value = [].concat(styling.split(' '));
-      } else if (styling instanceof Array) {
-        value = [].concat(styling);
-      } else if (styling instanceof Object) {
-        if (styling.classes) {
-          if (isString(styling.classes)) {
-            value = [].concat(styling.classes.split(' '));
-          } else if (styling.classes instanceof Array) {
-            value = [].concat(styling.classes);
-          }
-        }
-      }
-
-      return value;
-    }
-
-    function mergeStylingItem(destination, styling) {
-      if (styling) {
-        if (isString(styling)) {
-          destination.classes = destination.classes.concat(styling.split(' '));
-        } else if (styling instanceof Array) {
-          destination.classes = destination.classes.concat(styling);
-        } else if (styling instanceof Object) {
-          if (styling.classes) {
-            if (isString(styling.classes)) {
-              destination.classes = destination.classes.concat(styling.classes.split(' '));
-            } else if (styling.classes instanceof Array) {
-              destination.classes = destination.classes.concat(styling.classes);
-            }
-          }
-
-          if (styling.styles) {
-            extendAndOverride(destination.styles, styling.styles);
-          } else if (!styling.classes) {
-            extendAndOverride(destination.styles, styling);
-          }
-        }
-      }
-
-      return destination;
-    }
-
-    function copyStylingItem(destination, styling) {
-      if (styling) {
-        if (isString(styling)) {
-          destination.classes = styling.split(' ');
-        } else if (styling instanceof Array) {
-          destination.classes = styling.slice();
-        } else if (styling instanceof Object) {
-          if (styling.classes) {
-            if (isString(styling.classes)) {
-              destination.classes = styling.classes.split(' ');
-            } else if (styling.classes instanceof Array) {
-              destination.classes = styling.classes.slice();
-            }
-          }
-
-          if (styling.styles) {
-            extendAndOverride(destination.styles, styling.styles);
-          } else if (!styling.classes) {
-            extendAndOverride(destination.styles, styling);
-          }
-        }
-      }
-
-      return destination;
-    }
-
-    function cloneStylings(stylings) {
-      var destination = {};
-
-      if (stylings) {
-        for (var property in stylings) {
-          destination[property] = {
-            classes: [],
-            styles: {}
-          };
-          copyStylingItem(destination[property], stylings[property]);
-        }
-      }
-
-      return destination;
-    }
-    function mergeStylings(stylings, compensations) {
-      if (compensations) {
-        for (var property in compensations) {
-          if (!stylings[property]) stylings[property] = {
-            classes: [],
-            styles: {}
-          };
-          mergeStylingItem(stylings[property], compensations[property]);
-        }
-      }
-
-      return stylings;
-    }
-    function setStylingStyles(stylings, name, styles) {
-      var styling = stylings[name];
-
-      if (!styling) {
-        styling = {
-          styles: {},
-          classe: []
-        };
-        stylings[name] = styling;
-      }
-
-      extendAndOverride(styling.styles, styles);
-    }
-    function setStylingСlasses(destStylings, name, sourceStylings) {
-      if (!sourceStylings[name]) {
-        sourceStylings[name] = {
-          styles: {},
-          classes: []
-        };
-      }
-
-      if (!destStylings[name]) destStylings[name] = {
-        styles: {},
-        classes: []
-      };
-      var classes = extractClasses(sourceStylings[name]);
-      destStylings[name].classes = classes;
-    }
     function setStyling(element, styling) {
       if (styling) setClassAndStyle(element, styling.classes, styling.styles);
     }
@@ -1521,18 +1418,148 @@
       if (styling) unsetClassAndStyle(element, styling.classes, styling.styles);
     }
 
-    function pickContentGenerator(pickElement, stylings) {
-      setStyling(pickElement, stylings.pick);
+    function extendClasses(out, param, actionStr, actionArr) {
+      if (isString(param)) {
+        out.classes = actionStr(param.split(' '));
+        return true;
+      } else if (param instanceof Array) {
+        out.classes = actionArr(param);
+        return true;
+      }
+
+      return false;
+    }
+
+    function extendClassesAndStyles(value, param, actionStr, actionArr, actionObj) {
+      var success = extendClasses(value, param, actionStr, actionArr);
+
+      if (success === false) {
+        if (param instanceof Object) {
+          var classes = param.classes,
+              styles = param.styles;
+
+          if (classes) {
+            extendClasses(value, classes, actionStr, actionArr);
+          }
+
+          if (styles) {
+            value.styles = actionObj(styles);
+          } else if (!classes) {
+            value.styles = actionObj(param);
+          }
+        }
+      }
+    }
+
+    function Styling(param) {
+      var value = {
+        classes: [],
+        styles: {}
+      };
+
+      if (param) {
+        extendClassesAndStyles(value, param, function (a) {
+          return a;
+        }, function (a) {
+          return a.slice();
+        }, function (o) {
+          return shallowClone(o);
+        });
+
+        for (var _len = arguments.length, params = new Array(_len > 1 ? _len - 1 : 0), _key = 1; _key < _len; _key++) {
+          params[_key - 1] = arguments[_key];
+        }
+
+        if (params) {
+          var classes = value.classes,
+              styles = value.styles;
+          params.forEach(function (p) {
+            return extendClassesAndStyles(value, p, function (a) {
+              return classes.concat(a);
+            }, function (a) {
+              return classes.concat(a);
+            }, function (o) {
+              return shallowClone(styles, o);
+            });
+          });
+        }
+      }
+
+      return Object.freeze(value);
+    } // function setClassesMergeStyles(styling, param){
+    //     var {classes, styles} = styling;
+    //     var value = {classes, styles};
+    //     if (param)
+    //         extendClassesAndStyles(value, param, s=>s, a=>a.slice(), o=> shallowClone(styles, o));
+    //     return Object.freeze(value)
+    // }
+
+    function createCss(stylings1, stylings2) {
+      var destination = {};
+
+      for (var property in stylings1) {
+        var param1 = stylings1[property];
+        var param2 = stylings2 ? stylings2[property] : undefined;
+        if (param2 === undefined) destination[property] = Styling(param1);else {
+          var styling = Styling(param1);
+          var classes = styling.classes,
+              styles = styling.styles;
+          var value = {
+            classes: classes,
+            styles: styles
+          };
+          extendClassesAndStyles(value, param, function (s) {
+            return s;
+          }, function (a) {
+            return a.slice();
+          }, function (o) {
+            return shallowClone(styles, o);
+          });
+          destination[property] = Styling(value); // setClassesMergeStyles(styling, param2);
+        }
+      }
+
+      if (stylings2) for (var _property in stylings2) {
+        destination[_property] = Styling(stylings2[_property]);
+      }
+      return destination;
+    }
+    function extendCss(stylings1, stylings2) {
+      for (var property in stylings2) {
+        var param2 = stylings2[property];
+        var param1 = stylings1[property];
+        if (param1 === undefined) stylings1[property] = Styling(param2);else {
+          stylings1[property] = Styling(param1, param2);
+        }
+      }
+    } // export function setStylingStyles(destStylings, name, styling){
+    //     var styling = destStylings[name]
+    //     if (!styling){
+    //         styling = Styling()
+    //         destStylings[name] = styling
+    //     }
+    //     destStylings[name]=mergeStyles(destStylings[name], styling);
+    // }
+    // export function setStylingСlasses(destStylings, name, sourceStylings){
+    //     if (!sourceStylings[name])
+    //         sourceStylings[name] =  Styling()
+    //     if (!destStylings[name])
+    //         destStylings[name] = Styling()
+    //     destStylings[name]=setClasses(destStylings[name], sourceStylings[name]);
+    // }
+
+    function pickContentGenerator(pickElement, css) {
+      setStyling(pickElement, css.pick);
       pickElement.innerHTML = '<span></span><button aria-label="Remove" tabIndex="-1" type="button"><span aria-hidden="true">&times;</span></button>';
       var pickContentElement = pickElement.querySelector('SPAN');
       var pickButtonElement = pickElement.querySelector('BUTTON');
-      setStyling(pickButtonElement, stylings.pickButton);
+      setStyling(pickButtonElement, css.pickButton);
       var eventBinder = EventBinder();
       return {
         setData: function setData(option) {
           pickContentElement.textContent = option.text;
           var action = option.disabled ? setStyling : unsetStyling;
-          action(pickContentElement, stylings.pickContent_disabled);
+          action(pickContentElement, css.pickContent_disabled);
         },
         disable: function disable(isRemoveDisabled) {
           pickButtonElement.disabled = isRemoveDisabled;
@@ -1548,15 +1575,15 @@
       };
     }
 
-    function choiceContentGenerator(choiceElement, stylings) {
-      setStyling(choiceElement, stylings.choice);
+    function choiceContentGenerator(choiceElement, css) {
+      setStyling(choiceElement, css.choice);
       choiceElement.innerHTML = '<div><input type="checkbox"><label></label></div>';
       var choiceContentElement = choiceElement.querySelector('DIV');
       var choiceCheckBoxElement = choiceContentElement.querySelector('INPUT');
       var choiceLabelElement = choiceContentElement.querySelector('LABEL');
-      setStyling(choiceContentElement, stylings.choiceContent);
-      setStyling(choiceCheckBoxElement, stylings.choiceCheckBox);
-      setStyling(choiceLabelElement, stylings.choiceLabel);
+      setStyling(choiceContentElement, css.choiceContent);
+      setStyling(choiceCheckBoxElement, css.choiceCheckBox);
+      setStyling(choiceLabelElement, css.choiceLabel);
       var eventBinder = EventBinder();
       return {
         setData: function setData(option) {
@@ -1567,16 +1594,16 @@
         },
         disable: function disable(isDisabled, isSelected) {
           var action = isDisabled ? setStyling : unsetStyling;
-          action(choiceCheckBoxElement, stylings.choiceCheckBox_disabled);
-          action(choiceLabelElement, stylings.choiceLabel_disabled); // do not desable checkBox if option is selected! there should be possibility to unselect "disabled"
+          action(choiceCheckBoxElement, css.choiceCheckBox_disabled);
+          action(choiceLabelElement, css.choiceLabel_disabled); // do not desable checkBox if option is selected! there should be possibility to unselect "disabled"
 
           choiceCheckBoxElement.disabled = isDisabled && !isSelected;
         },
         hoverIn: function hoverIn() {
-          setStyling(choiceElement, stylings.choice_hover);
+          setStyling(choiceElement, css.choice_hover);
         },
         hoverOut: function hoverOut() {
-          unsetStyling(choiceElement, stylings.choice_hover);
+          unsetStyling(choiceElement, css.choice_hover);
         },
         onSelected: function onSelected(toggle) {
           eventBinder.bind(choiceCheckBoxElement, "change", toggle);
@@ -1592,7 +1619,7 @@
       };
     }
 
-    function staticContentGenerator(element, createElement, containerClass, stylings) {
+    function staticContentGenerator(element, createElement, containerClass, css) {
       var selectElement = null;
       var containerElement = null;
 
@@ -1641,10 +1668,10 @@
 
       var pickFilterElement = createElement('LI');
       var filterInputElement = createElement('INPUT');
-      setStyling(picksElement, stylings.picks);
-      setStyling(choicesElement, stylings.choices);
-      setStyling(pickFilterElement, stylings.pickFilter);
-      setStyling(filterInputElement, stylings.filterInput);
+      setStyling(picksElement, css.picks);
+      setStyling(choicesElement, css.choices);
+      setStyling(pickFilterElement, css.pickFilter);
+      setStyling(filterInputElement, css.filterInput);
       var createInputId = null;
       if (selectElement) createInputId = function createInputId() {
         return containerClass + "-generated-input-" + (selectElement.id ? selectElement.id : selectElement.name).toLowerCase() + "-id";
@@ -1680,16 +1707,16 @@
           }
         },
         enable: function enable() {
-          unsetStyling(picksElement, stylings.picks_disabled);
+          unsetStyling(picksElement, css.picks_disabled);
         },
         disable: function disable() {
-          setStyling(picksElement, stylings.picks_disabled);
+          setStyling(picksElement, css.picks_disabled);
         },
         focusIn: function focusIn() {
-          setStyling(picksElement, stylings.picks_focus);
+          setStyling(picksElement, css.picks_focus);
         },
         focusOut: function focusOut() {
-          unsetStyling(picksElement, stylings.picks_focus);
+          unsetStyling(picksElement, css.picks_focus);
         },
         dispose: function dispose() {
           if (ownContainerElement) containerElement.parentNode.removeChild(containerElement);
@@ -1711,16 +1738,16 @@
       updateIsValid(picksElement, optionsAdapter.getIsValid(), optionsAdapter.getIsInvalid());
     }
 
-    function pushIsValidClassToPicks(staticContent, stylings) {
+    function pushIsValidClassToPicks(staticContent, css) {
       var defFocusIn = staticContent.focusIn;
 
       staticContent.focusIn = function () {
         var picksElement = staticContent.picksElement;
 
         if (picksElement.classList.contains("is-valid")) {
-          setStyling(picksElement, stylings.picks_focus_valid);
+          setStyling(picksElement, css.picks_focus_valid);
         } else if (picksElement.classList.contains("is-invalid")) {
-          setStyling(picksElement, stylings.picks_focus_invalid);
+          setStyling(picksElement, css.picks_focus_invalid);
         } else {
           defFocusIn();
         }
@@ -1760,7 +1787,7 @@
       updateSizeJs(picksElement, picksLgStyling, picksSmStyling, picksDefStyling, optionsAdapter.getSize());
     }
 
-    function createBsAppearance(picksElement, optionsAdapter, useOwnCss, stylings) {
+    function createBsAppearance(picksElement, optionsAdapter, useOwnCss, css) {
       var value = null;
 
       var updateIsValid = function updateIsValid() {
@@ -1775,9 +1802,9 @@
           }
         });
       } else {
-        var picks_lg = stylings.picks_lg,
-            picks_sm = stylings.picks_sm,
-            picks_def = stylings.picks_def;
+        var picks_lg = css.picks_lg,
+            picks_sm = css.picks_sm,
+            picks_def = css.picks_def;
         value = Object.create({
           updateIsValid: updateIsValid,
           updateSize: function updateSize() {
@@ -1956,112 +1983,45 @@
 
       transformClasses.forEach(function (i) {
         if (configuration[i.old]) {
-          console.log("DashboarCode.BsMultiSelect: " + i.old + " is depricated, use - stylings:{" + i.opt + ":" + i.samplVal + "}");
+          console.log("DashboarCode.BsMultiSelect: " + i.old + " is depricated, use - css:{" + i.opt + ":" + i.samplVal + "}");
 
-          if (!stylings[i.opt]) {
-            stylings[i.opt] = configuration[i.old];
+          if (!css[i.opt]) {
+            css[i.opt] = configuration[i.old];
           }
 
           delete configuration[i.old];
         }
       });
-      if (!configuration.stylings) configuration.stylings = {};
-      var stylings = configuration.stylings;
+      if (!configuration.css) configuration.css = {};
+      var css = configuration.css;
 
       if (configuration.useCss) {
         console.log("DashboarCode.BsMultiSelect: useCss is depricated, use - 'useOwnCss: false|true'");
 
-        if (!stylings.pick_disabled) {
+        if (!css.pick_disabled) {
           configuration.useOwnCss = configuration.useCss;
         }
 
         delete configuration.useCss;
       }
-    }
-    function replaceConfigurationClassValues(stylings, configuration) {
-      var cfgStylings = configuration.stylings;
+    } // export function replaceConfigurationClassValues(css, configuration){
+    //     var cfgCss = configuration.css;
+    //     if (cfgCss)
+    //     {
+    //         for (let property in cfgCss)
+    //             setStylingСlasses(css, property, cfgCss);
+    //     }
+    // }
+    // export function injectConfigurationStyleValues(cssPatch, configuration){
+    //     var cfgCssPatch = configuration.cssPatch;
+    //     if (cfgCssPatch)
+    //     {
+    //         for (let property in cfgCss)
+    //             setStylingStyles(cssPatch, property, cfgCssPatch);
+    //     }
+    // }
 
-      if (cfgStylings) {
-        if (cfgStylings.choices) {
-          setStylingСlasses(stylings, "choices", cfgStylings);
-        }
-
-        if (cfgStylings.choice) {
-          setStylingСlasses(stylings, "choice", cfgStylings);
-        }
-
-        if (cfgStylings.choice_hover) {
-          setStylingСlasses(stylings, "choice_hover", cfgStylings);
-        }
-
-        if (cfgStylings.picks) {
-          setStylingСlasses(stylings, "picks", cfgStylings);
-        }
-
-        if (cfgStylings.pick) {
-          setStylingСlasses(stylings, "classes", cfgStylings);
-        }
-
-        if (cfgStylings.pickButton) {
-          setStylingСlasses(stylings, "pickButton", cfgStylings);
-        }
-
-        if (cfgStylings.pickFilter) {
-          setStylingСlasses(stylings, "pickFilter", cfgStylings);
-        }
-
-        if (cfgStylings.filterInput) {
-          setStylingСlasses(stylings, "filterInput", cfgStylings);
-        }
-
-        if (cfgStylings.picks_focus) {
-          setStylingСlasses(stylings, "picks_focus", cfgStylings);
-        }
-
-        if (cfgStylings.picks_disabled) {
-          setStylingСlasses(stylings, "picks_disabled", cfgStylings);
-        }
-
-        if (cfgStylings.pick_disabled) {
-          setStylingСlasses(stylings, "pick_disabled", cfgStylings);
-        }
-      }
-    }
-    function injectConfigurationStyleValues(stylings, configuration) {
-      if (configuration.nocss_picks_disabled) {
-        setStylingStyles(stylings, "picks_disabled", configuration.nocss_picks_disabled);
-      }
-
-      if (configuration.nocss_picks_focus) {
-        setStylingStyles(stylings, "picks_focus", configuration.nocss_picks_focus);
-      }
-
-      if (configuration.nocss_picks_focus_valid) {
-        setStylingStyles(stylings, "picks_focus_valid", configuration.nocss_picks_focus_valid);
-      }
-
-      if (configuration.nocss_picks_focus_invalid) {
-        setStylingStyles(stylings, "picks_focus_invalid", configuration.nocss_picks_focus_invalid);
-      }
-
-      if (configuration.nocss_picks_def) {
-        setStylingStyles(stylings, "picks_def", configuration.nocss_picks_def);
-      }
-
-      if (configuration.nocss_picks_lg) {
-        setStylingStyles(stylings, "picks_lg", configuration.nocss_picks_lg);
-      }
-
-      if (configuration.nocss_picks_sm) {
-        setStylingStyles(stylings, "picks_sm", configuration.nocss_picks_sm);
-      }
-
-      if (configuration.nocss_choiceLabel_disabled) {
-        setStylingStyles(stylings, "choiceLabel_disabled", configuration.nocss_choiceLabel_disabled);
-      }
-    }
-
-    var stylings = {
+    var css = {
       choices: 'dropdown-menu',
       // bs4, in bsmultiselect.scss as ul.dropdown-menu
       choice_hover: 'hover',
@@ -2098,7 +2058,7 @@
       choiceLabel: 'custom-control-label justify-content-start',
       choiceLabel_disabled: ''
     };
-    var compensation = {
+    var cssPatch = {
       choices: {
         listStyleType: 'none'
       },
@@ -2110,7 +2070,7 @@
         marginBottom: '0'
       },
       choice: 'px-2',
-      choice_hover: 'hover text-primary bg-light',
+      choice_hover: 'text-primary bg-light',
       filterInput: {
         classes: 'form-control',
         styles: {
@@ -2168,20 +2128,17 @@
     };
 
     function extendConfigurtion(configuration, defaults) {
-      var cfgStylings = configuration.stylings;
-      var cfgCompensation = configuration.compensation;
-      configuration.stylings = null;
-      configuration.compensation = null;
+      var cfgCss = configuration.css;
+      var cfgCssPatch = configuration.cssPatch;
+      configuration.css = null;
+      configuration.cssPatch = null;
       extendIfUndefined(configuration, defaults);
-      var defStylings = cloneStylings(defaults.stylings); // TODO
+      var defCss = createCss(defaults.css, cfgCss); // replace classes, merge styles
 
-      var defCompensation = cloneStylings(defaults.compensation); // TODO
-      //TODO: do something with cfgStylings and cfgCompensation
+      var defCssPatch = createCss(defaults.cssPatch, cfgCssPatch); // ? classes, merge styles
 
-      injectConfigurationStyleValues(defCompensation, configuration);
-      replaceConfigurationClassValues(defStylings, configuration);
-      configuration.stylings = defStylings;
-      configuration.compensation = defCompensation;
+      configuration.css = defCss;
+      configuration.cssPatch = defCssPatch;
     } // 1) do not use css - classes  + styling js + prediction clases + compensation js
     // 2) use scss - classes only 
 
@@ -2190,8 +2147,8 @@
       var defaults = {
         useOwnCss: false,
         containerClass: "dashboardcode-bsmultiselect",
-        stylings: stylings,
-        compensation: compensation,
+        css: css,
+        cssPatch: cssPatch,
         placeholder: '',
         staticContentGenerator: staticContentGenerator,
         getLabelElement: getLabelElement,
@@ -2221,26 +2178,28 @@
           extendConfigurtion(configuration, defaults);
           init = settings(element, configuration);
         } else {
-          if (settings) extendAndOverride(configuration, settings); // settings used per jQuery intialization, configuration per element
+          if (settings) {
+            adjustLegacyConfiguration(settngs);
+            extendOverriding(configuration, settings); // settings used per jQuery intialization, configuration per element
+          }
 
-          adjustLegacyConfiguration(configuration);
           extendConfigurtion(configuration, defaults);
         } // -----------------------------------------------------------------
 
 
         if (configuration.buildConfiguration) init = configuration.buildConfiguration(element, configuration);
-        var stylings = configuration.stylings; // -----------------------------------------------------------------
+        var css = configuration.css; // -----------------------------------------------------------------
 
         var useOwnCss = configuration.useOwnCss; // useOwnCss
 
         if (!useOwnCss) {
-          mergeStylings(stylings, configuration.compensation); // TODO merge
-        } //console.log(stylings);
+          extendCss(css, configuration.cssPatch); // TODO merge
+        }
 
-
+        console.log(css);
         var staticContent = configuration.staticContentGenerator(element, function (name) {
           return window.document.createElement(name);
-        }, configuration.containerClass, stylings);
+        }, configuration.containerClass, css);
         var optionsAdapter = configuration.optionsAdapter;
 
         if (!optionsAdapter) {
@@ -2257,7 +2216,7 @@
         }
 
         if (!useOwnCss) {
-          pushIsValidClassToPicks(staticContent, stylings);
+          pushIsValidClassToPicks(staticContent, css);
         }
 
         var labelAdapter = LabelAdapter(configuration.labelElement, staticContent.createInputId);
@@ -2267,7 +2226,7 @@
           if (!configuration.placeholder) configuration.placeholder = $(element).data("placeholder");
         }
 
-        var bsAppearance = createBsAppearance(staticContent.picksElement, optionsAdapter, useOwnCss, stylings);
+        var bsAppearance = createBsAppearance(staticContent.picksElement, optionsAdapter, useOwnCss, css);
 
         var onUpdate = function onUpdate() {
           bsAppearance.updateSize();
@@ -2275,9 +2234,9 @@
         };
 
         var multiSelect = new MultiSelect(optionsAdapter, configuration.setSelected, staticContent, function (pickElement) {
-          return configuration.pickContentGenerator(pickElement, stylings);
+          return configuration.pickContentGenerator(pickElement, css);
         }, function (choiceElement) {
-          return configuration.choiceContentGenerator(choiceElement, stylings);
+          return configuration.choiceContentGenerator(choiceElement, css);
         }, labelAdapter, configuration.placeholder, onUpdate, onDispose, Popper, window);
         multiSelect.UpdateSize = bsAppearance.updateSize;
         multiSelect.UpdateIsValid = bsAppearance.updateIsValid;

@@ -24,7 +24,7 @@ export function closestByClassName(element, className){
     return closest(element, e => e.classList.contains(className))
 }
 
-export function closest(element, predicate){
+function closest(element, predicate){
     if (!element || !(element instanceof Element)) return null; // should be element, not document (TODO: check iframe)
      
     if (predicate(element)) return element;
@@ -47,10 +47,10 @@ export function removeClasses(element, classes){
     modifyClasses(classes, e=>removeClass(element,e))
 }
 
-export function setStyle(element, style){
-    for (let property in style)
-        element.style[property] = style[property];
-}
+// export function setStyle(element, style){
+//     for (let property in style)
+//         element.style[property] = style[property];
+// }
 
 function modifyClasses(classes, modify){
     if (classes){
@@ -63,13 +63,13 @@ function modifyClasses(classes, modify){
     }
 }
 
-export function removeChildren(element){
-    var toRemove = element.firstChild;
-    while( toRemove ) {
-        element.removeChild( toRemove );
-        toRemove = element.firstChild;
-    }
-}
+// export function removeChildren(element){
+//     var toRemove = element.firstChild;
+//     while( toRemove ) {
+//         element.removeChild( toRemove );
+//         toRemove = element.firstChild;
+//     }
+// }
 
 export function setClassAndStyle(element, classes, styles){
     classes.forEach(
@@ -106,64 +106,4 @@ export function EventBinder(){
             })
         }
     }
-}
-
-export function constructStyling(source){
-    var destination = {classes:[], styles:{}};
-    if (source)
-    {
-        if (isString(source)){
-            source.split(" ").forEach(e => pushUnique(destination.classes, e))
-        } else if (source instanceof Array){
-            source.forEach(e => pushUnique(destination.classes, e))
-        } else if (source instanceof Object){
-            if (source.classes){
-                let classes = source.classes;
-                if (isString(classes)){
-                    classes.split(" ").forEach(e => pushUnique(destination.classes, e))
-                } else if (classes instanceof Array){
-                    classes.forEach(e => pushUnique(destination.classes, e))
-                }
-            } else
-            {
-                let styles = null;
-                if (source.styles) {
-                    styles = source.styles;
-                } else {
-                    styles = source;
-                }
-                for (let property in styles)
-                    destination.styles[property] = styles[property];
-            }
-        }
-    }
-    return destination;
-}
-
-export function addStyling(element, classes, styles){
-    if (classes && Array.isArray(classes)){
-        classes.forEach(
-            function(e){
-                element.classes.removeClass(e);
-            }
-        )
-    }
-    if (styles){
-        for (let property in styles)
-           element.style[property]='';
-    }
-}
-
-export function removeStyling(element, classes, styles){
-    if (classes && Array.isArray(classes)){
-        classes.forEach(
-            function(e){
-                element.classes.addClass(e);
-            }
-        )
-    }
-    if (styles){
-        for (let property in styles)
-           element.style[property]=styles[property];
-    }    
 }

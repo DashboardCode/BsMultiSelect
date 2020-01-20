@@ -1,16 +1,16 @@
 import  {EventBinder} from './ToolsDom';
 import  {setStyling, unsetStyling} from './ToolsStyling';
 
-export function choiceContentGenerator(choiceElement, stylings){
-    setStyling(choiceElement, stylings.choice);
+export function choiceContentGenerator(choiceElement, css){
+    setStyling(choiceElement, css.choice);
     choiceElement.innerHTML = '<div><input type="checkbox"><label></label></div>';
     let choiceContentElement = choiceElement.querySelector('DIV');
     let choiceCheckBoxElement = choiceContentElement.querySelector('INPUT');
     let choiceLabelElement = choiceContentElement.querySelector('LABEL');
     
-    setStyling(choiceContentElement, stylings.choiceContent); 
-    setStyling(choiceCheckBoxElement, stylings.choiceCheckBox); 
-    setStyling(choiceLabelElement, stylings.choiceLabel); 
+    setStyling(choiceContentElement, css.choiceContent); 
+    setStyling(choiceCheckBoxElement, css.choiceCheckBox); 
+    setStyling(choiceLabelElement, css.choiceLabel); 
 
     let eventBinder = EventBinder();
     return {
@@ -18,16 +18,16 @@ export function choiceContentGenerator(choiceElement, stylings){
         select(isSelected){ choiceCheckBoxElement.checked = isSelected }, 
         disable : (isDisabled, isSelected) => {
             var action = isDisabled?setStyling:unsetStyling;
-            action(choiceCheckBoxElement, stylings.choiceCheckBox_disabled);
-            action(choiceLabelElement, stylings.choiceLabel_disabled)
+            action(choiceCheckBoxElement, css.choiceCheckBox_disabled);
+            action(choiceLabelElement, css.choiceLabel_disabled)
             // do not desable checkBox if option is selected! there should be possibility to unselect "disabled"
             choiceCheckBoxElement.disabled = isDisabled && !isSelected;
         },
         hoverIn(){
-            setStyling(choiceElement, stylings.choice_hover);
+            setStyling(choiceElement, css.choice_hover);
         },
         hoverOut(){
-            unsetStyling(choiceElement, stylings.choice_hover);
+            unsetStyling(choiceElement, css.choice_hover);
         },
         onSelected(toggle) {
             eventBinder.bind(choiceCheckBoxElement, "change", toggle);

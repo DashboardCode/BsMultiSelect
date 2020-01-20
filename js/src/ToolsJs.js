@@ -2,25 +2,28 @@ export function isString(value){
     return value instanceof String || typeof(value) === 'string';
 }
 
-export function notStrictFalse(value){
-    return typeof(value) !== 'boolean' || value;
-}
-
 export function extendIfUndefined(destination, source) {
     for (let property in source)
         if (destination[property] === undefined)
             destination[property] = source[property];
 }
 
-export function extendAndOverride(destination, source) {
+export function extendOverriding(destination, source) {
     for (let property in source)
         destination[property] = source[property];
 }
 
-export function createEmpty(source, value) {
-    var destination={};
+export function shallowClone(source, ...sources) {
+    var destination = {};
     for (let property in source)
-         destination[property] = value;
+         destination[property] = source[property];
+    if(sources)
+        sources.forEach(
+            (s)=>{
+                for(let property in s)
+                    destination[property] = s[property];
+            }
+        )
     return destination;
 }
 

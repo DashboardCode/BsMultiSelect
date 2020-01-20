@@ -1,7 +1,7 @@
 import {findDirectChildByTagName, closestByClassName} from './ToolsDom';
 import  {setStyling, unsetStyling} from './ToolsStyling';
 
-export function staticContentGenerator(element, createElement, containerClass, stylings) { 
+export function staticContentGenerator(element, createElement, containerClass, css) { 
     var selectElement = null;
     var containerElement = null;
     if (element.tagName=='SELECT'){
@@ -55,10 +55,10 @@ export function staticContentGenerator(element, createElement, containerClass, s
     var pickFilterElement = createElement('LI');
     var filterInputElement = createElement('INPUT');
 
-    setStyling(picksElement,       stylings.picks);
-    setStyling(choicesElement,     stylings.choices);
-    setStyling(pickFilterElement,  stylings.pickFilter);
-    setStyling(filterInputElement, stylings.filterInput);
+    setStyling(picksElement,       css.picks);
+    setStyling(choicesElement,     css.choices);
+    setStyling(pickFilterElement,  css.pickFilter);
+    setStyling(filterInputElement, css.filterInput);
 
     var createInputId = null;
     if(selectElement)
@@ -101,19 +101,19 @@ export function staticContentGenerator(element, createElement, containerClass, s
             }
         },
         enable(){
-            unsetStyling(picksElement, stylings.picks_disabled)
+            unsetStyling(picksElement, css.picks_disabled)
         },
 
         disable(){
-            setStyling(picksElement, stylings.picks_disabled)
+            setStyling(picksElement, css.picks_disabled)
         },
 
         focusIn(){
-            setStyling(picksElement, stylings.picks_focus)
+            setStyling(picksElement, css.picks_focus)
         },
 
         focusOut(){
-            unsetStyling(picksElement, stylings.picks_focus)
+            unsetStyling(picksElement, css.picks_focus)
         },        
         dispose(){
             if (ownContainerElement)

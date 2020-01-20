@@ -1,13 +1,11 @@
-import {setStylingStyles,  setStylingСlasses} from './ToolsStyling';
-
 const transformStyles = [
-    {old:'selectedPanelDisabledBackgroundColor', opt:'nocss_picks_disabled', style:"backgroundColor", samplVal:"'myValue'"},
-    {old:'selectedPanelFocusValidBoxShadow', opt:'nocss_picks_focus_valid', style:"boxShadow", samplVal:"'myValue'"},
-    {old:'selectedPanelFocusInvalidBoxShadow', opt:'nocss_picks_focus_invalid', style:"boxShadow", samplVal:"'myValue'"},
-    {old:'selectedPanelDefMinHeight', opt:'nocss_picks_def', style:"minHeight", samplVal:"'myValue'"},
-    {old:'selectedPanelLgMinHeight', opt:'nocss_picks_lg', style:"minHeight", samplVal:"'myValue'"},
-    {old:'selectedPanelSmMinHeight', opt:'nocss_picks_sm', style:"minHeight", samplVal:"'myValue'"},
-    {old:'selectedItemContentDisabledOpacity', opt:'nocss_choiceLabel_disabled', style:"opacity", samplVal:"'myValue'"}
+    {old:'selectedPanelDisabledBackgroundColor', opt:'picks_disabled', style:"backgroundColor", samplVal:"'myValue'"},
+    {old:'selectedPanelFocusValidBoxShadow', opt:'picks_focus_valid', style:"boxShadow", samplVal:"'myValue'"},
+    {old:'selectedPanelFocusInvalidBoxShadow', opt:'picks_focus_invalid', style:"boxShadow", samplVal:"'myValue'"},
+    {old:'selectedPanelDefMinHeight', opt:'picks_def', style:"minHeight", samplVal:"'myValue'"},
+    {old:'selectedPanelLgMinHeight', opt:'picks_lg', style:"minHeight", samplVal:"'myValue'"},
+    {old:'selectedPanelSmMinHeight', opt:'picks_sm', style:"minHeight", samplVal:"'myValue'"},
+    {old:'selectedItemContentDisabledOpacity', opt:'choiceLabel_disabled', style:"opacity", samplVal:"'myValue'"}
 ]
 
 const transformClasses = [
@@ -26,7 +24,7 @@ const transformClasses = [
 
 export function adjustLegacyConfiguration(configuration){
     if (configuration.selectedPanelFocusBorderColor || configuration.selectedPanelFocusBoxShadow){
-        console.log("DashboarCode.BsMultiSelect: selectedPanelFocusBorderColor and selectedPanelFocusBoxShadow are depricated, use - nocss_picks_focus:{borderColor:'myValue', boxShadow:'myValue'}");
+        console.log("DashboarCode.BsMultiSelect: selectedPanelFocusBorderColor and selectedPanelFocusBoxShadow are depricated, use - cssPatch:{picks_focus:{borderColor:'myValue', boxShadow:'myValue'}}");
         if(!configuration.nocss_picks_focus){
             configuration.nocss_picks_focus = {boxShadow: configuration.selectedPanelFocusBoxShadow, borderColor: configuration.selectedPanelFocusBorderColor}
         }
@@ -55,89 +53,23 @@ export function adjustLegacyConfiguration(configuration){
     
     transformClasses.forEach( (i) => {
         if (configuration[i.old]){
-            console.log(`DashboarCode.BsMultiSelect: ${i.old} is depricated, use - stylings:{${i.opt}:${i.samplVal}}`);
-            if(!stylings[i.opt]){
-                stylings[i.opt]= configuration[i.old]
+            console.log(`DashboarCode.BsMultiSelect: ${i.old} is depricated, use - css:{${i.opt}:${i.samplVal}}`);
+            if(!css[i.opt]){
+                css[i.opt]= configuration[i.old]
             }
             delete configuration[i.old];
         }
     })
     
-    if (!configuration.stylings)
-        configuration.stylings={}
-    var stylings =configuration.stylings;
+    if (!configuration.css)
+        configuration.css={}
+    var css =configuration.css;
 
     if (configuration.useCss){
-        console.log("DashboarCode.BsMultiSelect: useCss is depricated, use - 'useOwnCss: false|true'");
-        if(!stylings.pick_disabled){
-            configuration.useOwnCss= configuration.useCss
+        console.log("DashboarCode.BsMultiSelect: useCss(=true) is depricated, use - 'useCssPatch: false'");
+        if(!css.pick_disabled){
+            configuration.useCssPatch = !configuration.useCss
         }
         delete configuration.useCss;
     }  
-}
-export function replaceConfigurationClassValues(stylings, configuration){
-    var cfgStylings = configuration.stylings;
-    if (cfgStylings)
-    {
-        if (cfgStylings.choices){
-            setStylingСlasses(stylings, "choices", cfgStylings);
-        }
-        if (cfgStylings.choice){
-            setStylingСlasses(stylings, "choice", cfgStylings);
-        }
-        if (cfgStylings.choice_hover){
-            setStylingСlasses(stylings, "choice_hover", cfgStylings);
-        }
-        if (cfgStylings.picks){
-            setStylingСlasses(stylings, "picks", cfgStylings);
-        }
-        if (cfgStylings.pick){
-            setStylingСlasses(stylings, "classes", cfgStylings);
-        }
-        if (cfgStylings.pickButton){
-            setStylingСlasses(stylings, "pickButton", cfgStylings);
-        }
-        if (cfgStylings.pickFilter){
-            setStylingСlasses(stylings, "pickFilter", cfgStylings);
-        }
-        if (cfgStylings.filterInput){
-            setStylingСlasses(stylings, "filterInput", cfgStylings);
-        }
-        if (cfgStylings.picks_focus){
-            setStylingСlasses(stylings, "picks_focus", cfgStylings);
-        }
-        if (cfgStylings.picks_disabled){
-            setStylingСlasses(stylings, "picks_disabled", cfgStylings);
-        }
-        if (cfgStylings.pick_disabled){
-            setStylingСlasses(stylings, "pick_disabled", cfgStylings);
-        }
-    }
-}
-
-export function injectConfigurationStyleValues(stylings, configuration){
-    if (configuration.nocss_picks_disabled){
-        setStylingStyles(stylings, "picks_disabled", configuration.nocss_picks_disabled);
-    }
-    if (configuration.nocss_picks_focus){
-        setStylingStyles(stylings, "picks_focus", configuration.nocss_picks_focus);
-    }
-    if (configuration.nocss_picks_focus_valid){
-        setStylingStyles(stylings, "picks_focus_valid", configuration.nocss_picks_focus_valid);
-    }
-    if (configuration.nocss_picks_focus_invalid){
-        setStylingStyles(stylings, "picks_focus_invalid", configuration.nocss_picks_focus_invalid);
-    }
-    if (configuration.nocss_picks_def){
-        setStylingStyles(stylings, "picks_def", configuration.nocss_picks_def);
-    }
-    if (configuration.nocss_picks_lg){
-        setStylingStyles(stylings, "picks_lg", configuration.nocss_picks_lg);
-    }
-    if (configuration.nocss_picks_sm){
-        setStylingStyles(stylings, "picks_sm", configuration.nocss_picks_sm);
-    }
-    if (configuration.nocss_choiceLabel_disabled){
-        setStylingStyles(stylings, "choiceLabel_disabled", configuration.nocss_choiceLabel_disabled);
-    }
 }

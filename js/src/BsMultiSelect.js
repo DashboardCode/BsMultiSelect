@@ -14,12 +14,12 @@ import {staticContentGenerator} from './StaticContentGenerator';
 
 import {createBsAppearance, adjustBsOptionAdapterConfiguration, pushIsValidClassToPicks, getLabelElement} from './BsAppearance';
 
-import {cloneStylings, mergeStylings} from './ToolsStyling';
-import {extendAndOverride, extendIfUndefined} from './ToolsJs';
+import {createCss, extendCss, Styling} from './ToolsStyling';
+import {extendOverriding, extendIfUndefined} from './ToolsJs';
 
-import {adjustLegacyConfiguration, injectConfigurationStyleValues, replaceConfigurationClassValues} from './BsMultiSelectDepricatedParameters'
+import {adjustLegacyConfiguration as adjustLegacySettings} from './BsMultiSelectDepricatedParameters'
 
-const stylings = {
+const css = {
     choices: 'dropdown-menu', // bs4, in bsmultiselect.scss as ul.dropdown-menu
 
     choice_hover:  'hover',  //  not bs4, in scss as 'ul.dropdown-menu li.hover'
@@ -49,11 +49,11 @@ const stylings = {
     choiceLabel_disabled: ''  
 }
 
-const compensation = {
-    choices: { listStyleType:'none'},
-    picks: { listStyleType:'none', display:'flex', flexWrap:'wrap',  height: 'auto', marginBottom: '0' },
+const cssPatch = {
+    choices: {listStyleType:'none'},
+    picks: {listStyleType:'none', display:'flex', flexWrap:'wrap',  height: 'auto', marginBottom: '0'},
     choice: 'px-2' ,  
-    choice_hover: 'hover text-primary bg-light', 
+    choice_hover: 'text-primary bg-light', 
     filterInput: { 
         classes: 'form-control', 
         styles: {border:'0px', height: 'auto', boxShadow:'none', padding:'0', margin:'0', outline:'none', backgroundColor:'transparent'}
@@ -81,32 +81,24 @@ const compensation = {
 };
 
 function extendConfigurtion(configuration, defaults){
-    let cfgStylings = configuration.stylings;
-    let cfgCompensation = configuration.compensation;
-    configuration.stylings = null;
-    configuration.compensation = null;
-    extendIfUndefined(configuration, defaults);
-    var defStylings = cloneStylings(defaults.stylings); // TODO
-    var defCompensation = cloneStylings(defaults.compensation); // TODO
-
-    //TODO: do something with cfgStylings and cfgCompensation
-    injectConfigurationStyleValues(defCompensation , configuration);
-    replaceConfigurationClassValues(defStylings, configuration);
-    
-    configuration.stylings = defStylings;
-    configuration.compensation = defCompensation;
-   
+    let cfgCss = configuration.css;
+    let cfgCssPatch = configuration.cssPatch;
+    configuration.css = null;
+    configuration.cssPatch = null;
+    extendIfUndefined(configuration, defaults); 
+    var defCss = createCss(defaults.css, cfgCss); // replace classes, merge styles
+    var defCssPatch = createCss(defaults.cssPatch, cfgCssPatch); // ? classes, merge styles
+    configuration.css = defCss;
+    configuration.cssPatch = defCssPatch;
 }
 
-// 1) do not use css - classes  + styling js + prediction clases + compensation js
-// 2) use scss - classes only 
 (
     (window, $, Popper) => {
         var defaults = {
-            useOwnCss : false,
+            useCssPatch : true,
             containerClass : "dashboardcode-bsmultiselect",
-            stylings: stylings,
-            compensation: compensation,
+            css: css,
+            cssPatch: cssPatch,
             placeholder: '',
             staticContentGenerator : staticContentGenerator,
             getLabelElement: getLabelElement,
@@ -138,9 +130,10 @@ function extendConfigurtion(configuration, defaults){
             }
             else
             { 
-                if (settings)
-                    extendAndOverride(configuration, settings); // settings used per jQuery intialization, configuration per element
-                adjustLegacyConfiguration(configuration);            
+                if (settings){
+                    adjustLegacySettings(settngs);            
+                    extendOverriding(configuration, settings); // settings used per jQuery intialization, configuration per element
+                }
                 extendConfigurtion(configuration, defaults);
             }
             
@@ -148,15 +141,15 @@ function extendConfigurtion(configuration, defaults){
             // -----------------------------------------------------------------
             if (configuration.buildConfiguration)
                 init = configuration.buildConfiguration(element, configuration);
-            var stylings = configuration.stylings;
+            var css = configuration.css;
             // -----------------------------------------------------------------
-            var useOwnCss = configuration.useOwnCss; // useOwnCss
-            if (!useOwnCss){
-                mergeStylings(stylings, configuration.compensation); // TODO merge
+            var useCssPatch = configuration.useCssPatch; 
+            if (useCssPatch){
+                extendCss(css, configuration.cssPatch); 
             }
-            //console.log(stylings);
+            console.log(css);
             let staticContent = configuration.staticContentGenerator(
-                element, (name)=>window.document.createElement(name), configuration.containerClass, stylings
+                element, (name)=>window.document.createElement(name), configuration.containerClass, css
             );
 
             let optionsAdapter = configuration.optionsAdapter;
@@ -192,9 +185,9 @@ function extendConfigurtion(configuration, defaults){
                 }
             }
 
-            if (!useOwnCss)
+            if (useCssPatch)
             {
-                pushIsValidClassToPicks(staticContent, stylings);
+                pushIsValidClassToPicks(staticContent, css);
             }
 
             let labelAdapter = LabelAdapter(configuration.labelElement, staticContent.createInputId);
@@ -206,7 +199,7 @@ function extendConfigurtion(configuration, defaults){
                     configuration.placeholder = $(element).data("placeholder");
             }
             
-            var bsAppearance =  createBsAppearance(staticContent.picksElement, optionsAdapter, useOwnCss, stylings);
+            var bsAppearance =  createBsAppearance(staticContent.picksElement, optionsAdapter, useCssPatch, css);
 
             var onUpdate = () => {
                 bsAppearance.updateSize();
@@ -217,8 +210,8 @@ function extendConfigurtion(configuration, defaults){
                 optionsAdapter,
                 configuration.setSelected,
                 staticContent,
-                (pickElement) => configuration.pickContentGenerator(pickElement, stylings),
-                (choiceElement) => configuration.choiceContentGenerator(choiceElement, stylings),
+                (pickElement) => configuration.pickContentGenerator(pickElement, css),
+                (choiceElement) => configuration.choiceContentGenerator(choiceElement, css),
                 labelAdapter,
                 configuration.placeholder,
                 onUpdate,

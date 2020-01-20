@@ -8,10 +8,10 @@ import { pickContentGenerator } from './PickContentGenerator';
 import { choiceContentGenerator } from './ChoiceContentGenerator';
 import { staticContentGenerator } from './StaticContentGenerator';
 import { createBsAppearance, adjustBsOptionAdapterConfiguration, pushIsValidClassToPicks, getLabelElement } from './BsAppearance';
-import { cloneStylings, mergeStylings } from './ToolsStyling';
-import { extendAndOverride, extendIfUndefined } from './ToolsJs';
-import { adjustLegacyConfiguration, injectConfigurationStyleValues, replaceConfigurationClassValues } from './BsMultiSelectDepricatedParameters';
-var stylings = {
+import { createCss, extendCss, Styling } from './ToolsStyling';
+import { extendOverriding, extendIfUndefined } from './ToolsJs';
+import { adjustLegacyConfiguration as adjustLegacySettings } from './BsMultiSelectDepricatedParameters';
+var css = {
   choices: 'dropdown-menu',
   // bs4, in bsmultiselect.scss as ul.dropdown-menu
   choice_hover: 'hover',
@@ -48,7 +48,7 @@ var stylings = {
   choiceLabel: 'custom-control-label justify-content-start',
   choiceLabel_disabled: ''
 };
-var compensation = {
+var cssPatch = {
   choices: {
     listStyleType: 'none'
   },
@@ -60,7 +60,7 @@ var compensation = {
     marginBottom: '0'
   },
   choice: 'px-2',
-  choice_hover: 'hover text-primary bg-light',
+  choice_hover: 'text-primary bg-light',
   filterInput: {
     classes: 'form-control',
     styles: {
@@ -118,20 +118,17 @@ var compensation = {
 };
 
 function extendConfigurtion(configuration, defaults) {
-  var cfgStylings = configuration.stylings;
-  var cfgCompensation = configuration.compensation;
-  configuration.stylings = null;
-  configuration.compensation = null;
+  var cfgCss = configuration.css;
+  var cfgCssPatch = configuration.cssPatch;
+  configuration.css = null;
+  configuration.cssPatch = null;
   extendIfUndefined(configuration, defaults);
-  var defStylings = cloneStylings(defaults.stylings); // TODO
+  var defCss = createCss(defaults.css, cfgCss); // replace classes, merge styles
 
-  var defCompensation = cloneStylings(defaults.compensation); // TODO
-  //TODO: do something with cfgStylings and cfgCompensation
+  var defCssPatch = createCss(defaults.cssPatch, cfgCssPatch); // ? classes, merge styles
 
-  injectConfigurationStyleValues(defCompensation, configuration);
-  replaceConfigurationClassValues(defStylings, configuration);
-  configuration.stylings = defStylings;
-  configuration.compensation = defCompensation;
+  configuration.css = defCss;
+  configuration.cssPatch = defCssPatch;
 } // 1) do not use css - classes  + styling js + prediction clases + compensation js
 // 2) use scss - classes only 
 
@@ -140,8 +137,8 @@ function extendConfigurtion(configuration, defaults) {
   var defaults = {
     useOwnCss: false,
     containerClass: "dashboardcode-bsmultiselect",
-    stylings: stylings,
-    compensation: compensation,
+    css: css,
+    cssPatch: cssPatch,
     placeholder: '',
     staticContentGenerator: staticContentGenerator,
     getLabelElement: getLabelElement,
@@ -171,26 +168,28 @@ function extendConfigurtion(configuration, defaults) {
       extendConfigurtion(configuration, defaults);
       init = settings(element, configuration);
     } else {
-      if (settings) extendAndOverride(configuration, settings); // settings used per jQuery intialization, configuration per element
+      if (settings) {
+        adjustLegacySettings(settngs);
+        extendOverriding(configuration, settings); // settings used per jQuery intialization, configuration per element
+      }
 
-      adjustLegacyConfiguration(configuration);
       extendConfigurtion(configuration, defaults);
     } // -----------------------------------------------------------------
 
 
     if (configuration.buildConfiguration) init = configuration.buildConfiguration(element, configuration);
-    var stylings = configuration.stylings; // -----------------------------------------------------------------
+    var css = configuration.css; // -----------------------------------------------------------------
 
     var useOwnCss = configuration.useOwnCss; // useOwnCss
 
     if (!useOwnCss) {
-      mergeStylings(stylings, configuration.compensation); // TODO merge
-    } //console.log(stylings);
+      extendCss(css, configuration.cssPatch); // TODO merge
+    }
 
-
+    console.log(css);
     var staticContent = configuration.staticContentGenerator(element, function (name) {
       return window.document.createElement(name);
-    }, configuration.containerClass, stylings);
+    }, configuration.containerClass, css);
     var optionsAdapter = configuration.optionsAdapter;
 
     if (!optionsAdapter) {
@@ -207,7 +206,7 @@ function extendConfigurtion(configuration, defaults) {
     }
 
     if (!useOwnCss) {
-      pushIsValidClassToPicks(staticContent, stylings);
+      pushIsValidClassToPicks(staticContent, css);
     }
 
     var labelAdapter = LabelAdapter(configuration.labelElement, staticContent.createInputId);
@@ -217,7 +216,7 @@ function extendConfigurtion(configuration, defaults) {
       if (!configuration.placeholder) configuration.placeholder = $(element).data("placeholder");
     }
 
-    var bsAppearance = createBsAppearance(staticContent.picksElement, optionsAdapter, useOwnCss, stylings);
+    var bsAppearance = createBsAppearance(staticContent.picksElement, optionsAdapter, useOwnCss, css);
 
     var onUpdate = function onUpdate() {
       bsAppearance.updateSize();
@@ -225,9 +224,9 @@ function extendConfigurtion(configuration, defaults) {
     };
 
     var multiSelect = new MultiSelect(optionsAdapter, configuration.setSelected, staticContent, function (pickElement) {
-      return configuration.pickContentGenerator(pickElement, stylings);
+      return configuration.pickContentGenerator(pickElement, css);
     }, function (choiceElement) {
-      return configuration.choiceContentGenerator(choiceElement, stylings);
+      return configuration.choiceContentGenerator(choiceElement, css);
     }, labelAdapter, configuration.placeholder, onUpdate, onDispose, Popper, window);
     multiSelect.UpdateSize = bsAppearance.updateSize;
     multiSelect.UpdateIsValid = bsAppearance.updateIsValid;

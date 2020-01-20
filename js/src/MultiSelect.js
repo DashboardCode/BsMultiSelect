@@ -6,7 +6,7 @@ import {PlaceholderAspect} from './PlaceholderAspect'
 
 import {EventSkipper} from './EventSkipper'
 import {removeElement} from './ToolsDom'
-import {sync, notStrictFalse} from './ToolsJs'
+import {sync} from './ToolsJs'
 
 function filterMultiSelectData(MultiSelectData, isFiltered, visibleIndex) {
     MultiSelectData.visible = isFiltered;
@@ -456,7 +456,7 @@ export class MultiSelect {
             },
             /*onPickRemoved*/ (multiSelectData, removePick) => {
                 let confirmed = this.setSelected(multiSelectData.option, false);
-                if (notStrictFalse(confirmed)) {
+                if (!(confirmed===false)) {
                     var {createPick, count} = removePick();
                     multiSelectData.excludedFromSearch = multiSelectData.isOptionDisabled;
                     if (multiSelectData.isOptionDisabled)
@@ -468,7 +468,7 @@ export class MultiSelect {
                     {
                         multiSelectData.toggle = ()=>{
                             let confirmed = this.setSelected(multiSelectData.option, true);
-                            if (notStrictFalse(confirmed)){
+                            if (!(confirmed===false)){
                                 createPick(multiSelectData, multiSelectData.option, this.isComponentDisabled );
                                 this.optionsAdapter.triggerChange();
                             }

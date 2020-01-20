@@ -1,4 +1,4 @@
-import {addClass, removeClass, setStyle, closestByTagName, closestByClassName} from './ToolsDom';
+import {addClass, removeClass, closestByTagName, closestByClassName} from './ToolsDom';
 import {setStyling} from './ToolsStyling'
 
 function updateIsValid(picksElement, isValid, isInvalid){
@@ -17,14 +17,14 @@ function updateIsValidForAdapter(picksElement, optionsAdapter){
     updateIsValid(picksElement, optionsAdapter.getIsValid(), optionsAdapter.getIsInvalid())
 }
 
-export function pushIsValidClassToPicks(staticContent, stylings){
+export function pushIsValidClassToPicks(staticContent, css){
     var defFocusIn = staticContent.focusIn;
     staticContent.focusIn = () => {
         var picksElement = staticContent.picksElement;
         if (picksElement.classList.contains("is-valid")) { 
-            setStyling(picksElement, stylings.picks_focus_valid)
+            setStyling(picksElement, css.picks_focus_valid)
         } else if (picksElement.classList.contains("is-invalid")) {
-            setStyling(picksElement, stylings.picks_focus_invalid)
+            setStyling(picksElement, css.picks_focus_invalid)
         } else {
             defFocusIn()
         }
@@ -65,16 +65,16 @@ function updateSizeJsForAdapter(picksElement, picksLgStyling, picksSmStyling, pi
     updateSizeJs(picksElement, picksLgStyling, picksSmStyling, picksDefStyling,  optionsAdapter.getSize())
 }
 
-export function createBsAppearance(picksElement, optionsAdapter, useOwnCss, stylings){
+export function createBsAppearance(picksElement, optionsAdapter, useCssPatch, css){
     var value=null;
     var updateIsValid = () => updateIsValidForAdapter(picksElement, optionsAdapter);
-    if (useOwnCss){
+    if (!useCssPatch){
         value= Object.create({
             updateIsValid,
             updateSize: () => updateSizeForAdapter(picksElement, optionsAdapter)
         });
     }else{
-        const {picks_lg, picks_sm, picks_def} = stylings;
+        const {picks_lg, picks_sm, picks_def} = css;
         value= Object.create({
             updateIsValid,
             updateSize: () => updateSizeJsForAdapter(picksElement, 
