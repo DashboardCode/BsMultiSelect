@@ -378,6 +378,20 @@
         }
       };
     }
+    function EventSkipper(window) {
+      var _isSkippable = false;
+      return {
+        isSkippable: function isSkippable() {
+          return _isSkippable;
+        },
+        setSkippable: function setSkippable() {
+          _isSkippable = true;
+          window.setTimeout(function () {
+            _isSkippable = false;
+          }, 0);
+        }
+      };
+    }
 
     function isString(value) {
       return value instanceof String || typeof value === 'string';
@@ -711,21 +725,6 @@
         },
         setDisabled: function setDisabled(isDisabled) {
           inputElement.disabled = isDisabled;
-        }
-      };
-    }
-
-    function EventSkipper(window) {
-      var _isSkippable = false;
-      return {
-        isSkippable: function isSkippable() {
-          return _isSkippable;
-        },
-        setSkippable: function setSkippable() {
-          _isSkippable = true;
-          window.setTimeout(function () {
-            _isSkippable = false;
-          }, 0);
         }
       };
     }

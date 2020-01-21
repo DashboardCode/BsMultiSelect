@@ -4,8 +4,7 @@ import {PicksPanel} from './PicksPanel'
 import {MultiSelectInputAspect} from './MultiSelectInputAspect'
 import {PlaceholderAspect} from './PlaceholderAspect'
 
-import {EventSkipper} from './EventSkipper'
-import {removeElement} from './ToolsDom'
+import {removeElement, EventSkipper} from './ToolsDom'
 import {sync} from './ToolsJs'
 
 function filterMultiSelectData(MultiSelectData, isFiltered, visibleIndex) {
