@@ -12,7 +12,7 @@ import {pickContentGenerator} from './PickContentGenerator';
 import {choiceContentGenerator} from './ChoiceContentGenerator';
 import {staticContentGenerator} from './StaticContentGenerator';
 
-import {createBsAppearance, adjustBsOptionAdapterConfiguration, pushIsValidClassToPicks, getLabelElement} from './BsAppearance';
+import {bsAppearance, adjustBsOptionAdapterConfiguration, pushIsValidClassToPicks, getLabelElement} from './BsAppearance';
 
 import {createCss, extendCss, Styling} from './ToolsStyling';
 import {extendOverriding, extendIfUndefined} from './ToolsJs';
@@ -23,9 +23,8 @@ const css = {
     choices: 'dropdown-menu', // bs4, in bsmultiselect.scss as ul.dropdown-menu
 
     choice_hover:  'hover',  //  not bs4, in scss as 'ul.dropdown-menu li.hover'
-    // TODO
-    choice_selected: '', // not used? should be used in OptionsPanel.js
-    choice_disabled: '', // not used? should be used in OptionsPanel.js
+    choice_selected: '', 
+    choice_disabled: '', 
 
     picks: 'form-control',  // bs4, in scss 'ul.form-control'
     picks_focus: 'focus', // not bs4, in scss 'ul.form-control.focus'
@@ -106,7 +105,7 @@ function extendConfigurtion(configuration, defaults){
             choiceContentGenerator : choiceContentGenerator,
 
             buildConfiguration: null,
-            setSelected: (option, value)=> {option.selected = value; },
+            setSelected: (option, value) => {option.selected = value; },
 
             optionsAdapter: null,
             options: null,
@@ -131,25 +130,22 @@ function extendConfigurtion(configuration, defaults){
             else
             { 
                 if (settings){
-                    adjustLegacySettings(settngs);            
+                    adjustLegacySettings(settings);            
                     extendOverriding(configuration, settings); // settings used per jQuery intialization, configuration per element
                 }
                 extendConfigurtion(configuration, defaults);
             }
             
-
-            // -----------------------------------------------------------------
             if (configuration.buildConfiguration)
                 init = configuration.buildConfiguration(element, configuration);
             var css = configuration.css;
-            // -----------------------------------------------------------------
+
             var useCssPatch = configuration.useCssPatch; 
-            if (useCssPatch){
+            if (useCssPatch)
                 extendCss(css, configuration.cssPatch); 
-            }
-            console.log(css);
+            
             let staticContent = configuration.staticContentGenerator(
-                element, (name)=>window.document.createElement(name), configuration.containerClass, css
+                element, name=>window.document.createElement(name), configuration.containerClass, css
             );
 
             let optionsAdapter = configuration.optionsAdapter;
@@ -166,8 +162,8 @@ function extendConfigurtion(configuration, defaults){
                         configuration.getSize,
                         configuration.getIsValid,
                         configuration.getIsInvalid,
-                        trigger);
-
+                        trigger
+                    );
                 } 
                 else  
                 {
@@ -186,9 +182,7 @@ function extendConfigurtion(configuration, defaults){
             }
 
             if (useCssPatch)
-            {
                 pushIsValidClassToPicks(staticContent, css);
-            }
 
             let labelAdapter = LabelAdapter(configuration.labelElement, staticContent.createInputId);
 
@@ -199,13 +193,6 @@ function extendConfigurtion(configuration, defaults){
                     configuration.placeholder = $(element).data("placeholder");
             }
             
-            var bsAppearance =  createBsAppearance(staticContent.picksElement, optionsAdapter, useCssPatch, css);
-
-            var onUpdate = () => {
-                bsAppearance.updateSize();
-                bsAppearance.updateIsValid();
-            }
-
             let multiSelect = new MultiSelect(
                 optionsAdapter,
                 configuration.setSelected,
@@ -214,13 +201,13 @@ function extendConfigurtion(configuration, defaults){
                 (choiceElement) => configuration.choiceContentGenerator(choiceElement, css),
                 labelAdapter,
                 configuration.placeholder,
-                onUpdate,
-                onDispose,
                 Popper,
                 window);
+            multiSelect.onDispose=onDispose;
             
-            multiSelect.UpdateSize = bsAppearance.updateSize;
-            multiSelect.UpdateIsValid = bsAppearance.updateIsValid;
+            bsAppearance(
+                multiSelect, staticContent.picksElement, optionsAdapter, useCssPatch, css);
+            
             
             if (init && init instanceof Function)
                 init(multiSelect);

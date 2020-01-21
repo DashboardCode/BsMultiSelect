@@ -1,16 +1,27 @@
 import {shallowClone, isString} from './ToolsJs';
-import {setClassAndStyle, unsetClassAndStyle} from './ToolsDom';
 
-export function setStyling(element, styling){
-    if (styling)
-        setClassAndStyle(element, styling.classes, styling.styles)
+export function addStyling(element, styling){
+    if (styling) {
+        var {classes, styles} = styling;
+        classes.forEach(e => element.classList.add(e)) // todo use add(classes)
+        for (let property in styles)
+            element.style[property]  = styles[property]; // todo use Object.assign (need polyfill for IE11)
+    }
 }
 
-export function unsetStyling(element, styling){
-    if (styling)
-        unsetClassAndStyle(element, styling.classes, styling.styles)
+export function removeStyling(element, styling){
+    if (styling) {
+        var {classes, styles} = styling;
+        classes.forEach(e=>element.classList.remove(e)) // todo use remove(classes)
+        for (let property in styles)
+            element.style[property]  = ''; // todo use Object.assign (need polyfill for IE11)
+    }
 }
 
+export function toggleStyling(element, styling, value){
+    var action = value?addStyling:removeStyling;
+    action(element, styling)
+}
 
 function extendClasses(out, param, actionStr, actionArr){
     if (isString(param)){
@@ -23,8 +34,7 @@ function extendClasses(out, param, actionStr, actionArr){
     return false;
 }
 
-
-function extendClassesAndStyles(value, param, actionStr, actionArr, actionObj){
+function extend(value, param, actionStr, actionArr, actionObj){
     var success = extendClasses(value, param, actionStr, actionArr);
     if (success === false){
         if (param instanceof Object){
@@ -41,17 +51,38 @@ function extendClassesAndStyles(value, param, actionStr, actionArr, actionObj){
     }
 }
 
-export function Styling(param, ...params){
+export function Styling(param){
     var value = {classes:[], styles:{}};
     if (param){
-        extendClassesAndStyles(value, param, a=>a, a=>a.slice(), o=>shallowClone(o));
+        extend(value, param, a=>a, a=>a.slice(), o=>shallowClone(o));
+    }
+    return Object.freeze(value);
+}
+
+function createStylingReplaceClasses(param, ...params){
+    var value = {classes:[], styles:{}};
+    if (param){
+        extend(value, param, a=>a, a=>a.slice(), o=>shallowClone(o));
         if (params){
             var {classes, styles} = value;
             params.forEach( p=>
-                extendClassesAndStyles(value, p, a=>classes.concat(a), a=>classes.concat(a), o=>shallowClone(styles, o))); // add classes
+                extend(value, p, a=>classes.concat(a), a=>classes.concat(a), o=>shallowClone(styles, o))); // add classes
         }
     }
-    return Object.freeze(value);
+    return Styling(value);
+}
+
+function createStylingJoinClasses(param, ...params){
+    var value = {classes:[], styles:{}};
+    if (param){
+        extend(value, param, a=>a, a=>a.slice(), o=>shallowClone(o));
+        if (params){
+            let {styles} = value;
+            params.forEach( p=>
+                extend(value, param, s=>s, a=>a.slice(), o=> shallowClone(styles, o))); // override classes
+        }
+    }
+    return Styling(value);
 }
 
 export function createCss(stylings1, stylings2){
@@ -63,11 +94,7 @@ export function createCss(stylings1, stylings2){
         if (param2===undefined)
             destination[property] = Styling(param1)
         else{
-            var styling = Styling(param1); 
-            var {classes, styles} = styling;
-            var value = {classes, styles};
-            extendClassesAndStyles(value, param, s=>s, a=>a.slice(), o=> shallowClone(styles, o)); // override classes
-            destination[property] = Styling(value); 
+            destination[property] = createStylingJoinClasses(param1, param2); 
         }
     }
     if (stylings2)
@@ -84,7 +111,7 @@ export function extendCss(stylings1, stylings2){
         if (param1 === undefined)
             stylings1[property] = Styling(param2)
         else{
-            stylings1[property] = Styling(param1, param2); 
+            stylings1[property] = createStylingReplaceClasses(param1, param2); 
         }
     }
 }

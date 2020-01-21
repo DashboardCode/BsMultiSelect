@@ -51,7 +51,8 @@ export function PicksPanel (
     
         item.pickContent = pickContentGenerator(pickElement);
         item.pickContent.setData(option);
-        item.pickContent.disable(isComponentDisabled);
+        item.pickContent.disable(option.disabled);
+        item.pickContent.disableRemove(isComponentDisabled);
         item.pickContent.onRemove( (event) => {
             processRemoveButtonClick(removeSelectedItem, event);
         });
@@ -68,7 +69,7 @@ export function PicksPanel (
         },
         isEmpty: list.isEmpty,
         disable(isComponentDisabled){
-            list.forEach(i=>i.pickContent.disable(isComponentDisabled))
+            list.forEach(i=>i.pickContent.disableRemove(isComponentDisabled))
         },
         deselectAll(){
             list.forEach(i =>i.removeSelectedItem())

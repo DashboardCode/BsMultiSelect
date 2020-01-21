@@ -54,10 +54,12 @@ export class MultiSelect {
         labelAdapter, 
         //MultiSelect, 
         placeholderText,
-        onUpdate, onDispose, popper, window) {
+        //onUpdate, 
+        //onDispose, 
+        popper, window) {
 
-        this.onUpdate = onUpdate;
-        this.onDispose = onDispose; 
+        this.onUpdate = null;
+        this.onDispose = null; 
 
         // readonly
         this.optionsAdapter = optionsAdapter;
@@ -115,7 +117,8 @@ export class MultiSelect {
     }
 
     Update(){
-        this.onUpdate();
+        if (this.onUpdate)
+            this.onUpdate();
         this.UpdateDisabled();
         this.UpdateData();
     }
@@ -247,22 +250,15 @@ export class MultiSelect {
                                 multiSelectData,
                                 multiSelectData.option,
                                 this.isComponentDisabled
-                                /*,
-                                isOptionDisabled,
-                                setChoiceContentDisabled
-                                */
                                 )
-                            //
                         },
                         (o,i) => this.setSelected(o,i),
                         () => this.optionsAdapter.triggerChange()
                         ,isSelected
-                        //,isOptionDisabled
                         );
                 }
             } 
             this.aspect.alignToFilterInputItemLocation(false);
-            //this.placeholderAspect.updatePlacehodlerVisibility();
         }
 
         // some browsers (IE11) can change select value (as part of "autocomplete") after page is loaded but before "ready" event
@@ -288,24 +284,6 @@ export class MultiSelect {
             this.aspect.dispose,
             this.staticContent.dispose
         );
-        //if (this.onDispose)
-        //    this.onDispose(); // primary used to remove from jQuery tables
-        
-        // remove event listeners
-        // TODO check if open
-        // this.choicesPanel.hideChoices();
-        // if (this.optionsAdapter.dispose)
-        //    this.optionsAdapter.dispose();
-        // if (this.picksPanel.dispose)
-        // this.picksPanel.dispose();
-        // removeElement(this.pickFilterElement);
-        // this.filterPanel.dispose();
-        
-        // this.labelAdapter.dispose();
-        
-        // this.aspect.dispose();
-        
-        // this.containerAdapter.dispose();
 
         for(let i=0; i<this.MultiSelectDataList.length; i++)
         {
@@ -324,17 +302,10 @@ export class MultiSelect {
     UpdateDisabled(){
         let isComponentDisabled = this.optionsAdapter.getDisabled();
         if (this.isComponentDisabled!==isComponentDisabled){
-            if (isComponentDisabled) {
-                this.picksPanel.disable(true);
-                this.aspect.disable();
-                this.placeholderAspect.setDisabled(true);
-                this.staticContent.disable();
-            } else {
-                this.picksPanel.disable(false);
-                this.aspect.enable();
-                this.placeholderAspect.setDisabled(false);
-                this.staticContent.enable();
-            }
+            this.picksPanel.disable(isComponentDisabled);
+            this.aspect.disable(isComponentDisabled);
+            this.placeholderAspect.setDisabled(isComponentDisabled);
+            this.staticContent.disable(isComponentDisabled);
             this.isComponentDisabled=isComponentDisabled;
         }
     }
@@ -383,12 +354,6 @@ export class MultiSelect {
         var document = this.window.document;
         var createElement = (name) => document.createElement(name);
 
-        //var pickFilterElement = createElement('LI'); // detached
-        //this.pickFilterElement=pickFilterElement;
-        /*
-            filterInputElement,
-            insertIntoDom,
-        */
         this.filterPanel = FilterPanel(
             this.staticContent.filterInputElement,
             () => {
@@ -398,13 +363,13 @@ export class MultiSelect {
                     this.staticContent.pickFilterElement); // located filter in selectionsPanel                    
             },
             () => {
-                this.staticContent.focusIn()
+                this.staticContent.focus(true)
             },  // focus in - show dropdown
             () => {
                 if (!this.aspect.getSkipFocusout()) // skip initiated by mouse click (we manage it different way)
                 {
                     this.resetFilter(); // if do not do this we will return to filtered list without text filter in input
-                    this.staticContent.focusOut()
+                    this.staticContent.focus(false)
                 }
                 this.aspect.resetSkipFocusout();
             }, // focus out - hide dropdown
@@ -446,7 +411,6 @@ export class MultiSelect {
                 }
             },
             this.pickContentGenerator,
-            //this.isComponentDisabled,
             /*onPickCreated*/ (multiSelectData, removePick, count) => {
                 multiSelectData.excludedFromSearch = true; // all selected excluded from search
                 multiSelectData.toggle = () => removePick();
@@ -529,10 +493,10 @@ export class MultiSelect {
             this.popper
         );
         
-        
         this.staticContent.attachContainer();
 
-        this.onUpdate();
+        if (this.onUpdate)
+            this.onUpdate();
         this.updateDataImpl();
         this.UpdateDisabled(); // should be done after updateDataImpl
 

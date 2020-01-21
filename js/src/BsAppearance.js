@@ -1,16 +1,16 @@
-import {addClass, removeClass, closestByTagName, closestByClassName} from './ToolsDom';
-import {setStyling} from './ToolsStyling'
+import {closestByTagName, closestByClassName} from './ToolsDom';
+import {addStyling} from './ToolsStyling'
 
 function updateIsValid(picksElement, isValid, isInvalid){
-    if (isValid)
-        addClass(picksElement,'is-valid');
+    if (isValid) // todo use classList.toggle('is-valid', isValid)
+        picksElement.classList.add('is-valid');
     else
-        removeClass(picksElement,'is-valid');
+        picksElement.classList.remove('is-valid');
     
     if (isInvalid)
-        addClass(picksElement,'is-invalid');
+        picksElement.classList.add('is-invalid');
     else
-        removeClass(picksElement,'is-invalid');
+        picksElement.classList.remove('is-invalid');
 }
 
 function updateIsValidForAdapter(picksElement, optionsAdapter){
@@ -18,42 +18,48 @@ function updateIsValidForAdapter(picksElement, optionsAdapter){
 }
 
 export function pushIsValidClassToPicks(staticContent, css){
-    var defFocusIn = staticContent.focusIn;
-    staticContent.focusIn = () => {
-        var picksElement = staticContent.picksElement;
-        if (picksElement.classList.contains("is-valid")) { 
-            setStyling(picksElement, css.picks_focus_valid)
-        } else if (picksElement.classList.contains("is-invalid")) {
-            setStyling(picksElement, css.picks_focus_invalid)
-        } else {
-            defFocusIn()
+    var defFocus = staticContent.focus;
+    staticContent.focus = (isFocusIn) => {
+        if (isFocusIn)
+        {
+            var picksElement = staticContent.picksElement;
+            if (picksElement.classList.contains("is-valid")) { 
+                addStyling(picksElement, css.picks_focus_valid)
+            } else if (picksElement.classList.contains("is-invalid")) {
+                addStyling(picksElement, css.picks_focus_invalid)
+            } else {
+                defFocus(isFocusIn)
+            }
+        }
+        else{
+            defFocus(isFocusIn)
         }
     }
 }
 
 function updateSize(picksElement, size){
     if (size=="lg"){
-        addClass(picksElement,'form-control-lg');
-        removeClass(picksElement,'form-control-sm');
+        picksElement.classList.add('form-control-lg');
+        picksElement.classList.remove('form-control-sm');
     }
     else if (size=="sm"){
-        removeClass(picksElement,'form-control-lg');
-        addClass(picksElement,'form-control-sm');
+        picksElement.classList.remove('form-control-lg');
+        picksElement.classList.add('form-control-sm');
     }
     else{
-        removeClass(picksElement,'form-control-lg');
-        removeClass(picksElement,'form-control-sm');
+        picksElement.classList.remove('form-control-lg');
+        picksElement.classList.remove('form-control-sm');
     }
 }
 
 function updateSizeJs(picksElement, picksLgStyling, picksSmStyling, picksDefStyling, size){
     updateSize(picksElement, size);
     if (size=="lg"){
-        setStyling(picksElement, picksLgStyling);
+        addStyling(picksElement, picksLgStyling);
     } else if (size=="sm"){
-        setStyling(picksElement, picksSmStyling);
+        addStyling(picksElement, picksSmStyling);
     } else {
-        setStyling(picksElement, picksDefStyling);
+        addStyling(picksElement, picksDefStyling);
     }
 }
 
@@ -65,7 +71,7 @@ function updateSizeJsForAdapter(picksElement, picksLgStyling, picksSmStyling, pi
     updateSizeJs(picksElement, picksLgStyling, picksSmStyling, picksDefStyling,  optionsAdapter.getSize())
 }
 
-export function createBsAppearance(picksElement, optionsAdapter, useCssPatch, css){
+export function bsAppearance(multiSelect, picksElement, optionsAdapter, useCssPatch, css){
     var value=null;
     var updateIsValid = () => updateIsValidForAdapter(picksElement, optionsAdapter);
     if (!useCssPatch){
@@ -81,7 +87,12 @@ export function createBsAppearance(picksElement, optionsAdapter, useCssPatch, cs
                 picks_lg, picks_sm, picks_def, optionsAdapter)
         });
     }
-    return value;
+    multiSelect.UpdateSize = value.updateSize;
+    multiSelect.UpdateIsValid = value.updateIsValid;
+    multiSelect.onUpdate=() => {
+        value.updateSize();
+        value.updateIsValid();
+    };
 }
 
 

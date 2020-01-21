@@ -1,5 +1,5 @@
 import {findDirectChildByTagName, closestByClassName} from './ToolsDom';
-import  {setStyling, unsetStyling} from './ToolsStyling';
+import  {addStyling, removeStyling, toggleStyling} from './ToolsStyling';
 
 export function staticContentGenerator(element, createElement, containerClass, css) { 
     var selectElement = null;
@@ -55,10 +55,10 @@ export function staticContentGenerator(element, createElement, containerClass, c
     var pickFilterElement = createElement('LI');
     var filterInputElement = createElement('INPUT');
 
-    setStyling(picksElement,       css.picks);
-    setStyling(choicesElement,     css.choices);
-    setStyling(pickFilterElement,  css.pickFilter);
-    setStyling(filterInputElement, css.filterInput);
+    addStyling(picksElement,       css.picks);
+    addStyling(choicesElement,     css.choices);
+    addStyling(pickFilterElement,  css.pickFilter);
+    addStyling(filterInputElement, css.filterInput);
 
     var createInputId = null;
     if(selectElement)
@@ -74,10 +74,6 @@ export function staticContentGenerator(element, createElement, containerClass, c
         pickFilterElement,
         filterInputElement,
         createInputId,
-        // init(){
-        //     if (ownPicksElement)
-        //         containerElement.appendChild(picksElement);
-        // },
         attachContainer(){
             if (ownContainerElement && selectElement) // otherwise it is attached
                 selectElement.parentNode.insertBefore(containerElement, selectElement.nextSibling);
@@ -100,21 +96,13 @@ export function staticContentGenerator(element, createElement, containerClass, c
                 }
             }
         },
-        enable(){
-            unsetStyling(picksElement, css.picks_disabled)
+        disable(isDisabled){
+            toggleStyling(picksElement, css.picks_disabled, isDisabled)
         },
 
-        disable(){
-            setStyling(picksElement, css.picks_disabled)
+        focus(isFocusIn){
+            toggleStyling(picksElement, css.picks_focus, isFocusIn)
         },
-
-        focusIn(){
-            setStyling(picksElement, css.picks_focus)
-        },
-
-        focusOut(){
-            unsetStyling(picksElement, css.picks_focus)
-        },        
         dispose(){
             if (ownContainerElement)
                 containerElement.parentNode.removeChild(containerElement);

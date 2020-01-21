@@ -7,7 +7,7 @@ import { OptionsAdapterJson, OptionsAdapterElement } from './OptionsAdapters';
 import { pickContentGenerator } from './PickContentGenerator';
 import { choiceContentGenerator } from './ChoiceContentGenerator';
 import { staticContentGenerator } from './StaticContentGenerator';
-import { createBsAppearance, adjustBsOptionAdapterConfiguration, pushIsValidClassToPicks, getLabelElement } from './BsAppearance';
+import { bsAppearance, adjustBsOptionAdapterConfiguration, pushIsValidClassToPicks, getLabelElement } from './BsAppearance';
 import { createCss, extendCss, Styling } from './ToolsStyling';
 import { extendOverriding, extendIfUndefined } from './ToolsJs';
 import { adjustLegacyConfiguration as adjustLegacySettings } from './BsMultiSelectDepricatedParameters';
@@ -16,11 +16,8 @@ var css = {
   // bs4, in bsmultiselect.scss as ul.dropdown-menu
   choice_hover: 'hover',
   //  not bs4, in scss as 'ul.dropdown-menu li.hover'
-  // TODO
   choice_selected: '',
-  // not used? should be used in OptionsPanel.js
   choice_disabled: '',
-  // not used? should be used in OptionsPanel.js
   picks: 'form-control',
   // bs4, in scss 'ul.form-control'
   picks_focus: 'focus',
@@ -129,13 +126,11 @@ function extendConfigurtion(configuration, defaults) {
 
   configuration.css = defCss;
   configuration.cssPatch = defCssPatch;
-} // 1) do not use css - classes  + styling js + prediction clases + compensation js
-// 2) use scss - classes only 
-
+}
 
 (function (window, $, Popper) {
   var defaults = {
-    useOwnCss: false,
+    useCssPatch: true,
     containerClass: "dashboardcode-bsmultiselect",
     css: css,
     cssPatch: cssPatch,
@@ -169,24 +164,17 @@ function extendConfigurtion(configuration, defaults) {
       init = settings(element, configuration);
     } else {
       if (settings) {
-        adjustLegacySettings(settngs);
+        adjustLegacySettings(settings);
         extendOverriding(configuration, settings); // settings used per jQuery intialization, configuration per element
       }
 
       extendConfigurtion(configuration, defaults);
-    } // -----------------------------------------------------------------
-
-
-    if (configuration.buildConfiguration) init = configuration.buildConfiguration(element, configuration);
-    var css = configuration.css; // -----------------------------------------------------------------
-
-    var useOwnCss = configuration.useOwnCss; // useOwnCss
-
-    if (!useOwnCss) {
-      extendCss(css, configuration.cssPatch); // TODO merge
     }
 
-    console.log(css);
+    if (configuration.buildConfiguration) init = configuration.buildConfiguration(element, configuration);
+    var css = configuration.css;
+    var useCssPatch = configuration.useCssPatch;
+    if (useCssPatch) extendCss(css, configuration.cssPatch);
     var staticContent = configuration.staticContentGenerator(element, function (name) {
       return window.document.createElement(name);
     }, configuration.containerClass, css);
@@ -205,10 +193,7 @@ function extendConfigurtion(configuration, defaults) {
       }
     }
 
-    if (!useOwnCss) {
-      pushIsValidClassToPicks(staticContent, css);
-    }
-
+    if (useCssPatch) pushIsValidClassToPicks(staticContent, css);
     var labelAdapter = LabelAdapter(configuration.labelElement, staticContent.createInputId);
 
     if (!configuration.placeholder) {
@@ -216,20 +201,13 @@ function extendConfigurtion(configuration, defaults) {
       if (!configuration.placeholder) configuration.placeholder = $(element).data("placeholder");
     }
 
-    var bsAppearance = createBsAppearance(staticContent.picksElement, optionsAdapter, useOwnCss, css);
-
-    var onUpdate = function onUpdate() {
-      bsAppearance.updateSize();
-      bsAppearance.updateIsValid();
-    };
-
     var multiSelect = new MultiSelect(optionsAdapter, configuration.setSelected, staticContent, function (pickElement) {
       return configuration.pickContentGenerator(pickElement, css);
     }, function (choiceElement) {
       return configuration.choiceContentGenerator(choiceElement, css);
-    }, labelAdapter, configuration.placeholder, onUpdate, onDispose, Popper, window);
-    multiSelect.UpdateSize = bsAppearance.updateSize;
-    multiSelect.UpdateIsValid = bsAppearance.updateIsValid;
+    }, labelAdapter, configuration.placeholder, Popper, window);
+    multiSelect.onDispose = onDispose;
+    bsAppearance(multiSelect, staticContent.picksElement, optionsAdapter, useCssPatch, css);
     if (init && init instanceof Function) init(multiSelect);
     multiSelect.init();
     return multiSelect;

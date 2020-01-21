@@ -30,12 +30,12 @@ export function ChoicesPanel(createElement, choicesElement, onShow, onHide,
     var hoverInInternal = function(index){
         hoveredMultiSelectDataIndex = index;
         hoveredMultiSelectData = getVisibleMultiSelectDataList()[index];
-        hoveredMultiSelectData.ChoiceContent.hoverIn()
+        hoveredMultiSelectData.ChoiceContent.hoverIn(true)
     }
 
     function resetChoicesHover() {
         if (hoveredMultiSelectData) {
-            hoveredMultiSelectData.ChoiceContent.hoverOut()
+            hoveredMultiSelectData.ChoiceContent.hoverIn(false)
             hoveredMultiSelectData = null;
             hoveredMultiSelectDataIndex = null;
         }
@@ -96,7 +96,7 @@ export function ChoicesPanel(createElement, choicesElement, onShow, onHide,
         if (newIndex!==null)
         {
             if (hoveredMultiSelectData)
-                hoveredMultiSelectData.ChoiceContent.hoverOut()
+                hoveredMultiSelectData.ChoiceContent.hoverIn(false)
                 // styling.HoverOut(hoveredMultiSelectData.choiceElement);
             updateChoicesLocation();
             showChoices(); 

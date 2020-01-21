@@ -120,14 +120,14 @@ export function MultiSelectInputAspect (
         resetSkipFocusout : function() {
              skipFocusout=false;
         },
-        enable(){
-            componentDisabledEventBinder.bind(picksElement,"click", event => {
-                onClick(event);
-                alignAndShowChoices(event);
-            });  // OPEN dropdown
-        },
-        disable(){
-            componentDisabledEventBinder.unbind();
+        disable(isDisabled){
+            if (isDisabled)
+                componentDisabledEventBinder.unbind();
+            else
+                componentDisabledEventBinder.bind(picksElement,"click", event => {
+                    onClick(event);
+                    alignAndShowChoices(event);
+                });  // OPEN dropdown
         }
     }
 }
