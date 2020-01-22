@@ -12,8 +12,7 @@ export function FilterPanel(
         onEnterOrTabToCompleate, // "compleate alike"
         onKeyDownEsc, 
         onKeyUpEsc, // "esc" alike
-        onInput, // filter
-        setEmptyLength
+        onInput//, // filter
     ){
         filterInputElement.setAttribute("type","search");
         filterInputElement.setAttribute("autocomplete","off");
@@ -85,22 +84,13 @@ export function FilterPanel(
     filterInputElement.addEventListener('keyup', onFilterInputKeyUp);
     filterInputElement.addEventListener('input', onFilterInputInput);
 
-    // function setEmptyLength(){
-    //     inputElement.style.width= "100%"; //--"1rem";
-    // }
-    //setEmptyLength();
-
-    function setEmpty(){
-        filterInputElement.value ='';
-        setEmptyLength();
-    }
-    
     return {
         isEmpty(){
             return filterInputElement.value ? false:true;
         },
-        setEmpty,
-        setEmptyLength,
+        setEmpty(){
+            filterInputElement.value ='';
+        },
         setFocus(){
             filterInputElement.focus();
         },

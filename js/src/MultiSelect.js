@@ -48,13 +48,14 @@ function collectFilterChoices(MultiSelectDataList, text) {
 
 export class MultiSelect {
 
-    constructor(optionsAdapter, setSelected, staticContent, /* styling, */
-        pickContentGenerator, choiceContentGenerator, 
+    constructor(
+        optionsAdapter, 
+        setSelected, 
+        staticContent, 
+        pickContentGenerator, 
+        choiceContentGenerator, 
         labelAdapter, 
-        //MultiSelect, 
         placeholderText,
-        //onUpdate, 
-        //onDispose, 
         popper, window) {
 
         this.onUpdate = null;
@@ -99,13 +100,14 @@ export class MultiSelect {
     resetFilter(){
         if (!this.filterPanel.isEmpty()) {
             this.filterPanel.setEmpty();
+            this.placeholderAspect.updateEmptyInputWidth();
             this.processEmptyInput();
             this.placeholderAspect.updatePlacehodlerVisibility();
         }
     }
 
     processEmptyInput(){
-        this.filterPanel.setEmptyLength();
+        this.placeholderAspect.updateEmptyInputWidth();
         resetChoices(this.MultiSelectDataList);
         this.filteredMultiSelectDataList = null;
     }
@@ -290,8 +292,10 @@ export class MultiSelect {
             multiSelectData.toggle = null;
             multiSelectData.remove = null; 
             multiSelectData.removeChoiceElement = null;
-            if (multiSelectData.DisposeChoiceElement)
+            if (multiSelectData.DisposeChoiceElement){
                 multiSelectData.DisposeChoiceElement();
+                multiSelectData.DisposeChoiceElement=null;
+            }
             
             if (multiSelectData.ChoiceContent)
                 multiSelectData.ChoiceContent.dispose();
@@ -326,6 +330,7 @@ export class MultiSelect {
                     if (fullMatchMultiSelectData.toggle)
                         fullMatchMultiSelectData.toggle();
                     this.filterPanel.setEmpty(); // clear
+                    this.placeholderAspect.updateEmptyInputWidth();
                     isEmpty=true;
                 }
             }
@@ -350,9 +355,6 @@ export class MultiSelect {
     }
 
     init() {
-        var document = this.window.document;
-        var createElement = (name) => document.createElement(name);
-
         this.filterPanel = FilterPanel(
             this.staticContent.filterInputElement,
             () => {
@@ -394,15 +396,12 @@ export class MultiSelect {
             { 
                 this.placeholderAspect.updatePlacehodlerVisibility();
                 this.input(filterInputValue, resetLength) 
-            }, // filter
-            () => {
-                this.placeholderAspect.updateEmptyInputWidth();
             }
         );
         
         this.picksPanel =  PicksPanel(
             /*createElement*/ () => {
-                var pickElement = createElement('LI');
+                var pickElement = this.staticContent.createPickElement();
                 return {
                     pickElement,
                     attach: () => this.staticContent.picksElement
@@ -451,7 +450,7 @@ export class MultiSelect {
         );
 
         this.choicesPanel = ChoicesPanel(
-            createElement,
+            ()=>this.staticContent.createChoiceElement(),
             this.staticContent.choicesElement,
             () => this.aspect.onChoicesShow(),
             () => this.aspect.onChoicesHide(),

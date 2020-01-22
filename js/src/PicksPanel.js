@@ -2,7 +2,7 @@ import {removeElement} from './ToolsDom'
 import {List} from './ToolsJs'
 
 export function PicksPanel (
-        createElement,
+        createPickElement,
         pickContentGenerator, 
         requestPickCreate,
         requestPickRemove,
@@ -11,7 +11,7 @@ export function PicksPanel (
 {
     var list = List();
     function createPick(multiSelectData, option, isComponentDisabled) {
-        var {pickElement, attach} = createElement();
+        var {pickElement, attach} = createPickElement();
         var item = {pickElement}
         var removeFromList = list.add(item);
 
@@ -67,7 +67,7 @@ export function PicksPanel (
             if (item) 
                 item.removeSelectedItem(); // always remove in this case
         },
-        isEmpty: list.isEmpty,
+        isEmpty: list.isEmpty, // function
         disable(isComponentDisabled){
             list.forEach(i=>i.pickContent.disableRemove(isComponentDisabled))
         },

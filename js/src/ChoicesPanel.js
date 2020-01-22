@@ -1,4 +1,4 @@
-export function ChoicesPanel(createElement, choicesElement, onShow, onHide, 
+export function ChoicesPanel(createChoiceElement, choicesElement, onShow, onHide, 
         eventSkipper, choiceContentGenerator, 
         getVisibleMultiSelectDataList, 
         resetFilter, updateChoicesLocation, filterPanelSetFocus) {
@@ -130,7 +130,7 @@ export function ChoicesPanel(createElement, choicesElement, onShow, onHide,
 
     function insertChoice(MultiSelectData, createSelectedItemGen, setSelected, triggerChange, isSelected/*, isOptionDisabled*/) 
     {
-        var choiceElement = createElement('LI');
+        var choiceElement = createChoiceElement();
         
         // in chrome it happens on "become visible" so we need to skip it, 
         // for IE11 and edge it doesn't happens, but for IE11 and Edge it doesn't happens on small 

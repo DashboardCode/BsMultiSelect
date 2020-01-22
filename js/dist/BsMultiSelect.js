@@ -8,7 +8,7 @@ import { pickContentGenerator } from './PickContentGenerator';
 import { choiceContentGenerator } from './ChoiceContentGenerator';
 import { staticContentGenerator } from './StaticContentGenerator';
 import { bsAppearance, adjustBsOptionAdapterConfiguration, pushIsValidClassToPicks, getLabelElement } from './BsAppearance';
-import { createCss, extendCss, Styling } from './ToolsStyling';
+import { createCss, extendCss } from './ToolsStyling';
 import { extendOverriding, extendIfUndefined } from './ToolsJs';
 import { adjustLegacyConfiguration as adjustLegacySettings } from './BsMultiSelectDepricatedParameters';
 var css = {
@@ -70,7 +70,7 @@ var cssPatch = {
       backgroundColor: 'transparent'
     }
   },
-  // used in StylingCorrector
+  // used in staticContentGenerator
   picks_disabled: {
     backgroundColor: '#e9ecef'
   },
@@ -94,7 +94,7 @@ var cssPatch = {
   picks_sm: {
     minHeight: 'calc(1.8125rem + 2px)'
   },
-  // used in BsPickContentStylingCorrector
+  // used in pickContentGenerator
   pick: {
     paddingLeft: '0px',
     lineHeight: '1.5em'
@@ -107,7 +107,7 @@ var cssPatch = {
   pickContent_disabled: {
     opacity: '.65'
   },
-  // used in BsChoiceContentStylingCorrector
+  // used in choiceContentGenerator
   choiceLabel_disabled: {
     opacity: '.65'
   } // more flexible than {color: '#6c757d'}, avoid opacity on pickElement's border

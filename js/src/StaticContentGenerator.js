@@ -1,5 +1,5 @@
 import {findDirectChildByTagName, closestByClassName} from './ToolsDom';
-import  {addStyling, removeStyling, toggleStyling} from './ToolsStyling';
+import  {addStyling, toggleStyling} from './ToolsStyling';
 
 export function staticContentGenerator(element, createElement, containerClass, css) { 
     var selectElement = null;
@@ -33,6 +33,18 @@ export function staticContentGenerator(element, createElement, containerClass, c
     if (!picksElement){
         picksElement = createElement('UL');
         ownPicksElement = true;
+    }
+    
+    var createPickElement = () =>{
+        var pickElement = createElement('LI');
+        addStyling(pickElement, css.pick);
+        return pickElement;
+    }
+
+    var createChoiceElement = () =>{
+        var choiceElement = createElement('LI');
+        addStyling(choiceElement, css.choice);
+        return choiceElement;
     }
 
     var ownContainerElement = false;        
@@ -70,7 +82,9 @@ export function staticContentGenerator(element, createElement, containerClass, c
         selectElement, 
         containerElement,
         picksElement,
+        createPickElement,
         choicesElement,
+        createChoiceElement,
         pickFilterElement,
         filterInputElement,
         createInputId,

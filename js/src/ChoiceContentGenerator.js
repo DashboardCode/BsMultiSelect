@@ -2,7 +2,6 @@ import  {EventBinder} from './ToolsDom';
 import  {addStyling, toggleStyling} from './ToolsStyling';
 
 export function choiceContentGenerator(choiceElement, css){
-    addStyling(choiceElement, css.choice);
     choiceElement.innerHTML = '<div><input type="checkbox"><label></label></div>';
     let choiceContentElement = choiceElement.querySelector('DIV');
     let choiceCheckBoxElement = choiceContentElement.querySelector('INPUT');

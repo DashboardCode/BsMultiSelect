@@ -19,8 +19,8 @@
     onBackspace, // backspace alike
     onEnterOrTabToCompleate, // "compleate alike"
     onKeyDownEsc, onKeyUpEsc, // "esc" alike
-    onInput, // filter
-    setEmptyLength) {
+    onInput //, // filter
+    ) {
       filterInputElement.setAttribute("type", "search");
       filterInputElement.setAttribute("autocomplete", "off"); //setStyle(filterInputElement, filterInputStyle);
 
@@ -83,22 +83,14 @@
       filterInputElement.addEventListener('focusout', onFocusOut);
       filterInputElement.addEventListener('keydown', onfilterInputKeyDown);
       filterInputElement.addEventListener('keyup', onFilterInputKeyUp);
-      filterInputElement.addEventListener('input', onFilterInputInput); // function setEmptyLength(){
-      //     inputElement.style.width= "100%"; //--"1rem";
-      // }
-      //setEmptyLength();
-
-      function setEmpty() {
-        filterInputElement.value = '';
-        setEmptyLength();
-      }
-
+      filterInputElement.addEventListener('input', onFilterInputInput);
       return {
         isEmpty: function isEmpty() {
           return filterInputElement.value ? false : true;
         },
-        setEmpty: setEmpty,
-        setEmptyLength: setEmptyLength,
+        setEmpty: function setEmpty() {
+          filterInputElement.value = '';
+        },
         setFocus: function setFocus() {
           filterInputElement.focus();
         },
@@ -115,7 +107,7 @@
       };
     }
 
-    function ChoicesPanel(createElement, choicesElement, onShow, onHide, eventSkipper, choiceContentGenerator, getVisibleMultiSelectDataList, resetFilter, updateChoicesLocation, filterPanelSetFocus) {
+    function ChoicesPanel(createChoiceElement, choicesElement, onShow, onHide, eventSkipper, choiceContentGenerator, getVisibleMultiSelectDataList, resetFilter, updateChoicesLocation, filterPanelSetFocus) {
       var hoveredMultiSelectData = null;
       var hoveredMultiSelectDataIndex = null;
       var candidateToHoveredMultiSelectData = null;
@@ -238,7 +230,7 @@
       function insertChoice(MultiSelectData, createSelectedItemGen, setSelected, triggerChange, isSelected
       /*, isOptionDisabled*/
       ) {
-        var choiceElement = createElement('LI'); // in chrome it happens on "become visible" so we need to skip it, 
+        var choiceElement = createChoiceElement(); // in chrome it happens on "become visible" so we need to skip it, 
         // for IE11 and edge it doesn't happens, but for IE11 and Edge it doesn't happens on small 
         // mouse moves inside the item. 
         // https://stackoverflow.com/questions/59022563/browser-events-mouseover-doesnt-happen-when-you-make-element-visible-and-mous
@@ -497,14 +489,14 @@
       });
     }
 
-    function PicksPanel(createElement, pickContentGenerator, requestPickCreate, requestPickRemove, processRemoveButtonClick // click to remove button
+    function PicksPanel(createPickElement, pickContentGenerator, requestPickCreate, requestPickRemove, processRemoveButtonClick // click to remove button
     ) {
       var list = List();
 
       function createPick(multiSelectData, option, isComponentDisabled) {
-        var _createElement = createElement(),
-            pickElement = _createElement.pickElement,
-            attach = _createElement.attach;
+        var _createPickElement = createPickElement(),
+            pickElement = _createPickElement.pickElement,
+            attach = _createPickElement.attach;
 
         var item = {
           pickElement: pickElement
@@ -558,6 +550,7 @@
           if (item) item.removeSelectedItem(); // always remove in this case
         },
         isEmpty: list.isEmpty,
+        // function
         disable: function disable(isComponentDisabled) {
           list.forEach(function (i) {
             return i.pickContent.disableRemove(isComponentDisabled);
@@ -768,12 +761,7 @@
     var MultiSelect =
     /*#__PURE__*/
     function () {
-      function MultiSelect(optionsAdapter, setSelected, staticContent,
-      /* styling, */
-      pickContentGenerator, choiceContentGenerator, labelAdapter, //MultiSelect, 
-      placeholderText, //onUpdate, 
-      //onDispose, 
-      popper, window) {
+      function MultiSelect(optionsAdapter, setSelected, staticContent, pickContentGenerator, choiceContentGenerator, labelAdapter, placeholderText, popper, window) {
         this.onUpdate = null;
         this.onDispose = null; // readonly
 
@@ -810,13 +798,14 @@
       _proto.resetFilter = function resetFilter() {
         if (!this.filterPanel.isEmpty()) {
           this.filterPanel.setEmpty();
+          this.placeholderAspect.updateEmptyInputWidth();
           this.processEmptyInput();
           this.placeholderAspect.updatePlacehodlerVisibility();
         }
       };
 
       _proto.processEmptyInput = function processEmptyInput() {
-        this.filterPanel.setEmptyLength();
+        this.placeholderAspect.updateEmptyInputWidth();
         resetChoices(this.MultiSelectDataList);
         this.filteredMultiSelectDataList = null;
       } // -----------------------------------------------------------------------------------------------------------------------
@@ -991,7 +980,12 @@
           multiSelectData.toggle = null;
           multiSelectData.remove = null;
           multiSelectData.removeChoiceElement = null;
-          if (multiSelectData.DisposeChoiceElement) multiSelectData.DisposeChoiceElement();
+
+          if (multiSelectData.DisposeChoiceElement) {
+            multiSelectData.DisposeChoiceElement();
+            multiSelectData.DisposeChoiceElement = null;
+          }
+
           if (multiSelectData.ChoiceContent) multiSelectData.ChoiceContent.dispose();
         }
       };
@@ -1022,6 +1016,7 @@
               if (fullMatchMultiSelectData.toggle) fullMatchMultiSelectData.toggle();
               this.filterPanel.setEmpty(); // clear
 
+              this.placeholderAspect.updateEmptyInputWidth();
               isEmpty = true;
             }
           }
@@ -1044,12 +1039,6 @@
 
       _proto.init = function init() {
         var _this2 = this;
-
-        var document = this.window.document;
-
-        var createElement = function createElement(name) {
-          return document.createElement(name);
-        };
 
         this.filterPanel = FilterPanel(this.staticContent.filterInputElement, function () {
           _this2.staticContent.pickFilterElement.appendChild(_this2.staticContent.filterInputElement);
@@ -1103,14 +1092,12 @@
           _this2.placeholderAspect.updatePlacehodlerVisibility();
 
           _this2.input(filterInputValue, resetLength);
-        }, // filter
-        function () {
-          _this2.placeholderAspect.updateEmptyInputWidth();
         });
         this.picksPanel = PicksPanel(
         /*createElement*/
         function () {
-          var pickElement = createElement('LI');
+          var pickElement = _this2.staticContent.createPickElement();
+
           return {
             pickElement: pickElement,
             attach: function attach() {
@@ -1173,7 +1160,9 @@
 
           _this2.resetFilter();
         });
-        this.choicesPanel = ChoicesPanel(createElement, this.staticContent.choicesElement, function () {
+        this.choicesPanel = ChoicesPanel(function () {
+          return _this2.staticContent.createChoiceElement();
+        }, this.staticContent.choicesElement, function () {
           return _this2.aspect.onChoicesShow();
         }, function () {
           return _this2.aspect.onChoicesHide();
@@ -1528,7 +1517,6 @@
     }
 
     function pickContentGenerator(pickElement, css) {
-      addStyling(pickElement, css.pick);
       pickElement.innerHTML = '<span></span><button aria-label="Remove" tabIndex="-1" type="button"><span aria-hidden="true">&times;</span></button>';
       var pickContentElement = pickElement.querySelector('SPAN');
       var pickButtonElement = pickElement.querySelector('BUTTON');
@@ -1556,7 +1544,6 @@
     }
 
     function choiceContentGenerator(choiceElement, css) {
-      addStyling(choiceElement, css.choice);
       choiceElement.innerHTML = '<div><input type="checkbox"><label></label></div>';
       var choiceContentElement = choiceElement.querySelector('DIV');
       var choiceCheckBoxElement = choiceContentElement.querySelector('INPUT');
@@ -1627,6 +1614,18 @@
         ownPicksElement = true;
       }
 
+      var createPickElement = function createPickElement() {
+        var pickElement = createElement('LI');
+        addStyling(pickElement, css.pick);
+        return pickElement;
+      };
+
+      var createChoiceElement = function createChoiceElement() {
+        var choiceElement = createElement('LI');
+        addStyling(choiceElement, css.choice);
+        return choiceElement;
+      };
+
       var ownContainerElement = false;
 
       if (!containerElement) {
@@ -1660,7 +1659,9 @@
         selectElement: selectElement,
         containerElement: containerElement,
         picksElement: picksElement,
+        createPickElement: createPickElement,
         choicesElement: choicesElement,
+        createChoiceElement: createChoiceElement,
         pickFilterElement: pickFilterElement,
         filterInputElement: filterInputElement,
         createInputId: createInputId,
@@ -2028,7 +2029,7 @@
           backgroundColor: 'transparent'
         }
       },
-      // used in StylingCorrector
+      // used in staticContentGenerator
       picks_disabled: {
         backgroundColor: '#e9ecef'
       },
@@ -2052,7 +2053,7 @@
       picks_sm: {
         minHeight: 'calc(1.8125rem + 2px)'
       },
-      // used in BsPickContentStylingCorrector
+      // used in pickContentGenerator
       pick: {
         paddingLeft: '0px',
         lineHeight: '1.5em'
@@ -2065,7 +2066,7 @@
       pickContent_disabled: {
         opacity: '.65'
       },
-      // used in BsChoiceContentStylingCorrector
+      // used in choiceContentGenerator
       choiceLabel_disabled: {
         opacity: '.65'
       } // more flexible than {color: '#6c757d'}, avoid opacity on pickElement's border

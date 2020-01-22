@@ -14,7 +14,7 @@ import {staticContentGenerator} from './StaticContentGenerator';
 
 import {bsAppearance, adjustBsOptionAdapterConfiguration, pushIsValidClassToPicks, getLabelElement} from './BsAppearance';
 
-import {createCss, extendCss, Styling} from './ToolsStyling';
+import {createCss, extendCss} from './ToolsStyling';
 import {extendOverriding, extendIfUndefined} from './ToolsJs';
 
 import {adjustLegacyConfiguration as adjustLegacySettings} from './BsMultiSelectDepricatedParameters'
@@ -58,7 +58,7 @@ const cssPatch = {
         styles: {border:'0px', height: 'auto', boxShadow:'none', padding:'0', margin:'0', outline:'none', backgroundColor:'transparent'}
     },
 
-    // used in StylingCorrector
+    // used in staticContentGenerator
     picks_disabled: {backgroundColor: '#e9ecef'},
 
     picks_focus: {borderColor: '#80bdff', boxShadow: '0 0 0 0.2rem rgba(0, 123, 255, 0.25)'},
@@ -70,12 +70,12 @@ const cssPatch = {
     picks_lg:  {minHeight: 'calc(2.875rem + 2px)'},
     picks_sm:  {minHeight: 'calc(1.8125rem + 2px)'},
     
-    // used in BsPickContentStylingCorrector
+    // used in pickContentGenerator
     pick: {paddingLeft: '0px', lineHeight: '1.5em'},
     pickButton: {fontSize:'1.5em', lineHeight: '.9em', float : "none"},
     pickContent_disabled: {opacity: '.65'}, 
     
-    // used in BsChoiceContentStylingCorrector
+    // used in choiceContentGenerator
     choiceLabel_disabled: {opacity: '.65'}  // more flexible than {color: '#6c757d'}, avoid opacity on pickElement's border
 };
 
