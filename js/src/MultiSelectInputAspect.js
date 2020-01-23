@@ -10,10 +10,12 @@ export function MultiSelectInputAspect (
     hideChoicesAndResetFilter,
     isChoiceEmpty,
     onClick,
+    isRtl,
     Popper
-    ) {
-        appendToContainer();
-        var document = window.document;
+    ) 
+{
+    appendToContainer();
+    var document = window.document;
 
     var skipFocusout = false;
     
@@ -38,9 +40,8 @@ export function MultiSelectInputAspect (
     //if (!!Popper.prototype && !!Popper.prototype.constructor.name) {
         popper=new Popper( 
             filterInputElement, 
-            choicesElement, 
-            {
-                placement: 'bottom-start',
+            choicesElement, {
+                placement: isRtl?'bottom-end':'bottom-start',
                 modifiers: {
                     preventOverflow: {enabled:false},
                     hide: {enabled:false},

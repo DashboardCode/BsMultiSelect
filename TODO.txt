@@ -62,4 +62,5 @@ Could release description be referenced?
 #### Notes:
 https://strizhechenko.github.io/2017/07/10/python-opensource-project-todo-list.html
 https://habrahabr.ru/post/341166/
- 
+
+review rtl: https://habr.com/ru/post/484886/

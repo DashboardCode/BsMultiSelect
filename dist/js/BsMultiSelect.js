@@ -341,6 +341,11 @@
         return e.classList.contains(className);
       });
     }
+    function closestByAttribute(element, attributeName, attribute) {
+      return closest(element, function (e) {
+        return e.getAttribute(attributeName) === attribute;
+      });
+    }
 
     function closest(element, predicate) {
       if (!element || !(element instanceof Element)) return null; // should be element, not document (TODO: check iframe)
@@ -366,6 +371,28 @@
                 eventName = e.eventName,
                 handler = e.handler;
             element.removeEventListener(eventName, handler);
+          });
+        }
+      };
+    }
+    function AttributeBackup() {
+      var list = [];
+      return {
+        set: function set(element, attributeName, attribute) {
+          var currentAtribute = element.getAttribute(attributeName);
+          list.push({
+            element: element,
+            currentAtribute: currentAtribute,
+            attribute: attribute
+          });
+          element.setAttribute(attributeName, attribute);
+        },
+        restore: function restore() {
+          list.forEach(function (e) {
+            var element = e.element,
+                attributeName = e.attributeName,
+                attribute = e.attribute;
+            if (attributeName) element.setAttribute(attributeName, attribute);else element.removeAttribute(attributeName);
           });
         }
       };
@@ -576,7 +603,7 @@
       };
     }
 
-    function MultiSelectInputAspect(window, appendToContainer, filterInputElement, picksElement, choicesElement, showChoices, hideChoicesAndResetFilter, isChoiceEmpty, onClick, Popper) {
+    function MultiSelectInputAspect(window, appendToContainer, filterInputElement, picksElement, choicesElement, showChoices, hideChoicesAndResetFilter, isChoiceEmpty, onClick, isRtl, Popper) {
       appendToContainer();
       var document = window.document;
       var skipFocusout = false; // we want to escape the closing of the menu (because of focus out from) on a user's click inside the container
@@ -595,7 +622,7 @@
       var popper = null; //if (!!Popper.prototype && !!Popper.prototype.constructor.name) {
 
       popper = new Popper(filterInputElement, choicesElement, {
-        placement: 'bottom-start',
+        placement: isRtl ? 'bottom-end' : 'bottom-start',
         modifiers: {
           preventOverflow: {
             enabled: false
@@ -761,9 +788,10 @@
     var MultiSelect =
     /*#__PURE__*/
     function () {
-      function MultiSelect(optionsAdapter, setSelected, staticContent, pickContentGenerator, choiceContentGenerator, labelAdapter, placeholderText, popper, window) {
+      function MultiSelect(optionsAdapter, setSelected, staticContent, pickContentGenerator, choiceContentGenerator, labelAdapter, placeholderText, isRtl, popper, window) {
         this.onUpdate = null;
-        this.onDispose = null; // readonly
+        this.onDispose = null;
+        this.isRtl = isRtl; // readonly
 
         this.optionsAdapter = optionsAdapter;
         this.staticContent = staticContent; //this.styling = styling;
@@ -1195,7 +1223,7 @@
         /*onClick*/
         function (event) {
           if (!_this2.filterPanel.isEventTarget(event)) _this2.filterPanel.setFocus();
-        }, this.popper);
+        }, this.isRtl, this.popper);
         this.staticContent.attachContainer();
         if (this.onUpdate) this.onUpdate();
         this.updateDataImpl();
@@ -1227,6 +1255,13 @@
           if (backupedForAttribute) labelElement.setAttribute('for', backupedForAttribute);
         }
       };
+    }
+
+    function RtlAdapter(element) {
+      var isRtl = false;
+      var e = closestByAttribute(element, "dir", "rtl");
+      if (e) isRtl = true;
+      return isRtl;
     }
 
     function addToJQueryPrototype(pluginName, createPlugin, defaults, $) {
@@ -1584,7 +1619,7 @@
       };
     }
 
-    function staticContentGenerator(element, createElement, containerClass, css) {
+    function staticContentGenerator(element, createElement, containerClass, putRtlToContainer, css) {
       var selectElement = null;
       var containerElement = null;
 
@@ -1634,6 +1669,18 @@
       }
 
       containerElement.classList.add(containerClass);
+      var attributeBackup = AttributeBackup();
+
+      if (putRtlToContainer) {
+        attributeBackup.set(containerElement, "dir", "rtl");
+      } else if (selectElement) {
+        var dirAttributeValue = selectElement.getAttribute("dir");
+
+        if (dirAttributeValue) {
+          attributeBackup.set(containerElement, "dir", dirAttributeValue);
+        }
+      }
+
       var choicesElement = createElement('UL');
       choicesElement.style.display = "none";
       var backupDisplay = null;
@@ -1688,7 +1735,7 @@
           toggleStyling(picksElement, css.picks_focus, isFocusIn);
         },
         dispose: function dispose() {
-          if (ownContainerElement) containerElement.parentNode.removeChild(containerElement);
+          if (ownContainerElement) containerElement.parentNode.removeChild(containerElement);else attributeBackup.restore();
           if (ownPicksElement) picksElement.parentNode.removeChild(picksElement);
           choicesElement.parentNode.removeChild(choicesElement);
           if (pickFilterElement.parentNode) pickFilterElement.parentNode.removeChild(pickFilterElement);
@@ -1994,11 +2041,11 @@
       pickButton: 'close',
       // bs4
       // used in BsChoiceContentStylingCorrector
-      choice: '',
+      // choice:  'dropdown-item', // it seems like hover should be managed manually since there should be keyboard support
       choiceCheckBox_disabled: 'disabled',
       //  not bs4, in scss as 'ul.form-control li .custom-control-input.disabled ~ .custom-control-label'
-      choiceContent: 'custom-control custom-checkbox',
-      // bs4
+      choiceContent: 'custom-control custom-checkbox d-flex',
+      // bs4 d-flex required for rtl to align items
       choiceCheckBox: 'custom-control-input',
       // bs4
       choiceLabel: 'custom-control-label justify-content-start',
@@ -2015,7 +2062,7 @@
         height: 'auto',
         marginBottom: '0'
       },
-      choice: 'px-2',
+      choice: 'px-md-2 px-1',
       choice_hover: 'text-primary bg-light',
       filterInput: {
         classes: 'form-control',
@@ -2081,6 +2128,8 @@
       extendIfUndefined(configuration, defaults);
       var defCss = createCss(defaults.css, cfgCss); // replace classes, merge styles
 
+      if (defaults.cssPatch instanceof Boolean || typeof defaults.cssPatch === "boolean" || cfgCssPatch instanceof Boolean || typeof cfgCssPatch === "boolean") throw new Error("BsMultiSelect: 'cssPatch' was used instead of 'useCssPatch'"); // often type of error
+
       var defCssPatch = createCss(defaults.cssPatch, cfgCssPatch); // ? classes, merge styles
 
       configuration.css = defCss;
@@ -2133,10 +2182,12 @@
         if (configuration.buildConfiguration) init = configuration.buildConfiguration(element, configuration);
         var css = configuration.css;
         var useCssPatch = configuration.useCssPatch;
+        var putRtlToContainer = false;
         if (useCssPatch) extendCss(css, configuration.cssPatch);
+        if (configuration.isRtl === undefined || configuration.isRtl === null) configuration.isRtl = RtlAdapter(element);else if (configuration.isRtl === true) putRtlToContainer = true;
         var staticContent = configuration.staticContentGenerator(element, function (name) {
           return window.document.createElement(name);
-        }, configuration.containerClass, css);
+        }, configuration.containerClass, putRtlToContainer, css);
         var optionsAdapter = configuration.optionsAdapter;
 
         if (!optionsAdapter) {
@@ -2164,7 +2215,7 @@
           return configuration.pickContentGenerator(pickElement, css);
         }, function (choiceElement) {
           return configuration.choiceContentGenerator(choiceElement, css);
-        }, labelAdapter, configuration.placeholder, Popper, window);
+        }, labelAdapter, configuration.placeholder, configuration.isRtl, Popper, window);
         multiSelect.onDispose = onDispose;
         bsAppearance(multiSelect, staticContent.picksElement, optionsAdapter, useCssPatch, css);
         if (init && init instanceof Function) init(multiSelect);

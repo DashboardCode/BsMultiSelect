@@ -1,7 +1,7 @@
-import {findDirectChildByTagName, closestByClassName} from './ToolsDom';
+import {findDirectChildByTagName, closestByClassName, AttributeBackup} from './ToolsDom';
 import  {addStyling, toggleStyling} from './ToolsStyling';
 
-export function staticContentGenerator(element, createElement, containerClass, css) { 
+export function staticContentGenerator(element, createElement, containerClass, putRtlToContainer, css) { 
     var selectElement = null;
     var containerElement = null;
     if (element.tagName=='SELECT'){
@@ -35,13 +35,13 @@ export function staticContentGenerator(element, createElement, containerClass, c
         ownPicksElement = true;
     }
     
-    var createPickElement = () =>{
+    var createPickElement = () => {
         var pickElement = createElement('LI');
         addStyling(pickElement, css.pick);
         return pickElement;
     }
 
-    var createChoiceElement = () =>{
+    var createChoiceElement = () => {
         var choiceElement = createElement('LI');
         addStyling(choiceElement, css.choice);
         return choiceElement;
@@ -54,12 +54,22 @@ export function staticContentGenerator(element, createElement, containerClass, c
     }
     containerElement.classList.add(containerClass);
 
+    var attributeBackup = AttributeBackup();
+    if (putRtlToContainer){
+        attributeBackup.set(containerElement, "dir", "rtl");
+    }
+    else if (selectElement){
+        var dirAttributeValue = selectElement.getAttribute("dir");
+        if (dirAttributeValue){
+            attributeBackup.set(containerElement, "dir", dirAttributeValue);
+        }
+    } 
+
     var choicesElement = createElement('UL');
     choicesElement.style.display="none";
     
     var backupDisplay = null;
-    if (selectElement)
-    { 
+    if (selectElement){ 
         backupDisplay = selectElement.style.display;
         selectElement.style.display='none';
     }
@@ -113,13 +123,14 @@ export function staticContentGenerator(element, createElement, containerClass, c
         disable(isDisabled){
             toggleStyling(picksElement, css.picks_disabled, isDisabled)
         },
-
         focus(isFocusIn){
             toggleStyling(picksElement, css.picks_focus, isFocusIn)
         },
         dispose(){
             if (ownContainerElement)
                 containerElement.parentNode.removeChild(containerElement);
+            else
+                attributeBackup.restore();
             if (ownPicksElement)
                 picksElement.parentNode.removeChild(picksElement);
             choicesElement.parentNode.removeChild(choicesElement);

@@ -3,6 +3,7 @@ import Popper from 'popper.js'
 
 import {MultiSelect} from './MultiSelect'
 import {LabelAdapter} from './LabelAdapter';
+import {RtlAdapter} from './RtlAdapter';
 import {addToJQueryPrototype} from './AddToJQueryPrototype'
 
 import {OptionsAdapterJson, OptionsAdapterElement} from './OptionsAdapters';
@@ -21,7 +22,6 @@ import {adjustLegacyConfiguration as adjustLegacySettings} from './BsMultiSelect
 
 const css = {
     choices: 'dropdown-menu', // bs4, in bsmultiselect.scss as ul.dropdown-menu
-
     choice_hover:  'hover',  //  not bs4, in scss as 'ul.dropdown-menu li.hover'
     choice_selected: '', 
     choice_disabled: '', 
@@ -40,9 +40,9 @@ const css = {
     pickButton: 'close', // bs4
 
     // used in BsChoiceContentStylingCorrector
-    choice:  '',
+    // choice:  'dropdown-item', // it seems like hover should be managed manually since there should be keyboard support
     choiceCheckBox_disabled: 'disabled', //  not bs4, in scss as 'ul.form-control li .custom-control-input.disabled ~ .custom-control-label'
-    choiceContent: 'custom-control custom-checkbox', // bs4
+    choiceContent: 'custom-control custom-checkbox d-flex', // bs4 d-flex required for rtl to align items
     choiceCheckBox: 'custom-control-input', // bs4
     choiceLabel: 'custom-control-label justify-content-start',
     choiceLabel_disabled: ''  
@@ -51,7 +51,7 @@ const css = {
 const cssPatch = {
     choices: {listStyleType:'none'},
     picks: {listStyleType:'none', display:'flex', flexWrap:'wrap',  height: 'auto', marginBottom: '0'},
-    choice: 'px-2' ,  
+    choice: 'px-md-2 px-1',  
     choice_hover: 'text-primary bg-light', 
     filterInput: { 
         classes: 'form-control', 
@@ -86,6 +86,10 @@ function extendConfigurtion(configuration, defaults){
     configuration.cssPatch = null;
     extendIfUndefined(configuration, defaults); 
     var defCss = createCss(defaults.css, cfgCss); // replace classes, merge styles
+    if (defaults.cssPatch instanceof Boolean || typeof defaults.cssPatch ==="boolean" 
+        || cfgCssPatch instanceof Boolean || typeof cfgCssPatch==="boolean" 
+    )
+    throw new Error("BsMultiSelect: 'cssPatch' was used instead of 'useCssPatch'") // often type of error
     var defCssPatch = createCss(defaults.cssPatch, cfgCssPatch); // ? classes, merge styles
     configuration.css = defCss;
     configuration.cssPatch = defCssPatch;
@@ -140,13 +144,19 @@ function extendConfigurtion(configuration, defaults){
                 init = configuration.buildConfiguration(element, configuration);
             var css = configuration.css;
 
-            var useCssPatch = configuration.useCssPatch; 
+            var useCssPatch = configuration.useCssPatch;
+            var putRtlToContainer=false; 
             if (useCssPatch)
                 extendCss(css, configuration.cssPatch); 
-            
+            if (configuration.isRtl===undefined || configuration.isRtl===null)
+                configuration.isRtl = RtlAdapter(element);
+            else if (configuration.isRtl===true)
+                putRtlToContainer=true;
+
             let staticContent = configuration.staticContentGenerator(
-                element, name=>window.document.createElement(name), configuration.containerClass, css
+                element, name=>window.document.createElement(name), configuration.containerClass, putRtlToContainer, css
             );
+
 
             let optionsAdapter = configuration.optionsAdapter;
             if (!optionsAdapter)
@@ -192,6 +202,8 @@ function extendConfigurtion(configuration, defaults){
                 if (!configuration.placeholder)
                     configuration.placeholder = $(element).data("placeholder");
             }
+
+            
             
             let multiSelect = new MultiSelect(
                 optionsAdapter,
@@ -201,6 +213,7 @@ function extendConfigurtion(configuration, defaults){
                 (choiceElement) => configuration.choiceContentGenerator(choiceElement, css),
                 labelAdapter,
                 configuration.placeholder,
+                configuration.isRtl,
                 Popper,
                 window);
             multiSelect.onDispose=onDispose;

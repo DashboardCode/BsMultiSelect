@@ -56,11 +56,13 @@ export class MultiSelect {
         choiceContentGenerator, 
         labelAdapter, 
         placeholderText,
+        isRtl,
         popper, window) {
 
         this.onUpdate = null;
         this.onDispose = null; 
 
+        this.isRtl = isRtl;
         // readonly
         this.optionsAdapter = optionsAdapter;
         this.staticContent = staticContent;
@@ -488,6 +490,7 @@ export class MultiSelect {
                 if (!this.filterPanel.isEventTarget(event))
                      this.filterPanel.setFocus();
             },
+            this.isRtl,
             this.popper
         );
         

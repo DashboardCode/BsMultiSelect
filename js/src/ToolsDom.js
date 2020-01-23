@@ -22,6 +22,10 @@ export function closestByClassName(element, className){
     return closest(element, e => e.classList.contains(className))
 }
 
+export function closestByAttribute(element, attributeName, attribute){
+    return closest(element, e => e.getAttribute(attributeName)===attribute )
+}
+
 function closest(element, predicate){
     if (!element || !(element instanceof Element)) return null; // should be element, not document (TODO: check iframe)
      
@@ -41,6 +45,27 @@ export function EventBinder(){
             {
                 let {element, eventName, handler}=e;
                 element.removeEventListener(eventName, handler)
+            })
+        }
+    }
+}
+
+export function AttributeBackup(){
+    var list = [];
+    return {
+        set(element, attributeName, attribute){
+            var currentAtribute =  element.getAttribute(attributeName); 
+            list.push( {element, currentAtribute, attribute} )
+            element.setAttribute(attributeName, attribute)
+        },
+        restore(){
+            list.forEach( e =>
+            {
+                let {element, attributeName, attribute}=e;
+                if (attributeName)
+                    element.setAttribute(attributeName, attribute)
+                else
+                    element.removeAttribute(attributeName)
             })
         }
     }

@@ -89,6 +89,18 @@
 .dashboardcode-bsmultiselect ul.dropdown-menu {
   list-style-type: none;
 }
+.dashboardcode-bsmultiselect ul.dropdown-menu > li {
+  display: block;
+  width: 100%;
+  padding: 0.25rem 1.5rem;
+  clear: both;
+  font-weight: 400;
+  color: #212529;
+  text-align: inherit;
+  white-space: nowrap;
+  background-color: transparent;
+  border: 0;
+}
 .dashboardcode-bsmultiselect ul.dropdown-menu > li .custom-control-input.disabled ~ .custom-control-label {
   color: #6c757d;
 }
