@@ -53,10 +53,12 @@ const cssPatch = {
     picks: {listStyleType:'none', display:'flex', flexWrap:'wrap',  height: 'auto', marginBottom: '0'},
     choice: 'px-md-2 px-1',  
     choice_hover: 'text-primary bg-light', 
-    filterInput: { 
-        classes: 'form-control', 
-        styles: {border:'0px', height: 'auto', boxShadow:'none', padding:'0', margin:'0', outline:'none', backgroundColor:'transparent'}
+    filterInput: {border:'0px', height: 'auto', boxShadow:'none', 
+        padding:'0', margin:'0', 
+        outline:'none', backgroundColor:'transparent',
+        backgroundImage: 'none' // otherwise BS .was-validated set its image
     },
+    filterInput_empty: 'form-control', // need for placeholder, TODO test form-control-plaintext
 
     // used in staticContentGenerator
     picks_disabled: {backgroundColor: '#e9ecef'},
@@ -76,6 +78,8 @@ const cssPatch = {
     pickContent_disabled: {opacity: '.65'}, 
     
     // used in choiceContentGenerator
+    choiceLabel: {color: 'inherit'}, // otherwise BS .was-validated set its color
+    choiceCheckBox: {color: 'inherit'},
     choiceLabel_disabled: {opacity: '.65'}  // more flexible than {color: '#6c757d'}, avoid opacity on pickElement's border
 };
 
@@ -110,7 +114,7 @@ function extendConfigurtion(configuration, defaults){
 
             buildConfiguration: null,
             setSelected: (option, value) => {option.selected = value; },
-
+            required: null, /* means look on select[required] or false */
             optionsAdapter: null,
             options: null,
             getDisabled: null,
@@ -118,6 +122,11 @@ function extendConfigurtion(configuration, defaults){
             getIsValid: null,
             getIsInvalid: null
         };
+
+        // Create our shared stylesheet:
+        // const sheet = new CSSStyleSheet();
+        // sheet.replaceSync('#target {color: darkseagreen}');
+        // document.adoptedStyleSheets = [sheet];
 
         function createPlugin(element, settings, onDispose){
 
@@ -156,7 +165,9 @@ function extendConfigurtion(configuration, defaults){
             let staticContent = configuration.staticContentGenerator(
                 element, name=>window.document.createElement(name), configuration.containerClass, putRtlToContainer, css
             );
-
+            
+            if (configuration.required === null)
+                    configuration.required = staticContent.required;
 
             let optionsAdapter = configuration.optionsAdapter;
             if (!optionsAdapter)
@@ -187,7 +198,8 @@ function extendConfigurtion(configuration, defaults){
                         configuration.getSize, 
                         configuration.getIsValid, 
                         configuration.getIsInvalid,
-                        trigger);
+                        trigger
+                    );
                 }
             }
 
@@ -202,24 +214,47 @@ function extendConfigurtion(configuration, defaults){
                 if (!configuration.placeholder)
                     configuration.placeholder = $(element).data("placeholder");
             }
+            var setSelected = null;
+            if (configuration.required){
+                var preSetSelected = configuration.setSelected;
+                var setValidityForRequired = ()=>{
+                    if (configuration.getCount()===0) {
+                        staticContent.filterInputElement.setCustomValidity("Please select an item in the list");
+                    } else {
+                        staticContent.filterInputElement.setCustomValidity("");
+                    }
+                }
+                setValidityForRequired();
+                setSelected = (option, value)=>{
+                    var success = preSetSelected(option, value);
+                    //console.log("setSelected success" + success);
+                    if (success!==false)
+                    { 
+                        setValidityForRequired()
+                    }
+                    return success;
+                }
+            } 
+            else {
+                setSelected = configuration.setSelected;
+            }
 
-            
-            
             let multiSelect = new MultiSelect(
                 optionsAdapter,
-                configuration.setSelected,
+                setSelected, //configuration.setSelected,
                 staticContent,
                 (pickElement) => configuration.pickContentGenerator(pickElement, css),
                 (choiceElement) => configuration.choiceContentGenerator(choiceElement, css),
                 labelAdapter,
                 configuration.placeholder,
                 configuration.isRtl,
+                css,
                 Popper,
                 window);
             multiSelect.onDispose=onDispose;
-            
+
             bsAppearance(
-                multiSelect, staticContent.picksElement, optionsAdapter, useCssPatch, css);
+                multiSelect, staticContent.containerElement, staticContent.picksElement, optionsAdapter, useCssPatch, css);
             
             
             if (init && init instanceof Function)

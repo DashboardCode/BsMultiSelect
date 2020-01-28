@@ -1,5 +1,6 @@
 # CHANGELOG
 ````
+0.5.0  - new styling parameters, rtl support. breaking changes (review your css);
 0.4.33 - better suport of group-input append radius corners
 0.4.32 - getSize, getDisabled, getIsValid, getIsInValid (actual for js-object initiated) are available to setup from configuration
 0.4.31 - better padding support for placehoder for BS sizes

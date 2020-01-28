@@ -68,6 +68,7 @@ export function PicksPanel (
                 item.removeSelectedItem(); // always remove in this case
         },
         isEmpty: list.isEmpty, // function
+        getCount: list.getCount,
         disable(isComponentDisabled){
             list.forEach(i=>i.pickContent.disableRemove(isComponentDisabled))
         },

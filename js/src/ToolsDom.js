@@ -33,6 +33,23 @@ function closest(element, predicate){
     return closest(element.parentNode, predicate);
 }
 
+export function siblingsAsArray(element){
+    var value = []
+    if (element.parentNode){
+        var children = element.parentNode.children;
+        var l = element.parentNode.children.length;
+        if (children.length>1){
+            for (var i=0; i < l; ++i){
+                var e = children[i];
+                if (e!=element)
+                    value.push(e);
+                
+            }
+        }
+    }
+    return value;
+}
+
 export function EventBinder(){
     var list = [];
     return {
@@ -59,9 +76,8 @@ export function AttributeBackup(){
             element.setAttribute(attributeName, attribute)
         },
         restore(){
-            list.forEach( e =>
-            {
-                let {element, attributeName, attribute}=e;
+            list.forEach(e=>{
+                let {element, attributeName, attribute} = e;
                 if (attributeName)
                     element.setAttribute(attributeName, attribute)
                 else

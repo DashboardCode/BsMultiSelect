@@ -104,7 +104,7 @@
             // next block copied from .dropdown-item
             display: block;
             width: 100%; // For `<button>`s
-            padding: $dropdown-item-padding-y $dropdown-item-padding-x;
+            padding: 0 /*$dropdown-item-padding-y*/ $dropdown-item-padding-x;
             clear: both;
             font-weight: $font-weight-normal;
             color: $dropdown-link-color;
@@ -116,7 +116,6 @@
             .custom-control-input.disabled ~ .custom-control-label {
                 color: $custom-control-label-disabled-color;
             }
-            
         }.hover{
             // from bs4 _dropdown.scss
             color: $dropdown-link-hover-color;
@@ -141,4 +140,8 @@
             }
         }
     }
+
+    // .was-validated .custom-control-input{
+
+    // }
 }

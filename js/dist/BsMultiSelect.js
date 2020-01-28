@@ -60,17 +60,18 @@ var cssPatch = {
   choice: 'px-md-2 px-1',
   choice_hover: 'text-primary bg-light',
   filterInput: {
-    classes: 'form-control',
-    styles: {
-      border: '0px',
-      height: 'auto',
-      boxShadow: 'none',
-      padding: '0',
-      margin: '0',
-      outline: 'none',
-      backgroundColor: 'transparent'
-    }
+    border: '0px',
+    height: 'auto',
+    boxShadow: 'none',
+    padding: '0',
+    margin: '0',
+    outline: 'none',
+    backgroundColor: 'transparent',
+    backgroundImage: 'none' // otherwise BS .was-validated set its image
+
   },
+  filterInput_empty: 'form-control',
+  // need for placeholder, TODO test form-control-plaintext
   // used in staticContentGenerator
   picks_disabled: {
     backgroundColor: '#e9ecef'
@@ -109,6 +110,13 @@ var cssPatch = {
     opacity: '.65'
   },
   // used in choiceContentGenerator
+  choiceLabel: {
+    color: 'inherit'
+  },
+  // otherwise BS .was-validated set its color
+  choiceCheckBox: {
+    color: 'inherit'
+  },
   choiceLabel_disabled: {
     opacity: '.65'
   } // more flexible than {color: '#6c757d'}, avoid opacity on pickElement's border
@@ -146,13 +154,19 @@ function extendConfigurtion(configuration, defaults) {
     setSelected: function setSelected(option, value) {
       option.selected = value;
     },
+    required: null,
+
+    /* means look on select[required] or false */
     optionsAdapter: null,
     options: null,
     getDisabled: null,
     getSize: null,
     getIsValid: null,
     getIsInvalid: null
-  };
+  }; // Create our shared stylesheet:
+  // const sheet = new CSSStyleSheet();
+  // sheet.replaceSync('#target {color: darkseagreen}');
+  // document.adoptedStyleSheets = [sheet];
 
   function createPlugin(element, settings, onDispose) {
     if (typeof Popper === 'undefined') {
@@ -183,6 +197,7 @@ function extendConfigurtion(configuration, defaults) {
     var staticContent = configuration.staticContentGenerator(element, function (name) {
       return window.document.createElement(name);
     }, configuration.containerClass, putRtlToContainer, css);
+    if (configuration.required === null) configuration.required = staticContent.required;
     var optionsAdapter = configuration.optionsAdapter;
 
     if (!optionsAdapter) {
@@ -206,13 +221,42 @@ function extendConfigurtion(configuration, defaults) {
       if (!configuration.placeholder) configuration.placeholder = $(element).data("placeholder");
     }
 
-    var multiSelect = new MultiSelect(optionsAdapter, configuration.setSelected, staticContent, function (pickElement) {
+    var setSelected = null;
+
+    if (configuration.required) {
+      var preSetSelected = configuration.setSelected;
+
+      var setValidityForRequired = function setValidityForRequired() {
+        if (configuration.getCount() === 0) {
+          staticContent.filterInputElement.setCustomValidity("Please select an item in the list");
+        } else {
+          staticContent.filterInputElement.setCustomValidity("");
+        }
+      };
+
+      setValidityForRequired();
+
+      setSelected = function setSelected(option, value) {
+        var success = preSetSelected(option, value); //console.log("setSelected success" + success);
+
+        if (success !== false) {
+          setValidityForRequired();
+        }
+
+        return success;
+      };
+    } else {
+      setSelected = configuration.setSelected;
+    }
+
+    var multiSelect = new MultiSelect(optionsAdapter, setSelected, //configuration.setSelected,
+    staticContent, function (pickElement) {
       return configuration.pickContentGenerator(pickElement, css);
     }, function (choiceElement) {
       return configuration.choiceContentGenerator(choiceElement, css);
-    }, labelAdapter, configuration.placeholder, configuration.isRtl, Popper, window);
+    }, labelAdapter, configuration.placeholder, configuration.isRtl, css, Popper, window);
     multiSelect.onDispose = onDispose;
-    bsAppearance(multiSelect, staticContent.picksElement, optionsAdapter, useCssPatch, css);
+    bsAppearance(multiSelect, staticContent.containerElement, staticContent.picksElement, optionsAdapter, useCssPatch, css);
     if (init && init instanceof Function) init(multiSelect);
     multiSelect.init();
     return multiSelect;

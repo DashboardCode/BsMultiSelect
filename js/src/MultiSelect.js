@@ -56,7 +56,7 @@ export class MultiSelect {
         choiceContentGenerator, 
         labelAdapter, 
         placeholderText,
-        isRtl,
+        isRtl, css,
         popper, window) {
 
         this.onUpdate = null;
@@ -73,6 +73,7 @@ export class MultiSelect {
         //this.createStylingComposite = createStylingComposite;
         this.placeholderText = placeholderText;
         this.setSelected=setSelected; // should I rebind this for callbacks? setSelected.bind(this);
+        this.css = css;
         this.popper = popper;
         this.window = window;
 
@@ -117,6 +118,9 @@ export class MultiSelect {
     // -----------------------------------------------------------------------------------------------------------------------
     GetContainer(){
         return this.staticContent.containerElement;
+    }
+    GetFilterInput(){
+        return this.staticContent.filterInputElement;
     }
 
     Update(){
@@ -176,6 +180,10 @@ export class MultiSelect {
         this.choicesPanel.hideChoices(); // always hide 1st
         this.picksPanel.deselectAll();
         this.resetFilter();
+    }
+
+    PicksCount(){
+        return this.picksPanel.getCount();
     }
 
     SelectAll(){
@@ -466,10 +474,10 @@ export class MultiSelect {
 
         this.placeholderAspect = PlaceholderAspect(
             this.placeholderText, 
-            () => this.picksPanel.isEmpty(), 
-            () => this.filterPanel.isEmpty(), 
+            () => this.picksPanel.isEmpty() && this.filterPanel.isEmpty(), 
             this.staticContent.picksElement, 
-            this.staticContent.filterInputElement
+            this.staticContent.filterInputElement,
+            this.css
         )
 
         this.placeholderAspect.updateEmptyInputWidth();

@@ -1,4 +1,6 @@
-export function PlaceholderAspect(placeholderText, picksIsEmpty, filterIsEmpty, picksElement, inputElement ){
+import  {toggleStyling} from './ToolsStyling';
+
+export function PlaceholderAspect(placeholderText, isEmpty, picksElement, inputElement , css ){
     function setEmptyInputWidth(isVisible){
         if(isVisible)
             inputElement.style.width="100%"
@@ -17,16 +19,17 @@ export function PlaceholderAspect(placeholderText, picksIsEmpty, filterIsEmpty, 
             inputElement.placeholder = "";
             picksElement.style.display= "flex";
         }
+        toggleStyling(inputElement, css.filterInput_empty, isVisible);
         setEmptyInputWidth(isVisible);
     }
     showPlacehodler(true);
 
     return {
         updatePlacehodlerVisibility(){
-            showPlacehodler(picksIsEmpty() && filterIsEmpty());
+            showPlacehodler(isEmpty());
         },
         updateEmptyInputWidth(){
-            setEmptyInputWidth(picksIsEmpty() && filterIsEmpty())
+            setEmptyInputWidth(isEmpty())
         },
         setDisabled(isDisabled)
         { 

@@ -1,5 +1,5 @@
 /*!
-  * DashboardCode BsMultiSelect v0.4.34-beta (https://dashboardcode.github.io/BsMultiSelect/)
+  * DashboardCode BsMultiSelect v0.5.0-beta (https://dashboardcode.github.io/BsMultiSelect/)
   * Copyright 2017-2020 Roman Pokrovskij (github user rpokrovskij)
   * Licensed under APACHE 2 (https://github.com/DashboardCode/BsMultiSelect/blob/master/LICENSE)
   */
@@ -354,6 +354,23 @@
       return closest(element.parentNode, predicate);
     }
 
+    function siblingsAsArray(element) {
+      var value = [];
+
+      if (element.parentNode) {
+        var children = element.parentNode.children;
+        var l = element.parentNode.children.length;
+
+        if (children.length > 1) {
+          for (var i = 0; i < l; ++i) {
+            var e = children[i];
+            if (e != element) value.push(e);
+          }
+        }
+      }
+
+      return value;
+    }
     function EventBinder() {
       var list = [];
       return {
@@ -578,6 +595,7 @@
         },
         isEmpty: list.isEmpty,
         // function
+        getCount: list.getCount,
         disable: function disable(isComponentDisabled) {
           list.forEach(function (i) {
             return i.pickContent.disableRemove(isComponentDisabled);
@@ -718,7 +736,191 @@
       };
     }
 
-    function PlaceholderAspect(placeholderText, picksIsEmpty, filterIsEmpty, picksElement, inputElement) {
+    function addStyling(element, styling) {
+      if (styling) {
+        var classes = styling.classes,
+            styles = styling.styles;
+        classes.forEach(function (e) {
+          return element.classList.add(e);
+        }); // todo use add(classes)
+
+        for (var property in styles) {
+          element.style[property] = styles[property];
+        } // todo use Object.assign (need polyfill for IE11)
+
+      }
+    }
+    function removeStyling(element, styling) {
+      if (styling) {
+        var classes = styling.classes,
+            styles = styling.styles;
+        classes.forEach(function (e) {
+          return element.classList.remove(e);
+        }); // todo use remove(classes)
+
+        for (var property in styles) {
+          element.style[property] = '';
+        } // todo use Object.assign (need polyfill for IE11)
+
+      }
+    }
+    function toggleStyling(element, styling, value) {
+      var action = value ? addStyling : removeStyling;
+      action(element, styling);
+    }
+
+    function extendClasses(out, param, actionStr, actionArr) {
+      if (isString(param)) {
+        out.classes = actionStr(param.split(' '));
+        return true;
+      } else if (param instanceof Array) {
+        out.classes = actionArr(param);
+        return true;
+      }
+
+      return false;
+    }
+
+    function extend(value, param, actionStr, actionArr, actionObj) {
+      var success = extendClasses(value, param, actionStr, actionArr);
+
+      if (success === false) {
+        if (param instanceof Object) {
+          var classes = param.classes,
+              styles = param.styles;
+
+          if (classes) {
+            extendClasses(value, classes, actionStr, actionArr);
+          }
+
+          if (styles) {
+            value.styles = actionObj(styles);
+          } else if (!classes) {
+            value.styles = actionObj(param);
+          }
+        }
+      }
+    }
+
+    function Styling(param) {
+      var value = {
+        classes: [],
+        styles: {}
+      };
+
+      if (param) {
+        extend(value, param, function (a) {
+          return a;
+        }, function (a) {
+          return a.slice();
+        }, function (o) {
+          return shallowClone(o);
+        });
+      }
+
+      return Object.freeze(value);
+    }
+
+    function createStylingReplaceClasses(param) {
+      var value = {
+        classes: [],
+        styles: {}
+      };
+
+      if (param) {
+        extend(value, param, function (a) {
+          return a;
+        }, function (a) {
+          return a.slice();
+        }, function (o) {
+          return shallowClone(o);
+        });
+
+        for (var _len = arguments.length, params = new Array(_len > 1 ? _len - 1 : 0), _key = 1; _key < _len; _key++) {
+          params[_key - 1] = arguments[_key];
+        }
+
+        if (params) {
+          var classes = value.classes,
+              styles = value.styles;
+          params.forEach(function (p) {
+            return extend(value, p, function (a) {
+              return classes.concat(a);
+            }, function (a) {
+              return classes.concat(a);
+            }, function (o) {
+              return shallowClone(styles, o);
+            });
+          }); // add classes
+        }
+      }
+
+      return Styling(value);
+    }
+
+    function createStylingJoinClasses(param) {
+      var value = {
+        classes: [],
+        styles: {}
+      };
+
+      if (param) {
+        extend(value, param, function (a) {
+          return a;
+        }, function (a) {
+          return a.slice();
+        }, function (o) {
+          return shallowClone(o);
+        });
+
+        for (var _len2 = arguments.length, params = new Array(_len2 > 1 ? _len2 - 1 : 0), _key2 = 1; _key2 < _len2; _key2++) {
+          params[_key2 - 1] = arguments[_key2];
+        }
+
+        if (params) {
+          var styles = value.styles;
+          params.forEach(function (p) {
+            return extend(value, param, function (s) {
+              return s;
+            }, function (a) {
+              return a.slice();
+            }, function (o) {
+              return shallowClone(styles, o);
+            });
+          }); // override classes
+        }
+      }
+
+      return Styling(value);
+    }
+
+    function createCss(stylings1, stylings2) {
+      var destination = {};
+
+      for (var property in stylings1) {
+        var param1 = stylings1[property];
+        var param2 = stylings2 ? stylings2[property] : undefined;
+        if (param2 === undefined) destination[property] = Styling(param1);else {
+          destination[property] = createStylingJoinClasses(param1, param2);
+        }
+      }
+
+      if (stylings2) for (var _property in stylings2) {
+        destination[_property] = Styling(stylings2[_property]);
+      }
+      return destination;
+    }
+    function extendCss(stylings1, stylings2) {
+      for (var property in stylings2) {
+        var param2 = stylings2[property];
+        var param1 = stylings1[property];
+        if (param1 === undefined) stylings1[property] = Styling(param2);else {
+          stylings1[property] = createStylingReplaceClasses(param1, param2);
+        }
+      }
+    }
+
+    function PlaceholderAspect(placeholderText, isEmpty, picksElement, inputElement, css) {
       function setEmptyInputWidth(isVisible) {
         if (isVisible) inputElement.style.width = "100%";else inputElement.style.width = "2ch";
       }
@@ -732,16 +934,17 @@
           picksElement.style.display = "flex";
         }
 
+        toggleStyling(inputElement, css.filterInput_empty, isVisible);
         setEmptyInputWidth(isVisible);
       }
 
       showPlacehodler(true);
       return {
         updatePlacehodlerVisibility: function updatePlacehodlerVisibility() {
-          showPlacehodler(picksIsEmpty() && filterIsEmpty());
+          showPlacehodler(isEmpty());
         },
         updateEmptyInputWidth: function updateEmptyInputWidth() {
-          setEmptyInputWidth(picksIsEmpty() && filterIsEmpty());
+          setEmptyInputWidth(isEmpty());
         },
         setDisabled: function setDisabled(isDisabled) {
           inputElement.disabled = isDisabled;
@@ -788,7 +991,7 @@
     var MultiSelect =
     /*#__PURE__*/
     function () {
-      function MultiSelect(optionsAdapter, setSelected, staticContent, pickContentGenerator, choiceContentGenerator, labelAdapter, placeholderText, isRtl, popper, window) {
+      function MultiSelect(optionsAdapter, setSelected, staticContent, pickContentGenerator, choiceContentGenerator, labelAdapter, placeholderText, isRtl, css, popper, window) {
         this.onUpdate = null;
         this.onDispose = null;
         this.isRtl = isRtl; // readonly
@@ -803,6 +1006,7 @@
         this.placeholderText = placeholderText;
         this.setSelected = setSelected; // should I rebind this for callbacks? setSelected.bind(this);
 
+        this.css = css;
         this.popper = popper;
         this.window = window;
         this.visibleCount = 10;
@@ -841,6 +1045,10 @@
 
       _proto.GetContainer = function GetContainer() {
         return this.staticContent.containerElement;
+      };
+
+      _proto.GetFilterInput = function GetFilterInput() {
+        return this.staticContent.filterInputElement;
       };
 
       _proto.Update = function Update() {
@@ -900,6 +1108,10 @@
 
         this.picksPanel.deselectAll();
         this.resetFilter();
+      };
+
+      _proto.PicksCount = function PicksCount() {
+        return this.picksPanel.getCount();
       };
 
       _proto.SelectAll = function SelectAll() {
@@ -1204,10 +1416,8 @@
           return _this2.filterPanel.setFocus();
         });
         this.placeholderAspect = PlaceholderAspect(this.placeholderText, function () {
-          return _this2.picksPanel.isEmpty();
-        }, function () {
-          return _this2.filterPanel.isEmpty();
-        }, this.staticContent.picksElement, this.staticContent.filterInputElement);
+          return _this2.picksPanel.isEmpty() && _this2.filterPanel.isEmpty();
+        }, this.staticContent.picksElement, this.staticContent.filterInputElement, this.css);
         this.placeholderAspect.updateEmptyInputWidth();
         this.aspect = MultiSelectInputAspect(this.window, function () {
           return _this2.staticContent.appendToContainer();
@@ -1367,190 +1577,6 @@
       };
     }
 
-    function addStyling(element, styling) {
-      if (styling) {
-        var classes = styling.classes,
-            styles = styling.styles;
-        classes.forEach(function (e) {
-          return element.classList.add(e);
-        }); // todo use add(classes)
-
-        for (var property in styles) {
-          element.style[property] = styles[property];
-        } // todo use Object.assign (need polyfill for IE11)
-
-      }
-    }
-    function removeStyling(element, styling) {
-      if (styling) {
-        var classes = styling.classes,
-            styles = styling.styles;
-        classes.forEach(function (e) {
-          return element.classList.remove(e);
-        }); // todo use remove(classes)
-
-        for (var property in styles) {
-          element.style[property] = '';
-        } // todo use Object.assign (need polyfill for IE11)
-
-      }
-    }
-    function toggleStyling(element, styling, value) {
-      var action = value ? addStyling : removeStyling;
-      action(element, styling);
-    }
-
-    function extendClasses(out, param, actionStr, actionArr) {
-      if (isString(param)) {
-        out.classes = actionStr(param.split(' '));
-        return true;
-      } else if (param instanceof Array) {
-        out.classes = actionArr(param);
-        return true;
-      }
-
-      return false;
-    }
-
-    function extend(value, param, actionStr, actionArr, actionObj) {
-      var success = extendClasses(value, param, actionStr, actionArr);
-
-      if (success === false) {
-        if (param instanceof Object) {
-          var classes = param.classes,
-              styles = param.styles;
-
-          if (classes) {
-            extendClasses(value, classes, actionStr, actionArr);
-          }
-
-          if (styles) {
-            value.styles = actionObj(styles);
-          } else if (!classes) {
-            value.styles = actionObj(param);
-          }
-        }
-      }
-    }
-
-    function Styling(param) {
-      var value = {
-        classes: [],
-        styles: {}
-      };
-
-      if (param) {
-        extend(value, param, function (a) {
-          return a;
-        }, function (a) {
-          return a.slice();
-        }, function (o) {
-          return shallowClone(o);
-        });
-      }
-
-      return Object.freeze(value);
-    }
-
-    function createStylingReplaceClasses(param) {
-      var value = {
-        classes: [],
-        styles: {}
-      };
-
-      if (param) {
-        extend(value, param, function (a) {
-          return a;
-        }, function (a) {
-          return a.slice();
-        }, function (o) {
-          return shallowClone(o);
-        });
-
-        for (var _len = arguments.length, params = new Array(_len > 1 ? _len - 1 : 0), _key = 1; _key < _len; _key++) {
-          params[_key - 1] = arguments[_key];
-        }
-
-        if (params) {
-          var classes = value.classes,
-              styles = value.styles;
-          params.forEach(function (p) {
-            return extend(value, p, function (a) {
-              return classes.concat(a);
-            }, function (a) {
-              return classes.concat(a);
-            }, function (o) {
-              return shallowClone(styles, o);
-            });
-          }); // add classes
-        }
-      }
-
-      return Styling(value);
-    }
-
-    function createStylingJoinClasses(param) {
-      var value = {
-        classes: [],
-        styles: {}
-      };
-
-      if (param) {
-        extend(value, param, function (a) {
-          return a;
-        }, function (a) {
-          return a.slice();
-        }, function (o) {
-          return shallowClone(o);
-        });
-
-        for (var _len2 = arguments.length, params = new Array(_len2 > 1 ? _len2 - 1 : 0), _key2 = 1; _key2 < _len2; _key2++) {
-          params[_key2 - 1] = arguments[_key2];
-        }
-
-        if (params) {
-          var styles = value.styles;
-          params.forEach(function (p) {
-            return extend(value, param, function (s) {
-              return s;
-            }, function (a) {
-              return a.slice();
-            }, function (o) {
-              return shallowClone(styles, o);
-            });
-          }); // override classes
-        }
-      }
-
-      return Styling(value);
-    }
-
-    function createCss(stylings1, stylings2) {
-      var destination = {};
-
-      for (var property in stylings1) {
-        var param1 = stylings1[property];
-        var param2 = stylings2 ? stylings2[property] : undefined;
-        if (param2 === undefined) destination[property] = Styling(param1);else {
-          destination[property] = createStylingJoinClasses(param1, param2);
-        }
-      }
-
-      if (stylings2) for (var _property in stylings2) {
-        destination[_property] = Styling(stylings2[_property]);
-      }
-      return destination;
-    }
-    function extendCss(stylings1, stylings2) {
-      for (var property in stylings2) {
-        var param2 = stylings2[property];
-        var param1 = stylings1[property];
-        if (param1 === undefined) stylings1[property] = Styling(param2);else {
-          stylings1[property] = createStylingReplaceClasses(param1, param2);
-        }
-      }
-    }
-
     function pickContentGenerator(pickElement, css) {
       pickElement.innerHTML = '<span></span><button aria-label="Remove" tabIndex="-1" type="button"><span aria-hidden="true">&times;</span></button>';
       var pickContentElement = pickElement.querySelector('SPAN');
@@ -1579,7 +1605,7 @@
     }
 
     function choiceContentGenerator(choiceElement, css) {
-      choiceElement.innerHTML = '<div><input type="checkbox"><label></label></div>';
+      choiceElement.innerHTML = '<div><input formnovalidate type="checkbox"><label></label></div>';
       var choiceContentElement = choiceElement.querySelector('DIV');
       var choiceCheckBoxElement = choiceContentElement.querySelector('INPUT');
       var choiceLabelElement = choiceContentElement.querySelector('LABEL');
@@ -1692,6 +1718,16 @@
 
       var pickFilterElement = createElement('LI');
       var filterInputElement = createElement('INPUT');
+      var required = false;
+      var backupedRequired = selectElement.required;
+
+      if (selectElement) {
+        if (selectElement.required === true) {
+          required = true;
+          selectElement.required = false;
+        }
+      }
+
       addStyling(picksElement, css.picks);
       addStyling(choicesElement, css.choices);
       addStyling(pickFilterElement, css.pickFilter);
@@ -1712,6 +1748,7 @@
         pickFilterElement: pickFilterElement,
         filterInputElement: filterInputElement,
         createInputId: createInputId,
+        required: required,
         attachContainer: function attachContainer() {
           if (ownContainerElement && selectElement) // otherwise it is attached
             selectElement.parentNode.insertBefore(containerElement, selectElement.nextSibling);
@@ -1740,20 +1777,53 @@
           choicesElement.parentNode.removeChild(choicesElement);
           if (pickFilterElement.parentNode) pickFilterElement.parentNode.removeChild(pickFilterElement);
           if (filterInputElement.parentNode) filterInputElement.parentNode.removeChild(filterInputElement);
-          if (selectElement) selectElement.style.display = backupDisplay;
+
+          if (selectElement) {
+            selectElement.required = backupedRequired;
+            selectElement.style.display = backupDisplay;
+          }
         }
       };
     }
 
-    function updateIsValid(picksElement, isValid, isInvalid) {
-      if (isValid) // todo use classList.toggle('is-valid', isValid)
-        picksElement.classList.add('is-valid');else picksElement.classList.remove('is-valid');
-      if (isInvalid) picksElement.classList.add('is-invalid');else picksElement.classList.remove('is-invalid');
+    function updateValidityForAdapter(container, picksElement, optionsAdapter) {
+      var siblings = siblingsAsArray(container);
+
+      if (optionsAdapter.getIsValid()) {
+        // todo use classList.toggle('is-valid', isValid)
+        picksElement.classList.add('is-valid');
+        siblings.filter(function (e) {
+          return e.classList.contains('valid-feedback') || e.classList.contains('valid-tooltip');
+        }).map(function (e) {
+          return e.style.display = 'block';
+        });
+      } else {
+        siblings.filter(function (e) {
+          return e.classList.contains('valid-feedback') || e.classList.contains('valid-tooltip');
+        }).map(function (e) {
+          return e.style.display = '';
+        });
+        picksElement.classList.remove('is-valid');
+      }
+
+      if (optionsAdapter.getIsInvalid()) {
+        siblings.filter(function (e) {
+          return e.classList.contains('invalid-feedback') || e.classList.contains('invalid-tooltip');
+        }).map(function (e) {
+          return e.style.display = 'block';
+        });
+        picksElement.classList.add('is-invalid');
+      } else {
+        siblings.filter(function (e) {
+          return e.classList.contains('invalid-feedback') || e.classList.contains('invalid-tooltip');
+        }).map(function (e) {
+          return e.style.display = '';
+        });
+        picksElement.classList.remove('is-invalid');
+      }
     }
 
-    function updateIsValidForAdapter(picksElement, optionsAdapter) {
-      updateIsValid(picksElement, optionsAdapter.getIsValid(), optionsAdapter.getIsInvalid());
-    }
+    function updateWasValidatedForAdapter() {}
 
     function pushIsValidClassToPicks(staticContent, css) {
       var defFocus = staticContent.focus;
@@ -1808,16 +1878,21 @@
       updateSizeJs(picksElement, picksLgStyling, picksSmStyling, picksDefStyling, optionsAdapter.getSize());
     }
 
-    function bsAppearance(multiSelect, picksElement, optionsAdapter, useCssPatch, css) {
+    function bsAppearance(multiSelect, container, picksElement, optionsAdapter, useCssPatch, css) {
       var value = null;
 
-      var updateIsValid = function updateIsValid() {
-        return updateIsValidForAdapter(picksElement, optionsAdapter);
+      var updateValidity = function updateValidity() {
+        return updateValidityForAdapter(container, picksElement, optionsAdapter);
+      };
+
+      var updateWasValidated = function updateWasValidated() {
+        return updateWasValidatedForAdapter();
       };
 
       if (!useCssPatch) {
         value = Object.create({
-          updateIsValid: updateIsValid,
+          updateValidity: updateValidity,
+          updateWasValidated: updateWasValidated,
           updateSize: function updateSize() {
             return updateSizeForAdapter(picksElement, optionsAdapter);
           }
@@ -1827,7 +1902,8 @@
             picks_sm = css.picks_sm,
             picks_def = css.picks_def;
         value = Object.create({
-          updateIsValid: updateIsValid,
+          updateValidity: updateValidity,
+          updateWasValidated: updateWasValidated,
           updateSize: function updateSize() {
             return updateSizeJsForAdapter(picksElement, picks_lg, picks_sm, picks_def, optionsAdapter);
           }
@@ -1835,11 +1911,13 @@
       }
 
       multiSelect.UpdateSize = value.updateSize;
-      multiSelect.UpdateIsValid = value.updateIsValid;
+      multiSelect.UpdateValidity = value.updateValidity;
+      multiSelect.UpdateWasValidated = value.updateWasValidated;
 
       multiSelect.onUpdate = function () {
         value.updateSize();
-        value.updateIsValid();
+        value.updateValidity();
+        value.updateWasValidated();
       };
     }
     function adjustBsOptionAdapterConfiguration(configuration, selectElement) {
@@ -1870,15 +1948,31 @@
         };
       }
 
+      if (!configuration.getCount) {
+        configuration.getCount = function () {
+          var count = 0;
+          var options = selectElement.options;
+
+          for (var i = 0; i < options.length; i++) {
+            if (options[i].selected) count++;
+          }
+
+          console.log("getCount " + count);
+          return count;
+        };
+      }
+
       if (!configuration.getIsValid) {
         configuration.getIsValid = function () {
-          return selectElement.classList.contains('is-valid');
+          var x = selectElement.classList.contains('is-valid') || closestByClassName(selectElement, 'was-validated') != null && selectElement.checkValidity();
+          return x;
         };
       }
 
       if (!configuration.getIsInvalid) {
         configuration.getIsInvalid = function () {
-          return selectElement.classList.contains('is-invalid');
+          var x = selectElement.classList.contains('is-invalid') || closestByClassName(selectElement, 'was-validated') != null && !selectElement.checkValidity();
+          return x;
         };
       }
     }
@@ -2065,17 +2159,18 @@
       choice: 'px-md-2 px-1',
       choice_hover: 'text-primary bg-light',
       filterInput: {
-        classes: 'form-control',
-        styles: {
-          border: '0px',
-          height: 'auto',
-          boxShadow: 'none',
-          padding: '0',
-          margin: '0',
-          outline: 'none',
-          backgroundColor: 'transparent'
-        }
+        border: '0px',
+        height: 'auto',
+        boxShadow: 'none',
+        padding: '0',
+        margin: '0',
+        outline: 'none',
+        backgroundColor: 'transparent',
+        backgroundImage: 'none' // otherwise BS .was-validated set its image
+
       },
+      filterInput_empty: 'form-control',
+      // need for placeholder, TODO test form-control-plaintext
       // used in staticContentGenerator
       picks_disabled: {
         backgroundColor: '#e9ecef'
@@ -2114,6 +2209,13 @@
         opacity: '.65'
       },
       // used in choiceContentGenerator
+      choiceLabel: {
+        color: 'inherit'
+      },
+      // otherwise BS .was-validated set its color
+      choiceCheckBox: {
+        color: 'inherit'
+      },
       choiceLabel_disabled: {
         opacity: '.65'
       } // more flexible than {color: '#6c757d'}, avoid opacity on pickElement's border
@@ -2151,13 +2253,19 @@
         setSelected: function setSelected(option, value) {
           option.selected = value;
         },
+        required: null,
+
+        /* means look on select[required] or false */
         optionsAdapter: null,
         options: null,
         getDisabled: null,
         getSize: null,
         getIsValid: null,
         getIsInvalid: null
-      };
+      }; // Create our shared stylesheet:
+      // const sheet = new CSSStyleSheet();
+      // sheet.replaceSync('#target {color: darkseagreen}');
+      // document.adoptedStyleSheets = [sheet];
 
       function createPlugin(element, settings, onDispose) {
         if (typeof Popper === 'undefined') {
@@ -2188,6 +2296,7 @@
         var staticContent = configuration.staticContentGenerator(element, function (name) {
           return window.document.createElement(name);
         }, configuration.containerClass, putRtlToContainer, css);
+        if (configuration.required === null) configuration.required = staticContent.required;
         var optionsAdapter = configuration.optionsAdapter;
 
         if (!optionsAdapter) {
@@ -2211,13 +2320,42 @@
           if (!configuration.placeholder) configuration.placeholder = $(element).data("placeholder");
         }
 
-        var multiSelect = new MultiSelect(optionsAdapter, configuration.setSelected, staticContent, function (pickElement) {
+        var setSelected = null;
+
+        if (configuration.required) {
+          var preSetSelected = configuration.setSelected;
+
+          var setValidityForRequired = function setValidityForRequired() {
+            if (configuration.getCount() === 0) {
+              staticContent.filterInputElement.setCustomValidity("Please select an item in the list");
+            } else {
+              staticContent.filterInputElement.setCustomValidity("");
+            }
+          };
+
+          setValidityForRequired();
+
+          setSelected = function setSelected(option, value) {
+            var success = preSetSelected(option, value); //console.log("setSelected success" + success);
+
+            if (success !== false) {
+              setValidityForRequired();
+            }
+
+            return success;
+          };
+        } else {
+          setSelected = configuration.setSelected;
+        }
+
+        var multiSelect = new MultiSelect(optionsAdapter, setSelected, //configuration.setSelected,
+        staticContent, function (pickElement) {
           return configuration.pickContentGenerator(pickElement, css);
         }, function (choiceElement) {
           return configuration.choiceContentGenerator(choiceElement, css);
-        }, labelAdapter, configuration.placeholder, configuration.isRtl, Popper, window);
+        }, labelAdapter, configuration.placeholder, configuration.isRtl, css, Popper, window);
         multiSelect.onDispose = onDispose;
-        bsAppearance(multiSelect, staticContent.picksElement, optionsAdapter, useCssPatch, css);
+        bsAppearance(multiSelect, staticContent.containerElement, staticContent.picksElement, optionsAdapter, useCssPatch, css);
         if (init && init instanceof Function) init(multiSelect);
         multiSelect.init();
         return multiSelect;

@@ -1,20 +1,35 @@
-import {closestByTagName, closestByClassName} from './ToolsDom';
+import {closestByTagName, closestByClassName, siblingsAsArray} from './ToolsDom';
 import {addStyling} from './ToolsStyling'
 
-function updateIsValid(picksElement, isValid, isInvalid){
-    if (isValid) // todo use classList.toggle('is-valid', isValid)
+function updateValidityForAdapter(container, picksElement, optionsAdapter){
+
+    var siblings = siblingsAsArray(container);
+    if (optionsAdapter.getIsValid()){ // todo use classList.toggle('is-valid', isValid)
         picksElement.classList.add('is-valid');
-    else
+        siblings.filter(e=>e.classList.contains('valid-feedback') || 
+            e.classList.contains('valid-tooltip')).map(e=>e.style.display='block');
+    }
+    else{
+        siblings.filter(e=>e.classList.contains('valid-feedback') || 
+            e.classList.contains('valid-tooltip')).map(e=>e.style.display='');      
         picksElement.classList.remove('is-valid');
+    }
     
-    if (isInvalid)
+    if (optionsAdapter.getIsInvalid()){
+        siblings.filter(e=>e.classList.contains('invalid-feedback') || 
+        e.classList.contains('invalid-tooltip')).map(e=>e.style.display='block');      
+
         picksElement.classList.add('is-invalid');
-    else
+    }
+    else{
+        siblings.filter(e=>e.classList.contains('invalid-feedback') || 
+        e.classList.contains('invalid-tooltip')).map(e=>e.style.display=''); 
         picksElement.classList.remove('is-invalid');
+    }
 }
 
-function updateIsValidForAdapter(picksElement, optionsAdapter){
-    updateIsValid(picksElement, optionsAdapter.getIsValid(), optionsAdapter.getIsInvalid())
+function updateWasValidatedForAdapter(){
+    
 }
 
 export function pushIsValidClassToPicks(staticContent, css){
@@ -71,27 +86,33 @@ function updateSizeJsForAdapter(picksElement, picksLgStyling, picksSmStyling, pi
     updateSizeJs(picksElement, picksLgStyling, picksSmStyling, picksDefStyling,  optionsAdapter.getSize())
 }
 
-export function bsAppearance(multiSelect, picksElement, optionsAdapter, useCssPatch, css){
+export function bsAppearance(multiSelect, container, picksElement, optionsAdapter, useCssPatch, css){
     var value=null;
-    var updateIsValid = () => updateIsValidForAdapter(picksElement, optionsAdapter);
+    var updateValidity = () => updateValidityForAdapter(container, picksElement, optionsAdapter);
+    var updateWasValidated =() =>updateWasValidatedForAdapter(picksElement, optionsAdapter);
     if (!useCssPatch){
         value= Object.create({
-            updateIsValid,
+            updateValidity,
+            updateWasValidated,
             updateSize: () => updateSizeForAdapter(picksElement, optionsAdapter)
         });
     }else{
         const {picks_lg, picks_sm, picks_def} = css;
         value= Object.create({
-            updateIsValid,
+            updateValidity,
+            updateWasValidated,
             updateSize: () => updateSizeJsForAdapter(picksElement, 
                 picks_lg, picks_sm, picks_def, optionsAdapter)
         });
     }
     multiSelect.UpdateSize = value.updateSize;
-    multiSelect.UpdateIsValid = value.updateIsValid;
+    multiSelect.UpdateValidity = value.updateValidity;
+    multiSelect.UpdateWasValidated = value.updateWasValidated;
+    
     multiSelect.onUpdate=() => {
         value.updateSize();
-        value.updateIsValid();
+        value.updateValidity();
+        value.updateWasValidated();
     };
 }
 
@@ -127,15 +148,36 @@ export function adjustBsOptionAdapterConfiguration(configuration, selectElement)
                 return value;
         }
     }
-
+    
+    if (!configuration.getCount) {
+        configuration.getCount = ()=>{
+            var count = 0;
+            var options = selectElement.options;
+            for (var i=0; i < options.length; i++) {
+                if (options[i].selected) count++;
+            }
+            console.log("getCount "+ count);
+            return count;
+        }
+    }
+    
     if (!configuration.getIsValid) {
         configuration.getIsValid = function()
-        { return selectElement.classList.contains('is-valid')}
+        { 
+            var x = selectElement.classList.contains('is-valid') || 
+                (closestByClassName(selectElement, 'was-validated')!=null && selectElement.checkValidity() )
+            return x;
+        }
     }
     if (!configuration.getIsInvalid) {
         configuration.getIsInvalid = function()
-        { return selectElement.classList.contains('is-invalid')}
+        { 
+            var x = selectElement.classList.contains('is-invalid') ||
+                (closestByClassName(selectElement, 'was-validated')!=null && !selectElement.checkValidity() )
+            return x;
+        }
     }
+
 }
 
 export function getLabelElement(selectElement){

@@ -25,7 +25,6 @@ export function staticContentGenerator(element, createElement, containerClass, p
         throw new Error('BsMultiSelect: Only DIV and SELECT supported');
     }
 
-
     var picksElement = null;
     var ownPicksElement = false;
     if (containerElement)
@@ -76,6 +75,15 @@ export function staticContentGenerator(element, createElement, containerClass, p
     
     var pickFilterElement = createElement('LI');
     var filterInputElement = createElement('INPUT');
+    var required =false;
+    var backupedRequired = selectElement.required;
+    if (selectElement){
+         if(selectElement.required===true){
+            required=true;
+            selectElement.required = false;
+         }
+    }
+
 
     addStyling(picksElement,       css.picks);
     addStyling(choicesElement,     css.choices);
@@ -98,6 +106,7 @@ export function staticContentGenerator(element, createElement, containerClass, p
         pickFilterElement,
         filterInputElement,
         createInputId,
+        required,
         attachContainer(){
             if (ownContainerElement && selectElement) // otherwise it is attached
                 selectElement.parentNode.insertBefore(containerElement, selectElement.nextSibling);
@@ -138,8 +147,10 @@ export function staticContentGenerator(element, createElement, containerClass, p
                 pickFilterElement.parentNode.removeChild(pickFilterElement);
             if (filterInputElement.parentNode)
                 filterInputElement.parentNode.removeChild(filterInputElement);
-            if (selectElement)
+            if (selectElement){
+                selectElement.required = backupedRequired;
                 selectElement.style.display = backupDisplay;
+            }
         }
     }
 }
