@@ -61,6 +61,7 @@ export class MultiSelect {
 
         this.onUpdate = null;
         this.onDispose = null; 
+        //this.onInput = null; 
 
         this.isRtl = isRtl;
         // readonly
@@ -124,6 +125,7 @@ export class MultiSelect {
     }
 
     Update(){
+        console.log("Update")
         if (this.onUpdate)
             this.onUpdate();
         this.UpdateDisabled();
@@ -504,6 +506,7 @@ export class MultiSelect {
         
         this.staticContent.attachContainer();
 
+        console.log("init - onUpdate")
         if (this.onUpdate)
             this.onUpdate();
         this.updateDataImpl();

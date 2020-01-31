@@ -10,7 +10,7 @@ function OptionsAdapterElement(selectElement, getDisabled, getSize, getIsValid, 
         },
         triggerChange(){
             trigger('change')
-            trigger('multiselect:change')
+            trigger('dashboardcode.multiselect:change')
         },
         getDisabled,
         getSize,
@@ -33,7 +33,7 @@ function OptionsAdapterJson(options, getDisabled, getSize, getIsValid, getIsInva
             return options
         },
         triggerChange(){
-            trigger('multiselect:change')
+            trigger('dashboardcode.multiselect:change')
         },
         getDisabled(){
             return getDisabled?getDisabled():false

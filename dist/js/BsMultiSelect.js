@@ -531,6 +531,40 @@
       functions.forEach(function (f) {
         if (f) f();
       });
+    } // export function Observable(){
+    //     var list = [];
+    //     return {
+    //         trigger(){
+    //             f();
+    //         },
+    //         attach(f){
+    //             list.push(f)
+    //         },
+    //         detachAll(){
+    //             list.length = 0;
+    //         }
+    //     }
+    // }
+
+    function ObservableValue(value) {
+      var list = List();
+      return {
+        getValue: function getValue() {
+          return value;
+        },
+        setValue: function setValue(newValue) {
+          value = newValue;
+          list.forEach(function (f) {
+            return f(newValue);
+          });
+        },
+        attach: function attach(f) {
+          return list.add(f);
+        },
+        detachAll: function detachAll() {
+          list.reset();
+        }
+      };
     }
 
     function PicksPanel(createPickElement, pickContentGenerator, requestPickCreate, requestPickRemove, processRemoveButtonClick // click to remove button
@@ -993,7 +1027,8 @@
     function () {
       function MultiSelect(optionsAdapter, setSelected, staticContent, pickContentGenerator, choiceContentGenerator, labelAdapter, placeholderText, isRtl, css, popper, window) {
         this.onUpdate = null;
-        this.onDispose = null;
+        this.onDispose = null; //this.onInput = null; 
+
         this.isRtl = isRtl; // readonly
 
         this.optionsAdapter = optionsAdapter;
@@ -1052,6 +1087,7 @@
       };
 
       _proto.Update = function Update() {
+        console.log("Update");
         if (this.onUpdate) this.onUpdate();
         this.UpdateDisabled();
         this.UpdateData();
@@ -1435,6 +1471,7 @@
           if (!_this2.filterPanel.isEventTarget(event)) _this2.filterPanel.setFocus();
         }, this.isRtl, this.popper);
         this.staticContent.attachContainer();
+        console.log("init - onUpdate");
         if (this.onUpdate) this.onUpdate();
         this.updateDataImpl();
         this.UpdateDisabled(); // should be done after updateDataImpl
@@ -1539,7 +1576,7 @@
         },
         triggerChange: function triggerChange() {
           trigger('change');
-          trigger('multiselect:change');
+          trigger('dashboardcode.multiselect:change');
         },
         getDisabled: getDisabled,
         getSize: getSize,
@@ -1560,7 +1597,7 @@
           return options;
         },
         triggerChange: function triggerChange() {
-          trigger('multiselect:change');
+          trigger('dashboardcode.multiselect:change');
         },
         getDisabled: function getDisabled() {
           return _getDisabled ? _getDisabled() : false;
@@ -1719,9 +1756,10 @@
       var pickFilterElement = createElement('LI');
       var filterInputElement = createElement('INPUT');
       var required = false;
-      var backupedRequired = selectElement.required;
 
       if (selectElement) {
+        var backupedRequired = selectElement.required;
+
         if (selectElement.required === true) {
           required = true;
           selectElement.required = false;
@@ -1786,49 +1824,13 @@
       };
     }
 
-    function updateValidityForAdapter(container, picksElement, optionsAdapter) {
-      var siblings = siblingsAsArray(container);
-
-      if (optionsAdapter.getIsValid()) {
-        // todo use classList.toggle('is-valid', isValid)
-        picksElement.classList.add('is-valid');
-        siblings.filter(function (e) {
-          return e.classList.contains('valid-feedback') || e.classList.contains('valid-tooltip');
-        }).map(function (e) {
-          return e.style.display = 'block';
-        });
-      } else {
-        siblings.filter(function (e) {
-          return e.classList.contains('valid-feedback') || e.classList.contains('valid-tooltip');
-        }).map(function (e) {
-          return e.style.display = '';
-        });
-        picksElement.classList.remove('is-valid');
-      }
-
-      if (optionsAdapter.getIsInvalid()) {
-        siblings.filter(function (e) {
-          return e.classList.contains('invalid-feedback') || e.classList.contains('invalid-tooltip');
-        }).map(function (e) {
-          return e.style.display = 'block';
-        });
-        picksElement.classList.add('is-invalid');
-      } else {
-        siblings.filter(function (e) {
-          return e.classList.contains('invalid-feedback') || e.classList.contains('invalid-tooltip');
-        }).map(function (e) {
-          return e.style.display = '';
-        });
-        picksElement.classList.remove('is-invalid');
-      }
-    }
-
-    function updateWasValidatedForAdapter() {}
-
     function pushIsValidClassToPicks(staticContent, css) {
+      console.log('pushIsValidClassToPicks');
       var defFocus = staticContent.focus;
 
       staticContent.focus = function (isFocusIn) {
+        console.log('pushIsValidClassToPicks - focus');
+
         if (isFocusIn) {
           var picksElement = staticContent.picksElement;
 
@@ -1843,6 +1845,49 @@
           defFocus(isFocusIn);
         }
       };
+    }
+    function updateValidity(container, picksElement, validity) {
+      console.log("updateValidity " + validity);
+      var siblings = siblingsAsArray(container);
+      var invalidMessages = siblings.filter(function (e) {
+        return e.classList.contains('invalid-feedback') || e.classList.contains('invalid-tooltip');
+      });
+      var validMessages = siblings.filter(function (e) {
+        return e.classList.contains('valid-feedback') || e.classList.contains('valid-tooltip');
+      });
+
+      if (validity === false) {
+        picksElement.classList.add('is-invalid');
+        picksElement.classList.remove('is-valid');
+        invalidMessages.map(function (e) {
+          return e.style.display = 'block';
+        });
+        validMessages.map(function (e) {
+          return e.style.display = 'none';
+        });
+      } else if (validity === true) {
+        picksElement.classList.remove('is-invalid');
+        picksElement.classList.add('is-valid');
+        invalidMessages.map(function (e) {
+          return e.style.display = 'none';
+        });
+        validMessages.map(function (e) {
+          return e.style.display = 'block';
+        });
+      } else {
+        picksElement.classList.remove('is-invalid');
+        picksElement.classList.remove('is-valid');
+        invalidMessages.map(function (e) {
+          return e.style.display = '';
+        });
+        validMessages.map(function (e) {
+          return e.style.display = '';
+        });
+      }
+    }
+
+    function updateValidityForAdapter(container, picksElement, optionsAdapter) {
+      updateValidity(container, picksElement, optionsAdapter.getIsInvalid() === true ? false : optionsAdapter.getIsValid() === true ? true : null);
     }
 
     function updateSize(picksElement, size) {
@@ -1878,15 +1923,18 @@
       updateSizeJs(picksElement, picksLgStyling, picksSmStyling, picksDefStyling, optionsAdapter.getSize());
     }
 
-    function bsAppearance(multiSelect, container, picksElement, optionsAdapter, useCssPatch, css) {
-      var value = null;
+    function bsAppearance(multiSelect, staticContent, containerElement, picksElement, optionsAdapter, useCssPatch, wasUpdatedObservable, getWasValidated, css) {
+      var value = null; // if (useCssPatch)
+      //     pushIsValidClassToPicks(staticContent, css);
 
       var updateValidity = function updateValidity() {
-        return updateValidityForAdapter(container, picksElement, optionsAdapter);
+        return updateValidityForAdapter(containerElement, picksElement, optionsAdapter);
       };
 
       var updateWasValidated = function updateWasValidated() {
-        return updateWasValidatedForAdapter();
+        var value = getWasValidated();
+        wasUpdatedObservable.setValue(value);
+        return value; //updateWasValidatedForAdapter(containerElement, picksElement, binder)
       };
 
       if (!useCssPatch) {
@@ -1916,8 +1964,8 @@
 
       multiSelect.onUpdate = function () {
         value.updateSize();
-        value.updateValidity();
-        value.updateWasValidated();
+        var wasVildatedPresent = value.updateWasValidated();
+        if (!wasVildatedPresent) value.updateValidity();
       };
     }
     function adjustBsOptionAdapterConfiguration(configuration, selectElement) {
@@ -1948,20 +1996,6 @@
         };
       }
 
-      if (!configuration.getCount) {
-        configuration.getCount = function () {
-          var count = 0;
-          var options = selectElement.options;
-
-          for (var i = 0; i < options.length; i++) {
-            if (options[i].selected) count++;
-          }
-
-          console.log("getCount " + count);
-          return count;
-        };
-      }
-
       if (!configuration.getIsValid) {
         configuration.getIsValid = function () {
           var x = selectElement.classList.contains('is-valid') || closestByClassName(selectElement, 'was-validated') != null && selectElement.checkValidity();
@@ -1985,6 +2019,50 @@
       }
 
       return value;
+    }
+
+    function createValidity(valueMissing, customError) {
+      return Object.freeze({
+        valueMissing: valueMissing,
+        customError: customError,
+        valid: !(valueMissing || customError)
+      });
+    }
+
+    function ValidityApi(visibleElement, isValueMissingObservable, valueMissingMessage, onValid) {
+      var customValidationMessage = "";
+      var validationMessage = "";
+      var validity = null;
+      var willValidate = true;
+
+      function setMessage(valueMissing, customError) {
+        validity = createValidity(valueMissing, customError);
+        validationMessage = customError ? customValidationMessage : valueMissing ? valueMissingMessage : "";
+        visibleElement.setCustomValidity(validationMessage);
+        onValid(validity.valid);
+      }
+
+      setMessage(isValueMissingObservable.getValue(), false);
+      isValueMissingObservable.attach(function (value) {
+        setMessage(value, validity.customError);
+      });
+      return {
+        validationMessage: validationMessage,
+        willValidate: willValidate,
+        validity: validity,
+        setCustomValidity: function setCustomValidity(message) {
+          customValidationMessage = message;
+          setMessage(validity.valueMissing, customValidationMessage ? true : false);
+        },
+        checkValidity: function checkValidity() {
+          if (!validity.valid) trigger('dashboardcode.multiselect:invalid');
+          return validity.valid;
+        },
+        reportValidity: function reportValidity() {
+          staticContent.filterInputElement.reportValidity();
+          return checkValidity();
+        }
+      };
     }
 
     var transformStyles = [{
@@ -2297,13 +2375,19 @@
           return window.document.createElement(name);
         }, configuration.containerClass, putRtlToContainer, css);
         if (configuration.required === null) configuration.required = staticContent.required;
+        var isValueMissingObservable;
+        var wasUpdatedObservable;
+        var getCount;
+        var getWasValidated;
+
+        var trigger = function trigger(eventName) {
+          $(element).trigger(eventName);
+          isValueMissingObservable.setValue(getCount() === 0);
+        };
+
         var optionsAdapter = configuration.optionsAdapter;
 
         if (!optionsAdapter) {
-          var trigger = function trigger(eventName) {
-            $(element).trigger(eventName);
-          };
-
           if (configuration.options) {
             optionsAdapter = OptionsAdapterJson(configuration.options, configuration.getDisabled, configuration.getSize, configuration.getIsValid, configuration.getIsInvalid, trigger);
           } else {
@@ -2312,6 +2396,34 @@
           }
         }
 
+        getCount = function getCount() {
+          var count = 0;
+          var options = optionsAdapter.getOptions();
+
+          for (var i = 0; i < options.length; i++) {
+            if (options[i].selected) count++;
+          }
+
+          return count;
+        };
+
+        getWasValidated = function getWasValidated() {
+          var wasValidatedElement = closestByClassName(staticContent.containerElement, 'was-validated');
+          return wasValidatedElement ? true : false;
+        };
+
+        isValueMissingObservable = ObservableValue(getCount() === 0);
+        wasUpdatedObservable = ObservableValue(getWasValidated());
+        var validationObservable = ObservableValue(wasUpdatedObservable.getValue() ? !isValueMissingObservable.getValue() : null);
+        validationObservable.attach(function (value) {
+          return updateValidity(staticContent.containerElement, staticContent.picksElement, value);
+        });
+        isValueMissingObservable.attach(function (isValueMissing) {
+          validationObservable.setValue(wasUpdatedObservable.getValue() ? !isValueMissing : null);
+        });
+        wasUpdatedObservable.attach(function (wasValidatedPresent) {
+          validationObservable.setValue(wasValidatedPresent ? !isValueMissingObservable.getValue() : null);
+        });
         if (useCssPatch) pushIsValidClassToPicks(staticContent, css);
         var labelAdapter = LabelAdapter(configuration.labelElement, staticContent.createInputId);
 
@@ -2320,42 +2432,51 @@
           if (!configuration.placeholder) configuration.placeholder = $(element).data("placeholder");
         }
 
-        var setSelected = null;
+        var valueMissingMessage = "Please select an item in the list";
+        if (configuration.valueMissingMessage) valueMissingMessage = configuration.valueMissingMessage;
+        var validityObservable = ObservableValue();
+        var validityApi = ValidityApi(staticContent.filterInputElement, isValueMissingObservable, valueMissingMessage, function (valid) {
+          return validityObservable.setValue(valid);
+        }); //var setSelected = configuration.setSelected;
+        // if (configuration.required){
+        //     var preSetSelected = configuration.setSelected;
+        //     var setValidityForRequired = ()=>{
+        //         if (configuration.getCount()===0) {
+        //             staticContent.filterInputElement.setCustomValidity("Please select an item in the list");
+        //         } else {
+        //             staticContent.filterInputElement.setCustomValidity("");
+        //         }
+        //     }
+        //     setValidityForRequired();
+        //     setSelected = (option, value)=>{
+        //         var success = preSetSelected(option, value);
+        //         //console.log("setSelected success" + success);
+        //         if (success!==false)
+        //         { 
+        //             setValidityForRequired()
+        //         }
+        //         return success;
+        //     }
+        // } 
+        // var setSelectedWithChangedEvent =  (option, value) => {
+        //     var success = setSelected(option, value);
+        //     if (success!==false)
+        //         changed();
+        //     return success;
+        // }
 
-        if (configuration.required) {
-          var preSetSelected = configuration.setSelected;
-
-          var setValidityForRequired = function setValidityForRequired() {
-            if (configuration.getCount() === 0) {
-              staticContent.filterInputElement.setCustomValidity("Please select an item in the list");
-            } else {
-              staticContent.filterInputElement.setCustomValidity("");
-            }
-          };
-
-          setValidityForRequired();
-
-          setSelected = function setSelected(option, value) {
-            var success = preSetSelected(option, value); //console.log("setSelected success" + success);
-
-            if (success !== false) {
-              setValidityForRequired();
-            }
-
-            return success;
-          };
-        } else {
-          setSelected = configuration.setSelected;
-        }
-
-        var multiSelect = new MultiSelect(optionsAdapter, setSelected, //configuration.setSelected,
-        staticContent, function (pickElement) {
+        var multiSelect = new MultiSelect(optionsAdapter, configuration.setSelected, staticContent, function (pickElement) {
           return configuration.pickContentGenerator(pickElement, css);
         }, function (choiceElement) {
           return configuration.choiceContentGenerator(choiceElement, css);
         }, labelAdapter, configuration.placeholder, configuration.isRtl, css, Popper, window);
-        multiSelect.onDispose = onDispose;
-        bsAppearance(multiSelect, staticContent.containerElement, staticContent.picksElement, optionsAdapter, useCssPatch, css);
+
+        multiSelect.onDispose = function () {
+          return sync(isValueMissingObservable.detachAll, onDispose);
+        };
+
+        multiSelect.validity = validityApi;
+        bsAppearance(multiSelect, staticContent, staticContent.containerElement, staticContent.picksElement, optionsAdapter, useCssPatch, wasUpdatedObservable, getWasValidated, css);
         if (init && init instanceof Function) init(multiSelect);
         multiSelect.init();
         return multiSelect;

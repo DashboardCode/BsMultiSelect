@@ -87,3 +87,37 @@ export function sync(...functions){
         }
     )
 }
+
+// export function Observable(){
+//     var list = [];
+//     return {
+//         trigger(){
+//             f();
+//         },
+//         attach(f){
+//             list.push(f)
+//         },
+//         detachAll(){
+//             list.length = 0;
+//         }
+//     }
+// }
+
+export function ObservableValue(value){
+    var list = List();
+    return {
+        getValue(){
+            return value;
+        },
+        setValue(newValue){
+            value = newValue;
+            list.forEach(f=>f(newValue));
+        },
+        attach(f){
+            return list.add(f)
+        },
+        detachAll(){
+            list.reset();
+        }
+    }
+}

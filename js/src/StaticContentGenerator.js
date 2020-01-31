@@ -76,12 +76,12 @@ export function staticContentGenerator(element, createElement, containerClass, p
     var pickFilterElement = createElement('LI');
     var filterInputElement = createElement('INPUT');
     var required =false;
-    var backupedRequired = selectElement.required;
     if (selectElement){
-         if(selectElement.required===true){
+        var backupedRequired = selectElement.required;
+        if(selectElement.required===true){
             required=true;
             selectElement.required = false;
-         }
+        }
     }
 
 
