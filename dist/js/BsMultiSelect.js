@@ -92,6 +92,7 @@
           filterInputElement.value = '';
         },
         setFocus: function setFocus() {
+          console.log('setFocus');
           filterInputElement.focus();
         },
         isEventTarget: function isEventTarget(event) {
@@ -1776,6 +1777,7 @@
       };else createInputId = function createInputId() {
         return containerClass + "-generated-filter-" + containerElement.id;
       };
+      var isActive = false;
       return {
         selectElement: selectElement,
         containerElement: containerElement,
@@ -1807,8 +1809,10 @@
           toggleStyling(picksElement, css.picks_disabled, isDisabled);
         },
         focus: function focus(isFocusIn) {
-          toggleStyling(picksElement, css.picks_focus, isFocusIn);
+          isActive = isFocusIn;
+          toggleStyling(picksElement, css.picks_focus, isFocusIn); //focusObservable.setValue(isFocusIn);
         },
+        isActive: isActive,
         dispose: function dispose() {
           if (ownContainerElement) containerElement.parentNode.removeChild(containerElement);else attributeBackup.restore();
           if (ownPicksElement) picksElement.parentNode.removeChild(picksElement);
@@ -1824,37 +1828,8 @@
       };
     }
 
-    function pushIsValidClassToPicks(staticContent, css) {
-      console.log('pushIsValidClassToPicks');
-      var defFocus = staticContent.focus;
-
-      staticContent.focus = function (isFocusIn) {
-        console.log('pushIsValidClassToPicks - focus');
-
-        if (isFocusIn) {
-          var picksElement = staticContent.picksElement;
-
-          if (picksElement.classList.contains("is-valid")) {
-            addStyling(picksElement, css.picks_focus_valid);
-          } else if (picksElement.classList.contains("is-invalid")) {
-            addStyling(picksElement, css.picks_focus_invalid);
-          } else {
-            defFocus(isFocusIn);
-          }
-        } else {
-          defFocus(isFocusIn);
-        }
-      };
-    }
-    function updateValidity(container, picksElement, validity) {
-      console.log("updateValidity " + validity);
-      var siblings = siblingsAsArray(container);
-      var invalidMessages = siblings.filter(function (e) {
-        return e.classList.contains('invalid-feedback') || e.classList.contains('invalid-tooltip');
-      });
-      var validMessages = siblings.filter(function (e) {
-        return e.classList.contains('valid-feedback') || e.classList.contains('valid-tooltip');
-      });
+    function updateValidity(picksElement, validMessages, invalidMessages, validity) {
+      console.log("updateValidity validity=" + validity);
 
       if (validity === false) {
         picksElement.classList.add('is-invalid');
@@ -1884,10 +1859,6 @@
           return e.style.display = '';
         });
       }
-    }
-
-    function updateValidityForAdapter(container, picksElement, optionsAdapter) {
-      updateValidity(container, picksElement, optionsAdapter.getIsInvalid() === true ? false : optionsAdapter.getIsValid() === true ? true : null);
     }
 
     function updateSize(picksElement, size) {
@@ -1923,13 +1894,40 @@
       updateSizeJs(picksElement, picksLgStyling, picksSmStyling, picksDefStyling, optionsAdapter.getSize());
     }
 
-    function bsAppearance(multiSelect, staticContent, containerElement, picksElement, optionsAdapter, useCssPatch, wasUpdatedObservable, getWasValidated, css) {
-      var value = null; // if (useCssPatch)
-      //     pushIsValidClassToPicks(staticContent, css);
+    function bsAppearance(multiSelect, staticContent, picksElement, optionsAdapter, useCssPatch, wasUpdatedObservable, getWasValidated, validationObservable, css) {
+      var value = null; // var getValidity = ()=> {
+      //     var validity = null;
+      //     if (picksElement.classList.contains("is-valid")){
+      //         validity =  true;
+      //     } else if (picksElement.classList.contains("is-invalid")){
+      //         validity =  false;
+      //     }
+      //     console.log("contains validity "+validity)
+      //     return validity;
+      // }
 
-      var updateValidity = function updateValidity() {
-        return updateValidityForAdapter(containerElement, picksElement, optionsAdapter);
-      };
+      if (useCssPatch) {
+        var defFocus = staticContent.focus;
+
+        staticContent.focus = function (isFocusIn) {
+          var validity = validationObservable.getValue();
+
+          if (isFocusIn) {
+            if (validity === false) {
+              staticContent.isActive = isFocusIn;
+              addStyling(picksElement, css.picks_focus_invalid);
+            } else if (validity === true) {
+              staticContent.isActive = isFocusIn;
+              addStyling(picksElement, css.picks_focus_valid);
+            } else {
+              defFocus(isFocusIn);
+            }
+          } else {
+            defFocus(isFocusIn);
+          } //setBsFocusCss(picksElement, isFocusIn, validity , defFocus, css);
+
+        };
+      }
 
       var updateWasValidated = function updateWasValidated() {
         var value = getWasValidated();
@@ -1939,7 +1937,9 @@
 
       if (!useCssPatch) {
         value = Object.create({
-          updateValidity: updateValidity,
+          updateValidity: function updateValidity() {
+            return validationObservable.setValue(optionsAdapter.getIsInvalid() === true ? false : optionsAdapter.getIsValid() === true ? true : null);
+          },
           updateWasValidated: updateWasValidated,
           updateSize: function updateSize() {
             return updateSizeForAdapter(picksElement, optionsAdapter);
@@ -1950,7 +1950,12 @@
             picks_sm = css.picks_sm,
             picks_def = css.picks_def;
         value = Object.create({
-          updateValidity: updateValidity,
+          updateValidity: function updateValidity() {
+            return validationObservable.setValue(optionsAdapter.getIsInvalid() === true ? false : optionsAdapter.getIsValid() === true ? true : null);
+          },
+          //updateValidity(picksElement, validMessages, invalidMessages,
+          //optionsAdapter.getIsInvalid()===true?false:(optionsAdapter.getIsValid()===true?true:null)
+          //),
           updateWasValidated: updateWasValidated,
           updateSize: function updateSize() {
             return updateSizeJsForAdapter(picksElement, picks_lg, picks_sm, picks_def, optionsAdapter);
@@ -2009,6 +2014,19 @@
           return x;
         };
       }
+    }
+    function getMessagesElements(containerElement) {
+      var siblings = siblingsAsArray(containerElement);
+      var invalidMessages = siblings.filter(function (e) {
+        return e.classList.contains('invalid-feedback') || e.classList.contains('invalid-tooltip');
+      });
+      var validMessages = siblings.filter(function (e) {
+        return e.classList.contains('valid-feedback') || e.classList.contains('valid-tooltip');
+      });
+      return {
+        validMessages: validMessages,
+        invalidMessages: invalidMessages
+      };
     }
     function getLabelElement(selectElement) {
       var value = null;
@@ -2414,17 +2432,25 @@
 
         isValueMissingObservable = ObservableValue(getCount() === 0);
         wasUpdatedObservable = ObservableValue(getWasValidated());
+
+        var _getMessagesElements = getMessagesElements(staticContent.containerElement),
+            validMessages = _getMessagesElements.validMessages,
+            invalidMessages = _getMessagesElements.invalidMessages;
+
         var validationObservable = ObservableValue(wasUpdatedObservable.getValue() ? !isValueMissingObservable.getValue() : null);
         validationObservable.attach(function (value) {
-          return updateValidity(staticContent.containerElement, staticContent.picksElement, value);
+          updateValidity(staticContent.picksElement, validMessages, invalidMessages, value);
+          staticContent.focus(staticContent.isActive);
         });
-        isValueMissingObservable.attach(function (isValueMissing) {
-          validationObservable.setValue(wasUpdatedObservable.getValue() ? !isValueMissing : null);
+        var validityApiObservable = ObservableValue();
+        validityApiObservable.attach(function (isValid) {
+          validationObservable.setValue(wasUpdatedObservable.getValue() ? isValid : null);
         });
         wasUpdatedObservable.attach(function (wasValidatedPresent) {
-          validationObservable.setValue(wasValidatedPresent ? !isValueMissingObservable.getValue() : null);
-        });
-        if (useCssPatch) pushIsValidClassToPicks(staticContent, css);
+          validationObservable.setValue(wasValidatedPresent ? validityApiObservable.getValue() : null);
+        }); //if (useCssPatch)
+        //    pushIsValidClassToPicks(staticContent, css);
+
         var labelAdapter = LabelAdapter(configuration.labelElement, staticContent.createInputId);
 
         if (!configuration.placeholder) {
@@ -2434,9 +2460,8 @@
 
         var valueMissingMessage = "Please select an item in the list";
         if (configuration.valueMissingMessage) valueMissingMessage = configuration.valueMissingMessage;
-        var validityObservable = ObservableValue();
         var validityApi = ValidityApi(staticContent.filterInputElement, isValueMissingObservable, valueMissingMessage, function (valid) {
-          return validityObservable.setValue(valid);
+          return validityApiObservable.setValue(valid);
         }); //var setSelected = configuration.setSelected;
         // if (configuration.required){
         //     var preSetSelected = configuration.setSelected;
@@ -2476,7 +2501,7 @@
         };
 
         multiSelect.validity = validityApi;
-        bsAppearance(multiSelect, staticContent, staticContent.containerElement, staticContent.picksElement, optionsAdapter, useCssPatch, wasUpdatedObservable, getWasValidated, css);
+        bsAppearance(multiSelect, staticContent, staticContent.picksElement, optionsAdapter, useCssPatch, wasUpdatedObservable, getWasValidated, validationObservable, css);
         if (init && init instanceof Function) init(multiSelect);
         multiSelect.init();
         return multiSelect;

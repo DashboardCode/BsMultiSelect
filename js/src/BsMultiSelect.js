@@ -13,7 +13,7 @@ import {pickContentGenerator} from './PickContentGenerator';
 import {choiceContentGenerator} from './ChoiceContentGenerator';
 import {staticContentGenerator} from './StaticContentGenerator';
 
-import {bsAppearance, updateValidity, adjustBsOptionAdapterConfiguration, pushIsValidClassToPicks, getLabelElement} from './BsAppearance';
+import {bsAppearance, getMessagesElements, updateValidity, adjustBsOptionAdapterConfiguration, /*pushIsValidClassToPicks,*/ getLabelElement} from './BsAppearance';
 import {ValidityApi} from './ValidityApi'
 
 import {createCss, extendCss} from './ToolsStyling';
@@ -23,7 +23,7 @@ import {closestByClassName} from './ToolsDom';
 
 import {adjustLegacyConfiguration as adjustLegacySettings} from './BsMultiSelectDepricatedParameters'
 
-import {css, cssPatch} from './BsCssDefaults'
+import {css, cssPatch} from './BsCss'
 
 
 function extendConfigurtion(configuration, defaults){
@@ -167,25 +167,35 @@ function extendConfigurtion(configuration, defaults){
             isValueMissingObservable = ObservableValue(getCount()===0);
 
             wasUpdatedObservable = ObservableValue(getWasValidated());
+            
+            var  {validMessages, invalidMessages} = getMessagesElements(staticContent.containerElement);
+            
+            var validationObservable = ObservableValue(
+                wasUpdatedObservable.getValue()?!isValueMissingObservable.getValue():null);
 
-            var validationObservable = ObservableValue(wasUpdatedObservable.getValue()?!isValueMissingObservable.getValue():null);
             validationObservable.attach(
-                (value)=>updateValidity( staticContent.containerElement, staticContent.picksElement,  value)
+                (value)=>{updateValidity( 
+                    staticContent.picksElement,
+                    validMessages, invalidMessages,
+                    value);
+                    staticContent.focus(staticContent.isActive)
+                }
             )
+            var validityApiObservable = ObservableValue()
 
-            isValueMissingObservable.attach(
-                (isValueMissing)=>{
-                    validationObservable.setValue(wasUpdatedObservable.getValue()?!isValueMissing:null)
+            validityApiObservable.attach(
+                (isValid)=>{
+                    validationObservable.setValue(wasUpdatedObservable.getValue()?isValid:null)
                 }
             )
             wasUpdatedObservable.attach(
                 (wasValidatedPresent)=>{
-                    validationObservable.setValue(wasValidatedPresent?!isValueMissingObservable.getValue():null)
+                    validationObservable.setValue(wasValidatedPresent?validityApiObservable.getValue():null)
                 }
             )
 
-            if (useCssPatch)
-                pushIsValidClassToPicks(staticContent, css);
+            //if (useCssPatch)
+            //    pushIsValidClassToPicks(staticContent, css);
 
             let labelAdapter = LabelAdapter(configuration.labelElement, staticContent.createInputId);
 
@@ -201,12 +211,12 @@ function extendConfigurtion(configuration, defaults){
                 valueMissingMessage = configuration.valueMissingMessage;
 
             
-            var validityObservable = ObservableValue()
+            
             var validityApi = ValidityApi(
                 staticContent.filterInputElement, 
                 isValueMissingObservable, 
                 valueMissingMessage,
-                (valid)=>validityObservable.setValue(valid));
+                (valid)=>validityApiObservable.setValue(valid));
 
             //var setSelected = configuration.setSelected;
             // if (configuration.required){
@@ -257,7 +267,8 @@ function extendConfigurtion(configuration, defaults){
             multiSelect.validity = validityApi;
             
             bsAppearance(
-                multiSelect, staticContent, staticContent.containerElement, staticContent.picksElement, optionsAdapter, useCssPatch, wasUpdatedObservable, getWasValidated,  css);
+                multiSelect, staticContent, staticContent.picksElement, optionsAdapter, useCssPatch, 
+                wasUpdatedObservable, getWasValidated, validationObservable, css);
             
             if (init && init instanceof Function)
                 init(multiSelect);

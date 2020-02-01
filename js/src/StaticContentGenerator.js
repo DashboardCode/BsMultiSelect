@@ -1,7 +1,7 @@
 import {findDirectChildByTagName, closestByClassName, AttributeBackup} from './ToolsDom';
 import  {addStyling, toggleStyling} from './ToolsStyling';
 
-export function staticContentGenerator(element, createElement, containerClass, putRtlToContainer, css) { 
+export function staticContentGenerator(element, createElement, containerClass,  putRtlToContainer, css) { 
     var selectElement = null;
     var containerElement = null;
     if (element.tagName=='SELECT'){
@@ -96,6 +96,7 @@ export function staticContentGenerator(element, createElement, containerClass, p
     else
         createInputId = () => `${containerClass}-generated-filter-${containerElement.id}`;
 
+    let isActive = false;
     return {
         selectElement, 
         containerElement,
@@ -133,8 +134,11 @@ export function staticContentGenerator(element, createElement, containerClass, p
             toggleStyling(picksElement, css.picks_disabled, isDisabled)
         },
         focus(isFocusIn){
+            isActive = isFocusIn
             toggleStyling(picksElement, css.picks_focus, isFocusIn)
+            //focusObservable.setValue(isFocusIn);
         },
+        isActive,
         dispose(){
             if (ownContainerElement)
                 containerElement.parentNode.removeChild(containerElement);

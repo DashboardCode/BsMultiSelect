@@ -8,13 +8,15 @@ import { OptionsAdapterJson, OptionsAdapterElement } from './OptionsAdapters';
 import { pickContentGenerator } from './PickContentGenerator';
 import { choiceContentGenerator } from './ChoiceContentGenerator';
 import { staticContentGenerator } from './StaticContentGenerator';
-import { bsAppearance, updateValidity, adjustBsOptionAdapterConfiguration, pushIsValidClassToPicks, getLabelElement } from './BsAppearance';
+import { bsAppearance, getMessagesElements, updateValidity, adjustBsOptionAdapterConfiguration
+/*pushIsValidClassToPicks,*/
+, getLabelElement } from './BsAppearance';
 import { ValidityApi } from './ValidityApi';
 import { createCss, extendCss } from './ToolsStyling';
 import { extendOverriding, extendIfUndefined, sync, ObservableValue } from './ToolsJs';
 import { closestByClassName } from './ToolsDom';
 import { adjustLegacyConfiguration as adjustLegacySettings } from './BsMultiSelectDepricatedParameters';
-import { css, cssPatch } from './BsCssDefaults';
+import { css, cssPatch } from './BsCss';
 
 function extendConfigurtion(configuration, defaults) {
   var cfgCss = configuration.css;
@@ -130,17 +132,25 @@ function extendConfigurtion(configuration, defaults) {
 
     isValueMissingObservable = ObservableValue(getCount() === 0);
     wasUpdatedObservable = ObservableValue(getWasValidated());
+
+    var _getMessagesElements = getMessagesElements(staticContent.containerElement),
+        validMessages = _getMessagesElements.validMessages,
+        invalidMessages = _getMessagesElements.invalidMessages;
+
     var validationObservable = ObservableValue(wasUpdatedObservable.getValue() ? !isValueMissingObservable.getValue() : null);
     validationObservable.attach(function (value) {
-      return updateValidity(staticContent.containerElement, staticContent.picksElement, value);
+      updateValidity(staticContent.picksElement, validMessages, invalidMessages, value);
+      staticContent.focus(staticContent.isActive);
     });
-    isValueMissingObservable.attach(function (isValueMissing) {
-      validationObservable.setValue(wasUpdatedObservable.getValue() ? !isValueMissing : null);
+    var validityApiObservable = ObservableValue();
+    validityApiObservable.attach(function (isValid) {
+      validationObservable.setValue(wasUpdatedObservable.getValue() ? isValid : null);
     });
     wasUpdatedObservable.attach(function (wasValidatedPresent) {
-      validationObservable.setValue(wasValidatedPresent ? !isValueMissingObservable.getValue() : null);
-    });
-    if (useCssPatch) pushIsValidClassToPicks(staticContent, css);
+      validationObservable.setValue(wasValidatedPresent ? validityApiObservable.getValue() : null);
+    }); //if (useCssPatch)
+    //    pushIsValidClassToPicks(staticContent, css);
+
     var labelAdapter = LabelAdapter(configuration.labelElement, staticContent.createInputId);
 
     if (!configuration.placeholder) {
@@ -150,9 +160,8 @@ function extendConfigurtion(configuration, defaults) {
 
     var valueMissingMessage = "Please select an item in the list";
     if (configuration.valueMissingMessage) valueMissingMessage = configuration.valueMissingMessage;
-    var validityObservable = ObservableValue();
     var validityApi = ValidityApi(staticContent.filterInputElement, isValueMissingObservable, valueMissingMessage, function (valid) {
-      return validityObservable.setValue(valid);
+      return validityApiObservable.setValue(valid);
     }); //var setSelected = configuration.setSelected;
     // if (configuration.required){
     //     var preSetSelected = configuration.setSelected;
@@ -192,7 +201,7 @@ function extendConfigurtion(configuration, defaults) {
     };
 
     multiSelect.validity = validityApi;
-    bsAppearance(multiSelect, staticContent, staticContent.containerElement, staticContent.picksElement, optionsAdapter, useCssPatch, wasUpdatedObservable, getWasValidated, css);
+    bsAppearance(multiSelect, staticContent, staticContent.picksElement, optionsAdapter, useCssPatch, wasUpdatedObservable, getWasValidated, validationObservable, css);
     if (init && init instanceof Function) init(multiSelect);
     multiSelect.init();
     return multiSelect;

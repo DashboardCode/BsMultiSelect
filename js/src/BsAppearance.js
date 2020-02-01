@@ -1,35 +1,8 @@
 import {closestByTagName, closestByClassName, siblingsAsArray} from './ToolsDom';
 import {addStyling} from './ToolsStyling'
 
-export function pushIsValidClassToPicks(staticContent, css){
-    console.log('pushIsValidClassToPicks')
-    var defFocus = staticContent.focus;
-    staticContent.focus = (isFocusIn) => {
-        console.log('pushIsValidClassToPicks - focus')
-        if (isFocusIn)
-        {
-            var picksElement = staticContent.picksElement;
-            if (picksElement.classList.contains("is-valid")) { 
-                addStyling(picksElement, css.picks_focus_valid)
-            } else if (picksElement.classList.contains("is-invalid")) {
-                addStyling(picksElement, css.picks_focus_invalid)
-            } else {
-                defFocus(isFocusIn)
-            }
-        }
-        else{
-            defFocus(isFocusIn)
-        }
-    }
-}
-
-export function updateValidity(container, picksElement, validity){
-    console.log("updateValidity "+validity)
-    var siblings = siblingsAsArray(container);
-    var invalidMessages =  siblings.filter(e=>e.classList.contains('invalid-feedback') || 
-        e.classList.contains('invalid-tooltip'));
-    var validMessages =  siblings.filter(e=>e.classList.contains('valid-feedback') || 
-        e.classList.contains('valid-tooltip'));
+export function updateValidity(picksElement, validMessages, invalidMessages, validity){
+    console.log("updateValidity validity="+validity)
     if (validity===false){
         picksElement.classList.add('is-invalid');
         picksElement.classList.remove('is-valid');
@@ -49,11 +22,7 @@ export function updateValidity(container, picksElement, validity){
     }
 }
 
-function updateValidityForAdapter(container, picksElement, optionsAdapter){
-    updateValidity(container, picksElement, 
-        optionsAdapter.getIsInvalid()===true?false:(optionsAdapter.getIsValid()===true?true:null)
-        )
-}
+
 
 function updateSize(picksElement, size){
     if (size=="lg"){
@@ -89,13 +58,47 @@ function updateSizeJsForAdapter(picksElement, picksLgStyling, picksSmStyling, pi
     updateSizeJs(picksElement, picksLgStyling, picksSmStyling, picksDefStyling,  optionsAdapter.getSize())
 }
 
-export function bsAppearance(multiSelect, staticContent, containerElement, picksElement, optionsAdapter, useCssPatch, wasUpdatedObservable, getWasValidated, css){
+
+
+export function bsAppearance(multiSelect, staticContent, picksElement, optionsAdapter, 
+    useCssPatch, wasUpdatedObservable, getWasValidated, validationObservable, css){
     var value=null;
 
-    // if (useCssPatch)
-    //     pushIsValidClassToPicks(staticContent, css);
+    // var getValidity = ()=> {
+    //     var validity = null;
+    //     if (picksElement.classList.contains("is-valid")){
+    //         validity =  true;
+    //     } else if (picksElement.classList.contains("is-invalid")){
+    //         validity =  false;
+    //     }
+    //     console.log("contains validity "+validity)
+    //     return validity;
+    // }
 
-    var updateValidity = () => updateValidityForAdapter(containerElement, picksElement, optionsAdapter);
+    if (useCssPatch){
+        var defFocus = staticContent.focus;
+        staticContent.focus = (isFocusIn) => {
+            var validity =  validationObservable.getValue();
+
+            if (isFocusIn)
+            {
+                if (validity===false) { 
+                    staticContent.isActive=isFocusIn;
+                    addStyling(picksElement, css.picks_focus_invalid)
+                } else if (validity===true) {
+                    staticContent.isActive=isFocusIn;
+                    addStyling(picksElement, css.picks_focus_valid)
+                } else {
+                    defFocus(isFocusIn)
+                }
+            }
+            else{
+                defFocus(isFocusIn)
+            }
+            //setBsFocusCss(picksElement, isFocusIn, validity , defFocus, css);
+        }
+    }
+
     var updateWasValidated =() => {
         var value = getWasValidated();
         wasUpdatedObservable.setValue(value);
@@ -103,16 +106,24 @@ export function bsAppearance(multiSelect, staticContent, containerElement, picks
         //updateWasValidatedForAdapter(containerElement, picksElement, binder)
     }
     
+   
+
     if (!useCssPatch){
         value= Object.create({
-            updateValidity,
+            updateValidity: 
+                ()=>validationObservable.setValue(optionsAdapter.getIsInvalid()===true?false:(optionsAdapter.getIsValid()===true?true:null))
+            ,
             updateWasValidated,
             updateSize: () => updateSizeForAdapter(picksElement, optionsAdapter)
         });
     }else{
         const {picks_lg, picks_sm, picks_def} = css;
         value= Object.create({
-            updateValidity,
+            updateValidity: ()=>
+                validationObservable.setValue(optionsAdapter.getIsInvalid()===true?false:(optionsAdapter.getIsValid()===true?true:null)),
+                //updateValidity(picksElement, validMessages, invalidMessages,
+                //optionsAdapter.getIsInvalid()===true?false:(optionsAdapter.getIsValid()===true?true:null)
+            //),
             updateWasValidated,
             updateSize: () => updateSizeJsForAdapter(picksElement, 
                 picks_lg, picks_sm, picks_def, optionsAdapter)
@@ -182,6 +193,15 @@ export function adjustBsOptionAdapterConfiguration(configuration, selectElement)
     }
 
 }
+
+export function getMessagesElements(containerElement){
+    var siblings = siblingsAsArray(containerElement);
+    var invalidMessages =  siblings.filter(e=>e.classList.contains('invalid-feedback') || 
+        e.classList.contains('invalid-tooltip'));
+    var validMessages =  siblings.filter(e=>e.classList.contains('valid-feedback') || 
+        e.classList.contains('valid-tooltip'));
+    return {validMessages, invalidMessages}    
+} 
 
 export function getLabelElement(selectElement){
     let value = null;
