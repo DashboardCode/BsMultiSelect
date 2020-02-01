@@ -170,8 +170,10 @@ function extendConfigurtion(configuration, defaults){
             
             var  {validMessages, invalidMessages} = getMessagesElements(staticContent.containerElement);
             
+            var validityApiObservable = ObservableValue(!isValueMissingObservable.getValue())
+
             var validationObservable = ObservableValue(
-                wasUpdatedObservable.getValue()?!isValueMissingObservable.getValue():null);
+                wasUpdatedObservable.getValue()?validityApiObservable.getValue():null);
 
             validationObservable.attach(
                 (value)=>{updateValidity( 
@@ -181,7 +183,7 @@ function extendConfigurtion(configuration, defaults){
                     staticContent.focus(staticContent.isActive)
                 }
             )
-            var validityApiObservable = ObservableValue()
+            
 
             validityApiObservable.attach(
                 (isValid)=>{
@@ -211,12 +213,11 @@ function extendConfigurtion(configuration, defaults){
                 valueMissingMessage = configuration.valueMissingMessage;
 
             
-            
             var validityApi = ValidityApi(
                 staticContent.filterInputElement, 
                 isValueMissingObservable, 
                 valueMissingMessage,
-                (valid)=>validityApiObservable.setValue(valid));
+                (isValid)=>validityApiObservable.setValue(isValid));
 
             //var setSelected = configuration.setSelected;
             // if (configuration.required){
