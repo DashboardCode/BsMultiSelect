@@ -76,4 +76,8 @@ export function adjustLegacyConfiguration(configuration){
         }
         delete configuration.useCss;
     }  
+
+    if (configuration.getIsValid || configuration.getIsInValid){
+        throw "DashboarCode.BsMultiSelect: parameters getIsValid and getIsInValid are depricated and removed, use - getValidity that should return (true|false|null) "
+    } 
 }

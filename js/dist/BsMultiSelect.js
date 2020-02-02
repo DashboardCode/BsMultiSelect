@@ -8,13 +8,10 @@ import { OptionsAdapterJson, OptionsAdapterElement } from './OptionsAdapters';
 import { pickContentGenerator } from './PickContentGenerator';
 import { choiceContentGenerator } from './ChoiceContentGenerator';
 import { staticContentGenerator } from './StaticContentGenerator';
-import { bsAppearance, getMessagesElements, updateValidity, adjustBsOptionAdapterConfiguration
-/*pushIsValidClassToPicks,*/
-, getLabelElement } from './BsAppearance';
+import { bsAppearance, adjustBsOptionAdapterConfiguration, getLabelElement } from './BsAppearance';
 import { ValidityApi } from './ValidityApi';
 import { createCss, extendCss } from './ToolsStyling';
-import { extendOverriding, extendIfUndefined, sync, ObservableValue } from './ToolsJs';
-import { closestByClassName } from './ToolsDom';
+import { extendOverriding, extendIfUndefined, sync, ObservableValue, ObservableLambda } from './ToolsJs';
 import { adjustLegacyConfiguration as adjustLegacySettings } from './BsMultiSelectDepricatedParameters';
 import { css, cssPatch } from './BsCss';
 
@@ -56,8 +53,7 @@ function extendConfigurtion(configuration, defaults) {
     options: null,
     getDisabled: null,
     getSize: null,
-    getIsValid: null,
-    getIsInvalid: null
+    getValidity: null
   }; // Create our shared stylesheet:
   // const sheet = new CSSStyleSheet();
   // sheet.replaceSync('#target {color: darkseagreen}');
@@ -93,28 +89,31 @@ function extendConfigurtion(configuration, defaults) {
       return window.document.createElement(name);
     }, configuration.containerClass, putRtlToContainer, css);
     if (configuration.required === null) configuration.required = staticContent.required;
-    var isValueMissingObservable;
-    var wasUpdatedObservable;
-    var getCount;
-    var getWasValidated;
 
     var trigger = function trigger(eventName) {
       $(element).trigger(eventName);
-      isValueMissingObservable.setValue(getCount() === 0);
     };
 
     var optionsAdapter = configuration.optionsAdapter;
+    var lazyDefinedEvent;
 
     if (!optionsAdapter) {
       if (configuration.options) {
-        optionsAdapter = OptionsAdapterJson(configuration.options, configuration.getDisabled, configuration.getSize, configuration.getIsValid, configuration.getIsInvalid, trigger);
+        optionsAdapter = OptionsAdapterJson(configuration.options, configuration.getDisabled, configuration.getSize, configuration.getValidity, function () {
+          lazyDefinedEvent();
+          trigger('dashboardcode.multiselect:change');
+        });
       } else {
         adjustBsOptionAdapterConfiguration(configuration, staticContent.selectElement);
-        optionsAdapter = OptionsAdapterElement(staticContent.selectElement, configuration.getDisabled, configuration.getSize, configuration.getIsValid, configuration.getIsInvalid, trigger);
+        optionsAdapter = OptionsAdapterElement(staticContent.selectElement, configuration.getDisabled, configuration.getSize, configuration.getValidity, function () {
+          lazyDefinedEvent();
+          trigger('change');
+          trigger('dashboardcode.multiselect:change');
+        });
       }
     }
 
-    getCount = function getCount() {
+    var getCount = function getCount() {
       var count = 0;
       var options = optionsAdapter.getOptions();
 
@@ -125,31 +124,16 @@ function extendConfigurtion(configuration, defaults) {
       return count;
     };
 
-    getWasValidated = function getWasValidated() {
-      var wasValidatedElement = closestByClassName(staticContent.containerElement, 'was-validated');
-      return wasValidatedElement ? true : false;
-    };
-
-    isValueMissingObservable = ObservableValue(getCount() === 0);
-    wasUpdatedObservable = ObservableValue(getWasValidated());
-
-    var _getMessagesElements = getMessagesElements(staticContent.containerElement),
-        validMessages = _getMessagesElements.validMessages,
-        invalidMessages = _getMessagesElements.invalidMessages;
-
-    var validationObservable = ObservableValue(wasUpdatedObservable.getValue() ? !isValueMissingObservable.getValue() : null);
-    validationObservable.attach(function (value) {
-      updateValidity(staticContent.picksElement, validMessages, invalidMessages, value);
-      staticContent.focus(staticContent.isActive);
+    var isValueMissingObservable = ObservableLambda(function () {
+      return configuration.required && getCount() === 0;
     });
-    var validityApiObservable = ObservableValue();
-    validityApiObservable.attach(function (isValid) {
-      validationObservable.setValue(wasUpdatedObservable.getValue() ? isValid : null);
-    });
-    wasUpdatedObservable.attach(function (wasValidatedPresent) {
-      validationObservable.setValue(wasValidatedPresent ? validityApiObservable.getValue() : null);
-    }); //if (useCssPatch)
+    var validityApiObservable = ObservableValue(!isValueMissingObservable.getValue());
+
+    lazyDefinedEvent = function lazyDefinedEvent() {
+      return isValueMissingObservable.call();
+    }; //if (useCssPatch)
     //    pushIsValidClassToPicks(staticContent, css);
+
 
     var labelAdapter = LabelAdapter(configuration.labelElement, staticContent.createInputId);
 
@@ -160,8 +144,8 @@ function extendConfigurtion(configuration, defaults) {
 
     var valueMissingMessage = "Please select an item in the list";
     if (configuration.valueMissingMessage) valueMissingMessage = configuration.valueMissingMessage;
-    var validityApi = ValidityApi(staticContent.filterInputElement, isValueMissingObservable, valueMissingMessage, function (valid) {
-      return validityApiObservable.setValue(valid);
+    var validityApi = ValidityApi(staticContent.filterInputElement, isValueMissingObservable, valueMissingMessage, function (isValid) {
+      return validityApiObservable.setValue(isValid);
     }); //var setSelected = configuration.setSelected;
     // if (configuration.required){
     //     var preSetSelected = configuration.setSelected;
@@ -197,11 +181,12 @@ function extendConfigurtion(configuration, defaults) {
     }, labelAdapter, configuration.placeholder, configuration.isRtl, css, Popper, window);
 
     multiSelect.onDispose = function () {
-      return sync(isValueMissingObservable.detachAll, onDispose);
+      return sync(isValueMissingObservable.detachAll, validityApiObservable.detachAll, onDispose);
     };
 
     multiSelect.validity = validityApi;
-    bsAppearance(multiSelect, staticContent, staticContent.picksElement, optionsAdapter, useCssPatch, wasUpdatedObservable, getWasValidated, validationObservable, css);
+    bsAppearance(multiSelect, staticContent, optionsAdapter, validityApiObservable, useCssPatch, //wasUpdatedObservable, validationObservable, getManualValidationObservable, update, 
+    css);
     if (init && init instanceof Function) init(multiSelect);
     multiSelect.init();
     return multiSelect;

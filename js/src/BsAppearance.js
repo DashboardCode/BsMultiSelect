@@ -1,15 +1,15 @@
 import {closestByTagName, closestByClassName, siblingsAsArray} from './ToolsDom';
 import {addStyling} from './ToolsStyling'
+import {ObservableLambda} from './ToolsJs';
 
-export function updateValidity(picksElement, validMessages, invalidMessages, validity){
-    console.log("updateValidity validity="+validity)
+function updateValidity(picksElement, validMessages, invalidMessages, validity){
     if (validity===false){
         picksElement.classList.add('is-invalid');
         picksElement.classList.remove('is-valid');
         invalidMessages.map(e=>e.style.display='block'); 
         validMessages.map(e=>e.style.display='none');      
     }
-    else  if (validity===true){
+    else if (validity===true){
         picksElement.classList.remove('is-invalid');
         picksElement.classList.add('is-valid');
         invalidMessages.map(e=>e.style.display='none'); 
@@ -59,22 +59,20 @@ function updateSizeJsForAdapter(picksElement, picksLgStyling, picksSmStyling, pi
 }
 
 
+export function bsAppearance(multiSelect, staticContent, optionsAdapter, 
+    validityApiObservable,
+    useCssPatch, css){
 
-export function bsAppearance(multiSelect, staticContent, picksElement, optionsAdapter, 
-    useCssPatch, wasUpdatedObservable, getWasValidated, validationObservable, css){
-    var value=null;
-
-    // var getValidity = ()=> {
-    //     var validity = null;
-    //     if (picksElement.classList.contains("is-valid")){
-    //         validity =  true;
-    //     } else if (picksElement.classList.contains("is-invalid")){
-    //         validity =  false;
-    //     }
-    //     console.log("contains validity "+validity)
-    //     return validity;
-    // }
-
+    var updateSize;
+    if (!useCssPatch){
+        updateSize= () => updateSizeForAdapter(staticContent.picksElement, optionsAdapter)
+    }
+    else{
+        const {picks_lg, picks_sm, picks_def} = css;
+        updateSize = () => updateSizeJsForAdapter(staticContent.picksElement, picks_lg, picks_sm, picks_def, optionsAdapter);
+    }
+    multiSelect.UpdateSize = updateSize;
+    
     if (useCssPatch){
         var defFocus = staticContent.focus;
         staticContent.focus = (isFocusIn) => {
@@ -84,10 +82,10 @@ export function bsAppearance(multiSelect, staticContent, picksElement, optionsAd
             {
                 if (validity===false) { 
                     staticContent.isActive=isFocusIn;
-                    addStyling(picksElement, css.picks_focus_invalid)
+                    addStyling(staticContent.picksElement, css.picks_focus_invalid)
                 } else if (validity===true) {
                     staticContent.isActive=isFocusIn;
-                    addStyling(picksElement, css.picks_focus_valid)
+                    addStyling(staticContent.picksElement, css.picks_focus_valid)
                 } else {
                     defFocus(isFocusIn)
                 }
@@ -95,50 +93,55 @@ export function bsAppearance(multiSelect, staticContent, picksElement, optionsAd
             else{
                 defFocus(isFocusIn)
             }
-            //setBsFocusCss(picksElement, isFocusIn, validity , defFocus, css);
         }
     }
 
-    var updateWasValidated =() => {
-        var value = getWasValidated();
-        wasUpdatedObservable.setValue(value);
-        return value;
-        //updateWasValidatedForAdapter(containerElement, picksElement, binder)
+    var getWasValidated = () => {
+        var wasValidatedElement = closestByClassName(staticContent.containerElement, 'was-validated');
+        return wasValidatedElement?true:false;
     }
+    var wasUpdatedObservable = ObservableLambda(()=>getWasValidated());
     
-   
-
-    if (!useCssPatch){
-        value= Object.create({
-            updateValidity: 
-                ()=>validationObservable.setValue(optionsAdapter.getIsInvalid()===true?false:(optionsAdapter.getIsValid()===true?true:null))
-            ,
-            updateWasValidated,
-            updateSize: () => updateSizeForAdapter(picksElement, optionsAdapter)
-        });
-    }else{
-        const {picks_lg, picks_sm, picks_def} = css;
-        value= Object.create({
-            updateValidity: ()=>
-                validationObservable.setValue(optionsAdapter.getIsInvalid()===true?false:(optionsAdapter.getIsValid()===true?true:null)),
-                //updateValidity(picksElement, validMessages, invalidMessages,
-                //optionsAdapter.getIsInvalid()===true?false:(optionsAdapter.getIsValid()===true?true:null)
-            //),
-            updateWasValidated,
-            updateSize: () => updateSizeJsForAdapter(picksElement, 
-                picks_lg, picks_sm, picks_def, optionsAdapter)
-        });
-    }
-    multiSelect.UpdateSize = value.updateSize;
-    multiSelect.UpdateValidity = value.updateValidity;
-    multiSelect.UpdateWasValidated = value.updateWasValidated;
+    var getManualValidationObservable = ObservableLambda(()=>optionsAdapter.getValidity());
+    
+    var validationObservable = ObservableLambda(
+        () => wasUpdatedObservable.getValue()?validityApiObservable.getValue():getManualValidationObservable.getValue()
+    )
+    
+    validationObservable.attach(
+        (value)=>{
+            var  {validMessages, invalidMessages} = getMessagesElements(staticContent.containerElement);
+            updateValidity( 
+            staticContent.picksElement,
+            validMessages, invalidMessages,
+            value);
+            staticContent.focus(staticContent.isActive)
+        }
+    )
+    wasUpdatedObservable.attach(
+        ()=>validationObservable.call()
+    )
+    validityApiObservable.attach(
+        ()=>validationObservable.call()
+    )
+    getManualValidationObservable.attach(
+        ()=>validationObservable.call()
+    )
+       
+    multiSelect.UpdateValidity = ()=> getManualValidationObservable.call();
+    multiSelect.UpdateWasValidated = ()=>wasUpdatedObservable.call();
     
     multiSelect.onUpdate = () => {
-        value.updateSize();
-        var wasVildatedPresent = value.updateWasValidated();
-        if (!wasVildatedPresent)
-            value.updateValidity();
+        updateSize();
+        validationObservable.call()
     };
+    let onDisposePrev = multiSelect.onDispose;
+    multiSelect.onDispose = () => {
+        wasUpdatedObservable.detachAll(); 
+        validationObservable.detachAll(); 
+        getManualValidationObservable.detachAll();
+        onDisposePrev();
+    }
 }
 
 
@@ -194,7 +197,7 @@ export function adjustBsOptionAdapterConfiguration(configuration, selectElement)
 
 }
 
-export function getMessagesElements(containerElement){
+function getMessagesElements(containerElement){
     var siblings = siblingsAsArray(containerElement);
     var invalidMessages =  siblings.filter(e=>e.classList.contains('invalid-feedback') || 
         e.classList.contains('invalid-tooltip'));

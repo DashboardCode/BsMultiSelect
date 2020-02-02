@@ -1,21 +1,19 @@
 
 import {EventBinder, closestByTagName} from './ToolsDom';
 
-function OptionsAdapterElement(selectElement, getDisabled, getSize, getIsValid, getIsInvalid, trigger) {
+function OptionsAdapterElement(selectElement, getDisabled, getSize, getValidity, onChange) {
     var form = closestByTagName(selectElement, 'form');
     var eventBuilder = EventBinder();
+    if(!getValidity)
+        getValidity = () => selectElement.classList.contains('is-invalid')?false:(selectElement.classList.contains('is-valid')?true:null);
     return {
         getOptions(){
             return selectElement.getElementsByTagName('OPTION')
         },
-        triggerChange(){
-            trigger('change')
-            trigger('dashboardcode.multiselect:change')
-        },
+        onChange,
         getDisabled,
         getSize,
-        getIsValid,
-        getIsInvalid,
+        getValidity,
         onReset(handler){
             if (form)
                 eventBuilder.bind(form, 'reset', handler)
@@ -27,26 +25,22 @@ function OptionsAdapterElement(selectElement, getDisabled, getSize, getIsValid, 
     }
 }
 
-function OptionsAdapterJson(options, getDisabled, getSize, getIsValid, getIsInvalid, trigger) {
+function OptionsAdapterJson(options, getDisabled, getSize, getValidity, onChange) {
+    if (!getValidity){
+        getValidity=()=>null
+    }
     return {
         getOptions(){
             return options
         },
-        triggerChange(){
-            trigger('dashboardcode.multiselect:change')
-        },
+        onChange,
         getDisabled(){
             return getDisabled?getDisabled():false
         },
         getSize(){
             return getSize?getSize():null
         },
-        getIsValid(){
-            return getIsValid?getIsValid():false
-        },
-        getIsInvalid(){
-            return getIsInvalid?getIsInvalid():false
-        }
+        getValidity,
     }
 }
 

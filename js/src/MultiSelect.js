@@ -125,7 +125,6 @@ export class MultiSelect {
     }
 
     Update(){
-        console.log("Update")
         if (this.onUpdate)
             this.onUpdate();
         this.UpdateDisabled();
@@ -266,7 +265,7 @@ export class MultiSelect {
                                 )
                         },
                         (o,i) => this.setSelected(o,i),
-                        () => this.optionsAdapter.triggerChange()
+                        () =>  this.optionsAdapter.onChange()
                         ,isSelected
                         );
                 }
@@ -444,14 +443,14 @@ export class MultiSelect {
                             let confirmed = this.setSelected(multiSelectData.option, true);
                             if (!(confirmed===false)){
                                 createPick(multiSelectData, multiSelectData.option, this.isComponentDisabled );
-                                this.optionsAdapter.triggerChange();
+                                this.optionsAdapter.onChange();
                             }
                         };
                     }
                     multiSelectData.ChoiceContent.select(false);
                     if (count==0) 
                         this.placeholderAspect.updatePlacehodlerVisibility()
-                    this.optionsAdapter.triggerChange();
+                    this.optionsAdapter.onChange();
                 }
             },
             (doUncheck, event) => {
@@ -506,7 +505,6 @@ export class MultiSelect {
         
         this.staticContent.attachContainer();
 
-        console.log("init - onUpdate")
         if (this.onUpdate)
             this.onUpdate();
         this.updateDataImpl();

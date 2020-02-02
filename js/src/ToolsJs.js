@@ -88,20 +88,20 @@ export function sync(...functions){
     )
 }
 
-// export function Observable(){
-//     var list = [];
-//     return {
-//         trigger(){
-//             f();
-//         },
-//         attach(f){
-//             list.push(f)
-//         },
-//         detachAll(){
-//             list.length = 0;
-//         }
-//     }
-// }
+export function Observable(){
+    var list = [];
+    return {
+        trigger(){
+            f();
+        },
+        attach(f){
+            list.push(f)
+        },
+        detachAll(){
+            list.length = 0;
+        }
+    }
+}
 
 export function ObservableValue(value){
     var list = List();
@@ -112,6 +112,26 @@ export function ObservableValue(value){
         setValue(newValue){
             value = newValue;
             list.forEach(f=>f(newValue));
+        },
+        attach(f){
+            return list.add(f)
+        },
+        detachAll(){
+            list.reset();
+        }
+    }
+}
+
+export function ObservableLambda(func){
+    var list = List();
+    var value = func();
+    return {
+        getValue(){
+            return value;
+        },
+        call(){
+            value = func();
+            list.forEach(f=>f(value));
         },
         attach(f){
             return list.add(f)

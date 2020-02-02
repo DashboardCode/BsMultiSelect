@@ -92,7 +92,6 @@ export function FilterPanel(
             filterInputElement.value ='';
         },
         setFocus(){
-            console.log('setFocus')
             filterInputElement.focus();
         },
         isEventTarget(event){
