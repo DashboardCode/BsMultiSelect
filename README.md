@@ -77,12 +77,13 @@ Sample `useCssPatch=true` configuration (default values used):
           });
 ````
 
-Note: in css and cssPatch parameters you can mix styles and classes (depending on your theme available features)
+Note 1: in css and cssPatch parameters you can mix styles and classes (depending on your theme available features)
 ````
       choiceLabel_disabled: { classes: '...', styles: {...}}   
 ````
 
-BsMultiSelect handles click events friendly to modals and popups. Important: for mouse events `preventDefault`, `stopPropagation` were not used (so your other controls always will get 'clicks' on them), but I remove dom elments (intiated by the click on "x" button) using setTimeout(..,0) - to simplify the identification of click event's target during the bubling (in global event loop you always could identify that click target belongs to BsMultiselect); 
+
+BsMultiSelect handles click events friendly to modals and popups. Important: for mouse events `preventDefault`, `stopPropagation` were not used (so your other controls always will get 'clicks' on them). BsMultiSelect remove its DOM elements in 'option was deselected' scenaroio (intiated by the click on "x" button) and do it using setTimeout(..,0) - to simplify the identification of click event's target during the bubling (therefore in global event loop you always are able to identify that click's target belongs to BsMultiselect - and skip processing - cancel popup closing); 
 
 For keyboard events `preventDefault` was used to 
     a) handle tab (`9`)  as autocompleate 
