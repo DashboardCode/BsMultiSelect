@@ -35,7 +35,7 @@ Other BS4 classes were used:
 
 * `custom-control-input` class - each dropdown item contains BS4 custom checkboxes
 
-It was a clear design goal to do not bring own external css but unfortunatly, if you do not use SCSS, this can be achived only for limited number of themes. Not all bootstrap styles varibales can be accessed from a plugin as classes, or CSS-variables therefore we need to setup them in javascript (default useCssPatch mode). Some of those variables are:
+It was a clear design goal to do not bring own external css but unfortunatly, if you do not use SCSS, this can be achived only for limited number of themes. Not all bootstrap themes varibales can be accessed from a plugin as classes, or CSS-variables, therefore we need to setup them in javascript (default `useCssPatch=true` mode). Some of those variables are:
 
 * $input-height - we need it for DIV `form-control`'s min-height; default value is "calc(2.25rem + 2px)",
 
@@ -45,11 +45,12 @@ It was a clear design goal to do not bring own external css but unfortunatly, if
 
 * focus for `isvalid`, focus for `isinvalid` effects (mixins)
 
-If your theme changes those variables, and you do not want to start with custom css, you have a possibility to update them on the plugin initialization using `cssPatch=true`.
+If your theme changes those variables, and you do not want to start with custom css, you have a possibility to update them on the plugin initialization using `useCssPatch=true`.
 
-Sample `cssPatch` configuration (default values used):
+Sample `useCssPatch=true` configuration (default values used):
 ````
           $("select[multiple='multiple']").bsMultiSelect({
+              useCssPatch=true, // default, can be ommitted
               cssPatch: {
                 // choices - dropdown menu items
                 choices: {listStyleType:'none'},
