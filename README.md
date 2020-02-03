@@ -11,11 +11,11 @@ There are many similar plugins but this reuses maximum of Bootrap 4 styles and c
 
 There are two modes: you can use plugin with or without its external CSS.
 
-1. There is a possibility to use plugin without adding CSS file/rules (here `BsMultiSelect.css`) just adjusting styling parameters in javascript: this is default `useCssPatch=true` mode. 
+1. There is a possibility to use plugin without adding CSS file/rules (means, without `BsMultiSelect.(s)css`) just adjusting styling parameters in javascript: this is default `useCssPatch=true` mode. 
 
-2. If you are building your project CSS file form SASS then link [./scss/BsMultiSelect.scss](https://github.com/DashboardCode/BsMultiSelect/blob/master/scss/BsMultiSelect.scss) to your project. It utilize your Bootstrap theme variables. This is first use case of `useCssPatch=false` mode. Other use case is traditional: copy static [./dist/css/BsMultiSelect.css](https://github.com/DashboardCode/BsMultiSelect/blob/master/dist/css/BsMultiSelect.css) and manually adjust it for your theme.
+2. If you are building your project CSS file form SASS then use `useCssPatcch=false` mode and link [./scss/BsMultiSelect.scss](https://github.com/DashboardCode/BsMultiSelect/blob/master/scss/BsMultiSelect.scss) to your project. SCSS file utilize your Bootstrap theme variables.  Other use case is traditional (not involving SASS): copy static [./dist/css/BsMultiSelect.css](https://github.com/DashboardCode/BsMultiSelect/blob/master/dist/css/BsMultiSelect.css) and manually adjust it for your theme.
 
-The Plugin follows Bootstrap 4 conventions and use the same instruments (babel, sass, rollup) so pretend to represent a BS team's modern plugin's **boilerplate**.  Supports all Bootsrap component features (pre/append buttons, validation). Supports RTL.
+BsMultiSelect follows Bootstrap 4 conventions and use the same instruments (babel, sass, rollup) so pretend to represent a BS team's modern plugin's **boilerplate**.  Supports all Bootsrap component features (pre/append buttons, [form validation](https://dashboardcode.github.io/BsMultiSelect/snippetFormValidation.html). Supports [RTL](https://dashboardcode.github.io/BsMultiSelect/snippetRtl.html).
 
 ![image](https://user-images.githubusercontent.com/11598038/39988733-cda205e2-5770-11e8-8ca2-0d30cefc3ca1.png)
 
@@ -35,7 +35,7 @@ Other BS4 classes were used:
 
 * `custom-control-input` class - each dropdown item contains BS4 custom checkboxes
 
-It was a clear design goal to do not bring own external css but unfortunatly, if you do not use SCSS, this can be achived only for limited number of themes. Not all bootstrap themes varibales can be accessed from a plugin as classes, or CSS-variables, therefore we need to setup them in javascript (default `useCssPatch=true` mode). Some of those variables are:
+It was a clear design goal to provide the MultiSelect that not require external css (use Bootstrap components only) but unfortunatly, if you do not use SCSS, this can be achived only for limited number of themes. Not all bootstrap themes varibales can be accessed from a plugin as classes, or CSS-variables, therefore we need to setup them in javascript (default `useCssPatch=true` mode). Some of those variables are:
 
 * $input-height - we need it for DIV `form-control`'s min-height; default value is "calc(2.25rem + 2px)",
 
@@ -45,7 +45,7 @@ It was a clear design goal to do not bring own external css but unfortunatly, if
 
 * focus for `isvalid`, focus for `isinvalid` effects (mixins)
 
-If your theme changes those variables, and you do not want to start with custom css, you have a possibility to update them on the plugin initialization using `useCssPatch=true`.
+If your theme changes those variables, and you do not want to start with custom css, I highly recommend to update them on the plugin initialization:
 
 Sample `useCssPatch=true` configuration (default values used):
 ````
@@ -77,13 +77,13 @@ Sample `useCssPatch=true` configuration (default values used):
           });
 ````
 
-Note 1: in css and cssPatch parameters you can mix styles and classes (depending on your theme available features)
+Note 1: in css and cssPatch (discussed bellow) parameters you can mix styles and classes (depending on your theme available features) this way:
 ````
       choiceLabel_disabled: { classes: '...', styles: {...}}   
 ````
 
 
-BsMultiSelect handles click events friendly to modals and popups. Important: for mouse events `preventDefault`, `stopPropagation` were not used (so your other controls always will get 'clicks' on them). BsMultiSelect remove its DOM elements in 'option was deselected' scenaroio (intiated by the click on "x" button) and do it using setTimeout(..,0) - to simplify the identification of click event's target during the bubling (therefore in global event loop you always are able to identify that click's target belongs to BsMultiselect - and skip processing - cancel popup closing); 
+`BsMultiSelect` handles click events friendly to your modals and popups. Important: for mouse events `preventDefault`, `stopPropagation` were not used (so your other controls always will get 'clicks' on them). BsMultiSelect remove its DOM elements (in 'option was deselected' scenaroio, intiated by the click on "x" button) and do it using setTimeout(..,0) - this simplifies the identification of click event's target during the bubling (bacause of element is not removing in global event loop iteration you always are able to identify that click's target belongs to BsMultiselect - and skip processing - most probably cancel popup close handler); 
 
 For keyboard events `preventDefault` was used to 
     a) handle tab (`9`)  as autocompleate 
