@@ -1,5 +1,6 @@
 # CHANGELOG
 ````
+0.5.1  - documentation updated
 0.5.0  - new styling parameters, rtl support, validation. breaking changes! (update your css and configuration);
 0.4.33 - better suport of group-input append radius corners
 0.4.32 - getSize, getDisabled, getIsValid, getIsInValid (actual for js-object initiated) are available to setup from configuration
