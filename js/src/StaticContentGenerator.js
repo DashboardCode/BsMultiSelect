@@ -96,8 +96,9 @@ export function staticContentGenerator(element, createElement, containerClass,  
     else
         createInputId = () => `${containerClass}-generated-filter-${containerElement.id}`;
 
-    let isActive = false;
+    let isFocusIn = false;
     return {
+        initialElement:element,
         selectElement, 
         containerElement,
         picksElement,
@@ -133,12 +134,15 @@ export function staticContentGenerator(element, createElement, containerClass,  
         disable(isDisabled){
             toggleStyling(picksElement, css.picks_disabled, isDisabled)
         },
-        focus(isFocusIn){
-            isActive = isFocusIn
-            toggleStyling(picksElement, css.picks_focus, isFocusIn)
-            //focusObservable.setValue(isFocusIn);
+        getIsFocusIn(){
+            return isFocusIn;
         },
-        isActive,
+        setIsFocusIn(newIsFocusIn){
+            isFocusIn = newIsFocusIn;
+        },
+        toggleFocusStyling(){
+            toggleStyling(picksElement, css.picks_focus, isFocusIn)
+        },
         dispose(){
             if (ownContainerElement)
                 containerElement.parentNode.removeChild(containerElement);

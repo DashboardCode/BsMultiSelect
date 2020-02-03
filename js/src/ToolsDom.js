@@ -26,6 +26,18 @@ export function closestByAttribute(element, attributeName, attribute){
     return closest(element, e => e.getAttribute(attributeName)===attribute )
 }
 
+export function getDataGuardedWithPrefix(element, prefix, name){
+    var tmp1 = element.getAttribute('data-' + prefix + '-' + name);
+    if (tmp1) {
+        return tmp1;
+    } else  {
+        var tmp2 = element.getAttribute('data-' + name);
+        if (tmp2)
+            return tmp2;
+    }
+    return null;
+}
+
 function closest(element, predicate){
     if (!element || !(element instanceof Element)) return null; // should be element, not document (TODO: check iframe)
      

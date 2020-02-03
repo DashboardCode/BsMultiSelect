@@ -221,8 +221,7 @@ $('div.#bsMultiSelectJson').bsMultiSelect(
                                         {text:"Africa",value:"C4",hidden:false,disabled:false,selected:false}
                                      ],
                             getDisabled : () => $('#optionDisable').is(":checked"), 
-                            getIsValid : () => false, //... or from where you want
-                            getIsInvalid : () => false, //... or from where you want
+                            getValidity : () => null, //... or true, or false 
                         }
                 );
 ````
@@ -260,7 +259,7 @@ Note, BS allready provide classes like: `h-25`, `bg-light`, `text-primary` that 
 
 * no 'smart tracking' of dynamic changes in options/data - after changes in data you need to call 'Update/UpdateData' method manually (this is actally not an issue, but desing decision); also you can't update concreate option (wait for `UpdateDataItem` in future versions). Detach/attach should be used if you have changed plugin styling parameters or RTL dinamically;
 
-* no "X selected" message, or no "no result" message on empty filter;
+* no "X selected" message, or no "no result" information messages on filter's dropdown;
 
 * no smart disabling on mobile devices (manage it manually);
 

@@ -375,13 +375,16 @@ export class MultiSelect {
                     this.staticContent.pickFilterElement); // located filter in selectionsPanel                    
             },
             () => {
-                this.staticContent.focus(true)
+                this.staticContent.setIsFocusIn(true)
+                this.staticContent.toggleFocusStyling();
             },  // focus in - show dropdown
             () => {
+                //console.log('focusout?')
                 if (!this.aspect.getSkipFocusout()) // skip initiated by mouse click (we manage it different way)
                 {
                     this.resetFilter(); // if do not do this we will return to filtered list without text filter in input
-                    this.staticContent.focus(false)
+                    this.staticContent.setIsFocusIn(false);
+                    this.staticContent.toggleFocusStyling();
                 }
                 this.aspect.resetSkipFocusout();
             }, // focus out - hide dropdown

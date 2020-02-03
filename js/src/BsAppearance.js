@@ -74,48 +74,53 @@ export function bsAppearance(multiSelect, staticContent, optionsAdapter,
     multiSelect.UpdateSize = updateSize;
     
     if (useCssPatch){
-        var defFocus = staticContent.focus;
-        staticContent.focus = (isFocusIn) => {
+        var defToggleFocusStyling = staticContent.toggleFocusStyling;
+        staticContent.toggleFocusStyling = () => {
             var validity =  validationObservable.getValue();
-
+            var isFocusIn = staticContent.getIsFocusIn();
             if (isFocusIn)
             {
                 if (validity===false) { 
-                    staticContent.isActive=isFocusIn;
+                    // but not toggle events (I know it will be done in future)
+                    staticContent.setIsFocusIn(isFocusIn);
+                    
                     addStyling(staticContent.picksElement, css.picks_focus_invalid)
                 } else if (validity===true) {
-                    staticContent.isActive=isFocusIn;
+                    // but not toggle events (I know it will be done in future)
+                    staticContent.setIsFocusIn(isFocusIn);
+                    
                     addStyling(staticContent.picksElement, css.picks_focus_valid)
                 } else {
-                    defFocus(isFocusIn)
+                    defToggleFocusStyling(isFocusIn)
                 }
             }
             else{
-                defFocus(isFocusIn)
+                defToggleFocusStyling(isFocusIn)
             }
         }
     }
 
     var getWasValidated = () => {
-        var wasValidatedElement = closestByClassName(staticContent.containerElement, 'was-validated');
+        var wasValidatedElement = closestByClassName(staticContent.initialElement, 'was-validated');
         return wasValidatedElement?true:false;
     }
     var wasUpdatedObservable = ObservableLambda(()=>getWasValidated());
-    
     var getManualValidationObservable = ObservableLambda(()=>optionsAdapter.getValidity());
     
     var validationObservable = ObservableLambda(
         () => wasUpdatedObservable.getValue()?validityApiObservable.getValue():getManualValidationObservable.getValue()
     )
     
+  
     validationObservable.attach(
         (value)=>{
+            //console.log("validationObservable on value change "+ value+ " , staticContent.getIsActive()="+staticContent.getIsActive());
             var  {validMessages, invalidMessages} = getMessagesElements(staticContent.containerElement);
             updateValidity( 
             staticContent.picksElement,
             validMessages, invalidMessages,
             value);
-            staticContent.focus(staticContent.isActive)
+            staticContent.toggleFocusStyling();
         }
     )
     wasUpdatedObservable.attach(

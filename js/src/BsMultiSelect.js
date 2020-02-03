@@ -16,6 +16,7 @@ import {staticContentGenerator} from './StaticContentGenerator';
 import {bsAppearance, adjustBsOptionAdapterConfiguration, getLabelElement} from './BsAppearance';
 import {ValidityApi} from './ValidityApi'
 
+import {getDataGuardedWithPrefix} from './ToolsDom';
 import {createCss, extendCss} from './ToolsStyling';
 import {extendOverriding, extendIfUndefined, sync, ObservableValue, ObservableLambda} from './ToolsJs';
 
@@ -23,6 +24,7 @@ import {adjustLegacyConfiguration as adjustLegacySettings} from './BsMultiSelect
 
 import {css, cssPatch} from './BsCss'
 
+const defValueMissingMessage = 'Please select an item in the list'
 
 function extendConfigurtion(configuration, defaults){
     let cfgCss = configuration.css;
@@ -48,6 +50,7 @@ function extendConfigurtion(configuration, defaults){
             css: css,
             cssPatch: cssPatch,
             placeholder: '',
+            valueMissingMessage: '',
             staticContentGenerator : staticContentGenerator,
             getLabelElement: getLabelElement,
             pickContentGenerator: pickContentGenerator,
@@ -55,7 +58,7 @@ function extendConfigurtion(configuration, defaults){
 
             buildConfiguration: null,
             setSelected: (option, value) => {option.selected = value; },
-            required: null, /* means look on select[required] or false */
+            required: null, /* means look on select[required] or false for js object source */
             optionsAdapter: null,
             options: null,
             getDisabled: null,
@@ -95,8 +98,14 @@ function extendConfigurtion(configuration, defaults){
 
             var useCssPatch = configuration.useCssPatch;
             var putRtlToContainer=false; 
-            if (useCssPatch)
+            
+            if (useCssPatch){
                 extendCss(css, configuration.cssPatch); 
+                console.log("patch")
+            }else{
+                console.log("no patch")
+            }
+
             if (configuration.isRtl===undefined || configuration.isRtl===null)
                 configuration.isRtl = RtlAdapter(element);
             else if (configuration.isRtl===true)
@@ -169,52 +178,23 @@ function extendConfigurtion(configuration, defaults){
 
             if (!configuration.placeholder)
             {
-                configuration.placeholder = $(element).data("bsmultiselect-placeholder");
-                if (!configuration.placeholder)
-                    configuration.placeholder = $(element).data("placeholder");
+                configuration.placeholder = getDataGuardedWithPrefix(element,"bsmultiselect","placeholder");
             }
-            
-            var valueMissingMessage = "Please select an item in the list";
-            if (configuration.valueMissingMessage)
-                valueMissingMessage = configuration.valueMissingMessage;
 
+            if (!configuration.valueMissingMessage)
+            {
+                configuration.valueMissingMessage = getDataGuardedWithPrefix(element,"bsmultiselect","value-missing-message");
+                if (!configuration.valueMissingMessage)
+                {
+                    configuration.valueMissingMessage = defValueMissingMessage;
+                }
+            }
             
             var validityApi = ValidityApi(
                 staticContent.filterInputElement, 
                 isValueMissingObservable, 
-                valueMissingMessage,
+                configuration.valueMissingMessage,
                 (isValid)=>validityApiObservable.setValue(isValid));
-
-            //var setSelected = configuration.setSelected;
-            // if (configuration.required){
-            //     var preSetSelected = configuration.setSelected;
-            //     var setValidityForRequired = ()=>{
-            //         if (configuration.getCount()===0) {
-            //             staticContent.filterInputElement.setCustomValidity("Please select an item in the list");
-            //         } else {
-            //             staticContent.filterInputElement.setCustomValidity("");
-            //         }
-            //     }
-            //     setValidityForRequired();
-            //     setSelected = (option, value)=>{
-            //         var success = preSetSelected(option, value);
-            //         //console.log("setSelected success" + success);
-            //         if (success!==false)
-            //         { 
-            //             setValidityForRequired()
-            //         }
-            //         return success;
-            //     }
-            // } 
-
-
-            
-            // var setSelectedWithChangedEvent =  (option, value) => {
-            //     var success = setSelected(option, value);
-            //     if (success!==false)
-            //         changed();
-            //     return success;
-            // }
 
             var multiSelect = new MultiSelect(
                 optionsAdapter,

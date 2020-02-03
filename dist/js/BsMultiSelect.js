@@ -346,6 +346,18 @@
         return e.getAttribute(attributeName) === attribute;
       });
     }
+    function getDataGuardedWithPrefix(element, prefix, name) {
+      var tmp1 = element.getAttribute('data-' + prefix + '-' + name);
+
+      if (tmp1) {
+        return tmp1;
+      } else {
+        var tmp2 = element.getAttribute('data-' + name);
+        if (tmp2) return tmp2;
+      }
+
+      return null;
+    }
 
     function closest(element, predicate) {
       if (!element || !(element instanceof Element)) return null; // should be element, not document (TODO: check iframe)
@@ -1330,15 +1342,20 @@
           _this2.staticContent.picksElement.appendChild(_this2.staticContent.pickFilterElement); // located filter in selectionsPanel                    
 
         }, function () {
-          _this2.staticContent.focus(true);
+          _this2.staticContent.setIsFocusIn(true);
+
+          _this2.staticContent.toggleFocusStyling();
         }, // focus in - show dropdown
         function () {
+          //console.log('focusout?')
           if (!_this2.aspect.getSkipFocusout()) // skip initiated by mouse click (we manage it different way)
             {
               _this2.resetFilter(); // if do not do this we will return to filtered list without text filter in input
 
 
-              _this2.staticContent.focus(false);
+              _this2.staticContent.setIsFocusIn(false);
+
+              _this2.staticContent.toggleFocusStyling();
             }
 
           _this2.aspect.resetSkipFocusout();
@@ -1779,8 +1796,9 @@
       };else createInputId = function createInputId() {
         return containerClass + "-generated-filter-" + containerElement.id;
       };
-      var isActive = false;
+      var isFocusIn = false;
       return {
+        initialElement: element,
         selectElement: selectElement,
         containerElement: containerElement,
         picksElement: picksElement,
@@ -1810,11 +1828,15 @@
         disable: function disable(isDisabled) {
           toggleStyling(picksElement, css.picks_disabled, isDisabled);
         },
-        focus: function focus(isFocusIn) {
-          isActive = isFocusIn;
-          toggleStyling(picksElement, css.picks_focus, isFocusIn); //focusObservable.setValue(isFocusIn);
+        getIsFocusIn: function getIsFocusIn() {
+          return isFocusIn;
         },
-        isActive: isActive,
+        setIsFocusIn: function setIsFocusIn(newIsFocusIn) {
+          isFocusIn = newIsFocusIn;
+        },
+        toggleFocusStyling: function toggleFocusStyling() {
+          toggleStyling(picksElement, css.picks_focus, isFocusIn);
+        },
         dispose: function dispose() {
           if (ownContainerElement) containerElement.parentNode.removeChild(containerElement);else attributeBackup.restore();
           if (ownPicksElement) picksElement.parentNode.removeChild(picksElement);
@@ -1914,29 +1936,32 @@
       multiSelect.UpdateSize = updateSize;
 
       if (useCssPatch) {
-        var defFocus = staticContent.focus;
+        var defToggleFocusStyling = staticContent.toggleFocusStyling;
 
-        staticContent.focus = function (isFocusIn) {
+        staticContent.toggleFocusStyling = function () {
           var validity = validationObservable.getValue();
+          var isFocusIn = staticContent.getIsFocusIn();
 
           if (isFocusIn) {
             if (validity === false) {
-              staticContent.isActive = isFocusIn;
+              // but not toggle events (I know it will be done in future)
+              staticContent.setIsFocusIn(isFocusIn);
               addStyling(staticContent.picksElement, css.picks_focus_invalid);
             } else if (validity === true) {
-              staticContent.isActive = isFocusIn;
+              // but not toggle events (I know it will be done in future)
+              staticContent.setIsFocusIn(isFocusIn);
               addStyling(staticContent.picksElement, css.picks_focus_valid);
             } else {
-              defFocus(isFocusIn);
+              defToggleFocusStyling(isFocusIn);
             }
           } else {
-            defFocus(isFocusIn);
+            defToggleFocusStyling(isFocusIn);
           }
         };
       }
 
       var getWasValidated = function getWasValidated() {
-        var wasValidatedElement = closestByClassName(staticContent.containerElement, 'was-validated');
+        var wasValidatedElement = closestByClassName(staticContent.initialElement, 'was-validated');
         return wasValidatedElement ? true : false;
       };
 
@@ -1950,12 +1975,13 @@
         return wasUpdatedObservable.getValue() ? validityApiObservable.getValue() : getManualValidationObservable.getValue();
       });
       validationObservable.attach(function (value) {
+        //console.log("validationObservable on value change "+ value+ " , staticContent.getIsActive()="+staticContent.getIsActive());
         var _getMessagesElements = getMessagesElements(staticContent.containerElement),
             validMessages = _getMessagesElements.validMessages,
             invalidMessages = _getMessagesElements.invalidMessages;
 
         updateValidity(staticContent.picksElement, validMessages, invalidMessages, value);
-        staticContent.focus(staticContent.isActive);
+        staticContent.toggleFocusStyling();
       });
       wasUpdatedObservable.attach(function () {
         return validationObservable.call();
@@ -2340,6 +2366,8 @@
 
     };
 
+    var defValueMissingMessage = 'Please select an item in the list';
+
     function extendConfigurtion(configuration, defaults) {
       var cfgCss = configuration.css;
       var cfgCssPatch = configuration.cssPatch;
@@ -2363,6 +2391,7 @@
         css: css,
         cssPatch: cssPatch,
         placeholder: '',
+        valueMissingMessage: '',
         staticContentGenerator: staticContentGenerator,
         getLabelElement: getLabelElement,
         pickContentGenerator: pickContentGenerator,
@@ -2373,7 +2402,7 @@
         },
         required: null,
 
-        /* means look on select[required] or false */
+        /* means look on select[required] or false for js object source */
         optionsAdapter: null,
         options: null,
         getDisabled: null,
@@ -2408,7 +2437,14 @@
         var css = configuration.css;
         var useCssPatch = configuration.useCssPatch;
         var putRtlToContainer = false;
-        if (useCssPatch) extendCss(css, configuration.cssPatch);
+
+        if (useCssPatch) {
+          extendCss(css, configuration.cssPatch);
+          console.log("patch");
+        } else {
+          console.log("no patch");
+        }
+
         if (configuration.isRtl === undefined || configuration.isRtl === null) configuration.isRtl = RtlAdapter(element);else if (configuration.isRtl === true) putRtlToContainer = true;
         var staticContent = configuration.staticContentGenerator(element, function (name) {
           return window.document.createElement(name);
@@ -2463,42 +2499,20 @@
         var labelAdapter = LabelAdapter(configuration.labelElement, staticContent.createInputId);
 
         if (!configuration.placeholder) {
-          configuration.placeholder = $(element).data("bsmultiselect-placeholder");
-          if (!configuration.placeholder) configuration.placeholder = $(element).data("placeholder");
+          configuration.placeholder = getDataGuardedWithPrefix(element, "bsmultiselect", "placeholder");
         }
 
-        var valueMissingMessage = "Please select an item in the list";
-        if (configuration.valueMissingMessage) valueMissingMessage = configuration.valueMissingMessage;
-        var validityApi = ValidityApi(staticContent.filterInputElement, isValueMissingObservable, valueMissingMessage, function (isValid) {
-          return validityApiObservable.setValue(isValid);
-        }); //var setSelected = configuration.setSelected;
-        // if (configuration.required){
-        //     var preSetSelected = configuration.setSelected;
-        //     var setValidityForRequired = ()=>{
-        //         if (configuration.getCount()===0) {
-        //             staticContent.filterInputElement.setCustomValidity("Please select an item in the list");
-        //         } else {
-        //             staticContent.filterInputElement.setCustomValidity("");
-        //         }
-        //     }
-        //     setValidityForRequired();
-        //     setSelected = (option, value)=>{
-        //         var success = preSetSelected(option, value);
-        //         //console.log("setSelected success" + success);
-        //         if (success!==false)
-        //         { 
-        //             setValidityForRequired()
-        //         }
-        //         return success;
-        //     }
-        // } 
-        // var setSelectedWithChangedEvent =  (option, value) => {
-        //     var success = setSelected(option, value);
-        //     if (success!==false)
-        //         changed();
-        //     return success;
-        // }
+        if (!configuration.valueMissingMessage) {
+          configuration.valueMissingMessage = getDataGuardedWithPrefix(element, "bsmultiselect", "value-missing-message");
 
+          if (!configuration.valueMissingMessage) {
+            configuration.valueMissingMessage = defValueMissingMessage;
+          }
+        }
+
+        var validityApi = ValidityApi(staticContent.filterInputElement, isValueMissingObservable, configuration.valueMissingMessage, function (isValid) {
+          return validityApiObservable.setValue(isValid);
+        });
         var multiSelect = new MultiSelect(optionsAdapter, configuration.setSelected, staticContent, function (pickElement) {
           return configuration.pickContentGenerator(pickElement, css);
         }, function (choiceElement) {
@@ -2510,8 +2524,7 @@
         };
 
         multiSelect.validity = validityApi;
-        bsAppearance(multiSelect, staticContent, optionsAdapter, validityApiObservable, useCssPatch, //wasUpdatedObservable, validationObservable, getManualValidationObservable, update, 
-        css);
+        bsAppearance(multiSelect, staticContent, optionsAdapter, validityApiObservable, useCssPatch, css);
         if (init && init instanceof Function) init(multiSelect);
         multiSelect.init();
         return multiSelect;

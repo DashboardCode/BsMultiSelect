@@ -1,3 +1,4 @@
+@use "sass:map";
 @import "./../node_modules/bootstrap/scss/_functions";
 @import "./../node_modules/bootstrap/scss/vendor/_rfs";
 @import "./../node_modules/bootstrap/scss/mixins/_box-shadow";
@@ -104,7 +105,7 @@
             // next block copied from .dropdown-item
             display: block;
             width: 100%; // For `<button>`s
-            padding: 0 /*$dropdown-item-padding-y*/ $dropdown-item-padding-x;
+            padding: 0 map.get($spacers, 2);// alternative could be $dropdown-item-padding-x; but it is too large
             clear: both;
             font-weight: $font-weight-normal;
             color: $dropdown-link-color;
@@ -118,7 +119,7 @@
             }
         }.hover{
             // from bs4 _dropdown.scss
-            color: $dropdown-link-hover-color;
+            color: var(--primary); //$dropdown-link-hover-color;
             @include gradient-bg($dropdown-link-hover-bg);
         }
     }
@@ -140,8 +141,27 @@
             }
         }
     }
-
-    // .was-validated .custom-control-input{
-
-    // }
+}
+// BS4 .was-validated problem, no possibility to exclude custom checkboxes from validation styling
+// Note: nested form for dropdown with 'novalidate ' attribute possibly could solve it but... nested forms are not allowed
+.was-validated .dashboardcode-bsmultiselect ul.dropdown-menu > li .custom-control-input:valid:checked ~ .custom-control-label{
+    color: $dropdown-color;
+}
+.was-validated .dashboardcode-bsmultiselect ul.dropdown-menu > li .custom-control-input:valid:not(:checked) ~ .custom-control-label{
+    color: $dropdown-color;
+}
+.was-validated .dashboardcode-bsmultiselect ul.dropdown-menu > li.hover .custom-control-input:valid:checked ~ .custom-control-label{
+    color: var(--primary);
+}
+.was-validated .dashboardcode-bsmultiselect ul.dropdown-menu > li.hover .custom-control-input:valid:not(:checked) ~ .custom-control-label{
+    color: var(--primary);
+}
+.was-validated .dashboardcode-bsmultiselect ul.dropdown-menu > li .custom-control-input:valid:checked ~ .custom-control-label::before {
+    color: $custom-control-indicator-checked-color;
+    border-color: $custom-control-indicator-checked-border-color;
+    @include gradient-bg($custom-control-indicator-checked-bg);
+    @include box-shadow($custom-control-indicator-checked-box-shadow);
+}
+.was-validated .dashboardcode-bsmultiselect .custom-control-input:valid:not(:checked) ~ .custom-control-label::before {
+    border: $custom-control-indicator-border-color solid $custom-control-indicator-border-width;
 }

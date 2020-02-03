@@ -10,10 +10,12 @@ import { choiceContentGenerator } from './ChoiceContentGenerator';
 import { staticContentGenerator } from './StaticContentGenerator';
 import { bsAppearance, adjustBsOptionAdapterConfiguration, getLabelElement } from './BsAppearance';
 import { ValidityApi } from './ValidityApi';
+import { getDataGuardedWithPrefix } from './ToolsDom';
 import { createCss, extendCss } from './ToolsStyling';
 import { extendOverriding, extendIfUndefined, sync, ObservableValue, ObservableLambda } from './ToolsJs';
 import { adjustLegacyConfiguration as adjustLegacySettings } from './BsMultiSelectDepricatedParameters';
 import { css, cssPatch } from './BsCss';
+var defValueMissingMessage = 'Please select an item in the list';
 
 function extendConfigurtion(configuration, defaults) {
   var cfgCss = configuration.css;
@@ -38,6 +40,7 @@ function extendConfigurtion(configuration, defaults) {
     css: css,
     cssPatch: cssPatch,
     placeholder: '',
+    valueMissingMessage: '',
     staticContentGenerator: staticContentGenerator,
     getLabelElement: getLabelElement,
     pickContentGenerator: pickContentGenerator,
@@ -48,7 +51,7 @@ function extendConfigurtion(configuration, defaults) {
     },
     required: null,
 
-    /* means look on select[required] or false */
+    /* means look on select[required] or false for js object source */
     optionsAdapter: null,
     options: null,
     getDisabled: null,
@@ -83,7 +86,14 @@ function extendConfigurtion(configuration, defaults) {
     var css = configuration.css;
     var useCssPatch = configuration.useCssPatch;
     var putRtlToContainer = false;
-    if (useCssPatch) extendCss(css, configuration.cssPatch);
+
+    if (useCssPatch) {
+      extendCss(css, configuration.cssPatch);
+      console.log("patch");
+    } else {
+      console.log("no patch");
+    }
+
     if (configuration.isRtl === undefined || configuration.isRtl === null) configuration.isRtl = RtlAdapter(element);else if (configuration.isRtl === true) putRtlToContainer = true;
     var staticContent = configuration.staticContentGenerator(element, function (name) {
       return window.document.createElement(name);
@@ -138,42 +148,20 @@ function extendConfigurtion(configuration, defaults) {
     var labelAdapter = LabelAdapter(configuration.labelElement, staticContent.createInputId);
 
     if (!configuration.placeholder) {
-      configuration.placeholder = $(element).data("bsmultiselect-placeholder");
-      if (!configuration.placeholder) configuration.placeholder = $(element).data("placeholder");
+      configuration.placeholder = getDataGuardedWithPrefix(element, "bsmultiselect", "placeholder");
     }
 
-    var valueMissingMessage = "Please select an item in the list";
-    if (configuration.valueMissingMessage) valueMissingMessage = configuration.valueMissingMessage;
-    var validityApi = ValidityApi(staticContent.filterInputElement, isValueMissingObservable, valueMissingMessage, function (isValid) {
-      return validityApiObservable.setValue(isValid);
-    }); //var setSelected = configuration.setSelected;
-    // if (configuration.required){
-    //     var preSetSelected = configuration.setSelected;
-    //     var setValidityForRequired = ()=>{
-    //         if (configuration.getCount()===0) {
-    //             staticContent.filterInputElement.setCustomValidity("Please select an item in the list");
-    //         } else {
-    //             staticContent.filterInputElement.setCustomValidity("");
-    //         }
-    //     }
-    //     setValidityForRequired();
-    //     setSelected = (option, value)=>{
-    //         var success = preSetSelected(option, value);
-    //         //console.log("setSelected success" + success);
-    //         if (success!==false)
-    //         { 
-    //             setValidityForRequired()
-    //         }
-    //         return success;
-    //     }
-    // } 
-    // var setSelectedWithChangedEvent =  (option, value) => {
-    //     var success = setSelected(option, value);
-    //     if (success!==false)
-    //         changed();
-    //     return success;
-    // }
+    if (!configuration.valueMissingMessage) {
+      configuration.valueMissingMessage = getDataGuardedWithPrefix(element, "bsmultiselect", "value-missing-message");
 
+      if (!configuration.valueMissingMessage) {
+        configuration.valueMissingMessage = defValueMissingMessage;
+      }
+    }
+
+    var validityApi = ValidityApi(staticContent.filterInputElement, isValueMissingObservable, configuration.valueMissingMessage, function (isValid) {
+      return validityApiObservable.setValue(isValid);
+    });
     var multiSelect = new MultiSelect(optionsAdapter, configuration.setSelected, staticContent, function (pickElement) {
       return configuration.pickContentGenerator(pickElement, css);
     }, function (choiceElement) {
@@ -185,8 +173,7 @@ function extendConfigurtion(configuration, defaults) {
     };
 
     multiSelect.validity = validityApi;
-    bsAppearance(multiSelect, staticContent, optionsAdapter, validityApiObservable, useCssPatch, //wasUpdatedObservable, validationObservable, getManualValidationObservable, update, 
-    css);
+    bsAppearance(multiSelect, staticContent, optionsAdapter, validityApiObservable, useCssPatch, css);
     if (init && init instanceof Function) init(multiSelect);
     multiSelect.init();
     return multiSelect;

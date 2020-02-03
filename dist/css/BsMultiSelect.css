@@ -92,7 +92,7 @@
 .dashboardcode-bsmultiselect ul.dropdown-menu > li {
   display: block;
   width: 100%;
-  padding: 0 1.5rem;
+  padding: 0 0.5rem;
   clear: both;
   font-weight: 400;
   color: #212529;
@@ -105,7 +105,7 @@
   color: #6c757d;
 }
 .dashboardcode-bsmultiselect ul.dropdown-menu .hover {
-  color: #16181b;
+  color: var(--primary);
   background-color: #f8f9fa;
 }
 .dashboardcode-bsmultiselect.input-group.input-group-sm ul.form-control {
@@ -119,6 +119,32 @@
 }
 .dashboardcode-bsmultiselect.input-group.input-group-lg ul.form-control input {
   font-size: 1.25rem;
+}
+
+.was-validated .dashboardcode-bsmultiselect ul.dropdown-menu > li .custom-control-input:valid:checked ~ .custom-control-label {
+  color: #212529;
+}
+
+.was-validated .dashboardcode-bsmultiselect ul.dropdown-menu > li .custom-control-input:valid:not(:checked) ~ .custom-control-label {
+  color: #212529;
+}
+
+.was-validated .dashboardcode-bsmultiselect ul.dropdown-menu > li.hover .custom-control-input:valid:checked ~ .custom-control-label {
+  color: var(--primary);
+}
+
+.was-validated .dashboardcode-bsmultiselect ul.dropdown-menu > li.hover .custom-control-input:valid:not(:checked) ~ .custom-control-label {
+  color: var(--primary);
+}
+
+.was-validated .dashboardcode-bsmultiselect ul.dropdown-menu > li .custom-control-input:valid:checked ~ .custom-control-label::before {
+  color: #fff;
+  border-color: #007bff;
+  background-color: #007bff;
+}
+
+.was-validated .dashboardcode-bsmultiselect .custom-control-input:valid:not(:checked) ~ .custom-control-label::before {
+  border: #adb5bd solid 1px;
 }
 
 /*# sourceMappingURL=BsMultiSelect.css.map */
