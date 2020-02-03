@@ -91,7 +91,7 @@ For keyboard events `preventDefault` was used to
     c) enter (`13`) to prvent default button action (submit etc.)
     d) esc (`27`) to avoid "clear text on `esc`" functionlity dublication
 
-Inspite plugin have form `reset` event listener, there are no MutationObserver defined inside (component does not track properties on original `SELECT`, `FIELDSET`). If you change  properties on original `SELECT` or `FIELDSET`, then you will need to push changes to component with methods `UpdateIsValid`, `UpdateDisabled`, `UpdateSize`, `UpdataData` or just `Update` (works like "update all") .
+Inspite plugin have form `reset` event listener, there are no MutationObserver defined inside (component does not track properties on original `SELECT`, `FIELDSET`, `.was-validated` parent). If you change  properties on original `SELECT` or `FIELDSET`, or toggle `.was-validated` then you will need to push changes to component with methods `UpdateIsValid`, `UpdateDisabled`, `UpdateSize`, `UpdateWasValidated`, `UpdateValidy` (`is-valid`, `is-invalid` on original `select`) , `UpdataData` or just `Update` (works like "update all") .
 
 ````
           $('#mySelect').bsMultiSelect("UpdateDisabled"); // bsMultiSelect call the method directly
