@@ -5,7 +5,7 @@ RTL snippet: https://dashboardcode.github.io/BsMultiSelect/snippetRtl.html
 
 Form validation snippet:  https://dashboardcode.github.io/BsMultiSelect/snippetFormValidation.html
 
-JSFiddle: https://jsfiddle.net/u2xf6bew/3/ Use it for bug reporting.
+CodePen, use it for bug reporting: https://codepen.io/rpokrovskij/pen/yLymQwW 
 
 There are many similar plugins but this reuses maximum of Bootrap 4 styles and code. In many cases it can be adjusted for your Bootsrap theme without editing CSS or with minimal efforts. 
 
