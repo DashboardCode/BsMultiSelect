@@ -101,9 +101,6 @@ function extendConfigurtion(configuration, defaults){
             
             if (useCssPatch){
                 extendCss(css, configuration.cssPatch); 
-                console.log("patch")
-            }else{
-                console.log("no patch")
             }
 
             if (configuration.isRtl===undefined || configuration.isRtl===null)

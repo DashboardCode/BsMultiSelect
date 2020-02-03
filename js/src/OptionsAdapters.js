@@ -2,7 +2,7 @@
 import {EventBinder, closestByTagName} from './ToolsDom';
 
 function OptionsAdapterElement(selectElement, getDisabled, getSize, getValidity, onChange) {
-    var form = closestByTagName(selectElement, 'form');
+    var form = closestByTagName(selectElement, 'FORM');
     var eventBuilder = EventBinder();
     if(!getValidity)
         getValidity = () => selectElement.classList.contains('is-invalid')?false:(selectElement.classList.contains('is-valid')?true:null);

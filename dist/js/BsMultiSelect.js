@@ -1,5 +1,5 @@
 /*!
-  * DashboardCode BsMultiSelect v0.5.0 (https://dashboardcode.github.io/BsMultiSelect/)
+  * DashboardCode BsMultiSelect v0.5.1 (https://dashboardcode.github.io/BsMultiSelect/)
   * Copyright 2017-2020 Roman Pokrovskij (github user rpokrovskij)
   * Licensed under APACHE 2 (https://github.com/DashboardCode/BsMultiSelect/blob/master/LICENSE)
   */
@@ -334,7 +334,7 @@
     function closestByTagName(element, tagName) {
       return closest(element, function (e) {
         return e.tagName === tagName;
-      });
+      }); // TODO support xhtml?  e.tagName.toUpperCase() ?
     }
     function closestByClassName(element, className) {
       return closest(element, function (e) {
@@ -1347,7 +1347,6 @@
           _this2.staticContent.toggleFocusStyling();
         }, // focus in - show dropdown
         function () {
-          //console.log('focusout?')
           if (!_this2.aspect.getSkipFocusout()) // skip initiated by mouse click (we manage it different way)
             {
               _this2.resetFilter(); // if do not do this we will return to filtered list without text filter in input
@@ -1498,11 +1497,13 @@
         this.updateDataImpl();
         this.UpdateDisabled(); // should be done after updateDataImpl
 
-        if (this.optionsAdapter.onReset) this.optionsAdapter.onReset(function () {
-          return _this2.window.setTimeout(function () {
-            return _this2.UpdateData();
+        if (this.optionsAdapter.onReset) {
+          this.optionsAdapter.onReset(function () {
+            _this2.window.setTimeout(function () {
+              return _this2.UpdateData();
+            });
           });
-        });
+        }
       };
 
       return MultiSelect;
@@ -1590,7 +1591,7 @@
     }
 
     function OptionsAdapterElement(selectElement, getDisabled, getSize, getValidity, onChange) {
-      var form = closestByTagName(selectElement, 'form');
+      var form = closestByTagName(selectElement, 'FORM');
       var eventBuilder = EventBinder();
       if (!getValidity) getValidity = function getValidity() {
         return selectElement.classList.contains('is-invalid') ? false : selectElement.classList.contains('is-valid') ? true : null;
@@ -1975,7 +1976,6 @@
         return wasUpdatedObservable.getValue() ? validityApiObservable.getValue() : getManualValidationObservable.getValue();
       });
       validationObservable.attach(function (value) {
-        //console.log("validationObservable on value change "+ value+ " , staticContent.getIsActive()="+staticContent.getIsActive());
         var _getMessagesElements = getMessagesElements(staticContent.containerElement),
             validMessages = _getMessagesElements.validMessages,
             invalidMessages = _getMessagesElements.invalidMessages;
@@ -2017,7 +2017,7 @@
     }
     function adjustBsOptionAdapterConfiguration(configuration, selectElement) {
       if (!configuration.getDisabled) {
-        var fieldsetElement = closestByTagName(selectElement, 'fieldset');
+        var fieldsetElement = closestByTagName(selectElement, 'FIELDSET');
 
         if (fieldsetElement) {
           configuration.getDisabled = function () {
@@ -2440,9 +2440,6 @@
 
         if (useCssPatch) {
           extendCss(css, configuration.cssPatch);
-          console.log("patch");
-        } else {
-          console.log("no patch");
         }
 
         if (configuration.isRtl === undefined || configuration.isRtl === null) configuration.isRtl = RtlAdapter(element);else if (configuration.isRtl === true) putRtlToContainer = true;

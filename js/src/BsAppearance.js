@@ -114,7 +114,6 @@ export function bsAppearance(multiSelect, staticContent, optionsAdapter,
   
     validationObservable.attach(
         (value)=>{
-            //console.log("validationObservable on value change "+ value+ " , staticContent.getIsActive()="+staticContent.getIsActive());
             var  {validMessages, invalidMessages} = getMessagesElements(staticContent.containerElement);
             updateValidity( 
             staticContent.picksElement,
@@ -152,7 +151,7 @@ export function bsAppearance(multiSelect, staticContent, optionsAdapter,
 
 export function adjustBsOptionAdapterConfiguration(configuration, selectElement){
     if (!configuration.getDisabled) {
-        var fieldsetElement = closestByTagName(selectElement, 'fieldset');
+        var fieldsetElement = closestByTagName(selectElement, 'FIELDSET');
         if (fieldsetElement) {
             configuration.getDisabled = () => selectElement.disabled || fieldsetElement.disabled;
         } else {

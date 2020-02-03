@@ -379,7 +379,6 @@ export class MultiSelect {
                 this.staticContent.toggleFocusStyling();
             },  // focus in - show dropdown
             () => {
-                //console.log('focusout?')
                 if (!this.aspect.getSkipFocusout()) // skip initiated by mouse click (we manage it different way)
                 {
                     this.resetFilter(); // if do not do this we will return to filtered list without text filter in input
@@ -513,7 +512,10 @@ export class MultiSelect {
         this.updateDataImpl();
         this.UpdateDisabled(); // should be done after updateDataImpl
 
-        if (this.optionsAdapter.onReset)
-            this.optionsAdapter.onReset(()=> this.window.setTimeout( ()=>this.UpdateData() ) );
+        if (this.optionsAdapter.onReset){
+            this.optionsAdapter.onReset(()=>{ 
+                this.window.setTimeout( ()=>this.UpdateData() ) 
+            });
+        }
     }
 }

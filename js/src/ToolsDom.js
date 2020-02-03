@@ -15,7 +15,7 @@ export function findDirectChildByTagName(element, tagName){
 }
 
 export function closestByTagName(element, tagName){
-    return closest(element, e => e.tagName===tagName)
+    return closest(element, e => e.tagName === tagName) // TODO support xhtml?  e.tagName.toUpperCase() ?
 }
 
 export function closestByClassName(element, className){
