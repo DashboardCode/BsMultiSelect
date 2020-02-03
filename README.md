@@ -9,11 +9,11 @@ JSFiddle: https://jsfiddle.net/u2xf6bew/3/ Use it for bug reporting.
 
 There are many similar plugins but this reuses maximum of Bootrap 4 styles and code. In many cases it can be adjusted for your Bootsrap theme without editing CSS or with minimal efforts. 
 
-There are two modes: you can use plugin  without or with its external CSS.
+There are two modes: you can use plugin with or without its external CSS.
 
-1. There is a possibility to use plugin without adding new CSS rules ( `BsMultiSelect.css`) just adjusting styling parameters in javascript: default `cssPatch=true` mode. 
+1. There is a possibility to use plugin without adding CSS file/rules (here `BsMultiSelect.css`) just adjusting styling parameters in javascript: this is default `useCssPatch=true` mode. 
 
-2. If you are building your project CSS form SASS then link [./scss/BsMultiSelect.scss](https://github.com/DashboardCode/BsMultiSelect/blob/master/scss/BsMultiSelect.scss) to your project. It will utilize your Bootstrap theme variables. This is one option of `cssPatch=false` mode. Other optin is traditional: copy static [./dist/css/BsMultiSelect.css](https://github.com/DashboardCode/BsMultiSelect/blob/master/dist/css/BsMultiSelect.css) and manually adjust it for your theme.
+2. If you are building your project CSS file form SASS then link [./scss/BsMultiSelect.scss](https://github.com/DashboardCode/BsMultiSelect/blob/master/scss/BsMultiSelect.scss) to your project. It utilize your Bootstrap theme variables. This is first use case of `useCssPatch=false` mode. Other use case is traditional: copy static [./dist/css/BsMultiSelect.css](https://github.com/DashboardCode/BsMultiSelect/blob/master/dist/css/BsMultiSelect.css) and manually adjust it for your theme.
 
 The Plugin follows Bootstrap 4 conventions and use the same instruments (babel, sass, rollup) so pretend to represent a BS team's modern plugin's **boilerplate**.  Supports all Bootsrap component features (pre/append buttons, validation). Supports RTL.
 
