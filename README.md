@@ -7,7 +7,7 @@ Form validation snippet:  https://dashboardcode.github.io/BsMultiSelect/snippetF
 
 JSFiddle: https://jsfiddle.net/u2xf6bew/3/ Use it for bug reporting.
 
-There are many similar plugins but this reuses maximum of Bootrap 4 styles and code. In many cases in can be adjusted for your Bootsrap theme without editing CSS or with minimum efforts. 
+There are many similar plugins but this reuses maximum of Bootrap 4 styles and code. In many cases it can be adjusted for your Bootsrap theme without editing CSS or with minimum efforts. 
 
 There are two modes: you can use plugin  without or with its external CSS.
 
