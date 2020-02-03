@@ -1,5 +1,7 @@
 # DashboardCode Multiselect plugin for Bootstrap 4
-*https://dashboardcode.github.io/BsMultiSelect/*
+Demo: https://dashboardcode.github.io/BsMultiSelect/
+RTL snippet: https://dashboardcode.github.io/BsMultiSelect/snippetRtl.html
+Form validation snippet:  https://dashboardcode.github.io/BsMultiSelect/snippetFormValidation.html
 
 JSFiddle: https://jsfiddle.net/u2xf6bew/3/ Use it for bug reporting.
 
@@ -115,6 +117,7 @@ Other way to access the component's instance is using `data` :
 **multiline**: input can grow vertically;
 
 **right-to-left support**: search for `[dir='rtl']` on parents; [`snippet is here...`](https://dashboardcode.github.io/BsMultiSelect/snippetRtl.html) 
+
 **SELECT disabled / readonly / FIELDSET disabled support**: although there is difference between those two attributes for `input`, the HTML 5.2 support only `disabled` for [`select`](https://www.w3.org/TR/2017/REC-html52-20171214/sec-forms.html#the-select-element) element. `Readonly` attribute on original `select` will be ignored;
 
 **`<option disabled selected>`**: option that is `disabled` and `selected` at the same time can be deselected but can't be selected again (just as it is in HTML `select` and unlike `chosen.js`);
