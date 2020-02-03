@@ -1,5 +1,5 @@
 /*!
-  * DashboardCode BsMultiSelect v0.5.0-beta (https://dashboardcode.github.io/BsMultiSelect/)
+  * DashboardCode BsMultiSelect v0.5.0 (https://dashboardcode.github.io/BsMultiSelect/)
   * Copyright 2017-2020 Roman Pokrovskij (github user rpokrovskij)
   * Licensed under APACHE 2 (https://github.com/DashboardCode/BsMultiSelect/blob/master/LICENSE)
   */
@@ -2488,7 +2488,7 @@
         var isValueMissingObservable = ObservableLambda(function () {
           return configuration.required && getCount() === 0;
         });
-        var validityApiObservable = ObservableValue(!isValueMissingObservable.getValue());
+        var validationApiObservable = ObservableValue(!isValueMissingObservable.getValue());
 
         lazyDefinedEvent = function lazyDefinedEvent() {
           return isValueMissingObservable.call();
@@ -2510,8 +2510,8 @@
           }
         }
 
-        var validityApi = ValidityApi(staticContent.filterInputElement, isValueMissingObservable, configuration.valueMissingMessage, function (isValid) {
-          return validityApiObservable.setValue(isValid);
+        var validationApi = ValidityApi(staticContent.filterInputElement, isValueMissingObservable, configuration.valueMissingMessage, function (isValid) {
+          return validationApiObservable.setValue(isValid);
         });
         var multiSelect = new MultiSelect(optionsAdapter, configuration.setSelected, staticContent, function (pickElement) {
           return configuration.pickContentGenerator(pickElement, css);
@@ -2520,11 +2520,11 @@
         }, labelAdapter, configuration.placeholder, configuration.isRtl, css, Popper, window);
 
         multiSelect.onDispose = function () {
-          return sync(isValueMissingObservable.detachAll, validityApiObservable.detachAll, onDispose);
+          return sync(isValueMissingObservable.detachAll, validationApiObservable.detachAll, onDispose);
         };
 
-        multiSelect.validity = validityApi;
-        bsAppearance(multiSelect, staticContent, optionsAdapter, validityApiObservable, useCssPatch, css);
+        multiSelect.validationApi = validationApi;
+        bsAppearance(multiSelect, staticContent, optionsAdapter, validationApiObservable, useCssPatch, css);
         if (init && init instanceof Function) init(multiSelect);
         multiSelect.init();
         return multiSelect;

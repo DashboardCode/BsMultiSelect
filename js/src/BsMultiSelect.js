@@ -167,7 +167,7 @@ function extendConfigurtion(configuration, defaults){
                 return count;
             }
             var isValueMissingObservable = ObservableLambda(()=>configuration.required && getCount()===0);
-            var validityApiObservable = ObservableValue(!isValueMissingObservable.getValue())
+            var validationApiObservable = ObservableValue(!isValueMissingObservable.getValue())
             lazyDefinedEvent = () => isValueMissingObservable.call();
             
 
@@ -190,11 +190,11 @@ function extendConfigurtion(configuration, defaults){
                 }
             }
             
-            var validityApi = ValidityApi(
+            var validationApi = ValidityApi(
                 staticContent.filterInputElement, 
                 isValueMissingObservable, 
                 configuration.valueMissingMessage,
-                (isValid)=>validityApiObservable.setValue(isValid));
+                (isValid)=>validationApiObservable.setValue(isValid));
 
             var multiSelect = new MultiSelect(
                 optionsAdapter,
@@ -209,13 +209,13 @@ function extendConfigurtion(configuration, defaults){
                 Popper,
                 window);
             
-            multiSelect.onDispose = ()=> sync(isValueMissingObservable.detachAll, validityApiObservable.detachAll, onDispose);
+            multiSelect.onDispose = ()=> sync(isValueMissingObservable.detachAll, validationApiObservable.detachAll, onDispose);
             
-            multiSelect.validity = validityApi;
+            multiSelect.validationApi = validationApi;
             
             bsAppearance(
                 multiSelect, staticContent,  optionsAdapter,
-                validityApiObservable,
+                validationApiObservable,
                 useCssPatch, 
                 css);
             

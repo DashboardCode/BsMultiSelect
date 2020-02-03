@@ -3,13 +3,15 @@
 
 JSFiddle: https://jsfiddle.net/u2xf6bew/3/ Use it for bug reporting.
 
-There are many similar plugins but this is small and clear since reuses maximum of bootrap 4 styles and code.
+There are many similar plugins but this reuses maximum of Bootrap 4 styles and code. In many cases in can be adjusted for your Bootsrap theme without editing CSS or with minimum efforts. 
 
-In many cases it can be adjusted for your theme without editing CSS. Optionally you can adjust some theme parameters in JS: default `cssPatch=true` mode.
-Second option is to add [./scss/BsMultiSelect.css](https://github.com/DashboardCode/BsMultiSelect/blob/master/scss/BsMultiSelect.scss) to your page (and adjust values manually: see `cssPatch=false`)
-Third option is the best: reference [./scss/BsMultiSelect.scss](https://github.com/DashboardCode/BsMultiSelect/blob/master/scss/BsMultiSelect.scss) in your SASS project (it will utilize your bootstrap variables).
+There are two modes: you can use plugin  without or with its external CSS.
 
-The Plugin follows Bootstrap 4 conventions and use the same instruments (babel, sass, rollup) so pretend to represent a BS team's modern plugin's **boilerplate**. 
+1. There is a possibility to use plugin without adding new CSS rules ( `BsMultiSelect.css`) just adjusting styling parameters in javascript: default `cssPatch=true` mode. 
+
+2. If you are building your project CSS form SASS then link [./scss/BsMultiSelect.scss](https://github.com/DashboardCode/BsMultiSelect/blob/master/scss/BsMultiSelect.scss) to your project. It will utilize your Bootstrap theme variables. This is one option of `cssPatch=false` mode. Other optin is traditional: copy static [./dist/css/BsMultiSelect.css](https://github.com/DashboardCode/BsMultiSelect/blob/master/dist/css/BsMultiSelect.css) and manually adjust it for your theme.
+
+The Plugin follows Bootstrap 4 conventions and use the same instruments (babel, sass, rollup) so pretend to represent a BS team's modern plugin's **boilerplate**.  Supports all Bootsrap component features (pre/append buttons, validation). Supports RTL.
 
 ![image](https://user-images.githubusercontent.com/11598038/39988733-cda205e2-5770-11e8-8ca2-0d30cefc3ca1.png)
 
@@ -27,9 +29,9 @@ Other BS4 classes were used:
 
 * `badge` class - selected items, each item contains BS4 `close` button
 
-* `custom-checkbox` class - each dropdown item contains BS4 checkbox
+* `custom-control-input` class - each dropdown item contains BS4 custom checkboxes
 
-This plugin doesn't aim to bring its own styles. It was a clear design goal but unfortunatly, if you do not use SCSS, or manually adjusted CSS, this can be achived only with some exceptions. Not all bootstrap styles varibales can be accessed from a plugin as classes, therefore we need to setup them in javascript (default useCssPatch mode). Some of those variables are:
+It was a clear design goal to do not bring own external css but unfortunatly, if you do not use SCSS, this can be achived only for limited number of themes. Not all bootstrap styles varibales can be accessed from a plugin as classes, or CSS-variables therefore we need to setup them in javascript (default useCssPatch mode). Some of those variables are:
 
 * $input-height - we need it for DIV `form-control`'s min-height; default value is "calc(2.25rem + 2px)",
 
@@ -39,22 +41,20 @@ This plugin doesn't aim to bring its own styles. It was a clear design goal but 
 
 * focus for `isvalid`, focus for `isinvalid` effects (mixins)
 
-If your theme changes those variables, and you do not want to start with custom css, you have a possibility to update them on the plugin initialization using `cssPatch`.
+If your theme changes those variables, and you do not want to start with custom css, you have a possibility to update them on the plugin initialization using `cssPatch=true`.
 
-Sample `cssPatch` configuration (default values used:)
+Sample `cssPatch` configuration (default values used):
 ````
           $("select[multiple='multiple']").bsMultiSelect({
               cssPatch: {
+                // choices - dropdown menu items
                 choices: {listStyleType:'none'},
+                choice: 'px-md-2 px-1',  // classes!
+                choice_hover: 'text-primary bg-light', 
+                choiceLabel_disabled: {opacity: '.65'},
+                
+                // picks - panel where selected item located
                 picks: {listStyleType:'none', display:'flex', flexWrap:'wrap',  height: 'auto', marginBottom: '0'},
-                choice: 'px-md-2 px-1',  
-                choice_hover: 'text-primary bg-light', // classes!
-                choiceLabel_disabled: {opacity: '.65'}  
-                filterInput: { 
-                    classes: 'form-control', 
-                    styles: {border:'0px', height: 'auto', boxShadow:'none', padding:'0', margin:'0', 
-                             outline:'none', backgroundColor:'transparent'}
-                },
                 picks_disabled: {backgroundColor: '#e9ecef'},
                 picks_focus: {borderColor: '#80bdff', boxShadow: '0 0 0 0.2rem rgba(0, 123, 255, 0.25)'},
                 picks_focus_valid: {boxShadow: '0 0 0 0.2rem rgba(40, 167, 69, 0.25)'},
@@ -65,20 +65,25 @@ Sample `cssPatch` configuration (default values used:)
                 pick: {paddingLeft: '0px', lineHeight: '1.5em'},
                 pickButton: {fontSize:'1.5em', lineHeight: '.9em', float : "none"},
                 pickContent_disabled: {opacity: '.65'}, 
+
+                filterInput: {border:'0px', height: 'auto', boxShadow:'none', padding:'0', margin:'0', 
+                             outline:'none', backgroundColor:'transparent'}
               }
           });
-            
 ````
 
-or (option 2) use `useCss=true` option and load the customized copy `BsMultiselect.css` or referencing `BsMultiselect.scss` in your css project.
+Note: in css and cssPatch parameters you can mix styles and classes (depending on your theme available features)
+````
+      choiceLabel_disabled: { classes: '...', styles: {...}}   
+````
 
-BsMultiSelect handles click events friendly to modals and popups. Important: `preventDefault`, `stopPropagation` were not used (for mouse events), but I remove dom elments (intiated by the click on "x" button) using setTimeout(..,0) - to simplify the identification of click event's target during the bubling; 
+BsMultiSelect handles click events friendly to modals and popups. Important: for mouse events `preventDefault`, `stopPropagation` were not used (so your other controls always will get 'clicks' on them), but I remove dom elments (intiated by the click on "x" button) using setTimeout(..,0) - to simplify the identification of click event's target during the bubling (in global event loop you always could identify that click target belongs to BsMultiselect); 
 
 For keyboard events `preventDefault` was used to 
-    a) handle tab `9`  as autocompleate 
-    b) arrows `38`, `40` to prevent browser still them; 
-    c) enter `13` to prvent default button action (submit etc.)
-    d) esc `27` to avoi `clear text on esc` functionlity dublication
+    a) handle tab (`9`)  as autocompleate 
+    b) arrows (`38`, `40`) to prevent browser still them; 
+    c) enter (`13`) to prvent default button action (submit etc.)
+    d) esc (`27`) to avoid "clear text on `esc`" functionlity dublication
 
 Inspite plugin have form `reset` event listener, there are no MutationObserver defined inside (component does not track properties on original `SELECT`, `FIELDSET`). If you change  properties on original `SELECT` or `FIELDSET`, then you will need to push changes to component with methods `UpdateIsValid`, `UpdateDisabled`, `UpdateSize`, `UpdataData` or just `Update` (works like "update all") .
 
@@ -90,7 +95,7 @@ Or this way.
 
 ````
           var bsMultiSelect = $('#mySelect').BsMultiSelect(); // BsMultiSelect return the object
-          bsMultiSelect.Update();
+          bsMultiSelect.UpdateDisabled();
 ````         
 
 Other way to access the component's instance is using `data` :
@@ -105,9 +110,11 @@ Other way to access the component's instance is using `data` :
 
 ## Features
 
+ Shortly: BsMultiSelect supports ALL Bootstrap 4 component features (append/prepend input buttons, custom validation, HTML form validation visualization with `.was-validated`). Additionally it also supports RTL (right-to-left).
+
 **multiline**: input can grow vertically;
 
-**right-to-left support**: search for `[dir='rtl']` on parents; [`sample`](https://dashboardcode.github.io/BsMultiSelect/snippetRtl.html) 
+**right-to-left support**: search for `[dir='rtl']` on parents; [`snippet is here...`](https://dashboardcode.github.io/BsMultiSelect/snippetRtl.html) 
 **SELECT disabled / readonly / FIELDSET disabled support**: although there is difference between those two attributes for `input`, the HTML 5.2 support only `disabled` for [`select`](https://www.w3.org/TR/2017/REC-html52-20171214/sec-forms.html#the-select-element) element. `Readonly` attribute on original `select` will be ignored;
 
 **`<option disabled selected>`**: option that is `disabled` and `selected` at the same time can be deselected but can't be selected again (just as it is in HTML `select` and unlike `chosen.js`);
@@ -124,17 +131,20 @@ Other way to access the component's instance is using `data` :
 
 **no flick**: optionally it is possible to add UL element (component's picks/selections/badges list) manually to HTML; then you will see less flicks during the page load 
 
-**placeholder**: use `data-placeholder` or configuration `{placeholder:"select something.."}`
+**placeholder**: use `data-placeholder`, `data-bsmultiselect-placeholder` or configuration parameter `{placeholder:"select something.."}`
 
-**Bootstrap .is-valid and .is-invalid**: supports Bbootstrap validation behaviour as for original `select`, that means manage border, hoovered border, tollgle sibling `(in)valid-feedback` or `(in)valid-tooltip` );
+**Bootstrap custom validation .is-valid and .is-invalid**: supports Bbootstrap validation behaviour as for original `select`, that means manage border, hoovered border, tollgle sibling `(in)valid-feedback` or `(in)valid-tooltip` ); [`snippet is here...`](https://dashboardcode.github.io/BsMultiSelect/snippetCustomValidation.html) ;
 
-**Bootstrap .was-validated**: supports Bbootstrap validation behaviour as for original `select`, that means when there is `.was-validated` on parent then pseudoclasses `:invalid` and `:valid` manage border, hoovered border, tollgle sibling `(in)valid-feedback` or `(in)valid-tooltip` ); 
+**Suports HTML form validation**: if original select is invalid (required attribute, no selected) then BsMultiSelect informs user on submit; [`snippet is here...`](https://dashboardcode.github.io/BsMultiSelect/snippetFormValidation.html) ;
 
-**Suports client side validation**: if original select is invalid and prevents form submit informs about it with popup error message;
+**Suports HTML form custom validation**: you can get validationAPI "emulation" by `multiSelect.validationApi`, then call `.setCustomValidity(...)` method the same as you would do it for original [`select`](https://developer.mozilla.org/en-US/docs/Learn/Forms/Form_validation)
+
+
+**Bootstrap HTML form validation visualizations with .was-validated**: supports Bbootstrap 4 styles for input elements with pseudoclasses `.was-validated :invalid` and `.was-validated :valid`; manage border, hoovered border, toggle sibling `(in)valid-feedback` or `(in)valid-tooltip` );  [`snippet is here...`](https://dashboardcode.github.io/BsMultiSelect/snippetFormValidation.html) ;
 
 **sizes**: supports bootstrap `custom-select-lg`, `custom-select-sm` or `input-group-lg`, `input-group-sm` on original `select`
 
-**bootstrap input-group + prepend + append support**  but you will need to setup more infromation about the dom  - to mark a container
+**bootstrap input-group + prepend + append support**  but you will need to setup more infromation about the dom  - to mark a container with `dashboardcode-bsmultiselect` class
 ````
           <div class="input-group dashboardcode-bsmultiselect"> <!-- mark the container with dashboardcode-bsmultiselect"  -->
                 <div class="input-group-prepend">
@@ -149,41 +159,51 @@ Other way to access the component's instance is using `data` :
             
 ````
 
-**dialog and popup** works on Bootstrap dialogs and dropdowns (BS dropdowns requires to add additional click event filtering from developer)
+**dialog and popup** works on Bootstrap dialogs and dropdowns (BS dropdowns requires to add additional click event filtering from developer to do not close popup when clicking is inside the component - usually on click the popups should be closed )
 
 **CSS and SCSS**: you can copy BsMultiSelect.css (included to distribution) and update values manually for your theme.
 Or you can use [./scss/BsMultiSelect.scss](https://github.com/DashboardCode/BsMultiSelect/blob/master/scss/BsMultiSelect.scss) copy it to your project and update reference to your custom BS variables in yout theme); these requires such configuration:
 
 ````
           $("select[multiple='multiple']").bsMultiSelect({
-                         useCss: true // this disables many style's manipulation in js; and relly on classes
-                     });
+              useCssPatch: false // this disables style's manipulation in js; and relly only on classes
+          });
             
 ````
-Also `useCss: true` allows you to go to heavy styling (and even use plugin without bootstrap). Those additional options are available (you see default values):
+Also `useCssPatch: false` allows you to go to heavy styling (and even use plugin without bootstrap 4). Those additional options are available (you see default values):
 
 
 ````
           $("select[multiple='multiple']").bsMultiSelect({
-                         useCss: true,
-                         containerClass: 'dashboardcode-bsmultiselect',
-                         dropDownMenuClass: 'dropdown-menu',
-                         dropDownItemClass:  'px-2',
-                         dropDownItemHoverClass: 'text-primary bg-light',
-                         selectedPanelClass: 'form-control',
-                         selectedItemClass: 'badge',
-                         removeSelectedItemButtonClass: 'close',
-                         filterInputItemClass: '',
-                         filterInputClass: ''
-                         selectedPanelFocusClass : 'focus',
-                         selectedPanelDisabledClass: 'disabled',
-                         selectedItemContentDisabledClass: 'disabled'
-                     });
+              useCssPatch: false,
+              css : {
+                  choices: 'dropdown-menu', 
+                  choice_hover:  'hover',  
+                  choice_selected: '', 
+                  choice_disabled: '', 
+                  
+                  choiceCheckBox_disabled: 'disabled',
+                  choiceContent: 'custom-control custom-checkbox d-flex', 
+                  choiceCheckBox: 'custom-control-input', 
+                  choiceLabel: 'custom-control-label justify-content-start',
+                  choiceLabel_disabled: ''
+
+                  picks: 'form-control', 
+                  picks_focus: 'focus', 
+                  picks_disabled: 'disabled',
+                  pick_disabled: '',  
+                  
+                  pickFilter: '', 
+                  pick: 'badge', 
+                  pickContent_disabled: 'disabled', 
+                  pickButton: 'close', 
+                  filterInput: '',                  
+                }
+            });
             
 ````
 
-
-With them you can change classes of generated HTML elements. Default generated HTML (for `useCss: true`) looks like:
+With them you can change classes of generated HTML elements. Default generated HTML (for `useCssPatch: false`) looks like:
 
 
 ````
@@ -212,18 +232,19 @@ With them you can change classes of generated HTML elements. Default generated H
 **without select element - intialize with js object**: in this case should be initialized over div
 ````
 $('div.#bsMultiSelectJson').bsMultiSelect(
-                        {
-                            options : [
-                                        {text:"Asia", value:"C0",hidden:false,disabled:false,selected:true},
-                                        {text:"Europe",value:"C1",hidden:false,disabled:false,selected:false},
-                                        {text:"Australia",value:"C2",hidden:false,disabled:false,selected:false},
-                                        {text:"America",value:"C3",hidden:false,disabled:false,selected:false},
-                                        {text:"Africa",value:"C4",hidden:false,disabled:false,selected:false}
-                                     ],
-                            getDisabled : () => $('#optionDisable').is(":checked"), 
-                            getValidity : () => null, //... or true, or false 
-                        }
-                );
+            {
+                options : [
+                            {text:"Asia", value:"C0",hidden:false,disabled:false,selected:true},
+                            {text:"Europe",value:"C1",hidden:false,disabled:false,selected:false},
+                            {text:"Australia",value:"C2",hidden:false,disabled:false,selected:false},
+                            {text:"America",value:"C3",hidden:false,disabled:false,selected:false},
+                            {text:"Africa",value:"C4",hidden:false,disabled:false,selected:false}
+                         ],
+                getDisabled : () => $('#optionDisable').is(":checked"), 
+                getValidity : () => null, //... or true, or false 
+                // setSelected : ... if there are no selected property in option
+            }
+    );
 ````
 
 Note: options should contais two obligated properties (text, value) - you can't ommit them. if `selected` is ommited then `setSelected` configuration method become obligated. If `setSelected` return false this cancel update "process" - this way can be achieved such goals as **"max selected"**.
@@ -265,16 +286,17 @@ Note, BS allready provide classes like: `h-25`, `bg-light`, `text-primary` that 
 
 * usually you still need css to patch some plugin element's styles to fix unexpected theme effects (e.g. BS close button could be made white by a dark theme,  then `.badge > close {color:black;}` fix the problem );
 
-* memory leaks: as I see there is something like several KB memory leak on each attach/detach  (that can be ignored since as I see every jquery plugin "attach/detach" have the same effect). Memory leak is in the compiled objects, not nodes. But I can't identify its source (jquery, bootstrap utilities, my code?). If you have knowledge how to explain it: help me. Here is a quick way to experiment with attach/detach and memory snapshots: https://dashboardcode.github.io/BsMultiSelect/snippetLeaks.html ;
+* memory leaks: as I see there is something like several KB memory leak on each attach/detach  (that can be ignored since as I see every jquery plugin "attach/detach" have the same effect). Memory leak is in the compiled objects, not nodes. But I can't identify its source (jquery, bootstrap utilities, my code?). If you know how to explain it: help me. Here is a quick way to experiment with attach/detach and memory snapshots: https://dashboardcode.github.io/BsMultiSelect/snippetLeaks.html ;
 
 ### Future development
 
-Actually plugin is ready for BS 5 that means for "no jquery".
+Actually plugin is ready for BS 5 that means for "no jquery". 
+Plugins is highly customizable even now, but API is not published. "Single select", "Enter Tags" or "Enter emails", "Fonts list" etc. can be developed right now with it, but I need to stabilize API before publishing (first I should made "search" customizable).
 The better dropdown menu (two different looks for with and without filters;  limitation of size) should be provided soon.
-
+ 
 ### Alternatives:
 
-BsMultiSelect was created because at the moment when bootstrap 4 was released all existed multi select plugins had strange side effects. It was just simpler to try to combine several BS 4 tools together: `form-control`, `dropdown-menu`, `close` button, `badge` then trying to understand internals of mature projects.
+BsMultiSelect was created because at the moment when bootstrap 4 was released all existed multi select plugins had strange side effects. It was just simpler to try to combine several BS 4 tools together: `form-control`, `dropdown-menu`, `close` button, `badge` then trying to understand internals of mature projects. I hope now all them are OK, still there are lis my test results .
 
 
 * Chosen.js: https://harvesthq.github.io/chosen/ - (ver 1.8.5), strange multiple "Consider marking event handler as 'passive' to make the page more responsive" warnings to console, not integrated to bootstrap theme (30KB+10KB js+css minified);
@@ -283,9 +305,9 @@ BsMultiSelect was created because at the moment when bootstrap 4 was released al
 
 * Bootstrap multiselect: http://davidstutz.de/bootstrap-multiselect/  -  (ver. 0.9.15) BS 4 was not supported, also no SCSS, selected options looks as plain text (not as badges, no backspace key handling (67KB+1KB js+css NOT minified);
 
-* Bootstrap-select: https://silviomoreto.github.io/bootstrap-select/ - (ver. 1.12.4) BS 4 supported, but SCSS is not integrated with BS4 variables, also badges line can't be multiline (33KB+7KB js+css minified)
+* Bootstrap-select: https://silviomoreto.github.io/bootstrap-select/ - (ver. 1.12.4) BS 4 supported, but SCSS is not integrated with BS4 variables, also picks list can't be multiline (33KB+7KB js+css minified)
 
-* Choices https://github.com/jshjohnson/Choices
+* Choices https://github.com/jshjohnson/Choices - not integrated to bootstrap;
 
 Other Bootstrap extension ideas:
 https://github.com/trumbitta/bootstrap-css-utils
