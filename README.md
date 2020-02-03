@@ -1,6 +1,8 @@
 # DashboardCode Multiselect plugin for Bootstrap 4
 Demo: https://dashboardcode.github.io/BsMultiSelect/
+
 RTL snippet: https://dashboardcode.github.io/BsMultiSelect/snippetRtl.html
+
 Form validation snippet:  https://dashboardcode.github.io/BsMultiSelect/snippetFormValidation.html
 
 JSFiddle: https://jsfiddle.net/u2xf6bew/3/ Use it for bug reporting.
