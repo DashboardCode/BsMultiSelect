@@ -22,6 +22,13 @@ BsMultiSelect follows Bootstrap 4 conventions and use the same instruments (babe
 # Install
 `npm install @dashboardcode/bsmultiselect`
 
+# CDN
+
+https://cdn.jsdelivr.net/npm/@dashboardcode/bsmultiselect@0.5.2/dist/js/BsMultiSelect.min.js
+https://cdn.jsdelivr.net/npm/@dashboardcode/bsmultiselect@0.5.2/dist/js/BsMultiSelect.min.js.map
+https://cdn.jsdelivr.net/npm/@dashboardcode/bsmultiselect@0.5.2/dist/css/BsMultiSelect.min.css
+https://cdn.jsdelivr.net/npm/@dashboardcode/bsmultiselect@0.5.2/dist/css/BsMultiSelect.min.css.map
+
 # Architecture
 Instead of using BS4 Dropdown component (it is not possible since BS Dropdown requires presence of `toggle-buttons` https://github.com/twbs/bootstrap/issues/26420) the plugin uses `popper.js` (V1) directly.
 
