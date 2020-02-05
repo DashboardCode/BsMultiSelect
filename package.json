@@ -1,6 +1,6 @@
 {
   "name": "@dashboardcode/bsmultiselect",
-  "version": "0.5.1",
+  "version": "0.5.2",
   "private": false,
   "description": "Bootstrap 4 component - MultiSelect",
   "homepage": "https://dashboardcode.github.io/BsMultiSelect/",
@@ -42,7 +42,7 @@
     "stylelint-config-standard": "^19.0.0",
     "stylelint-order": "^4.0.0",
     "stylelint-scss": "^3.14.2",
-    "uglify-js": "^3.7.6"
+    "uglify-js": "^3.7.7"
   },
   "scripts": {
     "report": "echo.cd & cd & echo. & where node & echo.node -v & node -v & echo. & where npm & echo.npm -version & npm -version  & echo. & where eslint & echo.eslint -v & eslint -v & echo. & where rollup & echo.rollup -version & rollup -version & echo. &  echo.babel -version & node ./node_modules/@babel/cli/bin/babel --version",

@@ -7,7 +7,7 @@ export function PlaceholderAspect(placeholderText, isEmpty, picksElement, inputE
         else
             inputElement.style.width="2ch";
     }
-
+    var emptyToggleStyling = toggleStyling(inputElement, css.filterInput_empty);
     function showPlacehodler(isVisible){
         if (isVisible)
         {
@@ -19,7 +19,7 @@ export function PlaceholderAspect(placeholderText, isEmpty, picksElement, inputE
             inputElement.placeholder = "";
             picksElement.style.display= "flex";
         }
-        toggleStyling(inputElement, css.filterInput_empty, isVisible);
+        emptyToggleStyling(isVisible);
         setEmptyInputWidth(isVisible);
     }
     showPlacehodler(true);

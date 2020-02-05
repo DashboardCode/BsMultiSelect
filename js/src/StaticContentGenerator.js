@@ -84,7 +84,6 @@ export function staticContentGenerator(element, createElement, containerClass,  
         }
     }
 
-
     addStyling(picksElement,       css.picks);
     addStyling(choicesElement,     css.choices);
     addStyling(pickFilterElement,  css.pickFilter);
@@ -97,6 +96,8 @@ export function staticContentGenerator(element, createElement, containerClass,  
         createInputId = () => `${containerClass}-generated-filter-${containerElement.id}`;
 
     let isFocusIn = false;
+    let disableToggleStyling =  toggleStyling(picksElement, css.picks_disabled);
+    let focusToggleStyling = toggleStyling(picksElement, css.picks_focus)
     return {
         initialElement:element,
         selectElement, 
@@ -132,7 +133,7 @@ export function staticContentGenerator(element, createElement, containerClass,  
             }
         },
         disable(isDisabled){
-            toggleStyling(picksElement, css.picks_disabled, isDisabled)
+            disableToggleStyling(isDisabled)
         },
         getIsFocusIn(){
             return isFocusIn;
@@ -141,7 +142,7 @@ export function staticContentGenerator(element, createElement, containerClass,  
             isFocusIn = newIsFocusIn;
         },
         toggleFocusStyling(){
-            toggleStyling(picksElement, css.picks_focus, isFocusIn)
+            focusToggleStyling(isFocusIn)
         },
         dispose(){
             if (ownContainerElement)

@@ -14,6 +14,7 @@ export const css = {
 
     // used in BsPickContentStylingCorrector
     pick: 'badge', // bs4
+    pickContent: '',
     pickContent_disabled: 'disabled', // not bs4, in scss 'ul.form-control li span.disabled'
     pickButton: 'close', // bs4
 
@@ -42,8 +43,8 @@ export const cssPatch = {
     picks_disabled: {backgroundColor: '#e9ecef'},
 
     picks_focus: {borderColor: '#80bdff', boxShadow: '0 0 0 0.2rem rgba(0, 123, 255, 0.25)'},
-    picks_focus_valid: {boxShadow: '0 0 0 0.2rem rgba(40, 167, 69, 0.25)'},
-    picks_focus_invalid: {boxShadow: '0 0 0 0.2rem rgba(220, 53, 69, 0.25)'},
+    picks_focus_valid: {borderColor: '', boxShadow: '0 0 0 0.2rem rgba(40, 167, 69, 0.25)'},
+    picks_focus_invalid: {borderColor: '', boxShadow: '0 0 0 0.2rem rgba(220, 53, 69, 0.25)'},
     
     // used in BsAppearance
     picks_def: {minHeight: 'calc(2.25rem + 2px)'},

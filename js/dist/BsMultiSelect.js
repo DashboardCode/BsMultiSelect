@@ -27,7 +27,7 @@ function extendConfigurtion(configuration, defaults) {
 
   if (defaults.cssPatch instanceof Boolean || typeof defaults.cssPatch === "boolean" || cfgCssPatch instanceof Boolean || typeof cfgCssPatch === "boolean") throw new Error("BsMultiSelect: 'cssPatch' was used instead of 'useCssPatch'"); // often type of error
 
-  var defCssPatch = createCss(defaults.cssPatch, cfgCssPatch); // ? classes, merge styles
+  var defCssPatch = createCss(defaults.cssPatch, cfgCssPatch); // replace classes, merge styles
 
   configuration.css = defCss;
   configuration.cssPatch = defCssPatch;

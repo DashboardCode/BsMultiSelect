@@ -3,7 +3,7 @@ Demo: https://dashboardcode.github.io/BsMultiSelect/
 
 RTL snippet: https://dashboardcode.github.io/BsMultiSelect/snippetRtl.html
 
-Form validation snippet:  https://dashboardcode.github.io/BsMultiSelect/snippetFormValidation.html
+Form validation snippet: https://dashboardcode.github.io/BsMultiSelect/snippetFormValidation.html
 
 CodePen, use it for bug reporting: https://codepen.io/rpokrovskij/pen/yLymQwW 
 

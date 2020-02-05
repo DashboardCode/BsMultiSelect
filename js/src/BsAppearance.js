@@ -78,8 +78,8 @@ export function bsAppearance(multiSelect, staticContent, optionsAdapter,
         staticContent.toggleFocusStyling = () => {
             var validity =  validationObservable.getValue();
             var isFocusIn = staticContent.getIsFocusIn();
-            if (isFocusIn)
-            {
+            defToggleFocusStyling(isFocusIn)
+            if (isFocusIn){
                 if (validity===false) { 
                     // but not toggle events (I know it will be done in future)
                     staticContent.setIsFocusIn(isFocusIn);
@@ -89,14 +89,28 @@ export function bsAppearance(multiSelect, staticContent, optionsAdapter,
                     // but not toggle events (I know it will be done in future)
                     staticContent.setIsFocusIn(isFocusIn);
                     
-                    addStyling(staticContent.picksElement, css.picks_focus_valid)
-                } else {
-                    defToggleFocusStyling(isFocusIn)
-                }
+                    addStyling(staticContent.picksElement, css.picks_focus_valid)  
+                }              
             }
-            else{
-                defToggleFocusStyling(isFocusIn)
-            }
+            // if (isFocusIn)
+            // {
+            //     if (validity===false) { 
+            //         // but not toggle events (I know it will be done in future)
+            //         staticContent.setIsFocusIn(isFocusIn);
+                    
+            //         addStyling(staticContent.picksElement, css.picks_focus_invalid)
+            //     } else if (validity===true) {
+            //         // but not toggle events (I know it will be done in future)
+            //         staticContent.setIsFocusIn(isFocusIn);
+                    
+            //         addStyling(staticContent.picksElement, css.picks_focus_valid)
+            //     } else {
+            //         defToggleFocusStyling(isFocusIn)
+            //     }
+            // }
+            // else{
+            //     defToggleFocusStyling(isFocusIn)
+            // }
         }
     }
 

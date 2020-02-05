@@ -1,5 +1,6 @@
 # CHANGELOG
 ````
+0.5.2  - styles patching throug js bug resolved
 0.5.1  - form reset and fieldset disabled bug solved
 0.5.0  - new styling parameters, rtl support, validation. breaking changes! (update your css and configuration);
 0.4.33 - better suport of group-input append radius corners
