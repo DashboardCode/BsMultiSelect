@@ -77,11 +77,12 @@ Sample `useCssPatch=true` configuration (default values used):
           });
 ````
 
-Note 1: in css and cssPatch (discussed bellow) parameters you can mix styles and classes (depending on your theme available features) this way:
+Note 1: in `cssPatch` and `css` (discussed bellow) parameters you can mix styles and classes (depending on your theme available features) this way:
 ````
       choiceLabel_disabled: { classes: '...', styles: {...}}   
 ````
 
+Note 1: when you setup `cssPatch` and `css` (discussed bellow) parameters in configuration as object parameter - you do not need to repeat all default values -  when `classes` replaces default `classes`, `styles` from configuraion merge default `styles` (you are able to add/replace default styles only you need).
 
 `BsMultiSelect` handles click events friendly to your modals and popups. Important: for mouse events `preventDefault`, `stopPropagation` were not used (so your other controls always will get 'clicks' on them). BsMultiSelect remove its DOM elements (in 'option was deselected' scenaroio, intiated by the click on "x" button) and do it using setTimeout(..,0) - this simplifies the identification of click event's target during the bubling (bacause of element is not removing in global event loop iteration you always are able to identify that click's target belongs to BsMultiselect - and skip processing - most probably cancel popup close handler); 
 
@@ -140,12 +141,11 @@ Other way to access the component's instance is using `data` :
 
 **placeholder**: use `data-placeholder`, `data-bsmultiselect-placeholder` or configuration parameter `{placeholder:"select something.."}`
 
-**Bootstrap custom validation .is-valid and .is-invalid**: supports Bbootstrap validation behaviour as for original `select`, that means manage border, hoovered border, tollgle sibling `(in)valid-feedback` or `(in)valid-tooltip` ); [`snippet is here...`](https://dashboardcode.github.io/BsMultiSelect/snippetCustomValidation.html) ;
+**Bootstrap custom validation .is-valid and .is-invalid**: supports Bootstrap validation behaviour as for the original `select`, that means manage border, hovered border, toggle siblings `(in)valid-feedback` or `(in)valid-tooltip` ); [`snippet is here...`](https://dashboardcode.github.io/BsMultiSelect/snippetCustomValidation.html) ;
 
-**Suports HTML form validation**: if original select is invalid (required attribute, no selected) then BsMultiSelect informs user on submit; [`snippet is here...`](https://dashboardcode.github.io/BsMultiSelect/snippetFormValidation.html) ;
+**Suports HTML form validation**: if original select is invalid (option is required - required attribute) then BsMultiSelect informs user on submit; [`snippet is here...`](https://dashboardcode.github.io/BsMultiSelect/snippetFormValidation.html) ;
 
-**Suports HTML form custom validation**: you can get validationAPI "emulation" by `multiSelect.validationApi`, then call `.setCustomValidity(...)` method the same as you would do it for original [`select`](https://developer.mozilla.org/en-US/docs/Learn/Forms/Form_validation)
-
+**Suports HTML form custom validation**: you can get HTMLElement *validation API* "emulation" by `multiSelect.validationApi`, then you can call `.setCustomValidity(...)` method the same as you would do it for original [`select`](https://developer.mozilla.org/en-US/docs/Learn/Forms/Form_validation)
 
 **Bootstrap HTML form validation visualizations with .was-validated**: supports Bbootstrap 4 styles for input elements with pseudoclasses `.was-validated :invalid` and `.was-validated :valid`; manage border, hoovered border, toggle sibling `(in)valid-feedback` or `(in)valid-tooltip` );  [`snippet is here...`](https://dashboardcode.github.io/BsMultiSelect/snippetFormValidation.html) ;
 
