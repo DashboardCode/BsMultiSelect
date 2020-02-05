@@ -101,6 +101,10 @@
   background-color: transparent;
   border: 0;
 }
+.dashboardcode-bsmultiselect ul.dropdown-menu > li .custom-control {
+  -webkit-box-pack: initial;
+  justify-content: initial;
+}
 .dashboardcode-bsmultiselect ul.dropdown-menu > li .custom-control-input.disabled ~ .custom-control-label {
   color: #6c757d;
 }

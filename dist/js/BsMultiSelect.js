@@ -1,5 +1,5 @@
 /*!
-  * DashboardCode BsMultiSelect v0.5.2 (https://dashboardcode.github.io/BsMultiSelect/)
+  * DashboardCode BsMultiSelect v0.5.3 (https://dashboardcode.github.io/BsMultiSelect/)
   * Copyright 2017-2020 Roman Pokrovskij (github user rpokrovskij)
   * Licensed under APACHE 2 (https://github.com/DashboardCode/BsMultiSelect/blob/master/LICENSE)
   */
@@ -2441,6 +2441,10 @@
         opacity: '.65'
       },
       // used in choiceContentGenerator
+      choiceContent: {
+        justifyContent: 'initial'
+      },
+      // BS problem: without this on inline form menu items justified center
       choiceLabel: {
         color: 'inherit'
       },
