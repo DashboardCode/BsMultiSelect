@@ -13,15 +13,25 @@ export function extendOverriding(destination, source) {
         destination[property] = source[property];
 }
 
-export function shallowClone(source, ...sources) { // override previous
+export function shallowClearClone(source, ...sources) { // override previous, no null and undefined
     var destination = {};
-    for (let property in source) // TODO:  Object.assign (need polyfill for IE11)
-         destination[property] = source[property];
+    for (let property in source){ // TODO:  Object.assign (need polyfill for IE11)
+        let v = source[property];
+        if (!(v === null || v===undefined))
+            destination[property] = v;
+    }
     if(sources)
         sources.forEach(
             s=>{
-                for(let property in s)
-                    destination[property] = s[property];
+                for(let property in s){
+                    let v = s[property];
+                    if (!(v === null || v===undefined))
+                        destination[property] = v;
+                    else
+                        if (destination.hasOwnProperty(property)){
+                            delete destination[property];
+                        }
+                }
             }
         )
     return destination;

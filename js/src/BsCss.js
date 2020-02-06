@@ -60,5 +60,5 @@ export const cssPatch = {
     choiceContent: {justifyContent: 'initial'}, // BS problem: without this on inline form menu items justified center
     choiceLabel: {color: 'inherit'}, // otherwise BS .was-validated set its color
     choiceCheckBox: {color: 'inherit'},
-    choiceLabel_disabled: {opacity: '.65'}  // more flexible than {color: '#6c757d'}, avoid opacity on pickElement's border
+    choiceLabel_disabled: {opacity: '.65'}  // more flexible than {color: '#6c757d'}; note: avoid opacity on pickElement's border; TODO write to BS4 
 };

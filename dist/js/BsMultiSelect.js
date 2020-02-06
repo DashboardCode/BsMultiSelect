@@ -1,5 +1,5 @@
 /*!
-  * DashboardCode BsMultiSelect v0.5.3 (https://dashboardcode.github.io/BsMultiSelect/)
+  * DashboardCode BsMultiSelect v0.5.4 (https://dashboardcode.github.io/BsMultiSelect/)
   * Copyright 2017-2020 Roman Pokrovskij (github user rpokrovskij)
   * Licensed under APACHE 2 (https://github.com/DashboardCode/BsMultiSelect/blob/master/LICENSE)
   */
@@ -454,13 +454,14 @@
         destination[property] = source[property];
       }
     }
-    function shallowClone(source) {
-      // override previous
+    function shallowClearClone(source) {
+      // override previous, no null and undefined
       var destination = {};
 
       for (var property in source) {
         // TODO:  Object.assign (need polyfill for IE11)
-        destination[property] = source[property];
+        var v = source[property];
+        if (!(v === null || v === undefined)) destination[property] = v;
       }
 
       for (var _len = arguments.length, sources = new Array(_len > 1 ? _len - 1 : 0), _key = 1; _key < _len; _key++) {
@@ -469,7 +470,10 @@
 
       if (sources) sources.forEach(function (s) {
         for (var _property in s) {
-          destination[_property] = s[_property];
+          var _v = s[_property];
+          if (!(_v === null || _v === undefined)) destination[_property] = _v;else if (destination.hasOwnProperty(_property)) {
+            delete destination[_property];
+          }
         }
       });
       return destination;
@@ -847,62 +851,55 @@
           }
         }
       };
-    }
+    } // function extendClasses(out, param, actionStr, actionArr){
+    //     if (isString(param)){
+    //         let c = param.split(' ');
+    //         out.classes = actionStr(c);
+    //         return true;
+    //     } else if (param instanceof Array){
+    //         out.classes = actionArr(param);
+    //         return true;
+    //     }
+    //     return false;
+    // }
 
-    function extendClasses(out, param, actionStr, actionArr) {
-      if (isString(param)) {
-        out.classes = actionStr(param.split(' '));
-        return true;
-      } else if (param instanceof Array) {
-        out.classes = actionArr(param);
-        return true;
-      }
-
-      return false;
-    }
-
-    function extendClassesIfNotEmpty(out, param, actionStr, actionArr) {
+    function extendClasses(out, param, actionStr, actionArr, isRemoveEmptyClasses) {
       if (isString(param)) {
         var c = param.split(' ');
-        if (c && c.length > 0) out.classes = actionStr();else if (c == "") out.classes = [];
+        if (!isRemoveEmptyClasses || c.length > 0) out.classes = actionStr(c);else if (c == "") out.classes = [];
         return true;
       } else if (param instanceof Array) {
-        if (param && c.param > 0) out.classes = actionArr(param);else if (param.length == 0) out.classes = [];
+        if (!isRemoveEmptyClasses || param.length > 0) out.classes = actionArr(param);else if (param.length == 0) out.classes = [];
         return true;
       }
 
       return false;
-    }
+    } // function extend(value, param, actionStr, actionArr, actionObj){
+    //     var success = extendClasses(value, param, actionStr, actionArr);
+    //     if (success === false){
+    //         if (param instanceof Object){
+    //             var {classes, styles} = param;
+    //             if (classes){
+    //                 extendClasses(value, classes, actionStr, actionArr);
+    //             }
+    //             if (styles) {
+    //                 value.styles = actionObj(styles);
+    //             } else if (!classes) {
+    //                 value.styles = actionObj(param)
+    //             }
+    //         }
+    //     }
+    // }
 
-    function extend(value, param, actionStr, actionArr, actionObj) {
-      var success = extendClasses(value, param, actionStr, actionArr);
 
-      if (success === false) {
-        if (param instanceof Object) {
-          var classes = param.classes,
-              styles = param.styles;
-
-          if (classes) {
-            extendClasses(value, classes, actionStr, actionArr);
-          }
-
-          if (styles) {
-            value.styles = actionObj(styles);
-          } else if (!classes) {
-            value.styles = actionObj(param);
-          }
-        }
-      }
-    }
-
-    function extendIfNotEmpty(value, param, actionStr, actionArr, actionObj) {
-      var success = extendClassesIfNotEmpty(value, param, actionStr, actionArr);
+    function extend(value, param, actionStr, actionArr, actionObj, isRemoveEmptyClasses) {
+      var success = extendClasses(value, param, actionStr, actionArr, isRemoveEmptyClasses);
 
       if (success === false) {
         if (param instanceof Object) {
           var classes = param.classes,
               styles = param.styles;
-          extendClassesIfNotEmpty(value, classes, actionStr, actionArr);
+          extendClasses(value, classes, actionStr, actionArr, isRemoveEmptyClasses);
 
           if (styles) {
             value.styles = actionObj(styles);
@@ -925,14 +922,25 @@
         }, function (a) {
           return a.slice();
         }, function (o) {
-          return shallowClone(o);
-        });
+          return shallowClearClone(o);
+        }, true);
       }
 
       return Object.freeze(value);
-    }
+    } // function createStylingReplaceClasses(param, ...params){
+    //     var value = {classes:[], styles:{}};
+    //     if (param){
+    //         extend(value, param, a=>a, a=>a.slice(), o=>shallowClearClone(o),true);
+    //         if (params){
+    //             let {styles} = value;
+    //             params.forEach( p=>
+    //                 extend(value, p, s=>s, a=>a.slice(), o=> shallowClearClone(styles, o)),true); 
+    //         }
+    //     }
+    //     return Styling(value);
+    // }
 
-    function createStylingReplaceClasses(param) {
+    function createStyling(isReplace, param) {
       var value = {
         classes: [],
         styles: {}
@@ -944,61 +952,36 @@
         }, function (a) {
           return a.slice();
         }, function (o) {
-          return shallowClone(o);
-        });
+          return shallowClearClone(o);
+        }, true);
 
-        for (var _len = arguments.length, params = new Array(_len > 1 ? _len - 1 : 0), _key = 1; _key < _len; _key++) {
-          params[_key - 1] = arguments[_key];
-        }
-
-        if (params) {
-          var styles = value.styles;
-          params.forEach(function (p) {
-            return extendIfNotEmpty(value, p, function (s) {
-              return s;
-            }, function (a) {
-              return a.slice();
-            }, function (o) {
-              return shallowClone(styles, o);
-            });
-          });
-        }
-      }
-
-      return Styling(value);
-    }
-
-    function createStylingJoinClasses(param) {
-      var value = {
-        classes: [],
-        styles: {}
-      };
-
-      if (param) {
-        extend(value, param, function (a) {
-          return a;
-        }, function (a) {
-          return a.slice();
-        }, function (o) {
-          return shallowClone(o);
-        });
-
-        for (var _len2 = arguments.length, params = new Array(_len2 > 1 ? _len2 - 1 : 0), _key2 = 1; _key2 < _len2; _key2++) {
-          params[_key2 - 1] = arguments[_key2];
+        for (var _len = arguments.length, params = new Array(_len > 2 ? _len - 2 : 0), _key = 2; _key < _len; _key++) {
+          params[_key - 2] = arguments[_key];
         }
 
         if (params) {
           var classes = value.classes,
               styles = value.styles;
-          params.forEach(function (p) {
+          var extendInt = isReplace ? function (p) {
+            return extend(value, p, function (s) {
+              return s;
+            }, function (a) {
+              return a.slice();
+            }, function (o) {
+              return shallowClearClone(styles, o);
+            }, true);
+          } : function (p) {
             return extend(value, p, function (a) {
               return classes.concat(a);
             }, function (a) {
               return classes.concat(a);
             }, function (o) {
-              return shallowClone(styles, o);
-            });
-          }); // join classes 
+              return shallowClearClone(styles, o);
+            }, false);
+          };
+          params.forEach(function (p) {
+            return extendInt(p);
+          });
         }
       }
 
@@ -1012,9 +995,7 @@
         var param1 = stylings1[property];
         var param2 = stylings2 ? stylings2[property] : undefined;
         if (param2 === undefined) destination[property] = Styling(param1);else {
-          //if (replaceClasses)
-          destination[property] = createStylingReplaceClasses(param1, param2); //else
-          //    destination[property] = createStylingJoinClasses(param1, param2); 
+          destination[property] = createStyling(true, param1, param2);
         }
       }
 
@@ -1028,7 +1009,7 @@
         var param2 = stylings2[property];
         var param1 = stylings1[property];
         if (param1 === undefined) stylings1[property] = Styling(param2);else {
-          stylings1[property] = createStylingJoinClasses(param1, param2); //createStylingReplaceClasses(param1, param2); 
+          stylings1[property] = createStyling(false, param1, param2);
         }
       }
     }
@@ -2454,7 +2435,7 @@
       },
       choiceLabel_disabled: {
         opacity: '.65'
-      } // more flexible than {color: '#6c757d'}, avoid opacity on pickElement's border
+      } // more flexible than {color: '#6c757d'}; note: avoid opacity on pickElement's border; TODO write to BS4 
 
     };
 

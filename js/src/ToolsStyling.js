@@ -1,4 +1,4 @@
-import {shallowClone, isString} from './ToolsJs';
+import {shallowClearClone, isString} from './ToolsJs';
 
 export function addStyling(element, styling){
     var backupStyling = {classes:[], styles:{}}
@@ -41,27 +41,28 @@ export function toggleStyling(element, styling){
     }
 }
 
-function extendClasses(out, param, actionStr, actionArr){
-    if (isString(param)){
-        out.classes = actionStr(param.split(' '));
-        return true;
-    } else if (param instanceof Array){
-        out.classes = actionArr(param);
-        return true;
-    }
-    return false;
-}
+// function extendClasses(out, param, actionStr, actionArr){
+//     if (isString(param)){
+//         let c = param.split(' ');
+//         out.classes = actionStr(c);
+//         return true;
+//     } else if (param instanceof Array){
+//         out.classes = actionArr(param);
+//         return true;
+//     }
+//     return false;
+// }
 
-function extendClassesIfNotEmpty(out, param, actionStr, actionArr){
+function extendClasses(out, param, actionStr, actionArr, isRemoveEmptyClasses){
     if (isString(param)){
-        var c = param.split(' ');
-        if (c && c.length>0)
-            out.classes = actionStr();
+        let c = param.split(' ');
+        if (!isRemoveEmptyClasses || c.length>0)
+            out.classes = actionStr(c);
         else if (c=="")
             out.classes = [];
         return true;
     } else if (param instanceof Array){
-        if (param && c.param>0)
+        if (!isRemoveEmptyClasses || param.length>0)
             out.classes = actionArr(param);
         else if (param.length==0)
             out.classes = [];
@@ -70,29 +71,29 @@ function extendClassesIfNotEmpty(out, param, actionStr, actionArr){
     return false;
 }
 
-function extend(value, param, actionStr, actionArr, actionObj){
-    var success = extendClasses(value, param, actionStr, actionArr);
-    if (success === false){
-        if (param instanceof Object){
-            var {classes, styles} = param;
-            if (classes){
-                extendClasses(value, classes, actionStr, actionArr);
-            }
-            if (styles) {
-                value.styles = actionObj(styles);
-            } else if (!classes) {
-                value.styles = actionObj(param)
-            }
-        }
-    }
-}
+// function extend(value, param, actionStr, actionArr, actionObj){
+//     var success = extendClasses(value, param, actionStr, actionArr);
+//     if (success === false){
+//         if (param instanceof Object){
+//             var {classes, styles} = param;
+//             if (classes){
+//                 extendClasses(value, classes, actionStr, actionArr);
+//             }
+//             if (styles) {
+//                 value.styles = actionObj(styles);
+//             } else if (!classes) {
+//                 value.styles = actionObj(param)
+//             }
+//         }
+//     }
+// }
 
-function extendIfNotEmpty(value, param, actionStr, actionArr, actionObj){
-    var success = extendClassesIfNotEmpty(value, param, actionStr, actionArr);
+function extend(value, param, actionStr, actionArr, actionObj, isRemoveEmptyClasses){
+    var success = extendClasses(value, param, actionStr, actionArr, isRemoveEmptyClasses);
     if (success === false){
         if (param instanceof Object){
             var {classes, styles} = param;
-            extendClassesIfNotEmpty(value, classes, actionStr, actionArr);
+            extendClasses(value, classes, actionStr, actionArr, isRemoveEmptyClasses);
             
             if (styles) {
                 value.styles = actionObj(styles);
@@ -106,33 +107,33 @@ function extendIfNotEmpty(value, param, actionStr, actionArr, actionObj){
 export function Styling(param){
     var value = {classes:[], styles:{}};
     if (param){
-        extend(value, param, a=>a, a=>a.slice(), o=>shallowClone(o));
+        extend(value, param, a=>a, a=>a.slice(), o=>shallowClearClone(o), true);
     }
     return Object.freeze(value);
 }
 
-function createStylingReplaceClasses(param, ...params){
-    var value = {classes:[], styles:{}};
-    if (param){
-        extend(value, param, a=>a, a=>a.slice(), o=>shallowClone(o));
-        if (params){
-            let {styles} = value;
-            params.forEach( p=>
-                extendIfNotEmpty(value, p, s=>s, a=>a.slice(), o=> shallowClone(styles, o))); 
-        }
-    }
-    return Styling(value);
-}
+// function createStylingReplaceClasses(param, ...params){
+//     var value = {classes:[], styles:{}};
+//     if (param){
+//         extend(value, param, a=>a, a=>a.slice(), o=>shallowClearClone(o),true);
+//         if (params){
+//             let {styles} = value;
+//             params.forEach( p=>
+//                 extend(value, p, s=>s, a=>a.slice(), o=> shallowClearClone(styles, o)),true); 
+//         }
+//     }
+//     return Styling(value);
+// }
 
-function createStylingJoinClasses(param, ...params){
+function createStyling(isReplace, param, ...params){
     var value = {classes:[], styles:{}};
     if (param){
-        extend(value, param, a=>a, a=>a.slice(), o=>shallowClone(o));
+        extend(value, param, a=>a, a=>a.slice(), o=>shallowClearClone(o),true);
         if (params){
             var {classes, styles} = value;
-            params.forEach( p=>
-                extend(value, p, a=>classes.concat(a), a=>classes.concat(a), o=>shallowClone(styles, o))); // join classes 
-                
+            var extendInt = isReplace? (p)=>extend(value, p, s=>s, a=>a.slice(), o=> shallowClearClone(styles, o),true):
+                (p)=>extend(value, p, a=>classes.concat(a), a=>classes.concat(a), o=>shallowClearClone(styles, o),false)
+            params.forEach(p=> extendInt(p));
         }
     }
     return Styling(value);
@@ -147,10 +148,7 @@ export function createCss(stylings1, stylings2){
         if (param2===undefined)
             destination[property] = Styling(param1)
         else{
-            //if (replaceClasses)
-                destination[property] = createStylingReplaceClasses(param1, param2); 
-            //else
-            //    destination[property] = createStylingJoinClasses(param1, param2); 
+            destination[property] = createStyling(true, param1, param2); 
         }
     }
     if (stylings2)
@@ -168,7 +166,7 @@ export function extendCss(stylings1, stylings2){
         if (param1 === undefined)
             stylings1[property] = Styling(param2)
         else{
-            stylings1[property] = createStylingJoinClasses(param1, param2); //createStylingReplaceClasses(param1, param2); 
+            stylings1[property] = createStyling(false, param1, param2); 
         }
     }
 }
