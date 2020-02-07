@@ -1,5 +1,5 @@
 /*!
-  * DashboardCode BsMultiSelect v0.5.4 (https://dashboardcode.github.io/BsMultiSelect/)
+  * DashboardCode BsMultiSelect v0.5.5 (https://dashboardcode.github.io/BsMultiSelect/)
   * Copyright 2017-2020 Roman Pokrovskij (github user rpokrovskij)
   * Licensed under APACHE 2 (https://github.com/DashboardCode/BsMultiSelect/blob/master/LICENSE)
   */
@@ -851,17 +851,7 @@
           }
         }
       };
-    } // function extendClasses(out, param, actionStr, actionArr){
-    //     if (isString(param)){
-    //         let c = param.split(' ');
-    //         out.classes = actionStr(c);
-    //         return true;
-    //     } else if (param instanceof Array){
-    //         out.classes = actionArr(param);
-    //         return true;
-    //     }
-    //     return false;
-    // }
+    }
 
     function extendClasses(out, param, actionStr, actionArr, isRemoveEmptyClasses) {
       if (isString(param)) {
@@ -874,23 +864,7 @@
       }
 
       return false;
-    } // function extend(value, param, actionStr, actionArr, actionObj){
-    //     var success = extendClasses(value, param, actionStr, actionArr);
-    //     if (success === false){
-    //         if (param instanceof Object){
-    //             var {classes, styles} = param;
-    //             if (classes){
-    //                 extendClasses(value, classes, actionStr, actionArr);
-    //             }
-    //             if (styles) {
-    //                 value.styles = actionObj(styles);
-    //             } else if (!classes) {
-    //                 value.styles = actionObj(param)
-    //             }
-    //         }
-    //     }
-    // }
-
+    }
 
     function extend(value, param, actionStr, actionArr, actionObj, isRemoveEmptyClasses) {
       var success = extendClasses(value, param, actionStr, actionArr, isRemoveEmptyClasses);
@@ -927,18 +901,7 @@
       }
 
       return Object.freeze(value);
-    } // function createStylingReplaceClasses(param, ...params){
-    //     var value = {classes:[], styles:{}};
-    //     if (param){
-    //         extend(value, param, a=>a, a=>a.slice(), o=>shallowClearClone(o),true);
-    //         if (params){
-    //             let {styles} = value;
-    //             params.forEach( p=>
-    //                 extend(value, p, s=>s, a=>a.slice(), o=> shallowClearClone(styles, o)),true); 
-    //         }
-    //     }
-    //     return Styling(value);
-    // }
+    }
 
     function createStyling(isReplace, param) {
       var value = {
@@ -1473,8 +1436,7 @@
               /*isDisabled*/
               true,
               /*isSelected*/
-              true); // TODO test it, THERE SHOULD BE SOMETHING WRONGGGG
-
+              false);
               multiSelectData.toggle = null;
             } else {
               multiSelectData.toggle = function () {

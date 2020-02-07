@@ -436,7 +436,7 @@ export class MultiSelect {
                     multiSelectData.excludedFromSearch = multiSelectData.isOptionDisabled;
                     if (multiSelectData.isOptionDisabled)
                     {
-                        multiSelectData.ChoiceContent.disable( /*isDisabled*/ true, /*isSelected*/ true); // TODO test it, THERE SHOULD BE SOMETHING WRONGGGG
+                        multiSelectData.ChoiceContent.disable( /*isDisabled*/ true, /*isSelected*/ false); 
                         multiSelectData.toggle = null;
                     }
                     else

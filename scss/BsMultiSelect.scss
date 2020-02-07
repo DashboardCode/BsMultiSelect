@@ -152,12 +152,16 @@
 .was-validated .dashboardcode-bsmultiselect ul.dropdown-menu > li .custom-control-input:valid:not(:checked) ~ .custom-control-label{
     color: $dropdown-color;
 }
+
+// hover
 .was-validated .dashboardcode-bsmultiselect ul.dropdown-menu > li.hover .custom-control-input:valid:checked ~ .custom-control-label{
     color: var(--primary);
 }
 .was-validated .dashboardcode-bsmultiselect ul.dropdown-menu > li.hover .custom-control-input:valid:not(:checked) ~ .custom-control-label{
     color: var(--primary);
 }
+
+// checkbox (label's ':before')
 .was-validated .dashboardcode-bsmultiselect ul.dropdown-menu > li .custom-control-input:valid:checked ~ .custom-control-label::before {
     color: $custom-control-indicator-checked-color;
     border-color: $custom-control-indicator-checked-border-color;
