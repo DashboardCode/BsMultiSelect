@@ -41,18 +41,6 @@ export function toggleStyling(element, styling){
     }
 }
 
-// function extendClasses(out, param, actionStr, actionArr){
-//     if (isString(param)){
-//         let c = param.split(' ');
-//         out.classes = actionStr(c);
-//         return true;
-//     } else if (param instanceof Array){
-//         out.classes = actionArr(param);
-//         return true;
-//     }
-//     return false;
-// }
-
 function extendClasses(out, param, actionStr, actionArr, isRemoveEmptyClasses){
     if (isString(param)){
         let c = param.split(' ');
@@ -70,23 +58,6 @@ function extendClasses(out, param, actionStr, actionArr, isRemoveEmptyClasses){
     }
     return false;
 }
-
-// function extend(value, param, actionStr, actionArr, actionObj){
-//     var success = extendClasses(value, param, actionStr, actionArr);
-//     if (success === false){
-//         if (param instanceof Object){
-//             var {classes, styles} = param;
-//             if (classes){
-//                 extendClasses(value, classes, actionStr, actionArr);
-//             }
-//             if (styles) {
-//                 value.styles = actionObj(styles);
-//             } else if (!classes) {
-//                 value.styles = actionObj(param)
-//             }
-//         }
-//     }
-// }
 
 function extend(value, param, actionStr, actionArr, actionObj, isRemoveEmptyClasses){
     var success = extendClasses(value, param, actionStr, actionArr, isRemoveEmptyClasses);
@@ -111,19 +82,6 @@ export function Styling(param){
     }
     return Object.freeze(value);
 }
-
-// function createStylingReplaceClasses(param, ...params){
-//     var value = {classes:[], styles:{}};
-//     if (param){
-//         extend(value, param, a=>a, a=>a.slice(), o=>shallowClearClone(o),true);
-//         if (params){
-//             let {styles} = value;
-//             params.forEach( p=>
-//                 extend(value, p, s=>s, a=>a.slice(), o=> shallowClearClone(styles, o)),true); 
-//         }
-//     }
-//     return Styling(value);
-// }
 
 function createStyling(isReplace, param, ...params){
     var value = {classes:[], styles:{}};
