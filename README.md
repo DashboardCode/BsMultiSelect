@@ -3,11 +3,11 @@ Demo: https://dashboardcode.github.io/BsMultiSelect/
 
 Snippets:
 
-  [Right To Left (RTL)](https://dashboardcode.github.io/BsMultiSelect/snippetRtl.html)
+   [Right To Left (RTL)](https://dashboardcode.github.io/BsMultiSelect/snippetRtl.html)
 
-  [HTML Form Validation](https://dashboardcode.github.io/BsMultiSelect/snippetFormValidation.html)
+   [HTML Form Validation](https://dashboardcode.github.io/BsMultiSelect/snippetFormValidation.html)
 
-  [Custom Validation](https://dashboardcode.github.io/BsMultiSelect/snippetCustomValidation.html)
+   [Custom Validation](https://dashboardcode.github.io/BsMultiSelect/snippetCustomValidation.html)
 
 CodePen, use it for bug reporting: https://codepen.io/rpokrovskij/pen/yLymQwW 
 
