@@ -1,6 +1,6 @@
 # CHANGELOG
 ````
-0.5.5  - useCssPatch=false mode disabled, dropdown item styling bug resolved
+0.5.5  - useCssPatch=false mode, 'disabled dropdown's item' styling bug resolved
 0.5.4  - configuring css/cssPatch, assuming null/undefined value to styles property - the property will be removed from default styles dictionary
 0.5.3  - justification in dropdown menu for inline form solved
 0.5.2  - styles patching throug js bug resolved
