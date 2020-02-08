@@ -248,7 +248,6 @@ export class MultiSelect {
                     visible: false,
                     toggle: null,
                     pickElement: null,
-                    remove: null,
                     disable: null,
                     removeChoiceElement: null
                 };
@@ -260,11 +259,13 @@ export class MultiSelect {
                     var choice = this.choicesPanel.createChoice(
                         MultiSelectData, 
                         /*createSelectedItemGen*/ (multiSelectData/*,isOptionDisabled,setChoiceContentDisabled*/) => {
-                            this.picksPanel.createPick(
-                                multiSelectData,
+                            var remove =this.picksPanel.createPick(
+                                (removePick)=>this.requestPickRemove(multiSelectData, removePick), 
+                                /*multiSelectData,*/
                                 multiSelectData.option,
                                 this.isComponentDisabled
-                                )
+                                );
+                            this.requestPickCreate(multiSelectData, remove, this.picksPanel.getCount());
                         },
                         (o,i) => this.setSelected(o,i),
                         () =>  this.optionsAdapter.onChange()
@@ -363,6 +364,45 @@ export class MultiSelect {
         }
     }
 
+    requestPickCreate(multiSelectData, removePick, count){
+        multiSelectData.excludedFromSearch = true; // all selected excluded from search
+        multiSelectData.toggle = () => removePick();
+        multiSelectData.select(true);
+        if (count==1) 
+            this.placeholderAspect.updatePlacehodlerVisibility()
+    }
+    
+    requestPickRemove(multiSelectData, removePick){
+        let confirmed = this.setSelected(multiSelectData.option, false);
+        if (!(confirmed===false)) {
+            var createPick = removePick();
+            multiSelectData.excludedFromSearch = multiSelectData.isOptionDisabled;
+            if (multiSelectData.isOptionDisabled)
+            {
+                multiSelectData.disable( /*isDisabled*/ true, /*isSelected*/ false); 
+                multiSelectData.toggle = null;
+            }
+            else
+            {
+                multiSelectData.toggle = ()=>{
+                    let confirmed = this.setSelected(multiSelectData.option, true);
+                    if (!(confirmed===false)){
+                        var remove = createPick(
+                            (removePick)=>this.requestPickRemove(multiSelectData, removePick), 
+                            multiSelectData.option, 
+                            this.isComponentDisabled );
+                        this.requestPickCreate(multiSelectData, remove, this.picksPanel.getCount());
+                        this.optionsAdapter.onChange();
+                    }
+                };
+            }
+            multiSelectData.select(false);
+            if (this.picksPanel.getCount()==0) 
+                this.placeholderAspect.updatePlacehodlerVisibility()
+            this.optionsAdapter.onChange();
+        }
+    }
+
     init() {
         this.filterPanel = FilterPanel(
             this.staticContent.filterInputElement,
@@ -420,41 +460,6 @@ export class MultiSelect {
                 }
             },
             this.pickContentGenerator,
-            /*requestPickCreate*/ (multiSelectData, removePick, count) => {
-                multiSelectData.excludedFromSearch = true; // all selected excluded from search
-                multiSelectData.toggle = () => removePick();
-                multiSelectData.select(true);
-                if (count==1) 
-                    this.placeholderAspect.updatePlacehodlerVisibility()
-            },
-            /*requestPickRemove*/ (multiSelectData, removePick) => {
-                let confirmed = this.setSelected(multiSelectData.option, false);
-                if (!(confirmed===false)) {
-                    var {createPick, count} = removePick();
-                    multiSelectData.excludedFromSearch = multiSelectData.isOptionDisabled;
-                    if (multiSelectData.isOptionDisabled)
-                    {
-                        multiSelectData.disable( /*isDisabled*/ true, /*isSelected*/ false); 
-                        multiSelectData.toggle = null;
-                    }
-                    else
-                    {
-                        multiSelectData.toggle = ()=>{
-                            let confirmed = this.setSelected(multiSelectData.option, true);
-                            if (!(confirmed===false)){
-                                createPick(
-                                    
-                                    multiSelectData, multiSelectData.option, this.isComponentDisabled );
-                                this.optionsAdapter.onChange();
-                            }
-                        };
-                    }
-                    multiSelectData.select(false);
-                    if (count==0) 
-                        this.placeholderAspect.updatePlacehodlerVisibility()
-                    this.optionsAdapter.onChange();
-                }
-            },
             (doUncheck, event) => {
                 this.aspect.processUncheck(doUncheck, event);
                 this.choicesPanel.hideChoices(); // always hide 1st
