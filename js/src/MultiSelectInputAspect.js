@@ -50,12 +50,12 @@ export function MultiSelectInputAspect (
             }
         );
     /*}else{
-        popper=Popper.createPopper( 
-            choiceFilterInputElement, 
-            choicesElement
-            // ,  https://github.com/popperjs/popper.js/blob/next/docs/src/pages/docs/modifiers/prevent-overflow.mdx#mainaxis
+        popper=Popper.createPopper(
+            filterInputElement,
+            choicesElement,
+            //  https://github.com/popperjs/popper.js/blob/next/docs/src/pages/docs/modifiers/prevent-overflow.mdx#mainaxis
             // {
-            //     placement: 'bottom-start',
+            //     placement: isRtl?'bottom-end':'bottom-start',
             //     modifiers: {
             //         preventOverflow: {enabled:false},
             //         hide: {enabled:false},
@@ -64,7 +64,6 @@ export function MultiSelectInputAspect (
             // }
         );
     }*/
-     
 
     var filterInputItemOffsetLeft = null; // used to detect changes in input field position (by comparision with current value)
     var preventDefaultClickEvent = null;

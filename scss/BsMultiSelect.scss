@@ -7,8 +7,11 @@
 @import "./../node_modules/bootstrap/scss/mixins/_gradients";
 @import "./../node_modules/bootstrap/scss/_variables"; // update it after copy, reference your custom theme variables
 
-@mixin form-control-focus-class() {
-    &.focus {
+// NOTE: strict copy of BS4  @mixin form-control-focus()  from mixins/_forms.scss
+// NOTE: there are changes in form-control-focus in BS5 (depricated?)
+// NOTE: ask Bootstrap team to add .focus class to the framework
+@mixin form-control-focus-bsmultiselect() {
+    &.focus { // .focus instead of :focus
         color: $input-focus-color;
         background-color: $input-focus-bg;
         border-color: $input-focus-border-color;
@@ -21,12 +24,14 @@
     }
 }
 
-@mixin form-validation-state($state, $color) {
+// NOTE: .was-validated support for ul.form-control, done by analogy to @form-validation-state
+//       that call  @include form-validation-state-selector($state) mixins/_forms.scss
+@mixin form-validation-state-bsmultiselect($state, $color) {
     ul.form-control{
         .was-validated &:#{$state},
         &.is-#{$state} {
             border-color: $color;
-            &.focus {
+            &.focus { // .focus instead of :focus
                 border-color: $color;
                 box-shadow: 0 0 0 $input-focus-width rgba($color, .25);
             }
@@ -35,6 +40,7 @@
 }
 
 .dashboardcode-bsmultiselect {
+    // JS css/cssPatch: picks
     ul.form-control {
         display: flex;
         flex-wrap: wrap;
@@ -60,10 +66,11 @@
         }
         &::placeholder {
             color: $input-placeholder-color;
-            // BS Override Firefox's unusual default opacity; see https://github.com/twbs/bootstrap/pull/11526.
+            // NOTE: CopyPaste from BS - override Firefox's unusual default opacity; see https://github.com/twbs/bootstrap/pull/11526.
             opacity: 1;
         }
-
+        
+        // JS css/cssPatch: pick
         > li.badge {
             padding-left: 0;
             line-height: 1.5em;
@@ -79,7 +86,7 @@
             }
         }
 
-        @include form-control-focus-class();
+        @include form-control-focus-bsmultiselect();
 
         &.form-control-sm {
                 min-height: #{$input-height-sm};
@@ -95,26 +102,28 @@
                 }
         }
     }
-    @include form-validation-state("valid", $form-feedback-valid-color);
-    @include form-validation-state("invalid", $form-feedback-invalid-color);
+    @include form-validation-state-bsmultiselect("valid", $form-feedback-valid-color);
+    @include form-validation-state-bsmultiselect("invalid", $form-feedback-invalid-color);
 
+    // JS css/cssPatch: choices
     ul.dropdown-menu {
         list-style-type: none;
         
+        // JS css/cssPatch: choice
         > li{
-            // next block copied from .dropdown-item
+            // NOTE: next block copied from .dropdown-item to have similar styles
             display: block;
-            width: 100%; // For `<button>`s
-            padding: 0 map.get($spacers, 2);// alternative could be $dropdown-item-padding-x; but it is too large
+            width: 100%;
+            padding: 0 map.get($spacers, 2); // NOTE: overrides BS $dropdown-item-padding-x; because it is too large
             clear: both;
             font-weight: $font-weight-normal;
             color: $dropdown-link-color;
-            text-align: inherit; // For `<button>`s
-            white-space: nowrap; // prevent links from randomly breaking onto new lines
-            background-color: transparent; // For `<button>`s
-            border: 0; // For `<button>`s
-            .custom-control{
-                justify-content: initial; // BS problem: without this on inline form menu items justified center
+            text-align: inherit;
+            white-space: nowrap;
+            background-color: transparent;
+            border: 0;
+            .custom-control{ // BS problem: without this dropdown menu's custom checkboxes on inline form justified center
+                justify-content: initial;
             }
             .custom-control-input.disabled ~ .custom-control-label {
                 color: $custom-control-label-disabled-color;
@@ -144,8 +153,12 @@
         }
     }
 }
-// BS4 .was-validated problem, no possibility to exclude custom checkboxes from validation styling
-// Note: nested form for dropdown with 'novalidate ' attribute possibly could solve it but... nested forms are not allowed
+
+// Till the end I solving BS4 .was-validated problem: no possibility to exclude custom checkboxes from validation styling.
+// So there we redefine pseudoclasses :valid:checked and :valid:not(:checked) - our options are allready valid.
+// Note: nested form for dropdown with 'novalidate ' attribute possibly could solve it but nested forms are not allowed
+
+// 1. reset "coloring"  (for both checked and uchecked)
 .was-validated .dashboardcode-bsmultiselect ul.dropdown-menu > li .custom-control-input:valid:checked ~ .custom-control-label{
     color: $dropdown-color;
 }
@@ -153,7 +166,7 @@
     color: $dropdown-color;
 }
 
-// hover
+// 2. but use different color for hovered item (for both checked and uchecked)
 .was-validated .dashboardcode-bsmultiselect ul.dropdown-menu > li.hover .custom-control-input:valid:checked ~ .custom-control-label{
     color: var(--primary);
 }
@@ -161,13 +174,13 @@
     color: var(--primary);
 }
 
-// checkbox (label's ':before')
+// 3. reset "coloring" for checkbox ('checked' and 'not(:checked)')
 .was-validated .dashboardcode-bsmultiselect ul.dropdown-menu > li .custom-control-input:valid:checked ~ .custom-control-label::before {
     color: $custom-control-indicator-checked-color;
     border-color: $custom-control-indicator-checked-border-color;
     @include gradient-bg($custom-control-indicator-checked-bg);
     @include box-shadow($custom-control-indicator-checked-box-shadow);
 }
-.was-validated .dashboardcode-bsmultiselect .custom-control-input:valid:not(:checked) ~ .custom-control-label::before {
+.was-validated .dashboardcode-bsmultiselect ul.dropdown-menu > li .custom-control-input:valid:not(:checked) ~ .custom-control-label::before {
     border: $custom-control-indicator-border-color solid $custom-control-indicator-border-width;
 }

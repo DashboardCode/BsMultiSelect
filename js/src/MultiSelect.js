@@ -4,13 +4,14 @@ import {PicksPanel} from './PicksPanel'
 import {MultiSelectInputAspect} from './MultiSelectInputAspect'
 import {PlaceholderAspect} from './PlaceholderAspect'
 
-import {removeElement, EventSkipper} from './ToolsDom'
+import {EventSkipper} from './ToolsDom'
 import {sync} from './ToolsJs'
 
 function filterMultiSelectData(MultiSelectData, isFiltered, visibleIndex) {
     MultiSelectData.visible = isFiltered;
     MultiSelectData.visibleIndex = visibleIndex;
-    MultiSelectData.choiceElement.style.display = isFiltered ? 'block': 'none';
+    MultiSelectData.choice.visible(isFiltered);
+    //MultiSelectData.choiceElement.style.display = isFiltered ? 'block': 'none';
 } 
 
 function resetChoices(MultiSelectDataList) {
@@ -34,7 +35,7 @@ function collectFilterChoices(MultiSelectDataList, text) {
         {
             if ( multiSelectData.excludedFromSearch || multiSelectData.searchText.indexOf(text)<0 )
             {
-                filterMultiSelectData(multiSelectData, false);
+                filterMultiSelectData(multiSelectData, false, null);
             }
             else 
             {
@@ -205,12 +206,13 @@ export class MultiSelect {
         this.choicesPanel.hideChoices(); // always hide 1st
         this.resetFilter();
 
-        for(let i=0; i<this.MultiSelectDataList.length; i++)
-        {
-            let multiSelectData = this.MultiSelectDataList[i];
-            if (multiSelectData.choiceElement)
-                removeElement(multiSelectData.choiceElement);
-        }
+        this.choicesPanel.clear();
+        // for(let i=0; i<this.MultiSelectDataList.length; i++)
+        // {
+        //     let multiSelectData = this.MultiSelectDataList[i];
+        //     if (multiSelectData.choice)
+        //         multiSelectData.choice.remove();
+        // }
         this.resetMultiSelectDataList();
         this.picksPanel.clear();
         this.placeholderAspect.updatePlacehodlerVisibility();
@@ -255,7 +257,7 @@ export class MultiSelect {
                 if (!isOptionHidden){
                     MultiSelectData.visible = true;
                     MultiSelectData.visibleIndex=i;
-                    this.choicesPanel.insertChoice(
+                    var choice = this.choicesPanel.createChoice(
                         MultiSelectData, 
                         /*createSelectedItemGen*/ (multiSelectData/*,isOptionDisabled,setChoiceContentDisabled*/) => {
                             this.picksPanel.createPick(
@@ -268,6 +270,8 @@ export class MultiSelect {
                         () =>  this.optionsAdapter.onChange()
                         ,isSelected
                         );
+                    
+                    MultiSelectData.choice=choice;
                 }
             } 
             this.aspect.alignToFilterInputItemLocation(false);
@@ -301,15 +305,9 @@ export class MultiSelect {
         {
             let multiSelectData = this.MultiSelectDataList[i];
             multiSelectData.toggle = null;
-            multiSelectData.remove = null; 
-            multiSelectData.removeChoiceElement = null;
-            if (multiSelectData.DisposeChoiceElement){
-                multiSelectData.DisposeChoiceElement();
-                multiSelectData.DisposeChoiceElement=null;
+            if (multiSelectData.disposeChoice){
+                multiSelectData.disposeChoice();
             }
-            
-            if (multiSelectData.ChoiceContent)
-                multiSelectData.ChoiceContent.dispose();
         }
     }
 
@@ -422,21 +420,21 @@ export class MultiSelect {
                 }
             },
             this.pickContentGenerator,
-            /*onPickCreated*/ (multiSelectData, removePick, count) => {
+            /*requestPickCreate*/ (multiSelectData, removePick, count) => {
                 multiSelectData.excludedFromSearch = true; // all selected excluded from search
                 multiSelectData.toggle = () => removePick();
-                multiSelectData.ChoiceContent.select(true);
+                multiSelectData.select(true);
                 if (count==1) 
                     this.placeholderAspect.updatePlacehodlerVisibility()
             },
-            /*onPickRemoved*/ (multiSelectData, removePick) => {
+            /*requestPickRemove*/ (multiSelectData, removePick) => {
                 let confirmed = this.setSelected(multiSelectData.option, false);
                 if (!(confirmed===false)) {
                     var {createPick, count} = removePick();
                     multiSelectData.excludedFromSearch = multiSelectData.isOptionDisabled;
                     if (multiSelectData.isOptionDisabled)
                     {
-                        multiSelectData.ChoiceContent.disable( /*isDisabled*/ true, /*isSelected*/ false); 
+                        multiSelectData.disable( /*isDisabled*/ true, /*isSelected*/ false); 
                         multiSelectData.toggle = null;
                     }
                     else
@@ -444,12 +442,14 @@ export class MultiSelect {
                         multiSelectData.toggle = ()=>{
                             let confirmed = this.setSelected(multiSelectData.option, true);
                             if (!(confirmed===false)){
-                                createPick(multiSelectData, multiSelectData.option, this.isComponentDisabled );
+                                createPick(
+                                    
+                                    multiSelectData, multiSelectData.option, this.isComponentDisabled );
                                 this.optionsAdapter.onChange();
                             }
                         };
                     }
-                    multiSelectData.ChoiceContent.select(false);
+                    multiSelectData.select(false);
                     if (count==0) 
                         this.placeholderAspect.updatePlacehodlerVisibility()
                     this.optionsAdapter.onChange();

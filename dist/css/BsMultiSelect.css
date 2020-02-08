@@ -147,7 +147,7 @@
   background-color: #007bff;
 }
 
-.was-validated .dashboardcode-bsmultiselect .custom-control-input:valid:not(:checked) ~ .custom-control-label::before {
+.was-validated .dashboardcode-bsmultiselect ul.dropdown-menu > li .custom-control-input:valid:not(:checked) ~ .custom-control-label::before {
   border: #adb5bd solid 1px;
 }
 

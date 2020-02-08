@@ -107,6 +107,7 @@
       };
     }
 
+    //import {removeElement} from './ToolsDom'
     function ChoicesPanel(createChoiceElement, choicesElement, onShow, onHide, eventSkipper, choiceContentGenerator, getVisibleMultiSelectDataList, resetFilter, updateChoicesLocation, filterPanelSetFocus) {
       var hoveredMultiSelectData = null;
       var hoveredMultiSelectDataIndex = null;
@@ -114,7 +115,7 @@
 
       function hideChoices() {
         if (candidateToHoveredMultiSelectData) {
-          resetCandidateToHoveredMultiSelectData();
+          candidateToHoveredMultiSelectData.resetCandidateToHoveredMultiSelectData();
         }
 
         if (choicesElement.style.display != 'none') {
@@ -145,19 +146,13 @@
         }
       }
 
-      var resetCandidateToHoveredMultiSelectData = function resetCandidateToHoveredMultiSelectData() {
-        candidateToHoveredMultiSelectData.choiceElement.removeEventListener('mousemove', processCandidateToHovered);
-        candidateToHoveredMultiSelectData.choiceElement.removeEventListener('mousedown', processCandidateToHovered);
-        candidateToHoveredMultiSelectData = null;
-      };
-
       var processCandidateToHovered = function processCandidateToHovered() {
         if (hoveredMultiSelectData != candidateToHoveredMultiSelectData) {
           resetChoicesHover();
           hoverInInternal(candidateToHoveredMultiSelectData.visibleIndex);
         }
 
-        if (candidateToHoveredMultiSelectData) resetCandidateToHoveredMultiSelectData();
+        if (candidateToHoveredMultiSelectData) candidateToHoveredMultiSelectData.resetCandidateToHoveredMultiSelectData();
       };
 
       function toggleHovered() {
@@ -202,8 +197,7 @@
         }
 
         if (newIndex !== null) {
-          if (hoveredMultiSelectData) hoveredMultiSelectData.ChoiceContent.hoverIn(false); // styling.HoverOut(hoveredMultiSelectData.choiceElement);
-
+          if (hoveredMultiSelectData) hoveredMultiSelectData.ChoiceContent.hoverIn(false);
           updateChoicesLocation();
           showChoices();
           hoverInInternal(newIndex);
@@ -212,10 +206,17 @@
 
       var onChoiceElementMouseoverGeneral = function onChoiceElementMouseoverGeneral(MultiSelectData, choiceElement) {
         if (eventSkipper.isSkippable()) {
-          if (candidateToHoveredMultiSelectData) resetCandidateToHoveredMultiSelectData();
+          if (candidateToHoveredMultiSelectData) candidateToHoveredMultiSelectData.resetCandidateToHoveredMultiSelectData();
           candidateToHoveredMultiSelectData = MultiSelectData;
           choiceElement.addEventListener('mousemove', processCandidateToHovered);
           choiceElement.addEventListener('mousedown', processCandidateToHovered);
+
+          candidateToHoveredMultiSelectData.resetCandidateToHoveredMultiSelectData = function () {
+            choiceElement.removeEventListener('mousemove', processCandidateToHovered);
+            choiceElement.removeEventListener('mousedown', processCandidateToHovered);
+            candidateToHoveredMultiSelectData.resetCandidateToHoveredMultiSelectData = null;
+            candidateToHoveredMultiSelectData = null;
+          };
         } else {
           if (hoveredMultiSelectData != MultiSelectData) {
             // mouseleave is not enough to guarantee remove hover styles in situations
@@ -227,7 +228,7 @@
         }
       };
 
-      function insertChoice(MultiSelectData, createSelectedItemGen, setSelected, triggerChange, isSelected
+      function createChoice(MultiSelectData, createSelectedItemGen, setSelected, triggerChange, isSelected
       /*, isOptionDisabled*/
       ) {
         var choiceElement = createChoiceElement(); // in chrome it happens on "become visible" so we need to skip it, 
@@ -252,19 +253,24 @@
         choicesElement.appendChild(choiceElement);
         var choiceContent = choiceContentGenerator(choiceElement);
         choiceContent.setData(MultiSelectData.option);
-        MultiSelectData.choiceElement = choiceElement;
         MultiSelectData.ChoiceContent = choiceContent;
 
-        MultiSelectData.DisposeChoiceElement = function () {
+        MultiSelectData.select = function (isSelected) {
+          choiceContent.select(isSelected);
+        };
+
+        MultiSelectData.disable = function (isDisabled, isSelected) {
+          choiceContent.disable(isDisabled, isSelected);
+        };
+
+        MultiSelectData.disposeChoice = function () {
           choiceElement.removeEventListener('mouseover', onChoiceElementMouseover);
           choiceElement.removeEventListener('mouseleave', onChoiceElementMouseleave);
-        }; // var setChoiceContentDisabled = (isSelected) => {
-        //     choiceContent.disabledStyle(true);
-        //     // do not desable if selected! there should be possibility to unselect "disabled"
-        //     choiceContent.disable(!isSelected);
-        // }
-        // choiceContent.setChoiceContentDisabled= setChoiceContentDisabled;
-
+          choiceContent.dispose();
+          MultiSelectData.select = null;
+          MultiSelectData.disable = null;
+          MultiSelectData.disposeChoice = null;
+        };
 
         if (MultiSelectData.isOptionDisabled) choiceContent.disable(true, isSelected);
         choiceContent.onSelected(function () {
@@ -273,10 +279,7 @@
         }); // ------------------------------------------------------------------------------
 
         var createSelectedItem = function createSelectedItem() {
-          return createSelectedItemGen(MultiSelectData //,
-          //MultiSelectData.isOptionDisabled,
-          //() => setChoiceContentDisabled(content, false)
-          );
+          return createSelectedItemGen(MultiSelectData);
         };
 
         if (isSelected) {
@@ -291,8 +294,13 @@
               triggerChange();
             }
           };
-        } // TODO: refactore it
+        }
 
+        return {
+          visible: function visible(isFiltered) {
+            choiceElement.style.display = isFiltered ? 'block' : 'none';
+          }
+        };
       }
 
       var item = {
@@ -306,9 +314,12 @@
         hideChoices: hideChoices,
         toggleHovered: toggleHovered,
         keyDownArrow: keyDownArrow,
-        insertChoice: insertChoice,
+        createChoice: createChoice,
         getIsVisble: function getIsVisble() {
           return choicesElement.style.display != 'none';
+        },
+        clear: function clear() {
+          choicesElement.innerHTML = "";
         }
       };
       return item;
@@ -711,12 +722,12 @@
         }
       });
       /*}else{
-          popper=Popper.createPopper( 
-              choiceFilterInputElement, 
-              choicesElement
-              // ,  https://github.com/popperjs/popper.js/blob/next/docs/src/pages/docs/modifiers/prevent-overflow.mdx#mainaxis
+          popper=Popper.createPopper(
+              filterInputElement,
+              choicesElement,
+              //  https://github.com/popperjs/popper.js/blob/next/docs/src/pages/docs/modifiers/prevent-overflow.mdx#mainaxis
               // {
-              //     placement: 'bottom-start',
+              //     placement: isRtl?'bottom-end':'bottom-start',
               //     modifiers: {
               //         preventOverflow: {enabled:false},
               //         hide: {enabled:false},
@@ -1014,7 +1025,7 @@
     function filterMultiSelectData(MultiSelectData, isFiltered, visibleIndex) {
       MultiSelectData.visible = isFiltered;
       MultiSelectData.visibleIndex = visibleIndex;
-      MultiSelectData.choiceElement.style.display = isFiltered ? 'block' : 'none';
+      MultiSelectData.choice.visible(isFiltered); //MultiSelectData.choiceElement.style.display = isFiltered ? 'block': 'none';
     }
 
     function resetChoices(MultiSelectDataList) {
@@ -1036,7 +1047,7 @@
 
         if (!multiSelectData.isHidden) {
           if (multiSelectData.excludedFromSearch || multiSelectData.searchText.indexOf(text) < 0) {
-            filterMultiSelectData(multiSelectData, false);
+            filterMultiSelectData(multiSelectData, false, null);
           } else {
             filterMultiSelectData(multiSelectData, true, j++);
             list.push(multiSelectData);
@@ -1190,11 +1201,12 @@
         this.choicesPanel.hideChoices(); // always hide 1st
 
         this.resetFilter();
-
-        for (var i = 0; i < this.MultiSelectDataList.length; i++) {
-          var multiSelectData = this.MultiSelectDataList[i];
-          if (multiSelectData.choiceElement) removeElement(multiSelectData.choiceElement);
-        }
+        this.choicesPanel.clear(); // for(let i=0; i<this.MultiSelectDataList.length; i++)
+        // {
+        //     let multiSelectData = this.MultiSelectDataList[i];
+        //     if (multiSelectData.choice)
+        //         multiSelectData.choice.remove();
+        // }
 
         this.resetMultiSelectDataList();
         this.picksPanel.clear();
@@ -1242,7 +1254,7 @@
               MultiSelectData.visible = true;
               MultiSelectData.visibleIndex = i;
 
-              _this.choicesPanel.insertChoice(MultiSelectData,
+              var choice = _this.choicesPanel.createChoice(MultiSelectData,
               /*createSelectedItemGen*/
               function (multiSelectData
               /*,isOptionDisabled,setChoiceContentDisabled*/
@@ -1253,6 +1265,8 @@
               }, function () {
                 return _this.optionsAdapter.onChange();
               }, isSelected);
+
+              MultiSelectData.choice = choice;
             }
           }
 
@@ -1278,15 +1292,10 @@
         for (var i = 0; i < this.MultiSelectDataList.length; i++) {
           var multiSelectData = this.MultiSelectDataList[i];
           multiSelectData.toggle = null;
-          multiSelectData.remove = null;
-          multiSelectData.removeChoiceElement = null;
 
-          if (multiSelectData.DisposeChoiceElement) {
-            multiSelectData.DisposeChoiceElement();
-            multiSelectData.DisposeChoiceElement = null;
+          if (multiSelectData.disposeChoice) {
+            multiSelectData.disposeChoice();
           }
-
-          if (multiSelectData.ChoiceContent) multiSelectData.ChoiceContent.dispose();
         }
       };
 
@@ -1409,7 +1418,7 @@
             }
           };
         }, this.pickContentGenerator,
-        /*onPickCreated*/
+        /*requestPickCreate*/
         function (multiSelectData, removePick, count) {
           multiSelectData.excludedFromSearch = true; // all selected excluded from search
 
@@ -1417,10 +1426,10 @@
             return removePick();
           };
 
-          multiSelectData.ChoiceContent.select(true);
+          multiSelectData.select(true);
           if (count == 1) _this2.placeholderAspect.updatePlacehodlerVisibility();
         },
-        /*onPickRemoved*/
+        /*requestPickRemove*/
         function (multiSelectData, removePick) {
           var confirmed = _this2.setSelected(multiSelectData.option, false);
 
@@ -1432,7 +1441,7 @@
             multiSelectData.excludedFromSearch = multiSelectData.isOptionDisabled;
 
             if (multiSelectData.isOptionDisabled) {
-              multiSelectData.ChoiceContent.disable(
+              multiSelectData.disable(
               /*isDisabled*/
               true,
               /*isSelected*/
@@ -1450,7 +1459,7 @@
               };
             }
 
-            multiSelectData.ChoiceContent.select(false);
+            multiSelectData.select(false);
             if (count == 0) _this2.placeholderAspect.updatePlacehodlerVisibility();
 
             _this2.optionsAdapter.onChange();

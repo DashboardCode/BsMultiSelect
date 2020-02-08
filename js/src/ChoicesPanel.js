@@ -1,4 +1,8 @@
-export function ChoicesPanel(createChoiceElement, choicesElement, onShow, onHide, 
+//import {removeElement} from './ToolsDom'
+
+export function ChoicesPanel(
+        createChoiceElement, choicesElement, 
+        onShow, onHide, 
         eventSkipper, choiceContentGenerator, 
         getVisibleMultiSelectDataList, 
         resetFilter, updateChoicesLocation, filterPanelSetFocus) {
@@ -9,7 +13,7 @@ export function ChoicesPanel(createChoiceElement, choicesElement, onShow, onHide
 
     function hideChoices() {
         if (candidateToHoveredMultiSelectData){
-            resetCandidateToHoveredMultiSelectData();
+            candidateToHoveredMultiSelectData.resetCandidateToHoveredMultiSelectData();
         }
         if (choicesElement.style.display != 'none')
         {
@@ -29,7 +33,9 @@ export function ChoicesPanel(createChoiceElement, choicesElement, onShow, onHide
 
     var hoverInInternal = function(index){
         hoveredMultiSelectDataIndex = index;
+        
         hoveredMultiSelectData = getVisibleMultiSelectDataList()[index];
+        
         hoveredMultiSelectData.ChoiceContent.hoverIn(true)
     }
 
@@ -41,12 +47,6 @@ export function ChoicesPanel(createChoiceElement, choicesElement, onShow, onHide
         }
     }
 
-    var resetCandidateToHoveredMultiSelectData = function(){
-        candidateToHoveredMultiSelectData.choiceElement.removeEventListener('mousemove', processCandidateToHovered);
-        candidateToHoveredMultiSelectData.choiceElement.removeEventListener('mousedown', processCandidateToHovered);
-        candidateToHoveredMultiSelectData = null;
-    }
-
     var processCandidateToHovered = function() {
         if (hoveredMultiSelectData != candidateToHoveredMultiSelectData)
         {
@@ -54,7 +54,7 @@ export function ChoicesPanel(createChoiceElement, choicesElement, onShow, onHide
             hoverInInternal(candidateToHoveredMultiSelectData.visibleIndex);
         }
         if(candidateToHoveredMultiSelectData) 
-            resetCandidateToHoveredMultiSelectData();
+            candidateToHoveredMultiSelectData.resetCandidateToHoveredMultiSelectData();
     }
 
     function toggleHovered(){
@@ -97,7 +97,6 @@ export function ChoicesPanel(createChoiceElement, choicesElement, onShow, onHide
         {
             if (hoveredMultiSelectData)
                 hoveredMultiSelectData.ChoiceContent.hoverIn(false)
-                // styling.HoverOut(hoveredMultiSelectData.choiceElement);
             updateChoicesLocation();
             showChoices(); 
             hoverInInternal(newIndex);
@@ -109,11 +108,18 @@ export function ChoicesPanel(createChoiceElement, choicesElement, onShow, onHide
         if (eventSkipper.isSkippable())
         {
             if(candidateToHoveredMultiSelectData)
-                resetCandidateToHoveredMultiSelectData()
+                candidateToHoveredMultiSelectData.resetCandidateToHoveredMultiSelectData()
 
             candidateToHoveredMultiSelectData = MultiSelectData;
             choiceElement.addEventListener('mousemove', processCandidateToHovered);
             choiceElement.addEventListener('mousedown', processCandidateToHovered);
+
+            candidateToHoveredMultiSelectData.resetCandidateToHoveredMultiSelectData = ()=>{
+                choiceElement.removeEventListener('mousemove', processCandidateToHovered);
+                choiceElement.removeEventListener('mousedown', processCandidateToHovered);
+                candidateToHoveredMultiSelectData.resetCandidateToHoveredMultiSelectData=null;
+                candidateToHoveredMultiSelectData = null;
+            }
         }
         else
         {
@@ -128,7 +134,7 @@ export function ChoicesPanel(createChoiceElement, choicesElement, onShow, onHide
         }
     }
 
-    function insertChoice(MultiSelectData, createSelectedItemGen, setSelected, triggerChange, isSelected/*, isOptionDisabled*/) 
+    function createChoice(MultiSelectData, createSelectedItemGen, setSelected, triggerChange, isSelected/*, isOptionDisabled*/) 
     {
         var choiceElement = createChoiceElement();
         
@@ -158,20 +164,26 @@ export function ChoicesPanel(createChoiceElement, choicesElement, onShow, onHide
 
         let choiceContent = choiceContentGenerator(choiceElement); 
         choiceContent.setData(MultiSelectData.option);
-        MultiSelectData.choiceElement = choiceElement;
+
         MultiSelectData.ChoiceContent = choiceContent;
 
-        MultiSelectData.DisposeChoiceElement = ()=> {
-            choiceElement.removeEventListener('mouseover',  onChoiceElementMouseover);
-            choiceElement.removeEventListener('mouseleave', onChoiceElementMouseleave);
+        MultiSelectData.select = (isSelected)=> {
+            choiceContent.select(isSelected);
         }
 
-        // var setChoiceContentDisabled = (isSelected) => {
-        //     choiceContent.disabledStyle(true);
-        //     // do not desable if selected! there should be possibility to unselect "disabled"
-        //     choiceContent.disable(!isSelected);
-        // }
-        // choiceContent.setChoiceContentDisabled= setChoiceContentDisabled;
+        MultiSelectData.disable = (isDisabled, isSelected)=> {
+            choiceContent.disable( isDisabled, isSelected); 
+        }
+
+        MultiSelectData.disposeChoice = ()=> {
+            choiceElement.removeEventListener('mouseover',  onChoiceElementMouseover);
+            choiceElement.removeEventListener('mouseleave', onChoiceElementMouseleave);
+            choiceContent.dispose();
+            MultiSelectData.select=null;
+            MultiSelectData.disable=null;
+            MultiSelectData.disposeChoice=null;
+        }
+
         if (MultiSelectData.isOptionDisabled)
             choiceContent.disable(true, isSelected )
 
@@ -182,11 +194,7 @@ export function ChoicesPanel(createChoiceElement, choicesElement, onShow, onHide
         });
         // ------------------------------------------------------------------------------
         
-        var createSelectedItem = () => createSelectedItemGen(
-            MultiSelectData//,
-            //MultiSelectData.isOptionDisabled,
-            //() => setChoiceContentDisabled(content, false)
-        );
+        var createSelectedItem = () => createSelectedItemGen(MultiSelectData);
         
         if (isSelected)
         {
@@ -206,7 +214,11 @@ export function ChoicesPanel(createChoiceElement, choicesElement, onShow, onHide
                     }
                 }
         }
-        // TODO: refactore it
+        return {
+            visible(isFiltered){
+                choiceElement.style.display = isFiltered ? 'block': 'none';
+            }
+        }
     }
 
     var item = {
@@ -219,10 +231,13 @@ export function ChoicesPanel(createChoiceElement, choicesElement, onShow, onHide
         hideChoices,
         toggleHovered,
         keyDownArrow,
-        insertChoice,
+        createChoice,
         getIsVisble(){
             return choicesElement.style.display != 'none';
-        }
+        },
+        clear() {
+            choicesElement.innerHTML = ""; 
+        },
     }
     return item;
 }
