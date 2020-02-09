@@ -14,12 +14,10 @@ export function addToJQueryPrototype(pluginName, createPlugin, defaults, $){
             let instance = $e.data(dataKey)
             let isMethodName = typeof options === 'string';
             if (!instance) {
-                if (isMethodName && /Dispose/.test(options)) {
+                if (isMethodName && /Dispose/.test(options)) 
                     return;
-                }
-                const optionsObject = (typeof options === 'object')?options:null;
-
-                instance = createPlugin(this, optionsObject,
+                const optionsRef = (typeof options === 'object') || (typeof options === 'function')?options:null;
+                instance = createPlugin(this, optionsRef,
                     () => {
                         $e.removeData(dataKey)
                     });

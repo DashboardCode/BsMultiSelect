@@ -1,5 +1,6 @@
 # CHANGELOG
 ````
+0.5.8  - default setSelected add/removes "selected" attribute
 0.5.7  - optimizations
 0.5.6  - optimizations
 0.5.5  - useCssPatch=false mode, 'disabled dropdown's item' styling bug resolved

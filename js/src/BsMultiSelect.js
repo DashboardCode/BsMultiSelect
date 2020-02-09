@@ -55,9 +55,8 @@ function extendConfigurtion(configuration, defaults){
             getLabelElement: getLabelElement,
             pickContentGenerator: pickContentGenerator,
             choiceContentGenerator : choiceContentGenerator,
-
             buildConfiguration: null,
-            setSelected: (option, value) => {option.selected = value; },
+            setSelected: null,
             required: null, /* means look on select[required] or false for js object source */
             optionsAdapter: null,
             options: null,
@@ -186,7 +185,18 @@ function extendConfigurtion(configuration, defaults){
                     configuration.valueMissingMessage = defValueMissingMessage;
                 }
             }
-            
+            var setSelected = configuration.setSelected;
+            if (!setSelected){
+                if (configuration.options)
+                    setSelected = (option, value) => {option.selected = value};
+                else
+                    setSelected = (option, value) => {
+                        if (value)
+                            option.setAttribute('selected','');
+                        else
+                            option.removeAttribute('selected');
+                    };
+            }
             var validationApi = ValidityApi(
                 staticContent.filterInputElement, 
                 isValueMissingObservable, 
@@ -195,7 +205,7 @@ function extendConfigurtion(configuration, defaults){
 
             var multiSelect = new MultiSelect(
                 optionsAdapter,
-                configuration.setSelected,
+                setSelected,
                 staticContent,
                 (pickElement) => configuration.pickContentGenerator(pickElement, css),
                 (choiceElement) => configuration.choiceContentGenerator(choiceElement, css),

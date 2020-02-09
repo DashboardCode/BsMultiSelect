@@ -1,5 +1,5 @@
 /*!
-  * DashboardCode BsMultiSelect v0.5.7 (https://dashboardcode.github.io/BsMultiSelect/)
+  * DashboardCode BsMultiSelect v0.5.8 (https://dashboardcode.github.io/BsMultiSelect/)
   * Copyright 2017-2020 Roman Pokrovskij (github user rpokrovskij)
   * Licensed under APACHE 2 (https://github.com/DashboardCode/BsMultiSelect/blob/master/LICENSE)
   */
@@ -1570,12 +1570,9 @@
           var isMethodName = typeof options === 'string';
 
           if (!instance) {
-            if (isMethodName && /Dispose/.test(options)) {
-              return;
-            }
-
-            var optionsObject = typeof options === 'object' ? options : null;
-            instance = createPlugin(this, optionsObject, function () {
+            if (isMethodName && /Dispose/.test(options)) return;
+            var optionsRef = typeof options === 'object' || typeof options === 'function' ? options : null;
+            instance = createPlugin(this, optionsRef, function () {
               $e.removeData(dataKey);
             });
             $e.data(dataKey, instance);
@@ -2444,9 +2441,7 @@
         pickContentGenerator: pickContentGenerator,
         choiceContentGenerator: choiceContentGenerator,
         buildConfiguration: null,
-        setSelected: function setSelected(option, value) {
-          option.selected = value;
-        },
+        setSelected: null,
         required: null,
 
         /* means look on select[required] or false for js object source */
@@ -2554,10 +2549,20 @@
           }
         }
 
+        var setSelected = configuration.setSelected;
+
+        if (!setSelected) {
+          if (configuration.options) setSelected = function setSelected(option, value) {
+            option.selected = value;
+          };else setSelected = function setSelected(option, value) {
+            if (value) option.setAttribute('selected', '');else option.removeAttribute('selected');
+          };
+        }
+
         var validationApi = ValidityApi(staticContent.filterInputElement, isValueMissingObservable, configuration.valueMissingMessage, function (isValid) {
           return validationApiObservable.setValue(isValid);
         });
-        var multiSelect = new MultiSelect(optionsAdapter, configuration.setSelected, staticContent, function (pickElement) {
+        var multiSelect = new MultiSelect(optionsAdapter, setSelected, staticContent, function (pickElement) {
           return configuration.pickContentGenerator(pickElement, css);
         }, function (choiceElement) {
           return configuration.choiceContentGenerator(choiceElement, css);

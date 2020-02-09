@@ -46,9 +46,7 @@ function extendConfigurtion(configuration, defaults) {
     pickContentGenerator: pickContentGenerator,
     choiceContentGenerator: choiceContentGenerator,
     buildConfiguration: null,
-    setSelected: function setSelected(option, value) {
-      option.selected = value;
-    },
+    setSelected: null,
     required: null,
 
     /* means look on select[required] or false for js object source */
@@ -156,10 +154,20 @@ function extendConfigurtion(configuration, defaults) {
       }
     }
 
+    var setSelected = configuration.setSelected;
+
+    if (!setSelected) {
+      if (configuration.options) setSelected = function setSelected(option, value) {
+        option.selected = value;
+      };else setSelected = function setSelected(option, value) {
+        if (value) option.setAttribute('selected', '');else option.removeAttribute('selected');
+      };
+    }
+
     var validationApi = ValidityApi(staticContent.filterInputElement, isValueMissingObservable, configuration.valueMissingMessage, function (isValid) {
       return validationApiObservable.setValue(isValid);
     });
-    var multiSelect = new MultiSelect(optionsAdapter, configuration.setSelected, staticContent, function (pickElement) {
+    var multiSelect = new MultiSelect(optionsAdapter, setSelected, staticContent, function (pickElement) {
       return configuration.pickContentGenerator(pickElement, css);
     }, function (choiceElement) {
       return configuration.choiceContentGenerator(choiceElement, css);
