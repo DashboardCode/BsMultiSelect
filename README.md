@@ -136,7 +136,7 @@ Other way to access the component's instance is using `data` :
 
 **SELECT disabled / readonly / FIELDSET disabled support**: although there is difference between those two attributes for `input`, the HTML 5.2 support only `disabled` for [`select`](https://www.w3.org/TR/2017/REC-html52-20171214/sec-forms.html#the-select-element) element. `Readonly` attribute on original `select` will be ignored;
 
-**`<option disabled selected>`**: option that is `disabled` and `selected` at the same time can be deselected but can't be selected again (just as it is in HTML `select`; important note: during the form's submit HTML ignore `disabled selected` - doesn't send them - therefore on `submit` event manually remove `disabled` attribute from all `selected`);
+**`<option disabled selected>`**: option that is `disabled` and `selected` at the same time can be deselected but can't be selected again (just as it is in HTML `select`; important note: during the form's submit HTML ignore `disabled selected` - doesn't send them; also browser's "go back" step done with autocomplete never removes `disabled` options; have it in mind or use the feature only with options passed as JavaScript object);
 
 **`<option hidden>`**: options with `hidden` property are ... hidden. You can't deselect them either. This is exactly how HTML5.2 works, but many other plugins show hidden options;
 
