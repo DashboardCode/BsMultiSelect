@@ -615,13 +615,15 @@
         };
         var removeFromList = list.add(item);
 
+        var removeImpl = function removeImpl() {
+          removeElement(pickElement);
+          item.pickContent.dispose();
+          removeFromList();
+          return createPick;
+        };
+
         var remove = function remove() {
-          requestPickRemove(function () {
-            removeElement(pickElement);
-            item.pickContent.dispose();
-            removeFromList();
-            return createPick;
-          });
+          return requestPickRemove(removeImpl);
         };
 
         item.remove = remove; // processRemoveButtonClick removes the item
@@ -643,7 +645,7 @@
         item.pickContent.disable(option.disabled);
         item.pickContent.disableRemove(isComponentDisabled);
         item.pickContent.onRemove(function (event) {
-          processRemoveButtonClick(remove, event);
+          return processRemoveButtonClick(remove, event);
         });
         attach();
         return remove;
