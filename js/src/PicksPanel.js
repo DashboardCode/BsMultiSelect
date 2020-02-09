@@ -13,16 +13,14 @@ export function PicksPanel (
         var item = {pickElement}
         var removeFromList = list.add(item);
 
-        var remove = () => {
-            requestPickRemove(
-                () => {
-                    removeElement(pickElement);
-                    item.pickContent.dispose();
-                    removeFromList();
-                    return createPick;
-                }
-            );
+        var removeImpl = () => {
+            removeElement(pickElement);
+            item.pickContent.dispose();
+            removeFromList();
+            return createPick;
         }
+        var remove = () => requestPickRemove(removeImpl);
+        
         item.remove = remove;
 
         // processRemoveButtonClick removes the item
@@ -44,9 +42,7 @@ export function PicksPanel (
         item.pickContent.disable(option.disabled);
         item.pickContent.disableRemove(isComponentDisabled);
         
-        item.pickContent.onRemove( (event) => {
-            processRemoveButtonClick(remove, event);
-        });
+        item.pickContent.onRemove(event => processRemoveButtonClick(remove, event));
         attach();
         return remove;
     }
