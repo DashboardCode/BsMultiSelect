@@ -160,7 +160,10 @@ function extendConfigurtion(configuration, defaults) {
       if (configuration.options) setSelected = function setSelected(option, value) {
         option.selected = value;
       };else setSelected = function setSelected(option, value) {
-        if (value) option.setAttribute('selected', '');else option.removeAttribute('selected');
+        if (value) option.setAttribute('selected', '');else {
+          option.removeAttribute('selected');
+          option.selected = false;
+        }
       };
     }
 
@@ -180,7 +183,14 @@ function extendConfigurtion(configuration, defaults) {
     multiSelect.validationApi = validationApi;
     bsAppearance(multiSelect, staticContent, optionsAdapter, validationApiObservable, useCssPatch, css);
     if (init && init instanceof Function) init(multiSelect);
-    multiSelect.init();
+    multiSelect.init(); // support browser's "step backward" on form restore
+
+    if (staticContent.selectElement && window.document.readyState != "complete") {
+      window.setTimeout(function () {
+        multiSelect.UpdateSelected();
+      });
+    }
+
     return multiSelect;
   }
 

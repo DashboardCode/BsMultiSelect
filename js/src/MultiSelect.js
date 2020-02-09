@@ -224,6 +224,19 @@ export class MultiSelect {
         this.updateDataImpl();
     }
 
+    UpdateSelected(){
+        let options = this.optionsAdapter.getOptions();
+        for(let i = 0; i<options.length; i++) {
+            let option = options[i];
+            let newIsSelected = option.selected;
+            let multiSelectData = this.MultiSelectDataList[i];
+            let isSelected = multiSelectData.isSelected;
+            if (newIsSelected!=isSelected)
+                if (multiSelectData.toggle)
+                    multiSelectData.toggle();
+        }
+    }
+
     updateDataImpl(){
         var fillChoices = () => {
             let options = this.optionsAdapter.getOptions();
@@ -241,10 +254,9 @@ export class MultiSelect {
                     option: option,
                     isOptionDisabled: isOptionDisabled,
                     isHidden: isOptionHidden,
+                    isSelected: isSelected,
                     choiceElement: null,
                     choiceContent: null,
-                    //selectedPrev: null,
-                    //selectedNext: null,
                     visible: false,
                     toggle: null,
                     pickElement: null,
@@ -271,7 +283,6 @@ export class MultiSelect {
                         () =>  this.optionsAdapter.onChange()
                         ,isSelected
                         );
-                    
                     MultiSelectData.choice=choice;
                 }
             } 
@@ -365,6 +376,7 @@ export class MultiSelect {
     }
 
     requestPickCreate(multiSelectData, removePick, count){
+        multiSelectData.isSelected = true;
         multiSelectData.excludedFromSearch = true; // all selected excluded from search
         multiSelectData.toggle = () => removePick();
         multiSelectData.select(true);
@@ -376,6 +388,7 @@ export class MultiSelect {
         let confirmed = this.setSelected(multiSelectData.option, false);
         if (!(confirmed===false)) {
             var createPick = removePick();
+            multiSelectData.isSelected = false;
             multiSelectData.excludedFromSearch = multiSelectData.isOptionDisabled;
             if (multiSelectData.isOptionDisabled)
             {
@@ -388,7 +401,7 @@ export class MultiSelect {
                     let confirmed = this.setSelected(multiSelectData.option, true);
                     if (!(confirmed===false)){
                         var remove = createPick(
-                            (removePick)=>this.requestPickRemove(multiSelectData, removePick), 
+                            removePick => this.requestPickRemove(multiSelectData, removePick), 
                             multiSelectData.option, 
                             this.isComponentDisabled );
                         this.requestPickCreate(multiSelectData, remove, this.picksPanel.getCount());
@@ -512,9 +525,10 @@ export class MultiSelect {
         
         this.staticContent.attachContainer();
 
+        
+        this.updateDataImpl();
         if (this.onUpdate)
             this.onUpdate();
-        this.updateDataImpl();
         this.UpdateDisabled(); // should be done after updateDataImpl
 
         if (this.optionsAdapter.onReset){

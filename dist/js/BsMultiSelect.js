@@ -1215,6 +1215,18 @@
         this.updateDataImpl();
       };
 
+      _proto.UpdateSelected = function UpdateSelected() {
+        var options = this.optionsAdapter.getOptions();
+
+        for (var i = 0; i < options.length; i++) {
+          var option = options[i];
+          var newIsSelected = option.selected;
+          var multiSelectData = this.MultiSelectDataList[i];
+          var isSelected = multiSelectData.isSelected;
+          if (newIsSelected != isSelected) if (multiSelectData.toggle) multiSelectData.toggle();
+        }
+      };
+
       _proto.updateDataImpl = function updateDataImpl() {
         var _this = this;
 
@@ -1232,10 +1244,9 @@
               option: option,
               isOptionDisabled: isOptionDisabled,
               isHidden: isOptionHidden,
+              isSelected: isSelected,
               choiceElement: null,
               choiceContent: null,
-              //selectedPrev: null,
-              //selectedNext: null,
               visible: false,
               toggle: null,
               pickElement: null,
@@ -1348,6 +1359,7 @@
       };
 
       _proto.requestPickCreate = function requestPickCreate(multiSelectData, removePick, count) {
+        multiSelectData.isSelected = true;
         multiSelectData.excludedFromSearch = true; // all selected excluded from search
 
         multiSelectData.toggle = function () {
@@ -1365,6 +1377,7 @@
 
         if (!(confirmed === false)) {
           var createPick = removePick();
+          multiSelectData.isSelected = false;
           multiSelectData.excludedFromSearch = multiSelectData.isOptionDisabled;
 
           if (multiSelectData.isOptionDisabled) {
@@ -1510,8 +1523,8 @@
           if (!_this3.filterPanel.isEventTarget(event)) _this3.filterPanel.setFocus();
         }, this.isRtl, this.popper);
         this.staticContent.attachContainer();
-        if (this.onUpdate) this.onUpdate();
         this.updateDataImpl();
+        if (this.onUpdate) this.onUpdate();
         this.UpdateDisabled(); // should be done after updateDataImpl
 
         if (this.optionsAdapter.onReset) {
@@ -2555,7 +2568,10 @@
           if (configuration.options) setSelected = function setSelected(option, value) {
             option.selected = value;
           };else setSelected = function setSelected(option, value) {
-            if (value) option.setAttribute('selected', '');else option.removeAttribute('selected');
+            if (value) option.setAttribute('selected', '');else {
+              option.removeAttribute('selected');
+              option.selected = false;
+            }
           };
         }
 
@@ -2575,7 +2591,14 @@
         multiSelect.validationApi = validationApi;
         bsAppearance(multiSelect, staticContent, optionsAdapter, validationApiObservable, useCssPatch, css);
         if (init && init instanceof Function) init(multiSelect);
-        multiSelect.init();
+        multiSelect.init(); // support browser's "step backward" on form restore
+
+        if (staticContent.selectElement && window.document.readyState != "complete") {
+          window.setTimeout(function () {
+            multiSelect.UpdateSelected();
+          });
+        }
+
         return multiSelect;
       }
 

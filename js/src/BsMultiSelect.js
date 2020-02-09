@@ -193,8 +193,10 @@ function extendConfigurtion(configuration, defaults){
                     setSelected = (option, value) => {
                         if (value)
                             option.setAttribute('selected','');
-                        else
+                        else {
                             option.removeAttribute('selected');
+                            option.selected=false;
+                        }
                     };
             }
             var validationApi = ValidityApi(
@@ -230,6 +232,11 @@ function extendConfigurtion(configuration, defaults){
                 init(multiSelect);
             
             multiSelect.init();
+            
+            // support browser's "step backward" on form restore
+            if (staticContent.selectElement && window.document.readyState !="complete"){
+                window.setTimeout( function(){multiSelect.UpdateSelected()});
+            }
 
             return multiSelect;
         }
