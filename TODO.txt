@@ -1,3 +1,6 @@
+0. search as API
+  include integration with https://fusejs.io/ 
+
 1. configure package.json for multiple entrypoints
 
 {
