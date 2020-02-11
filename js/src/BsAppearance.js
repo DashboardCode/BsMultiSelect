@@ -58,7 +58,6 @@ function updateSizeJsForAdapter(picksElement, picksLgStyling, picksSmStyling, pi
     updateSizeJs(picksElement, picksLgStyling, picksSmStyling, picksDefStyling,  optionsAdapter.getSize())
 }
 
-
 export function bsAppearance(multiSelect, staticContent, optionsAdapter, 
     validityApiObservable,
     useCssPatch, css){
@@ -124,7 +123,6 @@ export function bsAppearance(multiSelect, staticContent, optionsAdapter,
     var validationObservable = ObservableLambda(
         () => wasUpdatedObservable.getValue()?validityApiObservable.getValue():getManualValidationObservable.getValue()
     )
-    
   
     validationObservable.attach(
         (value)=>{
@@ -194,25 +192,6 @@ export function adjustBsOptionAdapterConfiguration(configuration, selectElement)
                 return value;
         }
     }
-    
-       
-    if (!configuration.getIsValid) {
-        configuration.getIsValid = function()
-        { 
-            var x = selectElement.classList.contains('is-valid') || 
-                (closestByClassName(selectElement, 'was-validated')!=null && selectElement.checkValidity() )
-            return x;
-        }
-    }
-    if (!configuration.getIsInvalid) {
-        configuration.getIsInvalid = function()
-        { 
-            var x = selectElement.classList.contains('is-invalid') ||
-                (closestByClassName(selectElement, 'was-validated')!=null && !selectElement.checkValidity() )
-            return x;
-        }
-    }
-
 }
 
 function getMessagesElements(containerElement){

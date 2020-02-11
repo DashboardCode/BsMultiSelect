@@ -63,3 +63,11 @@ https://strizhechenko.github.io/2017/07/10/python-opensource-project-todo-list.h
 https://habrahabr.ru/post/341166/
 
 review rtl: https://habr.com/ru/post/484886/
+
+
+### Auto patch generator
+
+        // Create our shared stylesheet:
+        // const sheet = new CSSStyleSheet();
+        // sheet.replaceSync('#target {color: darkseagreen}');
+        // document.adoptedStyleSheets = [sheet];

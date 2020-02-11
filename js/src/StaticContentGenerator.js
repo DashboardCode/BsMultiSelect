@@ -65,21 +65,21 @@ export function staticContentGenerator(element, createElement, containerClass,  
     } 
 
     var choicesElement = createElement('UL');
-    choicesElement.style.display="none";
+    choicesElement.style.display = 'none';
     
     var backupDisplay = null;
     if (selectElement){ 
         backupDisplay = selectElement.style.display;
-        selectElement.style.display='none';
+        selectElement.style.display = 'none';
     }
     
     var pickFilterElement = createElement('LI');
     var filterInputElement = createElement('INPUT');
-    var required =false;
+    var required = false;
     if (selectElement){
         var backupedRequired = selectElement.required;
         if(selectElement.required===true){
-            required=true;
+            required = true;
             selectElement.required = false;
         }
     }

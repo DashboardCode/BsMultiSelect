@@ -62,6 +62,17 @@ export function siblingsAsArray(element){
     return value;
 }
 
+// export function ShowBinder(element){
+//     return {
+//         show(){
+            
+//         },
+//         hide(){
+//             //
+//         }
+//     }
+// }
+
 export function EventBinder(){
     var list = [];
     return {

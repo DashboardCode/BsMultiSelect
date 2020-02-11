@@ -23,7 +23,6 @@ export function addToJQueryPrototype(pluginName, createPlugin, defaults, $){
                     });
                 $e.data(dataKey, instance);
             }
-
             if (isMethodName) {
                 let methodName = options;
                 if (typeof instance[methodName] === 'undefined') {

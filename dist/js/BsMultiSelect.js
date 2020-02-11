@@ -1,5 +1,5 @@
 /*!
-  * DashboardCode BsMultiSelect v0.5.8 (https://dashboardcode.github.io/BsMultiSelect/)
+  * DashboardCode BsMultiSelect v0.5.9 (https://dashboardcode.github.io/BsMultiSelect/)
   * Copyright 2017-2020 Roman Pokrovskij (github user rpokrovskij)
   * Licensed under APACHE 2 (https://github.com/DashboardCode/BsMultiSelect/blob/master/LICENSE)
   */
@@ -11,6 +11,59 @@
 
     $ = $ && $.hasOwnProperty('default') ? $['default'] : $;
     Popper = Popper && Popper.hasOwnProperty('default') ? Popper['default'] : Popper;
+
+    function addToJQueryPrototype(pluginName, createPlugin, defaults, $) {
+      var firstChar = pluginName.charAt(0);
+      var firstCharLower = firstChar.toLowerCase();
+
+      if (firstCharLower == firstChar) {
+        throw new TypeError("Plugin name '" + pluginName + "' should be started from upper case char");
+      }
+
+      var prototypableName = firstCharLower + pluginName.slice(1);
+      var noConflictPrototypable = $.fn[prototypableName];
+      var dataKey = "DashboardCode." + pluginName;
+
+      function prototypable(options) {
+        return this.each(function () {
+          var $e = $(this);
+          var instance = $e.data(dataKey);
+          var isMethodName = typeof options === 'string';
+
+          if (!instance) {
+            if (isMethodName && /Dispose/.test(options)) return;
+            var optionsRef = typeof options === 'object' || typeof options === 'function' ? options : null;
+            instance = createPlugin(this, optionsRef, function () {
+              $e.removeData(dataKey);
+            });
+            $e.data(dataKey, instance);
+          }
+
+          if (isMethodName) {
+            var methodName = options;
+
+            if (typeof instance[methodName] === 'undefined') {
+              throw new TypeError("No method named '" + methodName + "'");
+            }
+
+            instance[methodName]();
+          }
+        });
+      }
+
+      $.fn[prototypableName] = prototypable; // pluginName with first capitalized letter - return plugin instance (for 1st $selected item)
+
+      $.fn[pluginName] = function () {
+        return $(this).data(dataKey);
+      };
+
+      $.fn[prototypableName].noConflict = function () {
+        $.fn[prototypableName] = noConflictPrototypable;
+        return prototypable;
+      };
+
+      $.fn[prototypableName].defaults = defaults;
+    }
 
     //import {setStyle} from './ToolsDom';
     function FilterPanel(filterInputElement, insertIntoDom, onFocusIn, // show dropdown
@@ -393,7 +446,16 @@
       }
 
       return value;
-    }
+    } // export function ShowBinder(element){
+    //     return {
+    //         show(){
+    //         },
+    //         hide(){
+    //             //
+    //         }
+    //     }
+    // }
+
     function EventBinder() {
       var list = [];
       return {
@@ -986,18 +1048,18 @@
 
     function PlaceholderAspect(placeholderText, isEmpty, picksElement, inputElement, css) {
       function setEmptyInputWidth(isVisible) {
-        if (isVisible) inputElement.style.width = "100%";else inputElement.style.width = "2ch";
+        if (isVisible) inputElement.style.width = '100%';else inputElement.style.width = '2ch';
       }
 
       var emptyToggleStyling = toggleStyling(inputElement, css.filterInput_empty);
 
       function showPlacehodler(isVisible) {
         if (isVisible) {
-          inputElement.placeholder = placeholderText ? placeholderText : "";
-          picksElement.style.display = "block";
+          inputElement.placeholder = placeholderText ? placeholderText : '';
+          picksElement.style.display = 'block';
         } else {
-          inputElement.placeholder = "";
-          picksElement.style.display = "flex";
+          inputElement.placeholder = '';
+          picksElement.style.display = 'flex';
         }
 
         emptyToggleStyling(isVisible);
@@ -1564,59 +1626,6 @@
       return isRtl;
     }
 
-    function addToJQueryPrototype(pluginName, createPlugin, defaults, $) {
-      var firstChar = pluginName.charAt(0);
-      var firstCharLower = firstChar.toLowerCase();
-
-      if (firstCharLower == firstChar) {
-        throw new TypeError("Plugin name '" + pluginName + "' should be started from upper case char");
-      }
-
-      var prototypableName = firstCharLower + pluginName.slice(1);
-      var noConflictPrototypable = $.fn[prototypableName];
-      var dataKey = "DashboardCode." + pluginName;
-
-      function prototypable(options) {
-        return this.each(function () {
-          var $e = $(this);
-          var instance = $e.data(dataKey);
-          var isMethodName = typeof options === 'string';
-
-          if (!instance) {
-            if (isMethodName && /Dispose/.test(options)) return;
-            var optionsRef = typeof options === 'object' || typeof options === 'function' ? options : null;
-            instance = createPlugin(this, optionsRef, function () {
-              $e.removeData(dataKey);
-            });
-            $e.data(dataKey, instance);
-          }
-
-          if (isMethodName) {
-            var methodName = options;
-
-            if (typeof instance[methodName] === 'undefined') {
-              throw new TypeError("No method named '" + methodName + "'");
-            }
-
-            instance[methodName]();
-          }
-        });
-      }
-
-      $.fn[prototypableName] = prototypable; // pluginName with first capitalized letter - return plugin instance (for 1st $selected item)
-
-      $.fn[pluginName] = function () {
-        return $(this).data(dataKey);
-      };
-
-      $.fn[prototypableName].noConflict = function () {
-        $.fn[prototypableName] = noConflictPrototypable;
-        return prototypable;
-      };
-
-      $.fn[prototypableName].defaults = defaults;
-    }
-
     function OptionsAdapterElement(selectElement, getDisabled, getSize, getValidity, onChange) {
       var form = closestByTagName(selectElement, 'FORM');
       var eventBuilder = EventBinder();
@@ -1659,233 +1668,6 @@
           return _getSize ? _getSize() : null;
         },
         getValidity: getValidity
-      };
-    }
-
-    function pickContentGenerator(pickElement, css) {
-      pickElement.innerHTML = '<span></span><button aria-label="Remove" tabIndex="-1" type="button"><span aria-hidden="true">&times;</span></button>';
-      var pickContentElement = pickElement.querySelector('SPAN');
-      var pickButtonElement = pickElement.querySelector('BUTTON');
-      addStyling(pickContentElement, css.pickContent);
-      addStyling(pickButtonElement, css.pickButton);
-      var eventBinder = EventBinder();
-      var disableToggleStyling = toggleStyling(pickContentElement, css.pickContent_disabled);
-      return {
-        setData: function setData(option) {
-          pickContentElement.textContent = option.text;
-        },
-        disable: function disable(isDisabled) {
-          return disableToggleStyling(isDisabled);
-        },
-        disableRemove: function disableRemove(isRemoveDisabled) {
-          pickButtonElement.disabled = isRemoveDisabled;
-        },
-        onRemove: function onRemove(removePick) {
-          eventBinder.bind(pickButtonElement, "click", function (event) {
-            return removePick(event);
-          });
-        },
-        dispose: function dispose() {
-          eventBinder.unbind();
-        }
-      };
-    }
-
-    function choiceContentGenerator(choiceElement, css) {
-      choiceElement.innerHTML = '<div><input formnovalidate type="checkbox"><label></label></div>';
-      var choiceContentElement = choiceElement.querySelector('DIV');
-      var choiceCheckBoxElement = choiceContentElement.querySelector('INPUT');
-      var choiceLabelElement = choiceContentElement.querySelector('LABEL');
-      addStyling(choiceContentElement, css.choiceContent);
-      addStyling(choiceCheckBoxElement, css.choiceCheckBox);
-      addStyling(choiceLabelElement, css.choiceLabel);
-      var selectToggleStyling = toggleStyling(choiceElement, css.choice_selected);
-      var disable1ToggleStyling = toggleStyling(choiceElement, css.choice_disabled);
-      var disable2ToggleStyling = toggleStyling(choiceCheckBoxElement, css.choiceCheckBox_disabled);
-      var disable3ToggleStyling = toggleStyling(choiceLabelElement, css.choiceLabel_disabled);
-      var hoverInToggleStyling = toggleStyling(choiceElement, css.choice_hover);
-      var eventBinder = EventBinder();
-      return {
-        setData: function setData(option) {
-          choiceLabelElement.textContent = option.text;
-        },
-        select: function select(isSelected) {
-          selectToggleStyling(isSelected);
-          choiceCheckBoxElement.checked = isSelected;
-        },
-        disable: function disable(isDisabled, isSelected) {
-          disable1ToggleStyling(isDisabled);
-          disable2ToggleStyling(isDisabled);
-          disable3ToggleStyling(isDisabled); // do not desable checkBox if option is selected! there should be possibility to unselect "disabled"
-
-          choiceCheckBoxElement.disabled = isDisabled && !isSelected;
-        },
-        hoverIn: function hoverIn(isHoverIn) {
-          hoverInToggleStyling(isHoverIn);
-        },
-        onSelected: function onSelected(toggle) {
-          eventBinder.bind(choiceCheckBoxElement, "change", toggle);
-          eventBinder.bind(choiceElement, "click", function (event) {
-            if (choiceElement === event.target || choiceElement.contains(event.target)) {
-              toggle();
-            }
-          });
-        },
-        dispose: function dispose() {
-          eventBinder.unbind();
-        }
-      };
-    }
-
-    function staticContentGenerator(element, createElement, containerClass, putRtlToContainer, css) {
-      var selectElement = null;
-      var containerElement = null;
-
-      if (element.tagName == 'SELECT') {
-        selectElement = element;
-
-        if (containerClass) {
-          containerElement = closestByClassName(selectElement, containerClass); // TODO: do I need this?    
-          //if (selectElement.nextSibling  && selectElement.nextSibling.classList.contains(containerClass) )
-          //    containerElement = selectElement.parentNode;
-        }
-      } else if (element.tagName == "DIV") {
-        containerElement = element;
-        selectElement = findDirectChildByTagName(element, 'SELECT');
-      } else {
-        element.style.backgroundColor = 'red';
-        element.style.color = 'white';
-        throw new Error('BsMultiSelect: Only DIV and SELECT supported');
-      }
-
-      var picksElement = null;
-      var ownPicksElement = false;
-      if (containerElement) picksElement = findDirectChildByTagName(containerElement, 'UL');
-
-      if (!picksElement) {
-        picksElement = createElement('UL');
-        ownPicksElement = true;
-      }
-
-      var createPickElement = function createPickElement() {
-        var pickElement = createElement('LI');
-        addStyling(pickElement, css.pick);
-        return pickElement;
-      };
-
-      var createChoiceElement = function createChoiceElement() {
-        var choiceElement = createElement('LI');
-        addStyling(choiceElement, css.choice);
-        return choiceElement;
-      };
-
-      var ownContainerElement = false;
-
-      if (!containerElement) {
-        containerElement = createElement('DIV');
-        ownContainerElement = true;
-      }
-
-      containerElement.classList.add(containerClass);
-      var attributeBackup = AttributeBackup();
-
-      if (putRtlToContainer) {
-        attributeBackup.set(containerElement, "dir", "rtl");
-      } else if (selectElement) {
-        var dirAttributeValue = selectElement.getAttribute("dir");
-
-        if (dirAttributeValue) {
-          attributeBackup.set(containerElement, "dir", dirAttributeValue);
-        }
-      }
-
-      var choicesElement = createElement('UL');
-      choicesElement.style.display = "none";
-      var backupDisplay = null;
-
-      if (selectElement) {
-        backupDisplay = selectElement.style.display;
-        selectElement.style.display = 'none';
-      }
-
-      var pickFilterElement = createElement('LI');
-      var filterInputElement = createElement('INPUT');
-      var required = false;
-
-      if (selectElement) {
-        var backupedRequired = selectElement.required;
-
-        if (selectElement.required === true) {
-          required = true;
-          selectElement.required = false;
-        }
-      }
-
-      addStyling(picksElement, css.picks);
-      addStyling(choicesElement, css.choices);
-      addStyling(pickFilterElement, css.pickFilter);
-      addStyling(filterInputElement, css.filterInput);
-      var createInputId = null;
-      if (selectElement) createInputId = function createInputId() {
-        return containerClass + "-generated-input-" + (selectElement.id ? selectElement.id : selectElement.name).toLowerCase() + "-id";
-      };else createInputId = function createInputId() {
-        return containerClass + "-generated-filter-" + containerElement.id;
-      };
-      var isFocusIn = false;
-      var disableToggleStyling = toggleStyling(picksElement, css.picks_disabled);
-      var focusToggleStyling = toggleStyling(picksElement, css.picks_focus);
-      return {
-        initialElement: element,
-        selectElement: selectElement,
-        containerElement: containerElement,
-        picksElement: picksElement,
-        createPickElement: createPickElement,
-        choicesElement: choicesElement,
-        createChoiceElement: createChoiceElement,
-        pickFilterElement: pickFilterElement,
-        filterInputElement: filterInputElement,
-        createInputId: createInputId,
-        required: required,
-        attachContainer: function attachContainer() {
-          if (ownContainerElement && selectElement) // otherwise it is attached
-            selectElement.parentNode.insertBefore(containerElement, selectElement.nextSibling);
-        },
-        appendToContainer: function appendToContainer() {
-          if (ownContainerElement || !selectElement) {
-            if (ownPicksElement) containerElement.appendChild(picksElement);
-            containerElement.appendChild(choicesElement);
-          } else {
-            if (selectElement) {
-              // TODO picksElement element should be moved to attach
-              selectElement.parentNode.insertBefore(choicesElement, selectElement.nextSibling);
-              if (ownPicksElement) selectElement.parentNode.insertBefore(picksElement, choicesElement);
-            }
-          }
-        },
-        disable: function disable(isDisabled) {
-          disableToggleStyling(isDisabled);
-        },
-        getIsFocusIn: function getIsFocusIn() {
-          return isFocusIn;
-        },
-        setIsFocusIn: function setIsFocusIn(newIsFocusIn) {
-          isFocusIn = newIsFocusIn;
-        },
-        toggleFocusStyling: function toggleFocusStyling() {
-          focusToggleStyling(isFocusIn);
-        },
-        dispose: function dispose() {
-          if (ownContainerElement) containerElement.parentNode.removeChild(containerElement);else attributeBackup.restore();
-          if (ownPicksElement) picksElement.parentNode.removeChild(picksElement);
-          choicesElement.parentNode.removeChild(choicesElement);
-          if (pickFilterElement.parentNode) pickFilterElement.parentNode.removeChild(pickFilterElement);
-          if (filterInputElement.parentNode) filterInputElement.parentNode.removeChild(filterInputElement);
-
-          if (selectElement) {
-            selectElement.required = backupedRequired;
-            selectElement.style.display = backupDisplay;
-          }
-        }
       };
     }
 
@@ -2092,20 +1874,6 @@
           return value;
         };
       }
-
-      if (!configuration.getIsValid) {
-        configuration.getIsValid = function () {
-          var x = selectElement.classList.contains('is-valid') || closestByClassName(selectElement, 'was-validated') != null && selectElement.checkValidity();
-          return x;
-        };
-      }
-
-      if (!configuration.getIsInvalid) {
-        configuration.getIsInvalid = function () {
-          var x = selectElement.classList.contains('is-invalid') || closestByClassName(selectElement, 'was-validated') != null && !selectElement.checkValidity();
-          return x;
-        };
-      }
     }
 
     function getMessagesElements(containerElement) {
@@ -2305,6 +2073,233 @@
       }
     }
 
+    function pickContentGenerator(pickElement, css) {
+      pickElement.innerHTML = '<span></span><button aria-label="Remove" tabIndex="-1" type="button"><span aria-hidden="true">&times;</span></button>';
+      var pickContentElement = pickElement.querySelector('SPAN');
+      var pickButtonElement = pickElement.querySelector('BUTTON');
+      addStyling(pickContentElement, css.pickContent);
+      addStyling(pickButtonElement, css.pickButton);
+      var eventBinder = EventBinder();
+      var disableToggleStyling = toggleStyling(pickContentElement, css.pickContent_disabled);
+      return {
+        setData: function setData(option) {
+          pickContentElement.textContent = option.text;
+        },
+        disable: function disable(isDisabled) {
+          return disableToggleStyling(isDisabled);
+        },
+        disableRemove: function disableRemove(isRemoveDisabled) {
+          pickButtonElement.disabled = isRemoveDisabled;
+        },
+        onRemove: function onRemove(removePick) {
+          eventBinder.bind(pickButtonElement, "click", function (event) {
+            return removePick(event);
+          });
+        },
+        dispose: function dispose() {
+          eventBinder.unbind();
+        }
+      };
+    }
+
+    function choiceContentGenerator(choiceElement, css) {
+      choiceElement.innerHTML = '<div><input formnovalidate type="checkbox"><label></label></div>';
+      var choiceContentElement = choiceElement.querySelector('DIV');
+      var choiceCheckBoxElement = choiceContentElement.querySelector('INPUT');
+      var choiceLabelElement = choiceContentElement.querySelector('LABEL');
+      addStyling(choiceContentElement, css.choiceContent);
+      addStyling(choiceCheckBoxElement, css.choiceCheckBox);
+      addStyling(choiceLabelElement, css.choiceLabel);
+      var selectToggleStyling = toggleStyling(choiceElement, css.choice_selected);
+      var disable1ToggleStyling = toggleStyling(choiceElement, css.choice_disabled);
+      var disable2ToggleStyling = toggleStyling(choiceCheckBoxElement, css.choiceCheckBox_disabled);
+      var disable3ToggleStyling = toggleStyling(choiceLabelElement, css.choiceLabel_disabled);
+      var hoverInToggleStyling = toggleStyling(choiceElement, css.choice_hover);
+      var eventBinder = EventBinder();
+      return {
+        setData: function setData(option) {
+          choiceLabelElement.textContent = option.text;
+        },
+        select: function select(isSelected) {
+          selectToggleStyling(isSelected);
+          choiceCheckBoxElement.checked = isSelected;
+        },
+        disable: function disable(isDisabled, isSelected) {
+          disable1ToggleStyling(isDisabled);
+          disable2ToggleStyling(isDisabled);
+          disable3ToggleStyling(isDisabled); // do not desable checkBox if option is selected! there should be possibility to unselect "disabled"
+
+          choiceCheckBoxElement.disabled = isDisabled && !isSelected;
+        },
+        hoverIn: function hoverIn(isHoverIn) {
+          hoverInToggleStyling(isHoverIn);
+        },
+        onSelected: function onSelected(toggle) {
+          eventBinder.bind(choiceCheckBoxElement, "change", toggle);
+          eventBinder.bind(choiceElement, "click", function (event) {
+            if (choiceElement === event.target || choiceElement.contains(event.target)) {
+              toggle();
+            }
+          });
+        },
+        dispose: function dispose() {
+          eventBinder.unbind();
+        }
+      };
+    }
+
+    function staticContentGenerator(element, createElement, containerClass, putRtlToContainer, css) {
+      var selectElement = null;
+      var containerElement = null;
+
+      if (element.tagName == 'SELECT') {
+        selectElement = element;
+
+        if (containerClass) {
+          containerElement = closestByClassName(selectElement, containerClass); // TODO: do I need this?    
+          //if (selectElement.nextSibling  && selectElement.nextSibling.classList.contains(containerClass) )
+          //    containerElement = selectElement.parentNode;
+        }
+      } else if (element.tagName == "DIV") {
+        containerElement = element;
+        selectElement = findDirectChildByTagName(element, 'SELECT');
+      } else {
+        element.style.backgroundColor = 'red';
+        element.style.color = 'white';
+        throw new Error('BsMultiSelect: Only DIV and SELECT supported');
+      }
+
+      var picksElement = null;
+      var ownPicksElement = false;
+      if (containerElement) picksElement = findDirectChildByTagName(containerElement, 'UL');
+
+      if (!picksElement) {
+        picksElement = createElement('UL');
+        ownPicksElement = true;
+      }
+
+      var createPickElement = function createPickElement() {
+        var pickElement = createElement('LI');
+        addStyling(pickElement, css.pick);
+        return pickElement;
+      };
+
+      var createChoiceElement = function createChoiceElement() {
+        var choiceElement = createElement('LI');
+        addStyling(choiceElement, css.choice);
+        return choiceElement;
+      };
+
+      var ownContainerElement = false;
+
+      if (!containerElement) {
+        containerElement = createElement('DIV');
+        ownContainerElement = true;
+      }
+
+      containerElement.classList.add(containerClass);
+      var attributeBackup = AttributeBackup();
+
+      if (putRtlToContainer) {
+        attributeBackup.set(containerElement, "dir", "rtl");
+      } else if (selectElement) {
+        var dirAttributeValue = selectElement.getAttribute("dir");
+
+        if (dirAttributeValue) {
+          attributeBackup.set(containerElement, "dir", dirAttributeValue);
+        }
+      }
+
+      var choicesElement = createElement('UL');
+      choicesElement.style.display = 'none';
+      var backupDisplay = null;
+
+      if (selectElement) {
+        backupDisplay = selectElement.style.display;
+        selectElement.style.display = 'none';
+      }
+
+      var pickFilterElement = createElement('LI');
+      var filterInputElement = createElement('INPUT');
+      var required = false;
+
+      if (selectElement) {
+        var backupedRequired = selectElement.required;
+
+        if (selectElement.required === true) {
+          required = true;
+          selectElement.required = false;
+        }
+      }
+
+      addStyling(picksElement, css.picks);
+      addStyling(choicesElement, css.choices);
+      addStyling(pickFilterElement, css.pickFilter);
+      addStyling(filterInputElement, css.filterInput);
+      var createInputId = null;
+      if (selectElement) createInputId = function createInputId() {
+        return containerClass + "-generated-input-" + (selectElement.id ? selectElement.id : selectElement.name).toLowerCase() + "-id";
+      };else createInputId = function createInputId() {
+        return containerClass + "-generated-filter-" + containerElement.id;
+      };
+      var isFocusIn = false;
+      var disableToggleStyling = toggleStyling(picksElement, css.picks_disabled);
+      var focusToggleStyling = toggleStyling(picksElement, css.picks_focus);
+      return {
+        initialElement: element,
+        selectElement: selectElement,
+        containerElement: containerElement,
+        picksElement: picksElement,
+        createPickElement: createPickElement,
+        choicesElement: choicesElement,
+        createChoiceElement: createChoiceElement,
+        pickFilterElement: pickFilterElement,
+        filterInputElement: filterInputElement,
+        createInputId: createInputId,
+        required: required,
+        attachContainer: function attachContainer() {
+          if (ownContainerElement && selectElement) // otherwise it is attached
+            selectElement.parentNode.insertBefore(containerElement, selectElement.nextSibling);
+        },
+        appendToContainer: function appendToContainer() {
+          if (ownContainerElement || !selectElement) {
+            if (ownPicksElement) containerElement.appendChild(picksElement);
+            containerElement.appendChild(choicesElement);
+          } else {
+            if (selectElement) {
+              // TODO picksElement element should be moved to attach
+              selectElement.parentNode.insertBefore(choicesElement, selectElement.nextSibling);
+              if (ownPicksElement) selectElement.parentNode.insertBefore(picksElement, choicesElement);
+            }
+          }
+        },
+        disable: function disable(isDisabled) {
+          disableToggleStyling(isDisabled);
+        },
+        getIsFocusIn: function getIsFocusIn() {
+          return isFocusIn;
+        },
+        setIsFocusIn: function setIsFocusIn(newIsFocusIn) {
+          isFocusIn = newIsFocusIn;
+        },
+        toggleFocusStyling: function toggleFocusStyling() {
+          focusToggleStyling(isFocusIn);
+        },
+        dispose: function dispose() {
+          if (ownContainerElement) containerElement.parentNode.removeChild(containerElement);else attributeBackup.restore();
+          if (ownPicksElement) picksElement.parentNode.removeChild(picksElement);
+          choicesElement.parentNode.removeChild(choicesElement);
+          if (pickFilterElement.parentNode) pickFilterElement.parentNode.removeChild(pickFilterElement);
+          if (filterInputElement.parentNode) filterInputElement.parentNode.removeChild(filterInputElement);
+
+          if (selectElement) {
+            selectElement.required = backupedRequired;
+            selectElement.style.display = backupDisplay;
+          }
+        }
+      };
+    }
+
     var css = {
       choices: 'dropdown-menu',
       // bs4, in bsmultiselect.scss as ul.dropdown-menu
@@ -2424,6 +2419,31 @@
     };
 
     var defValueMissingMessage = 'Please select an item in the list';
+    var defaults = {
+      useCssPatch: true,
+      containerClass: "dashboardcode-bsmultiselect",
+      css: css,
+      cssPatch: cssPatch,
+      placeholder: '',
+      staticContentGenerator: null,
+      getLabelElement: null,
+      pickContentGenerator: null,
+      choiceContentGenerator: null,
+      buildConfiguration: null,
+      isRtl: null,
+      setSelected: null,
+      required: null,
+
+      /* null means look on select[required] or false if jso-source */
+      optionsAdapter: null,
+      options: null,
+      getDisabled: null,
+      getSize: null,
+      getValidity: null,
+      labelElement: null,
+      valueMissingMessage: '',
+      getIsValueMissing: null
+    };
 
     function extendConfigurtion(configuration, defaults) {
       var cfgCss = configuration.css;
@@ -2441,92 +2461,65 @@
       configuration.cssPatch = defCssPatch;
     }
 
-    (function (window, $, Popper) {
-      var defaults = {
-        useCssPatch: true,
-        containerClass: "dashboardcode-bsmultiselect",
-        css: css,
-        cssPatch: cssPatch,
-        placeholder: '',
-        valueMissingMessage: '',
-        staticContentGenerator: staticContentGenerator,
-        getLabelElement: getLabelElement,
-        pickContentGenerator: pickContentGenerator,
-        choiceContentGenerator: choiceContentGenerator,
-        buildConfiguration: null,
-        setSelected: null,
-        required: null,
+    function BsMultiSelectGenerator(element, settings, onDispose, trigger, window, Popper) {
+      if (typeof Popper === 'undefined') {
+        throw new Error("BsMultiSelect: Popper.js (https://popper.js.org) is required");
+      }
 
-        /* means look on select[required] or false for js object source */
-        optionsAdapter: null,
-        options: null,
-        getDisabled: null,
-        getSize: null,
-        getValidity: null
-      }; // Create our shared stylesheet:
-      // const sheet = new CSSStyleSheet();
-      // sheet.replaceSync('#target {color: darkseagreen}');
-      // document.adoptedStyleSheets = [sheet];
+      var configuration = {};
+      var init = null;
 
-      function createPlugin(element, settings, onDispose) {
-        if (typeof Popper === 'undefined') {
-          throw new Error("BsMultiSelect: Popper.js (https://popper.js.org) is required");
+      if (settings instanceof Function) {
+        extendConfigurtion(configuration, defaults);
+        init = settings(element, configuration);
+      } else {
+        if (settings) {
+          adjustLegacyConfiguration(settings);
+          extendOverriding(configuration, settings); // settings used per jQuery intialization, configuration per element
         }
 
-        var configuration = {};
-        var init = null;
+        extendConfigurtion(configuration, defaults);
+      }
 
-        if (settings instanceof Function) {
-          extendConfigurtion(configuration, defaults);
-          init = settings(element, configuration);
+      if (configuration.buildConfiguration) init = configuration.buildConfiguration(element, configuration);
+      var css = configuration.css;
+      var useCssPatch = configuration.useCssPatch;
+      var putRtlToContainer = false;
+
+      if (useCssPatch) {
+        extendCss(css, configuration.cssPatch);
+      }
+
+      if (!configuration.staticContentGenerator) configuration.staticContentGenerator = staticContentGenerator;
+      if (!configuration.getLabelElement) configuration.getLabelElement = getLabelElement;
+      if (!configuration.pickContentGenerator) configuration.pickContentGenerator = pickContentGenerator;
+      if (!configuration.choiceContentGenerator) configuration.choiceContentGenerator = choiceContentGenerator;
+      if (configuration.isRtl === undefined || configuration.isRtl === null) configuration.isRtl = RtlAdapter(element);else if (configuration.isRtl === true) putRtlToContainer = true;
+      var staticContent = configuration.staticContentGenerator(element, function (name) {
+        return window.document.createElement(name);
+      }, configuration.containerClass, putRtlToContainer, css);
+      if (configuration.required === null) configuration.required = staticContent.required;
+      var optionsAdapter = configuration.optionsAdapter;
+      var lazyDefinedEvent;
+
+      if (!optionsAdapter) {
+        if (configuration.options) {
+          optionsAdapter = OptionsAdapterJson(configuration.options, configuration.getDisabled, configuration.getSize, configuration.getValidity, function () {
+            lazyDefinedEvent();
+            trigger('dashboardcode.multiselect:change');
+          });
         } else {
-          if (settings) {
-            adjustLegacyConfiguration(settings);
-            extendOverriding(configuration, settings); // settings used per jQuery intialization, configuration per element
-          }
-
-          extendConfigurtion(configuration, defaults);
+          adjustBsOptionAdapterConfiguration(configuration, staticContent.selectElement);
+          optionsAdapter = OptionsAdapterElement(staticContent.selectElement, configuration.getDisabled, configuration.getSize, configuration.getValidity, function () {
+            lazyDefinedEvent();
+            trigger('change');
+            trigger('dashboardcode.multiselect:change');
+          });
         }
+      }
 
-        if (configuration.buildConfiguration) init = configuration.buildConfiguration(element, configuration);
-        var css = configuration.css;
-        var useCssPatch = configuration.useCssPatch;
-        var putRtlToContainer = false;
-
-        if (useCssPatch) {
-          extendCss(css, configuration.cssPatch);
-        }
-
-        if (configuration.isRtl === undefined || configuration.isRtl === null) configuration.isRtl = RtlAdapter(element);else if (configuration.isRtl === true) putRtlToContainer = true;
-        var staticContent = configuration.staticContentGenerator(element, function (name) {
-          return window.document.createElement(name);
-        }, configuration.containerClass, putRtlToContainer, css);
-        if (configuration.required === null) configuration.required = staticContent.required;
-
-        var trigger = function trigger(eventName) {
-          $(element).trigger(eventName);
-        };
-
-        var optionsAdapter = configuration.optionsAdapter;
-        var lazyDefinedEvent;
-
-        if (!optionsAdapter) {
-          if (configuration.options) {
-            optionsAdapter = OptionsAdapterJson(configuration.options, configuration.getDisabled, configuration.getSize, configuration.getValidity, function () {
-              lazyDefinedEvent();
-              trigger('dashboardcode.multiselect:change');
-            });
-          } else {
-            adjustBsOptionAdapterConfiguration(configuration, staticContent.selectElement);
-            optionsAdapter = OptionsAdapterElement(staticContent.selectElement, configuration.getDisabled, configuration.getSize, configuration.getValidity, function () {
-              lazyDefinedEvent();
-              trigger('change');
-              trigger('dashboardcode.multiselect:change');
-            });
-          }
-        }
-
-        var getCount = function getCount() {
+      if (!configuration.getIsValueMissing) {
+        configuration.getIsValueMissing = function () {
           var count = 0;
           var options = optionsAdapter.getOptions();
 
@@ -2534,73 +2527,83 @@
             if (options[i].selected) count++;
           }
 
-          return count;
+          return count === 0;
         };
+      }
 
-        var isValueMissingObservable = ObservableLambda(function () {
-          return configuration.required && getCount() === 0;
-        });
-        var validationApiObservable = ObservableValue(!isValueMissingObservable.getValue());
+      var isValueMissingObservable = ObservableLambda(function () {
+        return configuration.required && configuration.getIsValueMissing();
+      });
+      var validationApiObservable = ObservableValue(!isValueMissingObservable.getValue());
 
-        lazyDefinedEvent = function lazyDefinedEvent() {
-          return isValueMissingObservable.call();
-        }; //if (useCssPatch)
-        //    pushIsValidClassToPicks(staticContent, css);
+      lazyDefinedEvent = function lazyDefinedEvent() {
+        return isValueMissingObservable.call();
+      }; //if (useCssPatch)
+      //    pushIsValidClassToPicks(staticContent, css);
 
 
-        var labelAdapter = LabelAdapter(configuration.labelElement, staticContent.createInputId);
+      var labelAdapter = LabelAdapter(configuration.labelElement, staticContent.createInputId);
 
-        if (!configuration.placeholder) {
-          configuration.placeholder = getDataGuardedWithPrefix(element, "bsmultiselect", "placeholder");
-        }
+      if (!configuration.placeholder) {
+        configuration.placeholder = getDataGuardedWithPrefix(element, "bsmultiselect", "placeholder");
+      }
+
+      if (!configuration.valueMissingMessage) {
+        configuration.valueMissingMessage = getDataGuardedWithPrefix(element, "bsmultiselect", "value-missing-message");
 
         if (!configuration.valueMissingMessage) {
-          configuration.valueMissingMessage = getDataGuardedWithPrefix(element, "bsmultiselect", "value-missing-message");
+          configuration.valueMissingMessage = defValueMissingMessage;
+        }
+      }
 
-          if (!configuration.valueMissingMessage) {
-            configuration.valueMissingMessage = defValueMissingMessage;
+      var setSelected = configuration.setSelected;
+
+      if (!setSelected) {
+        if (configuration.options) setSelected = function setSelected(option, value) {
+          option.selected = value;
+        };else setSelected = function setSelected(option, value) {
+          if (value) option.setAttribute('selected', '');else {
+            option.removeAttribute('selected');
+            option.selected = false;
           }
-        }
+        };
+      }
 
-        var setSelected = configuration.setSelected;
+      var validationApi = ValidityApi(staticContent.filterInputElement, isValueMissingObservable, configuration.valueMissingMessage, function (isValid) {
+        return validationApiObservable.setValue(isValid);
+      });
+      var multiSelect = new MultiSelect(optionsAdapter, setSelected, staticContent, function (pickElement) {
+        return configuration.pickContentGenerator(pickElement, css);
+      }, function (choiceElement) {
+        return configuration.choiceContentGenerator(choiceElement, css);
+      }, labelAdapter, configuration.placeholder, configuration.isRtl, css, Popper, window);
 
-        if (!setSelected) {
-          if (configuration.options) setSelected = function setSelected(option, value) {
-            option.selected = value;
-          };else setSelected = function setSelected(option, value) {
-            if (value) option.setAttribute('selected', '');else {
-              option.removeAttribute('selected');
-              option.selected = false;
-            }
-          };
-        }
+      multiSelect.onDispose = function () {
+        return sync(isValueMissingObservable.detachAll, validationApiObservable.detachAll, onDispose);
+      };
 
-        var validationApi = ValidityApi(staticContent.filterInputElement, isValueMissingObservable, configuration.valueMissingMessage, function (isValid) {
-          return validationApiObservable.setValue(isValid);
+      multiSelect.validationApi = validationApi;
+      bsAppearance(multiSelect, staticContent, optionsAdapter, validationApiObservable, useCssPatch, css);
+      if (init && init instanceof Function) init(multiSelect);
+      multiSelect.init(); // support browser's "step backward" on form restore
+
+      if (staticContent.selectElement && window.document.readyState != "complete") {
+        window.setTimeout(function () {
+          multiSelect.UpdateSelected();
         });
-        var multiSelect = new MultiSelect(optionsAdapter, setSelected, staticContent, function (pickElement) {
-          return configuration.pickContentGenerator(pickElement, css);
-        }, function (choiceElement) {
-          return configuration.choiceContentGenerator(choiceElement, css);
-        }, labelAdapter, configuration.placeholder, configuration.isRtl, css, Popper, window);
+      }
 
-        multiSelect.onDispose = function () {
-          return sync(isValueMissingObservable.detachAll, validationApiObservable.detachAll, onDispose);
+      return multiSelect;
+    }
+
+    (function (window, $, Popper) {
+      var createPlugin = function createPlugin(element, settings, onDispose) {
+        var trigger = function trigger(eventName) {
+          return $(element).trigger(eventName);
         };
 
-        multiSelect.validationApi = validationApi;
-        bsAppearance(multiSelect, staticContent, optionsAdapter, validationApiObservable, useCssPatch, css);
-        if (init && init instanceof Function) init(multiSelect);
-        multiSelect.init(); // support browser's "step backward" on form restore
-
-        if (staticContent.selectElement && window.document.readyState != "complete") {
-          window.setTimeout(function () {
-            multiSelect.UpdateSelected();
-          });
-        }
-
-        return multiSelect;
-      }
+        return BsMultiSelectGenerator(element, settings, onDispose, trigger, window, Popper);
+      };
 
       addToJQueryPrototype('BsMultiSelect', createPlugin, defaults, $);
     })(window, $, Popper);
