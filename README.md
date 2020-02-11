@@ -3,11 +3,11 @@ Demo: https://dashboardcode.github.io/BsMultiSelect/
 
 Snippets:
 
-1. [Right To Left (RTL)](https://dashboardcode.github.io/BsMultiSelect/snippetRtl.html)
+1. [Custom Validation](https://dashboardcode.github.io/BsMultiSelect/snippetCustomValidation.html)
 
 2. [HTML Form Validation](https://dashboardcode.github.io/BsMultiSelect/snippetFormValidation.html)
 
-3. [Custom Validation](https://dashboardcode.github.io/BsMultiSelect/snippetCustomValidation.html)
+3. [Right To Left (RTL)](https://dashboardcode.github.io/BsMultiSelect/snippetRtl.html)
 
 CodePen, use it for bug reporting: https://codepen.io/rpokrovskij/pen/yLymQwW 
 
@@ -19,7 +19,7 @@ There are two modes of usage: you can use plugin with or without external CSS.
 
 2. If you are building your project CSS file form SASS then use `useCssPatcch=false` mode and link [./scss/BsMultiSelect.scss](https://github.com/DashboardCode/BsMultiSelect/blob/master/scss/BsMultiSelect.scss) to your project. SCSS file utilize your Bootstrap theme variables.  Other use case is traditional (not involving SASS): copy static [./dist/css/BsMultiSelect.css](https://github.com/DashboardCode/BsMultiSelect/blob/master/dist/css/BsMultiSelect.css) and manually adjust it for your theme.
 
-BsMultiSelect follows Bootstrap 4 conventions and use the same instruments (babel, sass, rollup) so pretend to represent a BS team's modern plugin's **boilerplate**.  Supports all Bootsrap component features (pre/append buttons, [form validation](https://dashboardcode.github.io/BsMultiSelect/snippetFormValidation.html). Supports [RTL](https://dashboardcode.github.io/BsMultiSelect/snippetRtl.html).
+BsMultiSelect follows Bootstrap 4 conventions and use the same instruments (babel, sass, rollup) so pretend to represent a BS team's modern plugin's **boilerplate**.  Supports all Bootsrap component features: pre/append buttons, custom validation, [form validation](https://dashboardcode.github.io/BsMultiSelect/snippetFormValidation.html). Additionally supports [RTL](https://dashboardcode.github.io/BsMultiSelect/snippetRtl.html).
 
 ![image](https://user-images.githubusercontent.com/11598038/39988733-cda205e2-5770-11e8-8ca2-0d30cefc3ca1.png)
 
@@ -93,7 +93,7 @@ Note 1: in `cssPatch` and `css` (discussed bellow) parameters you can mix styles
       choiceLabel_disabled: { classes: '...', styles: {...}}   
 ````
 
-Note 1: when you setup `cssPatch` and `css` (discussed bellow) parameters in configuration as object parameter - you do not need to repeat all default values -  when `classes` replaces default `classes`, `styles` from configuraion merge default `styles` (you are able to add/replace default styles only you need).
+Note 2: when you setup `cssPatch` and `css` (discussed bellow) parameters in configuration as object parameter - you do not need to repeat all default values -  when `classes` replaces default `classes`, `styles` from configuraion merge default `styles` (you are able to add/replace default styles only you need).
 
 `BsMultiSelect` handles click events friendly to your modals and popups. Important: for mouse events `preventDefault`, `stopPropagation` were not used (so your other controls always will get 'clicks' on them). BsMultiSelect remove its DOM elements (in 'option was deselected' scenaroio, intiated by the click on "x" button) and do it using setTimeout(..,0) - this simplifies the identification of click event's target during the bubling (bacause of element is not removing in global event loop iteration you always are able to identify that click's target belongs to BsMultiselect - and skip processing - most probably cancel popup close handler); 
 
@@ -221,7 +221,7 @@ Also `useCssPatch: false` allows you to go to heavy styling (and even use plugin
             
 ````
 
-With them you can change classes of generated HTML elements. Default generated HTML (for `useCssPatch: false`) looks like:
+With `css` parameter  you can change classes of generated HTML elements. Default HTML generated (for `useCssPatch: false`) looks like:
 
 
 ````
@@ -247,7 +247,7 @@ With them you can change classes of generated HTML elements. Default generated H
           </ul>
         </div>
 ````
-**without select element - intialize with js object**: in this case should be initialized over div
+**without select element - intialize with js object**: in this case plugin should be initialized over `div`
 ````
 $('div.#bsMultiSelectJson').bsMultiSelect(
             {
@@ -265,7 +265,7 @@ $('div.#bsMultiSelectJson').bsMultiSelect(
     );
 ````
 
-Note: options should contais two obligated properties (text, value) - you can't ommit them. if `selected` is ommited then `setSelected` configuration method become obligated. If `setSelected` return false this cancel update "process" - this way can be achieved such goals as **"max selected"**.
+Note: option's item should contais two required properties (text, value) - you can't ommit them. If `selected` is ommited then `setSelected` configuration method become obligated. If `setSelected` return false this cancel update "process" - this way can be achieved such goals as **"max selected"**.
 
 
 
@@ -310,14 +310,15 @@ Note, BS allready provide classes like: `h-25`, `bg-light`, `text-primary` that 
 
 Actually plugin is ready for BS 5 that means for "no jquery". 
 Plugins is highly customizable even now, but API is not published. "Single select", "Enter Tags" or "Enter emails", "Fonts list" etc. can be developed right now with it, but I need to stabilize API before publishing (first I should made "search" customizable).
-The better dropdown menu (two different looks for with and without filters;  limitation of size) should be provided soon.
+Also in plans is the better dropdown menu API: two different look for with and without filters;  limitation on size.
+
  
 ### Alternatives:
 
-BsMultiSelect was created because at the moment when bootstrap 4 was released all existed multi select plugins had strange side effects. It was just simpler to try to combine several BS 4 tools together: `form-control`, `dropdown-menu`, `close` button, `badge` then trying to understand internals of mature projects. I hope now all of them supports BS4 but this list still could be interesting for some people.
+BsMultiSelect was created because at the moment when Bootstrap 4 was released all existed multiselect plugins had strange side effects. It was just simpler to try to combine several BS 4 tools together: `form-control`, `dropdown-menu`, `close` button, `badge` then trying to understand internals of mature projects. I hope now all of them supports BS4 but this list still could be interesting for some people.
 
 
-* Chosen.js: https://harvesthq.github.io/chosen/ - (ver 1.8.5), strange multiple "Consider marking event handler as 'passive' to make the page more responsive" warnings to console, not integrated to bootstrap theme (30KB+10KB js+css minified);
+* Chosen.js: https://harvesthq.github.io/chosen/ - (ver 1.8.5), strange multiple "Consider marking event handler as 'passive' to make the page more responsive" warnings to console, not integrated to bootstrap themes (30KB+10KB js+css minified);
 
 * Select2: https://select2.org/appearance - (ver 3.5.3) strange or broken backspace handling (at least in my Chrome 66), not integrated to bootstrap theme (66KB+14KB js+css minified);
 
