@@ -60,19 +60,6 @@ function extendConfigurtion(configuration, defaults){
     configuration.css = defCss;
     configuration.cssPatch = defCssPatch;
 }
-
-// export function createEnvironment(window, Popper, trigger){
-//     var environent = {
-//         Popper,
-//         trigger: (trigger)? trigger: (element, name)=> {
-//             element.dispatchEvent(new window.Event(name));
-//         },
-//         setTimeout : (f)=>window.setTimeout(f),
-//         document: window.document,
-//     }
-//     return environent;
-// }
-
 export function BsMultiSelect(element, settings, environment){
     var {Popper, trigger, window} = environment;
     if (typeof Popper === 'undefined') {
