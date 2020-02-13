@@ -9,7 +9,8 @@ import {composeSync} from './ToolsJs';
     (window, $, Popper) => {
         let createPlugin = (element, settings, onDispose) => { 
             let trigger = eventName => $(element).trigger(eventName);
-            let multiSelect =  BsMultiSelect(element, settings, trigger, window, Popper);
+            let environment = {trigger, window, Popper}
+            let multiSelect = BsMultiSelect(element, settings, environment);
             multiSelect.onDispose = composeSync(multiSelect.onDispose, onDispose);
             return multiSelect;
         }
