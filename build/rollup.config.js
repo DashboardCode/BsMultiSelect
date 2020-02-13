@@ -5,6 +5,7 @@ const babel   = require('rollup-plugin-babel')
 
 const pkg     = require(path.resolve(__dirname, '../package.json'))
 const year    = new Date().getFullYear()
+const isEsm   = process.env.ESM === 'true'
 
 let presets = [
   [
@@ -21,7 +22,9 @@ let presets = [
   ]
 ];
 
-let fileDest  = 'BsMultiSelect.js';
+
+
+let fileDest  = `BsMultiSelect${isEsm ? '.esm' : ''}.js`;
 let external  = ['jquery', 'popper.js'];
 let globals   = {'jquery': 'jQuery', 'popper.js': 'Popper'};
 
@@ -33,7 +36,7 @@ const plugins = [
   })]
 
 module.exports = {
-  input: path.resolve(__dirname, '../js/src/BsMultiSelect.js'),
+  input: path.resolve(__dirname, `../js/src/BsMultiSelect${isEsm ? '' : '.jquery'}.js`),
   output: {
     banner: `/*!
   * DashboardCode BsMultiSelect v${pkg.version} (${pkg.homepage})
@@ -41,10 +44,14 @@ module.exports = {
   * Licensed under APACHE 2 (https://github.com/DashboardCode/BsMultiSelect/blob/master/LICENSE)
   */`,
     file: path.resolve(__dirname, `../dist/js/${fileDest}`),
-    format: 'umd',
+    format: isEsm ? 'esm' :'umd',
     globals,
     name: 'BsMultiSelect'
   },
   external,
   plugins
+}
+
+if (!isEsm) {
+  module.exports.output.name = 'BsMultiSelect'
 }

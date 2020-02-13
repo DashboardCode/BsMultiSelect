@@ -89,6 +89,10 @@ export function pushUnique(array, item){
     return false;
 } 
 
+export function composeSync(...functions){
+    return () => sync(...functions)
+}
+
 export function sync(...functions){
     functions.forEach(
         (f) => {

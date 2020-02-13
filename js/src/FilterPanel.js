@@ -1,5 +1,3 @@
-//import {setStyle} from './ToolsDom';
-
 export function FilterPanel(
         filterInputElement,
         insertIntoDom,

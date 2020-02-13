@@ -1,5 +1,3 @@
-//import {removeElement} from './ToolsDom'
-
 export function ChoicesPanel(
         createChoiceElement, choicesElement, 
         onShow, onHide, 

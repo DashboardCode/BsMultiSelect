@@ -124,7 +124,6 @@ export class MultiSelect {
     GetFilterInput(){
         return this.staticContent.filterInputElement;
     }
-
     Update(){
         if (this.onUpdate)
             this.onUpdate();

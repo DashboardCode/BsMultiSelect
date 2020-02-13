@@ -1,5 +1,5 @@
 /*!
-  * DashboardCode BsMultiSelect v0.5.9 (https://dashboardcode.github.io/BsMultiSelect/)
+  * DashboardCode BsMultiSelect v0.5.10beta (https://dashboardcode.github.io/BsMultiSelect/)
   * Copyright 2017-2020 Roman Pokrovskij (github user rpokrovskij)
   * Licensed under APACHE 2 (https://github.com/DashboardCode/BsMultiSelect/blob/master/LICENSE)
   */
@@ -65,7 +65,6 @@
       $.fn[prototypableName].defaults = defaults;
     }
 
-    //import {setStyle} from './ToolsDom';
     function FilterPanel(filterInputElement, insertIntoDom, onFocusIn, // show dropdown
     onFocusOut, // hide dropdown
     onKeyDownArrowUp, onKeyDownArrowDown, onTabForEmpty, // tab on empty
@@ -160,7 +159,6 @@
       };
     }
 
-    //import {removeElement} from './ToolsDom'
     function ChoicesPanel(createChoiceElement, choicesElement, onShow, onHide, eventSkipper, choiceContentGenerator, getVisibleMultiSelectDataList, resetFilter, updateChoicesLocation, filterPanelSetFocus) {
       var hoveredMultiSelectData = null;
       var hoveredMultiSelectDataIndex = null;
@@ -612,9 +610,18 @@
         }
       };
     }
-    function sync() {
+    function composeSync() {
       for (var _len2 = arguments.length, functions = new Array(_len2), _key2 = 0; _key2 < _len2; _key2++) {
         functions[_key2] = arguments[_key2];
+      }
+
+      return function () {
+        return sync.apply(void 0, functions);
+      };
+    }
+    function sync() {
+      for (var _len3 = arguments.length, functions = new Array(_len3), _key3 = 0; _key3 < _len3; _key3++) {
+        functions[_key3] = arguments[_key3];
       }
 
       functions.forEach(function (f) {
@@ -2461,7 +2468,7 @@
       configuration.cssPatch = defCssPatch;
     }
 
-    function BsMultiSelectGenerator(element, settings, onDispose, trigger, window, Popper) {
+    function BsMultiSelect(element, settings, trigger, window, Popper) {
       if (typeof Popper === 'undefined') {
         throw new Error("BsMultiSelect: Popper.js (https://popper.js.org) is required");
       }
@@ -2538,9 +2545,7 @@
 
       lazyDefinedEvent = function lazyDefinedEvent() {
         return isValueMissingObservable.call();
-      }; //if (useCssPatch)
-      //    pushIsValidClassToPicks(staticContent, css);
-
+      };
 
       var labelAdapter = LabelAdapter(configuration.labelElement, staticContent.createInputId);
 
@@ -2577,11 +2582,7 @@
       }, function (choiceElement) {
         return configuration.choiceContentGenerator(choiceElement, css);
       }, labelAdapter, configuration.placeholder, configuration.isRtl, css, Popper, window);
-
-      multiSelect.onDispose = function () {
-        return sync(isValueMissingObservable.detachAll, validationApiObservable.detachAll, onDispose);
-      };
-
+      multiSelect.onDispose = composeSync(multiSelect.onDispose, isValueMissingObservable.detachAll, validationApiObservable.detachAll);
       multiSelect.validationApi = validationApi;
       bsAppearance(multiSelect, staticContent, optionsAdapter, validationApiObservable, useCssPatch, css);
       if (init && init instanceof Function) init(multiSelect);
@@ -2602,7 +2603,9 @@
           return $(element).trigger(eventName);
         };
 
-        return BsMultiSelectGenerator(element, settings, onDispose, trigger, window, Popper);
+        var multiSelect = BsMultiSelect(element, settings, trigger, window, Popper);
+        multiSelect.onDispose = composeSync(multiSelect.onDispose, onDispose);
+        return multiSelect;
       };
 
       addToJQueryPrototype('BsMultiSelect', createPlugin, defaults, $);
