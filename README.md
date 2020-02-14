@@ -310,8 +310,8 @@ Note, BS allready provide classes like: `h-25`, `bg-light`, `text-primary` that 
 ### Future development
 
 Actually plugin is ready for BS 5 that means for "no jquery". 
-Plugins is highly customizable even now, but API is not published. "Single select", "Enter Tags" or "Enter emails", "Fonts list" etc. can be developed right now with it, but I need to stabilize API before publishing (first I should made "search" customizable).
-Also in plans is the better dropdown menu API: two different look for with and without filters;  limitation on size.
+Plugin is highly customizable even now, but API is not published. "Single select", "Enter Tags" or "Enter emails", "Fonts list" etc. can be developed right now with it, but I need to stabilize API before open it (also I should made "search" customizable).
+Dropdown menu API also should be proposed: two different look for with and without filters;  limitation on size.
 
  
 ### Alternatives:
