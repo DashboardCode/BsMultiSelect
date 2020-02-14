@@ -1,7 +1,7 @@
 0. search as API
   include integration with https://fusejs.io/ 
 
-1. configure package.json for multiple entrypoints
+1. configure package.json for multiple entrypoints. what is "main:src" there?
 
 {
 "main":"dist/index.js"
