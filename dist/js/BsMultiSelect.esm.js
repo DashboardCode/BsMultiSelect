@@ -2543,8 +2543,8 @@ function BsMultiSelect(element, environment, settings) {
 }
 
 function BsMultiSelect$1(element, environment, settings) {
-  if (!environment.trigger) environment.trigger = function (element, name) {
-    return element.dispatchEvent(new environment.window.Event(name));
+  if (!environment.trigger) environment.trigger = function (e, name) {
+    return e.dispatchEvent(new environment.window.Event(name));
   };
   return BsMultiSelect(element, environment, settings);
 }
