@@ -54,23 +54,15 @@ function extendConfigurtion(configuration, defaults) {
 
   configuration.css = defCss;
   configuration.cssPatch = defCssPatch;
-} // export function createEnvironment(window, Popper, trigger){
-//     var environent = {
-//         Popper,
-//         trigger: (trigger)? trigger: (element, name)=> {
-//             element.dispatchEvent(new window.Event(name));
-//         },
-//         setTimeout : (f)=>window.setTimeout(f),
-//         document: window.document,
-//     }
-//     return environent;
-// }
+}
 
-
-export function BsMultiSelect(element, settings, environment) {
+export function BsMultiSelect(element, environment, settings) {
   var Popper = environment.Popper,
-      trigger = environment.trigger,
       window = environment.window;
+
+  var trigger = function trigger(eventName) {
+    return environment.trigger(element, eventName);
+  };
 
   if (typeof Popper === 'undefined') {
     throw new Error("BsMultiSelect: Popper.js (https://popper.js.org) is required");

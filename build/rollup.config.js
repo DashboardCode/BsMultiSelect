@@ -36,7 +36,7 @@ const plugins = [
   })]
 
 module.exports = {
-  input: path.resolve(__dirname, `../js/src/BsMultiSelect${isEsm ? '' : '.jquery'}.js`),
+  input: path.resolve(__dirname, `../js/src/BsMultiSelect${isEsm ? '.esm' : '.jquery'}.js`),
   output: {
     banner: `/*!
   * DashboardCode BsMultiSelect v${pkg.version} (${pkg.homepage})

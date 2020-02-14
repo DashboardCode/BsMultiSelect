@@ -1,5 +1,5 @@
 /*!
-  * DashboardCode BsMultiSelect v0.5.10beta (https://dashboardcode.github.io/BsMultiSelect/)
+  * DashboardCode BsMultiSelect v0.5.10 (https://dashboardcode.github.io/BsMultiSelect/)
   * Copyright 2017-2020 Roman Pokrovskij (github user rpokrovskij)
   * Licensed under APACHE 2 (https://github.com/DashboardCode/BsMultiSelect/blob/master/LICENSE)
   */
@@ -2466,23 +2466,15 @@
 
       configuration.css = defCss;
       configuration.cssPatch = defCssPatch;
-    } // export function createEnvironment(window, Popper, trigger){
-    //     var environent = {
-    //         Popper,
-    //         trigger: (trigger)? trigger: (element, name)=> {
-    //             element.dispatchEvent(new window.Event(name));
-    //         },
-    //         setTimeout : (f)=>window.setTimeout(f),
-    //         document: window.document,
-    //     }
-    //     return environent;
-    // }
+    }
 
-
-    function BsMultiSelect(element, settings, environment) {
+    function BsMultiSelect(element, environment, settings) {
       var Popper = environment.Popper,
-          trigger = environment.trigger,
           window = environment.window;
+
+      var trigger = function trigger(eventName) {
+        return environment.trigger(element, eventName);
+      };
 
       if (typeof Popper === 'undefined') {
         throw new Error("BsMultiSelect: Popper.js (https://popper.js.org) is required");
@@ -2614,8 +2606,8 @@
 
     (function (window, $, Popper) {
       var createPlugin = function createPlugin(element, settings, onDispose) {
-        var trigger = function trigger(eventName) {
-          return $(element).trigger(eventName);
+        var trigger = function trigger(e, eventName) {
+          return $(e).trigger(eventName);
         };
 
         var environment = {
@@ -2623,7 +2615,7 @@
           window: window,
           Popper: Popper
         };
-        var multiSelect = BsMultiSelect(element, settings, environment);
+        var multiSelect = BsMultiSelect(element, environment, settings);
         multiSelect.onDispose = composeSync(multiSelect.onDispose, onDispose);
         return multiSelect;
       };

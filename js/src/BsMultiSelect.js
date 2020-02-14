@@ -60,8 +60,10 @@ function extendConfigurtion(configuration, defaults){
     configuration.css = defCss;
     configuration.cssPatch = defCssPatch;
 }
-export function BsMultiSelect(element, settings, environment){
-    var {Popper, trigger, window} = environment;
+
+export function BsMultiSelect(element, environment, settings){
+    var {Popper, window} = environment;
+    var trigger = (eventName)=> environment.trigger(element, eventName);
     if (typeof Popper === 'undefined') {
         throw new Error("BsMultiSelect: Popper.js (https://popper.js.org) is required")
     }

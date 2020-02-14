@@ -1,5 +1,6 @@
 # CHANGELOG
 ````
+0.5.10 - ES6 module; 
 0.5.9  - optimizations; getIsValueMissing():boolean available from config
 0.5.8  - default setSelected add/removes "selected" attribute
 0.5.7  - optimizations

@@ -9,6 +9,8 @@ Snippets:
 
 3. [Right To Left (RTL)](https://dashboardcode.github.io/BsMultiSelect/snippetRtl.html)
 
+4. [ES6 module, no jquery](https://dashboardcode.github.io/BsMultiSelect/snippetEsm.html)
+
 CodePen, use it for bug reporting: https://codepen.io/rpokrovskij/pen/yLymQwW 
 
 There are many similar plugins but this reuses maximum of Bootrap 4 styles and code. In many cases it can be adjusted for your Bootsrap theme without editing CSS or with minimal efforts. 

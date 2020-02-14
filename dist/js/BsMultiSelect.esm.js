@@ -1,5 +1,5 @@
 /*!
-  * DashboardCode BsMultiSelect v0.5.10beta (https://dashboardcode.github.io/BsMultiSelect/)
+  * DashboardCode BsMultiSelect v0.5.10 (https://dashboardcode.github.io/BsMultiSelect/)
   * Copyright 2017-2020 Roman Pokrovskij (github user rpokrovskij)
   * Licensed under APACHE 2 (https://github.com/DashboardCode/BsMultiSelect/blob/master/LICENSE)
   */
@@ -2404,23 +2404,15 @@ function extendConfigurtion(configuration, defaults) {
 
   configuration.css = defCss;
   configuration.cssPatch = defCssPatch;
-} // export function createEnvironment(window, Popper, trigger){
-//     var environent = {
-//         Popper,
-//         trigger: (trigger)? trigger: (element, name)=> {
-//             element.dispatchEvent(new window.Event(name));
-//         },
-//         setTimeout : (f)=>window.setTimeout(f),
-//         document: window.document,
-//     }
-//     return environent;
-// }
+}
 
-
-function BsMultiSelect(element, settings, environment) {
+function BsMultiSelect(element, environment, settings) {
   var Popper = environment.Popper,
-      trigger = environment.trigger,
       window = environment.window;
+
+  var trigger = function trigger(eventName) {
+    return environment.trigger(element, eventName);
+  };
 
   if (typeof Popper === 'undefined') {
     throw new Error("BsMultiSelect: Popper.js (https://popper.js.org) is required");
@@ -2550,5 +2542,12 @@ function BsMultiSelect(element, settings, environment) {
   return multiSelect;
 }
 
-export { BsMultiSelect, defaults };
+function BsMultiSelect$1(element, environment, settings) {
+  if (environment.trigger) environment.trigger = function (element, name) {
+    return element.dispatchEvent(new environment.window.Event(name));
+  };
+  return BsMultiSelect(element, environment, settings);
+}
+
+export { BsMultiSelect$1 as BsMultiSelect };
 //# sourceMappingURL=BsMultiSelect.esm.js.map
