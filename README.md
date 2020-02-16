@@ -278,19 +278,17 @@ Here are recommended variants:
 ````
 <select id="#myMultiSelect"></select>
 
+<!-- no flick -->
+<select id="#myMultiSelect"></select>
 <div class="dashboardcode-bsmultiselect">
-   <select id="#myMultiSelect"></select>
+   <ul class="form-control" style="..." /> <!-- styles/classes should contains everithing you need for "no flick" -->
 </div>
 
-<div class="dashboardcode-bsmultiselect">
-   <select id="#myMultiSelect"></select>
-   <ul class="form-control" style="..." />
-</div>
-
-<div class="input-group dashboardcode-bsmultiselect"
+<!-- input-group -->
+<div class="input-group dashboardcode-bsmultiselect">
    <div class="input-group-prepend">...</div>
    <select id="#myMultiSelect"></select>
-   <ul class="form-control" style="..."/>
+   <ul class="form-control" style="..."/> <!-- or put it before select  -->
    <div class="input-group-append">...</div>
 </div>
 
@@ -300,22 +298,29 @@ Here are recommended variants:
 ````
 <div id="#myMultiSelect"/>
 
+<!-- no flick -->
 <div id="#myMultiSelect">
-  <ul class="form-control" style="..."/>
+  <ul class="form-control" style="..."/> <!-- styles/classes should contains everithing you need for "no flick" -->
 </div>
 
-<div id="#myMultiSelect" class="input-group"
+<!-- input-group -->
+<div class="input-group dashboardcode-bsmultiselect">
    <div class="input-group-prepend">...</div>
-   <ul class="form-control" style="..."/>
+   <ul id="#myMultiSelect" class="form-control" style="..."/> <!-- required -->
    <div class="input-group-append">...</div>
 </div>
 
 ````
-Note: in case of `SELECT` datasource if there are no parent `dashboardcode-bsmultiselect` (aka container) then container will be created as sibling of `SELECT`, so the `SELECT` will be located outside `dashboardcode-bsmultiselect`
-Note: noflick picks (`UL`) should be direct child of `dashboardcode-bsmultiselect` .
-Note: noflick picks (`UL`) should be styled to have compleated look e.g. `style="list-style-type: none; display: flex; flex-wrap: wrap; height: auto; margin-bottom: 0px; min-height: calc(2.25rem + 2px);"`:  
-Note: choices (dropdown meny) will be added to the end of container element.
+Note: `dashboardcode-bsmultiselect` class used just to limit the search in DOM for "parts" it should be never used for styling or positioning; `(in)valid-feedback` classes should be siblings of  `dashboardcode-bsmultiselect`.
 
+
+Note: in case of `SELECT` datasource if there are no parent `dashboardcode-bsmultiselect` (aka container) then container will be created as sibling of `SELECT`, so the `SELECT` will be located outside `dashboardcode-bsmultiselect`
+
+Note: picks (`UL`) should be direct child of `dashboardcode-bsmultiselect` .
+
+Note: picks (`UL`) should be styled to have compleated look suitable for "no flick" e.g. `style="list-style-type: none; display: flex; flex-wrap: wrap; height: auto; margin-bottom: 0px; min-height: calc(2.25rem + 2px);"`:  
+
+Note: `choices` element (dropdown menu) and `picks` element (selectrd items) are always inside `dashboardcode-bsmultiselect`.
 
 
 ### Proposal to Bootstrap

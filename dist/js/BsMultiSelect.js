@@ -2162,6 +2162,8 @@
     function staticContentGenerator(element, createElement, containerClass, putRtlToContainer, css) {
       var selectElement = null;
       var containerElement = null;
+      var picksElement = null;
+      var ownPicksElement = false;
 
       if (element.tagName == 'SELECT') {
         selectElement = element;
@@ -2171,17 +2173,29 @@
           //if (selectElement.nextSibling  && selectElement.nextSibling.classList.contains(containerClass) )
           //    containerElement = selectElement.parentNode;
         }
-      } else if (element.tagName == "DIV") {
-        containerElement = element;
-        selectElement = findDirectChildByTagName(element, 'SELECT');
+      } else if (element.tagName == "DIV" || element.tagName == "UL") {
+        if (element.tagName == "DIV") {
+          containerElement = element;
+          selectElement = findDirectChildByTagName(element, 'SELECT');
+        } else
+          /*UL*/
+          {
+            picksElement = element;
+            containerElement = closestByClassName(element, containerClass);
+
+            if (!containerElement) {
+              // TODO: create error message submethod
+              element.style.backgroundColor = 'red';
+              element.style.color = 'white';
+              throw new Error('BsMultiSelect: definde on UL but container parent not found');
+            }
+          }
       } else {
         element.style.backgroundColor = 'red';
         element.style.color = 'white';
         throw new Error('BsMultiSelect: Only DIV and SELECT supported');
       }
 
-      var picksElement = null;
-      var ownPicksElement = false;
       if (containerElement) picksElement = findDirectChildByTagName(containerElement, 'UL');
 
       if (!picksElement) {
