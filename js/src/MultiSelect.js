@@ -121,6 +121,9 @@ export class MultiSelect {
     GetContainer(){
         return this.staticContent.containerElement;
     }
+    GetChoices(){
+        return this.staticContent.choicesElement;
+    }
     GetFilterInput(){
         return this.staticContent.filterInputElement;
     }

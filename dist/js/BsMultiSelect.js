@@ -1,5 +1,5 @@
 /*!
-  * DashboardCode BsMultiSelect v0.5.10 (https://dashboardcode.github.io/BsMultiSelect/)
+  * DashboardCode BsMultiSelect v0.5.11 (https://dashboardcode.github.io/BsMultiSelect/)
   * Copyright 2017-2020 Roman Pokrovskij (github user rpokrovskij)
   * Licensed under APACHE 2 (https://github.com/DashboardCode/BsMultiSelect/blob/master/LICENSE)
   */
@@ -1181,6 +1181,10 @@
 
       _proto.GetContainer = function GetContainer() {
         return this.staticContent.containerElement;
+      };
+
+      _proto.GetChoices = function GetChoices() {
+        return this.staticContent.choicesElement;
       };
 
       _proto.GetFilterInput = function GetFilterInput() {

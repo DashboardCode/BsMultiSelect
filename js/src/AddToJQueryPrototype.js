@@ -47,4 +47,3 @@ export function addToJQueryPrototype(pluginName, createPlugin, defaults, $){
 
     $.fn[prototypableName].defaults = defaults;
 }
-

@@ -268,6 +268,54 @@ $('div.#bsMultiSelectJson').bsMultiSelect(
 
 Note: option's item should contais two required properties (text, value) - you can't ommit them. If `selected` is ommited then `setSelected` configuration method become obligated. If `setSelected` return false this cancel update "process" - this way can be achieved such goals as **"max selected"**.
 
+### HTML Configuration
+
+`$("#myMultiSelect").bsMultiSelect()` would work over several configurations of initial elements
+
+Here are recommended variants: 
+
+1. Over `<SELECT>`
+````
+<select id="#myMultiSelect"></select>
+
+<div class="dashboardcode-bsmultiselect">
+   <select id="#myMultiSelect"></select>
+</div>
+
+<div class="dashboardcode-bsmultiselect">
+   <select id="#myMultiSelect"></select>
+   <ul class="form-control" style="..." />
+</div>
+
+<div class="input-group dashboardcode-bsmultiselect"
+   <div class="input-group-prepend">...</div>
+   <select id="#myMultiSelect"></select>
+   <ul class="form-control" style="..."/>
+   <div class="input-group-append">...</div>
+</div>
+
+````
+
+2. Over JS Object
+````
+<div id="#myMultiSelect"/>
+
+<div id="#myMultiSelect">
+  <ul class="form-control" style="..."/>
+</div>
+
+<div id="#myMultiSelect" class="input-group"
+   <div class="input-group-prepend">...</div>
+   <ul class="form-control" style="..."/>
+   <div class="input-group-append">...</div>
+</div>
+
+````
+Note: in case of `SELECT` datasource if there are no parent `dashboardcode-bsmultiselect` (aka container) then container will be created as sibling of `SELECT`, so the `SELECT` will be located outside `dashboardcode-bsmultiselect`
+Note: noflick picks (`UL`) should be direct child of `dashboardcode-bsmultiselect` .
+Note: noflick picks (`UL`) should be styled to have compleated look e.g. `style="list-style-type: none; display: flex; flex-wrap: wrap; height: auto; margin-bottom: 0px; min-height: calc(2.25rem + 2px);"`:  
+Note: choices (dropdown meny) will be added to the end of container element.
+
 
 
 ### Proposal to Bootstrap

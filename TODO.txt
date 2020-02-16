@@ -16,7 +16,18 @@ https://habr.com/post/425215/
 
 3. create snippet for jquery validate ( https://jqueryvalidation.org/ ) and unobtrusive-validation ( https://exceptionnotfound.net/asp-net-mvc-demystified-unobtrusive-validation/ )
 
-4. Port to web component (habr user justboris).
+4. Port to web component.
+Several base classes: Polymer (https://github.com/Polymer/polymer), Stencil, LitElement , https://www.polymer-project.org/
+Several "themes": https://github.com/wiredjs/wired-elements , https://github.com/material-components/material-components-web-components
+
+Polymer and LitElement https://43081j.com/2018/08/future-of-polymer 
+
+github списочек полимер компонент https://github.com/PolymerElements , 
+портал списочек компонент https://www.webcomponents.org/ 
+
+
+attaching styles to shadow dom: https://www.smashingmagazine.com/2018/07/reusable-components-custom-elements-shadow-dom-npm/ 
+
 http://jsfiddle.net/gc1rynmf/9/
 https://developer.mozilla.org/en-US/docs/Web/Web_Components/Using_custom_elements
 compare how bootstrap manage this with nojquery build
@@ -25,15 +36,23 @@ compare also with other alternatives https://github.com/thednp/bootstrap.native
 most important for ws : registration through customElements.define('my-component', MyComponent);
 check what other uses ? https://github.com/webcomponents/webcomponentsjs ?
 
+LIGHT DOM? Use <slot> to project light DOM children into your shadow DOM?
+
 http://jsfiddle.net/bvL8wq0n/3/
 https://www.webcomponents.org/polyfills/
 
-RTL, how to do it without huge css growing?
-1) check how BS checkbox / dismissable badge  look in rtl
-2) read this https://habr.com/company/2gis/blog/416635/
+5. port web component to other framework
+Sample: https://www.webcomponents.org/element/@zooplus/zoo-web-components
 
-Review eslint again 
+
+
+6. Review eslint again 
 https://habr.com/post/417841/
+
+7. analyze CSSX (css in js) - is it possible to use for :hover or custom "is empty" rules: https://www.smashingmagazine.com/2016/04/finally-css-javascript-meet-cssx/
+some otther instruments: styled components, css modules https://github.com/w3c/webcomponents/issues/759 ,  Constructable Stylesheets https://developers.google.com/web/updates/2019/02/constructable-stylesheets,  emotion, jss, aphrodite, radium
+
+8. css houdini ? to get bootstrap theme variables
 
 VS Code
 2. test VisualCode plugins https://habr.com/company/ruvds/blog/425313/
