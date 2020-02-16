@@ -279,9 +279,9 @@ Here are recommended variants:
 <select id="#myMultiSelect"></select>
 
 <!-- no flick -->
-<select id="#myMultiSelect"></select>
 <div class="dashboardcode-bsmultiselect">
-   <ul class="form-control" style="..." /> <!-- styles/classes should contains everithing you need for "no flick" -->
+  <select id="#myMultiSelect"></select>
+  <ul class="form-control" style="..." /> <!-- styles/classes should contains everithing you need for "no flick" -->
 </div>
 
 <!-- input-group -->
@@ -306,13 +306,14 @@ Here are recommended variants:
 <!-- input-group -->
 <div class="input-group dashboardcode-bsmultiselect">
    <div class="input-group-prepend">...</div>
-   <ul id="#myMultiSelect" class="form-control" style="..."/> <!-- required -->
+   <ul id="#myMultiSelect" class="form-control" style="..."/> <!-- required, become picks -->
    <div class="input-group-append">...</div>
 </div>
 
 ````
-Note: `dashboardcode-bsmultiselect` class used just to limit the search in DOM for "parts" it should be never used for styling or positioning; `(in)valid-feedback` classes should be siblings of  `dashboardcode-bsmultiselect`.
+Note: `input-group` variants are inconsistent, but you need them not too often. 
 
+Note: `dashboardcode-bsmultiselect` class is used just to limit the search in DOM selectors and it should be never used for styling or positioning; still `(in)valid-feedback` classes should be siblings of  `dashboardcode-bsmultiselect`.
 
 Note: in case of `SELECT` datasource if there are no parent `dashboardcode-bsmultiselect` (aka container) then container will be created as sibling of `SELECT`, so the `SELECT` will be located outside `dashboardcode-bsmultiselect`
 

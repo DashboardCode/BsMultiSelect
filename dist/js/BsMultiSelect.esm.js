@@ -2107,9 +2107,10 @@ function staticContentGenerator(element, createElement, containerClass, putRtlTo
     selectElement = element;
 
     if (containerClass) {
-      containerElement = closestByClassName(selectElement, containerClass); // TODO: do I need this?    
       //if (selectElement.nextSibling  && selectElement.nextSibling.classList.contains(containerClass) )
-      //    containerElement = selectElement.parentNode;
+      //    containerElement = selectElement.nextSibling;
+      //else 
+      containerElement = closestByClassName(selectElement, containerClass);
     }
   } else if (element.tagName == "DIV" || element.tagName == "UL") {
     if (element.tagName == "DIV") {
