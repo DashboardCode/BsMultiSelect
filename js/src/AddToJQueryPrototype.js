@@ -37,7 +37,11 @@ export function addToJQueryPrototype(pluginName, createPlugin, defaults, $){
 
     // pluginName with first capitalized letter - return plugin instance (for 1st $selected item)
     $.fn[pluginName] = function () {
-        return $(this).data(dataKey);
+        let instance = $(this).data(dataKey);
+        return instance;
+        // if (instance)
+        //     return instance;
+        // else
     };
 
     $.fn[prototypableName].noConflict = function () {

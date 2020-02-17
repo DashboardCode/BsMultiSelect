@@ -1,5 +1,5 @@
 /*!
-  * DashboardCode BsMultiSelect v0.5.11 (https://dashboardcode.github.io/BsMultiSelect/)
+  * DashboardCode BsMultiSelect v0.5.12 (https://dashboardcode.github.io/BsMultiSelect/)
   * Copyright 2017-2020 Roman Pokrovskij (github user rpokrovskij)
   * Licensed under APACHE 2 (https://github.com/DashboardCode/BsMultiSelect/blob/master/LICENSE)
   */
@@ -869,11 +869,25 @@ function toggleStyling(element, styling) {
 
 function extendClasses(out, param, actionStr, actionArr, isRemoveEmptyClasses) {
   if (isString(param)) {
-    var c = param.split(' ');
-    if (!isRemoveEmptyClasses || c.length > 0) out.classes = actionStr(c);else if (c == "") out.classes = [];
+    if (param === "") {
+      if (isRemoveEmptyClasses) {
+        out.classes = [];
+      }
+    } else {
+      var c = param.split(' ');
+      out.classes = actionStr(c);
+    }
+
     return true;
   } else if (param instanceof Array) {
-    if (!isRemoveEmptyClasses || param.length > 0) out.classes = actionArr(param);else if (param.length == 0) out.classes = [];
+    if (param.length == 0) {
+      if (isRemoveEmptyClasses) {
+        out.classes = [];
+      }
+    } else {
+      out.classes = actionArr(param);
+    }
+
     return true;
   }
 

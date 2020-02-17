@@ -1,5 +1,6 @@
 # CHANGELOG
 ````
+0.5.12 - cssPatch bug on "empty string remove classes" resolved;
 0.5.11 - GetChoices() method that returns 'dropdown' menu; 
 0.5.10 - ES6 module; 
 0.5.9  - optimizations; getIsValueMissing():boolean available from config

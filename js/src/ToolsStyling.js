@@ -43,17 +43,24 @@ export function toggleStyling(element, styling){
 
 function extendClasses(out, param, actionStr, actionArr, isRemoveEmptyClasses){
     if (isString(param)){
-        let c = param.split(' ');
-        if (!isRemoveEmptyClasses || c.length>0)
+        if (param === ""){
+            if (isRemoveEmptyClasses){
+                out.classes = [];
+            }
+        } else {
+            let c = param.split(' ');
             out.classes = actionStr(c);
-        else if (c=="")
-            out.classes = [];
+        }
         return true;
     } else if (param instanceof Array){
-        if (!isRemoveEmptyClasses || param.length>0)
+        if (param.length==0){
+            if (isRemoveEmptyClasses){
+                out.classes = [];
+            }
+        }
+        else{
             out.classes = actionArr(param);
-        else if (param.length==0)
-            out.classes = [];
+        }
         return true;
     }
     return false;
