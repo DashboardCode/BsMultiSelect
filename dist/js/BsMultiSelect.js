@@ -1,5 +1,5 @@
 /*!
-  * DashboardCode BsMultiSelect v0.5.12 (https://dashboardcode.github.io/BsMultiSelect/)
+  * DashboardCode BsMultiSelect v0.5.13 (https://dashboardcode.github.io/BsMultiSelect/)
   * Copyright 2017-2020 Roman Pokrovskij (github user rpokrovskij)
   * Licensed under APACHE 2 (https://github.com/DashboardCode/BsMultiSelect/blob/master/LICENSE)
   */
@@ -17,33 +17,39 @@
       var firstCharLower = firstChar.toLowerCase();
 
       if (firstCharLower == firstChar) {
-        throw new TypeError("Plugin name '" + pluginName + "' should be started from upper case char");
+        throw new Error("Plugin name '" + pluginName + "' should be started from upper case char");
       }
 
       var prototypableName = firstCharLower + pluginName.slice(1);
       var noConflictPrototypable = $.fn[prototypableName];
+      var noConflictPrototypableForInstance = $.fn[pluginName];
       var dataKey = "DashboardCode." + pluginName;
 
+      function createInstance(options, e, $e) {
+        var optionsRef = typeof options === 'object' || typeof options === 'function' ? options : null;
+        var instance = createPlugin(e, optionsRef, function () {
+          $e.removeData(dataKey);
+        });
+        $e.data(dataKey, instance);
+        return instance;
+      }
+
       function prototypable(options) {
-        return this.each(function () {
-          var $e = $(this);
+        return this.each(function (i, e) {
+          var $e = $(e);
           var instance = $e.data(dataKey);
           var isMethodName = typeof options === 'string';
 
           if (!instance) {
             if (isMethodName && /Dispose/.test(options)) return;
-            var optionsRef = typeof options === 'object' || typeof options === 'function' ? options : null;
-            instance = createPlugin(this, optionsRef, function () {
-              $e.removeData(dataKey);
-            });
-            $e.data(dataKey, instance);
+            instance = createInstance(options, e, $e);
           }
 
           if (isMethodName) {
             var methodName = options;
 
             if (typeof instance[methodName] === 'undefined') {
-              throw new TypeError("No method named '" + methodName + "'");
+              throw new Error("No method named '" + methodName + "'");
             }
 
             instance[methodName]();
@@ -51,18 +57,31 @@
         });
       }
 
-      $.fn[prototypableName] = prototypable; // pluginName with first capitalized letter - return plugin instance (for 1st $selected item)
+      function prototypableForInstance(options) {
+        var instance = this.data(dataKey);
+        if (instance) return instance;else if (this.length === 1) {
+          return createInstance(options, this.get(0), this);
+        } else if (this.length > 1) {
+          var output = [];
+          this.each(function (i, e) {
+            output.push(createInstance(options, e, $(e)));
+          });
+          return output;
+        }
+      }
 
-      $.fn[pluginName] = function () {
-        var instance = $(this).data(dataKey);
-        return instance; // if (instance)
-        //     return instance;
-        // else
-      };
+      $.fn[prototypableName] = prototypable;
 
       $.fn[prototypableName].noConflict = function () {
         $.fn[prototypableName] = noConflictPrototypable;
         return prototypable;
+      };
+
+      $.fn[pluginName] = prototypableForInstance;
+
+      $.fn[pluginName].noConflict = function () {
+        $.fn[pluginName] = noConflictPrototypableForInstance;
+        return prototypableForInstance;
       };
 
       $.fn[prototypableName].defaults = defaults;

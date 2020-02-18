@@ -1,5 +1,6 @@
 # CHANGELOG
 ````
+0.5.13 - BsMultiSelect jQuery prototype can create instance (was only return)
 0.5.12 - cssPatch bug on "empty string remove classes" resolved;
 0.5.11 - GetChoices() method that returns 'dropdown' menu; 
 0.5.10 - ES6 module; 
