@@ -53,7 +53,7 @@ export function addToJQueryPrototype(pluginName, createPlugin, defaults, $){
             return output;
         }
     }
-
+    
     $.fn[prototypableName] = prototypable;
     $.fn[prototypableName].noConflict = function () {
         $.fn[prototypableName] = noConflictPrototypable
