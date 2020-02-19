@@ -60,9 +60,7 @@ export class MultiSelect {
         isRtl, css,
         popper, window) {
 
-        this.onUpdate = null;
-        this.onDispose = null; 
-        //this.onInput = null; 
+
 
         this.isRtl = isRtl;
         // readonly
@@ -128,9 +126,7 @@ export class MultiSelect {
         return this.staticContent.filterInputElement;
     }
     Update(){
-        if (this.onUpdate)
-            this.onUpdate();
-        this.UpdateDisabled();
+        this.UpdateAppearance();
         this.UpdateData();
     }
 
@@ -305,7 +301,6 @@ export class MultiSelect {
 
     Dispose(){
         sync(
-            this.onDispose,
             this.choicesPanel.hideChoices,
             this.optionsAdapter.dispose,
             this.picksPanel.dispose,
@@ -323,6 +318,10 @@ export class MultiSelect {
                 multiSelectData.disposeChoice();
             }
         }
+    }
+
+    UpdateAppearance(){
+        this.UpdateDisabled();    
     }
 
     UpdateDisabled(){
@@ -529,9 +528,7 @@ export class MultiSelect {
 
         
         this.updateDataImpl();
-        if (this.onUpdate)
-            this.onUpdate();
-        this.UpdateDisabled(); // should be done after updateDataImpl
+        this.UpdateAppearance(); // TODO: now appearance should be done after updateDataImpl, because items should be "already in place", correct it
 
         if (this.optionsAdapter.onReset){
             this.optionsAdapter.onReset(()=>{ 

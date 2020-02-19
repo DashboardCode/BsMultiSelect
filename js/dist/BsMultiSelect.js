@@ -177,7 +177,7 @@ export function BsMultiSelect(element, environment, settings) {
   }, function (choiceElement) {
     return configuration.choiceContentGenerator(choiceElement, css);
   }, labelAdapter, configuration.placeholder, configuration.isRtl, css, Popper, window);
-  multiSelect.onDispose = composeSync(multiSelect.onDispose, isValueMissingObservable.detachAll, validationApiObservable.detachAll);
+  multiSelect.Dispose = composeSync(multiSelect.Dispose.bind(multiSelect), isValueMissingObservable.detachAll, validationApiObservable.detachAll);
   multiSelect.validationApi = validationApi;
   bsAppearance(multiSelect, staticContent, optionsAdapter, validationApiObservable, useCssPatch, css);
   if (init && init instanceof Function) init(multiSelect);

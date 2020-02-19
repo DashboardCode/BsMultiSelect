@@ -215,7 +215,7 @@ export function BsMultiSelect(element, environment, settings){
         Popper,
         window);
     
-    multiSelect.onDispose = composeSync(multiSelect.onDispose, isValueMissingObservable.detachAll, validationApiObservable.detachAll);
+    multiSelect.Dispose = composeSync(multiSelect.Dispose.bind(multiSelect), isValueMissingObservable.detachAll, validationApiObservable.detachAll);
     multiSelect.validationApi = validationApi;
     
     bsAppearance(

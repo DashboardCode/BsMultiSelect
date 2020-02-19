@@ -1,5 +1,5 @@
 /*!
-  * DashboardCode BsMultiSelect v0.5.13 (https://dashboardcode.github.io/BsMultiSelect/)
+  * DashboardCode BsMultiSelect v0.5.14 (https://dashboardcode.github.io/BsMultiSelect/)
   * Copyright 2017-2020 Roman Pokrovskij (github user rpokrovskij)
   * Licensed under APACHE 2 (https://github.com/DashboardCode/BsMultiSelect/blob/master/LICENSE)
   */
@@ -1079,9 +1079,6 @@ var MultiSelect =
 /*#__PURE__*/
 function () {
   function MultiSelect(optionsAdapter, setSelected, staticContent, pickContentGenerator, choiceContentGenerator, labelAdapter, placeholderText, isRtl, css, popper, window) {
-    this.onUpdate = null;
-    this.onDispose = null; //this.onInput = null; 
-
     this.isRtl = isRtl; // readonly
 
     this.optionsAdapter = optionsAdapter;
@@ -1144,8 +1141,7 @@ function () {
   };
 
   _proto.Update = function Update() {
-    if (this.onUpdate) this.onUpdate();
-    this.UpdateDisabled();
+    this.UpdateAppearance();
     this.UpdateData();
   }
   /*
@@ -1324,7 +1320,7 @@ function () {
   };
 
   _proto.Dispose = function Dispose() {
-    sync(this.onDispose, this.choicesPanel.hideChoices, this.optionsAdapter.dispose, this.picksPanel.dispose, this.filterPanel.dispose, this.labelAdapter.dispose, this.aspect.dispose, this.staticContent.dispose);
+    sync(this.choicesPanel.hideChoices, this.optionsAdapter.dispose, this.picksPanel.dispose, this.filterPanel.dispose, this.labelAdapter.dispose, this.aspect.dispose, this.staticContent.dispose);
 
     for (var i = 0; i < this.MultiSelectDataList.length; i++) {
       var multiSelectData = this.MultiSelectDataList[i];
@@ -1334,6 +1330,10 @@ function () {
         multiSelectData.disposeChoice();
       }
     }
+  };
+
+  _proto.UpdateAppearance = function UpdateAppearance() {
+    this.UpdateDisabled();
   };
 
   _proto.UpdateDisabled = function UpdateDisabled() {
@@ -1549,8 +1549,7 @@ function () {
     }, this.isRtl, this.popper);
     this.staticContent.attachContainer();
     this.updateDataImpl();
-    if (this.onUpdate) this.onUpdate();
-    this.UpdateDisabled(); // should be done after updateDataImpl
+    this.UpdateAppearance(); // TODO: now appearance should be done after updateDataImpl, because items should be "already in place", correct it
 
     if (this.optionsAdapter.onReset) {
       this.optionsAdapter.onReset(function () {
@@ -1796,19 +1795,8 @@ function bsAppearance(multiSelect, staticContent, optionsAdapter, validityApiObs
     return wasUpdatedObservable.call();
   };
 
-  multiSelect.onUpdate = function () {
-    updateSize();
-    validationObservable.call();
-  };
-
-  var onDisposePrev = multiSelect.onDispose;
-
-  multiSelect.onDispose = function () {
-    wasUpdatedObservable.detachAll();
-    validationObservable.detachAll();
-    getManualValidationObservable.detachAll();
-    onDisposePrev();
-  };
+  multiSelect.UpdateAppearance = composeSync(multiSelect.UpdateAppearance.bind(multiSelect), updateSize, validationObservable.call, getManualValidationObservable.call);
+  multiSelect.Dispose = composeSync(wasUpdatedObservable.detachAll, validationObservable.detachAll, getManualValidationObservable.detachAll, multiSelect.Dispose.bind(multiSelect));
 }
 function adjustBsOptionAdapterConfiguration(configuration, selectElement) {
   if (!configuration.getDisabled) {
@@ -2560,7 +2548,7 @@ function BsMultiSelect(element, environment, settings) {
   }, function (choiceElement) {
     return configuration.choiceContentGenerator(choiceElement, css);
   }, labelAdapter, configuration.placeholder, configuration.isRtl, css, Popper, window);
-  multiSelect.onDispose = composeSync(multiSelect.onDispose, isValueMissingObservable.detachAll, validationApiObservable.detachAll);
+  multiSelect.Dispose = composeSync(multiSelect.Dispose.bind(multiSelect), isValueMissingObservable.detachAll, validationApiObservable.detachAll);
   multiSelect.validationApi = validationApi;
   bsAppearance(multiSelect, staticContent, optionsAdapter, validationApiObservable, useCssPatch, css);
   if (init && init instanceof Function) init(multiSelect);

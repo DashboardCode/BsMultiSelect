@@ -1,6 +1,6 @@
 import {closestByTagName, closestByClassName, siblingsAsArray} from './ToolsDom';
 import {addStyling} from './ToolsStyling'
-import {ObservableLambda} from './ToolsJs';
+import {ObservableLambda, composeSync} from './ToolsJs';
 
 function updateValidity(picksElement, validMessages, invalidMessages, validity){
     if (validity===false){
@@ -147,17 +147,14 @@ export function bsAppearance(multiSelect, staticContent, optionsAdapter,
     multiSelect.UpdateValidity = ()=> getManualValidationObservable.call();
     multiSelect.UpdateWasValidated = ()=>wasUpdatedObservable.call();
     
-    multiSelect.onUpdate = () => {
-        updateSize();
-        validationObservable.call()
-    };
-    let onDisposePrev = multiSelect.onDispose;
-    multiSelect.onDispose = () => {
-        wasUpdatedObservable.detachAll(); 
-        validationObservable.detachAll(); 
-        getManualValidationObservable.detachAll();
-        onDisposePrev();
-    }
+    multiSelect.UpdateAppearance = composeSync(
+        multiSelect.UpdateAppearance.bind(multiSelect), 
+        updateSize, 
+        validationObservable.call, getManualValidationObservable.call);
+
+    
+    multiSelect.Dispose = composeSync(wasUpdatedObservable.detachAll, validationObservable.detachAll, getManualValidationObservable.detachAll,
+        multiSelect.Dispose.bind(multiSelect));
 }
 
 
