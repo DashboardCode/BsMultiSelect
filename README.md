@@ -29,9 +29,9 @@ BsMultiSelect follows Bootstrap 4 conventions and use the same instruments (babe
 `npm install @dashboardcode/bsmultiselect`
 
 # CDN
-https://cdn.jsdelivr.net/npm/@dashboardcode/bsmultiselect@0.5.13/dist/js/BsMultiSelect.min.js
-https://cdn.jsdelivr.net/npm/@dashboardcode/bsmultiselect@0.5.13/dist/js/BsMultiSelect.esm.min.js
-https://cdn.jsdelivr.net/npm/@dashboardcode/bsmultiselect@0.5.13/dist/css/BsMultiSelect.min.css
+https://cdn.jsdelivr.net/npm/@dashboardcode/bsmultiselect@0.5.14/dist/js/BsMultiSelect.min.js
+https://cdn.jsdelivr.net/npm/@dashboardcode/bsmultiselect@0.5.14/dist/js/BsMultiSelect.esm.min.js
+https://cdn.jsdelivr.net/npm/@dashboardcode/bsmultiselect@0.5.14/dist/css/BsMultiSelect.min.css
 
 
 # Architecture
@@ -104,7 +104,18 @@ For keyboard events `preventDefault` was used to
     c) enter (`13`) to prvent default button action (submit etc.)
     d) esc (`27`) to avoid "clear text on `esc`" functionlity dublication
 
-Inspite plugin have form `reset` event listener, there are no MutationObserver defined inside (component does not track properties on original `SELECT`, `FIELDSET`, `.was-validated` parent). If you change  properties on original `SELECT` or `FIELDSET`, or toggle `.was-validated` then you will need to push changes to component with methods `UpdateIsValid`, `UpdateDisabled`, `UpdateSize`, `UpdateWasValidated`, `UpdateValidy` (`is-valid`, `is-invalid` on original `select`) , `UpdataData` or just `Update` (works like "update all") .
+
+## Dynamic Updates 
+
+Inspite plugin have form's `reset` event listener, there are no MutationObserver defined inside (component does not track properties on original `SELECT`, `FIELDSET`, `.was-validated` parent). 
+
+If you change  properties on original `SELECT` or `FIELDSET`, or toggle `.was-validated` then you will need to push changes to component with methods `UpdateIsValid`, `UpdateDisabled`, `UpdateSize`, `UpdateWasValidated`, `UpdateValidy` (`is-valid`, `is-invalid` on original `select`). Or All together with `UpdateAppearance`.
+
+If you change items properties (text, `selected`, `disabled`, `hidden`) or if you delete them or insert new items you need to push changes to component with  `UpdateData`.
+ 
+The `Update` method works like "update all": it call `UpdateAppearance` and `UpdateData`.
+
+Samples:
 
 ````
           $('#mySelect').bsMultiSelect("UpdateDisabled"); // bsMultiSelect call the method directly
@@ -126,6 +137,19 @@ Other way to access the component's instance is using `data` :
           }
 ````         
 
+# jQuery factories
+
+Method 1:
+````
+          var bsMultiSelect = $('.myMultiSelect').bsMultiSelect({options}); // bsMultiSelect returns jQuery selector
+````
+
+Method 2:
+````
+          var bsMultiSelect = $('.myMultiSelect').BsMultiSelect({options}); // BsMultiSelect return the instance of MultiSelect class (or an array of them, ir selector '.myMultiSelect' returns multiple elements)
+````
+
+`$.fn["bsMultiSelect"].noConflict` and `$.fn["BsMultiSelect"].noConflict` are available.
 
 ## Features
 
