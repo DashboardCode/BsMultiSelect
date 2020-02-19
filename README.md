@@ -13,11 +13,11 @@ Snippets:
 
 CodePen, use it for bug reporting: https://codepen.io/rpokrovskij/pen/yLymQwW 
 
-There are many similar plugins but this reuses maximum of Bootrap 4 styles and code. In many cases it can be adjusted for your Bootsrap theme without editing CSS or with minimal efforts. 
+There are many similar plugins but this reuses maximum of Bootrap 4 styles/classes and code. In many cases it can be adjusted for your Bootsrap theme without editing CSS or with minimal efforts. 
 
-There are two modes of usage: you can use plugin with or without external CSS.
+There are two modes of usage: you can use plugin with or without external CSS (means, without BsMultiSelect.(s)css) .
 
-1. There is a possibility to use plugin without CSS file/rules (means, without `BsMultiSelect.(s)css`) but adjusting styling parameters in javascript: this is default `useCssPatch=true` mode. 
+1. There is a possibility to use plugin without CSS file/rules but adjusting styling parameters in javascript: this is default `useCssPatch=true` mode. 
 
 2. If you are building your project CSS file form SASS then use `useCssPatch=false` mode and link [./scss/BsMultiSelect.scss](https://github.com/DashboardCode/BsMultiSelect/blob/master/scss/BsMultiSelect.scss) to your project. SCSS file utilize your Bootstrap theme variables.  Other use case is traditional (not involving SASS): copy static [./dist/css/BsMultiSelect.css](https://github.com/DashboardCode/BsMultiSelect/blob/master/dist/css/BsMultiSelect.css) and manually adjust it for your theme.
 
