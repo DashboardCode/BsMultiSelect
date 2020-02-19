@@ -141,12 +141,12 @@ Other way to access the component's instance is using `data` :
 
 Method 1:
 ````
-          var bsMultiSelect = $('.myMultiSelect').bsMultiSelect({options}); // bsMultiSelect returns jQuery selector
+          var bsMultiSelect = $('.myMultiSelect').bsMultiSelect(options); // bsMultiSelect returns jQuery selector
 ````
 
 Method 2:
 ````
-          var bsMultiSelect = $('.myMultiSelect').BsMultiSelect({options}); // BsMultiSelect return the instance of MultiSelect class (or an array of them, ir selector '.myMultiSelect' returns multiple elements)
+          var bsMultiSelect = $('.myMultiSelect').BsMultiSelect(options); // BsMultiSelect return the instance of MultiSelect class (or an array of them, ir selector '.myMultiSelect' returns multiple elements)
 ````
 
 `$.fn["bsMultiSelect"].noConflict` and `$.fn["BsMultiSelect"].noConflict` are available.
