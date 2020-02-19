@@ -59,9 +59,6 @@ export class MultiSelect {
         placeholderText,
         isRtl, css,
         popper, window) {
-
-
-
         this.isRtl = isRtl;
         // readonly
         this.optionsAdapter = optionsAdapter;

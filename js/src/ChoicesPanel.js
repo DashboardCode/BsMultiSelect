@@ -1,6 +1,7 @@
 export function ChoicesPanel(
         createChoiceElement, choicesElement, 
-        onShow, onHide, 
+        onShow, 
+        onHide, 
         eventSkipper, choiceContentGenerator, 
         getVisibleMultiSelectDataList, 
         resetFilter, updateChoicesLocation, filterPanelSetFocus) {

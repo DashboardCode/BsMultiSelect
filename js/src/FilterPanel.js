@@ -51,8 +51,6 @@ export function FilterPanel(
                 onBackspace();
             }
         }
-
-
     }
     
     var onFilterInputKeyUp = (event) => {
