@@ -137,7 +137,7 @@ Other way to access the component's instance is using `data` :
           }
 ````         
 
-# jQuery factories
+## jQuery factories
 
 Method 1:
 ````
