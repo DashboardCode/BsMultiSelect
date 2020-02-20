@@ -1,5 +1,5 @@
 /*!
-  * DashboardCode BsMultiSelect v0.5.15beta (https://dashboardcode.github.io/BsMultiSelect/)
+  * DashboardCode BsMultiSelect v0.5.15 (https://dashboardcode.github.io/BsMultiSelect/)
   * Copyright 2017-2020 Roman Pokrovskij (github user rpokrovskij)
   * Licensed under APACHE 2 (https://github.com/DashboardCode/BsMultiSelect/blob/master/LICENSE)
   */
@@ -691,8 +691,7 @@ function PicksPanel(createPickElement, pickContentGenerator, processRemoveButton
   };
 }
 
-function MultiSelectInputAspect(window, appendToContainer, filterInputElement, picksElement, choicesElement, resetCandidateToHoveredMultiSelectData, //showChoices,
-hideChoicesAndResetFilter, isChoiceEmpty, onClick, isRtl, Popper) {
+function MultiSelectInputAspect(window, appendToContainer, filterInputElement, picksElement, choicesElement, isChoicesVisible, setChoicesVisible, resetCandidateToHoveredMultiSelectData, hideChoicesAndResetFilter, isChoiceEmpty, onClick, isRtl, Popper) {
   appendToContainer();
   var document = window.document;
   var eventSkipper = EventSkipper(window);
@@ -766,23 +765,17 @@ hideChoicesAndResetFilter, isChoiceEmpty, onClick, isRtl, Popper) {
     }
   }
 
-  var componentDisabledEventBinder = EventBinder();
-
-  function hideChoices() {
-    resetCandidateToHoveredMultiSelectData();
-
-    if (choicesElement.style.display != 'none') {
-      choicesElement.style.display = 'none';
-      picksElement.removeEventListener("mousedown", skipoutMousedown);
-      choicesElement.addEventListener("mousedown", skipoutMousedown);
-      document.removeEventListener("mouseup", documentMouseup);
-    }
-  }
+  var componentDisabledEventBinder = EventBinder(); // function getIsVisbleDropDown (){
+  //     // isChoicesVisible,
+  //     // setChoicesVisible,
+  //     return choicesElement.style.display != 'none';
+  // }
 
   function showChoices() {
-    if (choicesElement.style.display != 'block') {
+    if (!isChoicesVisible()) {
       eventSkipper.setSkippable();
-      choicesElement.style.display = 'block'; // add listeners that manages close dropdown on input's focusout and click outside container
+      setChoicesVisible(true); //choicesElement.style.display = 'block';
+      // add listeners that manages close dropdown on input's focusout and click outside container
       //container.removeEventListener("mousedown", containerMousedown);
 
       picksElement.addEventListener("mousedown", skipoutMousedown);
@@ -791,8 +784,16 @@ hideChoicesAndResetFilter, isChoiceEmpty, onClick, isRtl, Popper) {
     }
   }
 
-  function getIsVisbleDropDown() {
-    return choicesElement.style.display != 'none';
+  function hideChoices() {
+    resetCandidateToHoveredMultiSelectData();
+
+    if (isChoicesVisible()) {
+      setChoicesVisible(false); //choicesElement.style.display = 'none';
+
+      picksElement.removeEventListener("mousedown", skipoutMousedown);
+      choicesElement.addEventListener("mousedown", skipoutMousedown);
+      document.removeEventListener("mouseup", documentMouseup);
+    }
   }
 
   return {
@@ -823,8 +824,9 @@ hideChoicesAndResetFilter, isChoiceEmpty, onClick, isRtl, Popper) {
     },
     eventSkipper: eventSkipper,
     hideChoices: hideChoices,
-    showChoices: showChoices,
-    getIsVisbleDropDown: getIsVisbleDropDown
+    showChoices: showChoices //,
+    //getIsVisbleDropDown
+
   };
 }
 
@@ -1253,7 +1255,6 @@ function () {
   };
 
   _proto.UpdateData = function UpdateData() {
-    console.log("UpdateData");
     this.empty(); // reinitiate
 
     this.updateDataImpl();
@@ -1327,9 +1328,8 @@ function () {
       }
 
       _this.aspect.alignToFilterInputItemLocation(false);
-    };
+    }; // some browsers (IE11) can change select value (as part of "autocomplete") after page is loaded but before "ready" event
 
-    console.log("aaa"); // some browsers (IE11) can change select value (as part of "autocomplete") after page is loaded but before "ready" event
 
     if (document.readyState != 'loading') {
       fillChoices();
@@ -1501,10 +1501,10 @@ function () {
       _this3.aspect.alignToFilterInputItemLocation(false);
     }, // backspace - "remove last"
     function () {
-      if (_this3.aspect.getIsVisbleDropDown()) _this3.choicesPanel.toggleHovered();
+      if (_this3.staticContent.isChoicesVisible()) _this3.choicesPanel.toggleHovered();
     }, // tab/enter "compleate hovered"
     function (isEmpty, event) {
-      if (!isEmpty || _this3.aspect.getIsVisbleDropDown()) // supports bs modal - stop esc (close modal) propogation
+      if (!isEmpty || _this3.staticContent.isChoicesVisible()) // supports bs modal - stop esc (close modal) propogation
         event.stopPropagation();
     }, // esc keydown
     function () {
@@ -1562,7 +1562,7 @@ function () {
     this.placeholderAspect.updateEmptyInputWidth();
     this.aspect = MultiSelectInputAspect(this.window, function () {
       return _this3.staticContent.appendToContainer();
-    }, this.staticContent.filterInputElement, this.staticContent.picksElement, this.staticContent.choicesElement, function () {
+    }, this.staticContent.filterInputElement, this.staticContent.picksElement, this.staticContent.choicesElement, this.staticContent.isChoicesVisible, this.staticContent.setChoicesVisible, function () {
       return _this3.choicesPanel.resetCandidateToHoveredMultiSelectData();
     }, function () {
       _this3.aspect.hideChoices();
@@ -2267,6 +2267,12 @@ function staticContentGenerator(element, createElement, containerClass, putRtlTo
         }
       }
     },
+    isChoicesVisible: function isChoicesVisible() {
+      return choicesElement.style.display != 'none';
+    },
+    setChoicesVisible: function setChoicesVisible(visible) {
+      choicesElement.style.display = visible ? 'block' : 'none';
+    },
     disable: function disable(isDisabled) {
       disableToggleStyling(isDisabled);
     },
@@ -2558,14 +2564,12 @@ function BsMultiSelect(element, environment, settings) {
   var setSelected = configuration.setSelected;
 
   if (!setSelected) {
-    if (configuration.options) setSelected = function setSelected(option, value) {
+    setSelected = function setSelected(option, value) {
       option.selected = value;
-    };else setSelected = function setSelected(option, value) {
-      if (value) option.setAttribute('selected', '');else {
-        option.removeAttribute('selected');
-        option.selected = false;
-      }
-    };
+    }; // NOTE: adding this break Chrome's form reset functionality
+    // if (value) option.setAttribute('selected','');
+    // else  option.removeAttribute('selected');
+
   }
 
   var validationApi = ValidityApi(staticContent.filterInputElement, isValueMissingObservable, configuration.valueMissingMessage, function (isValid) {

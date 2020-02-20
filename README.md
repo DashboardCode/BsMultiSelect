@@ -29,9 +29,9 @@ BsMultiSelect follows Bootstrap 4 conventions and use the same instruments (babe
 `npm install @dashboardcode/bsmultiselect`
 
 # CDN
-https://cdn.jsdelivr.net/npm/@dashboardcode/bsmultiselect@0.5.14/dist/js/BsMultiSelect.min.js
-https://cdn.jsdelivr.net/npm/@dashboardcode/bsmultiselect@0.5.14/dist/js/BsMultiSelect.esm.min.js
-https://cdn.jsdelivr.net/npm/@dashboardcode/bsmultiselect@0.5.14/dist/css/BsMultiSelect.min.css
+https://cdn.jsdelivr.net/npm/@dashboardcode/bsmultiselect@0.5.15/dist/js/BsMultiSelect.min.js
+https://cdn.jsdelivr.net/npm/@dashboardcode/bsmultiselect@0.5.15/dist/js/BsMultiSelect.esm.min.js
+https://cdn.jsdelivr.net/npm/@dashboardcode/bsmultiselect@0.5.15/dist/css/BsMultiSelect.min.css
 
 
 # Architecture
@@ -104,6 +104,23 @@ For keyboard events `preventDefault` was used to
     c) enter (`13`) to prvent default button action (submit etc.)
     d) esc (`27`) to avoid "clear text on `esc`" functionlity dublication
 
+## Manipulations with SELECT
+
+When data source is SELECT element then when option selected happened HTML attribute `selected` are not removed or added, only `HTMLOptionElement.selected` value is setuped (this automitically doesn't add\remove `selected` attribute). If it is not enough you can `setSelected` (but this break [HTML Form reset](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/input/reset) functionality in Chrome).
+
+````
+          $('#mySelect').bsMultiSelect({
+              setSelected: function(option /*element*/, value /*true|false*/){
+                  if (value) 
+                      option.setAttribute('selected','');
+                  else  
+                      option.removeAttribute('selected');
+                  option.selected = value;
+              }
+          }); 
+````
+
+`setSelected` also discussed bellow.
 
 ## Dynamic Updates 
 

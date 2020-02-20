@@ -1,5 +1,6 @@
 # CHANGELOG
 ````
+0.5.15 - revert 0.5.8 update; now bsMultiselect doesn't remove/add selected attribute (removing attributes break Chrome's form reset functionality) 
 0.5.14 - new method UpdateAppearance - update everithing except item options (that means size, componetnt disabled, custom validity, .was-validated parent status; Update() = UpdateData() + UpdateAppearance()) 
 0.5.13 - BsMultiSelect jQuery prototype can create instance (was only return)
 0.5.12 - cssPatch bug on "empty string remove classes" resolved;

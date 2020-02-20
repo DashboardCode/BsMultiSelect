@@ -6,8 +6,9 @@ export function MultiSelectInputAspect (
     filterInputElement, 
     picksElement,
     choicesElement, 
+    isChoicesVisible,
+    setChoicesVisible,
     resetCandidateToHoveredMultiSelectData,
-    //showChoices,
     hideChoicesAndResetFilter,
     isChoiceEmpty,
     onClick,
@@ -19,8 +20,6 @@ export function MultiSelectInputAspect (
     var document = window.document;
     var eventSkipper = EventSkipper(window);
     var skipFocusout = false;
-    
-    
 
     // we want to escape the closing of the menu (because of focus out from) on a user's click inside the container
     var skipoutMousedown = function() {
@@ -91,23 +90,18 @@ export function MultiSelectInputAspect (
     }
     var componentDisabledEventBinder = EventBinder();
 
-    function hideChoices() {
-        resetCandidateToHoveredMultiSelectData();
-        if (choicesElement.style.display != 'none')
-        {
-            choicesElement.style.display = 'none';
-            
-            picksElement.removeEventListener("mousedown", skipoutMousedown);
-            choicesElement.addEventListener("mousedown", skipoutMousedown);
-            document.removeEventListener("mouseup", documentMouseup);
-        }
-    }
+    // function getIsVisbleDropDown (){
+    //     // isChoicesVisible,
+    //     // setChoicesVisible,
+    //     return choicesElement.style.display != 'none';
+    // }
 
     function showChoices() {
-        if (choicesElement.style.display != 'block')
+        if ( !isChoicesVisible() )
         {
             eventSkipper.setSkippable();
-            choicesElement.style.display = 'block';
+            setChoicesVisible(true);
+            //choicesElement.style.display = 'block';
             
             // add listeners that manages close dropdown on input's focusout and click outside container
             //container.removeEventListener("mousedown", containerMousedown);
@@ -118,8 +112,17 @@ export function MultiSelectInputAspect (
         }
     }
 
-    function getIsVisbleDropDown (){
-        return choicesElement.style.display != 'none';
+    function hideChoices() {
+        resetCandidateToHoveredMultiSelectData();
+        if (isChoicesVisible())
+        {
+            setChoicesVisible(false);
+            //choicesElement.style.display = 'none';
+            
+            picksElement.removeEventListener("mousedown", skipoutMousedown);
+            choicesElement.addEventListener("mousedown", skipoutMousedown);
+            document.removeEventListener("mouseup", documentMouseup);
+        }
     }
 
     return {
@@ -152,7 +155,8 @@ export function MultiSelectInputAspect (
         },
         eventSkipper,
         hideChoices,
-        showChoices,
-        getIsVisbleDropDown
+        showChoices
+        //,
+        //getIsVisbleDropDown
     }
 }

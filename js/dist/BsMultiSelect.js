@@ -159,14 +159,12 @@ export function BsMultiSelect(element, environment, settings) {
   var setSelected = configuration.setSelected;
 
   if (!setSelected) {
-    if (configuration.options) setSelected = function setSelected(option, value) {
+    setSelected = function setSelected(option, value) {
       option.selected = value;
-    };else setSelected = function setSelected(option, value) {
-      if (value) option.setAttribute('selected', '');else {
-        option.removeAttribute('selected');
-        option.selected = false;
-      }
-    };
+    }; // NOTE: adding this break Chrome's form reset functionality
+    // if (value) option.setAttribute('selected','');
+    // else  option.removeAttribute('selected');
+
   }
 
   var validationApi = ValidityApi(staticContent.filterInputElement, isValueMissingObservable, configuration.valueMissingMessage, function (isValid) {

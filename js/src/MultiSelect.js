@@ -213,7 +213,6 @@ export class MultiSelect {
     }
 
     UpdateData(){
-        console.log("UpdateData");
         this.empty();
         // reinitiate
         this.updateDataImpl();
@@ -283,7 +282,6 @@ export class MultiSelect {
             } 
             this.aspect.alignToFilterInputItemLocation(false);
         }
-        console.log("aaa");
         // some browsers (IE11) can change select value (as part of "autocomplete") after page is loaded but before "ready" event
         if (document.readyState != 'loading'){
             fillChoices();
@@ -444,10 +442,10 @@ export class MultiSelect {
                 this.aspect.alignToFilterInputItemLocation(false);
             }, // backspace - "remove last"
             () => { 
-                if (this.aspect.getIsVisbleDropDown())
+                if (this.staticContent.isChoicesVisible())
                     this.choicesPanel.toggleHovered() }, // tab/enter "compleate hovered"
             (isEmpty, event) => {
-                if (!isEmpty || this.aspect.getIsVisbleDropDown()) // supports bs modal - stop esc (close modal) propogation
+                if (!isEmpty || this.staticContent.isChoicesVisible()) // supports bs modal - stop esc (close modal) propogation
                     event.stopPropagation();
             }, // esc keydown
             () => {
@@ -512,6 +510,8 @@ export class MultiSelect {
             this.staticContent.filterInputElement, 
             this.staticContent.picksElement, 
             this.staticContent.choicesElement, 
+            this.staticContent.isChoicesVisible,
+            this.staticContent.setChoicesVisible,
             () => this.choicesPanel.resetCandidateToHoveredMultiSelectData(),
             () => {  
                 this.aspect.hideChoices();
