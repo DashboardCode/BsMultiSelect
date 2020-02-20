@@ -1,5 +1,16 @@
 import {EventBinder, EventSkipper} from './ToolsDom'
 
+export function MultiSelectDropDownAspect (choicesElement){
+    return {
+        isChoicesVisible(){
+            return choicesElement.style.display != 'none';
+        },
+        setChoicesVisible(visible){
+            choicesElement.style.display = visible?'block':'none';
+        }
+    }
+}
+
 export function MultiSelectInputAspect (
     window,
     appendToContainer, 
@@ -90,18 +101,12 @@ export function MultiSelectInputAspect (
     }
     var componentDisabledEventBinder = EventBinder();
 
-    // function getIsVisbleDropDown (){
-    //     // isChoicesVisible,
-    //     // setChoicesVisible,
-    //     return choicesElement.style.display != 'none';
-    // }
 
     function showChoices() {
         if ( !isChoicesVisible() )
         {
             eventSkipper.setSkippable();
             setChoicesVisible(true);
-            //choicesElement.style.display = 'block';
             
             // add listeners that manages close dropdown on input's focusout and click outside container
             //container.removeEventListener("mousedown", containerMousedown);
@@ -117,7 +122,6 @@ export function MultiSelectInputAspect (
         if (isChoicesVisible())
         {
             setChoicesVisible(false);
-            //choicesElement.style.display = 'none';
             
             picksElement.removeEventListener("mousedown", skipoutMousedown);
             choicesElement.addEventListener("mousedown", skipoutMousedown);

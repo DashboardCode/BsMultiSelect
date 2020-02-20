@@ -503,15 +503,15 @@ export class MultiSelect {
         )
 
         this.placeholderAspect.updateEmptyInputWidth();
-
+        
         this.aspect =  MultiSelectInputAspect(
             this.window,
             ()=>this.staticContent.appendToContainer(), 
             this.staticContent.filterInputElement, 
             this.staticContent.picksElement, 
             this.staticContent.choicesElement, 
-            this.staticContent.isChoicesVisible,
-            this.staticContent.setChoicesVisible,
+            ()=>this.staticContent.isChoicesVisible(),
+            (visible)=>this.staticContent.setChoicesVisible(visible),
             () => this.choicesPanel.resetCandidateToHoveredMultiSelectData(),
             () => {  
                 this.aspect.hideChoices();

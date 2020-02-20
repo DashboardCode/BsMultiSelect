@@ -144,12 +144,6 @@ export function staticContentGenerator(element, createElement, containerClass,  
                 }
             }
         },
-        isChoicesVisible(){
-            return choicesElement.style.display != 'none';
-        },
-        setChoicesVisible(visible){
-            choicesElement.style.display = visible?'block':'none';
-        },
         disable(isDisabled){
             disableToggleStyling(isDisabled)
         },
