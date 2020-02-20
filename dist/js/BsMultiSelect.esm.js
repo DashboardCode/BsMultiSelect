@@ -765,17 +765,12 @@ function MultiSelectInputAspect(window, appendToContainer, filterInputElement, p
     }
   }
 
-  var componentDisabledEventBinder = EventBinder(); // function getIsVisbleDropDown (){
-  //     // isChoicesVisible,
-  //     // setChoicesVisible,
-  //     return choicesElement.style.display != 'none';
-  // }
+  var componentDisabledEventBinder = EventBinder();
 
   function showChoices() {
     if (!isChoicesVisible()) {
       eventSkipper.setSkippable();
-      setChoicesVisible(true); //choicesElement.style.display = 'block';
-      // add listeners that manages close dropdown on input's focusout and click outside container
+      setChoicesVisible(true); // add listeners that manages close dropdown on input's focusout and click outside container
       //container.removeEventListener("mousedown", containerMousedown);
 
       picksElement.addEventListener("mousedown", skipoutMousedown);
@@ -788,8 +783,7 @@ function MultiSelectInputAspect(window, appendToContainer, filterInputElement, p
     resetCandidateToHoveredMultiSelectData();
 
     if (isChoicesVisible()) {
-      setChoicesVisible(false); //choicesElement.style.display = 'none';
-
+      setChoicesVisible(false);
       picksElement.removeEventListener("mousedown", skipoutMousedown);
       choicesElement.addEventListener("mousedown", skipoutMousedown);
       document.removeEventListener("mouseup", documentMouseup);
@@ -1562,7 +1556,11 @@ function () {
     this.placeholderAspect.updateEmptyInputWidth();
     this.aspect = MultiSelectInputAspect(this.window, function () {
       return _this3.staticContent.appendToContainer();
-    }, this.staticContent.filterInputElement, this.staticContent.picksElement, this.staticContent.choicesElement, this.staticContent.isChoicesVisible, this.staticContent.setChoicesVisible, function () {
+    }, this.staticContent.filterInputElement, this.staticContent.picksElement, this.staticContent.choicesElement, function () {
+      return _this3.staticContent.isChoicesVisible();
+    }, function (visible) {
+      return _this3.staticContent.setChoicesVisible(visible);
+    }, function () {
       return _this3.choicesPanel.resetCandidateToHoveredMultiSelectData();
     }, function () {
       _this3.aspect.hideChoices();
@@ -2267,12 +2265,6 @@ function staticContentGenerator(element, createElement, containerClass, putRtlTo
         }
       }
     },
-    isChoicesVisible: function isChoicesVisible() {
-      return choicesElement.style.display != 'none';
-    },
-    setChoicesVisible: function setChoicesVisible(visible) {
-      choicesElement.style.display = visible ? 'block' : 'none';
-    },
     disable: function disable(isDisabled) {
       disableToggleStyling(isDisabled);
     },
@@ -2284,6 +2276,12 @@ function staticContentGenerator(element, createElement, containerClass, putRtlTo
     },
     toggleFocusStyling: function toggleFocusStyling() {
       focusToggleStyling(isFocusIn);
+    },
+    isChoicesVisible: function isChoicesVisible() {
+      return choicesElement.style.display != 'none';
+    },
+    setChoicesVisible: function setChoicesVisible(visible) {
+      choicesElement.style.display = visible ? 'block' : 'none';
     },
     dispose: function dispose() {
       if (ownContainerElement) containerElement.parentNode.removeChild(containerElement);else attributeBackup.restore();

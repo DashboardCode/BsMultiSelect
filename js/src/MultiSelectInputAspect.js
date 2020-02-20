@@ -1,16 +1,5 @@
 import {EventBinder, EventSkipper} from './ToolsDom'
 
-export function MultiSelectDropDownAspect (choicesElement){
-    return {
-        isChoicesVisible(){
-            return choicesElement.style.display != 'none';
-        },
-        setChoicesVisible(visible){
-            choicesElement.style.display = visible?'block':'none';
-        }
-    }
-}
-
 export function MultiSelectInputAspect (
     window,
     appendToContainer, 

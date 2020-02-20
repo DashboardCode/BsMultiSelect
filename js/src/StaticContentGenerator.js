@@ -156,6 +156,12 @@ export function staticContentGenerator(element, createElement, containerClass,  
         toggleFocusStyling(){
             focusToggleStyling(isFocusIn)
         },
+        isChoicesVisible(){
+            return choicesElement.style.display != 'none';
+        },
+        setChoicesVisible(visible){
+            choicesElement.style.display = visible?'block':'none';
+        },
         dispose(){
             if (ownContainerElement)
                 containerElement.parentNode.removeChild(containerElement);
