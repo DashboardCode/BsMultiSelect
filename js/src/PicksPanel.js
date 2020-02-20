@@ -60,7 +60,7 @@ export function PicksPanel (
             list.forEach(i=>i.pickContent.disableRemove(isComponentDisabled))
         },
         deselectAll(){
-            list.forEach(i =>i.remove())
+            list.forEach(i=>i.remove())
         },
         clear() {
             list.forEach(i=>removeElement(i.pickElement));

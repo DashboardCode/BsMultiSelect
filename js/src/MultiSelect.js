@@ -4,7 +4,6 @@ import {PicksPanel} from './PicksPanel'
 import {MultiSelectInputAspect} from './MultiSelectInputAspect'
 import {PlaceholderAspect} from './PlaceholderAspect'
 
-import {EventSkipper} from './ToolsDom'
 import {sync} from './ToolsJs'
 
 function filterMultiSelectData(MultiSelectData, isFiltered, visibleIndex) {
@@ -174,7 +173,7 @@ export class MultiSelect {
     }*/
 
     DeselectAll(){
-        this.choicesPanel.hideChoices(); // always hide 1st
+        this.aspect.hideChoices(); // always hide 1st
         this.picksPanel.deselectAll();
         this.resetFilter();
     }
@@ -184,7 +183,7 @@ export class MultiSelect {
     }
 
     SelectAll(){
-        this.choicesPanel.hideChoices(); // always hide 1st
+        this.aspect.hideChoices(); // always hide 1st
 
         for(let i=0; i<this.MultiSelectDataList.length; i++)
         {
@@ -198,10 +197,10 @@ export class MultiSelect {
 
     empty(){
         // close drop down , remove filter
-        this.choicesPanel.hideChoices(); // always hide 1st
+        this.aspect.hideChoices(); // always hide 1st
         this.resetFilter();
 
-        this.choicesPanel.clear();
+        this.staticContent.choicesElement.innerHTML = ""; // TODO: there should better "optimization"
         // for(let i=0; i<this.MultiSelectDataList.length; i++)
         // {
         //     let multiSelectData = this.MultiSelectDataList[i];
@@ -214,6 +213,7 @@ export class MultiSelect {
     }
 
     UpdateData(){
+        console.log("UpdateData");
         this.empty();
         // reinitiate
         this.updateDataImpl();
@@ -283,7 +283,7 @@ export class MultiSelect {
             } 
             this.aspect.alignToFilterInputItemLocation(false);
         }
-
+        console.log("aaa");
         // some browsers (IE11) can change select value (as part of "autocomplete") after page is loaded but before "ready" event
         if (document.readyState != 'loading'){
             fillChoices();
@@ -298,7 +298,7 @@ export class MultiSelect {
 
     Dispose(){
         sync(
-            this.choicesPanel.hideChoices,
+            this.aspect.hideChoices,
             this.optionsAdapter.dispose,
             this.picksPanel.dispose,
             this.filterPanel.dispose,
@@ -367,9 +367,9 @@ export class MultiSelect {
 
         if (this.getVisibleMultiSelectDataList().length > 0) {
             this.aspect.alignToFilterInputItemLocation(true); // we need it to support case when textbox changes its place because of line break (texbox grow with each key press)
-            this.choicesPanel.showChoices();
+            this.aspect.showChoices();
         } else {
-            this.choicesPanel.hideChoices();
+            this.aspect.hideChoices();
         }
     }
 
@@ -438,20 +438,20 @@ export class MultiSelect {
             }, // focus out - hide dropdown
             () => this.choicesPanel.keyDownArrow(false), // arrow up
             () => this.choicesPanel.keyDownArrow(true),  // arrow down
-            () => this.choicesPanel.hideChoices(),  // tab on empty
+            () => this.aspect.hideChoices(),  // tab on empty
             () => {
                 this.picksPanel.removePicksTail();
                 this.aspect.alignToFilterInputItemLocation(false);
             }, // backspace - "remove last"
             () => { 
-                if (this.choicesPanel.getIsVisble())
+                if (this.aspect.getIsVisbleDropDown())
                     this.choicesPanel.toggleHovered() }, // tab/enter "compleate hovered"
             (isEmpty, event) => {
-                if (!isEmpty || this.choicesPanel.getIsVisble()) // supports bs modal - stop esc (close modal) propogation
+                if (!isEmpty || this.aspect.getIsVisbleDropDown()) // supports bs modal - stop esc (close modal) propogation
                     event.stopPropagation();
             }, // esc keydown
             () => {
-                this.choicesPanel.hideChoices(); // always hide 1st
+                this.aspect.hideChoices(); // always hide 1st
                 this.resetFilter();
             }, // esc keyup 
             (filterInputValue, resetLength) =>
@@ -473,7 +473,7 @@ export class MultiSelect {
             this.pickContentGenerator,
             (doUncheck, event) => {
                 this.aspect.processUncheck(doUncheck, event);
-                this.choicesPanel.hideChoices(); // always hide 1st
+                this.aspect.hideChoices(); // always hide 1st
                 this.resetFilter();
             }
         );
@@ -481,13 +481,18 @@ export class MultiSelect {
         this.choicesPanel = ChoicesPanel(
             ()=>this.staticContent.createChoiceElement(),
             this.staticContent.choicesElement,
-            () => this.aspect.onChoicesShow(),
-            () => this.aspect.onChoicesHide(),
-            EventSkipper(this.window),
+            //() => this.aspect.onChoicesShow(),
+            //() => this.aspect.onChoicesHide(),
+            () => this.aspect.eventSkipper,
             this.choiceContentGenerator,
             () => this.getVisibleMultiSelectDataList(),
-            () => this.resetFilter(),
-            () => this.aspect.alignToFilterInputItemLocation(true),
+            () => {
+                    this.aspect.hideChoices();
+                    this.resetFilter();},
+            () => {
+                this.aspect.alignToFilterInputItemLocation(true);
+                this.aspect.showChoices();
+            },
             () => this.filterPanel.setFocus()
         );
 
@@ -507,9 +512,9 @@ export class MultiSelect {
             this.staticContent.filterInputElement, 
             this.staticContent.picksElement, 
             this.staticContent.choicesElement, 
-            () => this.choicesPanel.showChoices(),
+            () => this.choicesPanel.resetCandidateToHoveredMultiSelectData(),
             () => {  
-                this.choicesPanel.hideChoices();
+                this.aspect.hideChoices();
                 this.resetFilter();
             },
             () => this.getVisibleMultiSelectDataList().length==0, 

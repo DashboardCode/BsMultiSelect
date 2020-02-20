@@ -1,5 +1,5 @@
 /*!
-  * DashboardCode BsMultiSelect v0.5.14 (https://dashboardcode.github.io/BsMultiSelect/)
+  * DashboardCode BsMultiSelect v0.5.15beta (https://dashboardcode.github.io/BsMultiSelect/)
   * Copyright 2017-2020 Roman Pokrovskij (github user rpokrovskij)
   * Licensed under APACHE 2 (https://github.com/DashboardCode/BsMultiSelect/blob/master/LICENSE)
   */
@@ -181,27 +181,16 @@
       };
     }
 
-    function ChoicesPanel(createChoiceElement, choicesElement, onShow, onHide, eventSkipper, choiceContentGenerator, getVisibleMultiSelectDataList, resetFilter, updateChoicesLocation, filterPanelSetFocus) {
+    function ChoicesPanel(createChoiceElement, choicesElement, //onShow, 
+    //onHide, 
+    getEventSkipper, choiceContentGenerator, getVisibleMultiSelectDataList, onToggleHovered, onMoveArrow, filterPanelSetFocus) {
       var hoveredMultiSelectData = null;
       var hoveredMultiSelectDataIndex = null;
       var candidateToHoveredMultiSelectData = null;
 
-      function hideChoices() {
+      function resetCandidateToHoveredMultiSelectData() {
         if (candidateToHoveredMultiSelectData) {
           candidateToHoveredMultiSelectData.resetCandidateToHoveredMultiSelectData();
-        }
-
-        if (choicesElement.style.display != 'none') {
-          choicesElement.style.display = 'none';
-          onHide();
-        }
-      }
-
-      function showChoices() {
-        if (choicesElement.style.display != 'block') {
-          eventSkipper.setSkippable();
-          choicesElement.style.display = 'block';
-          onShow();
         }
       }
 
@@ -225,16 +214,15 @@
           hoverInInternal(candidateToHoveredMultiSelectData.visibleIndex);
         }
 
-        if (candidateToHoveredMultiSelectData) candidateToHoveredMultiSelectData.resetCandidateToHoveredMultiSelectData();
+        resetCandidateToHoveredMultiSelectData();
       };
 
       function toggleHovered() {
         if (hoveredMultiSelectData) {
           if (hoveredMultiSelectData.toggle) hoveredMultiSelectData.toggle();
-          resetChoicesHover();
-          hideChoices(); // always hide 1st
+          resetChoicesHover(); //hideChoices(); // always hide 1st
 
-          resetFilter();
+          onToggleHovered();
         }
       }
 
@@ -271,15 +259,17 @@
 
         if (newIndex !== null) {
           if (hoveredMultiSelectData) hoveredMultiSelectData.ChoiceContent.hoverIn(false);
-          updateChoicesLocation();
-          showChoices();
+          onMoveArrow(); //showChoices(); 
+
           hoverInInternal(newIndex);
         }
       }
 
       var onChoiceElementMouseoverGeneral = function onChoiceElementMouseoverGeneral(MultiSelectData, choiceElement) {
+        var eventSkipper = getEventSkipper();
+
         if (eventSkipper.isSkippable()) {
-          if (candidateToHoveredMultiSelectData) candidateToHoveredMultiSelectData.resetCandidateToHoveredMultiSelectData();
+          resetCandidateToHoveredMultiSelectData();
           candidateToHoveredMultiSelectData = MultiSelectData;
           choiceElement.addEventListener('mousemove', processCandidateToHovered);
           choiceElement.addEventListener('mousedown', processCandidateToHovered);
@@ -317,6 +307,8 @@
         // note 2: since I want add aditional info panels to the dropdown put mouseleave on dropdwon would not work
 
         var onChoiceElementMouseleave = function onChoiceElementMouseleave() {
+          var eventSkipper = getEventSkipper();
+
           if (!eventSkipper.isSkippable()) {
             resetChoicesHover();
           }
@@ -375,25 +367,32 @@
           }
         };
       }
+      /* Picks:
+              createPick,
+              removePicksTail,
+              isEmpty,
+              getCount,
+              disable,
+              deselectAll,
+              clear,
+              dispose
+      */
+
 
       var item = {
+        createChoice: createChoice,
         hoverInInternal: hoverInInternal,
         stopAndResetChoicesHover: function stopAndResetChoicesHover() {
+          var eventSkipper = getEventSkipper();
           eventSkipper.setSkippable(); //disable Hover On MouseEnter - filter's changes should remove hover
 
           resetChoicesHover();
         },
-        showChoices: showChoices,
-        hideChoices: hideChoices,
+        resetCandidateToHoveredMultiSelectData: resetCandidateToHoveredMultiSelectData,
+        //showChoices,
+        //hideChoices,
         toggleHovered: toggleHovered,
-        keyDownArrow: keyDownArrow,
-        createChoice: createChoice,
-        getIsVisble: function getIsVisble() {
-          return choicesElement.style.display != 'none';
-        },
-        clear: function clear() {
-          choicesElement.innerHTML = "";
-        }
+        keyDownArrow: keyDownArrow
       };
       return item;
     }
@@ -776,9 +775,11 @@
       };
     }
 
-    function MultiSelectInputAspect(window, appendToContainer, filterInputElement, picksElement, choicesElement, showChoices, hideChoicesAndResetFilter, isChoiceEmpty, onClick, isRtl, Popper) {
+    function MultiSelectInputAspect(window, appendToContainer, filterInputElement, picksElement, choicesElement, resetCandidateToHoveredMultiSelectData, //showChoices,
+    hideChoicesAndResetFilter, isChoiceEmpty, onClick, isRtl, Popper) {
       appendToContainer();
       var document = window.document;
+      var eventSkipper = EventSkipper(window);
       var skipFocusout = false; // we want to escape the closing of the menu (because of focus out from) on a user's click inside the container
 
       var skipoutMousedown = function skipoutMousedown() {
@@ -850,6 +851,34 @@
       }
 
       var componentDisabledEventBinder = EventBinder();
+
+      function hideChoices() {
+        resetCandidateToHoveredMultiSelectData();
+
+        if (choicesElement.style.display != 'none') {
+          choicesElement.style.display = 'none';
+          picksElement.removeEventListener("mousedown", skipoutMousedown);
+          choicesElement.addEventListener("mousedown", skipoutMousedown);
+          document.removeEventListener("mouseup", documentMouseup);
+        }
+      }
+
+      function showChoices() {
+        if (choicesElement.style.display != 'block') {
+          eventSkipper.setSkippable();
+          choicesElement.style.display = 'block'; // add listeners that manages close dropdown on input's focusout and click outside container
+          //container.removeEventListener("mousedown", containerMousedown);
+
+          picksElement.addEventListener("mousedown", skipoutMousedown);
+          choicesElement.addEventListener("mousedown", skipoutMousedown);
+          document.addEventListener("mouseup", documentMouseup);
+        }
+      }
+
+      function getIsVisbleDropDown() {
+        return choicesElement.style.display != 'none';
+      }
+
       return {
         dispose: function dispose() {
           popper.destroy();
@@ -864,18 +893,6 @@
           }, 0);
           preventDefaultClickEvent = event; // setPreventDefaultMultiSelectEvent
         },
-        onChoicesShow: function onChoicesShow() {
-          // add listeners that manages close dropdown on input's focusout and click outside container
-          //container.removeEventListener("mousedown", containerMousedown);
-          picksElement.addEventListener("mousedown", skipoutMousedown);
-          choicesElement.addEventListener("mousedown", skipoutMousedown);
-          document.addEventListener("mouseup", documentMouseup);
-        },
-        onChoicesHide: function onChoicesHide() {
-          picksElement.removeEventListener("mousedown", skipoutMousedown);
-          choicesElement.addEventListener("mousedown", skipoutMousedown);
-          document.removeEventListener("mouseup", documentMouseup);
-        },
         getSkipFocusout: function getSkipFocusout() {
           return skipFocusout;
         },
@@ -887,7 +904,11 @@
             onClick(event);
             alignAndShowChoices(event);
           }); // OPEN dropdown
-        }
+        },
+        eventSkipper: eventSkipper,
+        hideChoices: hideChoices,
+        showChoices: showChoices,
+        getIsVisbleDropDown: getIsVisbleDropDown
       };
     }
 
@@ -1276,7 +1297,7 @@
       ;
 
       _proto.DeselectAll = function DeselectAll() {
-        this.choicesPanel.hideChoices(); // always hide 1st
+        this.aspect.hideChoices(); // always hide 1st
 
         this.picksPanel.deselectAll();
         this.resetFilter();
@@ -1287,7 +1308,7 @@
       };
 
       _proto.SelectAll = function SelectAll() {
-        this.choicesPanel.hideChoices(); // always hide 1st
+        this.aspect.hideChoices(); // always hide 1st
 
         for (var i = 0; i < this.MultiSelectDataList.length; i++) {
           var multiSelectData = this.MultiSelectDataList[i];
@@ -1299,10 +1320,11 @@
 
       _proto.empty = function empty() {
         // close drop down , remove filter
-        this.choicesPanel.hideChoices(); // always hide 1st
+        this.aspect.hideChoices(); // always hide 1st
 
         this.resetFilter();
-        this.choicesPanel.clear(); // for(let i=0; i<this.MultiSelectDataList.length; i++)
+        this.staticContent.choicesElement.innerHTML = ""; // TODO: there should better "optimization"
+        // for(let i=0; i<this.MultiSelectDataList.length; i++)
         // {
         //     let multiSelectData = this.MultiSelectDataList[i];
         //     if (multiSelectData.choice)
@@ -1315,6 +1337,7 @@
       };
 
       _proto.UpdateData = function UpdateData() {
+        console.log("UpdateData");
         this.empty(); // reinitiate
 
         this.updateDataImpl();
@@ -1388,8 +1411,9 @@
           }
 
           _this.aspect.alignToFilterInputItemLocation(false);
-        }; // some browsers (IE11) can change select value (as part of "autocomplete") after page is loaded but before "ready" event
+        };
 
+        console.log("aaa"); // some browsers (IE11) can change select value (as part of "autocomplete") after page is loaded but before "ready" event
 
         if (document.readyState != 'loading') {
           fillChoices();
@@ -1404,7 +1428,7 @@
       };
 
       _proto.Dispose = function Dispose() {
-        sync(this.choicesPanel.hideChoices, this.optionsAdapter.dispose, this.picksPanel.dispose, this.filterPanel.dispose, this.labelAdapter.dispose, this.aspect.dispose, this.staticContent.dispose);
+        sync(this.aspect.hideChoices, this.optionsAdapter.dispose, this.picksPanel.dispose, this.filterPanel.dispose, this.labelAdapter.dispose, this.aspect.dispose, this.staticContent.dispose);
 
         for (var i = 0; i < this.MultiSelectDataList.length; i++) {
           var multiSelectData = this.MultiSelectDataList[i];
@@ -1461,9 +1485,9 @@
         if (this.getVisibleMultiSelectDataList().length > 0) {
           this.aspect.alignToFilterInputItemLocation(true); // we need it to support case when textbox changes its place because of line break (texbox grow with each key press)
 
-          this.choicesPanel.showChoices();
+          this.aspect.showChoices();
         } else {
-          this.choicesPanel.hideChoices();
+          this.aspect.hideChoices();
         }
       };
 
@@ -1553,7 +1577,7 @@
           return _this3.choicesPanel.keyDownArrow(true);
         }, // arrow down
         function () {
-          return _this3.choicesPanel.hideChoices();
+          return _this3.aspect.hideChoices();
         }, // tab on empty
         function () {
           _this3.picksPanel.removePicksTail();
@@ -1561,14 +1585,14 @@
           _this3.aspect.alignToFilterInputItemLocation(false);
         }, // backspace - "remove last"
         function () {
-          if (_this3.choicesPanel.getIsVisble()) _this3.choicesPanel.toggleHovered();
+          if (_this3.aspect.getIsVisbleDropDown()) _this3.choicesPanel.toggleHovered();
         }, // tab/enter "compleate hovered"
         function (isEmpty, event) {
-          if (!isEmpty || _this3.choicesPanel.getIsVisble()) // supports bs modal - stop esc (close modal) propogation
+          if (!isEmpty || _this3.aspect.getIsVisbleDropDown()) // supports bs modal - stop esc (close modal) propogation
             event.stopPropagation();
         }, // esc keydown
         function () {
-          _this3.choicesPanel.hideChoices(); // always hide 1st
+          _this3.aspect.hideChoices(); // always hide 1st
 
 
           _this3.resetFilter();
@@ -1592,23 +1616,27 @@
         }, this.pickContentGenerator, function (doUncheck, event) {
           _this3.aspect.processUncheck(doUncheck, event);
 
-          _this3.choicesPanel.hideChoices(); // always hide 1st
+          _this3.aspect.hideChoices(); // always hide 1st
 
 
           _this3.resetFilter();
         });
         this.choicesPanel = ChoicesPanel(function () {
           return _this3.staticContent.createChoiceElement();
-        }, this.staticContent.choicesElement, function () {
-          return _this3.aspect.onChoicesShow();
-        }, function () {
-          return _this3.aspect.onChoicesHide();
-        }, EventSkipper(this.window), this.choiceContentGenerator, function () {
+        }, this.staticContent.choicesElement, //() => this.aspect.onChoicesShow(),
+        //() => this.aspect.onChoicesHide(),
+        function () {
+          return _this3.aspect.eventSkipper;
+        }, this.choiceContentGenerator, function () {
           return _this3.getVisibleMultiSelectDataList();
         }, function () {
-          return _this3.resetFilter();
+          _this3.aspect.hideChoices();
+
+          _this3.resetFilter();
         }, function () {
-          return _this3.aspect.alignToFilterInputItemLocation(true);
+          _this3.aspect.alignToFilterInputItemLocation(true);
+
+          _this3.aspect.showChoices();
         }, function () {
           return _this3.filterPanel.setFocus();
         });
@@ -1619,9 +1647,9 @@
         this.aspect = MultiSelectInputAspect(this.window, function () {
           return _this3.staticContent.appendToContainer();
         }, this.staticContent.filterInputElement, this.staticContent.picksElement, this.staticContent.choicesElement, function () {
-          return _this3.choicesPanel.showChoices();
+          return _this3.choicesPanel.resetCandidateToHoveredMultiSelectData();
         }, function () {
-          _this3.choicesPanel.hideChoices();
+          _this3.aspect.hideChoices();
 
           _this3.resetFilter();
         }, function () {

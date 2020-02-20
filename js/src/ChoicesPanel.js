@@ -1,32 +1,22 @@
 export function ChoicesPanel(
-        createChoiceElement, choicesElement, 
-        onShow, 
-        onHide, 
-        eventSkipper, choiceContentGenerator, 
+        createChoiceElement, 
+        choicesElement, 
+        //onShow, 
+        //onHide, 
+        getEventSkipper, 
+        choiceContentGenerator, 
         getVisibleMultiSelectDataList, 
-        resetFilter, updateChoicesLocation, filterPanelSetFocus) {
+        onToggleHovered, 
+        onMoveArrow, 
+        filterPanelSetFocus) {
     
     var hoveredMultiSelectData=null;
     var hoveredMultiSelectDataIndex = null;
     var candidateToHoveredMultiSelectData=null;
 
-    function hideChoices() {
+    function resetCandidateToHoveredMultiSelectData(){
         if (candidateToHoveredMultiSelectData){
             candidateToHoveredMultiSelectData.resetCandidateToHoveredMultiSelectData();
-        }
-        if (choicesElement.style.display != 'none')
-        {
-            choicesElement.style.display = 'none';
-            onHide();
-        }
-    }
-
-    function showChoices() {
-        if (choicesElement.style.display != 'block')
-        {
-            eventSkipper.setSkippable();
-            choicesElement.style.display = 'block';
-            onShow();
         }
     }
 
@@ -52,8 +42,7 @@ export function ChoicesPanel(
             resetChoicesHover(); 
             hoverInInternal(candidateToHoveredMultiSelectData.visibleIndex);
         }
-        if(candidateToHoveredMultiSelectData) 
-            candidateToHoveredMultiSelectData.resetCandidateToHoveredMultiSelectData();
+        resetCandidateToHoveredMultiSelectData();
     }
 
     function toggleHovered(){
@@ -61,8 +50,8 @@ export function ChoicesPanel(
             if (hoveredMultiSelectData.toggle)
                 hoveredMultiSelectData.toggle();
             resetChoicesHover();
-            hideChoices(); // always hide 1st
-            resetFilter();
+            //hideChoices(); // always hide 1st
+            onToggleHovered();
         } 
     }
 
@@ -96,18 +85,18 @@ export function ChoicesPanel(
         {
             if (hoveredMultiSelectData)
                 hoveredMultiSelectData.ChoiceContent.hoverIn(false)
-            updateChoicesLocation();
-            showChoices(); 
+            onMoveArrow();
+            //showChoices(); 
             hoverInInternal(newIndex);
         }
     }
 
     var onChoiceElementMouseoverGeneral = function(MultiSelectData, choiceElement)
     {
+        let eventSkipper = getEventSkipper();
         if (eventSkipper.isSkippable())
         {
-            if(candidateToHoveredMultiSelectData)
-                candidateToHoveredMultiSelectData.resetCandidateToHoveredMultiSelectData()
+            resetCandidateToHoveredMultiSelectData();
 
             candidateToHoveredMultiSelectData = MultiSelectData;
             choiceElement.addEventListener('mousemove', processCandidateToHovered);
@@ -152,6 +141,7 @@ export function ChoicesPanel(
         // note 1: mouseleave preferred to mouseout - which fires on each descendant
         // note 2: since I want add aditional info panels to the dropdown put mouseleave on dropdwon would not work
         var onChoiceElementMouseleave = () => {
+            let eventSkipper = getEventSkipper();
             if (!eventSkipper.isSkippable()) {
                 resetChoicesHover();
             }
@@ -220,23 +210,29 @@ export function ChoicesPanel(
         }
     }
 
+    /* Picks:
+            createPick,
+            removePicksTail,
+            isEmpty,
+            getCount,
+            disable,
+            deselectAll,
+            clear,
+            dispose
+    */
     var item = {
+        createChoice,
         hoverInInternal,
         stopAndResetChoicesHover(){
+            let eventSkipper = getEventSkipper();
             eventSkipper.setSkippable(); //disable Hover On MouseEnter - filter's changes should remove hover
             resetChoicesHover();
         },
-        showChoices,
-        hideChoices,
+        resetCandidateToHoveredMultiSelectData,
+        //showChoices,
+        //hideChoices,
         toggleHovered,
-        keyDownArrow,
-        createChoice,
-        getIsVisble(){
-            return choicesElement.style.display != 'none';
-        },
-        clear() {
-            choicesElement.innerHTML = ""; 
-        },
+        keyDownArrow
     }
     return item;
 }

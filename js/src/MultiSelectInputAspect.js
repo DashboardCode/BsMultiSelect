@@ -1,4 +1,4 @@
-import {EventBinder} from './ToolsDom'
+import {EventBinder, EventSkipper} from './ToolsDom'
 
 export function MultiSelectInputAspect (
     window,
@@ -6,7 +6,8 @@ export function MultiSelectInputAspect (
     filterInputElement, 
     picksElement,
     choicesElement, 
-    showChoices,
+    resetCandidateToHoveredMultiSelectData,
+    //showChoices,
     hideChoicesAndResetFilter,
     isChoiceEmpty,
     onClick,
@@ -16,9 +17,11 @@ export function MultiSelectInputAspect (
 {
     appendToContainer();
     var document = window.document;
-
+    var eventSkipper = EventSkipper(window);
     var skipFocusout = false;
     
+    
+
     // we want to escape the closing of the menu (because of focus out from) on a user's click inside the container
     var skipoutMousedown = function() {
          skipFocusout = true;
@@ -87,6 +90,38 @@ export function MultiSelectInputAspect (
         }
     }
     var componentDisabledEventBinder = EventBinder();
+
+    function hideChoices() {
+        resetCandidateToHoveredMultiSelectData();
+        if (choicesElement.style.display != 'none')
+        {
+            choicesElement.style.display = 'none';
+            
+            picksElement.removeEventListener("mousedown", skipoutMousedown);
+            choicesElement.addEventListener("mousedown", skipoutMousedown);
+            document.removeEventListener("mouseup", documentMouseup);
+        }
+    }
+
+    function showChoices() {
+        if (choicesElement.style.display != 'block')
+        {
+            eventSkipper.setSkippable();
+            choicesElement.style.display = 'block';
+            
+            // add listeners that manages close dropdown on input's focusout and click outside container
+            //container.removeEventListener("mousedown", containerMousedown);
+
+            picksElement.addEventListener("mousedown", skipoutMousedown);
+            choicesElement.addEventListener("mousedown", skipoutMousedown);
+            document.addEventListener("mouseup", documentMouseup);
+        }
+    }
+
+    function getIsVisbleDropDown (){
+        return choicesElement.style.display != 'none';
+    }
+
     return {
         dispose(){
             popper.destroy();
@@ -99,20 +134,6 @@ export function MultiSelectInputAspect (
 
             window.setTimeout(()=>uncheckOption(),0)
             preventDefaultClickEvent = event; // setPreventDefaultMultiSelectEvent
-        },
-        onChoicesShow(){
-            // add listeners that manages close dropdown on input's focusout and click outside container
-            //container.removeEventListener("mousedown", containerMousedown);
-
-            picksElement.addEventListener("mousedown", skipoutMousedown);
-            choicesElement.addEventListener("mousedown", skipoutMousedown);
-            document.addEventListener("mouseup", documentMouseup);
-            
-        },
-        onChoicesHide(){
-            picksElement.removeEventListener("mousedown", skipoutMousedown);
-            choicesElement.addEventListener("mousedown", skipoutMousedown);
-            document.removeEventListener("mouseup", documentMouseup);
         },
         getSkipFocusout : function() {
              return skipFocusout;
@@ -128,6 +149,10 @@ export function MultiSelectInputAspect (
                     onClick(event);
                     alignAndShowChoices(event);
                 });  // OPEN dropdown
-        }
+        },
+        eventSkipper,
+        hideChoices,
+        showChoices,
+        getIsVisbleDropDown
     }
 }
