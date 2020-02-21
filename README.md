@@ -89,12 +89,12 @@ Sample `useCssPatch=true` configuration (default values used):
           });
 ````
 
-Note 1: in `cssPatch` and `css` (discussed bellow) parameters you can mix styles and classes (depending on your theme available features) this way:
+Note 1: in `cssPatch` and `css` (discussed below) parameters you can mix styles and classes (depending on your theme available features) this way:
 ````
       choiceLabel_disabled: { classes: '...', styles: {...}}   
 ````
 
-Note 2: when you setup `cssPatch` and `css` (discussed bellow) parameters in configuration as object parameter - you do not need to repeat all default values -  when `classes` replaces default `classes`, `styles` from configuraion merge default `styles` (you are able to add/replace default styles only you need).
+Note 2: when you setup `cssPatch` and `css` (discussed below) parameters in configuration as object parameter - you do not need to repeat all default values -  when `classes` replaces default `classes`, `styles` from configuraion merge default `styles` (you are able to add/replace default styles only you need).
 
 `BsMultiSelect` handles click events friendly to your modals and popups. Important: for mouse events `preventDefault`, `stopPropagation` were not used (so your other controls always will get 'clicks' on them). BsMultiSelect remove its DOM elements (in 'option was deselected intiated by the click on "x" button' scenario) using setTimeout(..,0) - this simplifies the identification of click event's target during the bubling (bacause of element is not removing in click event loop iteration you always are able to identify that click's target belongs to BsMultiselect - and skip processing - most probably cancel popup close handler); 
 
@@ -106,7 +106,7 @@ For keyboard events `preventDefault` was used to
 
 ## Manipulations with SELECT
 
-When data source is SELECT element then when option selected happened HTML attribute `selected` are not removed or added, only `HTMLOptionElement.selected` value is setuped (this automitically doesn't add\remove `selected` attribute). If it is not enough you can `setSelected` (but this break [HTML Form reset](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/input/reset) functionality in Chrome).
+When data source is SELECT element then when user select option the HTML `selected` attribute is not removed or added from the `option`, only `HTMLOptionElement.selected` value is setuped (this automitically doesn't add\remove `selected` attribute). If it is not enough and you need to remove an attribute you can override `setSelected` in the configuration (but this break [HTML Form reset](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/input/reset) functionality in Chrome).
 
 ````
           $('#mySelect').bsMultiSelect({
@@ -120,7 +120,7 @@ When data source is SELECT element then when option selected happened HTML attri
           }); 
 ````
 
-`setSelected` also discussed bellow.
+`setSelected` also can be used for validation (if return `false`) and this is discussed below.
 
 ## Dynamic Updates 
 
