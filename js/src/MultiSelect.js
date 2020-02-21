@@ -297,7 +297,6 @@ export class MultiSelect {
     Dispose(){
         sync(
             this.aspect.hideChoices,
-            this.optionsAdapter.dispose,
             this.picksPanel.dispose,
             this.filterPanel.dispose,
             this.labelAdapter.dispose,
@@ -477,10 +476,7 @@ export class MultiSelect {
         );
 
         this.choicesPanel = ChoicesPanel(
-            ()=>this.staticContent.createChoiceElement(),
-            this.staticContent.choicesElement,
-            //() => this.aspect.onChoicesShow(),
-            //() => this.aspect.onChoicesHide(),
+            ()=> this.staticContent.createChoiceElement(),
             () => this.aspect.eventSkipper,
             this.choiceContentGenerator,
             () => this.getVisibleMultiSelectDataList(),
@@ -531,11 +527,5 @@ export class MultiSelect {
         
         this.updateDataImpl();
         this.UpdateAppearance(); // TODO: now appearance should be done after updateDataImpl, because items should be "already in place", correct it
-
-        if (this.optionsAdapter.onReset){
-            this.optionsAdapter.onReset(()=>{ 
-                this.window.setTimeout( ()=>this.UpdateData() ) 
-            });
-        }
     }
 }

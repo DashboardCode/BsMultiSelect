@@ -159,6 +159,12 @@ export function bsAppearance(multiSelect, staticContent, optionsAdapter,
 
 
 export function adjustBsOptionAdapterConfiguration(configuration, selectElement){
+
+    if(!configuration.getValidity)
+        configuration.getValidity = () => 
+            selectElement.classList.contains('is-invalid')?false:
+            (selectElement.classList.contains('is-valid')?true:null);
+    
     if (!configuration.getDisabled) {
         var fieldsetElement = closestByTagName(selectElement, 'FIELDSET');
         if (fieldsetElement) {

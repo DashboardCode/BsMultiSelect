@@ -1,8 +1,5 @@
 export function ChoicesPanel(
         createChoiceElement, 
-        choicesElement, 
-        //onShow, 
-        //onHide, 
         getEventSkipper, 
         choiceContentGenerator, 
         getVisibleMultiSelectDataList, 
@@ -124,7 +121,7 @@ export function ChoicesPanel(
 
     function createChoice(MultiSelectData, createSelectedItemGen, setSelected, triggerChange, isSelected/*, isOptionDisabled*/) 
     {
-        var choiceElement = createChoiceElement();
+        var {choiceElement, attach} = createChoiceElement();
         
         // in chrome it happens on "become visible" so we need to skip it, 
         // for IE11 and edge it doesn't happens, but for IE11 and Edge it doesn't happens on small 
@@ -149,7 +146,7 @@ export function ChoicesPanel(
 
         choiceElement.addEventListener('mouseleave', onChoiceElementMouseleave);
 
-        choicesElement.appendChild(choiceElement);
+        attach();
 
         let choiceContent = choiceContentGenerator(choiceElement); 
         choiceContent.setData(MultiSelectData.option);

@@ -55,7 +55,7 @@ export function staticContentGenerator(element, createElement, containerClass,  
     var createChoiceElement = () => {
         var choiceElement = createElement('LI');
         addStyling(choiceElement, css.choice);
-        return choiceElement;
+        return {choiceElement, attach: ()=>choicesElement.appendChild(choiceElement) };
     }
 
     var ownContainerElement = false;        

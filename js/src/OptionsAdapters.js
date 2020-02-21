@@ -1,47 +1,17 @@
-
-import {EventBinder, closestByTagName} from './ToolsDom';
-
-function OptionsAdapterElement(selectElement, getDisabled, getSize, getValidity, onChange) {
-    var form = closestByTagName(selectElement, 'FORM');
-    var eventBuilder = EventBinder();
-    if(!getValidity)
-        getValidity = () => selectElement.classList.contains('is-invalid')?false:(selectElement.classList.contains('is-valid')?true:null);
+function OptionsAdapter(getOptions, getDisabled, getSize, getValidity, onChange){
+    if (!getValidity)
+        getValidity=()=>null
+    if (!getDisabled)
+        getDisabled=()=>false;
+    if (!getSize)
+        getSize=()=>null;
     return {
-        getOptions(){
-            return selectElement.getElementsByTagName('OPTION')
-        },
-        onChange,
+        getOptions,
         getDisabled,
         getSize,
         getValidity,
-        onReset(handler){
-            if (form)
-                eventBuilder.bind(form, 'reset', handler)
-        },
-        dispose(){
-            if (form)
-                eventBuilder.unbind()
-        }
+        onChange
     }
 }
 
-function OptionsAdapterJson(options, getDisabled, getSize, getValidity, onChange) {
-    if (!getValidity){
-        getValidity=()=>null
-    }
-    return {
-        getOptions(){
-            return options
-        },
-        onChange,
-        getDisabled(){
-            return getDisabled?getDisabled():false
-        },
-        getSize(){
-            return getSize?getSize():null
-        },
-        getValidity,
-    }
-}
-
-export {OptionsAdapterJson, OptionsAdapterElement}
+export {OptionsAdapter}

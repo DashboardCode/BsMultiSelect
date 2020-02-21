@@ -2,12 +2,13 @@ import {MultiSelect} from './MultiSelect'
 import {LabelAdapter} from './LabelAdapter';
 import {RtlAdapter} from './RtlAdapter';
 
-import {OptionsAdapterJson, OptionsAdapterElement} from './OptionsAdapters';
+import {OptionsAdapter} from './OptionsAdapters';
 
 import {bsAppearance, adjustBsOptionAdapterConfiguration} from './BsAppearance';
 import {ValidityApi} from './ValidityApi'
 
-import {getDataGuardedWithPrefix} from './ToolsDom';
+import {getDataGuardedWithPrefix, EventBinder, closestByTagName} from './ToolsDom';
+
 import {createCss, extendCss} from './ToolsStyling';
 import {extendOverriding, extendIfUndefined, composeSync, ObservableValue, ObservableLambda} from './ToolsJs';
 
@@ -120,8 +121,9 @@ export function BsMultiSelect(element, environment, settings){
     if (!optionsAdapter)
     {
         if (configuration.options){
-            optionsAdapter = OptionsAdapterJson(
-                configuration.options,
+            let options =configuration.options;
+            optionsAdapter = OptionsAdapter(
+                ()=>options,
                 configuration.getDisabled,
                 configuration.getSize,
                 configuration.getValidity,
@@ -137,8 +139,9 @@ export function BsMultiSelect(element, environment, settings){
                 configuration,
                 staticContent.selectElement
             )
-            optionsAdapter = OptionsAdapterElement(
-                staticContent.selectElement, 
+            
+            optionsAdapter = OptionsAdapter(
+                ()=>staticContent.selectElement.getElementsByTagName('OPTION'), 
                 configuration.getDisabled, 
                 configuration.getSize, 
                 configuration.getValidity, 
@@ -153,10 +156,10 @@ export function BsMultiSelect(element, environment, settings){
 
     if (!configuration.getIsValueMissing){
         configuration.getIsValueMissing = () => {
-            var count = 0;
-            var options = optionsAdapter.getOptions();
-            for (var i=0; i < options.length; i++) {
-                if (options[i].selected) 
+            let count = 0;
+            let optionsArray = optionsAdapter.getOptions();
+            for (var i=0; i < optionsArray.length; i++) {
+                if (optionsArray[i].selected) 
                     count++;
             }
             return count===0;
@@ -209,8 +212,20 @@ export function BsMultiSelect(element, environment, settings){
         css,
         Popper,
         window);
-    
-    multiSelect.Dispose = composeSync(multiSelect.Dispose.bind(multiSelect), isValueMissingObservable.detachAll, validationApiObservable.detachAll);
+
+    var resetDispose=null;
+    if (staticContent.selectElement){
+         var form = closestByTagName(staticContent.selectElement, 'FORM');
+         if (form) {
+             var eventBuilder = EventBinder();
+             eventBuilder.bind(form, 
+                     'reset', 
+                     () => window.setTimeout( ()=>multiSelect.UpdateData() ) );
+             resetDispose = ()=>eventBuilder.unbind();
+         }
+    }
+            
+    multiSelect.Dispose = composeSync(multiSelect.Dispose.bind(multiSelect), isValueMissingObservable.detachAll, validationApiObservable.detachAll, resetDispose);
     multiSelect.validationApi = validationApi;
     
     bsAppearance(
@@ -222,8 +237,9 @@ export function BsMultiSelect(element, environment, settings){
     if (init && init instanceof Function)
         init(multiSelect);
     
-    multiSelect.init();
     
+    multiSelect.init();
+
     // support browser's "step backward" on form restore
     if (staticContent.selectElement && window.document.readyState !="complete"){
         window.setTimeout( function(){multiSelect.UpdateSelected()});

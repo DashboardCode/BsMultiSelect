@@ -1,10 +1,10 @@
 import { MultiSelect } from './MultiSelect';
 import { LabelAdapter } from './LabelAdapter';
 import { RtlAdapter } from './RtlAdapter';
-import { OptionsAdapterJson, OptionsAdapterElement } from './OptionsAdapters';
+import { OptionsAdapter } from './OptionsAdapters';
 import { bsAppearance, adjustBsOptionAdapterConfiguration } from './BsAppearance';
 import { ValidityApi } from './ValidityApi';
-import { getDataGuardedWithPrefix } from './ToolsDom';
+import { getDataGuardedWithPrefix, EventBinder, closestByTagName } from './ToolsDom';
 import { createCss, extendCss } from './ToolsStyling';
 import { extendOverriding, extendIfUndefined, composeSync, ObservableValue, ObservableLambda } from './ToolsJs';
 import { adjustLegacyConfiguration as adjustLegacySettings } from './BsMultiSelectDepricatedParameters';
@@ -106,13 +106,18 @@ export function BsMultiSelect(element, environment, settings) {
 
   if (!optionsAdapter) {
     if (configuration.options) {
-      optionsAdapter = OptionsAdapterJson(configuration.options, configuration.getDisabled, configuration.getSize, configuration.getValidity, function () {
+      var options = configuration.options;
+      optionsAdapter = OptionsAdapter(function () {
+        return options;
+      }, configuration.getDisabled, configuration.getSize, configuration.getValidity, function () {
         lazyDefinedEvent();
         trigger('dashboardcode.multiselect:change');
       });
     } else {
       adjustBsOptionAdapterConfiguration(configuration, staticContent.selectElement);
-      optionsAdapter = OptionsAdapterElement(staticContent.selectElement, configuration.getDisabled, configuration.getSize, configuration.getValidity, function () {
+      optionsAdapter = OptionsAdapter(function () {
+        return staticContent.selectElement.getElementsByTagName('OPTION');
+      }, configuration.getDisabled, configuration.getSize, configuration.getValidity, function () {
         lazyDefinedEvent();
         trigger('change');
         trigger('dashboardcode.multiselect:change');
@@ -123,10 +128,10 @@ export function BsMultiSelect(element, environment, settings) {
   if (!configuration.getIsValueMissing) {
     configuration.getIsValueMissing = function () {
       var count = 0;
-      var options = optionsAdapter.getOptions();
+      var optionsArray = optionsAdapter.getOptions();
 
-      for (var i = 0; i < options.length; i++) {
-        if (options[i].selected) count++;
+      for (var i = 0; i < optionsArray.length; i++) {
+        if (optionsArray[i].selected) count++;
       }
 
       return count === 0;
@@ -175,7 +180,26 @@ export function BsMultiSelect(element, environment, settings) {
   }, function (choiceElement) {
     return configuration.choiceContentGenerator(choiceElement, css);
   }, labelAdapter, configuration.placeholder, configuration.isRtl, css, Popper, window);
-  multiSelect.Dispose = composeSync(multiSelect.Dispose.bind(multiSelect), isValueMissingObservable.detachAll, validationApiObservable.detachAll);
+  var resetDispose = null;
+
+  if (staticContent.selectElement) {
+    var form = closestByTagName(staticContent.selectElement, 'FORM');
+
+    if (form) {
+      var eventBuilder = EventBinder();
+      eventBuilder.bind(form, 'reset', function () {
+        return window.setTimeout(function () {
+          return multiSelect.UpdateData();
+        });
+      });
+
+      resetDispose = function resetDispose() {
+        return eventBuilder.unbind();
+      };
+    }
+  }
+
+  multiSelect.Dispose = composeSync(multiSelect.Dispose.bind(multiSelect), isValueMissingObservable.detachAll, validationApiObservable.detachAll, resetDispose);
   multiSelect.validationApi = validationApi;
   bsAppearance(multiSelect, staticContent, optionsAdapter, validationApiObservable, useCssPatch, css);
   if (init && init instanceof Function) init(multiSelect);

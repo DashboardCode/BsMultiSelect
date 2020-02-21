@@ -1,5 +1,5 @@
 /*!
-  * DashboardCode BsMultiSelect v0.5.15 (https://dashboardcode.github.io/BsMultiSelect/)
+  * DashboardCode BsMultiSelect v0.5.16 (https://dashboardcode.github.io/BsMultiSelect/)
   * Copyright 2017-2020 Roman Pokrovskij (github user rpokrovskij)
   * Licensed under APACHE 2 (https://github.com/DashboardCode/BsMultiSelect/blob/master/LICENSE)
   */
@@ -97,9 +97,7 @@ onInput //, // filter
   };
 }
 
-function ChoicesPanel(createChoiceElement, choicesElement, //onShow, 
-//onHide, 
-getEventSkipper, choiceContentGenerator, getVisibleMultiSelectDataList, onToggleHovered, onMoveArrow, filterPanelSetFocus) {
+function ChoicesPanel(createChoiceElement, getEventSkipper, choiceContentGenerator, getVisibleMultiSelectDataList, onToggleHovered, onMoveArrow, filterPanelSetFocus) {
   var hoveredMultiSelectData = null;
   var hoveredMultiSelectDataIndex = null;
   var candidateToHoveredMultiSelectData = null;
@@ -210,10 +208,13 @@ getEventSkipper, choiceContentGenerator, getVisibleMultiSelectDataList, onToggle
   function createChoice(MultiSelectData, createSelectedItemGen, setSelected, triggerChange, isSelected
   /*, isOptionDisabled*/
   ) {
-    var choiceElement = createChoiceElement(); // in chrome it happens on "become visible" so we need to skip it, 
+    var _createChoiceElement = createChoiceElement(),
+        choiceElement = _createChoiceElement.choiceElement,
+        attach = _createChoiceElement.attach; // in chrome it happens on "become visible" so we need to skip it, 
     // for IE11 and edge it doesn't happens, but for IE11 and Edge it doesn't happens on small 
     // mouse moves inside the item. 
     // https://stackoverflow.com/questions/59022563/browser-events-mouseover-doesnt-happen-when-you-make-element-visible-and-mous
+
 
     var onChoiceElementMouseover = function onChoiceElementMouseover() {
       return onChoiceElementMouseoverGeneral(MultiSelectData, choiceElement);
@@ -231,7 +232,7 @@ getEventSkipper, choiceContentGenerator, getVisibleMultiSelectDataList, onToggle
     };
 
     choiceElement.addEventListener('mouseleave', onChoiceElementMouseleave);
-    choicesElement.appendChild(choiceElement);
+    attach();
     var choiceContent = choiceContentGenerator(choiceElement);
     choiceContent.setData(MultiSelectData.option);
     MultiSelectData.ChoiceContent = choiceContent;
@@ -1338,7 +1339,7 @@ function () {
   };
 
   _proto.Dispose = function Dispose() {
-    sync(this.aspect.hideChoices, this.optionsAdapter.dispose, this.picksPanel.dispose, this.filterPanel.dispose, this.labelAdapter.dispose, this.aspect.dispose, this.staticContent.dispose);
+    sync(this.aspect.hideChoices, this.picksPanel.dispose, this.filterPanel.dispose, this.labelAdapter.dispose, this.aspect.dispose, this.staticContent.dispose);
 
     for (var i = 0; i < this.MultiSelectDataList.length; i++) {
       var multiSelectData = this.MultiSelectDataList[i];
@@ -1533,9 +1534,7 @@ function () {
     });
     this.choicesPanel = ChoicesPanel(function () {
       return _this3.staticContent.createChoiceElement();
-    }, this.staticContent.choicesElement, //() => this.aspect.onChoicesShow(),
-    //() => this.aspect.onChoicesHide(),
-    function () {
+    }, function () {
       return _this3.aspect.eventSkipper;
     }, this.choiceContentGenerator, function () {
       return _this3.getVisibleMultiSelectDataList();
@@ -1576,14 +1575,6 @@ function () {
     this.staticContent.attachContainer();
     this.updateDataImpl();
     this.UpdateAppearance(); // TODO: now appearance should be done after updateDataImpl, because items should be "already in place", correct it
-
-    if (this.optionsAdapter.onReset) {
-      this.optionsAdapter.onReset(function () {
-        _this3.window.setTimeout(function () {
-          return _this3.UpdateData();
-        });
-      });
-    }
   };
 
   return MultiSelect;
@@ -1614,48 +1605,22 @@ function RtlAdapter(element) {
   return isRtl;
 }
 
-function OptionsAdapterElement(selectElement, getDisabled, getSize, getValidity, onChange) {
-  var form = closestByTagName(selectElement, 'FORM');
-  var eventBuilder = EventBinder();
+function OptionsAdapter(getOptions, getDisabled, getSize, getValidity, onChange) {
   if (!getValidity) getValidity = function getValidity() {
-    return selectElement.classList.contains('is-invalid') ? false : selectElement.classList.contains('is-valid') ? true : null;
+    return null;
+  };
+  if (!getDisabled) getDisabled = function getDisabled() {
+    return false;
+  };
+  if (!getSize) getSize = function getSize() {
+    return null;
   };
   return {
-    getOptions: function getOptions() {
-      return selectElement.getElementsByTagName('OPTION');
-    },
-    onChange: onChange,
+    getOptions: getOptions,
     getDisabled: getDisabled,
     getSize: getSize,
     getValidity: getValidity,
-    onReset: function onReset(handler) {
-      if (form) eventBuilder.bind(form, 'reset', handler);
-    },
-    dispose: function dispose() {
-      if (form) eventBuilder.unbind();
-    }
-  };
-}
-
-function OptionsAdapterJson(options, _getDisabled, _getSize, getValidity, onChange) {
-  if (!getValidity) {
-    getValidity = function getValidity() {
-      return null;
-    };
-  }
-
-  return {
-    getOptions: function getOptions() {
-      return options;
-    },
-    onChange: onChange,
-    getDisabled: function getDisabled() {
-      return _getDisabled ? _getDisabled() : false;
-    },
-    getSize: function getSize() {
-      return _getSize ? _getSize() : null;
-    },
-    getValidity: getValidity
+    onChange: onChange
   };
 }
 
@@ -1825,6 +1790,10 @@ function bsAppearance(multiSelect, staticContent, optionsAdapter, validityApiObs
   multiSelect.Dispose = composeSync(wasUpdatedObservable.detachAll, validationObservable.detachAll, getManualValidationObservable.detachAll, multiSelect.Dispose.bind(multiSelect));
 }
 function adjustBsOptionAdapterConfiguration(configuration, selectElement) {
+  if (!configuration.getValidity) configuration.getValidity = function () {
+    return selectElement.classList.contains('is-invalid') ? false : selectElement.classList.contains('is-valid') ? true : null;
+  };
+
   if (!configuration.getDisabled) {
     var fieldsetElement = closestByTagName(selectElement, 'FIELDSET');
 
@@ -2179,7 +2148,12 @@ function staticContentGenerator(element, createElement, containerClass, putRtlTo
   var createChoiceElement = function createChoiceElement() {
     var choiceElement = createElement('LI');
     addStyling(choiceElement, css.choice);
-    return choiceElement;
+    return {
+      choiceElement: choiceElement,
+      attach: function attach() {
+        return choicesElement.appendChild(choiceElement);
+      }
+    };
   };
 
   var ownContainerElement = false;
@@ -2509,13 +2483,18 @@ function BsMultiSelect(element, environment, settings) {
 
   if (!optionsAdapter) {
     if (configuration.options) {
-      optionsAdapter = OptionsAdapterJson(configuration.options, configuration.getDisabled, configuration.getSize, configuration.getValidity, function () {
+      var options = configuration.options;
+      optionsAdapter = OptionsAdapter(function () {
+        return options;
+      }, configuration.getDisabled, configuration.getSize, configuration.getValidity, function () {
         lazyDefinedEvent();
         trigger('dashboardcode.multiselect:change');
       });
     } else {
       adjustBsOptionAdapterConfiguration(configuration, staticContent.selectElement);
-      optionsAdapter = OptionsAdapterElement(staticContent.selectElement, configuration.getDisabled, configuration.getSize, configuration.getValidity, function () {
+      optionsAdapter = OptionsAdapter(function () {
+        return staticContent.selectElement.getElementsByTagName('OPTION');
+      }, configuration.getDisabled, configuration.getSize, configuration.getValidity, function () {
         lazyDefinedEvent();
         trigger('change');
         trigger('dashboardcode.multiselect:change');
@@ -2526,10 +2505,10 @@ function BsMultiSelect(element, environment, settings) {
   if (!configuration.getIsValueMissing) {
     configuration.getIsValueMissing = function () {
       var count = 0;
-      var options = optionsAdapter.getOptions();
+      var optionsArray = optionsAdapter.getOptions();
 
-      for (var i = 0; i < options.length; i++) {
-        if (options[i].selected) count++;
+      for (var i = 0; i < optionsArray.length; i++) {
+        if (optionsArray[i].selected) count++;
       }
 
       return count === 0;
@@ -2578,7 +2557,26 @@ function BsMultiSelect(element, environment, settings) {
   }, function (choiceElement) {
     return configuration.choiceContentGenerator(choiceElement, css);
   }, labelAdapter, configuration.placeholder, configuration.isRtl, css, Popper, window);
-  multiSelect.Dispose = composeSync(multiSelect.Dispose.bind(multiSelect), isValueMissingObservable.detachAll, validationApiObservable.detachAll);
+  var resetDispose = null;
+
+  if (staticContent.selectElement) {
+    var form = closestByTagName(staticContent.selectElement, 'FORM');
+
+    if (form) {
+      var eventBuilder = EventBinder();
+      eventBuilder.bind(form, 'reset', function () {
+        return window.setTimeout(function () {
+          return multiSelect.UpdateData();
+        });
+      });
+
+      resetDispose = function resetDispose() {
+        return eventBuilder.unbind();
+      };
+    }
+  }
+
+  multiSelect.Dispose = composeSync(multiSelect.Dispose.bind(multiSelect), isValueMissingObservable.detachAll, validationApiObservable.detachAll, resetDispose);
   multiSelect.validationApi = validationApi;
   bsAppearance(multiSelect, staticContent, optionsAdapter, validationApiObservable, useCssPatch, css);
   if (init && init instanceof Function) init(multiSelect);
