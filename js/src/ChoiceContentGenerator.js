@@ -1,7 +1,7 @@
 import  {EventBinder} from './ToolsDom';
 import  {addStyling, toggleStyling} from './ToolsStyling';
 
-export function choiceContentGenerator(choiceElement, css){
+export function choiceContentGenerator(choiceElement, common, css){
     choiceElement.innerHTML = '<div><input formnovalidate type="checkbox"><label></label></div>';
     let choiceContentElement = choiceElement.querySelector('DIV');
     let choiceCheckBoxElement = choiceContentElement.querySelector('INPUT');
@@ -18,7 +18,7 @@ export function choiceContentGenerator(choiceElement, css){
     let hoverInToggleStyling = toggleStyling(choiceElement, css.choice_hover);
     let eventBinder = EventBinder();
     return {
-        setData(option) {choiceLabelElement.textContent =option.text;},
+        setData(option) {choiceLabelElement.textContent = option.text;},
         select(isSelected){ 
             selectToggleStyling(isSelected);
             choiceCheckBoxElement.checked = isSelected 

@@ -50,25 +50,25 @@ function updateSizeJs(picksElement, picksLgStyling, picksSmStyling, picksDefStyl
     }
 }
 
-function updateSizeForAdapter(picksElement, optionsAdapter){
-    updateSize(picksElement, optionsAdapter.getSize())
+function updateSizeForAdapter(picksElement, getSize){
+    updateSize(picksElement, getSize())
 }
 
-function updateSizeJsForAdapter(picksElement, picksLgStyling, picksSmStyling, picksDefStyling, optionsAdapter){
-    updateSizeJs(picksElement, picksLgStyling, picksSmStyling, picksDefStyling,  optionsAdapter.getSize())
+function updateSizeJsForAdapter(picksElement, picksLgStyling, picksSmStyling, picksDefStyling, getSize){
+    updateSizeJs(picksElement, picksLgStyling, picksSmStyling, picksDefStyling, getSize())
 }
 
-export function bsAppearance(multiSelect, staticContent, optionsAdapter, 
+export function bsAppearance(multiSelect, staticContent, getValidity, getSize, 
     validityApiObservable,
     useCssPatch, css){
 
     var updateSize;
     if (!useCssPatch){
-        updateSize= () => updateSizeForAdapter(staticContent.picksElement, optionsAdapter)
+        updateSize= () => updateSizeForAdapter(staticContent.picksElement, getSize)
     }
     else{
         const {picks_lg, picks_sm, picks_def} = css;
-        updateSize = () => updateSizeJsForAdapter(staticContent.picksElement, picks_lg, picks_sm, picks_def, optionsAdapter);
+        updateSize = () => updateSizeJsForAdapter(staticContent.picksElement, picks_lg, picks_sm, picks_def, getSize);
     }
     multiSelect.UpdateSize = updateSize;
     
@@ -118,7 +118,7 @@ export function bsAppearance(multiSelect, staticContent, optionsAdapter,
         return wasValidatedElement?true:false;
     }
     var wasUpdatedObservable = ObservableLambda(()=>getWasValidated());
-    var getManualValidationObservable = ObservableLambda(()=>optionsAdapter.getValidity());
+    var getManualValidationObservable = ObservableLambda(()=>getValidity());
     
     var validationObservable = ObservableLambda(
         () => wasUpdatedObservable.getValue()?validityApiObservable.getValue():getManualValidationObservable.getValue()

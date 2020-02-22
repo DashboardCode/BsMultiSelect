@@ -1,7 +1,7 @@
 import  {EventBinder} from './ToolsDom';
 import  {addStyling, toggleStyling} from './ToolsStyling';
 
-export function pickContentGenerator(pickElement, css){
+export function pickContentGenerator(pickElement, common, css){
     pickElement.innerHTML = '<span></span><button aria-label="Remove" tabIndex="-1" type="button"><span aria-hidden="true">&times;</span></button>'
     let pickContentElement = pickElement.querySelector('SPAN');
     let pickButtonElement = pickElement.querySelector('BUTTON');
@@ -11,7 +11,7 @@ export function pickContentGenerator(pickElement, css){
     var disableToggleStyling = toggleStyling(pickContentElement, css.pickContent_disabled);
     return {
         setData(option){
-            pickContentElement.textContent = option.text;
+            pickContentElement.textContent = option.text; 
         },
         disable:(isDisabled)=>disableToggleStyling(isDisabled),
         disableRemove(isRemoveDisabled){

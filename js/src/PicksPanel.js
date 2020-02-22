@@ -4,11 +4,13 @@ import {List} from './ToolsJs'
 export function PicksPanel (
         createPickElement,
         pickContentGenerator, 
-        processRemoveButtonClick // click to remove button
+        processRemoveButtonClick, // click to remove button
+        common,
+        getIsComponentDisabled
 ) 
 {
     var list = List();
-    function createPick(requestPickRemove, option, isComponentDisabled) {
+    function createPick(requestPickRemove, option) {
         var {pickElement, attach} = createPickElement();
         var item = {pickElement}
         var removeFromList = list.add(item);
@@ -40,7 +42,7 @@ export function PicksPanel (
         item.pickContent = pickContentGenerator(pickElement);
         item.pickContent.setData(option);
         item.pickContent.disable(option.disabled);
-        item.pickContent.disableRemove(isComponentDisabled);
+        item.pickContent.disableRemove(getIsComponentDisabled());
         
         item.pickContent.onRemove(event => processRemoveButtonClick(remove, event));
         attach();
@@ -56,8 +58,8 @@ export function PicksPanel (
         },
         isEmpty: list.isEmpty, // function
         getCount: list.getCount,
-        disable(isComponentDisabled){
-            list.forEach(i=>i.pickContent.disableRemove(isComponentDisabled))
+        disable(){
+            list.forEach(i=>i.pickContent.disableRemove(getIsComponentDisabled()))
         },
         deselectAll(){
             list.forEach(i=>i.remove())

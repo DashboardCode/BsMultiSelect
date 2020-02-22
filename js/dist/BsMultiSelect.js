@@ -1,7 +1,6 @@
 import { MultiSelect } from './MultiSelect';
 import { LabelAdapter } from './LabelAdapter';
 import { RtlAdapter } from './RtlAdapter';
-import { OptionsAdapter } from './OptionsAdapters';
 import { bsAppearance, adjustBsOptionAdapterConfiguration } from './BsAppearance';
 import { ValidityApi } from './ValidityApi';
 import { getDataGuardedWithPrefix, EventBinder, closestByTagName } from './ToolsDom';
@@ -30,7 +29,7 @@ export var defaults = {
   required: null,
 
   /* null means look on select[required] or false if jso-source */
-  optionsAdapter: null,
+  common: null,
   options: null,
   getDisabled: null,
   getSize: null,
@@ -101,34 +100,43 @@ export function BsMultiSelect(element, environment, settings) {
     return window.document.createElement(name);
   }, configuration.containerClass, putRtlToContainer, css);
   if (configuration.required === null) configuration.required = staticContent.required;
-  var optionsAdapter = configuration.optionsAdapter;
   var lazyDefinedEvent;
+  var onChange;
+  var getOptions;
 
-  if (!optionsAdapter) {
-    if (configuration.options) {
-      var options = configuration.options;
-      optionsAdapter = OptionsAdapter(function () {
-        return options;
-      }, configuration.getDisabled, configuration.getSize, configuration.getValidity, function () {
-        lazyDefinedEvent();
-        trigger('dashboardcode.multiselect:change');
-      });
-    } else {
-      adjustBsOptionAdapterConfiguration(configuration, staticContent.selectElement);
-      optionsAdapter = OptionsAdapter(function () {
-        return staticContent.selectElement.getElementsByTagName('OPTION');
-      }, configuration.getDisabled, configuration.getSize, configuration.getValidity, function () {
-        lazyDefinedEvent();
-        trigger('change');
-        trigger('dashboardcode.multiselect:change');
-      });
-    }
+  if (configuration.options) {
+    if (!configuration.getValidity) configuration.getValidity = function () {
+      return null;
+    };
+    if (!configuration.getDisabled) configuration.getDisabled = function () {
+      return false;
+    };
+    if (!configuration.getSize) configuration.getSize = function () {
+      return null;
+    };
+    var options = configuration.options;
+    getOptions = function getOptions() {
+      return options;
+    }, onChange = function onChange() {
+      lazyDefinedEvent();
+      trigger('dashboardcode.multiselect:change');
+    };
+  } else {
+    adjustBsOptionAdapterConfiguration(configuration, staticContent.selectElement);
+    getOptions = function getOptions() {
+      return staticContent.selectElement.options;
+    }, //.getElementsByTagName('OPTION'), 
+    onChange = function onChange() {
+      lazyDefinedEvent();
+      trigger('change');
+      trigger('dashboardcode.multiselect:change');
+    };
   }
 
   if (!configuration.getIsValueMissing) {
     configuration.getIsValueMissing = function () {
       var count = 0;
-      var optionsArray = optionsAdapter.getOptions();
+      var optionsArray = getOptions();
 
       for (var i = 0; i < optionsArray.length; i++) {
         if (optionsArray[i].selected) count++;
@@ -175,11 +183,20 @@ export function BsMultiSelect(element, environment, settings) {
   var validationApi = ValidityApi(staticContent.filterInputElement, isValueMissingObservable, configuration.valueMissingMessage, function (isValid) {
     return validationApiObservable.setValue(isValid);
   });
-  var multiSelect = new MultiSelect(optionsAdapter, setSelected, staticContent, function (pickElement) {
-    return configuration.pickContentGenerator(pickElement, css);
+
+  if (!configuration.common) {
+    configuration.common = {
+      getDisabled: configuration.getDisabled,
+      getValidity: configuration.getValidity,
+      getSize: configuration.getSize
+    };
+  }
+
+  var multiSelect = new MultiSelect(getOptions, configuration.common, configuration.getDisabled, setSelected, staticContent, function (pickElement) {
+    return configuration.pickContentGenerator(pickElement, configuration.common, css);
   }, function (choiceElement) {
-    return configuration.choiceContentGenerator(choiceElement, css);
-  }, labelAdapter, configuration.placeholder, configuration.isRtl, css, Popper, window);
+    return configuration.choiceContentGenerator(choiceElement, configuration.common, css);
+  }, labelAdapter, configuration.placeholder, configuration.isRtl, onChange, css, Popper, window);
   var resetDispose = null;
 
   if (staticContent.selectElement) {
@@ -201,7 +218,7 @@ export function BsMultiSelect(element, environment, settings) {
 
   multiSelect.Dispose = composeSync(multiSelect.Dispose.bind(multiSelect), isValueMissingObservable.detachAll, validationApiObservable.detachAll, resetDispose);
   multiSelect.validationApi = validationApi;
-  bsAppearance(multiSelect, staticContent, optionsAdapter, validationApiObservable, useCssPatch, css);
+  bsAppearance(multiSelect, staticContent, configuration.getValidity, configuration.getSize, validationApiObservable, useCssPatch, css);
   if (init && init instanceof Function) init(multiSelect);
   multiSelect.init(); // support browser's "step backward" on form restore
 

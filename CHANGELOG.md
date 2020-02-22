@@ -1,5 +1,6 @@
 # CHANGELOG
 ````
+0.5.17 - changes in non published API (`common` generation parameter)
 0.5.16 - optimizations
 0.5.15 - revert 0.5.8 update; now bsMultiselect doesn't remove/add selected attribute (removing attributes break Chrome's form reset functionality) 
 0.5.14 - new method UpdateAppearance - update everithing except item options (that means size, componetnt disabled, custom validity, .was-validated parent status; Update() = UpdateData() + UpdateAppearance()) 

@@ -2,8 +2,6 @@ import {MultiSelect} from './MultiSelect'
 import {LabelAdapter} from './LabelAdapter';
 import {RtlAdapter} from './RtlAdapter';
 
-import {OptionsAdapter} from './OptionsAdapters';
-
 import {bsAppearance, adjustBsOptionAdapterConfiguration} from './BsAppearance';
 import {ValidityApi} from './ValidityApi'
 
@@ -36,11 +34,13 @@ export const defaults = {
     isRtl: null,
     setSelected: null,
     required: null, /* null means look on select[required] or false if jso-source */
-    optionsAdapter: null,
+    common: null,
     options: null,
+    
     getDisabled: null,
     getSize: null,
     getValidity: null,
+    
     labelElement: null,
     valueMissingMessage: '',
     getIsValueMissing: null
@@ -116,48 +116,43 @@ export function BsMultiSelect(element, environment, settings){
     if (configuration.required === null)
             configuration.required = staticContent.required;
 
-    let optionsAdapter = configuration.optionsAdapter;
     let lazyDefinedEvent;
-    if (!optionsAdapter)
+
+    let onChange;
+    let getOptions;
+    if (configuration.options){
+        if (!configuration.getValidity)
+            configuration.getValidity=()=>null
+        if (!configuration.getDisabled)
+            configuration.getDisabled=()=>false;
+        if (!configuration.getSize)
+            configuration.getSize=()=>null;
+        let options = configuration.options;
+        getOptions = () => options,
+        onChange = () => {
+            lazyDefinedEvent()
+            trigger('dashboardcode.multiselect:change')
+        }
+    } 
+    else  
     {
-        if (configuration.options){
-            let options =configuration.options;
-            optionsAdapter = OptionsAdapter(
-                ()=>options,
-                configuration.getDisabled,
-                configuration.getSize,
-                configuration.getValidity,
-                ()=>{
-                    lazyDefinedEvent()
-                    trigger('dashboardcode.multiselect:change')
-                }
-            );
-        } 
-        else  
-        {
-            adjustBsOptionAdapterConfiguration(
-                configuration,
-                staticContent.selectElement
-            )
-            
-            optionsAdapter = OptionsAdapter(
-                ()=>staticContent.selectElement.getElementsByTagName('OPTION'), 
-                configuration.getDisabled, 
-                configuration.getSize, 
-                configuration.getValidity, 
-                ()=>{
-                    lazyDefinedEvent()
-                    trigger('change')
-                    trigger('dashboardcode.multiselect:change')
-                }
-            );
+        adjustBsOptionAdapterConfiguration(
+            configuration,
+            staticContent.selectElement
+        )
+        getOptions = ()=>staticContent.selectElement.options, //.getElementsByTagName('OPTION'), 
+        onChange = () => {
+            lazyDefinedEvent()
+            trigger('change')
+            trigger('dashboardcode.multiselect:change')
         }
     }
+
 
     if (!configuration.getIsValueMissing){
         configuration.getIsValueMissing = () => {
             let count = 0;
-            let optionsArray = optionsAdapter.getOptions();
+            let optionsArray = getOptions();
             for (var i=0; i < optionsArray.length; i++) {
                 if (optionsArray[i].selected) 
                     count++;
@@ -200,15 +195,26 @@ export function BsMultiSelect(element, environment, settings){
         configuration.valueMissingMessage,
         (isValid)=>validationApiObservable.setValue(isValid));
 
+    if (!configuration.common){
+        configuration.common = {
+            getDisabled: configuration.getDisabled,
+            getValidity: configuration.getValidity,
+            getSize: configuration.getSize,
+        }
+    }
+
     var multiSelect = new MultiSelect(
-        optionsAdapter,
+        getOptions,
+        configuration.common,
+        configuration.getDisabled,
         setSelected,
         staticContent,
-        (pickElement) => configuration.pickContentGenerator(pickElement, css),
-        (choiceElement) => configuration.choiceContentGenerator(choiceElement, css),
+        (pickElement) => configuration.pickContentGenerator(pickElement, configuration.common, css),
+        (choiceElement) => configuration.choiceContentGenerator(choiceElement, configuration.common, css),
         labelAdapter,
         configuration.placeholder,
         configuration.isRtl,
+        onChange,
         css,
         Popper,
         window);
@@ -229,15 +235,14 @@ export function BsMultiSelect(element, environment, settings){
     multiSelect.validationApi = validationApi;
     
     bsAppearance(
-        multiSelect, staticContent,  optionsAdapter,
+        multiSelect, staticContent, configuration.getValidity, configuration.getSize,
         validationApiObservable,
         useCssPatch, 
         css);
     
     if (init && init instanceof Function)
         init(multiSelect);
-    
-    
+   
     multiSelect.init();
 
     // support browser's "step backward" on form restore

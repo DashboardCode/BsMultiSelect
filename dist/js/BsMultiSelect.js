@@ -1,5 +1,5 @@
 /*!
-  * DashboardCode BsMultiSelect v0.5.16 (https://dashboardcode.github.io/BsMultiSelect/)
+  * DashboardCode BsMultiSelect v0.5.17 (https://dashboardcode.github.io/BsMultiSelect/)
   * Copyright 2017-2020 Roman Pokrovskij (github user rpokrovskij)
   * Licensed under APACHE 2 (https://github.com/DashboardCode/BsMultiSelect/blob/master/LICENSE)
   */
@@ -692,11 +692,11 @@
       };
     }
 
-    function PicksPanel(createPickElement, pickContentGenerator, processRemoveButtonClick // click to remove button
-    ) {
+    function PicksPanel(createPickElement, pickContentGenerator, processRemoveButtonClick, // click to remove button
+    common, getIsComponentDisabled) {
       var list = List();
 
-      function createPick(requestPickRemove, option, isComponentDisabled) {
+      function createPick(requestPickRemove, option) {
         var _createPickElement = createPickElement(),
             pickElement = _createPickElement.pickElement,
             attach = _createPickElement.attach;
@@ -734,7 +734,7 @@
         item.pickContent = pickContentGenerator(pickElement);
         item.pickContent.setData(option);
         item.pickContent.disable(option.disabled);
-        item.pickContent.disableRemove(isComponentDisabled);
+        item.pickContent.disableRemove(getIsComponentDisabled());
         item.pickContent.onRemove(function (event) {
           return processRemoveButtonClick(remove, event);
         });
@@ -751,9 +751,9 @@
         isEmpty: list.isEmpty,
         // function
         getCount: list.getCount,
-        disable: function disable(isComponentDisabled) {
+        disable: function disable() {
           list.forEach(function (i) {
-            return i.pickContent.disableRemove(isComponentDisabled);
+            return i.pickContent.disableRemove(getIsComponentDisabled());
           });
         },
         deselectAll: function deselectAll() {
@@ -1180,10 +1180,11 @@
     var MultiSelect =
     /*#__PURE__*/
     function () {
-      function MultiSelect(optionsAdapter, setSelected, staticContent, pickContentGenerator, choiceContentGenerator, labelAdapter, placeholderText, isRtl, css, popper, window) {
+      function MultiSelect(getOptions, common, getIsComponentDisabled, setSelected, staticContent, pickContentGenerator, choiceContentGenerator, labelAdapter, placeholderText, isRtl, onChange, css, popper, window) {
         this.isRtl = isRtl; // readonly
 
-        this.optionsAdapter = optionsAdapter;
+        this.common = common;
+        this.getOptions = getOptions;
         this.staticContent = staticContent; //this.styling = styling;
 
         this.pickContentGenerator = pickContentGenerator;
@@ -1199,7 +1200,8 @@
         this.visibleCount = 10;
         this.choicesPanel = null;
         this.stylingComposite = null;
-        this.isComponentDisabled = null;
+        this.onChange = onChange;
+        this.getIsComponentDisabled = getIsComponentDisabled;
         this.resetMultiSelectDataList();
       }
 
@@ -1340,7 +1342,7 @@
       };
 
       _proto.UpdateSelected = function UpdateSelected() {
-        var options = this.optionsAdapter.getOptions();
+        var options = this.getOptions();
 
         for (var i = 0; i < options.length; i++) {
           var option = options[i];
@@ -1355,7 +1357,7 @@
         var _this = this;
 
         var fillChoices = function fillChoices() {
-          var options = _this.optionsAdapter.getOptions();
+          var options = _this.getOptions();
 
           for (var i = 0; i < options.length; i++) {
             var option = options[i];
@@ -1399,7 +1401,7 @@
               }, function (o, i) {
                 return _this.setSelected(o, i);
               }, function () {
-                return _this.optionsAdapter.onChange();
+                return _this.onChange();
               }, isSelected);
 
               MultiSelectData.choice = choice;
@@ -1440,7 +1442,7 @@
       };
 
       _proto.UpdateDisabled = function UpdateDisabled() {
-        var isComponentDisabled = this.optionsAdapter.getDisabled();
+        var isComponentDisabled = this.getIsComponentDisabled();
 
         if (this.isComponentDisabled !== isComponentDisabled) {
           this.picksPanel.disable(isComponentDisabled);
@@ -1526,14 +1528,14 @@
 
                 _this2.requestPickCreate(multiSelectData, remove, _this2.picksPanel.getCount());
 
-                _this2.optionsAdapter.onChange();
+                _this2.onChange();
               }
             };
           }
 
           multiSelectData.select(false);
           if (this.picksPanel.getCount() == 0) this.placeholderAspect.updatePlacehodlerVisibility();
-          this.optionsAdapter.onChange();
+          this.onChange();
         }
       };
 
@@ -1615,7 +1617,7 @@
 
 
           _this3.resetFilter();
-        });
+        }, this.common, this.getIsComponentDisabled);
         this.choicesPanel = ChoicesPanel(function () {
           return _this3.staticContent.createChoiceElement();
         }, function () {
@@ -1689,25 +1691,6 @@
       return isRtl;
     }
 
-    function OptionsAdapter(getOptions, getDisabled, getSize, getValidity, onChange) {
-      if (!getValidity) getValidity = function getValidity() {
-        return null;
-      };
-      if (!getDisabled) getDisabled = function getDisabled() {
-        return false;
-      };
-      if (!getSize) getSize = function getSize() {
-        return null;
-      };
-      return {
-        getOptions: getOptions,
-        getDisabled: getDisabled,
-        getSize: getSize,
-        getValidity: getValidity,
-        onChange: onChange
-      };
-    }
-
     function updateValidity(picksElement, validMessages, invalidMessages, validity) {
       if (validity === false) {
         picksElement.classList.add('is-invalid');
@@ -1764,20 +1747,20 @@
       }
     }
 
-    function updateSizeForAdapter(picksElement, optionsAdapter) {
-      updateSize(picksElement, optionsAdapter.getSize());
+    function updateSizeForAdapter(picksElement, getSize) {
+      updateSize(picksElement, getSize());
     }
 
-    function updateSizeJsForAdapter(picksElement, picksLgStyling, picksSmStyling, picksDefStyling, optionsAdapter) {
-      updateSizeJs(picksElement, picksLgStyling, picksSmStyling, picksDefStyling, optionsAdapter.getSize());
+    function updateSizeJsForAdapter(picksElement, picksLgStyling, picksSmStyling, picksDefStyling, getSize) {
+      updateSizeJs(picksElement, picksLgStyling, picksSmStyling, picksDefStyling, getSize());
     }
 
-    function bsAppearance(multiSelect, staticContent, optionsAdapter, validityApiObservable, useCssPatch, css) {
+    function bsAppearance(multiSelect, staticContent, getValidity, getSize, validityApiObservable, useCssPatch, css) {
       var updateSize;
 
       if (!useCssPatch) {
         updateSize = function updateSize() {
-          return updateSizeForAdapter(staticContent.picksElement, optionsAdapter);
+          return updateSizeForAdapter(staticContent.picksElement, getSize);
         };
       } else {
         var picks_lg = css.picks_lg,
@@ -1785,7 +1768,7 @@
             picks_def = css.picks_def;
 
         updateSize = function updateSize() {
-          return updateSizeJsForAdapter(staticContent.picksElement, picks_lg, picks_sm, picks_def, optionsAdapter);
+          return updateSizeJsForAdapter(staticContent.picksElement, picks_lg, picks_sm, picks_def, getSize);
         };
       }
 
@@ -1839,7 +1822,7 @@
         return getWasValidated();
       });
       var getManualValidationObservable = ObservableLambda(function () {
-        return optionsAdapter.getValidity();
+        return getValidity();
       });
       var validationObservable = ObservableLambda(function () {
         return wasUpdatedObservable.getValue() ? validityApiObservable.getValue() : getManualValidationObservable.getValue();
@@ -2103,7 +2086,7 @@
       }
     }
 
-    function pickContentGenerator(pickElement, css) {
+    function pickContentGenerator(pickElement, common, css) {
       pickElement.innerHTML = '<span></span><button aria-label="Remove" tabIndex="-1" type="button"><span aria-hidden="true">&times;</span></button>';
       var pickContentElement = pickElement.querySelector('SPAN');
       var pickButtonElement = pickElement.querySelector('BUTTON');
@@ -2132,7 +2115,7 @@
       };
     }
 
-    function choiceContentGenerator(choiceElement, css) {
+    function choiceContentGenerator(choiceElement, common, css) {
       choiceElement.innerHTML = '<div><input formnovalidate type="checkbox"><label></label></div>';
       var choiceContentElement = choiceElement.querySelector('DIV');
       var choiceCheckBoxElement = choiceContentElement.querySelector('INPUT');
@@ -2491,7 +2474,7 @@
       required: null,
 
       /* null means look on select[required] or false if jso-source */
-      optionsAdapter: null,
+      common: null,
       options: null,
       getDisabled: null,
       getSize: null,
@@ -2562,34 +2545,43 @@
         return window.document.createElement(name);
       }, configuration.containerClass, putRtlToContainer, css);
       if (configuration.required === null) configuration.required = staticContent.required;
-      var optionsAdapter = configuration.optionsAdapter;
       var lazyDefinedEvent;
+      var onChange;
+      var getOptions;
 
-      if (!optionsAdapter) {
-        if (configuration.options) {
-          var options = configuration.options;
-          optionsAdapter = OptionsAdapter(function () {
-            return options;
-          }, configuration.getDisabled, configuration.getSize, configuration.getValidity, function () {
-            lazyDefinedEvent();
-            trigger('dashboardcode.multiselect:change');
-          });
-        } else {
-          adjustBsOptionAdapterConfiguration(configuration, staticContent.selectElement);
-          optionsAdapter = OptionsAdapter(function () {
-            return staticContent.selectElement.getElementsByTagName('OPTION');
-          }, configuration.getDisabled, configuration.getSize, configuration.getValidity, function () {
-            lazyDefinedEvent();
-            trigger('change');
-            trigger('dashboardcode.multiselect:change');
-          });
-        }
+      if (configuration.options) {
+        if (!configuration.getValidity) configuration.getValidity = function () {
+          return null;
+        };
+        if (!configuration.getDisabled) configuration.getDisabled = function () {
+          return false;
+        };
+        if (!configuration.getSize) configuration.getSize = function () {
+          return null;
+        };
+        var options = configuration.options;
+        getOptions = function getOptions() {
+          return options;
+        }, onChange = function onChange() {
+          lazyDefinedEvent();
+          trigger('dashboardcode.multiselect:change');
+        };
+      } else {
+        adjustBsOptionAdapterConfiguration(configuration, staticContent.selectElement);
+        getOptions = function getOptions() {
+          return staticContent.selectElement.options;
+        }, //.getElementsByTagName('OPTION'), 
+        onChange = function onChange() {
+          lazyDefinedEvent();
+          trigger('change');
+          trigger('dashboardcode.multiselect:change');
+        };
       }
 
       if (!configuration.getIsValueMissing) {
         configuration.getIsValueMissing = function () {
           var count = 0;
-          var optionsArray = optionsAdapter.getOptions();
+          var optionsArray = getOptions();
 
           for (var i = 0; i < optionsArray.length; i++) {
             if (optionsArray[i].selected) count++;
@@ -2636,11 +2628,20 @@
       var validationApi = ValidityApi(staticContent.filterInputElement, isValueMissingObservable, configuration.valueMissingMessage, function (isValid) {
         return validationApiObservable.setValue(isValid);
       });
-      var multiSelect = new MultiSelect(optionsAdapter, setSelected, staticContent, function (pickElement) {
-        return configuration.pickContentGenerator(pickElement, css);
+
+      if (!configuration.common) {
+        configuration.common = {
+          getDisabled: configuration.getDisabled,
+          getValidity: configuration.getValidity,
+          getSize: configuration.getSize
+        };
+      }
+
+      var multiSelect = new MultiSelect(getOptions, configuration.common, configuration.getDisabled, setSelected, staticContent, function (pickElement) {
+        return configuration.pickContentGenerator(pickElement, configuration.common, css);
       }, function (choiceElement) {
-        return configuration.choiceContentGenerator(choiceElement, css);
-      }, labelAdapter, configuration.placeholder, configuration.isRtl, css, Popper, window);
+        return configuration.choiceContentGenerator(choiceElement, configuration.common, css);
+      }, labelAdapter, configuration.placeholder, configuration.isRtl, onChange, css, Popper, window);
       var resetDispose = null;
 
       if (staticContent.selectElement) {
@@ -2662,7 +2663,7 @@
 
       multiSelect.Dispose = composeSync(multiSelect.Dispose.bind(multiSelect), isValueMissingObservable.detachAll, validationApiObservable.detachAll, resetDispose);
       multiSelect.validationApi = validationApi;
-      bsAppearance(multiSelect, staticContent, optionsAdapter, validationApiObservable, useCssPatch, css);
+      bsAppearance(multiSelect, staticContent, configuration.getValidity, configuration.getSize, validationApiObservable, useCssPatch, css);
       if (init && init instanceof Function) init(multiSelect);
       multiSelect.init(); // support browser's "step backward" on form restore
 

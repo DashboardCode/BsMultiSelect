@@ -49,18 +49,23 @@ function collectFilterChoices(MultiSelectDataList, text) {
 export class MultiSelect {
 
     constructor(
-        optionsAdapter, 
+        getOptions,
+        common,
+        getIsComponentDisabled,
         setSelected, 
         staticContent, 
         pickContentGenerator, 
         choiceContentGenerator, 
         labelAdapter, 
         placeholderText,
-        isRtl, css,
+        isRtl, 
+        onChange,
+        css,
         popper, window) {
         this.isRtl = isRtl;
         // readonly
-        this.optionsAdapter = optionsAdapter;
+        this.common = common;
+        this.getOptions=getOptions;
         this.staticContent = staticContent;
         //this.styling = styling;
         this.pickContentGenerator = pickContentGenerator;
@@ -78,8 +83,9 @@ export class MultiSelect {
         this.choicesPanel = null;
 
         this.stylingComposite = null;
-
-        this.isComponentDisabled = null;
+        this.onChange=onChange;
+        
+        this.getIsComponentDisabled = getIsComponentDisabled;
                 
         this.resetMultiSelectDataList();
     }
@@ -219,7 +225,7 @@ export class MultiSelect {
     }
 
     UpdateSelected(){
-        let options = this.optionsAdapter.getOptions();
+        let options = this.getOptions();
         for(let i = 0; i<options.length; i++) {
             let option = options[i];
             let newIsSelected = option.selected;
@@ -233,7 +239,7 @@ export class MultiSelect {
 
     updateDataImpl(){
         var fillChoices = () => {
-            let options = this.optionsAdapter.getOptions();
+            let options = this.getOptions();
             for(let i = 0; i<options.length; i++) {
                 let option = options[i];
 
@@ -274,7 +280,7 @@ export class MultiSelect {
                             this.requestPickCreate(multiSelectData, remove, this.picksPanel.getCount());
                         },
                         (o,i) => this.setSelected(o,i),
-                        () =>  this.optionsAdapter.onChange()
+                        () =>  this.onChange()
                         ,isSelected
                         );
                     MultiSelectData.choice=choice;
@@ -319,7 +325,7 @@ export class MultiSelect {
     }
 
     UpdateDisabled(){
-        let isComponentDisabled = this.optionsAdapter.getDisabled();
+        let isComponentDisabled = this.getIsComponentDisabled();
         if (this.isComponentDisabled!==isComponentDisabled){
             this.picksPanel.disable(isComponentDisabled);
             this.aspect.disable(isComponentDisabled);
@@ -400,14 +406,14 @@ export class MultiSelect {
                             multiSelectData.option, 
                             this.isComponentDisabled );
                         this.requestPickCreate(multiSelectData, remove, this.picksPanel.getCount());
-                        this.optionsAdapter.onChange();
+                        this.onChange();
                     }
                 };
             }
             multiSelectData.select(false);
             if (this.picksPanel.getCount()==0) 
                 this.placeholderAspect.updatePlacehodlerVisibility()
-            this.optionsAdapter.onChange();
+            this.onChange();
         }
     }
 
@@ -472,7 +478,9 @@ export class MultiSelect {
                 this.aspect.processUncheck(doUncheck, event);
                 this.aspect.hideChoices(); // always hide 1st
                 this.resetFilter();
-            }
+            },
+            this.common,
+            this.getIsComponentDisabled
         );
 
         this.choicesPanel = ChoicesPanel(
