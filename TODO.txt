@@ -1,3 +1,17 @@
+-4. Refactore to  structure:
+
+DATA: {CHOICES, PICKS, 
+		setSelected(option, value):Boolean, 
+		getIsDisabled(option), getOptGroupd(option), 
+		common, getIsComponentDisabled }
+	PICKS: [PICK]
+		PICK: {CHOICE, removePick}
+	CHOICES: [CHOICE|OPTGROUP]
+		OPTGROUP: {label, getOptGroupIsDisabled, [CHOICE]}
+		CHOICE: {option, setSelected(value)}
+
+removePick = ( 1. setSelected; 2. removePickElement() )
+setSelected = ( 1. setSelected; 2. removePickElement()  )
 
 -3. create snippet for `selected disabled`. -> need updateSelectedDisabled to support browser's `step back` behaviour.
 

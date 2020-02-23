@@ -31,6 +31,8 @@ export var defaults = {
   /* null means look on select[required] or false if jso-source */
   common: null,
   options: null,
+  getIsOptionDisabled: null,
+  getIsOptionHidden: null,
   getDisabled: null,
   getSize: null,
   getValidity: null,
@@ -121,6 +123,12 @@ export function BsMultiSelect(element, environment, settings) {
       lazyDefinedEvent();
       trigger('dashboardcode.multiselect:change');
     };
+    if (!configuration.getIsOptionDisabled) configuration.getIsOptionDisabled = function (option) {
+      return option.disabled === undefined ? false : option.disabled;
+    };
+    if (!configuration.getIsOptionHidden) configuration.getIsOptionHidden = function (option) {
+      return option.hidden === undefined ? false : option.hidden;
+    };
   } else {
     adjustBsOptionAdapterConfiguration(configuration, staticContent.selectElement);
     getOptions = function getOptions() {
@@ -130,6 +138,12 @@ export function BsMultiSelect(element, environment, settings) {
       lazyDefinedEvent();
       trigger('change');
       trigger('dashboardcode.multiselect:change');
+    };
+    if (!configuration.getIsOptionDisabled) configuration.getIsOptionDisabled = function (option) {
+      return option.disabled;
+    };
+    if (!configuration.getIsOptionHidden) configuration.getIsOptionHidden = function (option) {
+      return option.hidden;
     };
   }
 
@@ -192,7 +206,7 @@ export function BsMultiSelect(element, environment, settings) {
     };
   }
 
-  var multiSelect = new MultiSelect(getOptions, configuration.common, configuration.getDisabled, setSelected, staticContent, function (pickElement) {
+  var multiSelect = new MultiSelect(getOptions, configuration.common, configuration.getDisabled, setSelected, configuration.getIsOptionDisabled, configuration.getIsOptionHidden, staticContent, function (pickElement) {
     return configuration.pickContentGenerator(pickElement, configuration.common, css);
   }, function (choiceElement) {
     return configuration.choiceContentGenerator(choiceElement, configuration.common, css);

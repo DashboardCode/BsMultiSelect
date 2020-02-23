@@ -24,7 +24,7 @@ export function choiceContentGenerator(choiceElement, common, css){
             choiceCheckBoxElement.checked = isSelected 
         }, 
         disable(isDisabled, isSelected){
-            disable1ToggleStyling(isDisabled);
+            disable1ToggleStyling(isDisabled)
             disable2ToggleStyling(isDisabled)
             disable3ToggleStyling(isDisabled)
 

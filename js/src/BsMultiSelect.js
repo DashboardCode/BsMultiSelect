@@ -36,7 +36,9 @@ export const defaults = {
     required: null, /* null means look on select[required] or false if jso-source */
     common: null,
     options: null,
-    
+    getIsOptionDisabled: null,
+    getIsOptionHidden: null,
+
     getDisabled: null,
     getSize: null,
     getValidity: null,
@@ -133,6 +135,11 @@ export function BsMultiSelect(element, environment, settings){
             lazyDefinedEvent()
             trigger('dashboardcode.multiselect:change')
         }
+        
+        if (!configuration.getIsOptionDisabled)
+            configuration.getIsOptionDisabled = (option)=>(option.disabled===undefined)?false:option.disabled;
+        if (!configuration.getIsOptionHidden)
+            configuration.getIsOptionHidden = (option)=>(option.hidden===undefined)?false:option.hidden;     
     } 
     else  
     {
@@ -146,6 +153,11 @@ export function BsMultiSelect(element, environment, settings){
             trigger('change')
             trigger('dashboardcode.multiselect:change')
         }
+
+        if (!configuration.getIsOptionDisabled)
+            configuration.getIsOptionDisabled = (option)=>option.disabled;
+        if (!configuration.getIsOptionHidden)
+            configuration.getIsOptionHidden = (option)=>option.hidden;     
     }
 
 
@@ -163,7 +175,6 @@ export function BsMultiSelect(element, environment, settings){
     var isValueMissingObservable = ObservableLambda(()=>configuration.required && configuration.getIsValueMissing());
     var validationApiObservable = ObservableValue(!isValueMissingObservable.getValue())
     lazyDefinedEvent = () => isValueMissingObservable.call();
-    
 
     let labelAdapter = LabelAdapter(configuration.labelElement, staticContent.createInputId);
 
@@ -195,6 +206,7 @@ export function BsMultiSelect(element, environment, settings){
         configuration.valueMissingMessage,
         (isValid)=>validationApiObservable.setValue(isValid));
 
+
     if (!configuration.common){
         configuration.common = {
             getDisabled: configuration.getDisabled,
@@ -208,6 +220,8 @@ export function BsMultiSelect(element, environment, settings){
         configuration.common,
         configuration.getDisabled,
         setSelected,
+        configuration.getIsOptionDisabled,
+        configuration.getIsOptionHidden,
         staticContent,
         (pickElement) => configuration.pickContentGenerator(pickElement, configuration.common, css),
         (choiceElement) => configuration.choiceContentGenerator(choiceElement, configuration.common, css),

@@ -13,7 +13,7 @@ export function pickContentGenerator(pickElement, common, css){
         setData(option){
             pickContentElement.textContent = option.text; 
         },
-        disable:(isDisabled)=>disableToggleStyling(isDisabled),
+        disable: (isDisabled)=>disableToggleStyling(isDisabled),
         disableRemove(isRemoveDisabled){
             pickButtonElement.disabled = isRemoveDisabled;
         },

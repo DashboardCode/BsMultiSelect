@@ -53,6 +53,8 @@ export class MultiSelect {
         common,
         getIsComponentDisabled,
         setSelected, 
+        getIsOptionDisabled,
+        getIsOptionHidden,
         staticContent, 
         pickContentGenerator, 
         choiceContentGenerator, 
@@ -66,6 +68,8 @@ export class MultiSelect {
         // readonly
         this.common = common;
         this.getOptions=getOptions;
+        this.getIsOptionDisabled = getIsOptionDisabled;
+        this.getIsOptionHidden=getIsOptionHidden;
         this.staticContent = staticContent;
         //this.styling = styling;
         this.pickContentGenerator = pickContentGenerator;
@@ -142,7 +146,7 @@ export class MultiSelect {
             multiSelectData.isHidden=option.isHidden;
             if (multiSelectData.isHidden)
                 this.optionsPanel.insertChoice(multiSelectData, 
-                    (p1,p2,p3)=>this.picksPanel.createPick(p1,p2,p3),
+                    (p1,p2,p3)=>this.picksPanel.addPick(p1,p2,p3),
                     ()=>this.optionsAdapter.triggerChange(),
                     option.isSelected, option.isDisabled);
             else
@@ -245,8 +249,8 @@ export class MultiSelect {
 
                 let isSelected = option.selected;
 
-                let isOptionDisabled = (option.disabled)?option.disabled:false;
-                let isOptionHidden   = (option.hidden)?option.hidden:false;
+                let isOptionDisabled = this.getIsOptionDisabled(option); 
+                let isOptionHidden   = this.getIsOptionHidden(option);
                 
                 var MultiSelectData = {
                     searchText: option.text.toLowerCase().trim(),
@@ -271,11 +275,10 @@ export class MultiSelect {
                     var choice = this.choicesPanel.createChoice(
                         MultiSelectData, 
                         /*createSelectedItemGen*/ (multiSelectData/*,isOptionDisabled,setChoiceContentDisabled*/) => {
-                            var remove =this.picksPanel.createPick(
-                                (removePick)=>this.requestPickRemove(multiSelectData, removePick), 
-                                /*multiSelectData,*/
+                            var remove =this.picksPanel.addPick(
                                 multiSelectData.option,
-                                this.isComponentDisabled
+                                ()=>this.getIsOptionDisabled(multiSelectData.option),
+                                (removePick)=>this.requestPickRemove(multiSelectData, removePick), 
                                 );
                             this.requestPickCreate(multiSelectData, remove, this.picksPanel.getCount());
                         },
@@ -388,7 +391,7 @@ export class MultiSelect {
     requestPickRemove(multiSelectData, removePick){
         let confirmed = this.setSelected(multiSelectData.option, false);
         if (!(confirmed===false)) {
-            var createPick = removePick();
+            var addPick = removePick();
             multiSelectData.isSelected = false;
             multiSelectData.excludedFromSearch = multiSelectData.isOptionDisabled;
             if (multiSelectData.isOptionDisabled)
@@ -401,10 +404,11 @@ export class MultiSelect {
                 multiSelectData.toggle = ()=>{
                     let confirmed = this.setSelected(multiSelectData.option, true);
                     if (!(confirmed===false)){
-                        var remove = createPick(
-                            removePick => this.requestPickRemove(multiSelectData, removePick), 
-                            multiSelectData.option, 
-                            this.isComponentDisabled );
+                        var remove = addPick(
+                            multiSelectData.option,
+                            ()=>this.getIsOptionDisabled(multiSelectData.option),
+                            removePick => this.requestPickRemove(multiSelectData, removePick)
+                            );
                         this.requestPickCreate(multiSelectData, remove, this.picksPanel.getCount());
                         this.onChange();
                     }

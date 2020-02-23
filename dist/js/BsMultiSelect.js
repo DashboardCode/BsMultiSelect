@@ -1,5 +1,5 @@
 /*!
-  * DashboardCode BsMultiSelect v0.5.17 (https://dashboardcode.github.io/BsMultiSelect/)
+  * DashboardCode BsMultiSelect v0.5.18 (https://dashboardcode.github.io/BsMultiSelect/)
   * Copyright 2017-2020 Roman Pokrovskij (github user rpokrovskij)
   * Licensed under APACHE 2 (https://github.com/DashboardCode/BsMultiSelect/blob/master/LICENSE)
   */
@@ -369,7 +369,7 @@
         };
       }
       /* Picks:
-              createPick,
+              addPick,
               removePicksTail,
               isEmpty,
               getCount,
@@ -696,7 +696,7 @@
     common, getIsComponentDisabled) {
       var list = List();
 
-      function createPick(requestPickRemove, option) {
+      function addPick(option, getIsOptionDisabled, requestPickRemove) {
         var _createPickElement = createPickElement(),
             pickElement = _createPickElement.pickElement,
             attach = _createPickElement.attach;
@@ -710,7 +710,7 @@
           removeElement(pickElement);
           item.pickContent.dispose();
           removeFromList();
-          return createPick;
+          return addPick;
         };
 
         var remove = function remove() {
@@ -733,7 +733,7 @@
 
         item.pickContent = pickContentGenerator(pickElement);
         item.pickContent.setData(option);
-        item.pickContent.disable(option.disabled);
+        item.pickContent.disable(getIsOptionDisabled());
         item.pickContent.disableRemove(getIsComponentDisabled());
         item.pickContent.onRemove(function (event) {
           return processRemoveButtonClick(remove, event);
@@ -743,7 +743,7 @@
       }
 
       return {
-        createPick: createPick,
+        addPick: addPick,
         removePicksTail: function removePicksTail() {
           var item = list.getTail();
           if (item) item.remove(); // always remove in this case
@@ -1180,11 +1180,13 @@
     var MultiSelect =
     /*#__PURE__*/
     function () {
-      function MultiSelect(getOptions, common, getIsComponentDisabled, setSelected, staticContent, pickContentGenerator, choiceContentGenerator, labelAdapter, placeholderText, isRtl, onChange, css, popper, window) {
+      function MultiSelect(getOptions, common, getIsComponentDisabled, setSelected, getIsOptionDisabled, getIsOptionHidden, staticContent, pickContentGenerator, choiceContentGenerator, labelAdapter, placeholderText, isRtl, onChange, css, popper, window) {
         this.isRtl = isRtl; // readonly
 
         this.common = common;
         this.getOptions = getOptions;
+        this.getIsOptionDisabled = getIsOptionDisabled;
+        this.getIsOptionHidden = getIsOptionHidden;
         this.staticContent = staticContent; //this.styling = styling;
 
         this.pickContentGenerator = pickContentGenerator;
@@ -1258,7 +1260,7 @@
               multiSelectData.isHidden=option.isHidden;
               if (multiSelectData.isHidden)
                   this.optionsPanel.insertChoice(multiSelectData, 
-                      (p1,p2,p3)=>this.picksPanel.createPick(p1,p2,p3),
+                      (p1,p2,p3)=>this.picksPanel.addPick(p1,p2,p3),
                       ()=>this.optionsAdapter.triggerChange(),
                       option.isSelected, option.isDisabled);
               else
@@ -1362,8 +1364,11 @@
           for (var i = 0; i < options.length; i++) {
             var option = options[i];
             var isSelected = option.selected;
-            var isOptionDisabled = option.disabled ? option.disabled : false;
-            var isOptionHidden = option.hidden ? option.hidden : false;
+
+            var isOptionDisabled = _this.getIsOptionDisabled(option);
+
+            var isOptionHidden = _this.getIsOptionHidden(option);
+
             var MultiSelectData = {
               searchText: option.text.toLowerCase().trim(),
               excludedFromSearch: isSelected || isOptionDisabled || isOptionHidden,
@@ -1391,11 +1396,11 @@
               function (multiSelectData
               /*,isOptionDisabled,setChoiceContentDisabled*/
               ) {
-                var remove = _this.picksPanel.createPick(function (removePick) {
+                var remove = _this.picksPanel.addPick(multiSelectData.option, function () {
+                  return _this.getIsOptionDisabled(multiSelectData.option);
+                }, function (removePick) {
                   return _this.requestPickRemove(multiSelectData, removePick);
-                },
-                /*multiSelectData,*/
-                multiSelectData.option, _this.isComponentDisabled);
+                });
 
                 _this.requestPickCreate(multiSelectData, remove, _this.picksPanel.getCount());
               }, function (o, i) {
@@ -1506,7 +1511,7 @@
         var confirmed = this.setSelected(multiSelectData.option, false);
 
         if (!(confirmed === false)) {
-          var createPick = removePick();
+          var addPick = removePick();
           multiSelectData.isSelected = false;
           multiSelectData.excludedFromSearch = multiSelectData.isOptionDisabled;
 
@@ -1522,9 +1527,11 @@
               var confirmed = _this2.setSelected(multiSelectData.option, true);
 
               if (!(confirmed === false)) {
-                var remove = createPick(function (removePick) {
+                var remove = addPick(multiSelectData.option, function () {
+                  return _this2.getIsOptionDisabled(multiSelectData.option);
+                }, function (removePick) {
                   return _this2.requestPickRemove(multiSelectData, removePick);
-                }, multiSelectData.option, _this2.isComponentDisabled);
+                });
 
                 _this2.requestPickCreate(multiSelectData, remove, _this2.picksPanel.getCount());
 
@@ -2476,6 +2483,8 @@
       /* null means look on select[required] or false if jso-source */
       common: null,
       options: null,
+      getIsOptionDisabled: null,
+      getIsOptionHidden: null,
       getDisabled: null,
       getSize: null,
       getValidity: null,
@@ -2566,6 +2575,12 @@
           lazyDefinedEvent();
           trigger('dashboardcode.multiselect:change');
         };
+        if (!configuration.getIsOptionDisabled) configuration.getIsOptionDisabled = function (option) {
+          return option.disabled === undefined ? false : option.disabled;
+        };
+        if (!configuration.getIsOptionHidden) configuration.getIsOptionHidden = function (option) {
+          return option.hidden === undefined ? false : option.hidden;
+        };
       } else {
         adjustBsOptionAdapterConfiguration(configuration, staticContent.selectElement);
         getOptions = function getOptions() {
@@ -2575,6 +2590,12 @@
           lazyDefinedEvent();
           trigger('change');
           trigger('dashboardcode.multiselect:change');
+        };
+        if (!configuration.getIsOptionDisabled) configuration.getIsOptionDisabled = function (option) {
+          return option.disabled;
+        };
+        if (!configuration.getIsOptionHidden) configuration.getIsOptionHidden = function (option) {
+          return option.hidden;
         };
       }
 
@@ -2637,7 +2658,7 @@
         };
       }
 
-      var multiSelect = new MultiSelect(getOptions, configuration.common, configuration.getDisabled, setSelected, staticContent, function (pickElement) {
+      var multiSelect = new MultiSelect(getOptions, configuration.common, configuration.getDisabled, setSelected, configuration.getIsOptionDisabled, configuration.getIsOptionHidden, staticContent, function (pickElement) {
         return configuration.pickContentGenerator(pickElement, configuration.common, css);
       }, function (choiceElement) {
         return configuration.choiceContentGenerator(choiceElement, configuration.common, css);

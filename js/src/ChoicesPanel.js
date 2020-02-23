@@ -208,7 +208,7 @@ export function ChoicesPanel(
     }
 
     /* Picks:
-            createPick,
+            addPick,
             removePicksTail,
             isEmpty,
             getCount,

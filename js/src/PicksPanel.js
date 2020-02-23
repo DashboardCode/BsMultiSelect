@@ -10,7 +10,8 @@ export function PicksPanel (
 ) 
 {
     var list = List();
-    function createPick(requestPickRemove, option) {
+
+    function addPick(option, getIsOptionDisabled, requestPickRemove) {
         var {pickElement, attach} = createPickElement();
         var item = {pickElement}
         var removeFromList = list.add(item);
@@ -19,7 +20,7 @@ export function PicksPanel (
             removeElement(pickElement);
             item.pickContent.dispose();
             removeFromList();
-            return createPick;
+            return addPick;
         }
         var remove = () => requestPickRemove(removeImpl);
         
@@ -41,7 +42,7 @@ export function PicksPanel (
 
         item.pickContent = pickContentGenerator(pickElement);
         item.pickContent.setData(option);
-        item.pickContent.disable(option.disabled);
+        item.pickContent.disable(getIsOptionDisabled());
         item.pickContent.disableRemove(getIsComponentDisabled());
         
         item.pickContent.onRemove(event => processRemoveButtonClick(remove, event));
@@ -50,7 +51,7 @@ export function PicksPanel (
     }
 
     return {
-        createPick,
+        addPick,
         removePicksTail(){  
             var item = list.getTail();
             if (item) 

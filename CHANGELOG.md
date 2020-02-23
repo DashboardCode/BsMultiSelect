@@ -1,5 +1,6 @@
 # CHANGELOG
 ````
+0.5.18 - changes in non published API (getIsOptionDisabled, getIsOptionHidden)
 0.5.17 - changes in non published API (`common` generation parameter)
 0.5.16 - optimizations
 0.5.15 - revert 0.5.8 update; now bsMultiselect doesn't remove/add selected attribute (removing attributes break Chrome's form reset functionality) 
