@@ -1,5 +1,5 @@
 /*!
-  * DashboardCode BsMultiSelect v0.5.19 (https://dashboardcode.github.io/BsMultiSelect/)
+  * DashboardCode BsMultiSelect v0.5.20 (https://dashboardcode.github.io/BsMultiSelect/)
   * Copyright 2017-2020 Roman Pokrovskij (github user rpokrovskij)
   * Licensed under APACHE 2 (https://github.com/DashboardCode/BsMultiSelect/blob/master/LICENSE)
   */
@@ -1386,11 +1386,6 @@ function () {
     if (count == 1) this.placeholderAspect.updatePlacehodlerVisibility();
   };
 
-  _proto.processRemoveButtonClick = function processRemoveButtonClick(removePick, event) {
-    this.aspect.processRemoveButtonClick(removePick, event);
-    this.resetFilter();
-  };
-
   _proto.createPick = function createPick(option, getIsOptionDisabled, requestPickRemove) {
     var _this2 = this;
 
@@ -1405,7 +1400,13 @@ function () {
     };
 
     var pickContent = this.pickContentGenerator(pickElement);
-    var processRemoveButtonClick = this.processRemoveButtonClick;
+
+    var processRemoveButtonClick = function processRemoveButtonClick(removePick, event) {
+      _this2.aspect.processRemoveButtonClick(removePick, event);
+
+      _this2.resetFilter();
+    };
+
     var pick = {
       disableRemove: function disableRemove() {
         return pickContent.disableRemove(_this2.getIsComponentDisabled());

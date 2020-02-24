@@ -391,18 +391,16 @@ export class MultiSelect {
         if (count==1) 
             this.placeholderAspect.updatePlacehodlerVisibility()
     }
-    
-    processRemoveButtonClick(removePick, event){
-        this.aspect.processRemoveButtonClick(removePick, event);
-        this.resetFilter();
-    }
 
     createPick(option, getIsOptionDisabled, requestPickRemove){
         let pickElement = this.staticContent.createPickElement(); 
         let attach = () => this.staticContent.picksElement.insertBefore(pickElement, this.staticContent.pickFilterElement);
         let detach = () => removeElement(pickElement);
         let pickContent = this.pickContentGenerator(pickElement);
-        let processRemoveButtonClick = this.processRemoveButtonClick;
+        let processRemoveButtonClick = (removePick, event) => {
+            this.aspect.processRemoveButtonClick(removePick, event);
+            this.resetFilter();
+        };
         var pick = {
             disableRemove: () => pickContent.disableRemove(this.getIsComponentDisabled()),
             setData: () => pickContent.setData(option),
