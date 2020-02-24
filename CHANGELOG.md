@@ -1,5 +1,6 @@
 # CHANGELOG
 ````
+0.5.19 - optimizations
 0.5.18 - changes in non published API (getIsOptionDisabled, getIsOptionHidden)
 0.5.17 - changes in non published API (`common` generation parameter)
 0.5.16 - optimizations

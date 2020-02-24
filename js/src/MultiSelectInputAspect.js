@@ -117,20 +117,20 @@ export function MultiSelectInputAspect (
             document.removeEventListener("mouseup", documentMouseup);
         }
     }
+    function processUncheck(uncheckOption, event){
+        // we can't remove item on "click" in the same loop iteration - it is unfrendly for 3PP event handlers (they will get detached element)
+        // never remove elements in the same event iteration
 
+        window.setTimeout(()=>uncheckOption(),0)
+        preventDefaultClickEvent = event; // setPreventDefaultMultiSelectEvent
+    }
     return {
         dispose(){
             popper.destroy();
             componentDisabledEventBinder.unbind();
         },
         alignToFilterInputItemLocation,
-        processUncheck(uncheckOption, event){
-            // we can't remove item on "click" in the same loop iteration - it is unfrendly for 3PP event handlers (they will get detached element)
-            // never remove elements in the same event iteration
-
-            window.setTimeout(()=>uncheckOption(),0)
-            preventDefaultClickEvent = event; // setPreventDefaultMultiSelectEvent
-        },
+        
         getSkipFocusout : function() {
              return skipFocusout;
         },
@@ -148,7 +148,11 @@ export function MultiSelectInputAspect (
         },
         eventSkipper,
         hideChoices,
-        showChoices
+        showChoices,
+        processRemoveButtonClick(removePick, event){
+            processUncheck(removePick, event);
+            hideChoices(); // always hide 1st
+        }
         //,
         //getIsVisbleDropDown
     }

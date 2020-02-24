@@ -1,8 +1,9 @@
 import {FilterPanel} from './FilterPanel'
 import {ChoicesPanel} from './ChoicesPanel'
-import {PicksPanel} from './PicksPanel'
+import {PicksList} from './PicksList'
 import {MultiSelectInputAspect} from './MultiSelectInputAspect'
 import {PlaceholderAspect} from './PlaceholderAspect'
+import {removeElement} from './ToolsDom'
 
 import {sync} from './ToolsJs'
 
@@ -146,7 +147,7 @@ export class MultiSelect {
             multiSelectData.isHidden=option.isHidden;
             if (multiSelectData.isHidden)
                 this.optionsPanel.insertChoice(multiSelectData, 
-                    (p1,p2,p3)=>this.picksPanel.addPick(p1,p2,p3),
+                    (p1,p2,p3)=>this.picksList.addPick(p1,p2,p3),
                     ()=>this.optionsAdapter.triggerChange(),
                     option.isSelected, option.isDisabled);
             else
@@ -184,12 +185,12 @@ export class MultiSelect {
 
     DeselectAll(){
         this.aspect.hideChoices(); // always hide 1st
-        this.picksPanel.deselectAll();
+        this.picksList.removeAll();
         this.resetFilter();
     }
 
     PicksCount(){
-        return this.picksPanel.getCount();
+        return this.picksList.getCount();
     }
 
     SelectAll(){
@@ -218,7 +219,7 @@ export class MultiSelect {
         //         multiSelectData.choice.remove();
         // }
         this.resetMultiSelectDataList();
-        this.picksPanel.clear();
+        this.picksList.clear();
         this.placeholderAspect.updatePlacehodlerVisibility();
     }
 
@@ -230,7 +231,7 @@ export class MultiSelect {
 
     UpdateSelected(){
         let options = this.getOptions();
-        for(let i = 0; i<options.length; i++) {
+        for(let i = 0; i<options.length; i++){
             let option = options[i];
             let newIsSelected = option.selected;
             let multiSelectData = this.MultiSelectDataList[i];
@@ -275,12 +276,15 @@ export class MultiSelect {
                     var choice = this.choicesPanel.createChoice(
                         MultiSelectData, 
                         /*createSelectedItemGen*/ (multiSelectData/*,isOptionDisabled,setChoiceContentDisabled*/) => {
-                            var remove =this.picksPanel.addPick(
-                                multiSelectData.option,
-                                ()=>this.getIsOptionDisabled(multiSelectData.option),
-                                (removePick)=>this.requestPickRemove(multiSelectData, removePick), 
+                            var {pick, adoptRemoveFromList} = this.createPick( 
+                                    multiSelectData.option, 
+                                    ()=>this.getIsOptionDisabled(multiSelectData.option),
+                                    (removePick)=>this.requestPickRemove(multiSelectData, removePick)
+
                                 );
-                            this.requestPickCreate(multiSelectData, remove, this.picksPanel.getCount());
+                            var removeFromList = this.picksList.addPick(pick);
+                            var remove = adoptRemoveFromList(removeFromList);
+                            this.requestPickCreate(multiSelectData, remove, this.picksList.getCount());
                         },
                         (o,i) => this.setSelected(o,i),
                         () =>  this.onChange()
@@ -306,7 +310,7 @@ export class MultiSelect {
     Dispose(){
         sync(
             this.aspect.hideChoices,
-            this.picksPanel.dispose,
+            this.picksList.dispose,
             this.filterPanel.dispose,
             this.labelAdapter.dispose,
             this.aspect.dispose,
@@ -330,7 +334,7 @@ export class MultiSelect {
     UpdateDisabled(){
         let isComponentDisabled = this.getIsComponentDisabled();
         if (this.isComponentDisabled!==isComponentDisabled){
-            this.picksPanel.disable(isComponentDisabled);
+            this.picksList.disableRemoveAll(isComponentDisabled);
             this.aspect.disable(isComponentDisabled);
             this.placeholderAspect.setDisabled(isComponentDisabled);
             this.staticContent.disable(isComponentDisabled);
@@ -388,10 +392,65 @@ export class MultiSelect {
             this.placeholderAspect.updatePlacehodlerVisibility()
     }
     
+    processRemoveButtonClick(removePick, event){
+        this.aspect.processRemoveButtonClick(removePick, event);
+        this.resetFilter();
+    }
+
+    createPick(option, getIsOptionDisabled, requestPickRemove){
+        let pickElement = this.staticContent.createPickElement(); 
+        let attach = () => this.staticContent.picksElement.insertBefore(pickElement, this.staticContent.pickFilterElement);
+        let detach = () => removeElement(pickElement);
+        let pickContent = this.pickContentGenerator(pickElement);
+        let processRemoveButtonClick = this.processRemoveButtonClick;
+        var pick = {
+            disableRemove: () => pickContent.disableRemove(this.getIsComponentDisabled()),
+            setData: () => pickContent.setData(option),
+            disable: () => pickContent.disable(getIsOptionDisabled()),
+            removePick: null,
+            dispose: () => { detach(); pickContent.dispose(); }, 
+        }
+        pick.setData();
+        pick.disable();
+        pick.disableRemove();
+        attach();
+        return {
+            pick: pick,
+            adoptRemoveFromList(removeFromList){
+                var removeImpl = () => {
+                    removeFromList();
+                    pick.dispose();
+                }
+                var removePick = () => requestPickRemove(removeImpl);
+                pick.removePick = removePick;
+        
+                // processRemoveButtonClick removes the item
+                // what is a problem with calling 'remove' directly (not using  setTimeout('remove', 0)):
+                // consider situation "MultiSelect" on DROPDOWN (that should be closed on the click outside dropdown)
+                // therefore we aslo have document's click's handler where we decide to close or leave the DROPDOWN open.
+                // because of the event's bubling process 'remove' runs first. 
+                // that means the event's target element on which we click (the x button) will be removed from the DOM together with badge 
+                // before we could analize is it belong to our dropdown or not.
+                // important 1: we can't just the stop propogation using stopPropogate because click outside dropdown on the similar 
+                // component that use stopPropogation will not close dropdown (error, dropdown should be closed)
+                // important 2: we can't change the dropdown's event handler to leave dropdown open if event's target is null because of
+                // the situation described above: click outside dropdown on the same component.
+                // Alternatively it could be possible to use stopPropogate but together create custom click event setting new target 
+                // that belomgs to DOM (e.g. panel)
+                
+
+                pickContent.onRemove(event => {
+                    processRemoveButtonClick(removePick, event);
+                });
+                return removePick;
+            }
+        };
+    }
+
     requestPickRemove(multiSelectData, removePick){
         let confirmed = this.setSelected(multiSelectData.option, false);
         if (!(confirmed===false)) {
-            var addPick = removePick();
+            removePick();
             multiSelectData.isSelected = false;
             multiSelectData.excludedFromSearch = multiSelectData.isOptionDisabled;
             if (multiSelectData.isOptionDisabled)
@@ -401,21 +460,23 @@ export class MultiSelect {
             }
             else
             {
-                multiSelectData.toggle = ()=>{
+                multiSelectData.toggle = () => {
                     let confirmed = this.setSelected(multiSelectData.option, true);
                     if (!(confirmed===false)){
-                        var remove = addPick(
-                            multiSelectData.option,
+                        var {pick, adoptRemoveFromList} = this.createPick( 
+                            multiSelectData.option, 
                             ()=>this.getIsOptionDisabled(multiSelectData.option),
-                            removePick => this.requestPickRemove(multiSelectData, removePick)
-                            );
-                        this.requestPickCreate(multiSelectData, remove, this.picksPanel.getCount());
+                            (removePick)=>this.requestPickRemove(multiSelectData, removePick)                            
+                        );
+                        var removeFromList = this.picksList.addPick(pick);
+                        var remove = adoptRemoveFromList(removeFromList);
+                        this.requestPickCreate(multiSelectData, remove, this.picksList.getCount());
                         this.onChange();
                     }
                 };
             }
             multiSelectData.select(false);
-            if (this.picksPanel.getCount()==0) 
+            if (this.picksList.getCount()==0) 
                 this.placeholderAspect.updatePlacehodlerVisibility()
             this.onChange();
         }
@@ -447,7 +508,7 @@ export class MultiSelect {
             () => this.choicesPanel.keyDownArrow(true),  // arrow down
             () => this.aspect.hideChoices(),  // tab on empty
             () => {
-                this.picksPanel.removePicksTail();
+                this.picksList.removePicksTail();
                 this.aspect.alignToFilterInputItemLocation(false);
             }, // backspace - "remove last"
             () => { 
@@ -468,23 +529,24 @@ export class MultiSelect {
             }
         );
         
-        this.picksPanel =  PicksPanel(
-            /*createElement*/ () => {
-                var pickElement = this.staticContent.createPickElement();
-                return {
-                    pickElement,
-                    attach: () => this.staticContent.picksElement
-                        .insertBefore(pickElement, this.staticContent.pickFilterElement)
-                }
-            },
-            this.pickContentGenerator,
-            (doUncheck, event) => {
-                this.aspect.processUncheck(doUncheck, event);
-                this.aspect.hideChoices(); // always hide 1st
-                this.resetFilter();
-            },
-            this.common,
-            this.getIsComponentDisabled
+        this.picksList =  PicksList(
+            // () => {
+            //     var pickElement = this.staticContent.createPickElement();
+            //     return {
+            //         pickElement,
+            //         attach: () => this.staticContent.picksElement
+            //             .insertBefore(pickElement, this.staticContent.pickFilterElement),
+            //         detach: () =>removeElement(pickElement)
+            //     }
+            // },
+            // this.pickContentGenerator,
+            // (doUncheck, event) => {
+            //     this.aspect.processUncheck(doUncheck, event);
+            //     this.aspect.hideChoices(); // always hide 1st
+            //     this.resetFilter();
+            // },
+            // this.common,
+            // this.getIsComponentDisabled
         );
 
         this.choicesPanel = ChoicesPanel(
@@ -504,7 +566,7 @@ export class MultiSelect {
 
         this.placeholderAspect = PlaceholderAspect(
             this.placeholderText, 
-            () => this.picksPanel.isEmpty() && this.filterPanel.isEmpty(), 
+            () => this.picksList.isEmpty() && this.filterPanel.isEmpty(), 
             this.staticContent.picksElement, 
             this.staticContent.filterInputElement,
             this.css

@@ -42,7 +42,7 @@ export function ChoicesPanel(
         resetCandidateToHoveredMultiSelectData();
     }
 
-    function toggleHovered(){
+    function toggleHovered() {
         if (hoveredMultiSelectData) {
             if (hoveredMultiSelectData.toggle)
                 hoveredMultiSelectData.toggle();
