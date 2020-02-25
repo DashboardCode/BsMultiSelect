@@ -137,8 +137,8 @@ export function MultiSelectInputAspect (
         resetSkipFocusout : function() {
              skipFocusout=false;
         },
-        disable(isDisabled){
-            if (isDisabled)
+        disable(isComponentDisabled){
+            if (isComponentDisabled)
                 componentDisabledEventBinder.unbind();
             else
                 componentDisabledEventBinder.bind(picksElement,"click", event => {

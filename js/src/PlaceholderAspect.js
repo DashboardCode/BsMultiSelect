@@ -31,9 +31,9 @@ export function PlaceholderAspect(placeholderText, isEmpty, picksElement, inputE
         updateEmptyInputWidth(){
             setEmptyInputWidth(isEmpty())
         },
-        setDisabled(isDisabled)
+        setDisabled(isComponentDisabled)
         { 
-            inputElement.disabled = isDisabled;
+            inputElement.disabled = isComponentDisabled;
         }
     }
 }

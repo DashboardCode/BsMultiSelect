@@ -1,7 +1,8 @@
 # CHANGELOG
 ````
+0.5.21 - optimizations, removes the disabled and focused styling from "no flick picks element" on plugin detach   
 0.5.20 - remove x button problem resloved
-0.5.19 - optimizations
+0.5.19 - optimizations 
 0.5.18 - changes in non published API (getIsOptionDisabled, getIsOptionHidden)
 0.5.17 - changes in non published API (`common` generation parameter)
 0.5.16 - optimizations

@@ -1,5 +1,5 @@
 /*!
-  * DashboardCode BsMultiSelect v0.5.20 (https://dashboardcode.github.io/BsMultiSelect/)
+  * DashboardCode BsMultiSelect v0.5.21 (https://dashboardcode.github.io/BsMultiSelect/)
   * Copyright 2017-2020 Roman Pokrovskij (github user rpokrovskij)
   * Licensed under APACHE 2 (https://github.com/DashboardCode/BsMultiSelect/blob/master/LICENSE)
   */
@@ -195,12 +195,12 @@
       var hoverInInternal = function hoverInInternal(index) {
         hoveredMultiSelectDataIndex = index;
         hoveredMultiSelectData = getVisibleMultiSelectDataList()[index];
-        hoveredMultiSelectData.ChoiceContent.hoverIn(true);
+        hoveredMultiSelectData.hoverIn(true);
       };
 
       function resetChoicesHover() {
         if (hoveredMultiSelectData) {
-          hoveredMultiSelectData.ChoiceContent.hoverIn(false);
+          hoveredMultiSelectData.hoverIn(false);
           hoveredMultiSelectData = null;
           hoveredMultiSelectDataIndex = null;
         }
@@ -256,19 +256,19 @@
         }
 
         if (newIndex !== null) {
-          if (hoveredMultiSelectData) hoveredMultiSelectData.ChoiceContent.hoverIn(false);
+          if (hoveredMultiSelectData) hoveredMultiSelectData.hoverIn(false);
           onMoveArrow(); //showChoices(); 
 
           hoverInInternal(newIndex);
         }
       }
 
-      var onChoiceElementMouseoverGeneral = function onChoiceElementMouseoverGeneral(MultiSelectData, choiceElement) {
+      var onChoiceElementMouseoverGeneral = function onChoiceElementMouseoverGeneral(choice, choiceElement) {
         var eventSkipper = getEventSkipper();
 
         if (eventSkipper.isSkippable()) {
           resetCandidateToHoveredMultiSelectData();
-          candidateToHoveredMultiSelectData = MultiSelectData;
+          candidateToHoveredMultiSelectData = choice;
           choiceElement.addEventListener('mousemove', processCandidateToHovered);
           choiceElement.addEventListener('mousedown', processCandidateToHovered);
 
@@ -279,17 +279,17 @@
             candidateToHoveredMultiSelectData = null;
           };
         } else {
-          if (hoveredMultiSelectData != MultiSelectData) {
+          if (hoveredMultiSelectData != choice) {
             // mouseleave is not enough to guarantee remove hover styles in situations
             // when style was setuped without mouse (keyboard arrows)
             // therefore force reset manually
             resetChoicesHover();
-            hoverInInternal(MultiSelectData.visibleIndex);
+            hoverInInternal(choice.visibleIndex);
           }
         }
       };
 
-      function createChoice(MultiSelectData, createSelectedItemGen, setSelected, triggerChange, isSelected
+      function adoptChoice(choice, createPick, setSelected, triggerChange, isOptionSelected
       /*, isOptionDisabled*/
       ) {
         var _createChoiceElement = createChoiceElement(),
@@ -301,7 +301,7 @@
 
 
         var onChoiceElementMouseover = function onChoiceElementMouseover() {
-          return onChoiceElementMouseoverGeneral(MultiSelectData, choiceElement);
+          return onChoiceElementMouseoverGeneral(choice, choiceElement);
         };
 
         choiceElement.addEventListener('mouseover', onChoiceElementMouseover); // note 1: mouseleave preferred to mouseout - which fires on each descendant
@@ -318,54 +318,54 @@
         choiceElement.addEventListener('mouseleave', onChoiceElementMouseleave);
         attach();
         var choiceContent = choiceContentGenerator(choiceElement);
-        choiceContent.setData(MultiSelectData.option);
-        MultiSelectData.ChoiceContent = choiceContent;
+        choiceContent.setData(choice.option);
 
-        MultiSelectData.select = function (isSelected) {
-          choiceContent.select(isSelected);
+        choice.hoverIn = function (isHoverIn) {
+          choiceContent.hoverIn(isHoverIn);
         };
 
-        MultiSelectData.disable = function (isDisabled, isSelected) {
-          choiceContent.disable(isDisabled, isSelected);
+        choice.select = function (isOptionSelected) {
+          choiceContent.select(isOptionSelected);
         };
 
-        MultiSelectData.disposeChoice = function () {
+        choice.disable = function (isDisabled, isOptionSelected) {
+          choiceContent.disable(isDisabled, isOptionSelected);
+        };
+
+        choice.dispose = function () {
           choiceElement.removeEventListener('mouseover', onChoiceElementMouseover);
           choiceElement.removeEventListener('mouseleave', onChoiceElementMouseleave);
           choiceContent.dispose();
-          MultiSelectData.select = null;
-          MultiSelectData.disable = null;
-          MultiSelectData.disposeChoice = null;
+          choice.hoverIn = null;
+          choice.select = null;
+          choice.disable = null;
+          choice.dispose = null;
+          choice.toggle = null;
+          choice.setVisible = null;
         };
 
-        if (MultiSelectData.isOptionDisabled) choiceContent.disable(true, isSelected);
+        if (choice.isOptionDisabled) choiceContent.disable(true, isOptionSelected);
         choiceContent.onSelected(function () {
-          if (MultiSelectData.toggle) MultiSelectData.toggle();
+          if (choice.toggle) choice.toggle();
           filterPanelSetFocus();
-        }); // ------------------------------------------------------------------------------
+        });
 
-        var createSelectedItem = function createSelectedItem() {
-          return createSelectedItemGen(MultiSelectData);
-        };
-
-        if (isSelected) {
-          createSelectedItem();
+        if (isOptionSelected) {
+          createPick();
         } else {
-          MultiSelectData.excludedFromSearch = MultiSelectData.isOptionDisabled;
-          if (MultiSelectData.isOptionDisabled) MultiSelectData.toggle = null;else MultiSelectData.toggle = function () {
-            var confirmed = setSelected(MultiSelectData.option, true);
+          choice.excludedFromSearch = choice.isOptionDisabled;
+          if (choice.isOptionDisabled) choice.toggle = null;else choice.toggle = function () {
+            var confirmed = setSelected(choice.option, true);
 
             if (!(confirmed === false)) {
-              createSelectedItem();
+              createPick();
               triggerChange();
             }
           };
         }
 
-        return {
-          visible: function visible(isFiltered) {
-            choiceElement.style.display = isFiltered ? 'block' : 'none';
-          }
+        choice.setVisible = function (isFiltered) {
+          choiceElement.style.display = isFiltered ? 'block' : 'none';
         };
       }
       /* Picks:
@@ -381,7 +381,7 @@
 
 
       var item = {
-        createChoice: createChoice,
+        adoptChoice: adoptChoice,
         hoverInInternal: hoverInInternal,
         stopAndResetChoicesHover: function stopAndResetChoicesHover() {
           var eventSkipper = getEventSkipper();
@@ -390,8 +390,6 @@
           resetChoicesHover();
         },
         resetCandidateToHoveredMultiSelectData: resetCandidateToHoveredMultiSelectData,
-        //showChoices,
-        //hideChoices,
         toggleHovered: toggleHovered,
         keyDownArrow: keyDownArrow
       };
@@ -850,8 +848,8 @@
         resetSkipFocusout: function resetSkipFocusout() {
           skipFocusout = false;
         },
-        disable: function disable(isDisabled) {
-          if (isDisabled) componentDisabledEventBinder.unbind();else componentDisabledEventBinder.bind(picksElement, "click", function (event) {
+        disable: function disable(isComponentDisabled) {
+          if (isComponentDisabled) componentDisabledEventBinder.unbind();else componentDisabledEventBinder.bind(picksElement, "click", function (event) {
             onClick(event);
             alignAndShowChoices(event);
           }); // OPEN dropdown
@@ -1094,8 +1092,8 @@
         updateEmptyInputWidth: function updateEmptyInputWidth() {
           setEmptyInputWidth(isEmpty());
         },
-        setDisabled: function setDisabled(isDisabled) {
-          inputElement.disabled = isDisabled;
+        setDisabled: function setDisabled(isComponentDisabled) {
+          inputElement.disabled = isComponentDisabled;
         }
       };
     }
@@ -1103,32 +1101,32 @@
     function filterMultiSelectData(MultiSelectData, isFiltered, visibleIndex) {
       MultiSelectData.visible = isFiltered;
       MultiSelectData.visibleIndex = visibleIndex;
-      MultiSelectData.choice.visible(isFiltered); //MultiSelectData.choiceElement.style.display = isFiltered ? 'block': 'none';
+      MultiSelectData.setVisible(isFiltered); //MultiSelectData.choiceElement.style.display = isFiltered ? 'block': 'none';
     }
 
-    function resetChoices(MultiSelectDataList) {
-      for (var i = 0; i < MultiSelectDataList.length; i++) {
-        var multiSelectData = MultiSelectDataList[i];
+    function resetChoices(choicesList) {
+      for (var i = 0; i < choicesList.length; i++) {
+        var multiSelectData = choicesList[i];
 
-        if (!multiSelectData.isHidden) {
+        if (!multiSelectData.isOptionHidden) {
           filterMultiSelectData(multiSelectData, true, i);
         }
       }
     }
 
-    function collectFilterChoices(MultiSelectDataList, text) {
+    function collectFilterChoices(choicesList, text) {
       var list = [];
       var j = 0;
 
-      for (var i = 0; i < MultiSelectDataList.length; i++) {
-        var multiSelectData = MultiSelectDataList[i];
+      for (var i = 0; i < choicesList.length; i++) {
+        var choice = choicesList[i];
 
-        if (!multiSelectData.isHidden) {
-          if (multiSelectData.excludedFromSearch || multiSelectData.searchText.indexOf(text) < 0) {
-            filterMultiSelectData(multiSelectData, false, null);
+        if (!choice.isOptionHidden) {
+          if (choice.excludedFromSearch || choice.searchText.indexOf(text) < 0) {
+            filterMultiSelectData(choice, false, null);
           } else {
-            filterMultiSelectData(multiSelectData, true, j++);
-            list.push(multiSelectData);
+            filterMultiSelectData(choice, true, j++);
+            list.push(choice);
           }
         }
       }
@@ -1163,18 +1161,18 @@
         this.stylingComposite = null;
         this.onChange = onChange;
         this.getIsComponentDisabled = getIsComponentDisabled;
-        this.resetMultiSelectDataList();
+        this.resetChoicesList();
       }
 
       var _proto = MultiSelect.prototype;
 
-      _proto.resetMultiSelectDataList = function resetMultiSelectDataList() {
-        this.MultiSelectDataList = [];
-        this.filteredMultiSelectDataList = null;
+      _proto.resetChoicesList = function resetChoicesList() {
+        this.choicesList = [];
+        this.filteredChoicesList = null;
       };
 
-      _proto.getVisibleMultiSelectDataList = function getVisibleMultiSelectDataList() {
-        return this.filteredMultiSelectDataList ? this.filteredMultiSelectDataList : this.MultiSelectDataList;
+      _proto.getVisibleChoicesList = function getVisibleChoicesList() {
+        return this.filteredChoicesList ? this.filteredChoicesList : this.choicesList;
       };
 
       _proto.resetFilter = function resetFilter() {
@@ -1188,8 +1186,8 @@
 
       _proto.processEmptyInput = function processEmptyInput() {
         this.placeholderAspect.updateEmptyInputWidth();
-        resetChoices(this.MultiSelectDataList);
-        this.filteredMultiSelectDataList = null;
+        resetChoices(this.choicesList);
+        this.filteredChoicesList = null;
       } // -----------------------------------------------------------------------------------------------------------------------
       ;
 
@@ -1214,25 +1212,25 @@
           let multiSelectData = this.MultiSelectDataList[index];
           let option = multiSelectData.option;
           multiSelectData.searchText = option.text.toLowerCase().trim();
-          if (multiSelectData.isHidden != option.isHidden)
+          if (multiSelectData.isOptionHidden != option.isHidden)
           {
-              multiSelectData.isHidden=option.isHidden;
-              if (multiSelectData.isHidden)
+              multiSelectData.isOptionHidden=option.isHidden;
+              if (multiSelectData.isOptionHidden)
                   this.optionsPanel.insertChoice(multiSelectData, 
                       (p1,p2,p3)=>this.picksList.addPick(p1,p2,p3),
                       ()=>this.optionsAdapter.triggerChange(),
-                      option.isSelected, option.isDisabled);
+                      option.isOptionSelected, option.isDisabled);
               else
                   multiSelectData.removeChoiceElement();
           }
           else 
           {
-              if (multiSelectData.isSelected != option.isSelected)
+              if (multiSelectData.isOptionSelected != option.isOptionSelected)
               {
-                  multiSelectData.isSelected=option.isSelected;
-                  if (multiSelectData.isSelected)
+                  multiSelectData.isOptionSelected=option.isOptionSelected;
+                  if (multiSelectData.isOptionSelected)
                   {
-                      // this.insertChoice(multiSelectData, (e)=>this.choicesElement.appendChild(e), isSelected, isDisabled);
+                      // this.insertChoice(multiSelectData, (e)=>this.choicesElement.appendChild(e), isOptionSelected, isDisabled);
                   }
                   else
                   {
@@ -1244,7 +1242,7 @@
                   multiSelectData.isDisabled=option.isDisabled;
                   if (multiSelectData.isDisabled)
                   {
-                      // this.insertChoice(multiSelectData, (e)=>this.choicesElement.appendChild(e), isSelected, isDisabled);
+                      // this.insertChoice(multiSelectData, (e)=>this.choicesElement.appendChild(e), isOptionSelected, isDisabled);
                   }
                   else
                   {
@@ -1270,9 +1268,9 @@
       _proto.SelectAll = function SelectAll() {
         this.aspect.hideChoices(); // always hide 1st
 
-        for (var i = 0; i < this.MultiSelectDataList.length; i++) {
-          var multiSelectData = this.MultiSelectDataList[i];
-          if (!multiSelectData.excludedFromSearch) if (multiSelectData.toggle) multiSelectData.toggle();
+        for (var i = 0; i < this.choicesList.length; i++) {
+          var choice = this.choicesList[i];
+          if (!choice.excludedFromSearch) if (choice.toggle) choice.toggle();
         }
 
         this.resetFilter();
@@ -1291,7 +1289,7 @@
         //         multiSelectData.choice.remove();
         // }
 
-        this.resetMultiSelectDataList();
+        this.resetChoicesList();
         this.picksList.clear();
         this.placeholderAspect.updatePlacehodlerVisibility();
       };
@@ -1308,78 +1306,84 @@
         for (var i = 0; i < options.length; i++) {
           var option = options[i];
           var newIsSelected = option.selected;
-          var multiSelectData = this.MultiSelectDataList[i];
-          var isSelected = multiSelectData.isSelected;
-          if (newIsSelected != isSelected) if (multiSelectData.toggle) multiSelectData.toggle();
+          var choice = this.choicesList[i];
+          if (newIsSelected != choice.isOptionSelected) if (choice.toggle) choice.toggle();
         }
       };
 
-      _proto.updateDataImpl = function updateDataImpl() {
+      _proto.createChoice = function createChoice(option, i) {
         var _this = this;
 
+        var isOptionSelected = option.selected;
+        var isOptionDisabled = this.getIsOptionDisabled(option);
+        var isOptionHidden = this.getIsOptionHidden(option);
+        var choice = {
+          option: option,
+          isOptionDisabled: isOptionDisabled,
+          isOptionHidden: isOptionHidden,
+          isOptionSelected: isOptionSelected,
+          searchText: option.text.toLowerCase().trim(),
+          excludedFromSearch: isOptionSelected || isOptionDisabled || isOptionHidden,
+          hoverIn: null,
+          select: null,
+          disable: null,
+          dispose: null,
+          toggle: null,
+          setVisible: null,
+          resetCandidateToHoveredMultiSelectData: null,
+          // todo: setCandidateToHovered(Boolean) ?
+          //removeChoiceElement: null, // TODO
+          visible: false,
+          visibleIndex: null // todo: check for errors
+
+        };
+
+        if (!isOptionHidden) {
+          choice.visible = true;
+          choice.visibleIndex = i;
+          this.choicesPanel.adoptChoice(choice, function () {
+            var _this$createPick = _this.createPick(choice.option, function () {
+              return _this.getIsOptionDisabled(choice.option);
+            }, function (removePick) {
+              return _this.requestPickRemove(choice, removePick);
+            }),
+                pick = _this$createPick.pick,
+                adoptRemoveFromList = _this$createPick.adoptRemoveFromList;
+
+            var removeFromList = _this.picksList.addPick(pick);
+
+            var remove = adoptRemoveFromList(removeFromList);
+
+            _this.requestPickCreate(choice, remove, _this.picksList.getCount());
+          }, function (o, i) {
+            return _this.setSelected(o, i);
+          }, function () {
+            return _this.onChange();
+          }, isOptionSelected);
+        }
+
+        return choice;
+      };
+
+      _proto.updateDataImpl = function updateDataImpl() {
+        var _this2 = this;
+
         var fillChoices = function fillChoices() {
-          var options = _this.getOptions();
+          var options = _this2.getOptions();
 
           for (var i = 0; i < options.length; i++) {
             var option = options[i];
-            var isSelected = option.selected;
 
-            var isOptionDisabled = _this.getIsOptionDisabled(option);
+            var choice = _this2.createChoice(option, i);
 
-            var isOptionHidden = _this.getIsOptionHidden(option);
-
-            var MultiSelectData = {
-              searchText: option.text.toLowerCase().trim(),
-              excludedFromSearch: isSelected || isOptionDisabled || isOptionHidden,
-              option: option,
-              isOptionDisabled: isOptionDisabled,
-              isHidden: isOptionHidden,
-              isSelected: isSelected,
-              choiceElement: null,
-              choiceContent: null,
-              visible: false,
-              toggle: null,
-              pickElement: null,
-              disable: null,
-              removeChoiceElement: null
-            };
-
-            _this.MultiSelectDataList.push(MultiSelectData);
-
-            if (!isOptionHidden) {
-              MultiSelectData.visible = true;
-              MultiSelectData.visibleIndex = i;
-
-              var choice = _this.choicesPanel.createChoice(MultiSelectData,
-              /*createSelectedItemGen*/
-              function (multiSelectData
-              /*,isOptionDisabled,setChoiceContentDisabled*/
-              ) {
-                var _this$createPick = _this.createPick(multiSelectData.option, function () {
-                  return _this.getIsOptionDisabled(multiSelectData.option);
-                }, function (removePick) {
-                  return _this.requestPickRemove(multiSelectData, removePick);
-                }),
-                    pick = _this$createPick.pick,
-                    adoptRemoveFromList = _this$createPick.adoptRemoveFromList;
-
-                var removeFromList = _this.picksList.addPick(pick);
-
-                var remove = adoptRemoveFromList(removeFromList);
-
-                _this.requestPickCreate(multiSelectData, remove, _this.picksList.getCount());
-              }, function (o, i) {
-                return _this.setSelected(o, i);
-              }, function () {
-                return _this.onChange();
-              }, isSelected);
-
-              MultiSelectData.choice = choice;
-            }
+            _this2.choicesList.push(choice);
           }
 
-          _this.aspect.alignToFilterInputItemLocation(false);
-        }; // some browsers (IE11) can change select value (as part of "autocomplete") after page is loaded but before "ready" event
+          _this2.aspect.alignToFilterInputItemLocation(false);
+        }; // browsers can change select value as part of "autocomplete" (IE11) 
+        // or "show preserved on go back" (Chrome) after page is loaded but before "ready" event;
+        // but they never "restore" selected-disabled options.
+        // TODO: make the FROM Validation for 'selected-disabled' easy.
 
 
         if (document.readyState != 'loading') {
@@ -1397,12 +1401,12 @@
       _proto.Dispose = function Dispose() {
         sync(this.aspect.hideChoices, this.picksList.dispose, this.filterPanel.dispose, this.labelAdapter.dispose, this.aspect.dispose, this.staticContent.dispose);
 
-        for (var i = 0; i < this.MultiSelectDataList.length; i++) {
-          var multiSelectData = this.MultiSelectDataList[i];
+        for (var i = 0; i < this.choicesList.length; i++) {
+          var multiSelectData = this.choicesList[i];
           multiSelectData.toggle = null;
 
-          if (multiSelectData.disposeChoice) {
-            multiSelectData.disposeChoice();
+          if (multiSelectData.dispose) {
+            multiSelectData.dispose();
           }
         }
       };
@@ -1428,10 +1432,10 @@
         var isEmpty = false;
         if (text == '') isEmpty = true;else {
           // check if exact match, otherwise new search
-          this.filteredMultiSelectDataList = collectFilterChoices(this.MultiSelectDataList, text);
+          this.filteredChoicesList = collectFilterChoices(this.choicesList, text);
 
-          if (this.filteredMultiSelectDataList.length == 1) {
-            var fullMatchMultiSelectData = this.filteredMultiSelectDataList[0];
+          if (this.filteredChoicesList.length == 1) {
+            var fullMatchMultiSelectData = this.filteredChoicesList[0];
 
             if (fullMatchMultiSelectData.searchText == text) {
               if (fullMatchMultiSelectData.toggle) fullMatchMultiSelectData.toggle();
@@ -1445,11 +1449,11 @@
         if (isEmpty) this.processEmptyInput();else resetLength();
         this.choicesPanel.stopAndResetChoicesHover();
 
-        if (this.getVisibleMultiSelectDataList().length == 1) {
+        if (this.getVisibleChoicesList().length == 1) {
           this.choicesPanel.hoverInInternal(0);
         }
 
-        if (this.getVisibleMultiSelectDataList().length > 0) {
+        if (this.getVisibleChoicesList().length > 0) {
           this.aspect.alignToFilterInputItemLocation(true); // we need it to support case when textbox changes its place because of line break (texbox grow with each key press)
 
           this.aspect.showChoices();
@@ -1458,25 +1462,25 @@
         }
       };
 
-      _proto.requestPickCreate = function requestPickCreate(multiSelectData, removePick, count) {
-        multiSelectData.isSelected = true;
-        multiSelectData.excludedFromSearch = true; // all selected excluded from search
+      _proto.requestPickCreate = function requestPickCreate(choice, removePick, count) {
+        choice.isOptionSelected = true;
+        choice.excludedFromSearch = true; // all selected excluded from search
 
-        multiSelectData.toggle = function () {
+        choice.toggle = function () {
           return removePick();
         };
 
-        multiSelectData.select(true);
+        choice.select(true);
         if (count == 1) this.placeholderAspect.updatePlacehodlerVisibility();
       };
 
       _proto.createPick = function createPick(option, getIsOptionDisabled, requestPickRemove) {
-        var _this2 = this;
+        var _this3 = this;
 
         var pickElement = this.staticContent.createPickElement();
 
         var attach = function attach() {
-          return _this2.staticContent.picksElement.insertBefore(pickElement, _this2.staticContent.pickFilterElement);
+          return _this3.staticContent.picksElement.insertBefore(pickElement, _this3.staticContent.pickFilterElement);
         };
 
         var detach = function detach() {
@@ -1486,14 +1490,14 @@
         var pickContent = this.pickContentGenerator(pickElement);
 
         var processRemoveButtonClick = function processRemoveButtonClick(removePick, event) {
-          _this2.aspect.processRemoveButtonClick(removePick, event);
+          _this3.aspect.processRemoveButtonClick(removePick, event);
 
-          _this2.resetFilter();
+          _this3.resetFilter();
         };
 
         var pick = {
           disableRemove: function disableRemove() {
-            return pickContent.disableRemove(_this2.getIsComponentDisabled());
+            return pickContent.disableRemove(_this3.getIsComponentDisabled());
           },
           setData: function setData() {
             return pickContent.setData(option);
@@ -1545,153 +1549,153 @@
         };
       };
 
-      _proto.requestPickRemove = function requestPickRemove(multiSelectData, removePick) {
-        var _this3 = this;
+      _proto.requestPickRemove = function requestPickRemove(choice, removePick) {
+        var _this4 = this;
 
-        var confirmed = this.setSelected(multiSelectData.option, false);
+        var confirmed = this.setSelected(choice.option, false);
 
         if (!(confirmed === false)) {
           removePick();
-          multiSelectData.isSelected = false;
-          multiSelectData.excludedFromSearch = multiSelectData.isOptionDisabled;
+          choice.isOptionSelected = false;
+          choice.excludedFromSearch = choice.isOptionDisabled;
 
-          if (multiSelectData.isOptionDisabled) {
-            multiSelectData.disable(
-            /*isDisabled*/
+          if (choice.isOptionDisabled) {
+            choice.disable(
+            /*isOptionDisabled*/
             true,
-            /*isSelected*/
+            /*isOptionSelected*/
             false);
-            multiSelectData.toggle = null;
+            choice.toggle = null;
           } else {
-            multiSelectData.toggle = function () {
-              var confirmed = _this3.setSelected(multiSelectData.option, true);
+            choice.toggle = function () {
+              var confirmed = _this4.setSelected(choice.option, true);
 
               if (!(confirmed === false)) {
-                var _this3$createPick = _this3.createPick(multiSelectData.option, function () {
-                  return _this3.getIsOptionDisabled(multiSelectData.option);
+                var _this4$createPick = _this4.createPick(choice.option, function () {
+                  return _this4.getIsOptionDisabled(choice.option);
                 }, function (removePick) {
-                  return _this3.requestPickRemove(multiSelectData, removePick);
+                  return _this4.requestPickRemove(choice, removePick);
                 }),
-                    pick = _this3$createPick.pick,
-                    adoptRemoveFromList = _this3$createPick.adoptRemoveFromList;
+                    pick = _this4$createPick.pick,
+                    adoptRemoveFromList = _this4$createPick.adoptRemoveFromList;
 
-                var removeFromList = _this3.picksList.addPick(pick);
+                var removeFromList = _this4.picksList.addPick(pick);
 
                 var remove = adoptRemoveFromList(removeFromList);
 
-                _this3.requestPickCreate(multiSelectData, remove, _this3.picksList.getCount());
+                _this4.requestPickCreate(choice, remove, _this4.picksList.getCount());
 
-                _this3.onChange();
+                _this4.onChange();
               }
             };
           }
 
-          multiSelectData.select(false);
+          choice.select(false);
           if (this.picksList.getCount() == 0) this.placeholderAspect.updatePlacehodlerVisibility();
           this.onChange();
         }
       };
 
       _proto.init = function init() {
-        var _this4 = this;
+        var _this5 = this;
 
         this.filterPanel = FilterPanel(this.staticContent.filterInputElement, function () {
-          _this4.staticContent.pickFilterElement.appendChild(_this4.staticContent.filterInputElement);
+          _this5.staticContent.pickFilterElement.appendChild(_this5.staticContent.filterInputElement);
 
-          _this4.labelAdapter.init(_this4.staticContent.filterInputElement);
+          _this5.labelAdapter.init(_this5.staticContent.filterInputElement);
 
-          _this4.staticContent.picksElement.appendChild(_this4.staticContent.pickFilterElement); // located filter in selectionsPanel                    
+          _this5.staticContent.picksElement.appendChild(_this5.staticContent.pickFilterElement); // located filter in selectionsPanel                    
 
         }, function () {
-          _this4.staticContent.setIsFocusIn(true);
+          _this5.staticContent.setIsFocusIn(true);
 
-          _this4.staticContent.toggleFocusStyling();
+          _this5.staticContent.toggleFocusStyling();
         }, // focus in - show dropdown
         function () {
-          if (!_this4.aspect.getSkipFocusout()) // skip initiated by mouse click (we manage it different way)
+          if (!_this5.aspect.getSkipFocusout()) // skip initiated by mouse click (we manage it different way)
             {
-              _this4.resetFilter(); // if do not do this we will return to filtered list without text filter in input
+              _this5.resetFilter(); // if do not do this we will return to filtered list without text filter in input
 
 
-              _this4.staticContent.setIsFocusIn(false);
+              _this5.staticContent.setIsFocusIn(false);
 
-              _this4.staticContent.toggleFocusStyling();
+              _this5.staticContent.toggleFocusStyling();
             }
 
-          _this4.aspect.resetSkipFocusout();
+          _this5.aspect.resetSkipFocusout();
         }, // focus out - hide dropdown
         function () {
-          return _this4.choicesPanel.keyDownArrow(false);
+          return _this5.choicesPanel.keyDownArrow(false);
         }, // arrow up
         function () {
-          return _this4.choicesPanel.keyDownArrow(true);
+          return _this5.choicesPanel.keyDownArrow(true);
         }, // arrow down
         function () {
-          return _this4.aspect.hideChoices();
+          return _this5.aspect.hideChoices();
         }, // tab on empty
         function () {
-          _this4.picksList.removePicksTail();
+          _this5.picksList.removePicksTail();
 
-          _this4.aspect.alignToFilterInputItemLocation(false);
+          _this5.aspect.alignToFilterInputItemLocation(false);
         }, // backspace - "remove last"
         function () {
-          if (_this4.staticContent.isChoicesVisible()) _this4.choicesPanel.toggleHovered();
+          if (_this5.staticContent.isChoicesVisible()) _this5.choicesPanel.toggleHovered();
         }, // tab/enter "compleate hovered"
         function (isEmpty, event) {
-          if (!isEmpty || _this4.staticContent.isChoicesVisible()) // supports bs modal - stop esc (close modal) propogation
+          if (!isEmpty || _this5.staticContent.isChoicesVisible()) // supports bs modal - stop esc (close modal) propogation
             event.stopPropagation();
         }, // esc keydown
         function () {
-          _this4.aspect.hideChoices(); // always hide 1st
+          _this5.aspect.hideChoices(); // always hide 1st
 
 
-          _this4.resetFilter();
+          _this5.resetFilter();
         }, // esc keyup 
         function (filterInputValue, resetLength) {
-          _this4.placeholderAspect.updatePlacehodlerVisibility();
+          _this5.placeholderAspect.updatePlacehodlerVisibility();
 
-          _this4.input(filterInputValue, resetLength);
+          _this5.input(filterInputValue, resetLength);
         });
         this.picksList = PicksList();
         this.choicesPanel = ChoicesPanel(function () {
-          return _this4.staticContent.createChoiceElement();
+          return _this5.staticContent.createChoiceElement();
         }, function () {
-          return _this4.aspect.eventSkipper;
+          return _this5.aspect.eventSkipper;
         }, this.choiceContentGenerator, function () {
-          return _this4.getVisibleMultiSelectDataList();
+          return _this5.getVisibleChoicesList();
         }, function () {
-          _this4.aspect.hideChoices();
+          _this5.aspect.hideChoices();
 
-          _this4.resetFilter();
+          _this5.resetFilter();
         }, function () {
-          _this4.aspect.alignToFilterInputItemLocation(true);
+          _this5.aspect.alignToFilterInputItemLocation(true);
 
-          _this4.aspect.showChoices();
+          _this5.aspect.showChoices();
         }, function () {
-          return _this4.filterPanel.setFocus();
+          return _this5.filterPanel.setFocus();
         });
         this.placeholderAspect = PlaceholderAspect(this.placeholderText, function () {
-          return _this4.picksList.isEmpty() && _this4.filterPanel.isEmpty();
+          return _this5.picksList.isEmpty() && _this5.filterPanel.isEmpty();
         }, this.staticContent.picksElement, this.staticContent.filterInputElement, this.css);
         this.placeholderAspect.updateEmptyInputWidth();
         this.aspect = MultiSelectInputAspect(this.window, function () {
-          return _this4.staticContent.appendToContainer();
+          return _this5.staticContent.appendToContainer();
         }, this.staticContent.filterInputElement, this.staticContent.picksElement, this.staticContent.choicesElement, function () {
-          return _this4.staticContent.isChoicesVisible();
+          return _this5.staticContent.isChoicesVisible();
         }, function (visible) {
-          return _this4.staticContent.setChoicesVisible(visible);
+          return _this5.staticContent.setChoicesVisible(visible);
         }, function () {
-          return _this4.choicesPanel.resetCandidateToHoveredMultiSelectData();
+          return _this5.choicesPanel.resetCandidateToHoveredMultiSelectData();
         }, function () {
-          _this4.aspect.hideChoices();
+          _this5.aspect.hideChoices();
 
-          _this4.resetFilter();
+          _this5.resetFilter();
         }, function () {
-          return _this4.getVisibleMultiSelectDataList().length == 0;
+          return _this5.getVisibleChoicesList().length == 0;
         },
         /*onClick*/
         function (event) {
-          if (!_this4.filterPanel.isEventTarget(event)) _this4.filterPanel.setFocus();
+          if (!_this5.filterPanel.isEventTarget(event)) _this5.filterPanel.setFocus();
         }, this.isRtl, this.popper);
         this.staticContent.attachContainer();
         this.updateDataImpl();
@@ -2168,16 +2172,16 @@
         setData: function setData(option) {
           choiceLabelElement.textContent = option.text;
         },
-        select: function select(isSelected) {
-          selectToggleStyling(isSelected);
-          choiceCheckBoxElement.checked = isSelected;
+        select: function select(isOptionSelected) {
+          selectToggleStyling(isOptionSelected);
+          choiceCheckBoxElement.checked = isOptionSelected;
         },
-        disable: function disable(isDisabled, isSelected) {
-          disable1ToggleStyling(isDisabled);
-          disable2ToggleStyling(isDisabled);
-          disable3ToggleStyling(isDisabled); // do not desable checkBox if option is selected! there should be possibility to unselect "disabled"
+        disable: function disable(isOptionDisabled, isOptionSelected) {
+          disable1ToggleStyling(isOptionDisabled);
+          disable2ToggleStyling(isOptionDisabled);
+          disable3ToggleStyling(isOptionDisabled); // do not desable checkBox if option is selected! there should be possibility to unselect "disabled"
 
-          choiceCheckBoxElement.disabled = isDisabled && !isSelected;
+          choiceCheckBoxElement.disabled = isOptionDisabled && !isOptionSelected;
         },
         hoverIn: function hoverIn(isHoverIn) {
           hoverInToggleStyling(isHoverIn);
@@ -2341,8 +2345,8 @@
             }
           }
         },
-        disable: function disable(isDisabled) {
-          disableToggleStyling(isDisabled);
+        disable: function disable(isComponentDisabled) {
+          disableToggleStyling(isComponentDisabled);
         },
         getIsFocusIn: function getIsFocusIn() {
           return isFocusIn;
@@ -2361,7 +2365,15 @@
         },
         dispose: function dispose() {
           if (ownContainerElement) containerElement.parentNode.removeChild(containerElement);else attributeBackup.restore();
-          if (ownPicksElement) picksElement.parentNode.removeChild(picksElement);
+
+          if (ownPicksElement) {
+            picksElement.parentNode.removeChild(picksElement);
+          } else {
+            // remove styles, TODO: find something better?
+            disableToggleStyling(false);
+            focusToggleStyling(false);
+          }
+
           choicesElement.parentNode.removeChild(choicesElement);
           if (pickFilterElement.parentNode) pickFilterElement.parentNode.removeChild(pickFilterElement);
           if (filterInputElement.parentNode) filterInputElement.parentNode.removeChild(filterInputElement);

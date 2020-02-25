@@ -22,12 +22,12 @@ export function ChoicesPanel(
         
         hoveredMultiSelectData = getVisibleMultiSelectDataList()[index];
         
-        hoveredMultiSelectData.ChoiceContent.hoverIn(true)
+        hoveredMultiSelectData.hoverIn(true)
     }
 
     function resetChoicesHover() {
         if (hoveredMultiSelectData) {
-            hoveredMultiSelectData.ChoiceContent.hoverIn(false)
+            hoveredMultiSelectData.hoverIn(false)
             hoveredMultiSelectData = null;
             hoveredMultiSelectDataIndex = null;
         }
@@ -81,21 +81,21 @@ export function ChoicesPanel(
         if (newIndex!==null)
         {
             if (hoveredMultiSelectData)
-                hoveredMultiSelectData.ChoiceContent.hoverIn(false)
+                hoveredMultiSelectData.hoverIn(false)
             onMoveArrow();
             //showChoices(); 
             hoverInInternal(newIndex);
         }
     }
 
-    var onChoiceElementMouseoverGeneral = function(MultiSelectData, choiceElement)
+    var onChoiceElementMouseoverGeneral = function(choice, choiceElement)
     {
         let eventSkipper = getEventSkipper();
         if (eventSkipper.isSkippable())
         {
             resetCandidateToHoveredMultiSelectData();
 
-            candidateToHoveredMultiSelectData = MultiSelectData;
+            candidateToHoveredMultiSelectData = choice;
             choiceElement.addEventListener('mousemove', processCandidateToHovered);
             choiceElement.addEventListener('mousedown', processCandidateToHovered);
 
@@ -108,18 +108,18 @@ export function ChoicesPanel(
         }
         else
         {
-            if (hoveredMultiSelectData!=MultiSelectData)
+            if (hoveredMultiSelectData!=choice)
             {
                 // mouseleave is not enough to guarantee remove hover styles in situations
                 // when style was setuped without mouse (keyboard arrows)
                 // therefore force reset manually
                 resetChoicesHover(); 
-                hoverInInternal(MultiSelectData.visibleIndex);
+                hoverInInternal(choice.visibleIndex);
             }                
         }
     }
 
-    function createChoice(MultiSelectData, createSelectedItemGen, setSelected, triggerChange, isSelected/*, isOptionDisabled*/) 
+    function adoptChoice(choice, createPick, setSelected, triggerChange, isOptionSelected/*, isOptionDisabled*/) 
     {
         var {choiceElement, attach} = createChoiceElement();
         
@@ -129,7 +129,7 @@ export function ChoicesPanel(
         // https://stackoverflow.com/questions/59022563/browser-events-mouseover-doesnt-happen-when-you-make-element-visible-and-mous
         
         var onChoiceElementMouseover = () => onChoiceElementMouseoverGeneral(
-            MultiSelectData,
+            choice,
             choiceElement
         )
 
@@ -149,62 +149,64 @@ export function ChoicesPanel(
         attach();
 
         let choiceContent = choiceContentGenerator(choiceElement); 
-        choiceContent.setData(MultiSelectData.option);
+        choiceContent.setData(choice.option);
 
-        MultiSelectData.ChoiceContent = choiceContent;
-
-        MultiSelectData.select = (isSelected)=> {
-            choiceContent.select(isSelected);
+        choice.hoverIn = (isHoverIn) => {
+            choiceContent.hoverIn(isHoverIn);
         }
 
-        MultiSelectData.disable = (isDisabled, isSelected)=> {
-            choiceContent.disable( isDisabled, isSelected); 
+        choice.select = (isOptionSelected) => {
+            choiceContent.select(isOptionSelected);
         }
 
-        MultiSelectData.disposeChoice = ()=> {
+        choice.disable = (isDisabled, isOptionSelected) => {
+            choiceContent.disable( isDisabled, isOptionSelected); 
+        }
+
+        choice.dispose = ()=> {
             choiceElement.removeEventListener('mouseover',  onChoiceElementMouseover);
             choiceElement.removeEventListener('mouseleave', onChoiceElementMouseleave);
             choiceContent.dispose();
-            MultiSelectData.select=null;
-            MultiSelectData.disable=null;
-            MultiSelectData.disposeChoice=null;
+
+            choice.hoverIn = null;
+            choice.select = null;
+            choice.disable = null;
+            choice.dispose = null;
+            choice.toggle = null;
+            choice.setVisible = null;
         }
 
-        if (MultiSelectData.isOptionDisabled)
-            choiceContent.disable(true, isSelected )
+        if (choice.isOptionDisabled)
+            choiceContent.disable(true, isOptionSelected )
 
         choiceContent.onSelected( () => {
-            if (MultiSelectData.toggle)
-                MultiSelectData.toggle();
+            if (choice.toggle)
+                choice.toggle();
             filterPanelSetFocus();
         });
-        // ------------------------------------------------------------------------------
-        
-        var createSelectedItem = () => createSelectedItemGen(MultiSelectData);
-        
-        if (isSelected)
+
+        if (isOptionSelected)
         {
-            createSelectedItem();
+            createPick();
         }
         else
         {
-            MultiSelectData.excludedFromSearch =  MultiSelectData.isOptionDisabled;
-            if (MultiSelectData.isOptionDisabled)
-                MultiSelectData.toggle = null;
+            choice.excludedFromSearch =  choice.isOptionDisabled;
+            if (choice.isOptionDisabled)
+                choice.toggle = null;
             else
-                MultiSelectData.toggle = () =>  {
-                    var confirmed = setSelected(MultiSelectData.option, true);
+                choice.toggle = () =>  {
+                    var confirmed = setSelected(choice.option, true);
                     if (!(confirmed===false)) {
-                        createSelectedItem();
+                        createPick();
                         triggerChange();
                     }
                 }
         }
-        return {
-            visible(isFiltered){
-                choiceElement.style.display = isFiltered ? 'block': 'none';
-            }
+        choice.setVisible = (isFiltered)=>{
+            choiceElement.style.display = isFiltered ? 'block': 'none';
         }
+            
     }
 
     /* Picks:
@@ -218,7 +220,7 @@ export function ChoicesPanel(
             dispose
     */
     var item = {
-        createChoice,
+        adoptChoice,
         hoverInInternal,
         stopAndResetChoicesHover(){
             let eventSkipper = getEventSkipper();
@@ -226,8 +228,6 @@ export function ChoicesPanel(
             resetChoicesHover();
         },
         resetCandidateToHoveredMultiSelectData,
-        //showChoices,
-        //hideChoices,
         toggleHovered,
         keyDownArrow
     }

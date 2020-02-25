@@ -19,17 +19,17 @@ export function choiceContentGenerator(choiceElement, common, css){
     let eventBinder = EventBinder();
     return {
         setData(option) {choiceLabelElement.textContent = option.text;},
-        select(isSelected){ 
-            selectToggleStyling(isSelected);
-            choiceCheckBoxElement.checked = isSelected 
+        select(isOptionSelected){ 
+            selectToggleStyling(isOptionSelected);
+            choiceCheckBoxElement.checked = isOptionSelected 
         }, 
-        disable(isDisabled, isSelected){
-            disable1ToggleStyling(isDisabled)
-            disable2ToggleStyling(isDisabled)
-            disable3ToggleStyling(isDisabled)
+        disable(isOptionDisabled, isOptionSelected){
+            disable1ToggleStyling(isOptionDisabled)
+            disable2ToggleStyling(isOptionDisabled)
+            disable3ToggleStyling(isOptionDisabled)
 
             // do not desable checkBox if option is selected! there should be possibility to unselect "disabled"
-            choiceCheckBoxElement.disabled = isDisabled && !isSelected;
+            choiceCheckBoxElement.disabled = isOptionDisabled && !isOptionSelected;
         },
         hoverIn(isHoverIn){
             hoverInToggleStyling(isHoverIn);

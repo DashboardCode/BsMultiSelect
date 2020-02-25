@@ -108,8 +108,8 @@ export function staticContentGenerator(element, createElement, containerClass,  
         createInputId = () => `${containerClass}-generated-filter-${containerElement.id}`;
 
     let isFocusIn = false;
-    let disableToggleStyling =  toggleStyling(picksElement, css.picks_disabled);
-    let focusToggleStyling = toggleStyling(picksElement, css.picks_focus)
+    let disableToggleStyling = toggleStyling(picksElement, css.picks_disabled);
+    let focusToggleStyling = toggleStyling(picksElement, css.picks_focus);
     return {
         initialElement:element,
         selectElement, 
@@ -144,8 +144,8 @@ export function staticContentGenerator(element, createElement, containerClass,  
                 }
             }
         },
-        disable(isDisabled){
-            disableToggleStyling(isDisabled)
+        disable(isComponentDisabled){
+            disableToggleStyling(isComponentDisabled)
         },
         getIsFocusIn(){
             return isFocusIn;
@@ -167,8 +167,13 @@ export function staticContentGenerator(element, createElement, containerClass,  
                 containerElement.parentNode.removeChild(containerElement);
             else
                 attributeBackup.restore();
-            if (ownPicksElement)
+            if (ownPicksElement){
                 picksElement.parentNode.removeChild(picksElement);
+            }else{
+                // remove styles, TODO: find something better?
+                disableToggleStyling(false);
+                focusToggleStyling(false); 
+            }
             choicesElement.parentNode.removeChild(choicesElement);
             if (pickFilterElement.parentNode)
                 pickFilterElement.parentNode.removeChild(pickFilterElement);
