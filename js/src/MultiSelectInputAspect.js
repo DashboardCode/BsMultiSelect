@@ -90,7 +90,6 @@ export function MultiSelectInputAspect (
     }
     var componentDisabledEventBinder = EventBinder();
 
-
     function showChoices() {
         if ( !isChoicesVisible() )
         {
