@@ -262,6 +262,7 @@ export class MultiSelect {
             dispose: null,
             toggle: null,
             setVisible: null,
+            createPick: null,
             resetCandidateToHoveredMultiSelectData: null, // todo: setCandidateToHovered(Boolean) ?
             //removeChoiceElement: null, // TODO
 
@@ -269,26 +270,41 @@ export class MultiSelect {
             visibleIndex: null // todo: check for errors
         };
         
+        choice.createPick = ()=>{
+            var {pick, adoptRemoveFromList} = this.createPick( 
+                    choice.option, 
+                    ()=>this.getIsOptionDisabled(choice.option),
+                    (removePick)=>this.requestPickRemove(choice, removePick)
+                );
+            var removeFromList = this.picksList.addPick(pick);
+            var remove = adoptRemoveFromList(removeFromList);
+            this.requestPickCreate(choice, remove, this.picksList.getCount());
+        }
+
         if (!isOptionHidden){
             choice.visible = true;
             choice.visibleIndex=i;
             this.choicesPanel.adoptChoice(
                 choice, 
-                () => {
-                    var {pick, adoptRemoveFromList} = this.createPick( 
-                        choice.option, 
-                            ()=>this.getIsOptionDisabled(choice.option),
-                            (removePick)=>this.requestPickRemove(choice, removePick)
-
-                        );
-                    var removeFromList = this.picksList.addPick(pick);
-                    var remove = adoptRemoveFromList(removeFromList);
-                    this.requestPickCreate(choice, remove, this.picksList.getCount());
-                },
-                (o,i) => this.setSelected(o,i),
-                () =>  this.onChange(),
                 isOptionSelected
-                );
+            );
+            // createPick, setSelected, triggerChange,
+            if (isOptionSelected){
+                choice.createPick();
+            } else
+            {
+                choice.excludedFromSearch =  choice.isOptionDisabled;
+                if (choice.isOptionDisabled)
+                    choice.toggle = null;
+                else
+                    choice.toggle = () => {
+                        var confirmed = this.setSelected(choice.option, true);
+                        if (!(confirmed===false)) {
+                            choice.createPick();
+                            this.onChange();
+                        }
+                    }
+            }
         }
         return choice;
     }
@@ -461,7 +477,7 @@ export class MultiSelect {
         if (!(confirmed===false)) {
             removePick();
             choice.isOptionSelected = false;
-            choice.excludedFromSearch = choice.isOptionDisabled;
+            choice.excludedFromSearch = choice.isOptionDisabled; 
             if (choice.isOptionDisabled)
             {
                 choice.disable( /*isOptionDisabled*/ true, /*isOptionSelected*/ false); 
@@ -472,14 +488,15 @@ export class MultiSelect {
                 choice.toggle = () => {
                     let confirmed = this.setSelected(choice.option, true);
                     if (!(confirmed===false)){
-                        var {pick, adoptRemoveFromList} = this.createPick( 
-                            choice.option, 
-                            ()=>this.getIsOptionDisabled(choice.option),
-                            (removePick)=>this.requestPickRemove(choice, removePick)                            
-                        );
-                        var removeFromList = this.picksList.addPick(pick);
-                        var remove = adoptRemoveFromList(removeFromList);
-                        this.requestPickCreate(choice, remove, this.picksList.getCount());
+                        choice.createPick();
+                        // var {pick, adoptRemoveFromList} = this.createPick( 
+                        //     choice.option, 
+                        //     ()=>this.getIsOptionDisabled(choice.option),
+                        //     (removePick)=>this.requestPickRemove(choice, removePick)                            
+                        // );
+                        // var removeFromList = this.picksList.addPick(pick);
+                        // var remove = adoptRemoveFromList(removeFromList);
+                        // this.requestPickCreate(choice, remove, this.picksList.getCount());
                         this.onChange();
                     }
                 };

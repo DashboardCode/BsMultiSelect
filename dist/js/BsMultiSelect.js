@@ -1,5 +1,5 @@
 /*!
-  * DashboardCode BsMultiSelect v0.5.21 (https://dashboardcode.github.io/BsMultiSelect/)
+  * DashboardCode BsMultiSelect v0.5.22 (https://dashboardcode.github.io/BsMultiSelect/)
   * Copyright 2017-2020 Roman Pokrovskij (github user rpokrovskij)
   * Licensed under APACHE 2 (https://github.com/DashboardCode/BsMultiSelect/blob/master/LICENSE)
   */
@@ -289,7 +289,7 @@
         }
       };
 
-      function adoptChoice(choice, createPick, setSelected, triggerChange, isOptionSelected
+      function adoptChoice(choice, isOptionSelected
       /*, isOptionDisabled*/
       ) {
         var _createChoiceElement = createChoiceElement(),
@@ -342,6 +342,7 @@
           choice.dispose = null;
           choice.toggle = null;
           choice.setVisible = null;
+          choice.createPick = null;
         };
 
         if (choice.isOptionDisabled) choiceContent.disable(true, isOptionSelected);
@@ -349,20 +350,6 @@
           if (choice.toggle) choice.toggle();
           filterPanelSetFocus();
         });
-
-        if (isOptionSelected) {
-          createPick();
-        } else {
-          choice.excludedFromSearch = choice.isOptionDisabled;
-          if (choice.isOptionDisabled) choice.toggle = null;else choice.toggle = function () {
-            var confirmed = setSelected(choice.option, true);
-
-            if (!(confirmed === false)) {
-              createPick();
-              triggerChange();
-            }
-          };
-        }
 
         choice.setVisible = function (isFiltered) {
           choiceElement.style.display = isFiltered ? 'block' : 'none';
@@ -1330,6 +1317,7 @@
           dispose: null,
           toggle: null,
           setVisible: null,
+          createPick: null,
           resetCandidateToHoveredMultiSelectData: null,
           // todo: setCandidateToHovered(Boolean) ?
           //removeChoiceElement: null, // TODO
@@ -1338,28 +1326,41 @@
 
         };
 
+        choice.createPick = function () {
+          var _this$createPick = _this.createPick(choice.option, function () {
+            return _this.getIsOptionDisabled(choice.option);
+          }, function (removePick) {
+            return _this.requestPickRemove(choice, removePick);
+          }),
+              pick = _this$createPick.pick,
+              adoptRemoveFromList = _this$createPick.adoptRemoveFromList;
+
+          var removeFromList = _this.picksList.addPick(pick);
+
+          var remove = adoptRemoveFromList(removeFromList);
+
+          _this.requestPickCreate(choice, remove, _this.picksList.getCount());
+        };
+
         if (!isOptionHidden) {
           choice.visible = true;
           choice.visibleIndex = i;
-          this.choicesPanel.adoptChoice(choice, function () {
-            var _this$createPick = _this.createPick(choice.option, function () {
-              return _this.getIsOptionDisabled(choice.option);
-            }, function (removePick) {
-              return _this.requestPickRemove(choice, removePick);
-            }),
-                pick = _this$createPick.pick,
-                adoptRemoveFromList = _this$createPick.adoptRemoveFromList;
+          this.choicesPanel.adoptChoice(choice, isOptionSelected); // createPick, setSelected, triggerChange,
 
-            var removeFromList = _this.picksList.addPick(pick);
+          if (isOptionSelected) {
+            choice.createPick();
+          } else {
+            choice.excludedFromSearch = choice.isOptionDisabled;
+            if (choice.isOptionDisabled) choice.toggle = null;else choice.toggle = function () {
+              var confirmed = _this.setSelected(choice.option, true);
 
-            var remove = adoptRemoveFromList(removeFromList);
+              if (!(confirmed === false)) {
+                choice.createPick();
 
-            _this.requestPickCreate(choice, remove, _this.picksList.getCount());
-          }, function (o, i) {
-            return _this.setSelected(o, i);
-          }, function () {
-            return _this.onChange();
-          }, isOptionSelected);
+                _this.onChange();
+              }
+            };
+          }
         }
 
         return choice;
@@ -1571,19 +1572,14 @@
               var confirmed = _this4.setSelected(choice.option, true);
 
               if (!(confirmed === false)) {
-                var _this4$createPick = _this4.createPick(choice.option, function () {
-                  return _this4.getIsOptionDisabled(choice.option);
-                }, function (removePick) {
-                  return _this4.requestPickRemove(choice, removePick);
-                }),
-                    pick = _this4$createPick.pick,
-                    adoptRemoveFromList = _this4$createPick.adoptRemoveFromList;
-
-                var removeFromList = _this4.picksList.addPick(pick);
-
-                var remove = adoptRemoveFromList(removeFromList);
-
-                _this4.requestPickCreate(choice, remove, _this4.picksList.getCount());
+                choice.createPick(); // var {pick, adoptRemoveFromList} = this.createPick( 
+                //     choice.option, 
+                //     ()=>this.getIsOptionDisabled(choice.option),
+                //     (removePick)=>this.requestPickRemove(choice, removePick)                            
+                // );
+                // var removeFromList = this.picksList.addPick(pick);
+                // var remove = adoptRemoveFromList(removeFromList);
+                // this.requestPickCreate(choice, remove, this.picksList.getCount());
 
                 _this4.onChange();
               }

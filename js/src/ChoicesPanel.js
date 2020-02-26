@@ -119,7 +119,7 @@ export function ChoicesPanel(
         }
     }
 
-    function adoptChoice(choice, createPick, setSelected, triggerChange, isOptionSelected/*, isOptionDisabled*/) 
+    function adoptChoice(choice, isOptionSelected/*, isOptionDisabled*/) 
     {
         var {choiceElement, attach} = createChoiceElement();
         
@@ -174,6 +174,7 @@ export function ChoicesPanel(
             choice.dispose = null;
             choice.toggle = null;
             choice.setVisible = null;
+            choice.createPick=null;
         }
 
         if (choice.isOptionDisabled)
@@ -184,29 +185,9 @@ export function ChoicesPanel(
                 choice.toggle();
             filterPanelSetFocus();
         });
-
-        if (isOptionSelected)
-        {
-            createPick();
-        }
-        else
-        {
-            choice.excludedFromSearch =  choice.isOptionDisabled;
-            if (choice.isOptionDisabled)
-                choice.toggle = null;
-            else
-                choice.toggle = () =>  {
-                    var confirmed = setSelected(choice.option, true);
-                    if (!(confirmed===false)) {
-                        createPick();
-                        triggerChange();
-                    }
-                }
-        }
         choice.setVisible = (isFiltered)=>{
             choiceElement.style.display = isFiltered ? 'block': 'none';
         }
-            
     }
 
     /* Picks:
