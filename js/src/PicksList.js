@@ -11,7 +11,7 @@ export function PicksList()
         removePicksTail(){  
             var i = list.getTail();
             if (i) 
-                i.removePick(); // always remove in this case
+                i.remove(); // always remove in this case
         },
         isEmpty: list.isEmpty, // function
         getCount: list.getCount,
@@ -19,7 +19,7 @@ export function PicksList()
             list.forEach(i=>i.disableRemove())
         },
         removeAll(){
-            list.forEach(i=>i.removePick())
+            list.forEach(i=>i.remove())
         },
         clear() {
             list.forEach(i=>i.dispose());

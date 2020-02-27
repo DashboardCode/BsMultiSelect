@@ -44,11 +44,17 @@ export function ChoicesPanel(
 
     function toggleHovered() {
         if (hoveredMultiSelectData) {
-            if (hoveredMultiSelectData.toggle)
-                hoveredMultiSelectData.toggle();
-            resetChoicesHover();
-            //hideChoices(); // always hide 1st
-            onToggleHovered();
+            if (hoveredMultiSelectData.isOptionSelected){
+                hoveredMultiSelectData.setSelectedFalse();
+                resetChoicesHover();
+                onToggleHovered();
+            }
+            else
+                if (!hoveredMultiSelectData.isOptionDisabled){
+                    hoveredMultiSelectData.setSelectedTrue();
+                    resetChoicesHover();
+                    onToggleHovered();
+                }
         } 
     }
 
@@ -172,17 +178,27 @@ export function ChoicesPanel(
             choice.select = null;
             choice.disable = null;
             choice.dispose = null;
-            choice.toggle = null;
             choice.setVisible = null;
-            choice.createPick=null;
+            choice.setSelectedTrue = null;
+            choice.setSelectedFalse = null;
+            choice.setChoiceSelectedFalse = null;
+            choice.setChoiceSelectedTrue = null;
+
         }
 
         if (choice.isOptionDisabled)
             choiceContent.disable(true, isOptionSelected )
 
+        // TODO movo into choiceContent to handlers switch
         choiceContent.onSelected( () => {
-            if (choice.toggle)
-                choice.toggle();
+            if (choice.isOptionSelected)
+                choice.setSelectedFalse();
+            else
+                if (!choice.isOptionDisabled )
+                    choice.setSelectedTrue();
+            //choice.setSelectedTrue();
+            //if (choice.toggle)
+            //    choice.toggle();
             filterPanelSetFocus();
         });
         choice.setVisible = (isFiltered)=>{

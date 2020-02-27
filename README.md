@@ -29,9 +29,9 @@ BsMultiSelect follows Bootstrap 4 conventions and use the same instruments (babe
 `npm install @dashboardcode/bsmultiselect`
 
 # CDN
-https://cdn.jsdelivr.net/npm/@dashboardcode/bsmultiselect@0.5.23/dist/js/BsMultiSelect.min.js
-https://cdn.jsdelivr.net/npm/@dashboardcode/bsmultiselect@0.5.23/dist/js/BsMultiSelect.esm.min.js
-https://cdn.jsdelivr.net/npm/@dashboardcode/bsmultiselect@0.5.23/dist/css/BsMultiSelect.min.css
+https://cdn.jsdelivr.net/npm/@dashboardcode/bsmultiselect@0.5.24/dist/js/BsMultiSelect.min.js
+https://cdn.jsdelivr.net/npm/@dashboardcode/bsmultiselect@0.5.24/dist/js/BsMultiSelect.esm.min.js
+https://cdn.jsdelivr.net/npm/@dashboardcode/bsmultiselect@0.5.24/dist/css/BsMultiSelect.min.css
 
 
 # Architecture
@@ -357,9 +357,9 @@ Here are recommended variants:
 ````
 Note: `input-group` variants are inconsistent, but you need them not too often. 
 
-Note: `dashboardcode-bsmultiselect` class is used just to limit the search in DOM selectors and it should be never used for styling or positioning; still `(in)valid-feedback` classes should be siblings of  `dashboardcode-bsmultiselect`.
+Note: `dashboardcode-bsmultiselect` class (aka *container*) is used just to limit the search in DOM selectors and it should be never used for styling or positioning; still `(in)valid-feedback` classes should be siblings of the *container*; (also *container* is a good element to setup rtl attribute, so when RTL for `BsMultiSelect` is configured through `js` configuration `isRtl` field, `BsMultiSelect` force rtl attribute on *container*).
 
-Note: in case of `SELECT` datasource if there are no parent `dashboardcode-bsmultiselect` (aka container) then container will be created as sibling of `SELECT`, so the `SELECT` will be located outside `dashboardcode-bsmultiselect`
+Note: in case of `SELECT` datasource if there are no parent `dashboardcode-bsmultiselect`  then container will be created as sibling of `SELECT`, so the `SELECT` will be located outside `dashboardcode-bsmultiselect`
 
 Note: picks (`UL`) should be direct child of `dashboardcode-bsmultiselect` .
 

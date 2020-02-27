@@ -1,5 +1,3 @@
-import {isFunction} from './ToolsJs';
-
 export function addToJQueryPrototype(pluginName, createPlugin, defaults, $){
     const firstChar = pluginName.charAt(0);
     const firstCharLower = firstChar.toLowerCase();
