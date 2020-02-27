@@ -58,9 +58,23 @@ function updateSizeJsForAdapter(picksElement, picksLgStyling, picksSmStyling, pi
     updateSizeJs(picksElement, picksLgStyling, picksSmStyling, picksDefStyling, getSize())
 }
 
-export function bsAppearance(multiSelect, staticContent, getValidity, getSize, 
+function getMessagesElements(containerElement){
+    var siblings = siblingsAsArray(containerElement);
+    var invalidMessages =  siblings.filter(e=>e.classList.contains('invalid-feedback') || 
+        e.classList.contains('invalid-tooltip'));
+    var validMessages =  siblings.filter(e=>e.classList.contains('valid-feedback') || 
+        e.classList.contains('valid-tooltip'));
+    return {validMessages, invalidMessages}    
+} 
+
+export function bsAppearance(
+    multiSelect, 
+    staticContent, 
+    getValidity, 
+    getSize, 
     validityApiObservable,
-    useCssPatch, css){
+    useCssPatch, 
+    css){
 
     var updateSize;
     if (!useCssPatch){
@@ -156,55 +170,49 @@ export function bsAppearance(multiSelect, staticContent, getValidity, getSize,
     multiSelect.Dispose = composeSync(wasUpdatedObservable.detachAll, validationObservable.detachAll, getManualValidationObservable.detachAll,
         multiSelect.Dispose.bind(multiSelect));
 }
-
-
-export function adjustBsOptionAdapterConfiguration(configuration, selectElement){
-
-    if(!configuration.getValidity)
-        configuration.getValidity = () => 
-            selectElement.classList.contains('is-invalid')?false:
-            (selectElement.classList.contains('is-valid')?true:null);
-    
-    if (!configuration.getDisabled) {
-        var fieldsetElement = closestByTagName(selectElement, 'FIELDSET');
-        if (fieldsetElement) {
-            configuration.getDisabled = () => selectElement.disabled || fieldsetElement.disabled;
-        } else {
-            configuration.getDisabled = () => selectElement.disabled;
-        }
-    }
-
-    if (!configuration.getSize) {
-        var inputGroupElement = closestByClassName(selectElement, 'input-group');
-        if (inputGroupElement)
-            configuration.getSize = function(){
-                var value = null;
-                if (inputGroupElement.classList.contains('input-group-lg'))
-                    value = 'lg';
-                else if (inputGroupElement.classList.contains('input-group-sm'))
-                    value = 'sm';
-                return value;
-            }
-        else 
-            configuration.getSize = function(){
-                var value = null;
-                if (selectElement.classList.contains('custom-select-lg') || selectElement.classList.contains('form-control-lg'))
-                    value = 'lg';
-                else if (selectElement.classList.contains('custom-select-sm') || selectElement.classList.contains('form-control-sm'))
-                    value = 'sm'; 
-                return value;
-        }
-    }
+export function composeGetValidity(selectElement){
+    var getValidity = () => 
+        selectElement.classList.contains('is-invalid')?false:
+        (selectElement.classList.contains('is-valid')?true:null);
+    return getValidity;
 }
 
-function getMessagesElements(containerElement){
-    var siblings = siblingsAsArray(containerElement);
-    var invalidMessages =  siblings.filter(e=>e.classList.contains('invalid-feedback') || 
-        e.classList.contains('invalid-tooltip'));
-    var validMessages =  siblings.filter(e=>e.classList.contains('valid-feedback') || 
-        e.classList.contains('valid-tooltip'));
-    return {validMessages, invalidMessages}    
-} 
+export function composeGetDisabled(selectElement){
+    var fieldsetElement = closestByTagName(selectElement, 'FIELDSET');
+    var getDisabled = null;
+    if (fieldsetElement) {
+        getDisabled = () => selectElement.disabled || fieldsetElement.disabled;
+    } else {
+        getDisabled = () => selectElement.disabled;
+    }
+    return getDisabled;
+}
+
+export function composeGetSize(selectElement){
+    let inputGroupElement = closestByClassName(selectElement, 'input-group');
+    let getSize = null;
+    if (inputGroupElement){
+        getSize = function(){
+            var value = null;
+            if (inputGroupElement.classList.contains('input-group-lg'))
+                value = 'lg';
+            else if (inputGroupElement.classList.contains('input-group-sm'))
+                value = 'sm';
+            return value;
+        }
+    }
+    else{ 
+        getSize = function(){
+            var value = null;
+            if (selectElement.classList.contains('custom-select-lg') || selectElement.classList.contains('form-control-lg'))
+                value = 'lg';
+            else if (selectElement.classList.contains('custom-select-sm') || selectElement.classList.contains('form-control-sm'))
+                value = 'sm'; 
+            return value;
+        }
+    }
+    return getSize;
+}
 
 export function getLabelElement(selectElement){
     let value = null;

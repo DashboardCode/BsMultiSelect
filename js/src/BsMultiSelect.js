@@ -1,21 +1,19 @@
 import {MultiSelect} from './MultiSelect'
 import {LabelAdapter} from './LabelAdapter';
-import {RtlAdapter} from './RtlAdapter';
 
-import {bsAppearance, adjustBsOptionAdapterConfiguration} from './BsAppearance';
+import {bsAppearance, getLabelElement,  composeGetValidity, composeGetDisabled, composeGetSize} from './BsAppearance';
 import {ValidityApi} from './ValidityApi'
 
-import {getDataGuardedWithPrefix, EventBinder, closestByTagName} from './ToolsDom';
+import {getDataGuardedWithPrefix, EventBinder, closestByTagName, getIsRtl} from './ToolsDom';
 
 import {createCss, extendCss} from './ToolsStyling';
-import {extendOverriding, extendIfUndefined, composeSync, ObservableValue, ObservableLambda} from './ToolsJs';
+import {extendOverriding, extendIfUndefined, composeSync, ObservableValue, ObservableLambda, def, defCall, isBoolean} from './ToolsJs';
 
 import {adjustLegacyConfiguration as adjustLegacySettings} from './BsMultiSelectDepricatedParameters'
 
-import {pickContentGenerator} from './PickContentGenerator';
-import {choiceContentGenerator} from './ChoiceContentGenerator';
-import {staticContentGenerator} from './StaticContentGenerator';
-import {getLabelElement} from './BsAppearance';
+import {pickContentGenerator as defPickContentGenerator} from './PickContentGenerator';
+import {choiceContentGenerator as defChoiceContentGenerator} from './ChoiceContentGenerator';
+import {staticContentGenerator  as defStaticContentGenerator} from './StaticContentGenerator';
 import {css, cssPatch} from './BsCss'
 
 const defValueMissingMessage = 'Please select an item in the list'
@@ -25,9 +23,9 @@ export const defaults = {
     containerClass : "dashboardcode-bsmultiselect",
     css: css,
     cssPatch: cssPatch,
+    label: null,
     placeholder: '',
     staticContentGenerator : null, 
-    getLabelElement: null, 
     pickContentGenerator: null, 
     choiceContentGenerator : null, 
     buildConfiguration: null,
@@ -43,7 +41,6 @@ export const defaults = {
     getSize: null,
     getValidity: null,
     
-    labelElement: null,
     valueMissingMessage: '',
     getIsValueMissing: null
 };
@@ -88,81 +85,89 @@ export function BsMultiSelect(element, environment, settings){
     
     if (configuration.buildConfiguration)
         init = configuration.buildConfiguration(element, configuration);
-    var css = configuration.css;
-
-    var useCssPatch = configuration.useCssPatch;
-    var putRtlToContainer=false; 
     
+    let {
+        css, cssPatch, useCssPatch,
+        containerClass, label, isRtl, required,
+        getIsValueMissing, setSelected, placeholder, 
+        common,
+        options, getDisabled, getValidity, getSize,
+        getIsOptionDisabled,  getIsOptionHidden
+        } = configuration;
+
     if (useCssPatch){
-        extendCss(css, configuration.cssPatch); 
+        extendCss(css, cssPatch); 
     }
+    
+    let staticContentGenerator = def(configuration.staticContentGenerator, defStaticContentGenerator);
+    let pickContentGenerator = def(configuration.pickContentGenerator, defPickContentGenerator);
+    let choiceContentGenerator = def(configuration.choiceContentGenerator, defChoiceContentGenerator);
+    let valueMissingMessage = defCall(configuration.valueMissingMessage,
+        ()=> getDataGuardedWithPrefix(element,"bsmultiselect","value-missing-message"),
+        defValueMissingMessage)
 
-    if (!configuration.staticContentGenerator)
-        configuration.staticContentGenerator = staticContentGenerator;
-    if (!configuration.getLabelElement)
-        configuration.getLabelElement = getLabelElement;
-    if (!configuration.pickContentGenerator)
-        configuration.pickContentGenerator = pickContentGenerator;
-    if (!configuration.choiceContentGenerator)
-        configuration.choiceContentGenerator = choiceContentGenerator;
+    let forceRtlOnContainer = false; 
+    if (isBoolean(isRtl))
+        forceRtlOnContainer = true;
+    else
+        isRtl = getIsRtl(element);
 
-    if (configuration.isRtl===undefined || configuration.isRtl===null)
-        configuration.isRtl = RtlAdapter(element);
-    else if (configuration.isRtl===true)
-        putRtlToContainer=true;
-
-    let staticContent = configuration.staticContentGenerator(
-        element, name=>window.document.createElement(name), configuration.containerClass, putRtlToContainer, css
+    let staticContent = staticContentGenerator(
+        element, name=>window.document.createElement(name), containerClass, forceRtlOnContainer, css
     );
     
-    if (configuration.required === null)
-            configuration.required = staticContent.required;
+    required = def(required, staticContent.required);
 
     let lazyDefinedEvent;
 
     let onChange;
     let getOptions;
-    if (configuration.options){
-        if (!configuration.getValidity)
-            configuration.getValidity=()=>null
-        if (!configuration.getDisabled)
-            configuration.getDisabled=()=>false;
-        if (!configuration.getSize)
-            configuration.getSize=()=>null;
-        let options = configuration.options;
+    if (options){
+        if (!getValidity)
+            getValidity = () => null
+        if (!getDisabled)
+            getDisabled = () => false;
+        if (!getSize)
+            getSize = () => null;
         getOptions = () => options,
         onChange = () => {
             lazyDefinedEvent()
             trigger('dashboardcode.multiselect:change')
         }
         
-        if (!configuration.getIsOptionDisabled)
-            configuration.getIsOptionDisabled = (option)=>(option.disabled===undefined)?false:option.disabled;
-        if (!configuration.getIsOptionHidden)
-            configuration.getIsOptionHidden = (option)=>(option.hidden===undefined)?false:option.hidden;     
+        if (!getIsOptionDisabled)
+            getIsOptionDisabled = (option)=>(option.disabled===undefined)?false:option.disabled;
+        if (!getIsOptionHidden)
+            getIsOptionHidden = (option)=>(option.hidden===undefined)?false:option.hidden;     
     } 
     else  
     {
-        adjustBsOptionAdapterConfiguration(
-            configuration,
-            staticContent.selectElement
-        )
-        getOptions = ()=>staticContent.selectElement.options, //.getElementsByTagName('OPTION'), 
+        let selectElement = staticContent.selectElement;
+        if(!getValidity)
+            getValidity = composeGetValidity(selectElement);
+    
+        if (!getDisabled) 
+            getDisabled = composeGetDisabled(selectElement);
+
+        if (!getSize) 
+            getSize = composeGetSize(selectElement);
+
+        getOptions = ()=>selectElement.options, //.getElementsByTagName('OPTION'), 
         onChange = () => {
             lazyDefinedEvent()
             trigger('change')
             trigger('dashboardcode.multiselect:change')
         }
 
-        if (!configuration.getIsOptionDisabled)
-            configuration.getIsOptionDisabled = (option)=>option.disabled;
-        if (!configuration.getIsOptionHidden)
-            configuration.getIsOptionHidden = (option)=>option.hidden;     
+        if (!getIsOptionDisabled)
+            getIsOptionDisabled = (option)=>option.disabled;
+        if (!getIsOptionHidden)
+            getIsOptionHidden = (option)=>option.hidden;     
     }
 
 
-    if (!configuration.getIsValueMissing){
-        configuration.getIsValueMissing = () => {
+    if (!getIsValueMissing){
+        getIsValueMissing = () => {
             let count = 0;
             let optionsArray = getOptions();
             for (var i=0; i < optionsArray.length; i++) {
@@ -172,29 +177,24 @@ export function BsMultiSelect(element, environment, settings){
             return count===0;
         }
     }
-    var isValueMissingObservable = ObservableLambda(()=>configuration.required && configuration.getIsValueMissing());
+    var isValueMissingObservable = ObservableLambda(()=>required && getIsValueMissing());
     var validationApiObservable = ObservableValue(!isValueMissingObservable.getValue())
     lazyDefinedEvent = () => isValueMissingObservable.call();
 
-    let labelAdapter = LabelAdapter(configuration.labelElement, staticContent.createInputId);
+    let labelElement = defCall(label);
+    if (!labelElement) 
+        labelElement=getLabelElement(staticContent.selectElement); 
+    let labelAdapter = LabelAdapter(labelElement, staticContent.createInputId);
 
-    if (!configuration.placeholder)
+    if (!placeholder)
     {
-        configuration.placeholder = getDataGuardedWithPrefix(element,"bsmultiselect","placeholder");
+        placeholder = getDataGuardedWithPrefix(element,"bsmultiselect","placeholder");
     }
 
-    if (!configuration.valueMissingMessage)
-    {
-        configuration.valueMissingMessage = getDataGuardedWithPrefix(element,"bsmultiselect","value-missing-message");
-        if (!configuration.valueMissingMessage)
-        {
-            configuration.valueMissingMessage = defValueMissingMessage;
-        }
-    }
-    var setSelected = configuration.setSelected;
+
+
     if (!setSelected){
         setSelected = (option, value) => {option.selected = value};
-        
         // NOTE: adding this break Chrome's form reset functionality
         // if (value) option.setAttribute('selected','');
         // else  option.removeAttribute('selected');
@@ -203,31 +203,31 @@ export function BsMultiSelect(element, environment, settings){
     var validationApi = ValidityApi(
         staticContent.filterInputElement, 
         isValueMissingObservable, 
-        configuration.valueMissingMessage,
+        valueMissingMessage,
         (isValid)=>validationApiObservable.setValue(isValid));
 
-
-    if (!configuration.common){
-        configuration.common = {
-            getDisabled: configuration.getDisabled,
-            getValidity: configuration.getValidity,
-            getSize: configuration.getSize,
+    
+    if (!common){
+        common = {
+            getDisabled,
+            getValidity,
+            getSize,
         }
     }
 
     var multiSelect = new MultiSelect(
         getOptions,
-        configuration.common,
-        configuration.getDisabled,
+        common,
+        getDisabled,
         setSelected,
-        configuration.getIsOptionDisabled,
-        configuration.getIsOptionHidden,
+        getIsOptionDisabled,
+        getIsOptionHidden,
         staticContent,
-        (pickElement) => configuration.pickContentGenerator(pickElement, configuration.common, css),
-        (choiceElement) => configuration.choiceContentGenerator(choiceElement, configuration.common, css),
+        (pickElement) => pickContentGenerator(pickElement, common, css),
+        (choiceElement) => choiceContentGenerator(choiceElement, common, css),
         labelAdapter,
-        configuration.placeholder,
-        configuration.isRtl,
+        placeholder,
+        isRtl,
         onChange,
         css,
         Popper,
@@ -249,10 +249,9 @@ export function BsMultiSelect(element, environment, settings){
     multiSelect.validationApi = validationApi;
     
     bsAppearance(
-        multiSelect, staticContent, configuration.getValidity, configuration.getSize,
+        multiSelect, staticContent, getValidity, getSize,
         validationApiObservable,
-        useCssPatch, 
-        css);
+        useCssPatch, css);
     
     if (init && init instanceof Function)
         init(multiSelect);

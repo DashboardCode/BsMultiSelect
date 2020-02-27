@@ -1,5 +1,5 @@
 /*!
-  * DashboardCode BsMultiSelect v0.5.22 (https://dashboardcode.github.io/BsMultiSelect/)
+  * DashboardCode BsMultiSelect v0.5.23 (https://dashboardcode.github.io/BsMultiSelect/)
   * Copyright 2017-2020 Roman Pokrovskij (github user rpokrovskij)
   * Licensed under APACHE 2 (https://github.com/DashboardCode/BsMultiSelect/blob/master/LICENSE)
   */
@@ -299,6 +299,9 @@ function ChoicesPanel(createChoiceElement, getEventSkipper, choiceContentGenerat
   return item;
 }
 
+function isBoolean(value) {
+  return value === true || value === false;
+}
 function isString(value) {
   return value instanceof String || typeof value === 'string';
 }
@@ -415,6 +418,32 @@ function sync() {
     if (f) f();
   });
 }
+function def() {
+  for (var _len4 = arguments.length, functions = new Array(_len4), _key4 = 0; _key4 < _len4; _key4++) {
+    functions[_key4] = arguments[_key4];
+  }
+
+  for (var _i = 0, _functions = functions; _i < _functions.length; _i++) {
+    var _f = _functions[_i];
+
+    if (_f) {
+      return _f;
+    }
+  }
+}
+function defCall() {
+  for (var _len5 = arguments.length, functions = new Array(_len5), _key5 = 0; _key5 < _len5; _key5++) {
+    functions[_key5] = arguments[_key5];
+  }
+
+  for (var _i2 = 0, _functions2 = functions; _i2 < _functions2.length; _i2++) {
+    var _f2 = _functions2[_i2];
+
+    if (_f2) {
+      if (_f2 instanceof Function) return _f2();else return _f2;
+    }
+  }
+}
 function ObservableValue(value) {
   var list = List();
   return {
@@ -434,7 +463,10 @@ function ObservableValue(value) {
       list.reset();
     }
   };
-}
+} // export function isFunction(obj){
+//     return typeof obj === 'function'
+// }
+
 function ObservableLambda(func) {
   var list = List();
   var value = func();
@@ -573,6 +605,12 @@ function siblingsAsArray(element) {
 //     }
 // }
 
+function getIsRtl(element) {
+  var isRtl = false;
+  var e = closestByAttribute(element, "dir", "rtl");
+  if (e) isRtl = true;
+  return isRtl;
+}
 function EventBinder() {
   var list = [];
   return {
@@ -1635,13 +1673,6 @@ function LabelAdapter(labelElement, createInputId) {
   };
 }
 
-function RtlAdapter(element) {
-  var isRtl = false;
-  var e = closestByAttribute(element, "dir", "rtl");
-  if (e) isRtl = true;
-  return isRtl;
-}
-
 function updateValidity(picksElement, validMessages, invalidMessages, validity) {
   if (validity === false) {
     picksElement.classList.add('is-invalid');
@@ -1704,6 +1735,20 @@ function updateSizeForAdapter(picksElement, getSize) {
 
 function updateSizeJsForAdapter(picksElement, picksLgStyling, picksSmStyling, picksDefStyling, getSize) {
   updateSizeJs(picksElement, picksLgStyling, picksSmStyling, picksDefStyling, getSize());
+}
+
+function getMessagesElements(containerElement) {
+  var siblings = siblingsAsArray(containerElement);
+  var invalidMessages = siblings.filter(function (e) {
+    return e.classList.contains('invalid-feedback') || e.classList.contains('invalid-tooltip');
+  });
+  var validMessages = siblings.filter(function (e) {
+    return e.classList.contains('valid-feedback') || e.classList.contains('valid-tooltip');
+  });
+  return {
+    validMessages: validMessages,
+    invalidMessages: invalidMessages
+  };
 }
 
 function bsAppearance(multiSelect, staticContent, getValidity, getSize, validityApiObservable, useCssPatch, css) {
@@ -1807,53 +1852,49 @@ function bsAppearance(multiSelect, staticContent, getValidity, getSize, validity
   multiSelect.UpdateAppearance = composeSync(multiSelect.UpdateAppearance.bind(multiSelect), updateSize, validationObservable.call, getManualValidationObservable.call);
   multiSelect.Dispose = composeSync(wasUpdatedObservable.detachAll, validationObservable.detachAll, getManualValidationObservable.detachAll, multiSelect.Dispose.bind(multiSelect));
 }
-function adjustBsOptionAdapterConfiguration(configuration, selectElement) {
-  if (!configuration.getValidity) configuration.getValidity = function () {
+function composeGetValidity(selectElement) {
+  var getValidity = function getValidity() {
     return selectElement.classList.contains('is-invalid') ? false : selectElement.classList.contains('is-valid') ? true : null;
   };
 
-  if (!configuration.getDisabled) {
-    var fieldsetElement = closestByTagName(selectElement, 'FIELDSET');
+  return getValidity;
+}
+function composeGetDisabled(selectElement) {
+  var fieldsetElement = closestByTagName(selectElement, 'FIELDSET');
+  var getDisabled = null;
 
-    if (fieldsetElement) {
-      configuration.getDisabled = function () {
-        return selectElement.disabled || fieldsetElement.disabled;
-      };
-    } else {
-      configuration.getDisabled = function () {
-        return selectElement.disabled;
-      };
-    }
+  if (fieldsetElement) {
+    getDisabled = function getDisabled() {
+      return selectElement.disabled || fieldsetElement.disabled;
+    };
+  } else {
+    getDisabled = function getDisabled() {
+      return selectElement.disabled;
+    };
   }
 
-  if (!configuration.getSize) {
-    var inputGroupElement = closestByClassName(selectElement, 'input-group');
-    if (inputGroupElement) configuration.getSize = function () {
+  return getDisabled;
+}
+function composeGetSize(selectElement) {
+  var inputGroupElement = closestByClassName(selectElement, 'input-group');
+  var getSize = null;
+
+  if (inputGroupElement) {
+    getSize = function getSize() {
       var value = null;
       if (inputGroupElement.classList.contains('input-group-lg')) value = 'lg';else if (inputGroupElement.classList.contains('input-group-sm')) value = 'sm';
       return value;
-    };else configuration.getSize = function () {
+    };
+  } else {
+    getSize = function getSize() {
       var value = null;
       if (selectElement.classList.contains('custom-select-lg') || selectElement.classList.contains('form-control-lg')) value = 'lg';else if (selectElement.classList.contains('custom-select-sm') || selectElement.classList.contains('form-control-sm')) value = 'sm';
       return value;
     };
   }
-}
 
-function getMessagesElements(containerElement) {
-  var siblings = siblingsAsArray(containerElement);
-  var invalidMessages = siblings.filter(function (e) {
-    return e.classList.contains('invalid-feedback') || e.classList.contains('invalid-tooltip');
-  });
-  var validMessages = siblings.filter(function (e) {
-    return e.classList.contains('valid-feedback') || e.classList.contains('valid-tooltip');
-  });
-  return {
-    validMessages: validMessages,
-    invalidMessages: invalidMessages
-  };
+  return getSize;
 }
-
 function getLabelElement(selectElement) {
   var value = null;
   var formGroup = closestByClassName(selectElement, 'form-group');
@@ -2112,7 +2153,7 @@ function choiceContentGenerator(choiceElement, common, css) {
   };
 }
 
-function staticContentGenerator(element, createElement, containerClass, putRtlToContainer, css) {
+function staticContentGenerator(element, createElement, containerClass, forceRtlOnContainer, css) {
   var selectElement = null;
   var containerElement = null;
   var picksElement = null;
@@ -2184,7 +2225,7 @@ function staticContentGenerator(element, createElement, containerClass, putRtlTo
   containerElement.classList.add(containerClass);
   var attributeBackup = AttributeBackup();
 
-  if (putRtlToContainer) {
+  if (forceRtlOnContainer) {
     attributeBackup.set(containerElement, "dir", "rtl");
   } else if (selectElement) {
     var dirAttributeValue = selectElement.getAttribute("dir");
@@ -2422,9 +2463,9 @@ var defaults = {
   containerClass: "dashboardcode-bsmultiselect",
   css: css,
   cssPatch: cssPatch,
+  label: null,
   placeholder: '',
   staticContentGenerator: null,
-  getLabelElement: null,
   pickContentGenerator: null,
   choiceContentGenerator: null,
   buildConfiguration: null,
@@ -2440,7 +2481,6 @@ var defaults = {
   getDisabled: null,
   getSize: null,
   getValidity: null,
-  labelElement: null,
   valueMissingMessage: '',
   getIsValueMissing: null
 };
@@ -2489,70 +2529,89 @@ function BsMultiSelect(element, environment, settings) {
   }
 
   if (configuration.buildConfiguration) init = configuration.buildConfiguration(element, configuration);
-  var css = configuration.css;
-  var useCssPatch = configuration.useCssPatch;
-  var putRtlToContainer = false;
+  var css = configuration.css,
+      cssPatch = configuration.cssPatch,
+      useCssPatch = configuration.useCssPatch,
+      containerClass = configuration.containerClass,
+      label = configuration.label,
+      isRtl = configuration.isRtl,
+      required = configuration.required,
+      getIsValueMissing = configuration.getIsValueMissing,
+      setSelected = configuration.setSelected,
+      placeholder = configuration.placeholder,
+      common = configuration.common,
+      options = configuration.options,
+      getDisabled = configuration.getDisabled,
+      getValidity = configuration.getValidity,
+      getSize = configuration.getSize,
+      getIsOptionDisabled = configuration.getIsOptionDisabled,
+      getIsOptionHidden = configuration.getIsOptionHidden;
 
   if (useCssPatch) {
-    extendCss(css, configuration.cssPatch);
+    extendCss(css, cssPatch);
   }
 
-  if (!configuration.staticContentGenerator) configuration.staticContentGenerator = staticContentGenerator;
-  if (!configuration.getLabelElement) configuration.getLabelElement = getLabelElement;
-  if (!configuration.pickContentGenerator) configuration.pickContentGenerator = pickContentGenerator;
-  if (!configuration.choiceContentGenerator) configuration.choiceContentGenerator = choiceContentGenerator;
-  if (configuration.isRtl === undefined || configuration.isRtl === null) configuration.isRtl = RtlAdapter(element);else if (configuration.isRtl === true) putRtlToContainer = true;
-  var staticContent = configuration.staticContentGenerator(element, function (name) {
+  var staticContentGenerator$1 = def(configuration.staticContentGenerator, staticContentGenerator);
+  var pickContentGenerator$1 = def(configuration.pickContentGenerator, pickContentGenerator);
+  var choiceContentGenerator$1 = def(configuration.choiceContentGenerator, choiceContentGenerator);
+  var valueMissingMessage = defCall(configuration.valueMissingMessage, function () {
+    return getDataGuardedWithPrefix(element, "bsmultiselect", "value-missing-message");
+  }, defValueMissingMessage);
+  var forceRtlOnContainer = false;
+  if (isBoolean(isRtl)) forceRtlOnContainer = true;else isRtl = getIsRtl(element);
+  var staticContent = staticContentGenerator$1(element, function (name) {
     return window.document.createElement(name);
-  }, configuration.containerClass, putRtlToContainer, css);
-  if (configuration.required === null) configuration.required = staticContent.required;
+  }, containerClass, forceRtlOnContainer, css);
+  required = def(required, staticContent.required);
   var lazyDefinedEvent;
   var onChange;
   var getOptions;
 
-  if (configuration.options) {
-    if (!configuration.getValidity) configuration.getValidity = function () {
+  if (options) {
+    if (!getValidity) getValidity = function getValidity() {
       return null;
     };
-    if (!configuration.getDisabled) configuration.getDisabled = function () {
+    if (!getDisabled) getDisabled = function getDisabled() {
       return false;
     };
-    if (!configuration.getSize) configuration.getSize = function () {
+    if (!getSize) getSize = function getSize() {
       return null;
     };
-    var options = configuration.options;
     getOptions = function getOptions() {
       return options;
     }, onChange = function onChange() {
       lazyDefinedEvent();
       trigger('dashboardcode.multiselect:change');
     };
-    if (!configuration.getIsOptionDisabled) configuration.getIsOptionDisabled = function (option) {
+    if (!getIsOptionDisabled) getIsOptionDisabled = function getIsOptionDisabled(option) {
       return option.disabled === undefined ? false : option.disabled;
     };
-    if (!configuration.getIsOptionHidden) configuration.getIsOptionHidden = function (option) {
+    if (!getIsOptionHidden) getIsOptionHidden = function getIsOptionHidden(option) {
       return option.hidden === undefined ? false : option.hidden;
     };
   } else {
-    adjustBsOptionAdapterConfiguration(configuration, staticContent.selectElement);
+    var selectElement = staticContent.selectElement;
+    if (!getValidity) getValidity = composeGetValidity(selectElement);
+    if (!getDisabled) getDisabled = composeGetDisabled(selectElement);
+    if (!getSize) getSize = composeGetSize(selectElement);
     getOptions = function getOptions() {
-      return staticContent.selectElement.options;
+      return selectElement.options;
     }, //.getElementsByTagName('OPTION'), 
     onChange = function onChange() {
       lazyDefinedEvent();
       trigger('change');
       trigger('dashboardcode.multiselect:change');
     };
-    if (!configuration.getIsOptionDisabled) configuration.getIsOptionDisabled = function (option) {
+    if (!getIsOptionDisabled) getIsOptionDisabled = function getIsOptionDisabled(option) {
       return option.disabled;
     };
-    if (!configuration.getIsOptionHidden) configuration.getIsOptionHidden = function (option) {
+    if (!getIsOptionHidden) getIsOptionHidden = function getIsOptionHidden(option) {
       return option.hidden;
     };
   }
 
-  if (!configuration.getIsValueMissing) {
-    configuration.getIsValueMissing = function () {
+  if (!getIsValueMissing) {
+    getIsValueMissing = function getIsValueMissing() {
       var count = 0;
       var optionsArray = getOptions();
 
@@ -2565,7 +2624,7 @@ function BsMultiSelect(element, environment, settings) {
   }
 
   var isValueMissingObservable = ObservableLambda(function () {
-    return configuration.required && configuration.getIsValueMissing();
+    return required && getIsValueMissing();
   });
   var validationApiObservable = ObservableValue(!isValueMissingObservable.getValue());
 
@@ -2573,21 +2632,13 @@ function BsMultiSelect(element, environment, settings) {
     return isValueMissingObservable.call();
   };
 
-  var labelAdapter = LabelAdapter(configuration.labelElement, staticContent.createInputId);
+  var labelElement = defCall(label);
+  if (!labelElement) labelElement = getLabelElement(staticContent.selectElement);
+  var labelAdapter = LabelAdapter(labelElement, staticContent.createInputId);
 
-  if (!configuration.placeholder) {
-    configuration.placeholder = getDataGuardedWithPrefix(element, "bsmultiselect", "placeholder");
+  if (!placeholder) {
+    placeholder = getDataGuardedWithPrefix(element, "bsmultiselect", "placeholder");
   }
-
-  if (!configuration.valueMissingMessage) {
-    configuration.valueMissingMessage = getDataGuardedWithPrefix(element, "bsmultiselect", "value-missing-message");
-
-    if (!configuration.valueMissingMessage) {
-      configuration.valueMissingMessage = defValueMissingMessage;
-    }
-  }
-
-  var setSelected = configuration.setSelected;
 
   if (!setSelected) {
     setSelected = function setSelected(option, value) {
@@ -2598,23 +2649,23 @@ function BsMultiSelect(element, environment, settings) {
 
   }
 
-  var validationApi = ValidityApi(staticContent.filterInputElement, isValueMissingObservable, configuration.valueMissingMessage, function (isValid) {
+  var validationApi = ValidityApi(staticContent.filterInputElement, isValueMissingObservable, valueMissingMessage, function (isValid) {
     return validationApiObservable.setValue(isValid);
   });
 
-  if (!configuration.common) {
-    configuration.common = {
-      getDisabled: configuration.getDisabled,
-      getValidity: configuration.getValidity,
-      getSize: configuration.getSize
+  if (!common) {
+    common = {
+      getDisabled: getDisabled,
+      getValidity: getValidity,
+      getSize: getSize
     };
   }
 
-  var multiSelect = new MultiSelect(getOptions, configuration.common, configuration.getDisabled, setSelected, configuration.getIsOptionDisabled, configuration.getIsOptionHidden, staticContent, function (pickElement) {
-    return configuration.pickContentGenerator(pickElement, configuration.common, css);
+  var multiSelect = new MultiSelect(getOptions, common, getDisabled, setSelected, getIsOptionDisabled, getIsOptionHidden, staticContent, function (pickElement) {
+    return pickContentGenerator$1(pickElement, common, css);
   }, function (choiceElement) {
-    return configuration.choiceContentGenerator(choiceElement, configuration.common, css);
-  }, labelAdapter, configuration.placeholder, configuration.isRtl, onChange, css, Popper, window);
+    return choiceContentGenerator$1(choiceElement, common, css);
+  }, labelAdapter, placeholder, isRtl, onChange, css, Popper, window);
   var resetDispose = null;
 
   if (staticContent.selectElement) {
@@ -2636,7 +2687,7 @@ function BsMultiSelect(element, environment, settings) {
 
   multiSelect.Dispose = composeSync(multiSelect.Dispose.bind(multiSelect), isValueMissingObservable.detachAll, validationApiObservable.detachAll, resetDispose);
   multiSelect.validationApi = validationApi;
-  bsAppearance(multiSelect, staticContent, configuration.getValidity, configuration.getSize, validationApiObservable, useCssPatch, css);
+  bsAppearance(multiSelect, staticContent, getValidity, getSize, validationApiObservable, useCssPatch, css);
   if (init && init instanceof Function) init(multiSelect);
   multiSelect.init(); // support browser's "step backward" on form restore
 

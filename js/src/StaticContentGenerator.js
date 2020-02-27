@@ -1,7 +1,7 @@
 import {findDirectChildByTagName, closestByClassName, AttributeBackup} from './ToolsDom';
 import  {addStyling, toggleStyling} from './ToolsStyling';
 
-export function staticContentGenerator(element, createElement, containerClass,  putRtlToContainer, css) { 
+export function staticContentGenerator(element, createElement, containerClass, forceRtlOnContainer, css) { 
     var selectElement = null;
     var containerElement = null;
     var picksElement = null;
@@ -66,7 +66,7 @@ export function staticContentGenerator(element, createElement, containerClass,  
     containerElement.classList.add(containerClass);
 
     var attributeBackup = AttributeBackup();
-    if (putRtlToContainer){
+    if (forceRtlOnContainer){
         attributeBackup.set(containerElement, "dir", "rtl");
     }
     else if (selectElement){

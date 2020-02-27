@@ -73,6 +73,14 @@ export function siblingsAsArray(element){
 //     }
 // }
 
+export function getIsRtl(element){
+    var isRtl = false;
+    var e = closestByAttribute(element,"dir","rtl");
+    if (e)
+        isRtl = true;
+    return isRtl;
+}
+
 export function EventBinder(){
     var list = [];
     return {

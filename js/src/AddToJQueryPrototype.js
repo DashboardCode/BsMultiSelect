@@ -1,3 +1,5 @@
+import {isFunction} from './ToolsJs';
+
 export function addToJQueryPrototype(pluginName, createPlugin, defaults, $){
     const firstChar = pluginName.charAt(0);
     const firstCharLower = firstChar.toLowerCase();
@@ -10,7 +12,7 @@ export function addToJQueryPrototype(pluginName, createPlugin, defaults, $){
     const dataKey = `DashboardCode.${pluginName}`;
 
     function createInstance(options, e, $e){
-        const optionsRef = (typeof options === 'object') || (typeof options === 'function')?options:null;
+        const optionsRef = (typeof options === 'object') || options instanceof Function ? options:null;
         let instance = createPlugin(e, optionsRef,
             () => {
                 $e.removeData(dataKey)

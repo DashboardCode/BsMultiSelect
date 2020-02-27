@@ -1,3 +1,7 @@
+export function isBoolean(value){
+    return value === true || value === false;
+}
+
 export function isString(value){
     return value instanceof String || typeof(value) === 'string';
 }
@@ -102,6 +106,24 @@ export function sync(...functions){
     )
 }
 
+export function def(...functions){
+    for (let f of functions) 
+        if (f) {
+           return f;
+        }
+}
+
+export function defCall(...functions){
+    for (let f of functions) 
+        if (f) {
+            if (f instanceof Function)
+                return f()
+            else
+                return f 
+        }
+}
+
+
 export function Observable(){
     var list = [];
     return {
@@ -135,6 +157,10 @@ export function ObservableValue(value){
         }
     }
 }
+
+// export function isFunction(obj){
+//     return typeof obj === 'function'
+// }
 
 export function ObservableLambda(func){
     var list = List();
