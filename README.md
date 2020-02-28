@@ -29,9 +29,9 @@ BsMultiSelect follows Bootstrap 4 conventions and use the same instruments (babe
 `npm install @dashboardcode/bsmultiselect`
 
 # CDN
-https://cdn.jsdelivr.net/npm/@dashboardcode/bsmultiselect@0.5.24/dist/js/BsMultiSelect.min.js
-https://cdn.jsdelivr.net/npm/@dashboardcode/bsmultiselect@0.5.24/dist/js/BsMultiSelect.esm.min.js
-https://cdn.jsdelivr.net/npm/@dashboardcode/bsmultiselect@0.5.24/dist/css/BsMultiSelect.min.css
+https://cdn.jsdelivr.net/npm/@dashboardcode/bsmultiselect@0.5.25/dist/js/BsMultiSelect.min.js
+https://cdn.jsdelivr.net/npm/@dashboardcode/bsmultiselect@0.5.25/dist/js/BsMultiSelect.esm.min.js
+https://cdn.jsdelivr.net/npm/@dashboardcode/bsmultiselect@0.5.25/dist/css/BsMultiSelect.min.css
 
 
 # Architecture
@@ -124,13 +124,15 @@ When data source is SELECT element then when user select option the HTML `select
 
 ## Dynamic Updates 
 
-Inspite plugin have form's `reset` event listener, there are no MutationObserver defined inside (component does not track properties on original `SELECT`, `FIELDSET`, `.was-validated` parent). 
+Inspite plugin have form's `reset` event listener, there are no MutationObserver defined inside (component does not track properties on original `SELECT`, js object data source, `FIELDSET`, `.was-validated` parent). 
 
-If you change  properties on original `SELECT` or `FIELDSET`, or toggle `.was-validated` then you will need to push changes to component with methods `UpdateIsValid`, `UpdateDisabled`, `UpdateSize`, `UpdateWasValidated`, `UpdateValidy` (`is-valid`, `is-invalid` on original `select`). Or All together with `UpdateAppearance`.
+If you change  properties on original `SELECT`, js object used as source, or `FIELDSET`(disabled), or toggle `.was-validated` then you will need to push changes to component with methods `UpdateIsValid`, `UpdateDisabled`, `UpdateSize`, `UpdateWasValidated`, `UpdateValidy` (`is-valid`, `is-invalid` on original `select`). Or All together with `UpdateAppearance`.
 
 If you change items properties (text, `selected`, `disabled`, `hidden`) or if you delete them or insert new items you need to push changes to component with  `UpdateData`.
  
-The `Update` method works like "update all": it call `UpdateAppearance` and `UpdateData`.
+`Update` method works like "update all": it call `UpdateAppearance` and `UpdateData`.
+
+`UpdateSelected` method synchronize only `selected` properties.
 
 Samples:
 

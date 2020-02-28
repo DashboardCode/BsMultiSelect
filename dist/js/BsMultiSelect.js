@@ -1,5 +1,5 @@
 /*!
-  * DashboardCode BsMultiSelect v0.5.24 (https://dashboardcode.github.io/BsMultiSelect/)
+  * DashboardCode BsMultiSelect v0.5.25-beta (https://dashboardcode.github.io/BsMultiSelect/)
   * Copyright 2017-2020 Roman Pokrovskij (github user rpokrovskij)
   * Licensed under APACHE 2 (https://github.com/DashboardCode/BsMultiSelect/blob/master/LICENSE)
   */
@@ -1235,9 +1235,7 @@
       return list;
     }
 
-    var MultiSelect =
-    /*#__PURE__*/
-    function () {
+    var MultiSelect = /*#__PURE__*/function () {
       function MultiSelect(getOptions, common, getIsComponentDisabled, setSelected, getIsOptionDisabled, getIsOptionHidden, staticContent, pickContentGenerator, choiceContentGenerator, labelAdapter, placeholderText, isRtl, onChange, css, popper, window) {
         this.isRtl = isRtl; // readonly
 

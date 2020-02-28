@@ -122,6 +122,7 @@ export function BsMultiSelect(element, environment, settings){
 
     let onChange;
     let getOptions;
+    
     if (options){
         if (!getValidity)
             getValidity = () => null
