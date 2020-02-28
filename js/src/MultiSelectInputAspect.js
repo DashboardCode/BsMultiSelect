@@ -148,7 +148,7 @@ export function MultiSelectInputAspect (
             processRemoveButtonClick(event);
         });
     }
-            
+    
     return {
         dispose(){
             popper.destroy();

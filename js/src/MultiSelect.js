@@ -4,6 +4,7 @@ import {PicksList} from './PicksList'
 import {MultiSelectInputAspect} from './MultiSelectInputAspect'
 import {PlaceholderAspect} from './PlaceholderAspect'
 import {removeElement} from './ToolsDom'
+import {Choice, toggleOptionSelected, setOptionSelectedTrue, setOptionSelectedFalse} from './Choice'
 
 import {sync} from './ToolsJs'
 
@@ -201,7 +202,7 @@ export class MultiSelect {
             let choice = this.choicesList[i];
             if (!choice.excludedFromSearch)
                 if (!choice.isOptionSelected  && !choice.isOptionDisabled && !choice.isOptionHidden)
-                    choice.setSelectedTrue();
+                    setOptionSelectedTrue(choice, this.setSelected)
         }
         this.resetFilter();
     }
@@ -247,34 +248,10 @@ export class MultiSelect {
 
     createChoice(option, i){
         let isOptionSelected = option.selected;
-
         let isOptionDisabled = this.getIsOptionDisabled(option); 
         let isOptionHidden   = this.getIsOptionHidden(option);
         
-        var choice = {
-            option: option,
-            isOptionDisabled: isOptionDisabled,
-            isOptionHidden: isOptionHidden,
-            isOptionSelected: isOptionSelected,
-
-            searchText: option.text.toLowerCase().trim(),
-            excludedFromSearch: isOptionSelected || isOptionDisabled || isOptionHidden,
-
-            hoverIn: null,
-            select: null,
-            disable: null,
-            dispose: null,
-            setVisible: null,
-            setChoiceSelectedFalse: null,
-            setChoiceSelectedTrue: null,
-            setSelectedTrue: null,
-            setSelectedFalse: null,
-            resetCandidateToHoveredMultiSelectData: null, // todo: setCandidateToHovered(Boolean) ?
-            //removeChoiceElement: null, // TODO
-
-            visible: false,
-            visibleIndex: null // todo: check for errors
-        };
+        var choice = Choice(option, isOptionSelected, isOptionDisabled, isOptionHidden);
         
         let createPick = () => {
             let pickElement = this.staticContent.createPickElement(); 
@@ -287,7 +264,9 @@ export class MultiSelect {
                 setData: () => pickContent.setData(choice.option),
                 disable: () => pickContent.disable( this.getIsOptionDisabled(choice.option) ),
                 remove: null,
-                dispose: () => { detach(); pickContent.dispose(); 
+                dispose: () => { 
+                    detach(); 
+                    pickContent.dispose(); 
                     pick.disableRemove=null; pick.setData=null; pick.disable=null; pick.remove=null; 
                     pick.dispose=null;  }, 
             }
@@ -306,14 +285,12 @@ export class MultiSelect {
                 {
                     choice.disable( /*isOptionDisabled*/ true, /*isOptionSelected*/ false); 
                 }
-                choice.select(false);
+                choice.select();
                 if (this.picksList.getCount()==0) 
                     this.placeholderAspect.updatePlacehodlerVisibility()
                 this.onChange();
             }
-            let setSelectedFalse = () => {
-                this.setOptionSelected(choice.option, false, choice.setChoiceSelectedFalse)
-            }
+            let setSelectedFalse = () => setOptionSelectedFalse(choice, this.setSelected)
             pick.remove = setSelectedFalse;
             choice.setSelectedFalse= setSelectedFalse;
         
@@ -321,26 +298,20 @@ export class MultiSelect {
 
             choice.isOptionSelected = true;
             choice.excludedFromSearch = true; // all selected excluded from search
-            choice.select(true);
+            choice.select();
             if (this.picksList.getCount()==1) 
                 this.placeholderAspect.updatePlacehodlerVisibility()
-    
         }
+
         choice.setChoiceSelectedTrue = ()=>{
             createPick();
             this.onChange();
-        }
-        choice.setSelectedTrue = () => {
-            this.setOptionSelected(choice.option, true, choice.setChoiceSelectedTrue)
         }
 
         if (!isOptionHidden){
             choice.visible = true;
             choice.visibleIndex=i;
-            this.choicesPanel.adoptChoice(
-                choice, 
-                isOptionSelected
-            );
+            this.choicesPanel.adoptChoice(choice);
             
             if (isOptionSelected){
                 createPick();
@@ -351,14 +322,6 @@ export class MultiSelect {
             }
         }
         return choice;
-    }
-
-
-    setOptionSelected(option, val, onSucces){
-        var confirmed = this.setSelected(option, val);
-        if (!(confirmed===false)) {
-            onSucces();
-        }
     }
 
     updateDataImpl(){
@@ -434,7 +397,7 @@ export class MultiSelect {
                 let fullMatchChoice =  this.filteredChoicesList[0];
                 if (fullMatchChoice.searchText == text)
                 {
-                    fullMatchChoice.setSelectedTrue();
+                    this.setOptionSelectedTrue(fullMatchChoice, this.setSelected);
                     this.filterPanel.setEmpty(); // clear
                     this.placeholderAspect.updateEmptyInputWidth();
                     isEmpty=true;
@@ -511,6 +474,7 @@ export class MultiSelect {
 
         this.choicesPanel = ChoicesPanel(
             ()=> this.staticContent.createChoiceElement(),
+            (choice)=> toggleOptionSelected(choice, this.setSelected),
             () => this.aspect.eventSkipper,
             this.choiceContentGenerator,
             () => this.getVisibleChoicesList(),

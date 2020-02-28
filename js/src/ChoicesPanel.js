@@ -1,5 +1,6 @@
 export function ChoicesPanel(
-        createChoiceElement, 
+        createChoiceElement,
+        toggle, 
         getEventSkipper, 
         choiceContentGenerator, 
         getVisibleMultiSelectDataList, 
@@ -43,18 +44,12 @@ export function ChoicesPanel(
     }
 
     function toggleHovered() {
-        if (hoveredMultiSelectData) {
-            if (hoveredMultiSelectData.isOptionSelected){
-                hoveredMultiSelectData.setSelectedFalse();
+        let choice = hoveredMultiSelectData;
+        if (choice) {
+            if (toggle(choice)){
                 resetChoicesHover();
                 onToggleHovered();
             }
-            else
-                if (!hoveredMultiSelectData.isOptionDisabled){
-                    hoveredMultiSelectData.setSelectedTrue();
-                    resetChoicesHover();
-                    onToggleHovered();
-                }
         } 
     }
 
@@ -125,7 +120,7 @@ export function ChoicesPanel(
         }
     }
 
-    function adoptChoice(choice, isOptionSelected/*, isOptionDisabled*/) 
+    function adoptChoice(choice) 
     {
         var {choiceElement, attach} = createChoiceElement();
         
@@ -161,8 +156,8 @@ export function ChoicesPanel(
             choiceContent.hoverIn(isHoverIn);
         }
 
-        choice.select = (isOptionSelected) => {
-            choiceContent.select(isOptionSelected);
+        choice.select = () => {
+            choiceContent.select(choice.isOptionSelected);
         }
 
         choice.disable = (isDisabled, isOptionSelected) => {
@@ -187,18 +182,11 @@ export function ChoicesPanel(
         }
 
         if (choice.isOptionDisabled)
-            choiceContent.disable(true, isOptionSelected )
+            choiceContent.disable(true, choice.isOptionSelected )
 
         // TODO movo into choiceContent to handlers switch
         choiceContent.onSelected( () => {
-            if (choice.isOptionSelected)
-                choice.setSelectedFalse();
-            else
-                if (!choice.isOptionDisabled )
-                    choice.setSelectedTrue();
-            //choice.setSelectedTrue();
-            //if (choice.toggle)
-            //    choice.toggle();
+            toggle(choice)
             filterPanelSetFocus();
         });
         choice.setVisible = (isFiltered)=>{

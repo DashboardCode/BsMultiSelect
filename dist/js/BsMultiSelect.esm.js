@@ -1,5 +1,5 @@
 /*!
-  * DashboardCode BsMultiSelect v0.5.24-beta (https://dashboardcode.github.io/BsMultiSelect/)
+  * DashboardCode BsMultiSelect v0.5.24 (https://dashboardcode.github.io/BsMultiSelect/)
   * Copyright 2017-2020 Roman Pokrovskij (github user rpokrovskij)
   * Licensed under APACHE 2 (https://github.com/DashboardCode/BsMultiSelect/blob/master/LICENSE)
   */
@@ -97,7 +97,7 @@ onInput //, // filter
   };
 }
 
-function ChoicesPanel(createChoiceElement, getEventSkipper, choiceContentGenerator, getVisibleMultiSelectDataList, onToggleHovered, onMoveArrow, filterPanelSetFocus) {
+function ChoicesPanel(createChoiceElement, toggle, getEventSkipper, choiceContentGenerator, getVisibleMultiSelectDataList, onToggleHovered, onMoveArrow, filterPanelSetFocus) {
   var hoveredMultiSelectData = null;
   var hoveredMultiSelectDataIndex = null;
   var candidateToHoveredMultiSelectData = null;
@@ -132,13 +132,10 @@ function ChoicesPanel(createChoiceElement, getEventSkipper, choiceContentGenerat
   };
 
   function toggleHovered() {
-    if (hoveredMultiSelectData) {
-      if (hoveredMultiSelectData.isOptionSelected) {
-        hoveredMultiSelectData.setSelectedFalse();
-        resetChoicesHover();
-        onToggleHovered();
-      } else if (!hoveredMultiSelectData.isOptionDisabled) {
-        hoveredMultiSelectData.setSelectedTrue();
+    var choice = hoveredMultiSelectData;
+
+    if (choice) {
+      if (toggle(choice)) {
         resetChoicesHover();
         onToggleHovered();
       }
@@ -210,9 +207,7 @@ function ChoicesPanel(createChoiceElement, getEventSkipper, choiceContentGenerat
     }
   };
 
-  function adoptChoice(choice, isOptionSelected
-  /*, isOptionDisabled*/
-  ) {
+  function adoptChoice(choice) {
     var _createChoiceElement = createChoiceElement(),
         choiceElement = _createChoiceElement.choiceElement,
         attach = _createChoiceElement.attach; // in chrome it happens on "become visible" so we need to skip it, 
@@ -245,8 +240,8 @@ function ChoicesPanel(createChoiceElement, getEventSkipper, choiceContentGenerat
       choiceContent.hoverIn(isHoverIn);
     };
 
-    choice.select = function (isOptionSelected) {
-      choiceContent.select(isOptionSelected);
+    choice.select = function () {
+      choiceContent.select(choice.isOptionSelected);
     };
 
     choice.disable = function (isDisabled, isOptionSelected) {
@@ -268,13 +263,10 @@ function ChoicesPanel(createChoiceElement, getEventSkipper, choiceContentGenerat
       choice.setChoiceSelectedTrue = null;
     };
 
-    if (choice.isOptionDisabled) choiceContent.disable(true, isOptionSelected); // TODO movo into choiceContent to handlers switch
+    if (choice.isOptionDisabled) choiceContent.disable(true, choice.isOptionSelected); // TODO movo into choiceContent to handlers switch
 
     choiceContent.onSelected(function () {
-      if (choice.isOptionSelected) choice.setSelectedFalse();else if (!choice.isOptionDisabled) choice.setSelectedTrue(); //choice.setSelectedTrue();
-      //if (choice.toggle)
-      //    choice.toggle();
-
+      toggle(choice);
       filterPanelSetFocus();
     });
 
@@ -1071,6 +1063,58 @@ function PlaceholderAspect(placeholderText, isEmpty, picksElement, inputElement,
   };
 }
 
+function Choice(option, isOptionSelected, isOptionDisabled, isOptionHidden) {
+  return {
+    option: option,
+    isOptionDisabled: isOptionDisabled,
+    isOptionHidden: isOptionHidden,
+    isOptionSelected: isOptionSelected,
+    searchText: option.text.toLowerCase().trim(),
+    excludedFromSearch: isOptionSelected || isOptionDisabled || isOptionHidden,
+    hoverIn: null,
+    select: null,
+    disable: null,
+    dispose: null,
+    setVisible: null,
+    setChoiceSelectedFalse: null,
+    setChoiceSelectedTrue: null,
+    //setSelectedTrue: null, // TODO remove / replace with this.setOptionSelected
+    //setSelectedFalse: null, // TODO remove / replace with this.setOptionSelected
+    resetCandidateToHoveredMultiSelectData: null,
+    // todo: setCandidateToHovered(Boolean) ?
+    visible: false,
+    visibleIndex: null // todo: check for errors
+
+  };
+}
+function setOptionSelectedTrue(choice, setSelected) {
+  var value = false;
+  var confirmed = setSelected(choice.option, true);
+
+  if (!(confirmed === false)) {
+    choice.setChoiceSelectedTrue();
+    value = true;
+  }
+
+  return value;
+}
+function setOptionSelectedFalse(choice, setSelected) {
+  var value = false;
+  var confirmed = setSelected(choice.option, false);
+
+  if (!(confirmed === false)) {
+    choice.setChoiceSelectedFalse();
+    value = true;
+  }
+
+  return value;
+}
+function toggleOptionSelected(choice, setSelected) {
+  var value = false;
+  if (choice.isOptionSelected) value = setOptionSelectedFalse(choice, setSelected);else if (!choice.isOptionDisabled) value = setOptionSelectedTrue(choice, setSelected);
+  return value;
+}
+
 function filterMultiSelectData(MultiSelectData, isFiltered, visibleIndex) {
   MultiSelectData.visible = isFiltered;
   MultiSelectData.visibleIndex = visibleIndex;
@@ -1243,7 +1287,7 @@ function () {
 
     for (var i = 0; i < this.choicesList.length; i++) {
       var choice = this.choicesList[i];
-      if (!choice.excludedFromSearch) if (!choice.isOptionSelected && !choice.isOptionDisabled && !choice.isOptionHidden) choice.setSelectedTrue();
+      if (!choice.excludedFromSearch) if (!choice.isOptionSelected && !choice.isOptionDisabled && !choice.isOptionHidden) setOptionSelectedTrue(choice, this.setSelected);
     }
 
     this.resetFilter();
@@ -1293,29 +1337,7 @@ function () {
     var isOptionSelected = option.selected;
     var isOptionDisabled = this.getIsOptionDisabled(option);
     var isOptionHidden = this.getIsOptionHidden(option);
-    var choice = {
-      option: option,
-      isOptionDisabled: isOptionDisabled,
-      isOptionHidden: isOptionHidden,
-      isOptionSelected: isOptionSelected,
-      searchText: option.text.toLowerCase().trim(),
-      excludedFromSearch: isOptionSelected || isOptionDisabled || isOptionHidden,
-      hoverIn: null,
-      select: null,
-      disable: null,
-      dispose: null,
-      setVisible: null,
-      setChoiceSelectedFalse: null,
-      setChoiceSelectedTrue: null,
-      setSelectedTrue: null,
-      setSelectedFalse: null,
-      resetCandidateToHoveredMultiSelectData: null,
-      // todo: setCandidateToHovered(Boolean) ?
-      //removeChoiceElement: null, // TODO
-      visible: false,
-      visibleIndex: null // todo: check for errors
-
-    };
+    var choice = Choice(option, isOptionSelected, isOptionDisabled, isOptionHidden);
 
     var createPick = function createPick() {
       var pickElement = _this.staticContent.createPickElement();
@@ -1372,14 +1394,14 @@ function () {
           false);
         }
 
-        choice.select(false);
+        choice.select();
         if (_this.picksList.getCount() == 0) _this.placeholderAspect.updatePlacehodlerVisibility();
 
         _this.onChange();
       };
 
       var setSelectedFalse = function setSelectedFalse() {
-        _this.setOptionSelected(choice.option, false, choice.setChoiceSelectedFalse);
+        return setOptionSelectedFalse(choice, _this.setSelected);
       };
 
       pick.remove = setSelectedFalse;
@@ -1390,7 +1412,7 @@ function () {
       choice.isOptionSelected = true;
       choice.excludedFromSearch = true; // all selected excluded from search
 
-      choice.select(true);
+      choice.select();
       if (_this.picksList.getCount() == 1) _this.placeholderAspect.updatePlacehodlerVisibility();
     };
 
@@ -1400,14 +1422,10 @@ function () {
       _this.onChange();
     };
 
-    choice.setSelectedTrue = function () {
-      _this.setOptionSelected(choice.option, true, choice.setChoiceSelectedTrue);
-    };
-
     if (!isOptionHidden) {
       choice.visible = true;
       choice.visibleIndex = i;
-      this.choicesPanel.adoptChoice(choice, isOptionSelected);
+      this.choicesPanel.adoptChoice(choice);
 
       if (isOptionSelected) {
         createPick();
@@ -1417,14 +1435,6 @@ function () {
     }
 
     return choice;
-  };
-
-  _proto.setOptionSelected = function setOptionSelected(option, val, onSucces) {
-    var confirmed = this.setSelected(option, val);
-
-    if (!(confirmed === false)) {
-      onSucces();
-    }
   };
 
   _proto.updateDataImpl = function updateDataImpl() {
@@ -1499,7 +1509,7 @@ function () {
         var fullMatchChoice = this.filteredChoicesList[0];
 
         if (fullMatchChoice.searchText == text) {
-          fullMatchChoice.setSelectedTrue();
+          this.setOptionSelectedTrue(fullMatchChoice, this.setSelected);
           this.filterPanel.setEmpty(); // clear
 
           this.placeholderAspect.updateEmptyInputWidth();
@@ -1586,6 +1596,8 @@ function () {
     this.picksList = PicksList();
     this.choicesPanel = ChoicesPanel(function () {
       return _this3.staticContent.createChoiceElement();
+    }, function (choice) {
+      return toggleOptionSelected(choice, _this3.setSelected);
     }, function () {
       return _this3.aspect.eventSkipper;
     }, this.choiceContentGenerator, function () {
