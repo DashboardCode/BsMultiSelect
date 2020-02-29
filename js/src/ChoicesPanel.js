@@ -8,43 +8,44 @@ export function ChoicesPanel(
         onMoveArrow, 
         filterPanelSetFocus) {
     
-    var hoveredMultiSelectData=null;
-    var hoveredMultiSelectDataIndex = null;
-    var candidateToHoveredMultiSelectData=null;
+    var hoveredChoice=null;
+    var hoveredChoiceIndex = null;
+    var candidateToHoveredChoice=null;
 
-    function resetCandidateToHoveredMultiSelectData(){
-        if (candidateToHoveredMultiSelectData){
-            candidateToHoveredMultiSelectData.resetCandidateToHoveredMultiSelectData();
+    function resetCandidateToHoveredChoice(){
+        if (candidateToHoveredChoice){
+            candidateToHoveredChoice.resetCandidateToHoveredChoice();
         }
     }
 
     var hoverInInternal = function(index){
-        hoveredMultiSelectDataIndex = index;
+        hoveredChoiceIndex = index;
         
-        hoveredMultiSelectData = getVisibleMultiSelectDataList()[index];
-        
-        hoveredMultiSelectData.hoverIn(true)
+        hoveredChoice = getVisibleMultiSelectDataList()[index];
+        hoveredChoice.isHoverIn = true;
+        hoveredChoice.updateHoverIn()
     }
 
     function resetChoicesHover() {
-        if (hoveredMultiSelectData) {
-            hoveredMultiSelectData.hoverIn(false)
-            hoveredMultiSelectData = null;
-            hoveredMultiSelectDataIndex = null;
+        if (hoveredChoice) {
+            hoveredChoice.isHoverIn = false;
+            hoveredChoice.updateHoverIn()
+            hoveredChoice = null;
+            hoveredChoiceIndex = null;
         }
     }
 
     var processCandidateToHovered = function() {
-        if (hoveredMultiSelectData != candidateToHoveredMultiSelectData)
+        if (hoveredChoice != candidateToHoveredChoice)
         {
             resetChoicesHover(); 
-            hoverInInternal(candidateToHoveredMultiSelectData.visibleIndex);
+            hoverInInternal(candidateToHoveredChoice.visibleIndex);
         }
-        resetCandidateToHoveredMultiSelectData();
+        resetCandidateToHoveredChoice();
     }
 
     function toggleHovered() {
-        let choice = hoveredMultiSelectData;
+        let choice = hoveredChoice;
         if (choice) {
             if (toggle(choice)){
                 resetChoicesHover();
@@ -59,7 +60,7 @@ export function ChoicesPanel(
         let newIndex=null;
         if (length > 0) {
             if (down) {
-                let i = hoveredMultiSelectDataIndex===null?0:hoveredMultiSelectDataIndex+1;
+                let i = hoveredChoiceIndex===null?0:hoveredChoiceIndex+1;
                 while(i<length){
                     if (visibleMultiSelectDataList[i].visible){
                         newIndex=i;
@@ -68,7 +69,7 @@ export function ChoicesPanel(
                     i++;
                 }
             } else {
-                let i = hoveredMultiSelectDataIndex===null?length-1:hoveredMultiSelectDataIndex-1;
+                let i = hoveredChoiceIndex===null?length-1:hoveredChoiceIndex-1;
                 while(i>=0){
                     if (visibleMultiSelectDataList[i].visible){
                         newIndex=i;
@@ -81,8 +82,10 @@ export function ChoicesPanel(
         
         if (newIndex!==null)
         {
-            if (hoveredMultiSelectData)
-                hoveredMultiSelectData.hoverIn(false)
+            if (hoveredChoice){
+                hoveredChoice.isHoverIn = false;
+                hoveredChoice.updateHoverIn()
+            }
             onMoveArrow();
             //showChoices(); 
             hoverInInternal(newIndex);
@@ -94,22 +97,22 @@ export function ChoicesPanel(
         let eventSkipper = getEventSkipper();
         if (eventSkipper.isSkippable())
         {
-            resetCandidateToHoveredMultiSelectData();
+            resetCandidateToHoveredChoice();
 
-            candidateToHoveredMultiSelectData = choice;
+            candidateToHoveredChoice = choice;
             choiceElement.addEventListener('mousemove', processCandidateToHovered);
             choiceElement.addEventListener('mousedown', processCandidateToHovered);
 
-            candidateToHoveredMultiSelectData.resetCandidateToHoveredMultiSelectData = ()=>{
+            candidateToHoveredChoice.resetCandidateToHoveredChoice = ()=>{
                 choiceElement.removeEventListener('mousemove', processCandidateToHovered);
                 choiceElement.removeEventListener('mousedown', processCandidateToHovered);
-                candidateToHoveredMultiSelectData.resetCandidateToHoveredMultiSelectData=null;
-                candidateToHoveredMultiSelectData = null;
+                candidateToHoveredChoice.resetCandidateToHoveredChoice=null;
+                candidateToHoveredChoice = null;
             }
         }
         else
         {
-            if (hoveredMultiSelectData!=choice)
+            if (hoveredChoice!=choice)
             {
                 // mouseleave is not enough to guarantee remove hover styles in situations
                 // when style was setuped without mouse (keyboard arrows)
@@ -152,8 +155,8 @@ export function ChoicesPanel(
         let choiceContent = choiceContentGenerator(choiceElement); 
         choiceContent.setData(choice.option);
 
-        choice.hoverIn = (isHoverIn) => {
-            choiceContent.hoverIn(isHoverIn);
+        choice.updateHoverIn = () => {
+            choiceContent.hoverIn(choice.isHoverIn);
         }
 
         choice.select = () => {
@@ -169,16 +172,14 @@ export function ChoicesPanel(
             choiceElement.removeEventListener('mouseleave', onChoiceElementMouseleave);
             choiceContent.dispose();
 
-            choice.hoverIn = null;
+            choice.setVisible = null;
+            choice.updateHoverIn = null;
             choice.select = null;
             choice.disable = null;
             choice.dispose = null;
-            choice.setVisible = null;
-            choice.setSelectedTrue = null;
-            choice.setSelectedFalse = null;
-            choice.setChoiceSelectedFalse = null;
-            choice.setChoiceSelectedTrue = null;
 
+            choice.updateSelectedFalse = null;
+            choice.updateSelectedTrue = null;
         }
 
         if (choice.isOptionDisabled)
@@ -192,6 +193,7 @@ export function ChoicesPanel(
         choice.setVisible = (isFiltered)=>{
             choiceElement.style.display = isFiltered ? 'block': 'none';
         }
+        
     }
 
     /* Picks:
@@ -212,7 +214,7 @@ export function ChoicesPanel(
             eventSkipper.setSkippable(); //disable Hover On MouseEnter - filter's changes should remove hover
             resetChoicesHover();
         },
-        resetCandidateToHoveredMultiSelectData,
+        resetCandidateToHoveredChoice: resetCandidateToHoveredChoice,
         toggleHovered,
         keyDownArrow
     }

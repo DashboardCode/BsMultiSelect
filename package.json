@@ -1,6 +1,6 @@
 {
   "name": "@dashboardcode/bsmultiselect",
-  "version": "0.5.25-beta",
+  "version": "0.5.25",
   "private": false,
   "description": "Bootstrap 4 component - multiselect input",
   "homepage": "https://dashboardcode.github.io/BsMultiSelect/",
@@ -36,7 +36,7 @@
     "postcss-cli": "^7.1.0",
     "rollup": "1.32.0",
     "rollup-plugin-babel": "^4.3.3",
-    "sass": "^1.26.1",
+    "sass": "^1.26.2",
     "size-limit": "4.0.2",
     "stylelint": "^13.2.0",
     "stylelint-config-recommended-scss": "^4.2.0",

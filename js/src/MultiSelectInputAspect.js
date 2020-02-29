@@ -8,7 +8,7 @@ export function MultiSelectInputAspect (
     choicesElement, 
     isChoicesVisible,
     setChoicesVisible,
-    resetCandidateToHoveredMultiSelectData,
+    resetCandidateToHoveredChoice,
     resetFilter,
     isChoiceEmpty,
     onClick,
@@ -107,7 +107,7 @@ export function MultiSelectInputAspect (
     }
 
     function hideChoices() {
-        resetCandidateToHoveredMultiSelectData();
+        resetCandidateToHoveredChoice();
         if (isChoicesVisible())
         {
             setChoicesVisible(false);

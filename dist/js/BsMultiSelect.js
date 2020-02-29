@@ -1,5 +1,5 @@
 /*!
-  * DashboardCode BsMultiSelect v0.5.25-beta (https://dashboardcode.github.io/BsMultiSelect/)
+  * DashboardCode BsMultiSelect v0.5.25 (https://dashboardcode.github.io/BsMultiSelect/)
   * Copyright 2017-2020 Roman Pokrovskij (github user rpokrovskij)
   * Licensed under APACHE 2 (https://github.com/DashboardCode/BsMultiSelect/blob/master/LICENSE)
   */
@@ -182,41 +182,43 @@
     }
 
     function ChoicesPanel(createChoiceElement, toggle, getEventSkipper, choiceContentGenerator, getVisibleMultiSelectDataList, onToggleHovered, onMoveArrow, filterPanelSetFocus) {
-      var hoveredMultiSelectData = null;
-      var hoveredMultiSelectDataIndex = null;
-      var candidateToHoveredMultiSelectData = null;
+      var hoveredChoice = null;
+      var hoveredChoiceIndex = null;
+      var candidateToHoveredChoice = null;
 
-      function resetCandidateToHoveredMultiSelectData() {
-        if (candidateToHoveredMultiSelectData) {
-          candidateToHoveredMultiSelectData.resetCandidateToHoveredMultiSelectData();
+      function resetCandidateToHoveredChoice() {
+        if (candidateToHoveredChoice) {
+          candidateToHoveredChoice.resetCandidateToHoveredChoice();
         }
       }
 
       var hoverInInternal = function hoverInInternal(index) {
-        hoveredMultiSelectDataIndex = index;
-        hoveredMultiSelectData = getVisibleMultiSelectDataList()[index];
-        hoveredMultiSelectData.hoverIn(true);
+        hoveredChoiceIndex = index;
+        hoveredChoice = getVisibleMultiSelectDataList()[index];
+        hoveredChoice.isHoverIn = true;
+        hoveredChoice.updateHoverIn();
       };
 
       function resetChoicesHover() {
-        if (hoveredMultiSelectData) {
-          hoveredMultiSelectData.hoverIn(false);
-          hoveredMultiSelectData = null;
-          hoveredMultiSelectDataIndex = null;
+        if (hoveredChoice) {
+          hoveredChoice.isHoverIn = false;
+          hoveredChoice.updateHoverIn();
+          hoveredChoice = null;
+          hoveredChoiceIndex = null;
         }
       }
 
       var processCandidateToHovered = function processCandidateToHovered() {
-        if (hoveredMultiSelectData != candidateToHoveredMultiSelectData) {
+        if (hoveredChoice != candidateToHoveredChoice) {
           resetChoicesHover();
-          hoverInInternal(candidateToHoveredMultiSelectData.visibleIndex);
+          hoverInInternal(candidateToHoveredChoice.visibleIndex);
         }
 
-        resetCandidateToHoveredMultiSelectData();
+        resetCandidateToHoveredChoice();
       };
 
       function toggleHovered() {
-        var choice = hoveredMultiSelectData;
+        var choice = hoveredChoice;
 
         if (choice) {
           if (toggle(choice)) {
@@ -233,7 +235,7 @@
 
         if (length > 0) {
           if (down) {
-            var i = hoveredMultiSelectDataIndex === null ? 0 : hoveredMultiSelectDataIndex + 1;
+            var i = hoveredChoiceIndex === null ? 0 : hoveredChoiceIndex + 1;
 
             while (i < length) {
               if (visibleMultiSelectDataList[i].visible) {
@@ -244,7 +246,7 @@
               i++;
             }
           } else {
-            var _i = hoveredMultiSelectDataIndex === null ? length - 1 : hoveredMultiSelectDataIndex - 1;
+            var _i = hoveredChoiceIndex === null ? length - 1 : hoveredChoiceIndex - 1;
 
             while (_i >= 0) {
               if (visibleMultiSelectDataList[_i].visible) {
@@ -258,7 +260,11 @@
         }
 
         if (newIndex !== null) {
-          if (hoveredMultiSelectData) hoveredMultiSelectData.hoverIn(false);
+          if (hoveredChoice) {
+            hoveredChoice.isHoverIn = false;
+            hoveredChoice.updateHoverIn();
+          }
+
           onMoveArrow(); //showChoices(); 
 
           hoverInInternal(newIndex);
@@ -269,19 +275,19 @@
         var eventSkipper = getEventSkipper();
 
         if (eventSkipper.isSkippable()) {
-          resetCandidateToHoveredMultiSelectData();
-          candidateToHoveredMultiSelectData = choice;
+          resetCandidateToHoveredChoice();
+          candidateToHoveredChoice = choice;
           choiceElement.addEventListener('mousemove', processCandidateToHovered);
           choiceElement.addEventListener('mousedown', processCandidateToHovered);
 
-          candidateToHoveredMultiSelectData.resetCandidateToHoveredMultiSelectData = function () {
+          candidateToHoveredChoice.resetCandidateToHoveredChoice = function () {
             choiceElement.removeEventListener('mousemove', processCandidateToHovered);
             choiceElement.removeEventListener('mousedown', processCandidateToHovered);
-            candidateToHoveredMultiSelectData.resetCandidateToHoveredMultiSelectData = null;
-            candidateToHoveredMultiSelectData = null;
+            candidateToHoveredChoice.resetCandidateToHoveredChoice = null;
+            candidateToHoveredChoice = null;
           };
         } else {
-          if (hoveredMultiSelectData != choice) {
+          if (hoveredChoice != choice) {
             // mouseleave is not enough to guarantee remove hover styles in situations
             // when style was setuped without mouse (keyboard arrows)
             // therefore force reset manually
@@ -320,8 +326,8 @@
         var choiceContent = choiceContentGenerator(choiceElement);
         choiceContent.setData(choice.option);
 
-        choice.hoverIn = function (isHoverIn) {
-          choiceContent.hoverIn(isHoverIn);
+        choice.updateHoverIn = function () {
+          choiceContent.hoverIn(choice.isHoverIn);
         };
 
         choice.select = function () {
@@ -336,15 +342,13 @@
           choiceElement.removeEventListener('mouseover', onChoiceElementMouseover);
           choiceElement.removeEventListener('mouseleave', onChoiceElementMouseleave);
           choiceContent.dispose();
-          choice.hoverIn = null;
+          choice.setVisible = null;
+          choice.updateHoverIn = null;
           choice.select = null;
           choice.disable = null;
           choice.dispose = null;
-          choice.setVisible = null;
-          choice.setSelectedTrue = null;
-          choice.setSelectedFalse = null;
-          choice.setChoiceSelectedFalse = null;
-          choice.setChoiceSelectedTrue = null;
+          choice.updateSelectedFalse = null;
+          choice.updateSelectedTrue = null;
         };
 
         if (choice.isOptionDisabled) choiceContent.disable(true, choice.isOptionSelected); // TODO movo into choiceContent to handlers switch
@@ -379,7 +383,7 @@
 
           resetChoicesHover();
         },
-        resetCandidateToHoveredMultiSelectData: resetCandidateToHoveredMultiSelectData,
+        resetCandidateToHoveredChoice: resetCandidateToHoveredChoice,
         toggleHovered: toggleHovered,
         keyDownArrow: keyDownArrow
       };
@@ -756,7 +760,7 @@
       };
     }
 
-    function MultiSelectInputAspect(window, appendToContainer, filterInputElement, picksElement, choicesElement, isChoicesVisible, setChoicesVisible, resetCandidateToHoveredMultiSelectData, resetFilter, isChoiceEmpty, onClick, isRtl, Popper) {
+    function MultiSelectInputAspect(window, appendToContainer, filterInputElement, picksElement, choicesElement, isChoicesVisible, setChoicesVisible, resetCandidateToHoveredChoice, resetFilter, isChoiceEmpty, onClick, isRtl, Popper) {
       appendToContainer();
       var document = window.document;
       var eventSkipper = EventSkipper(window);
@@ -846,7 +850,7 @@
       }
 
       function hideChoices() {
-        resetCandidateToHoveredMultiSelectData();
+        resetCandidateToHoveredChoice();
 
         if (isChoicesVisible()) {
           setChoicesVisible(false);
@@ -1148,35 +1152,39 @@
     }
 
     function Choice(option, isOptionSelected, isOptionDisabled, isOptionHidden) {
-      return {
+      var choice = {
         option: option,
         isOptionDisabled: isOptionDisabled,
         isOptionHidden: isOptionHidden,
         isOptionSelected: isOptionSelected,
+        isHoverIn: false,
         searchText: option.text.toLowerCase().trim(),
         excludedFromSearch: isOptionSelected || isOptionDisabled || isOptionHidden,
-        hoverIn: null,
+        setVisible: null,
+        updateHoverIn: null,
         select: null,
         disable: null,
+        updateSelectedFalse: null,
+        // TODO remove / replace with updateSelected
+        updateSelectedTrue: null,
+        // TODO remove / replace with updateSelected
         dispose: null,
-        setVisible: null,
-        setChoiceSelectedFalse: null,
-        setChoiceSelectedTrue: null,
         //setSelectedTrue: null, // TODO remove / replace with this.setOptionSelected
         //setSelectedFalse: null, // TODO remove / replace with this.setOptionSelected
-        resetCandidateToHoveredMultiSelectData: null,
+        resetCandidateToHoveredChoice: null,
         // todo: setCandidateToHovered(Boolean) ?
         visible: false,
         visibleIndex: null // todo: check for errors
 
       };
+      return choice;
     }
     function setOptionSelectedTrue(choice, setSelected) {
       var value = false;
       var confirmed = setSelected(choice.option, true);
 
       if (!(confirmed === false)) {
-        choice.setChoiceSelectedTrue();
+        choice.updateSelectedTrue();
         value = true;
       }
 
@@ -1187,30 +1195,40 @@
       var confirmed = setSelected(choice.option, false);
 
       if (!(confirmed === false)) {
-        choice.setChoiceSelectedFalse();
+        choice.updateSelectedFalse();
         value = true;
       }
 
       return value;
+    }
+    function setOptionSelected(choice, value, setSelected) {
+      if (value) return setOptionSelectedTrue(choice, setSelected);else return setOptionSelectedFalse(choice, setSelected);
     }
     function toggleOptionSelected(choice, setSelected) {
       var value = false;
       if (choice.isOptionSelected) value = setOptionSelectedFalse(choice, setSelected);else if (!choice.isOptionDisabled) value = setOptionSelectedTrue(choice, setSelected);
       return value;
     }
+    function updateSelected(choice) {
+      var newIsSelected = choice.option.selected;
 
-    function filterMultiSelectData(MultiSelectData, isFiltered, visibleIndex) {
-      MultiSelectData.visible = isFiltered;
-      MultiSelectData.visibleIndex = visibleIndex;
-      MultiSelectData.setVisible(isFiltered); //MultiSelectData.choiceElement.style.display = isFiltered ? 'block': 'none';
+      if (newIsSelected != choice.isOptionSelected) {
+        if (newIsSelected) choice.updateSelectedTrue();else choice.updateSelectedFalse();
+      }
+    }
+
+    function filterMultiSelectData(choice, isFiltered, visibleIndex) {
+      choice.visible = isFiltered;
+      choice.visibleIndex = visibleIndex;
+      choice.setVisible(isFiltered); //MultiSelectData.choiceElement.style.display = isFiltered ? 'block': 'none';
     }
 
     function resetChoices(choicesList) {
       for (var i = 0; i < choicesList.length; i++) {
-        var multiSelectData = choicesList[i];
+        var choice = choicesList[i];
 
-        if (!multiSelectData.isOptionHidden) {
-          filterMultiSelectData(multiSelectData, true, i);
+        if (!choice.isOptionHidden) {
+          filterMultiSelectData(choice, true, i);
         }
       }
     }
@@ -1403,14 +1421,19 @@
         var options = this.getOptions();
 
         for (var i = 0; i < options.length; i++) {
-          var option = options[i];
-          var newIsSelected = option.selected;
-          var choice = this.choicesList[i];
-
-          if (newIsSelected != choice.isOptionSelected) {
-            if (newIsSelected) choice.setChoiceSelectedTrue();else choice.setChoiceSelectedFalse();
-          }
+          this.UpdateSelectedChoice(i);
         }
+      };
+
+      _proto.UpdateSelectedChoice = function UpdateSelectedChoice(key) {
+        var choice = this.choicesList[key]; // TODO: 
+
+        updateSelected(choice, this.setSelected);
+      };
+
+      _proto.SetSelectedChoice = function SetSelectedChoice(key, value) {
+        var choice = this.choicesList[key];
+        setOptionSelected(choice, value, this.setSelected);
       };
 
       _proto.createChoice = function createChoice(option, i) {
@@ -1462,7 +1485,7 @@
 
           var removeFromList = _this.picksList.addPick(pick);
 
-          choice.setChoiceSelectedFalse = function () {
+          choice.updateSelectedFalse = function () {
             removeFromList();
             pick.dispose();
             choice.isOptionSelected = false;
@@ -1498,7 +1521,7 @@
           if (_this.picksList.getCount() == 1) _this.placeholderAspect.updatePlacehodlerVisibility();
         };
 
-        choice.setChoiceSelectedTrue = function () {
+        choice.updateSelectedTrue = function () {
           createPick();
 
           _this.onChange();
@@ -1706,7 +1729,7 @@
         }, function (visible) {
           return _this3.staticContent.setChoicesVisible(visible);
         }, function () {
-          return _this3.choicesPanel.resetCandidateToHoveredMultiSelectData();
+          return _this3.choicesPanel.resetCandidateToHoveredChoice();
         }, function () {
           return _this3.resetFilter();
         }, function () {

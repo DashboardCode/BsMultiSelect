@@ -4,24 +4,24 @@ import {PicksList} from './PicksList'
 import {MultiSelectInputAspect} from './MultiSelectInputAspect'
 import {PlaceholderAspect} from './PlaceholderAspect'
 import {removeElement} from './ToolsDom'
-import {Choice, toggleOptionSelected, setOptionSelectedTrue, setOptionSelectedFalse} from './Choice'
+import {Choice, toggleOptionSelected, updateSelected, setOptionSelected, setOptionSelectedTrue, setOptionSelectedFalse} from './Choice'
 
 import {sync} from './ToolsJs'
 
-function filterMultiSelectData(MultiSelectData, isFiltered, visibleIndex) {
-    MultiSelectData.visible = isFiltered;
-    MultiSelectData.visibleIndex = visibleIndex;
-    MultiSelectData.setVisible(isFiltered);
+function filterMultiSelectData(choice, isFiltered, visibleIndex) {
+    choice.visible = isFiltered;
+    choice.visibleIndex = visibleIndex;
+    choice.setVisible(isFiltered);
     //MultiSelectData.choiceElement.style.display = isFiltered ? 'block': 'none';
 } 
 
 function resetChoices(choicesList) {
     for(let i=0; i<choicesList.length; i++)
     {
-        let multiSelectData = choicesList[i];
-        if ( !multiSelectData.isOptionHidden )
+        let choice = choicesList[i];
+        if ( !choice.isOptionHidden )
         {
-            filterMultiSelectData(multiSelectData, true, i);
+            filterMultiSelectData(choice, true, i);
         }
     }
 }
@@ -183,7 +183,7 @@ export class MultiSelect {
         }    
         //multiSelectData.updateOption();
     }*/
-
+    
     DeselectAll(){
         this.aspect.hideChoices(); // always hide 1st
         this.picksList.removeAll();
@@ -233,17 +233,18 @@ export class MultiSelect {
     UpdateSelected(){
         let options = this.getOptions();
         for(let i = 0; i<options.length; i++){
-            let option = options[i];
-            let newIsSelected = option.selected;
-            let choice = this.choicesList[i];
-            if (newIsSelected!=choice.isOptionSelected)
-            {
-                if (newIsSelected)
-                    choice.setChoiceSelectedTrue();
-                else
-                    choice.setChoiceSelectedFalse();
-            }
+            this.UpdateSelectedChoice(i)
         }
+    }
+
+    UpdateSelectedChoice(key){
+        let choice = this.choicesList[key]; // TODO: 
+        updateSelected(choice, this.setSelected)
+    }
+
+    SetSelectedChoice(key, value){
+        let choice = this.choicesList[key];
+        setOptionSelected(choice, value, this.setSelected);
     }
 
     createChoice(option, i){
@@ -252,7 +253,7 @@ export class MultiSelect {
         let isOptionHidden   = this.getIsOptionHidden(option);
         
         var choice = Choice(option, isOptionSelected, isOptionDisabled, isOptionHidden);
-        
+    
         let createPick = () => {
             let pickElement = this.staticContent.createPickElement(); 
             let attachPickElement = () => this.staticContent.picksElement.insertBefore(pickElement, this.staticContent.pickFilterElement);
@@ -276,7 +277,7 @@ export class MultiSelect {
             attachPickElement();
             var removeFromList = this.picksList.addPick(pick);
             
-            choice.setChoiceSelectedFalse = () => {
+            choice.updateSelectedFalse = () => {
                 removeFromList();
                 pick.dispose();
                 choice.isOptionSelected = false;
@@ -303,7 +304,7 @@ export class MultiSelect {
                 this.placeholderAspect.updatePlacehodlerVisibility()
         }
 
-        choice.setChoiceSelectedTrue = ()=>{
+        choice.updateSelectedTrue = () => {
             createPick();
             this.onChange();
         }
@@ -506,7 +507,7 @@ export class MultiSelect {
             this.staticContent.choicesElement, 
             ()=>this.staticContent.isChoicesVisible(),
             (visible)=>this.staticContent.setChoicesVisible(visible),
-            () => this.choicesPanel.resetCandidateToHoveredMultiSelectData(),
+            () => this.choicesPanel.resetCandidateToHoveredChoice(),
             () => this.resetFilter(),
             () => this.getVisibleChoicesList().length==0, 
             /*onClick*/(event) => {

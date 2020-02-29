@@ -1,5 +1,6 @@
 # CHANGELOG
 ````
+0.5.25 - optimizations
 0.5.24 - new UpdateSelected, optimizations
 0.5.23 - optimizations
 0.5.22 - optimizations
