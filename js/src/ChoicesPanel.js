@@ -1,3 +1,5 @@
+import {EventBinder} from './ToolsDom'
+
 export function ChoicesPanel(
         createChoiceElement,
         toggle, 
@@ -100,19 +102,19 @@ export function ChoicesPanel(
             resetCandidateToHoveredChoice();
 
             candidateToHoveredChoice = choice;
-            choiceElement.addEventListener('mousemove', processCandidateToHovered);
-            choiceElement.addEventListener('mousedown', processCandidateToHovered);
+            var eventBinder = EventBinder();
+            eventBinder.bind(choiceElement, 'mousemove', processCandidateToHovered);
+            eventBinder.bind(choiceElement, 'mousedown', processCandidateToHovered);
 
             candidateToHoveredChoice.resetCandidateToHoveredChoice = ()=>{
-                choiceElement.removeEventListener('mousemove', processCandidateToHovered);
-                choiceElement.removeEventListener('mousedown', processCandidateToHovered);
+                eventBinder.unbind();
                 candidateToHoveredChoice.resetCandidateToHoveredChoice=null;
                 candidateToHoveredChoice = null;
             }
         }
         else
         {
-            if (hoveredChoice!=choice)
+            if (/*hoveredChoice!=choice*/!choice.isHoverIn)
             {
                 // mouseleave is not enough to guarantee remove hover styles in situations
                 // when style was setuped without mouse (keyboard arrows)
@@ -137,7 +139,7 @@ export function ChoicesPanel(
             choiceElement
         )
 
-        choiceElement.addEventListener('mouseover', onChoiceElementMouseover);
+        //choiceElement.addEventListener('mouseover', onChoiceElementMouseover);
         
         // note 1: mouseleave preferred to mouseout - which fires on each descendant
         // note 2: since I want add aditional info panels to the dropdown put mouseleave on dropdwon would not work
@@ -147,12 +149,15 @@ export function ChoicesPanel(
                 resetChoicesHover();
             }
         }
-
-        choiceElement.addEventListener('mouseleave', onChoiceElementMouseleave);
-
-        attach();
+        //choiceElement.addEventListener('mouseleave', onChoiceElementMouseleave);
+        var eventBinder = EventBinder();
+        eventBinder.bind(choiceElement, 'mouseover', onChoiceElementMouseover);
+        eventBinder.bind(choiceElement, 'mouseleave', onChoiceElementMouseleave);
+        
 
         let choiceContent = choiceContentGenerator(choiceElement); 
+        attach();
+
         choiceContent.setData(choice.option);
 
         choice.updateHoverIn = () => {
@@ -168,8 +173,9 @@ export function ChoicesPanel(
         }
 
         choice.dispose = ()=> {
-            choiceElement.removeEventListener('mouseover',  onChoiceElementMouseover);
-            choiceElement.removeEventListener('mouseleave', onChoiceElementMouseleave);
+            eventBinder.unbind();
+            //choiceElement.removeEventListener('mouseover',  onChoiceElementMouseover);
+            //choiceElement.removeEventListener('mouseleave', onChoiceElementMouseleave);
             choiceContent.dispose();
 
             choice.setVisible = null;
@@ -196,19 +202,9 @@ export function ChoicesPanel(
         
     }
 
-    /* Picks:
-            addPick,
-            removePicksTail,
-            isEmpty,
-            getCount,
-            disable,
-            deselectAll,
-            clear,
-            dispose
-    */
     var item = {
         adoptChoice,
-        hoverInInternal,
+        setFirstChoiceHovered: ()=>hoverInInternal(0),
         stopAndResetChoicesHover(){
             let eventSkipper = getEventSkipper();
             eventSkipper.setSkippable(); //disable Hover On MouseEnter - filter's changes should remove hover
@@ -220,3 +216,4 @@ export function ChoicesPanel(
     }
     return item;
 }
+

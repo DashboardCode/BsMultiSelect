@@ -84,13 +84,12 @@ export function getIsRtl(element){
 export function EventBinder(){
     var list = [];
     return {
-        bind(element, eventName, handler){
+        bind(element, eventName, handler) {
             element.addEventListener(eventName, handler)
             list.push( {element, eventName, handler} )
         },
-        unbind(){
-            list.forEach( e=>
-            {
+        unbind() {
+            list.forEach( e=> {
                 let {element, eventName, handler}=e;
                 element.removeEventListener(eventName, handler)
             })

@@ -1,5 +1,5 @@
 /*!
-  * DashboardCode BsMultiSelect v0.5.25 (https://dashboardcode.github.io/BsMultiSelect/)
+  * DashboardCode BsMultiSelect v0.5.26 (https://dashboardcode.github.io/BsMultiSelect/)
   * Copyright 2017-2020 Roman Pokrovskij (github user rpokrovskij)
   * Licensed under APACHE 2 (https://github.com/DashboardCode/BsMultiSelect/blob/master/LICENSE)
   */
@@ -93,6 +93,148 @@ onInput //, // filter
       filterInputElement.removeEventListener('keydown', onfilterInputKeyDown);
       filterInputElement.removeEventListener('keyup', onFilterInputKeyUp);
       filterInputElement.removeEventListener('input', onFilterInputInput);
+    }
+  };
+}
+
+function removeElement(e) {
+  e.parentNode.removeChild(e);
+}
+function findDirectChildByTagName(element, tagName) {
+  var value = null;
+
+  for (var i = 0; i < element.children.length; i++) {
+    var tmp = element.children[i];
+
+    if (tmp.tagName == tagName) {
+      value = tmp;
+      break;
+    }
+  }
+
+  return value;
+}
+function closestByTagName(element, tagName) {
+  return closest(element, function (e) {
+    return e.tagName === tagName;
+  }); // TODO support xhtml?  e.tagName.toUpperCase() ?
+}
+function closestByClassName(element, className) {
+  return closest(element, function (e) {
+    return e.classList.contains(className);
+  });
+}
+function closestByAttribute(element, attributeName, attribute) {
+  return closest(element, function (e) {
+    return e.getAttribute(attributeName) === attribute;
+  });
+}
+function getDataGuardedWithPrefix(element, prefix, name) {
+  var tmp1 = element.getAttribute('data-' + prefix + '-' + name);
+
+  if (tmp1) {
+    return tmp1;
+  } else {
+    var tmp2 = element.getAttribute('data-' + name);
+    if (tmp2) return tmp2;
+  }
+
+  return null;
+}
+
+function closest(element, predicate) {
+  if (!element || !(element instanceof Element)) return null; // should be element, not document (TODO: check iframe)
+
+  if (predicate(element)) return element;
+  return closest(element.parentNode, predicate);
+}
+
+function siblingsAsArray(element) {
+  var value = [];
+
+  if (element.parentNode) {
+    var children = element.parentNode.children;
+    var l = element.parentNode.children.length;
+
+    if (children.length > 1) {
+      for (var i = 0; i < l; ++i) {
+        var e = children[i];
+        if (e != element) value.push(e);
+      }
+    }
+  }
+
+  return value;
+} // export function ShowBinder(element){
+//     return {
+//         show(){
+//         },
+//         hide(){
+//             //
+//         }
+//     }
+// }
+
+function getIsRtl(element) {
+  var isRtl = false;
+  var e = closestByAttribute(element, "dir", "rtl");
+  if (e) isRtl = true;
+  return isRtl;
+}
+function EventBinder() {
+  var list = [];
+  return {
+    bind: function bind(element, eventName, handler) {
+      element.addEventListener(eventName, handler);
+      list.push({
+        element: element,
+        eventName: eventName,
+        handler: handler
+      });
+    },
+    unbind: function unbind() {
+      list.forEach(function (e) {
+        var element = e.element,
+            eventName = e.eventName,
+            handler = e.handler;
+        element.removeEventListener(eventName, handler);
+      });
+    }
+  };
+}
+function AttributeBackup() {
+  var list = [];
+  return {
+    set: function set(element, attributeName, attribute) {
+      var currentAtribute = element.getAttribute(attributeName);
+      list.push({
+        element: element,
+        currentAtribute: currentAtribute,
+        attribute: attribute
+      });
+      element.setAttribute(attributeName, attribute);
+    },
+    restore: function restore() {
+      list.forEach(function (e) {
+        var element = e.element,
+            attributeName = e.attributeName,
+            attribute = e.attribute;
+        if (attributeName) element.setAttribute(attributeName, attribute);else element.removeAttribute(attributeName);
+      });
+    }
+  };
+}
+function EventSkipper(window) {
+  var _isSkippable = false;
+  return {
+    isSkippable: function isSkippable() {
+      return _isSkippable;
+    },
+    setSkippable: function setSkippable() {
+      _isSkippable = true;
+      window.setTimeout(function () {
+        _isSkippable = false;
+      }, 0);
     }
   };
 }
@@ -193,17 +335,19 @@ function ChoicesPanel(createChoiceElement, toggle, getEventSkipper, choiceConten
     if (eventSkipper.isSkippable()) {
       resetCandidateToHoveredChoice();
       candidateToHoveredChoice = choice;
-      choiceElement.addEventListener('mousemove', processCandidateToHovered);
-      choiceElement.addEventListener('mousedown', processCandidateToHovered);
+      var eventBinder = EventBinder();
+      eventBinder.bind(choiceElement, 'mousemove', processCandidateToHovered);
+      eventBinder.bind(choiceElement, 'mousedown', processCandidateToHovered);
 
       candidateToHoveredChoice.resetCandidateToHoveredChoice = function () {
-        choiceElement.removeEventListener('mousemove', processCandidateToHovered);
-        choiceElement.removeEventListener('mousedown', processCandidateToHovered);
+        eventBinder.unbind();
         candidateToHoveredChoice.resetCandidateToHoveredChoice = null;
         candidateToHoveredChoice = null;
       };
     } else {
-      if (hoveredChoice != choice) {
+      if (
+      /*hoveredChoice!=choice*/
+      !choice.isHoverIn) {
         // mouseleave is not enough to guarantee remove hover styles in situations
         // when style was setuped without mouse (keyboard arrows)
         // therefore force reset manually
@@ -224,10 +368,10 @@ function ChoicesPanel(createChoiceElement, toggle, getEventSkipper, choiceConten
 
     var onChoiceElementMouseover = function onChoiceElementMouseover() {
       return onChoiceElementMouseoverGeneral(choice, choiceElement);
-    };
-
-    choiceElement.addEventListener('mouseover', onChoiceElementMouseover); // note 1: mouseleave preferred to mouseout - which fires on each descendant
+    }; //choiceElement.addEventListener('mouseover', onChoiceElementMouseover);
+    // note 1: mouseleave preferred to mouseout - which fires on each descendant
     // note 2: since I want add aditional info panels to the dropdown put mouseleave on dropdwon would not work
+
 
     var onChoiceElementMouseleave = function onChoiceElementMouseleave() {
       var eventSkipper = getEventSkipper();
@@ -235,11 +379,14 @@ function ChoicesPanel(createChoiceElement, toggle, getEventSkipper, choiceConten
       if (!eventSkipper.isSkippable()) {
         resetChoicesHover();
       }
-    };
+    }; //choiceElement.addEventListener('mouseleave', onChoiceElementMouseleave);
 
-    choiceElement.addEventListener('mouseleave', onChoiceElementMouseleave);
-    attach();
+
+    var eventBinder = EventBinder();
+    eventBinder.bind(choiceElement, 'mouseover', onChoiceElementMouseover);
+    eventBinder.bind(choiceElement, 'mouseleave', onChoiceElementMouseleave);
     var choiceContent = choiceContentGenerator(choiceElement);
+    attach();
     choiceContent.setData(choice.option);
 
     choice.updateHoverIn = function () {
@@ -255,8 +402,9 @@ function ChoicesPanel(createChoiceElement, toggle, getEventSkipper, choiceConten
     };
 
     choice.dispose = function () {
-      choiceElement.removeEventListener('mouseover', onChoiceElementMouseover);
-      choiceElement.removeEventListener('mouseleave', onChoiceElementMouseleave);
+      eventBinder.unbind(); //choiceElement.removeEventListener('mouseover',  onChoiceElementMouseover);
+      //choiceElement.removeEventListener('mouseleave', onChoiceElementMouseleave);
+
       choiceContent.dispose();
       choice.setVisible = null;
       choice.updateHoverIn = null;
@@ -278,21 +426,12 @@ function ChoicesPanel(createChoiceElement, toggle, getEventSkipper, choiceConten
       choiceElement.style.display = isFiltered ? 'block' : 'none';
     };
   }
-  /* Picks:
-          addPick,
-          removePicksTail,
-          isEmpty,
-          getCount,
-          disable,
-          deselectAll,
-          clear,
-          dispose
-  */
-
 
   var item = {
     adoptChoice: adoptChoice,
-    hoverInInternal: hoverInInternal,
+    setFirstChoiceHovered: function setFirstChoiceHovered() {
+      return hoverInInternal(0);
+    },
     stopAndResetChoicesHover: function stopAndResetChoicesHover() {
       var eventSkipper = getEventSkipper();
       eventSkipper.setSkippable(); //disable Hover On MouseEnter - filter's changes should remove hover
@@ -530,148 +669,6 @@ function PicksList() {
       list.forEach(function (i) {
         return i.dispose();
       });
-    }
-  };
-}
-
-function removeElement(e) {
-  e.parentNode.removeChild(e);
-}
-function findDirectChildByTagName(element, tagName) {
-  var value = null;
-
-  for (var i = 0; i < element.children.length; i++) {
-    var tmp = element.children[i];
-
-    if (tmp.tagName == tagName) {
-      value = tmp;
-      break;
-    }
-  }
-
-  return value;
-}
-function closestByTagName(element, tagName) {
-  return closest(element, function (e) {
-    return e.tagName === tagName;
-  }); // TODO support xhtml?  e.tagName.toUpperCase() ?
-}
-function closestByClassName(element, className) {
-  return closest(element, function (e) {
-    return e.classList.contains(className);
-  });
-}
-function closestByAttribute(element, attributeName, attribute) {
-  return closest(element, function (e) {
-    return e.getAttribute(attributeName) === attribute;
-  });
-}
-function getDataGuardedWithPrefix(element, prefix, name) {
-  var tmp1 = element.getAttribute('data-' + prefix + '-' + name);
-
-  if (tmp1) {
-    return tmp1;
-  } else {
-    var tmp2 = element.getAttribute('data-' + name);
-    if (tmp2) return tmp2;
-  }
-
-  return null;
-}
-
-function closest(element, predicate) {
-  if (!element || !(element instanceof Element)) return null; // should be element, not document (TODO: check iframe)
-
-  if (predicate(element)) return element;
-  return closest(element.parentNode, predicate);
-}
-
-function siblingsAsArray(element) {
-  var value = [];
-
-  if (element.parentNode) {
-    var children = element.parentNode.children;
-    var l = element.parentNode.children.length;
-
-    if (children.length > 1) {
-      for (var i = 0; i < l; ++i) {
-        var e = children[i];
-        if (e != element) value.push(e);
-      }
-    }
-  }
-
-  return value;
-} // export function ShowBinder(element){
-//     return {
-//         show(){
-//         },
-//         hide(){
-//             //
-//         }
-//     }
-// }
-
-function getIsRtl(element) {
-  var isRtl = false;
-  var e = closestByAttribute(element, "dir", "rtl");
-  if (e) isRtl = true;
-  return isRtl;
-}
-function EventBinder() {
-  var list = [];
-  return {
-    bind: function bind(element, eventName, handler) {
-      element.addEventListener(eventName, handler);
-      list.push({
-        element: element,
-        eventName: eventName,
-        handler: handler
-      });
-    },
-    unbind: function unbind() {
-      list.forEach(function (e) {
-        var element = e.element,
-            eventName = e.eventName,
-            handler = e.handler;
-        element.removeEventListener(eventName, handler);
-      });
-    }
-  };
-}
-function AttributeBackup() {
-  var list = [];
-  return {
-    set: function set(element, attributeName, attribute) {
-      var currentAtribute = element.getAttribute(attributeName);
-      list.push({
-        element: element,
-        currentAtribute: currentAtribute,
-        attribute: attribute
-      });
-      element.setAttribute(attributeName, attribute);
-    },
-    restore: function restore() {
-      list.forEach(function (e) {
-        var element = e.element,
-            attributeName = e.attributeName,
-            attribute = e.attribute;
-        if (attributeName) element.setAttribute(attributeName, attribute);else element.removeAttribute(attributeName);
-      });
-    }
-  };
-}
-function EventSkipper(window) {
-  var _isSkippable = false;
-  return {
-    isSkippable: function isSkippable() {
-      return _isSkippable;
-    },
-    setSkippable: function setSkippable() {
-      _isSkippable = true;
-      window.setTimeout(function () {
-        _isSkippable = false;
-      }, 0);
     }
   };
 }
@@ -1352,104 +1349,101 @@ var MultiSelect = /*#__PURE__*/function () {
     setOptionSelected(choice, value, this.setSelected);
   };
 
-  _proto.createChoice = function createChoice(option, i) {
+  _proto.createPick = function createPick(choice) {
     var _this = this;
+
+    var pickElement = this.staticContent.createPickElement();
+
+    var attachPickElement = function attachPickElement() {
+      return _this.staticContent.picksElement.insertBefore(pickElement, _this.staticContent.pickFilterElement);
+    };
+
+    var detach = function detach() {
+      return removeElement(pickElement);
+    };
+
+    var pickContent = this.pickContentGenerator(pickElement);
+    var pick = {
+      disableRemove: function disableRemove() {
+        return pickContent.disableRemove(_this.getIsComponentDisabled());
+      },
+      setData: function setData() {
+        return pickContent.setData(choice.option);
+      },
+      disable: function disable() {
+        return pickContent.disable(_this.getIsOptionDisabled(choice.option));
+      },
+      remove: null,
+      dispose: function dispose() {
+        detach();
+        pickContent.dispose();
+        pick.disableRemove = null;
+        pick.setData = null;
+        pick.disable = null;
+        pick.remove = null;
+        pick.dispose = null;
+      }
+    };
+    pick.setData();
+    pick.disable();
+    pick.disableRemove();
+    attachPickElement();
+    var removeFromList = this.picksList.addPick(pick);
+
+    choice.updateSelectedFalse = function () {
+      removeFromList();
+      pick.dispose();
+      choice.isOptionSelected = false;
+      choice.excludedFromSearch = choice.isOptionDisabled;
+
+      if (choice.isOptionDisabled) {
+        choice.disable(
+        /*isOptionDisabled*/
+        true,
+        /*isOptionSelected*/
+        false);
+      }
+
+      choice.select();
+      if (_this.picksList.getCount() == 0) _this.placeholderAspect.updatePlacehodlerVisibility();
+
+      _this.onChange();
+    };
+
+    var setSelectedFalse = function setSelectedFalse() {
+      return setOptionSelectedFalse(choice, _this.setSelected);
+    };
+
+    pick.remove = setSelectedFalse;
+    this.aspect.handleOnRemoveButton(pickContent.onRemove, setSelectedFalse);
+    choice.isOptionSelected = true;
+    choice.excludedFromSearch = true; // all selected excluded from search
+
+    choice.select();
+    if (this.picksList.getCount() == 1) this.placeholderAspect.updatePlacehodlerVisibility();
+  };
+
+  _proto.createChoice = function createChoice(option, i) {
+    var _this2 = this;
 
     var isOptionSelected = option.selected;
     var isOptionDisabled = this.getIsOptionDisabled(option);
     var isOptionHidden = this.getIsOptionHidden(option);
     var choice = Choice(option, isOptionSelected, isOptionDisabled, isOptionHidden);
 
-    var createPick = function createPick() {
-      var pickElement = _this.staticContent.createPickElement();
-
-      var attachPickElement = function attachPickElement() {
-        return _this.staticContent.picksElement.insertBefore(pickElement, _this.staticContent.pickFilterElement);
-      };
-
-      var detach = function detach() {
-        return removeElement(pickElement);
-      };
-
-      var pickContent = _this.pickContentGenerator(pickElement);
-
-      var pick = {
-        disableRemove: function disableRemove() {
-          return pickContent.disableRemove(_this.getIsComponentDisabled());
-        },
-        setData: function setData() {
-          return pickContent.setData(choice.option);
-        },
-        disable: function disable() {
-          return pickContent.disable(_this.getIsOptionDisabled(choice.option));
-        },
-        remove: null,
-        dispose: function dispose() {
-          detach();
-          pickContent.dispose();
-          pick.disableRemove = null;
-          pick.setData = null;
-          pick.disable = null;
-          pick.remove = null;
-          pick.dispose = null;
-        }
-      };
-      pick.setData();
-      pick.disable();
-      pick.disableRemove();
-      attachPickElement();
-
-      var removeFromList = _this.picksList.addPick(pick);
-
-      choice.updateSelectedFalse = function () {
-        removeFromList();
-        pick.dispose();
-        choice.isOptionSelected = false;
-        choice.excludedFromSearch = choice.isOptionDisabled;
-
-        if (choice.isOptionDisabled) {
-          choice.disable(
-          /*isOptionDisabled*/
-          true,
-          /*isOptionSelected*/
-          false);
-        }
-
-        choice.select();
-        if (_this.picksList.getCount() == 0) _this.placeholderAspect.updatePlacehodlerVisibility();
-
-        _this.onChange();
-      };
-
-      var setSelectedFalse = function setSelectedFalse() {
-        return setOptionSelectedFalse(choice, _this.setSelected);
-      };
-
-      pick.remove = setSelectedFalse;
-      choice.setSelectedFalse = setSelectedFalse;
-
-      _this.aspect.handleOnRemoveButton(pickContent.onRemove, setSelectedFalse);
-
-      choice.isOptionSelected = true;
-      choice.excludedFromSearch = true; // all selected excluded from search
-
-      choice.select();
-      if (_this.picksList.getCount() == 1) _this.placeholderAspect.updatePlacehodlerVisibility();
-    };
-
-    choice.updateSelectedTrue = function () {
-      createPick();
-
-      _this.onChange();
-    };
-
     if (!isOptionHidden) {
+      choice.updateSelectedTrue = function () {
+        _this2.createPick(choice);
+
+        _this2.onChange();
+      };
+
       choice.visible = true;
       choice.visibleIndex = i;
       this.choicesPanel.adoptChoice(choice);
 
       if (isOptionSelected) {
-        createPick();
+        this.createPick(choice);
       } else {
         choice.excludedFromSearch = choice.isOptionDisabled;
       }
@@ -1459,20 +1453,20 @@ var MultiSelect = /*#__PURE__*/function () {
   };
 
   _proto.updateDataImpl = function updateDataImpl() {
-    var _this2 = this;
+    var _this3 = this;
 
     var fillChoices = function fillChoices() {
-      var options = _this2.getOptions();
+      var options = _this3.getOptions();
 
       for (var i = 0; i < options.length; i++) {
         var option = options[i];
 
-        var choice = _this2.createChoice(option, i);
+        var choice = _this3.createChoice(option, i);
 
-        _this2.choicesList.push(choice);
+        _this3.choicesList.push(choice);
       }
 
-      _this2.aspect.alignToFilterInputItemLocation(false);
+      _this3.aspect.alignToFilterInputItemLocation(false);
     }; // browsers can change select value as part of "autocomplete" (IE11) 
     // or "show preserved on go back" (Chrome) after page is loaded but before "ready" event;
     // but they never "restore" selected-disabled options.
@@ -1542,7 +1536,7 @@ var MultiSelect = /*#__PURE__*/function () {
     this.choicesPanel.stopAndResetChoicesHover();
 
     if (this.getVisibleChoicesList().length == 1) {
-      this.choicesPanel.hoverInInternal(0);
+      this.choicesPanel.setFirstChoiceHovered();
     }
 
     if (this.getVisibleChoicesList().length > 0) {
@@ -1555,105 +1549,105 @@ var MultiSelect = /*#__PURE__*/function () {
   };
 
   _proto.init = function init() {
-    var _this3 = this;
+    var _this4 = this;
 
     this.filterPanel = FilterPanel(this.staticContent.filterInputElement, function () {
-      _this3.staticContent.pickFilterElement.appendChild(_this3.staticContent.filterInputElement);
+      _this4.staticContent.pickFilterElement.appendChild(_this4.staticContent.filterInputElement);
 
-      _this3.labelAdapter.init(_this3.staticContent.filterInputElement);
+      _this4.labelAdapter.init(_this4.staticContent.filterInputElement);
 
-      _this3.staticContent.picksElement.appendChild(_this3.staticContent.pickFilterElement); // located filter in selectionsPanel                    
+      _this4.staticContent.picksElement.appendChild(_this4.staticContent.pickFilterElement); // located filter in selectionsPanel                    
 
     }, function () {
-      _this3.staticContent.setIsFocusIn(true);
+      _this4.staticContent.setIsFocusIn(true);
 
-      _this3.staticContent.toggleFocusStyling();
+      _this4.staticContent.toggleFocusStyling();
     }, // focus in - show dropdown
     function () {
-      if (!_this3.aspect.getSkipFocusout()) // skip initiated by mouse click (we manage it different way)
+      if (!_this4.aspect.getSkipFocusout()) // skip initiated by mouse click (we manage it different way)
         {
-          _this3.resetFilter(); // if do not do this we will return to filtered list without text filter in input
+          _this4.resetFilter(); // if do not do this we will return to filtered list without text filter in input
 
 
-          _this3.staticContent.setIsFocusIn(false);
+          _this4.staticContent.setIsFocusIn(false);
 
-          _this3.staticContent.toggleFocusStyling();
+          _this4.staticContent.toggleFocusStyling();
         }
 
-      _this3.aspect.resetSkipFocusout();
+      _this4.aspect.resetSkipFocusout();
     }, // focus out - hide dropdown
     function () {
-      return _this3.choicesPanel.keyDownArrow(false);
+      return _this4.choicesPanel.keyDownArrow(false);
     }, // arrow up
     function () {
-      return _this3.choicesPanel.keyDownArrow(true);
+      return _this4.choicesPanel.keyDownArrow(true);
     }, // arrow down
     function () {
-      return _this3.aspect.hideChoices();
+      return _this4.aspect.hideChoices();
     }, // tab on empty
     function () {
-      _this3.picksList.removePicksTail();
+      _this4.picksList.removePicksTail();
 
-      _this3.aspect.alignToFilterInputItemLocation(false);
+      _this4.aspect.alignToFilterInputItemLocation(false);
     }, // backspace - "remove last"
     function () {
-      if (_this3.staticContent.isChoicesVisible()) _this3.choicesPanel.toggleHovered();
+      if (_this4.staticContent.isChoicesVisible()) _this4.choicesPanel.toggleHovered();
     }, // tab/enter "compleate hovered"
     function (isEmpty, event) {
-      if (!isEmpty || _this3.staticContent.isChoicesVisible()) // supports bs modal - stop esc (close modal) propogation
+      if (!isEmpty || _this4.staticContent.isChoicesVisible()) // supports bs modal - stop esc (close modal) propogation
         event.stopPropagation();
     }, // esc keydown
     function () {
-      _this3.aspect.hideChoices(); // always hide 1st
+      _this4.aspect.hideChoices(); // always hide 1st
 
 
-      _this3.resetFilter();
+      _this4.resetFilter();
     }, // esc keyup 
     function (filterInputValue, resetLength) {
-      _this3.placeholderAspect.updatePlacehodlerVisibility();
+      _this4.placeholderAspect.updatePlacehodlerVisibility();
 
-      _this3.input(filterInputValue, resetLength);
+      _this4.input(filterInputValue, resetLength);
     });
     this.picksList = PicksList();
     this.choicesPanel = ChoicesPanel(function () {
-      return _this3.staticContent.createChoiceElement();
+      return _this4.staticContent.createChoiceElement();
     }, function (choice) {
-      return toggleOptionSelected(choice, _this3.setSelected);
+      return toggleOptionSelected(choice, _this4.setSelected);
     }, function () {
-      return _this3.aspect.eventSkipper;
+      return _this4.aspect.eventSkipper;
     }, this.choiceContentGenerator, function () {
-      return _this3.getVisibleChoicesList();
+      return _this4.getVisibleChoicesList();
     }, function () {
-      _this3.aspect.hideChoices();
+      _this4.aspect.hideChoices();
 
-      _this3.resetFilter();
+      _this4.resetFilter();
     }, function () {
-      _this3.aspect.alignToFilterInputItemLocation(true);
+      _this4.aspect.alignToFilterInputItemLocation(true);
 
-      _this3.aspect.showChoices();
+      _this4.aspect.showChoices();
     }, function () {
-      return _this3.filterPanel.setFocus();
+      return _this4.filterPanel.setFocus();
     });
     this.placeholderAspect = PlaceholderAspect(this.placeholderText, function () {
-      return _this3.picksList.isEmpty() && _this3.filterPanel.isEmpty();
+      return _this4.picksList.isEmpty() && _this4.filterPanel.isEmpty();
     }, this.staticContent.picksElement, this.staticContent.filterInputElement, this.css);
     this.placeholderAspect.updateEmptyInputWidth();
     this.aspect = MultiSelectInputAspect(this.window, function () {
-      return _this3.staticContent.appendToContainer();
+      return _this4.staticContent.appendToContainer();
     }, this.staticContent.filterInputElement, this.staticContent.picksElement, this.staticContent.choicesElement, function () {
-      return _this3.staticContent.isChoicesVisible();
+      return _this4.staticContent.isChoicesVisible();
     }, function (visible) {
-      return _this3.staticContent.setChoicesVisible(visible);
+      return _this4.staticContent.setChoicesVisible(visible);
     }, function () {
-      return _this3.choicesPanel.resetCandidateToHoveredChoice();
+      return _this4.choicesPanel.resetCandidateToHoveredChoice();
     }, function () {
-      return _this3.resetFilter();
+      return _this4.resetFilter();
     }, function () {
-      return _this3.getVisibleChoicesList().length == 0;
+      return _this4.getVisibleChoicesList().length == 0;
     },
     /*onClick*/
     function (event) {
-      if (!_this3.filterPanel.isEventTarget(event)) _this3.filterPanel.setFocus();
+      if (!_this4.filterPanel.isEventTarget(event)) _this4.filterPanel.setFocus();
     }, this.isRtl, this.popper);
     this.staticContent.attachContainer();
     this.updateDataImpl();

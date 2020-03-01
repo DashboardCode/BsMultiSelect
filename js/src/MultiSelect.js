@@ -247,75 +247,77 @@ export class MultiSelect {
         setOptionSelected(choice, value, this.setSelected);
     }
 
+    createPick(choice){
+        let pickElement = this.staticContent.createPickElement(); 
+        let attachPickElement = () => this.staticContent.picksElement.insertBefore(pickElement, this.staticContent.pickFilterElement);
+        let detach = () => removeElement(pickElement);
+        let pickContent = this.pickContentGenerator(pickElement);
+        
+        var pick = {
+            disableRemove: () => pickContent.disableRemove(this.getIsComponentDisabled()),
+            setData: () => pickContent.setData(choice.option),
+            disable: () => pickContent.disable( this.getIsOptionDisabled(choice.option) ),
+            remove: null,
+            dispose: () => { 
+                detach(); 
+                pickContent.dispose(); 
+                pick.disableRemove=null; pick.setData=null; pick.disable=null; pick.remove=null; 
+                pick.dispose=null;  
+            }, 
+        }
+        pick.setData();
+        pick.disable();
+        pick.disableRemove();
+        attachPickElement();
+        var removeFromList = this.picksList.addPick(pick);
+        
+        choice.updateSelectedFalse = () => {
+            removeFromList();
+            pick.dispose();
+            choice.isOptionSelected = false;
+            choice.excludedFromSearch = choice.isOptionDisabled; 
+            if (choice.isOptionDisabled)
+            {
+                choice.disable( /*isOptionDisabled*/ true, /*isOptionSelected*/ false); 
+            }
+            choice.select();
+            if (this.picksList.getCount()==0) 
+                this.placeholderAspect.updatePlacehodlerVisibility()
+            this.onChange();
+        }
+        let setSelectedFalse = () => setOptionSelectedFalse(choice, this.setSelected)
+        pick.remove = setSelectedFalse;
+    
+        this.aspect.handleOnRemoveButton(pickContent.onRemove, setSelectedFalse);
+
+        choice.isOptionSelected = true;
+        choice.excludedFromSearch = true; // all selected excluded from search
+        choice.select();
+        if (this.picksList.getCount()==1) 
+            this.placeholderAspect.updatePlacehodlerVisibility()
+    }
+
     createChoice(option, i){
         let isOptionSelected = option.selected;
         let isOptionDisabled = this.getIsOptionDisabled(option); 
         let isOptionHidden   = this.getIsOptionHidden(option);
         
         var choice = Choice(option, isOptionSelected, isOptionDisabled, isOptionHidden);
-    
-        let createPick = () => {
-            let pickElement = this.staticContent.createPickElement(); 
-            let attachPickElement = () => this.staticContent.picksElement.insertBefore(pickElement, this.staticContent.pickFilterElement);
-            let detach = () => removeElement(pickElement);
-            let pickContent = this.pickContentGenerator(pickElement);
-            
-            var pick = {
-                disableRemove: () => pickContent.disableRemove(this.getIsComponentDisabled()),
-                setData: () => pickContent.setData(choice.option),
-                disable: () => pickContent.disable( this.getIsOptionDisabled(choice.option) ),
-                remove: null,
-                dispose: () => { 
-                    detach(); 
-                    pickContent.dispose(); 
-                    pick.disableRemove=null; pick.setData=null; pick.disable=null; pick.remove=null; 
-                    pick.dispose=null;  }, 
-            }
-            pick.setData();
-            pick.disable();
-            pick.disableRemove();
-            attachPickElement();
-            var removeFromList = this.picksList.addPick(pick);
-            
-            choice.updateSelectedFalse = () => {
-                removeFromList();
-                pick.dispose();
-                choice.isOptionSelected = false;
-                choice.excludedFromSearch = choice.isOptionDisabled; 
-                if (choice.isOptionDisabled)
-                {
-                    choice.disable( /*isOptionDisabled*/ true, /*isOptionSelected*/ false); 
-                }
-                choice.select();
-                if (this.picksList.getCount()==0) 
-                    this.placeholderAspect.updatePlacehodlerVisibility()
+        if (!isOptionHidden){
+
+            choice.updateSelectedTrue = () => {
+                this.createPick(choice);
                 this.onChange();
             }
-            let setSelectedFalse = () => setOptionSelectedFalse(choice, this.setSelected)
-            pick.remove = setSelectedFalse;
-            choice.setSelectedFalse= setSelectedFalse;
-        
-            this.aspect.handleOnRemoveButton(pickContent.onRemove, setSelectedFalse);
 
-            choice.isOptionSelected = true;
-            choice.excludedFromSearch = true; // all selected excluded from search
-            choice.select();
-            if (this.picksList.getCount()==1) 
-                this.placeholderAspect.updatePlacehodlerVisibility()
-        }
-
-        choice.updateSelectedTrue = () => {
-            createPick();
-            this.onChange();
-        }
-
-        if (!isOptionHidden){
             choice.visible = true;
             choice.visibleIndex=i;
+
+
             this.choicesPanel.adoptChoice(choice);
             
             if (isOptionSelected){
-                createPick();
+                this.createPick(choice);
             } 
             else
             {
@@ -410,10 +412,9 @@ export class MultiSelect {
         else
             resetLength();  
         
-        
         this.choicesPanel.stopAndResetChoicesHover();
         if (this.getVisibleChoicesList().length == 1) {
-            this.choicesPanel.hoverInInternal(0)
+            this.choicesPanel.setFirstChoiceHovered();
         }
 
         if (this.getVisibleChoicesList().length > 0) {

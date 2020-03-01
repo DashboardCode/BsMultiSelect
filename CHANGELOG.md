@@ -1,7 +1,8 @@
 # CHANGELOG
 ````
+0.5.26 - optimizations
 0.5.25 - optimizations
-0.5.24 - new UpdateSelected, optimizations
+0.5.24 - new UpdateSelected method, optimizations
 0.5.23 - optimizations
 0.5.22 - optimizations
 0.5.21 - optimizations, removes the disabled and focused styling from "no flick picks element" on plugin detach   
