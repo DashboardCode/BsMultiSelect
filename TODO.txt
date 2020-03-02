@@ -19,12 +19,7 @@
 
 and then test how weback handle it
 
-2. some webpack tricks
-https://habr.com/post/425215/
-
-
-
-4. Port to web component.
+2. Port to web component.
 Several base classes: Polymer (https://github.com/Polymer/polymer), Stencil, LitElement , https://www.polymer-project.org/
 Several "themes": https://github.com/wiredjs/wired-elements , https://github.com/material-components/material-components-web-components
 
@@ -49,16 +44,21 @@ LIGHT DOM? Use <slot> to project light DOM children into your shadow DOM?
 http://jsfiddle.net/bvL8wq0n/3/
 https://www.webcomponents.org/polyfills/
 
-5. port web component to other framework
+3. port web component to other framework
 Sample: https://www.webcomponents.org/element/@zooplus/zoo-web-components
 
 
+---------------- ENVIRONMENT
+1. some webpack tricks
+https://habr.com/post/425215/
 
-6. Review eslint again 
+2. Review eslint again 
 https://habr.com/post/417841/
 
-7. analyze CSSX (css in js) - is it possible to use for :hover or custom "is empty" rules: https://www.smashingmagazine.com/2016/04/finally-css-javascript-meet-cssx/
+3. analyze CSSX (css in js) - is it possible to use for :hover or custom "is empty" rules: https://www.smashingmagazine.com/2016/04/finally-css-javascript-meet-cssx/
 some otther instruments: styled components, css modules https://github.com/w3c/webcomponents/issues/759 ,  Constructable Stylesheets https://developers.google.com/web/updates/2019/02/constructable-stylesheets,  emotion, jss, aphrodite, radium
+
+4. github badges as https://github.com/jlmakes/scrollreveal
 
 8. css houdini ? to get bootstrap theme variables
 

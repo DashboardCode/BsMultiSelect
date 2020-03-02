@@ -1,5 +1,6 @@
 # CHANGELOG
 ````
+0.5.27 - full match problem solved
 0.5.26 - optimizations
 0.5.25 - optimizations
 0.5.24 - new UpdateSelected method, optimizations

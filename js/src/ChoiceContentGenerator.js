@@ -1,7 +1,7 @@
 import  {EventBinder} from './ToolsDom';
 import  {addStyling, toggleStyling} from './ToolsStyling';
 
-export function choiceContentGenerator(choiceElement, common, css){
+export function choiceContentGenerator(choiceElement, common, css, toggle){
     choiceElement.innerHTML = '<div><input formnovalidate type="checkbox"><label></label></div>';
     let choiceContentElement = choiceElement.querySelector('DIV');
     let choiceCheckBoxElement = choiceContentElement.querySelector('INPUT');
@@ -13,10 +13,20 @@ export function choiceContentGenerator(choiceElement, common, css){
 
     let selectToggleStyling = toggleStyling(choiceElement, css.choice_selected);
     let disable1ToggleStyling = toggleStyling(choiceElement, css.choice_disabled);
+    let hoverInToggleStyling = toggleStyling(choiceElement, css.choice_hover);
+
     let disable2ToggleStyling = toggleStyling(choiceCheckBoxElement, css.choiceCheckBox_disabled)
     let disable3ToggleStyling = toggleStyling(choiceLabelElement, css.choiceLabel_disabled)
-    let hoverInToggleStyling = toggleStyling(choiceElement, css.choice_hover);
     let eventBinder = EventBinder();
+
+    eventBinder.bind(choiceCheckBoxElement, "change", toggle);
+    eventBinder.bind(choiceElement, "click", 
+        event => {
+            if (choiceElement === event.target || choiceElement.contains(event.target)) 
+                toggle();
+        }
+    );
+
     return {
         setData(option) {choiceLabelElement.textContent = option.text;},
         select(isOptionSelected){ 
@@ -33,16 +43,6 @@ export function choiceContentGenerator(choiceElement, common, css){
         },
         hoverIn(isHoverIn){
             hoverInToggleStyling(isHoverIn);
-        },
-        onSelected(toggle) {
-            eventBinder.bind(choiceCheckBoxElement, "change", toggle);
-            eventBinder.bind(choiceElement, "click", 
-                event => {
-                    if (choiceElement === event.target || choiceElement.contains(event.target)) {
-                        toggle();
-                    }
-                }
-            );
         },
         dispose(){
             eventBinder.unbind();

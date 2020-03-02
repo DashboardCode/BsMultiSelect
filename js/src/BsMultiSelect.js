@@ -225,7 +225,7 @@ export function BsMultiSelect(element, environment, settings){
         getIsOptionHidden,
         staticContent,
         (pickElement) => pickContentGenerator(pickElement, common, css),
-        (choiceElement) => choiceContentGenerator(choiceElement, common, css),
+        (choiceElement, toggle) => choiceContentGenerator(choiceElement, common, css, toggle),
         labelAdapter,
         placeholder,
         isRtl,

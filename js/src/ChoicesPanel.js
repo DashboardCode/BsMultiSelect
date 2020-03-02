@@ -1,14 +1,12 @@
 import {EventBinder} from './ToolsDom'
 
 export function ChoicesPanel(
-        createChoiceElement,
         toggle, 
         getEventSkipper, 
-        choiceContentGenerator, 
         getVisibleMultiSelectDataList, 
         onToggleHovered, 
-        onMoveArrow, 
-        filterPanelSetFocus) {
+        onMoveArrow
+        ) {
     
     var hoveredChoice=null;
     var hoveredChoiceIndex = null;
@@ -125,10 +123,8 @@ export function ChoicesPanel(
         }
     }
 
-    function adoptChoice(choice) 
-    {
-        var {choiceElement, attach} = createChoiceElement();
-        
+    function adoptChoiceElement(choice, choiceElement){
+
         // in chrome it happens on "become visible" so we need to skip it, 
         // for IE11 and edge it doesn't happens, but for IE11 and Edge it doesn't happens on small 
         // mouse moves inside the item. 
@@ -153,57 +149,12 @@ export function ChoicesPanel(
         var eventBinder = EventBinder();
         eventBinder.bind(choiceElement, 'mouseover', onChoiceElementMouseover);
         eventBinder.bind(choiceElement, 'mouseleave', onChoiceElementMouseleave);
-        
 
-        let choiceContent = choiceContentGenerator(choiceElement); 
-        attach();
-
-        choiceContent.setData(choice.option);
-
-        choice.updateHoverIn = () => {
-            choiceContent.hoverIn(choice.isHoverIn);
-        }
-
-        choice.select = () => {
-            choiceContent.select(choice.isOptionSelected);
-        }
-
-        choice.disable = (isDisabled, isOptionSelected) => {
-            choiceContent.disable( isDisabled, isOptionSelected); 
-        }
-
-        choice.dispose = ()=> {
-            eventBinder.unbind();
-            //choiceElement.removeEventListener('mouseover',  onChoiceElementMouseover);
-            //choiceElement.removeEventListener('mouseleave', onChoiceElementMouseleave);
-            choiceContent.dispose();
-
-            choice.setVisible = null;
-            choice.updateHoverIn = null;
-            choice.select = null;
-            choice.disable = null;
-            choice.dispose = null;
-
-            choice.updateSelectedFalse = null;
-            choice.updateSelectedTrue = null;
-        }
-
-        if (choice.isOptionDisabled)
-            choiceContent.disable(true, choice.isOptionSelected )
-
-        // TODO movo into choiceContent to handlers switch
-        choiceContent.onSelected( () => {
-            toggle(choice)
-            filterPanelSetFocus();
-        });
-        choice.setVisible = (isFiltered)=>{
-            choiceElement.style.display = isFiltered ? 'block': 'none';
-        }
-        
+        return eventBinder.unbind;
     }
 
     var item = {
-        adoptChoice,
+        adoptChoiceElement,
         setFirstChoiceHovered: ()=>hoverInInternal(0),
         stopAndResetChoicesHover(){
             let eventSkipper = getEventSkipper();

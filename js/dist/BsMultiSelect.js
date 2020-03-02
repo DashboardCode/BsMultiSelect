@@ -216,8 +216,8 @@ export function BsMultiSelect(element, environment, settings) {
 
   var multiSelect = new MultiSelect(getOptions, common, getDisabled, setSelected, getIsOptionDisabled, getIsOptionHidden, staticContent, function (pickElement) {
     return pickContentGenerator(pickElement, common, css);
-  }, function (choiceElement) {
-    return choiceContentGenerator(choiceElement, common, css);
+  }, function (choiceElement, toggle) {
+    return choiceContentGenerator(choiceElement, common, css, toggle);
   }, labelAdapter, placeholder, isRtl, onChange, css, Popper, window);
   var resetDispose = null;
 

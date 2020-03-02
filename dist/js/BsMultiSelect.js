@@ -1,5 +1,5 @@
 /*!
-  * DashboardCode BsMultiSelect v0.5.26 (https://dashboardcode.github.io/BsMultiSelect/)
+  * DashboardCode BsMultiSelect v0.5.27 (https://dashboardcode.github.io/BsMultiSelect/)
   * Copyright 2017-2020 Roman Pokrovskij (github user rpokrovskij)
   * Licensed under APACHE 2 (https://github.com/DashboardCode/BsMultiSelect/blob/master/LICENSE)
   */
@@ -323,7 +323,7 @@
       };
     }
 
-    function ChoicesPanel(createChoiceElement, toggle, getEventSkipper, choiceContentGenerator, getVisibleMultiSelectDataList, onToggleHovered, onMoveArrow, filterPanelSetFocus) {
+    function ChoicesPanel(toggle, getEventSkipper, getVisibleMultiSelectDataList, onToggleHovered, onMoveArrow) {
       var hoveredChoice = null;
       var hoveredChoiceIndex = null;
       var candidateToHoveredChoice = null;
@@ -441,15 +441,11 @@
         }
       };
 
-      function adoptChoice(choice) {
-        var _createChoiceElement = createChoiceElement(),
-            choiceElement = _createChoiceElement.choiceElement,
-            attach = _createChoiceElement.attach; // in chrome it happens on "become visible" so we need to skip it, 
+      function adoptChoiceElement(choice, choiceElement) {
+        // in chrome it happens on "become visible" so we need to skip it, 
         // for IE11 and edge it doesn't happens, but for IE11 and Edge it doesn't happens on small 
         // mouse moves inside the item. 
         // https://stackoverflow.com/questions/59022563/browser-events-mouseover-doesnt-happen-when-you-make-element-visible-and-mous
-
-
         var onChoiceElementMouseover = function onChoiceElementMouseover() {
           return onChoiceElementMouseoverGeneral(choice, choiceElement);
         }; //choiceElement.addEventListener('mouseover', onChoiceElementMouseover);
@@ -469,50 +465,11 @@
         var eventBinder = EventBinder();
         eventBinder.bind(choiceElement, 'mouseover', onChoiceElementMouseover);
         eventBinder.bind(choiceElement, 'mouseleave', onChoiceElementMouseleave);
-        var choiceContent = choiceContentGenerator(choiceElement);
-        attach();
-        choiceContent.setData(choice.option);
-
-        choice.updateHoverIn = function () {
-          choiceContent.hoverIn(choice.isHoverIn);
-        };
-
-        choice.select = function () {
-          choiceContent.select(choice.isOptionSelected);
-        };
-
-        choice.disable = function (isDisabled, isOptionSelected) {
-          choiceContent.disable(isDisabled, isOptionSelected);
-        };
-
-        choice.dispose = function () {
-          eventBinder.unbind(); //choiceElement.removeEventListener('mouseover',  onChoiceElementMouseover);
-          //choiceElement.removeEventListener('mouseleave', onChoiceElementMouseleave);
-
-          choiceContent.dispose();
-          choice.setVisible = null;
-          choice.updateHoverIn = null;
-          choice.select = null;
-          choice.disable = null;
-          choice.dispose = null;
-          choice.updateSelectedFalse = null;
-          choice.updateSelectedTrue = null;
-        };
-
-        if (choice.isOptionDisabled) choiceContent.disable(true, choice.isOptionSelected); // TODO movo into choiceContent to handlers switch
-
-        choiceContent.onSelected(function () {
-          toggle(choice);
-          filterPanelSetFocus();
-        });
-
-        choice.setVisible = function (isFiltered) {
-          choiceElement.style.display = isFiltered ? 'block' : 'none';
-        };
+        return eventBinder.unbind;
       }
 
       var item = {
-        adoptChoice: adoptChoice,
+        adoptChoiceElement: adoptChoiceElement,
         setFirstChoiceHovered: function setFirstChoiceHovered() {
           return hoverInInternal(0);
         },
@@ -1280,6 +1237,10 @@
 
       var _proto = MultiSelect.prototype;
 
+      _proto.toggleOptionSelected = function toggleOptionSelected$1(choice) {
+        toggleOptionSelected(choice, this.setSelected);
+      };
+
       _proto.resetChoicesList = function resetChoicesList() {
         this.choicesList = [];
         this.filteredChoicesList = null;
@@ -1524,7 +1485,50 @@
 
           choice.visible = true;
           choice.visibleIndex = i;
-          this.choicesPanel.adoptChoice(choice);
+
+          var _this$staticContent$c = this.staticContent.createChoiceElement(),
+              choiceElement = _this$staticContent$c.choiceElement,
+              setVisible = _this$staticContent$c.setVisible,
+              attach = _this$staticContent$c.attach;
+
+          var unbindChoiceElement = this.choicesPanel.adoptChoiceElement(choice, choiceElement);
+          var choiceContent = this.choiceContentGenerator(choiceElement, function () {
+            _this2.toggleOptionSelected(choice);
+
+            _this2.filterPanel.setFocus();
+          });
+          attach();
+          choiceContent.setData(choice.option);
+
+          choice.updateHoverIn = function () {
+            choiceContent.hoverIn(choice.isHoverIn);
+          };
+
+          choice.select = function () {
+            choiceContent.select(choice.isOptionSelected);
+          };
+
+          choice.disable = function (isDisabled, isOptionSelected) {
+            choiceContent.disable(isDisabled, isOptionSelected);
+          };
+
+          choice.dispose = function () {
+            unbindChoiceElement();
+            choiceContent.dispose();
+            choice.setVisible = null;
+            choice.updateHoverIn = null;
+            choice.select = null;
+            choice.disable = null;
+            choice.dispose = null;
+            choice.updateSelectedFalse = null;
+            choice.updateSelectedTrue = null;
+          };
+
+          if (choice.isOptionDisabled) choiceContent.disable(true, choice.isOptionSelected);
+
+          choice.setVisible = function (isVisible) {
+            return setVisible(isVisible);
+          };
 
           if (isOptionSelected) {
             this.createPick(choice);
@@ -1608,7 +1612,7 @@
             var fullMatchChoice = this.filteredChoicesList[0];
 
             if (fullMatchChoice.searchText == text) {
-              this.setOptionSelectedTrue(fullMatchChoice, this.setSelected);
+              setOptionSelectedTrue(fullMatchChoice, this.setSelected);
               this.filterPanel.setEmpty(); // clear
 
               this.placeholderAspect.updateEmptyInputWidth();
@@ -1693,13 +1697,11 @@
           _this4.input(filterInputValue, resetLength);
         });
         this.picksList = PicksList();
-        this.choicesPanel = ChoicesPanel(function () {
-          return _this4.staticContent.createChoiceElement();
-        }, function (choice) {
-          return toggleOptionSelected(choice, _this4.setSelected);
+        this.choicesPanel = ChoicesPanel(function (choice) {
+          return _this4.toggleOptionSelected(choice);
         }, function () {
           return _this4.aspect.eventSkipper;
-        }, this.choiceContentGenerator, function () {
+        }, function () {
           return _this4.getVisibleChoicesList();
         }, function () {
           _this4.aspect.hideChoices();
@@ -1709,8 +1711,6 @@
           _this4.aspect.alignToFilterInputItemLocation(true);
 
           _this4.aspect.showChoices();
-        }, function () {
-          return _this4.filterPanel.setFocus();
         });
         this.placeholderAspect = PlaceholderAspect(this.placeholderText, function () {
           return _this4.picksList.isEmpty() && _this4.filterPanel.isEmpty();
@@ -2193,7 +2193,7 @@
       };
     }
 
-    function choiceContentGenerator(choiceElement, common, css) {
+    function choiceContentGenerator(choiceElement, common, css, toggle) {
       choiceElement.innerHTML = '<div><input formnovalidate type="checkbox"><label></label></div>';
       var choiceContentElement = choiceElement.querySelector('DIV');
       var choiceCheckBoxElement = choiceContentElement.querySelector('INPUT');
@@ -2203,10 +2203,14 @@
       addStyling(choiceLabelElement, css.choiceLabel);
       var selectToggleStyling = toggleStyling(choiceElement, css.choice_selected);
       var disable1ToggleStyling = toggleStyling(choiceElement, css.choice_disabled);
+      var hoverInToggleStyling = toggleStyling(choiceElement, css.choice_hover);
       var disable2ToggleStyling = toggleStyling(choiceCheckBoxElement, css.choiceCheckBox_disabled);
       var disable3ToggleStyling = toggleStyling(choiceLabelElement, css.choiceLabel_disabled);
-      var hoverInToggleStyling = toggleStyling(choiceElement, css.choice_hover);
       var eventBinder = EventBinder();
+      eventBinder.bind(choiceCheckBoxElement, "change", toggle);
+      eventBinder.bind(choiceElement, "click", function (event) {
+        if (choiceElement === event.target || choiceElement.contains(event.target)) toggle();
+      });
       return {
         setData: function setData(option) {
           choiceLabelElement.textContent = option.text;
@@ -2224,14 +2228,6 @@
         },
         hoverIn: function hoverIn(isHoverIn) {
           hoverInToggleStyling(isHoverIn);
-        },
-        onSelected: function onSelected(toggle) {
-          eventBinder.bind(choiceCheckBoxElement, "change", toggle);
-          eventBinder.bind(choiceElement, "click", function (event) {
-            if (choiceElement === event.target || choiceElement.contains(event.target)) {
-              toggle();
-            }
-          });
         },
         dispose: function dispose() {
           eventBinder.unbind();
@@ -2295,6 +2291,9 @@
         addStyling(choiceElement, css.choice);
         return {
           choiceElement: choiceElement,
+          setVisible: function setVisible(isVisible) {
+            return choiceElement.style.display = isVisible ? 'block' : 'none';
+          },
           attach: function attach() {
             return choicesElement.appendChild(choiceElement);
           }
@@ -2749,8 +2748,8 @@
 
       var multiSelect = new MultiSelect(getOptions, common, getDisabled, setSelected, getIsOptionDisabled, getIsOptionHidden, staticContent, function (pickElement) {
         return pickContentGenerator$1(pickElement, common, css);
-      }, function (choiceElement) {
-        return choiceContentGenerator$1(choiceElement, common, css);
+      }, function (choiceElement, toggle) {
+        return choiceContentGenerator$1(choiceElement, common, css, toggle);
       }, labelAdapter, placeholder, isRtl, onChange, css, Popper, window);
       var resetDispose = null;
 
