@@ -1,5 +1,6 @@
 # CHANGELOG
 ````
+0.5.28 - partial single match enter/tab reset filter
 0.5.27 - full match problem solved
 0.5.26 - optimizations
 0.5.25 - optimizations

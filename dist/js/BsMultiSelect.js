@@ -1,5 +1,5 @@
 /*!
-  * DashboardCode BsMultiSelect v0.5.27 (https://dashboardcode.github.io/BsMultiSelect/)
+  * DashboardCode BsMultiSelect v0.5.28 (https://dashboardcode.github.io/BsMultiSelect/)
   * Copyright 2017-2020 Roman Pokrovskij (github user rpokrovskij)
   * Licensed under APACHE 2 (https://github.com/DashboardCode/BsMultiSelect/blob/master/LICENSE)
   */
@@ -323,7 +323,8 @@
       };
     }
 
-    function ChoicesPanel(toggle, getEventSkipper, getVisibleMultiSelectDataList, onToggleHovered, onMoveArrow) {
+    function ChoicesPanel( //toggle, 
+    getEventSkipper, getVisibleMultiSelectDataList, onMoveArrow) {
       var hoveredChoice = null;
       var hoveredChoiceIndex = null;
       var candidateToHoveredChoice = null;
@@ -358,17 +359,6 @@
 
         resetCandidateToHoveredChoice();
       };
-
-      function toggleHovered() {
-        var choice = hoveredChoice;
-
-        if (choice) {
-          if (toggle(choice)) {
-            resetChoicesHover();
-            onToggleHovered();
-          }
-        }
-      }
 
       function keyDownArrow(down) {
         var visibleMultiSelectDataList = getVisibleMultiSelectDataList();
@@ -473,6 +463,7 @@
         setFirstChoiceHovered: function setFirstChoiceHovered() {
           return hoverInInternal(0);
         },
+        resetChoicesHover: resetChoicesHover,
         stopAndResetChoicesHover: function stopAndResetChoicesHover() {
           var eventSkipper = getEventSkipper();
           eventSkipper.setSkippable(); //disable Hover On MouseEnter - filter's changes should remove hover
@@ -480,7 +471,10 @@
           resetChoicesHover();
         },
         resetCandidateToHoveredChoice: resetCandidateToHoveredChoice,
-        toggleHovered: toggleHovered,
+        //toggleHovered,
+        getHoveredChoice: function getHoveredChoice() {
+          return hoveredChoice;
+        },
         keyDownArrow: keyDownArrow
       };
       return item;
@@ -1238,7 +1232,7 @@
       var _proto = MultiSelect.prototype;
 
       _proto.toggleOptionSelected = function toggleOptionSelected$1(choice) {
-        toggleOptionSelected(choice, this.setSelected);
+        return toggleOptionSelected(choice, this.setSelected);
       };
 
       _proto.resetChoicesList = function resetChoicesList() {
@@ -1477,6 +1471,13 @@
         var choice = Choice(option, isOptionSelected, isOptionDisabled, isOptionHidden);
 
         if (!isOptionHidden) {
+          var _this$staticContent$c = this.staticContent.createChoiceElement(),
+              choiceElement = _this$staticContent$c.choiceElement,
+              setVisible = _this$staticContent$c.setVisible,
+              attach = _this$staticContent$c.attach;
+
+          var unbindChoiceElement = this.choicesPanel.adoptChoiceElement(choice, choiceElement);
+
           choice.updateSelectedTrue = function () {
             _this2.createPick(choice);
 
@@ -1485,13 +1486,6 @@
 
           choice.visible = true;
           choice.visibleIndex = i;
-
-          var _this$staticContent$c = this.staticContent.createChoiceElement(),
-              choiceElement = _this$staticContent$c.choiceElement,
-              setVisible = _this$staticContent$c.setVisible,
-              attach = _this$staticContent$c.attach;
-
-          var unbindChoiceElement = this.choicesPanel.adoptChoiceElement(choice, choiceElement);
           var choiceContent = this.choiceContentGenerator(choiceElement, function () {
             _this2.toggleOptionSelected(choice);
 
@@ -1678,8 +1672,24 @@
 
           _this4.aspect.alignToFilterInputItemLocation(false);
         }, // backspace - "remove last"
+
+        /*onEnterOrTabToCompleate*/
         function () {
-          if (_this4.staticContent.isChoicesVisible()) _this4.choicesPanel.toggleHovered();
+          if (_this4.staticContent.isChoicesVisible()) {
+            var hoveredChoice = _this4.choicesPanel.getHoveredChoice();
+
+            if (hoveredChoice) {
+              var wasToggled = _this4.toggleOptionSelected(hoveredChoice);
+
+              if (wasToggled) {
+                _this4.choicesPanel.resetChoicesHover();
+
+                _this4.aspect.hideChoices();
+
+                _this4.resetFilter();
+              }
+            }
+          }
         }, // tab/enter "compleate hovered"
         function (isEmpty, event) {
           if (!isEmpty || _this4.staticContent.isChoicesVisible()) // supports bs modal - stop esc (close modal) propogation
@@ -1697,16 +1707,10 @@
           _this4.input(filterInputValue, resetLength);
         });
         this.picksList = PicksList();
-        this.choicesPanel = ChoicesPanel(function (choice) {
-          return _this4.toggleOptionSelected(choice);
-        }, function () {
+        this.choicesPanel = ChoicesPanel(function () {
           return _this4.aspect.eventSkipper;
         }, function () {
           return _this4.getVisibleChoicesList();
-        }, function () {
-          _this4.aspect.hideChoices();
-
-          _this4.resetFilter();
         }, function () {
           _this4.aspect.alignToFilterInputItemLocation(true);
 

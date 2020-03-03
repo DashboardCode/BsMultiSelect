@@ -1,10 +1,9 @@
 import {EventBinder} from './ToolsDom'
 
 export function ChoicesPanel(
-        toggle, 
+        //toggle, 
         getEventSkipper, 
         getVisibleMultiSelectDataList, 
-        onToggleHovered, 
         onMoveArrow
         ) {
     
@@ -45,13 +44,14 @@ export function ChoicesPanel(
     }
 
     function toggleHovered() {
+        let resultValue = false;
         let choice = hoveredChoice;
         if (choice) {
             if (toggle(choice)){
                 resetChoicesHover();
-                onToggleHovered();
             }
         } 
+        return resultValue;
     }
 
     function keyDownArrow(down) {
@@ -156,13 +156,15 @@ export function ChoicesPanel(
     var item = {
         adoptChoiceElement,
         setFirstChoiceHovered: ()=>hoverInInternal(0),
+        resetChoicesHover,
         stopAndResetChoicesHover(){
             let eventSkipper = getEventSkipper();
             eventSkipper.setSkippable(); //disable Hover On MouseEnter - filter's changes should remove hover
             resetChoicesHover();
         },
         resetCandidateToHoveredChoice: resetCandidateToHoveredChoice,
-        toggleHovered,
+        //toggleHovered,
+        getHoveredChoice: ()=>hoveredChoice,
         keyDownArrow
     }
     return item;

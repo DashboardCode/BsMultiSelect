@@ -1,6 +1,6 @@
 {
   "name": "@dashboardcode/bsmultiselect",
-  "version": "0.5.27",
+  "version": "0.5.28",
   "private": false,
   "description": "Bootstrap 4 component - multiselect input",
   "homepage": "https://dashboardcode.github.io/BsMultiSelect/",
@@ -28,7 +28,7 @@
     "babel-eslint": "10.1.0",
     "bootstrap": "^4.4.1",
     "clean-css-cli": "^4.3.0",
-    "cross-env": "^7.0.0",
+    "cross-env": "^7.0.1",
     "eslint": "^6.8.0",
     "eslint-plugin-compat": "^3.5.1",
     "jquery": "^3.4.1",
@@ -43,7 +43,7 @@
     "stylelint-config-standard": "^20.0.0",
     "stylelint-order": "^4.0.0",
     "stylelint-scss": "^3.14.2",
-    "terser": "4.6.4"
+    "terser": "4.6.6"
   },
   "scripts": {
     "report": "echo.cd & cd & echo. & where node & echo.node -v & node -v & echo. & where npm & echo.npm -version & npm -version  & echo. & where eslint & echo.eslint -v & eslint -v & echo. & where rollup & echo.rollup -version & rollup -version & echo. &  echo.babel -version & node ./node_modules/@babel/cli/bin/babel --version",

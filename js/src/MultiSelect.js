@@ -97,7 +97,7 @@ export class MultiSelect {
     }
 
     toggleOptionSelected(choice){
-        toggleOptionSelectedLib(choice, this.setSelected);
+        return toggleOptionSelectedLib(choice, this.setSelected);
     }
 
     resetChoicesList(){
@@ -308,7 +308,9 @@ export class MultiSelect {
         
         var choice = Choice(option, isOptionSelected, isOptionDisabled, isOptionHidden);
         if (!isOptionHidden){
-
+            var {choiceElement, setVisible, attach} = this.staticContent.createChoiceElement();
+            var unbindChoiceElement = this.choicesPanel.adoptChoiceElement(choice, choiceElement);
+            
             choice.updateSelectedTrue = () => {
                 this.createPick(choice);
                 this.onChange();
@@ -317,10 +319,9 @@ export class MultiSelect {
             choice.visible = true;
             choice.visibleIndex=i;
 
+            
 
-            var {choiceElement, setVisible, attach} = this.staticContent.createChoiceElement();
-
-            var unbindChoiceElement = this.choicesPanel.adoptChoiceElement(choice, choiceElement);
+            
 
             let choiceContent = this.choiceContentGenerator(choiceElement, ()=>{
                 this.toggleOptionSelected(choice);
@@ -500,9 +501,19 @@ export class MultiSelect {
                 this.picksList.removePicksTail();
                 this.aspect.alignToFilterInputItemLocation(false);
             }, // backspace - "remove last"
-            () => { 
-                if (this.staticContent.isChoicesVisible())
-                    this.choicesPanel.toggleHovered() }, // tab/enter "compleate hovered"
+            /*onEnterOrTabToCompleate*/() => { 
+                if (this.staticContent.isChoicesVisible()) {
+                    let hoveredChoice = this.choicesPanel.getHoveredChoice();
+                    if (hoveredChoice){
+                    var wasToggled = this.toggleOptionSelected(hoveredChoice);
+                        if (wasToggled) {
+                            this.choicesPanel.resetChoicesHover();
+                            this.aspect.hideChoices();
+                            this.resetFilter();
+                        }
+                    }
+                } 
+            }, // tab/enter "compleate hovered"
             (isEmpty, event) => {
                 if (!isEmpty || this.staticContent.isChoicesVisible()) // supports bs modal - stop esc (close modal) propogation
                     event.stopPropagation();
@@ -521,12 +532,8 @@ export class MultiSelect {
         this.picksList =  PicksList();
 
         this.choicesPanel = ChoicesPanel(
-            (choice)=> this.toggleOptionSelected(choice),
             () => this.aspect.eventSkipper,
             () => this.getVisibleChoicesList(),
-            () => {
-                    this.aspect.hideChoices();
-                    this.resetFilter();},
             () => {
                 this.aspect.alignToFilterInputItemLocation(true);
                 this.aspect.showChoices();
