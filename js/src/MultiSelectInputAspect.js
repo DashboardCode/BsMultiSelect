@@ -1,4 +1,4 @@
-import {EventBinder, EventSkipper} from './ToolsDom'
+import {EventBinder, EventLoopFlag} from './ToolsDom'
 
 export function MultiSelectInputAspect (
     window,
@@ -18,7 +18,7 @@ export function MultiSelectInputAspect (
 {
     appendToContainer();
     var document = window.document;
-    var eventSkipper = EventSkipper(window);
+    var eventLoopFlag = EventLoopFlag(window); // showChoices
     var skipFocusout = false;
 
     // we want to escape the closing of the menu (because of focus out from) on a user's click inside the container
@@ -94,7 +94,7 @@ export function MultiSelectInputAspect (
     function showChoices() {
         if ( !isChoicesVisible() )
         {
-            eventSkipper.setSkippable();
+            eventLoopFlag.set();
             setChoicesVisible(true);
             
             // add listeners that manages close dropdown on input's focusout and click outside container
@@ -171,7 +171,7 @@ export function MultiSelectInputAspect (
                     alignAndShowChoices(event);
                 });  // OPEN dropdown
         },
-        eventSkipper,
+        eventLoopFlag,
         hideChoices,
         showChoices,
         handleOnRemoveButton

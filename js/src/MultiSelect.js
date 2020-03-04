@@ -11,7 +11,7 @@ import {sync} from './ToolsJs'
 function filterMultiSelectData(choice, isFiltered, visibleIndex) {
     choice.visible = isFiltered;
     choice.visibleIndex = visibleIndex;
-    choice.setVisible(isFiltered);
+    choice.updateVisible();
     //MultiSelectData.choiceElement.style.display = isFiltered ? 'block': 'none';
 } 
 
@@ -49,7 +49,6 @@ function collectFilterChoices(choicesList, text) {
 }
 
 export class MultiSelect {
-
     constructor(
         getOptions,
         common,
@@ -318,9 +317,6 @@ export class MultiSelect {
 
             choice.visible = true;
             choice.visibleIndex=i;
-
-            
-
             
 
             let choiceContent = this.choiceContentGenerator(choiceElement, ()=>{
@@ -347,7 +343,7 @@ export class MultiSelect {
                 unbindChoiceElement();
                 choiceContent.dispose();
 
-                choice.setVisible = null;
+                choice.updateVisible = null;
                 choice.updateHoverIn = null;
                 choice.select = null;
                 choice.disable = null;
@@ -361,7 +357,7 @@ export class MultiSelect {
                 choiceContent.disable(true, choice.isOptionSelected )
 
 
-            choice.setVisible = isVisible => setVisible(isVisible)
+            choice.updateVisible = () => setVisible(choice.visible)
             
             if (isOptionSelected){
                 this.createPick(choice);
@@ -459,7 +455,10 @@ export class MultiSelect {
         else
             resetLength();  
         
-        this.choicesPanel.stopAndResetChoicesHover();
+        this.choicesPanel.resetChoicesHover();
+        this.aspect.eventLoopFlag.set(); // means disable some mouse handlers; otherwise we will get "Hover On MouseEnter" when filter's changes should remove hover
+
+
         if (this.getVisibleChoicesList().length == 1) {
             this.choicesPanel.setFirstChoiceHovered();
         }
@@ -472,7 +471,20 @@ export class MultiSelect {
         }
     }
 
+    hoveredToSelected(){
+        let hoveredChoice = this.choicesPanel.getHoveredChoice();
+        if (hoveredChoice){
+            var wasToggled = this.toggleOptionSelected(hoveredChoice);
+            if (wasToggled) {
+                this.choicesPanel.resetChoicesHover();
+                this.aspect.hideChoices();
+                this.resetFilter();
+            }
+        }
+    }
+
     init() {
+        
         this.filterPanel = FilterPanel(
             this.staticContent.filterInputElement,
             () => {
@@ -501,25 +513,27 @@ export class MultiSelect {
                 this.picksList.removePicksTail();
                 this.aspect.alignToFilterInputItemLocation(false);
             }, // backspace - "remove last"
-            /*onEnterOrTabToCompleate*/() => { 
+            /*onTabToCompleate*/() => { 
                 if (this.staticContent.isChoicesVisible()) {
-                    let hoveredChoice = this.choicesPanel.getHoveredChoice();
-                    if (hoveredChoice){
-                    var wasToggled = this.toggleOptionSelected(hoveredChoice);
-                        if (wasToggled) {
-                            this.choicesPanel.resetChoicesHover();
-                            this.aspect.hideChoices();
-                            this.resetFilter();
-                        }
-                    }
+                    this.hoveredToSelected();
                 } 
-            }, // tab/enter "compleate hovered"
+            },
+            /*onEnterToCompleate*/() => { 
+                if (this.staticContent.isChoicesVisible()) {
+                    this.hoveredToSelected();
+                } else {
+                    this.aspect.alignToFilterInputItemLocation(true);
+                    this.aspect.showChoices();
+                }
+            },
+            // tab/enter "compleate hovered"
             (isEmpty, event) => {
                 if (!isEmpty || this.staticContent.isChoicesVisible()) // supports bs modal - stop esc (close modal) propogation
                     event.stopPropagation();
             }, // esc keydown
             () => {
                 this.aspect.hideChoices(); // always hide 1st
+                this.choicesPanel.resetChoicesHover();
                 this.resetFilter();
             }, // esc keyup 
             (filterInputValue, resetLength) =>
@@ -532,9 +546,9 @@ export class MultiSelect {
         this.picksList =  PicksList();
 
         this.choicesPanel = ChoicesPanel(
-            () => this.aspect.eventSkipper,
+            () => this.aspect.eventLoopFlag,
             () => this.getVisibleChoicesList(),
-            () => {
+            /*onMoveArrow*/() => {
                 this.aspect.alignToFilterInputItemLocation(true);
                 this.aspect.showChoices();
             }

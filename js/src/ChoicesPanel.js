@@ -1,28 +1,18 @@
 import {EventBinder} from './ToolsDom'
 
 export function ChoicesPanel(
-        //toggle, 
-        getEventSkipper, 
+        getEventLoopFlag, 
         getVisibleMultiSelectDataList, 
         onMoveArrow
-        ) {
-    
+        ) 
+{
     var hoveredChoice=null;
-    var hoveredChoiceIndex = null;
-    var candidateToHoveredChoice=null;
+    var mouseOverChoice=null;
 
     function resetCandidateToHoveredChoice(){
-        if (candidateToHoveredChoice){
-            candidateToHoveredChoice.resetCandidateToHoveredChoice();
+        if (mouseOverChoice){
+            mouseOverChoice.resetCandidateToHoveredChoice();
         }
-    }
-
-    var hoverInInternal = function(index){
-        hoveredChoiceIndex = index;
-        
-        hoveredChoice = getVisibleMultiSelectDataList()[index];
-        hoveredChoice.isHoverIn = true;
-        hoveredChoice.updateHoverIn()
     }
 
     function resetChoicesHover() {
@@ -30,49 +20,44 @@ export function ChoicesPanel(
             hoveredChoice.isHoverIn = false;
             hoveredChoice.updateHoverIn()
             hoveredChoice = null;
-            hoveredChoiceIndex = null;
         }
     }
 
+    var hoverIn = function(choice){
+        resetChoicesHover(); 
+        hoveredChoice = choice;
+        hoveredChoice.isHoverIn = true;
+        hoveredChoice.updateHoverIn()
+    }
+
+
     var processCandidateToHovered = function() {
-        if (hoveredChoice != candidateToHoveredChoice)
+        if (hoveredChoice != mouseOverChoice)
         {
-            resetChoicesHover(); 
-            hoverInInternal(candidateToHoveredChoice.visibleIndex);
+            hoverIn(mouseOverChoice);
         }
         resetCandidateToHoveredChoice();
     }
 
-    function toggleHovered() {
-        let resultValue = false;
-        let choice = hoveredChoice;
-        if (choice) {
-            if (toggle(choice)){
-                resetChoicesHover();
-            }
-        } 
-        return resultValue;
-    }
-
     function keyDownArrow(down) {
-        let visibleMultiSelectDataList = getVisibleMultiSelectDataList();
-        let length = visibleMultiSelectDataList.length;
-        let newIndex=null;
+        let visibleChoices = getVisibleMultiSelectDataList();
+        let length = visibleChoices.length;
+        let iChoice = null;
         if (length > 0) {
             if (down) {
-                let i = hoveredChoiceIndex===null?0:hoveredChoiceIndex+1;
+                let i = hoveredChoice===null?0:hoveredChoice.visibleIndex+1;
                 while(i<length){
-                    if (visibleMultiSelectDataList[i].visible){
-                        newIndex=i;
+                    iChoice = visibleChoices[i];
+                    if (iChoice.visible){
                         break;
                     }
                     i++;
                 }
             } else {
-                let i = hoveredChoiceIndex===null?length-1:hoveredChoiceIndex-1;
-                while(i>=0){
-                    if (visibleMultiSelectDataList[i].visible){
-                        newIndex=i;
+                let i = hoveredChoice===null?length-1:hoveredChoice.visibleIndex-1;
+                while(i>=0) {
+                    iChoice = visibleChoices[i];
+                    if (iChoice.visible) {
                         break;
                     }
                     i--;
@@ -80,45 +65,41 @@ export function ChoicesPanel(
             }
         }
         
-        if (newIndex!==null)
+        if (iChoice)
         {
-            if (hoveredChoice){
-                hoveredChoice.isHoverIn = false;
-                hoveredChoice.updateHoverIn()
-            }
+            hoverIn(iChoice);
             onMoveArrow();
-            //showChoices(); 
-            hoverInInternal(newIndex);
         }
     }
 
     var onChoiceElementMouseoverGeneral = function(choice, choiceElement)
     {
-        let eventSkipper = getEventSkipper();
-        if (eventSkipper.isSkippable())
+        let eventLoopFlag = getEventLoopFlag();
+        if (eventLoopFlag.get())
         {
             resetCandidateToHoveredChoice();
 
-            candidateToHoveredChoice = choice;
+            mouseOverChoice = choice;
             var eventBinder = EventBinder();
             eventBinder.bind(choiceElement, 'mousemove', processCandidateToHovered);
             eventBinder.bind(choiceElement, 'mousedown', processCandidateToHovered);
 
-            candidateToHoveredChoice.resetCandidateToHoveredChoice = ()=>{
+            mouseOverChoice.resetCandidateToHoveredChoice = ()=>{
+                mouseOverChoice.isMouseOver=false;
                 eventBinder.unbind();
-                candidateToHoveredChoice.resetCandidateToHoveredChoice=null;
-                candidateToHoveredChoice = null;
+                mouseOverChoice.resetCandidateToHoveredChoice=null;
+                mouseOverChoice = null;
             }
         }
         else
         {
             if (/*hoveredChoice!=choice*/!choice.isHoverIn)
             {
-                // mouseleave is not enough to guarantee remove hover styles in situations
+                // NOTE: mouseleave is not enough to guarantee remove hover styles in situations
                 // when style was setuped without mouse (keyboard arrows)
-                // therefore force reset manually
-                resetChoicesHover(); 
-                hoverInInternal(choice.visibleIndex);
+                // therefore force reset manually (done inside hoverIn)
+                
+                hoverIn(choice);
             }                
         }
     }
@@ -134,18 +115,15 @@ export function ChoicesPanel(
             choice,
             choiceElement
         )
-
-        //choiceElement.addEventListener('mouseover', onChoiceElementMouseover);
         
         // note 1: mouseleave preferred to mouseout - which fires on each descendant
         // note 2: since I want add aditional info panels to the dropdown put mouseleave on dropdwon would not work
         var onChoiceElementMouseleave = () => {
-            let eventSkipper = getEventSkipper();
-            if (!eventSkipper.isSkippable()) {
+            let eventLoopFlag = getEventLoopFlag();
+            if (!eventLoopFlag.get()) {
                 resetChoicesHover();
             }
         }
-        //choiceElement.addEventListener('mouseleave', onChoiceElementMouseleave);
         var eventBinder = EventBinder();
         eventBinder.bind(choiceElement, 'mouseover', onChoiceElementMouseover);
         eventBinder.bind(choiceElement, 'mouseleave', onChoiceElementMouseleave);
@@ -155,15 +133,12 @@ export function ChoicesPanel(
 
     var item = {
         adoptChoiceElement,
-        setFirstChoiceHovered: ()=>hoverInInternal(0),
-        resetChoicesHover,
-        stopAndResetChoicesHover(){
-            let eventSkipper = getEventSkipper();
-            eventSkipper.setSkippable(); //disable Hover On MouseEnter - filter's changes should remove hover
-            resetChoicesHover();
+        setFirstChoiceHovered: ()=> {
+            // NOTE: do not require the resetChoicesHover since we sure that there is no hovered (menu was just opened)
+            hoverIn(getVisibleMultiSelectDataList()[0])
         },
+        resetChoicesHover,
         resetCandidateToHoveredChoice: resetCandidateToHoveredChoice,
-        //toggleHovered,
         getHoveredChoice: ()=>hoveredChoice,
         keyDownArrow
     }

@@ -29,9 +29,9 @@ BsMultiSelect follows Bootstrap 4 conventions and use the same instruments (babe
 `npm install @dashboardcode/bsmultiselect`
 
 # CDN
-https://cdn.jsdelivr.net/npm/@dashboardcode/bsmultiselect@0.5.28/dist/js/BsMultiSelect.min.js
-https://cdn.jsdelivr.net/npm/@dashboardcode/bsmultiselect@0.5.28/dist/js/BsMultiSelect.esm.min.js
-https://cdn.jsdelivr.net/npm/@dashboardcode/bsmultiselect@0.5.28/dist/css/BsMultiSelect.min.css
+https://cdn.jsdelivr.net/npm/@dashboardcode/bsmultiselect@0.5.29/dist/js/BsMultiSelect.min.js
+https://cdn.jsdelivr.net/npm/@dashboardcode/bsmultiselect@0.5.29/dist/js/BsMultiSelect.esm.min.js
+https://cdn.jsdelivr.net/npm/@dashboardcode/bsmultiselect@0.5.29/dist/css/BsMultiSelect.min.css
 
 
 # Architecture
@@ -104,9 +104,9 @@ For keyboard events `preventDefault` was used to
     c) enter (`13`) to prvent default button action (submit etc.)
     d) esc (`27`) to avoid "clear text on `esc`" functionlity dublication
 
-## Manipulations with SELECT
+## Manipulations with SELECT > OPTION
 
-When data source is SELECT element then when user select option the HTML `selected` attribute is not removed or added from the `option`, only `HTMLOptionElement.selected` value is setuped (this automitically doesn't add\remove `selected` attribute). If it is not enough and you need to remove an attribute you can override `setSelected` in the configuration (but this break [HTML Form reset](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/input/reset) functionality in Chrome).
+When data source is `select` element then when user make a selection the option's `selected` attribute is not removed or added, only `HTMLOptionElement.selected` value is setuped (this automitically doesn't add\remove `selected` attribute). If it is not enough and you need to add/remove an attribute, then you can override `setSelected` in the configuration (note: but this break [HTML Form reset](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/input/reset) functionality in Chrome).
 
 ````
           $('#mySelect').bsMultiSelect({
@@ -124,15 +124,13 @@ When data source is SELECT element then when user select option the HTML `select
 
 ## Dynamic Updates 
 
-Inspite plugin have form's `reset` event listener, there are no MutationObserver defined inside (component does not track properties on original `SELECT`, js object data source, `FIELDSET`, `.was-validated` parent). 
+Inspite plugin subscribes to form's `reset` event listener, there are no `MutationObserver` defined inside (`BsMultiSelect` does not track properties on original `SELECT`, or js object data, on parent `FIELDSET` element, or presence of `.was-validated` on parent , or presence of `is-valid`, `is-invalid`  original `select` or substitutional configuration methods. 
 
-If you change  properties on original `SELECT`, js object used as source, or `FIELDSET`(disabled), or toggle `.was-validated` then you will need to push changes to component with methods `UpdateIsValid`, `UpdateDisabled`, `UpdateSize`, `UpdateWasValidated`, `UpdateValidy` (`is-valid`, `is-invalid` on original `select`). Or All together with `UpdateAppearance`.
+If you change original `select`'s appearance after `BsMultiSelecte` was created then you will need to push changes to component with corresponded methods `UpdateIsValid`, `UpdateDisabled`, `UpdateSize`, `UpdateWasValidated`, `UpdateValidy`. Or All together with `UpdateAppearance`.
 
-If you change items properties (text, `selected`, `disabled`, `hidden`) or if you delete them or insert new items you need to push changes to component with  `UpdateData`.
+If you change options/items properties (text, `selected`, `disabled`, `hidden`) or if you delete them or insert new items you need to push changes to component with  `UpdateData`. There is specific `UpdateSelected` method synchronize only `selected` properties.
  
 `Update` method works like "update all": it call `UpdateAppearance` and `UpdateData`.
-
-`UpdateSelected` method synchronize only `selected` properties.
 
 Samples:
 

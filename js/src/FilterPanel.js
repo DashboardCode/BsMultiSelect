@@ -7,7 +7,8 @@ export function FilterPanel(
         onKeyDownArrowDown,
         onTabForEmpty,  // tab on empty
         onBackspace, // backspace alike
-        onEnterOrTabToCompleate, // "compleate alike"
+        onTabToCompleate, // "compleate alike"
+        onEnterToCompleate,
         onKeyDownEsc, 
         onKeyUpEsc, // "esc" alike
         onInput//, // filter
@@ -23,10 +24,10 @@ export function FilterPanel(
         if ([38, 40, 13 ,27].indexOf(event.which)>=0 
             || (event.which == 9 && filterInputElement.value) ) {
             event.preventDefault(); 
-            // preventDefault for tab(9) it enables keyup,
-            // prevent form default button (13-enter) 
+            // preventDefault for '9-tab' it enables keyup,
+            // prevent form default button '13-enter' 
             // but doesn't help with bootsrap modal ESC or ENTER (close behaviour);
-            // esc(27) there is just in case
+            // '27-esc' there is just in case
         }
         if (event.which == 27 ) {
             onKeyDownEsc(filterInputElement.value?false:true, event); // support BS do not close modal - event.stopPropagation inside
@@ -54,8 +55,11 @@ export function FilterPanel(
     }
     
     var onFilterInputKeyUp = (event) => {
-        if (event.which == 13 || event.which == 9) {
-            onEnterOrTabToCompleate();
+        if (event.which == 9) {
+            onTabToCompleate();
+        }
+        else if (event.which == 13 ){
+            onEnterToCompleate();
         }
         else if (event.which == 27) { // escape
             onKeyUpEsc(); // is it always empty (bs x can still it) 

@@ -4,12 +4,16 @@ export function Choice(option, isOptionSelected, isOptionDisabled, isOptionHidde
             isOptionDisabled: isOptionDisabled,
             isOptionHidden: isOptionHidden,
             isOptionSelected: isOptionSelected,
+            
             isHoverIn: false,
+            isMouseOver: false,
             
             searchText: option.text.toLowerCase().trim(),
             excludedFromSearch: isOptionSelected || isOptionDisabled || isOptionHidden,
             setVisible: null,
-            
+            visible: false,
+            visibleIndex: null, // todo: check for errors
+
             updateHoverIn: null,
             select: null,
             disable: null,
@@ -22,8 +26,7 @@ export function Choice(option, isOptionSelected, isOptionDisabled, isOptionHidde
             //setSelectedTrue: null, // TODO remove / replace with this.setOptionSelected
             //setSelectedFalse: null, // TODO remove / replace with this.setOptionSelected
             resetCandidateToHoveredChoice: null, // todo: setCandidateToHovered(Boolean) ?
-            visible: false,
-            visibleIndex: null, // todo: check for errors
+            
     }
     return choice;
 }

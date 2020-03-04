@@ -117,17 +117,17 @@ export function AttributeBackup(){
     }
 }
 
-export function EventSkipper(window) {
-    var isSkippable = false;
+export function EventLoopFlag(window) {
+    var flag = false;
     return {
-        isSkippable(){
-            return isSkippable;
+        get(){
+            return flag;
         },
-        setSkippable(){
-            isSkippable = true;
+        set(){
+            flag = true;
             window.setTimeout( 
                 () => {  
-                    isSkippable = false;
+                    flag = false;
                 }, 0)
         }
     }
