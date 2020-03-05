@@ -6,7 +6,6 @@ export function Choice(option, isOptionSelected, isOptionDisabled, isOptionHidde
             isOptionSelected: isOptionSelected,
             
             isHoverIn: false,
-            isMouseOver: false,
             
             searchText: option.text.toLowerCase().trim(),
             excludedFromSearch: isOptionSelected || isOptionDisabled || isOptionHidden,
@@ -21,12 +20,7 @@ export function Choice(option, isOptionSelected, isOptionDisabled, isOptionHidde
             updateSelectedFalse: null, // TODO remove / replace with updateSelected
             updateSelectedTrue: null, // TODO remove / replace with updateSelected
             
-            dispose: null,
-
-            //setSelectedTrue: null, // TODO remove / replace with this.setOptionSelected
-            //setSelectedFalse: null, // TODO remove / replace with this.setOptionSelected
-            resetCandidateToHoveredChoice: null, // todo: setCandidateToHovered(Boolean) ?
-            
+            dispose: null
     }
     return choice;
 }

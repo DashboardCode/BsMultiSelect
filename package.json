@@ -1,6 +1,6 @@
 {
   "name": "@dashboardcode/bsmultiselect",
-  "version": "0.5.29",
+  "version": "0.5.30",
   "private": false,
   "description": "Bootstrap 4 component - multiselect input",
   "homepage": "https://dashboardcode.github.io/BsMultiSelect/",
@@ -19,11 +19,11 @@
   "peerDependencies": {},
   "devDependencies": {
     "@babel/cli": "^7.8.4",
-    "@babel/core": "^7.8.6",
+    "@babel/core": "^7.8.7",
     "@babel/plugin-external-helpers": "^7.8.3",
     "@babel/plugin-transform-spread": "^7.8.3",
-    "@babel/polyfill": "^7.8.3",
-    "@babel/preset-env": "^7.8.6",
+    "@babel/polyfill": "^7.8.7",
+    "@babel/preset-env": "^7.8.7",
     "autoprefixer": "^9.7.4",
     "babel-eslint": "10.1.0",
     "bootstrap": "^4.4.1",

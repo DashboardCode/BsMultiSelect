@@ -308,7 +308,7 @@ export class MultiSelect {
         var choice = Choice(option, isOptionSelected, isOptionDisabled, isOptionHidden);
         if (!isOptionHidden){
             var {choiceElement, setVisible, attach} = this.staticContent.createChoiceElement();
-            var unbindChoiceElement = this.choicesPanel.adoptChoiceElement(choice, choiceElement);
+            var unbindChoiceElement = this.aspect.adoptChoiceElement(choice, choiceElement);
             
             choice.updateSelectedTrue = () => {
                 this.createPick(choice);
@@ -397,6 +397,7 @@ export class MultiSelect {
 
     Dispose(){
         sync(
+            //this.ChoicesPanel.resetMouseCandidateChoice, // guarantee unbind mouse event
             this.aspect.hideChoices,
             this.picksList.dispose,
             this.filterPanel.dispose,
@@ -455,12 +456,13 @@ export class MultiSelect {
         else
             resetLength();  
         
-        this.choicesPanel.resetChoicesHover();
+        this.choicesPanel.resetHoveredChoice();
         this.aspect.eventLoopFlag.set(); // means disable some mouse handlers; otherwise we will get "Hover On MouseEnter" when filter's changes should remove hover
 
-
-        if (this.getVisibleChoicesList().length == 1) {
-            this.choicesPanel.setFirstChoiceHovered();
+        var choicesList = this.getVisibleChoicesList();
+        if (choicesList.length == 1) {
+             // NOTE: do not require the resetHoveredChoice since we sure that there is no hovered (menu was just opened)
+            this.choicesPanel.hoverIn(choicesList[0])
         }
 
         if (this.getVisibleChoicesList().length > 0) {
@@ -476,10 +478,45 @@ export class MultiSelect {
         if (hoveredChoice){
             var wasToggled = this.toggleOptionSelected(hoveredChoice);
             if (wasToggled) {
-                this.choicesPanel.resetChoicesHover();
+                this.choicesPanel.resetHoveredChoice();
                 this.aspect.hideChoices();
                 this.resetFilter();
             }
+        }
+    }
+
+    keyDownArrow(down) {
+        let visibleChoices = this.getVisibleChoicesList();
+        let length = visibleChoices.length;
+        let iChoice = null;
+        let hoveredChoice =  this.choicesPanel.getHoveredChoice();
+        if (length > 0) {
+            if (down) {
+                let i = hoveredChoice===null?0:hoveredChoice.visibleIndex+1;
+                while(i<length){
+                    iChoice = visibleChoices[i];
+                    if (iChoice.visible){
+                        break;
+                    }
+                    i++;
+                }
+            } else {
+                let i = hoveredChoice===null?length-1:hoveredChoice.visibleIndex-1;
+                while(i>=0) {
+                    iChoice = visibleChoices[i];
+                    if (iChoice.visible) {
+                        break;
+                    }
+                    i--;
+                }
+            }
+        }
+        
+        if (iChoice)
+        {
+            this.choicesPanel.hoverIn(iChoice);
+            this.aspect.alignToFilterInputItemLocation(true);
+            this.aspect.showChoices();
         }
     }
 
@@ -506,8 +543,8 @@ export class MultiSelect {
                 }
                 this.aspect.resetSkipFocusout();
             }, // focus out - hide dropdown
-            () => this.choicesPanel.keyDownArrow(false), // arrow up
-            () => this.choicesPanel.keyDownArrow(true),  // arrow down
+            () => this.keyDownArrow(false), // arrow up
+            () => this.keyDownArrow(true),  // arrow down
             () => this.aspect.hideChoices(),  // tab on empty
             () => {
                 this.picksList.removePicksTail();
@@ -533,7 +570,7 @@ export class MultiSelect {
             }, // esc keydown
             () => {
                 this.aspect.hideChoices(); // always hide 1st
-                this.choicesPanel.resetChoicesHover();
+                this.choicesPanel.resetHoveredChoice();
                 this.resetFilter();
             }, // esc keyup 
             (filterInputValue, resetLength) =>
@@ -546,12 +583,7 @@ export class MultiSelect {
         this.picksList =  PicksList();
 
         this.choicesPanel = ChoicesPanel(
-            () => this.aspect.eventLoopFlag,
-            () => this.getVisibleChoicesList(),
-            /*onMoveArrow*/() => {
-                this.aspect.alignToFilterInputItemLocation(true);
-                this.aspect.showChoices();
-            }
+            () => this.aspect.eventLoopFlag
         );
 
         this.placeholderAspect = PlaceholderAspect(
@@ -572,7 +604,8 @@ export class MultiSelect {
             this.staticContent.choicesElement, 
             ()=>this.staticContent.isChoicesVisible(),
             (visible)=>this.staticContent.setChoicesVisible(visible),
-            () => this.choicesPanel.resetCandidateToHoveredChoice(),
+            () => this.choicesPanel.resetHoveredChoice(), 
+            (choice) => this.choicesPanel.hoverIn(choice),
             () => this.resetFilter(),
             () => this.getVisibleChoicesList().length==0, 
             /*onClick*/(event) => {

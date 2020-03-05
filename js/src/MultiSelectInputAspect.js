@@ -8,7 +8,8 @@ export function MultiSelectInputAspect (
     choicesElement, 
     isChoicesVisible,
     setChoicesVisible,
-    resetCandidateToHoveredChoice,
+    resetHoveredChoice, 
+    hoverIn,
     resetFilter,
     isChoiceEmpty,
     onClick,
@@ -107,7 +108,7 @@ export function MultiSelectInputAspect (
     }
 
     function hideChoices() {
-        resetCandidateToHoveredChoice();
+        resetMouseCandidateChoice();
         if (isChoicesVisible())
         {
             setChoicesVisible(false);
@@ -149,8 +150,62 @@ export function MultiSelectInputAspect (
         });
     }
     
+    let mouseCandidateEventBinder = EventBinder();
+    var resetMouseCandidateChoice = () => {
+        mouseCandidateEventBinder.unbind();
+    };
+
+    var mouseOverToHoveredAndReset = (choice) => {
+        if (!choice.isHoverIn)
+            hoverIn(choice);
+        resetMouseCandidateChoice();
+    };
+
+    function adoptChoiceElement(choice, choiceElement){
+
+        // in chrome it happens on "become visible" so we need to skip it, 
+        // for IE11 and edge it doesn't happens, but for IE11 and Edge it doesn't happens on small 
+        // mouse moves inside the item. 
+        // https://stackoverflow.com/questions/59022563/browser-events-mouseover-doesnt-happen-when-you-make-element-visible-and-mous
+        
+        var onChoiceElementMouseover = () => 
+        {
+            if (eventLoopFlag.get())
+            {
+                resetMouseCandidateChoice();
+                mouseCandidateEventBinder.bind(choiceElement, 'mousemove', ()=>mouseOverToHoveredAndReset(choice));
+                mouseCandidateEventBinder.bind(choiceElement, 'mousedown', ()=>mouseOverToHoveredAndReset(choice));
+            }
+            else
+            {
+                if (!choice.isHoverIn)
+                {
+                    // NOTE: mouseleave is not enough to guarantee remove hover styles in situations
+                    // when style was setuped without mouse (keyboard arrows)
+                    // therefore force reset manually (done inside hoverIn)
+                    hoverIn(choice);
+                }                
+            }
+        }
+        
+        // note 1: mouseleave preferred to mouseout - which fires on each descendant
+        // note 2: since I want add aditional info panels to the dropdown put mouseleave on dropdwon would not work
+        var onChoiceElementMouseleave = () => {
+            if (!eventLoopFlag.get()) {
+                resetHoveredChoice();
+            }
+        }
+        var overAndLeaveEventBinder = EventBinder();
+        overAndLeaveEventBinder.bind(choiceElement, 'mouseover', onChoiceElementMouseover);
+        overAndLeaveEventBinder.bind(choiceElement, 'mouseleave', onChoiceElementMouseleave);
+
+        return overAndLeaveEventBinder.unbind;
+    }
+
     return {
+        adoptChoiceElement,
         dispose(){
+            resetMouseCandidateChoice();
             popper.destroy();
             componentDisabledEventBinder.unbind();
         },

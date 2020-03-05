@@ -1,5 +1,5 @@
 /*!
-  * DashboardCode BsMultiSelect v0.5.29 (https://dashboardcode.github.io/BsMultiSelect/)
+  * DashboardCode BsMultiSelect v0.5.30 (https://dashboardcode.github.io/BsMultiSelect/)
   * Copyright 2017-2020 Roman Pokrovskij (github user rpokrovskij)
   * Licensed under APACHE 2 (https://github.com/DashboardCode/BsMultiSelect/blob/master/LICENSE)
   */
@@ -183,159 +183,10 @@
       };
     }
 
-    function removeElement(e) {
-      e.parentNode.removeChild(e);
-    }
-    function findDirectChildByTagName(element, tagName) {
-      var value = null;
-
-      for (var i = 0; i < element.children.length; i++) {
-        var tmp = element.children[i];
-
-        if (tmp.tagName == tagName) {
-          value = tmp;
-          break;
-        }
-      }
-
-      return value;
-    }
-    function closestByTagName(element, tagName) {
-      return closest(element, function (e) {
-        return e.tagName === tagName;
-      }); // TODO support xhtml?  e.tagName.toUpperCase() ?
-    }
-    function closestByClassName(element, className) {
-      return closest(element, function (e) {
-        return e.classList.contains(className);
-      });
-    }
-    function closestByAttribute(element, attributeName, attribute) {
-      return closest(element, function (e) {
-        return e.getAttribute(attributeName) === attribute;
-      });
-    }
-    function getDataGuardedWithPrefix(element, prefix, name) {
-      var tmp1 = element.getAttribute('data-' + prefix + '-' + name);
-
-      if (tmp1) {
-        return tmp1;
-      } else {
-        var tmp2 = element.getAttribute('data-' + name);
-        if (tmp2) return tmp2;
-      }
-
-      return null;
-    }
-
-    function closest(element, predicate) {
-      if (!element || !(element instanceof Element)) return null; // should be element, not document (TODO: check iframe)
-
-      if (predicate(element)) return element;
-      return closest(element.parentNode, predicate);
-    }
-
-    function siblingsAsArray(element) {
-      var value = [];
-
-      if (element.parentNode) {
-        var children = element.parentNode.children;
-        var l = element.parentNode.children.length;
-
-        if (children.length > 1) {
-          for (var i = 0; i < l; ++i) {
-            var e = children[i];
-            if (e != element) value.push(e);
-          }
-        }
-      }
-
-      return value;
-    } // export function ShowBinder(element){
-    //     return {
-    //         show(){
-    //         },
-    //         hide(){
-    //             //
-    //         }
-    //     }
-    // }
-
-    function getIsRtl(element) {
-      var isRtl = false;
-      var e = closestByAttribute(element, "dir", "rtl");
-      if (e) isRtl = true;
-      return isRtl;
-    }
-    function EventBinder() {
-      var list = [];
-      return {
-        bind: function bind(element, eventName, handler) {
-          element.addEventListener(eventName, handler);
-          list.push({
-            element: element,
-            eventName: eventName,
-            handler: handler
-          });
-        },
-        unbind: function unbind() {
-          list.forEach(function (e) {
-            var element = e.element,
-                eventName = e.eventName,
-                handler = e.handler;
-            element.removeEventListener(eventName, handler);
-          });
-        }
-      };
-    }
-    function AttributeBackup() {
-      var list = [];
-      return {
-        set: function set(element, attributeName, attribute) {
-          var currentAtribute = element.getAttribute(attributeName);
-          list.push({
-            element: element,
-            currentAtribute: currentAtribute,
-            attribute: attribute
-          });
-          element.setAttribute(attributeName, attribute);
-        },
-        restore: function restore() {
-          list.forEach(function (e) {
-            var element = e.element,
-                attributeName = e.attributeName,
-                attribute = e.attribute;
-            if (attributeName) element.setAttribute(attributeName, attribute);else element.removeAttribute(attributeName);
-          });
-        }
-      };
-    }
-    function EventLoopFlag(window) {
-      var flag = false;
-      return {
-        get: function get() {
-          return flag;
-        },
-        set: function set() {
-          flag = true;
-          window.setTimeout(function () {
-            flag = false;
-          }, 0);
-        }
-      };
-    }
-
-    function ChoicesPanel(getEventLoopFlag, getVisibleMultiSelectDataList, onMoveArrow) {
+    function ChoicesPanel() {
       var hoveredChoice = null;
-      var mouseOverChoice = null;
 
-      function resetCandidateToHoveredChoice() {
-        if (mouseOverChoice) {
-          mouseOverChoice.resetCandidateToHoveredChoice();
-        }
-      }
-
-      function resetChoicesHover() {
+      function resetHoveredChoice() {
         if (hoveredChoice) {
           hoveredChoice.isHoverIn = false;
           hoveredChoice.updateHoverIn();
@@ -343,125 +194,17 @@
         }
       }
 
-      var hoverIn = function hoverIn(choice) {
-        resetChoicesHover();
-        hoveredChoice = choice;
-        hoveredChoice.isHoverIn = true;
-        hoveredChoice.updateHoverIn();
-      };
-
-      var processCandidateToHovered = function processCandidateToHovered() {
-        if (hoveredChoice != mouseOverChoice) {
-          hoverIn(mouseOverChoice);
-        }
-
-        resetCandidateToHoveredChoice();
-      };
-
-      function keyDownArrow(down) {
-        var visibleChoices = getVisibleMultiSelectDataList();
-        var length = visibleChoices.length;
-        var iChoice = null;
-
-        if (length > 0) {
-          if (down) {
-            var i = hoveredChoice === null ? 0 : hoveredChoice.visibleIndex + 1;
-
-            while (i < length) {
-              iChoice = visibleChoices[i];
-
-              if (iChoice.visible) {
-                break;
-              }
-
-              i++;
-            }
-          } else {
-            var _i = hoveredChoice === null ? length - 1 : hoveredChoice.visibleIndex - 1;
-
-            while (_i >= 0) {
-              iChoice = visibleChoices[_i];
-
-              if (iChoice.visible) {
-                break;
-              }
-
-              _i--;
-            }
-          }
-        }
-
-        if (iChoice) {
-          hoverIn(iChoice);
-          onMoveArrow();
-        }
-      }
-
-      var onChoiceElementMouseoverGeneral = function onChoiceElementMouseoverGeneral(choice, choiceElement) {
-        var eventLoopFlag = getEventLoopFlag();
-
-        if (eventLoopFlag.get()) {
-          resetCandidateToHoveredChoice();
-          mouseOverChoice = choice;
-          var eventBinder = EventBinder();
-          eventBinder.bind(choiceElement, 'mousemove', processCandidateToHovered);
-          eventBinder.bind(choiceElement, 'mousedown', processCandidateToHovered);
-
-          mouseOverChoice.resetCandidateToHoveredChoice = function () {
-            mouseOverChoice.isMouseOver = false;
-            eventBinder.unbind();
-            mouseOverChoice.resetCandidateToHoveredChoice = null;
-            mouseOverChoice = null;
-          };
-        } else {
-          if (
-          /*hoveredChoice!=choice*/
-          !choice.isHoverIn) {
-            // NOTE: mouseleave is not enough to guarantee remove hover styles in situations
-            // when style was setuped without mouse (keyboard arrows)
-            // therefore force reset manually (done inside hoverIn)
-            hoverIn(choice);
-          }
-        }
-      };
-
-      function adoptChoiceElement(choice, choiceElement) {
-        // in chrome it happens on "become visible" so we need to skip it, 
-        // for IE11 and edge it doesn't happens, but for IE11 and Edge it doesn't happens on small 
-        // mouse moves inside the item. 
-        // https://stackoverflow.com/questions/59022563/browser-events-mouseover-doesnt-happen-when-you-make-element-visible-and-mous
-        var onChoiceElementMouseover = function onChoiceElementMouseover() {
-          return onChoiceElementMouseoverGeneral(choice, choiceElement);
-        }; // note 1: mouseleave preferred to mouseout - which fires on each descendant
-        // note 2: since I want add aditional info panels to the dropdown put mouseleave on dropdwon would not work
-
-
-        var onChoiceElementMouseleave = function onChoiceElementMouseleave() {
-          var eventLoopFlag = getEventLoopFlag();
-
-          if (!eventLoopFlag.get()) {
-            resetChoicesHover();
-          }
-        };
-
-        var eventBinder = EventBinder();
-        eventBinder.bind(choiceElement, 'mouseover', onChoiceElementMouseover);
-        eventBinder.bind(choiceElement, 'mouseleave', onChoiceElementMouseleave);
-        return eventBinder.unbind;
-      }
-
       var item = {
-        adoptChoiceElement: adoptChoiceElement,
-        setFirstChoiceHovered: function setFirstChoiceHovered() {
-          // NOTE: do not require the resetChoicesHover since we sure that there is no hovered (menu was just opened)
-          hoverIn(getVisibleMultiSelectDataList()[0]);
-        },
-        resetChoicesHover: resetChoicesHover,
-        resetCandidateToHoveredChoice: resetCandidateToHoveredChoice,
         getHoveredChoice: function getHoveredChoice() {
           return hoveredChoice;
         },
-        keyDownArrow: keyDownArrow
+        hoverIn: function hoverIn(choice) {
+          resetHoveredChoice();
+          hoveredChoice = choice;
+          hoveredChoice.isHoverIn = true;
+          hoveredChoice.updateHoverIn();
+        },
+        resetHoveredChoice: resetHoveredChoice
       };
       return item;
     }
@@ -694,7 +437,149 @@
       };
     }
 
-    function MultiSelectInputAspect(window, appendToContainer, filterInputElement, picksElement, choicesElement, isChoicesVisible, setChoicesVisible, resetCandidateToHoveredChoice, resetFilter, isChoiceEmpty, onClick, isRtl, Popper) {
+    function removeElement(e) {
+      e.parentNode.removeChild(e);
+    }
+    function findDirectChildByTagName(element, tagName) {
+      var value = null;
+
+      for (var i = 0; i < element.children.length; i++) {
+        var tmp = element.children[i];
+
+        if (tmp.tagName == tagName) {
+          value = tmp;
+          break;
+        }
+      }
+
+      return value;
+    }
+    function closestByTagName(element, tagName) {
+      return closest(element, function (e) {
+        return e.tagName === tagName;
+      }); // TODO support xhtml?  e.tagName.toUpperCase() ?
+    }
+    function closestByClassName(element, className) {
+      return closest(element, function (e) {
+        return e.classList.contains(className);
+      });
+    }
+    function closestByAttribute(element, attributeName, attribute) {
+      return closest(element, function (e) {
+        return e.getAttribute(attributeName) === attribute;
+      });
+    }
+    function getDataGuardedWithPrefix(element, prefix, name) {
+      var tmp1 = element.getAttribute('data-' + prefix + '-' + name);
+
+      if (tmp1) {
+        return tmp1;
+      } else {
+        var tmp2 = element.getAttribute('data-' + name);
+        if (tmp2) return tmp2;
+      }
+
+      return null;
+    }
+
+    function closest(element, predicate) {
+      if (!element || !(element instanceof Element)) return null; // should be element, not document (TODO: check iframe)
+
+      if (predicate(element)) return element;
+      return closest(element.parentNode, predicate);
+    }
+
+    function siblingsAsArray(element) {
+      var value = [];
+
+      if (element.parentNode) {
+        var children = element.parentNode.children;
+        var l = element.parentNode.children.length;
+
+        if (children.length > 1) {
+          for (var i = 0; i < l; ++i) {
+            var e = children[i];
+            if (e != element) value.push(e);
+          }
+        }
+      }
+
+      return value;
+    } // export function ShowBinder(element){
+    //     return {
+    //         show(){
+    //         },
+    //         hide(){
+    //             //
+    //         }
+    //     }
+    // }
+
+    function getIsRtl(element) {
+      var isRtl = false;
+      var e = closestByAttribute(element, "dir", "rtl");
+      if (e) isRtl = true;
+      return isRtl;
+    }
+    function EventBinder() {
+      var list = [];
+      return {
+        bind: function bind(element, eventName, handler) {
+          element.addEventListener(eventName, handler);
+          list.push({
+            element: element,
+            eventName: eventName,
+            handler: handler
+          });
+        },
+        unbind: function unbind() {
+          list.forEach(function (e) {
+            var element = e.element,
+                eventName = e.eventName,
+                handler = e.handler;
+            element.removeEventListener(eventName, handler);
+          });
+        }
+      };
+    }
+    function AttributeBackup() {
+      var list = [];
+      return {
+        set: function set(element, attributeName, attribute) {
+          var currentAtribute = element.getAttribute(attributeName);
+          list.push({
+            element: element,
+            currentAtribute: currentAtribute,
+            attribute: attribute
+          });
+          element.setAttribute(attributeName, attribute);
+        },
+        restore: function restore() {
+          list.forEach(function (e) {
+            var element = e.element,
+                attributeName = e.attributeName,
+                attribute = e.attribute;
+            if (attributeName) element.setAttribute(attributeName, attribute);else element.removeAttribute(attributeName);
+          });
+        }
+      };
+    }
+    function EventLoopFlag(window) {
+      var flag = false;
+      return {
+        get: function get() {
+          return flag;
+        },
+        set: function set() {
+          flag = true;
+          window.setTimeout(function () {
+            flag = false;
+          }, 0);
+        }
+      };
+    }
+
+    function MultiSelectInputAspect(window, appendToContainer, filterInputElement, picksElement, choicesElement, isChoicesVisible, setChoicesVisible, resetHoveredChoice, hoverIn, resetFilter, isChoiceEmpty, onClick, isRtl, Popper) {
       appendToContainer();
       var document = window.document;
       var eventLoopFlag = EventLoopFlag(window); // showChoices
@@ -785,7 +670,7 @@
       }
 
       function hideChoices() {
-        resetCandidateToHoveredChoice();
+        resetMouseCandidateChoice();
 
         if (isChoicesVisible()) {
           setChoicesVisible(false);
@@ -829,8 +714,59 @@
         });
       }
 
+      var mouseCandidateEventBinder = EventBinder();
+
+      var resetMouseCandidateChoice = function resetMouseCandidateChoice() {
+        mouseCandidateEventBinder.unbind();
+      };
+
+      var mouseOverToHoveredAndReset = function mouseOverToHoveredAndReset(choice) {
+        if (!choice.isHoverIn) hoverIn(choice);
+        resetMouseCandidateChoice();
+      };
+
+      function adoptChoiceElement(choice, choiceElement) {
+        // in chrome it happens on "become visible" so we need to skip it, 
+        // for IE11 and edge it doesn't happens, but for IE11 and Edge it doesn't happens on small 
+        // mouse moves inside the item. 
+        // https://stackoverflow.com/questions/59022563/browser-events-mouseover-doesnt-happen-when-you-make-element-visible-and-mous
+        var onChoiceElementMouseover = function onChoiceElementMouseover() {
+          if (eventLoopFlag.get()) {
+            resetMouseCandidateChoice();
+            mouseCandidateEventBinder.bind(choiceElement, 'mousemove', function () {
+              return mouseOverToHoveredAndReset(choice);
+            });
+            mouseCandidateEventBinder.bind(choiceElement, 'mousedown', function () {
+              return mouseOverToHoveredAndReset(choice);
+            });
+          } else {
+            if (!choice.isHoverIn) {
+              // NOTE: mouseleave is not enough to guarantee remove hover styles in situations
+              // when style was setuped without mouse (keyboard arrows)
+              // therefore force reset manually (done inside hoverIn)
+              hoverIn(choice);
+            }
+          }
+        }; // note 1: mouseleave preferred to mouseout - which fires on each descendant
+        // note 2: since I want add aditional info panels to the dropdown put mouseleave on dropdwon would not work
+
+
+        var onChoiceElementMouseleave = function onChoiceElementMouseleave() {
+          if (!eventLoopFlag.get()) {
+            resetHoveredChoice();
+          }
+        };
+
+        var overAndLeaveEventBinder = EventBinder();
+        overAndLeaveEventBinder.bind(choiceElement, 'mouseover', onChoiceElementMouseover);
+        overAndLeaveEventBinder.bind(choiceElement, 'mouseleave', onChoiceElementMouseleave);
+        return overAndLeaveEventBinder.unbind;
+      }
+
       return {
+        adoptChoiceElement: adoptChoiceElement,
         dispose: function dispose() {
+          resetMouseCandidateChoice();
           popper.destroy();
           componentDisabledEventBinder.unbind();
         },
@@ -1093,7 +1029,6 @@
         isOptionHidden: isOptionHidden,
         isOptionSelected: isOptionSelected,
         isHoverIn: false,
-        isMouseOver: false,
         searchText: option.text.toLowerCase().trim(),
         excludedFromSearch: isOptionSelected || isOptionDisabled || isOptionHidden,
         setVisible: null,
@@ -1107,11 +1042,7 @@
         // TODO remove / replace with updateSelected
         updateSelectedTrue: null,
         // TODO remove / replace with updateSelected
-        dispose: null,
-        //setSelectedTrue: null, // TODO remove / replace with this.setOptionSelected
-        //setSelectedFalse: null, // TODO remove / replace with this.setOptionSelected
-        resetCandidateToHoveredChoice: null // todo: setCandidateToHovered(Boolean) ?
-
+        dispose: null
       };
       return choice;
     }
@@ -1464,7 +1395,7 @@
               setVisible = _this$staticContent$c.setVisible,
               attach = _this$staticContent$c.attach;
 
-          var unbindChoiceElement = this.choicesPanel.adoptChoiceElement(choice, choiceElement);
+          var unbindChoiceElement = this.aspect.adoptChoiceElement(choice, choiceElement);
 
           choice.updateSelectedTrue = function () {
             _this2.createPick(choice);
@@ -1556,7 +1487,8 @@
       };
 
       _proto.Dispose = function Dispose() {
-        sync(this.aspect.hideChoices, this.picksList.dispose, this.filterPanel.dispose, this.labelAdapter.dispose, this.aspect.dispose, this.staticContent.dispose);
+        sync( //this.ChoicesPanel.resetMouseCandidateChoice, // guarantee unbind mouse event
+        this.aspect.hideChoices, this.picksList.dispose, this.filterPanel.dispose, this.labelAdapter.dispose, this.aspect.dispose, this.staticContent.dispose);
 
         for (var i = 0; i < this.choicesList.length; i++) {
           var choice = this.choicesList[i];
@@ -1603,11 +1535,14 @@
           }
         }
         if (isEmpty) this.processEmptyInput();else resetLength();
-        this.choicesPanel.resetChoicesHover();
+        this.choicesPanel.resetHoveredChoice();
         this.aspect.eventLoopFlag.set(); // means disable some mouse handlers; otherwise we will get "Hover On MouseEnter" when filter's changes should remove hover
 
-        if (this.getVisibleChoicesList().length == 1) {
-          this.choicesPanel.setFirstChoiceHovered();
+        var choicesList = this.getVisibleChoicesList();
+
+        if (choicesList.length == 1) {
+          // NOTE: do not require the resetHoveredChoice since we sure that there is no hovered (menu was just opened)
+          this.choicesPanel.hoverIn(choicesList[0]);
         }
 
         if (this.getVisibleChoicesList().length > 0) {
@@ -1626,10 +1561,51 @@
           var wasToggled = this.toggleOptionSelected(hoveredChoice);
 
           if (wasToggled) {
-            this.choicesPanel.resetChoicesHover();
+            this.choicesPanel.resetHoveredChoice();
             this.aspect.hideChoices();
             this.resetFilter();
           }
+        }
+      };
+
+      _proto.keyDownArrow = function keyDownArrow(down) {
+        var visibleChoices = this.getVisibleChoicesList();
+        var length = visibleChoices.length;
+        var iChoice = null;
+        var hoveredChoice = this.choicesPanel.getHoveredChoice();
+
+        if (length > 0) {
+          if (down) {
+            var i = hoveredChoice === null ? 0 : hoveredChoice.visibleIndex + 1;
+
+            while (i < length) {
+              iChoice = visibleChoices[i];
+
+              if (iChoice.visible) {
+                break;
+              }
+
+              i++;
+            }
+          } else {
+            var _i = hoveredChoice === null ? length - 1 : hoveredChoice.visibleIndex - 1;
+
+            while (_i >= 0) {
+              iChoice = visibleChoices[_i];
+
+              if (iChoice.visible) {
+                break;
+              }
+
+              _i--;
+            }
+          }
+        }
+
+        if (iChoice) {
+          this.choicesPanel.hoverIn(iChoice);
+          this.aspect.alignToFilterInputItemLocation(true);
+          this.aspect.showChoices();
         }
       };
 
@@ -1662,10 +1638,10 @@
           _this4.aspect.resetSkipFocusout();
         }, // focus out - hide dropdown
         function () {
-          return _this4.choicesPanel.keyDownArrow(false);
+          return _this4.keyDownArrow(false);
         }, // arrow up
         function () {
-          return _this4.choicesPanel.keyDownArrow(true);
+          return _this4.keyDownArrow(true);
         }, // arrow down
         function () {
           return _this4.aspect.hideChoices();
@@ -1700,7 +1676,7 @@
           _this4.aspect.hideChoices(); // always hide 1st
 
 
-          _this4.choicesPanel.resetChoicesHover();
+          _this4.choicesPanel.resetHoveredChoice();
 
           _this4.resetFilter();
         }, // esc keyup 
@@ -1710,17 +1686,7 @@
           _this4.input(filterInputValue, resetLength);
         });
         this.picksList = PicksList();
-        this.choicesPanel = ChoicesPanel(function () {
-          return _this4.aspect.eventLoopFlag;
-        }, function () {
-          return _this4.getVisibleChoicesList();
-        },
-        /*onMoveArrow*/
-        function () {
-          _this4.aspect.alignToFilterInputItemLocation(true);
-
-          _this4.aspect.showChoices();
-        });
+        this.choicesPanel = ChoicesPanel();
         this.placeholderAspect = PlaceholderAspect(this.placeholderText, function () {
           return _this4.picksList.isEmpty() && _this4.filterPanel.isEmpty();
         }, this.staticContent.picksElement, this.staticContent.filterInputElement, this.css);
@@ -1732,7 +1698,9 @@
         }, function (visible) {
           return _this4.staticContent.setChoicesVisible(visible);
         }, function () {
-          return _this4.choicesPanel.resetCandidateToHoveredChoice();
+          return _this4.choicesPanel.resetHoveredChoice();
+        }, function (choice) {
+          return _this4.choicesPanel.hoverIn(choice);
         }, function () {
           return _this4.resetFilter();
         }, function () {
