@@ -246,7 +246,7 @@ export function BsMultiSelect(element, environment, settings) {
 
   if (staticContent.selectElement && window.document.readyState != "complete") {
     window.setTimeout(function () {
-      multiSelect.UpdateSelected();
+      multiSelect.UpdateOptionsSelected();
     });
   }
 

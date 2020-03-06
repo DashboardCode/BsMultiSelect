@@ -128,7 +128,7 @@ Inspite plugin subscribes to form's `reset` event listener, there are no `Mutati
 
 If you change original `select`'s appearance after `BsMultiSelecte` was created then you will need to push changes to component with corresponded methods `UpdateIsValid`, `UpdateDisabled`, `UpdateSize`, `UpdateWasValidated`, `UpdateValidy`. Or All together with `UpdateAppearance`.
 
-If you change options/items properties (text, `selected`, `disabled`, `hidden`) or if you delete them or insert new items you need to push changes to component with  `UpdateData`. There is specific `UpdateSelected` method synchronize only `selected` properties.
+If you change options/items properties (text, `selected`, `disabled`, `hidden`) or if you delete them or insert new items you need to push changes to component with  `UpdateData`. There is specific `UpdateOptionsSelected` method synchronize only `selected` states of options and `UpdateOptionsDisabled` to synchronize only `disabled` states of options.
  
 `Update` method works like "update all": it call `UpdateAppearance` and `UpdateData`.
 

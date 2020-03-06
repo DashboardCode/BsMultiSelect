@@ -4,12 +4,12 @@ import {PicksList} from './PicksList'
 import {MultiSelectInputAspect} from './MultiSelectInputAspect'
 import {PlaceholderAspect} from './PlaceholderAspect'
 import {removeElement} from './ToolsDom'
-import {Choice, ChoiceHidden, toggleOptionSelected as toggleOptionSelectedLib, updateSelected, setOptionSelected, setOptionSelectedTrue, setOptionSelectedFalse} from './Choice'
+import {Choice, ChoiceHidden, toggleOptionSelected as toggleOptionSelectedLib, updateDisabled, updateSelected, setOptionSelected, setOptionSelectedTrue, setOptionSelectedFalse} from './Choice'
 
-import {sync} from './ToolsJs'
+import {sync, composeSync} from './ToolsJs'
 
-function filterMultiSelectData(choice, isFiltered, visibleIndex) {
-    choice.visible = isFiltered;
+function filterMultiSelectData(choice, isVisible, visibleIndex) {
+    choice.isVisible = isVisible;
     choice.visibleIndex = visibleIndex;
     choice.updateVisible();
 } 
@@ -233,16 +233,28 @@ export class MultiSelect {
         this.updateDataImpl();
     }
 
-    UpdateSelected(){
+    UpdateOptionsDisabled(){
         let options = this.getOptions();
         for(let i = 0; i<options.length; i++){
-            this.UpdateSelectedChoice(i)
+            this.UpdateOptionDisabled(i)
         }
     }
 
-    UpdateSelectedChoice(key){
+    UpdateOptionDisabled(key){
         let choice = this.choicesList[key]; // TODO: 
-        updateSelected(choice, this.setSelected)
+        updateDisabled(choice, this.getIsOptionDisabled)
+    }
+
+    UpdateOptionsSelected(){
+        let options = this.getOptions();
+        for(let i = 0; i<options.length; i++){
+            this.UpdateOptionSelected(i)
+        }
+    }
+
+    UpdateOptionSelected(key){
+        let choice = this.choicesList[key]; // TODO: 
+        updateSelected(choice)
     }
 
     SetSelectedChoice(key, value){
@@ -250,7 +262,7 @@ export class MultiSelect {
         setOptionSelected(choice, value, this.setSelected);
     }
 
-    createPick(choice){
+    createPick(choice, choiceContent){
         let pickElement = this.staticContent.createPickElement(); 
         let attachPickElement = () => this.staticContent.picksElement.insertBefore(pickElement, this.staticContent.pickFilterElement);
         let detach = () => removeElement(pickElement);
@@ -269,20 +281,19 @@ export class MultiSelect {
             }, 
         }
         pick.setData();
-        pick.disable();
         pick.disableRemove();
         attachPickElement();
+        let choiceUpdateDisabledBackup = choice.updateDisabled;
+        choice.updateDisabled = composeSync(choiceUpdateDisabledBackup, pick.disable);
+
         var removeFromList = this.picksList.addPick(pick);
-        
         choice.updateSelectedFalse = () => {
             removeFromList();
             pick.dispose();
             choice.isOptionSelected = false;
-            if (choice.isOptionDisabled)
-            {
-                choice.disable( /*isOptionDisabled*/ true, /*isOptionSelected*/ false); 
-            }
-            choice.select();
+            choice.updateDisabled = choiceUpdateDisabledBackup; 
+            choice.updateDisabled();
+            choiceContent.select(choice.isOptionSelected);
             if (this.picksList.getCount()==0) 
                 this.placeholderAspect.updatePlacehodlerVisibility()
             this.onChange();
@@ -293,7 +304,7 @@ export class MultiSelect {
         this.aspect.handleOnRemoveButton(pickContent.onRemove, setSelectedFalse);
 
         choice.isOptionSelected = true;
-        choice.select();
+        choiceContent.select(choice.isOptionSelected);
         if (this.picksList.getCount()==1) 
             this.placeholderAspect.updatePlacehodlerVisibility()
     }
@@ -313,55 +324,46 @@ export class MultiSelect {
                 this.toggleOptionSelected(choice);
                 this.filterPanel.setFocus();
             });
-
+            let createPick= ()=>this.createPick(choice, choiceContent);
             var unbindChoiceElement = this.aspect.adoptChoiceElement(choice, choiceElement);
+
             choice.updateSelectedTrue = () => {
-                this.createPick(choice);
+                createPick();
                 this.onChange();
             }
 
-            choice.visible = true;
+            choice.isVisible = true;
             choice.visibleIndex=i;
 
             attach();
 
             choiceContent.setData(choice.option);
 
+            
             choice.updateHoverIn = () => {
                 choiceContent.hoverIn(choice.isHoverIn);
-            }
-
-            choice.select = () => {
-                choiceContent.select(choice.isOptionSelected);
-            }
-
-            choice.disable = (isDisabled, isOptionSelected) => {
-                choiceContent.disable( isDisabled, isOptionSelected); 
             }
 
             choice.dispose = ()=> {
                 unbindChoiceElement();
                 choiceContent.dispose();
 
-                choice.updateVisible = null;
-                choice.updateHoverIn = null;
-                choice.select = null;
-                choice.disable = null;
-                choice.dispose = null;
-
                 choice.updateSelectedFalse = null;
                 choice.updateSelectedTrue = null;
+
+                // not real data manipulation but internal state
+                choice.updateVisible = null; // filter in
+                choice.updateHoverIn = null;
+
+                choice.dispose = null;
             }
 
-            if (choice.isOptionDisabled)
-                choiceContent.disable(true, choice.isOptionSelected )
-
-
-            choice.updateVisible = () => setVisible(choice.visible)
-            
+            choice.updateVisible = () => setVisible(choice.isVisible)
+            choice.updateDisabled = () => choiceContent.disable( choice.isOptionDisabled, choice.isOptionSelected); 
             if (isOptionSelected){
-                this.createPick(choice);
-            } 
+                createPick();
+            }
+            choice.updateDisabled(); 
             return choice;
         }
     }
@@ -490,7 +492,7 @@ export class MultiSelect {
                 let i = hoveredChoice===null?0:hoveredChoice.visibleIndex+1;
                 while(i<length){
                     iChoice = visibleChoices[i];
-                    if (iChoice.visible){
+                    if (iChoice.isVisible){
                         break;
                     }
                     i++;
@@ -499,7 +501,7 @@ export class MultiSelect {
                 let i = hoveredChoice===null?length-1:hoveredChoice.visibleIndex-1;
                 while(i>=0) {
                     iChoice = visibleChoices[i];
-                    if (iChoice.visible) {
+                    if (iChoice.isVisible) {
                         break;
                     }
                     i--;

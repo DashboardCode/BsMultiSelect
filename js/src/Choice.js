@@ -15,20 +15,19 @@ export function Choice(option, isOptionSelected, isOptionDisabled, isOptionHidde
             isOptionSelected: isOptionSelected,
             
             isHoverIn: false,
-            
-            searchText: option.text.toLowerCase().trim(),
-            
-            //setVisible: null,
-            
-            visible: false,
+
+            isVisible: false,
             visibleIndex: null, 
+            searchText: option.text.toLowerCase().trim(),
 
-            updateHoverIn: null,
-            select: null,
-            disable: null,
+            updateDisabled:null,
 
-            updateSelectedFalse: null, 
+            updateSelectedFalse: null, // TODO: wired. make as updateDisabled (and move setter isOptionSelected outside ?)
             updateSelectedTrue: null,
+
+            // internal state handlers
+            updateVisible: null,
+            updateHoverIn: null,
             
             dispose: null
     }
@@ -73,15 +72,27 @@ export function toggleOptionSelected(choice, setSelected){
 }
 
 export function updateSelected(choice){
-    let newIsSelected = choice.option.selected;
-    if (newIsSelected != choice.isOptionSelected)
+    if (!choice.isOptionHidden)
     {
-        if (!choice.isOptionHidden) // TODO - soemthing wrong there
+        let newIsSelected = choice.option.selected;
+        if (newIsSelected != choice.isOptionSelected)
         {
-            if (newIsSelected)
-                choice.updateSelectedTrue();
-            else
-                choice.updateSelectedFalse();
+                if (newIsSelected)
+                    choice.updateSelectedTrue();
+                else
+                    choice.updateSelectedFalse();
+        }
+    }
+}
+
+export function updateDisabled(choice, getIsOptionDisabled){
+    if (!choice.isOptionHidden)
+    {
+        let newIsDisabled = getIsOptionDisabled(choice.option);
+        if (newIsDisabled != choice.isOptionDisabled)
+        {
+            choice.isOptionDisabled= newIsDisabled;
+            choice.updateDisabled();
         }
     }
 }
