@@ -114,7 +114,7 @@ export function MultiSelectInputAspect (
             setChoicesVisible(false);
             
             picksElement.removeEventListener("mousedown", skipoutMousedown);
-            choicesElement.addEventListener("mousedown", skipoutMousedown);
+            choicesElement.removeEventListener("mousedown", skipoutMousedown);
             document.removeEventListener("mouseup", documentMouseup);
         }
     }

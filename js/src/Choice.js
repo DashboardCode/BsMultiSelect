@@ -1,24 +1,34 @@
+
+export function ChoiceHidden(option, isOptionHidden){
+    return {
+            option: option,
+            isOptionHidden: isOptionHidden,
+    }
+}
+
 export function Choice(option, isOptionSelected, isOptionDisabled, isOptionHidden){
     let choice = {
             option: option,
-            isOptionDisabled: isOptionDisabled,
             isOptionHidden: isOptionHidden,
+
+            isOptionDisabled: isOptionDisabled,
             isOptionSelected: isOptionSelected,
             
             isHoverIn: false,
             
             searchText: option.text.toLowerCase().trim(),
-            excludedFromSearch: isOptionSelected || isOptionDisabled || isOptionHidden,
-            setVisible: null,
+            
+            //setVisible: null,
+            
             visible: false,
-            visibleIndex: null, // todo: check for errors
+            visibleIndex: null, 
 
             updateHoverIn: null,
             select: null,
             disable: null,
 
-            updateSelectedFalse: null, // TODO remove / replace with updateSelected
-            updateSelectedTrue: null, // TODO remove / replace with updateSelected
+            updateSelectedFalse: null, 
+            updateSelectedTrue: null,
             
             dispose: null
     }
@@ -66,9 +76,12 @@ export function updateSelected(choice){
     let newIsSelected = choice.option.selected;
     if (newIsSelected != choice.isOptionSelected)
     {
-        if (newIsSelected)
-            choice.updateSelectedTrue();
-        else
-            choice.updateSelectedFalse();
+        if (!choice.isOptionHidden) // TODO - soemthing wrong there
+        {
+            if (newIsSelected)
+                choice.updateSelectedTrue();
+            else
+                choice.updateSelectedFalse();
+        }
     }
 }

@@ -1,5 +1,5 @@
 /*!
-  * DashboardCode BsMultiSelect v0.5.30 (https://dashboardcode.github.io/BsMultiSelect/)
+  * DashboardCode BsMultiSelect v0.5.31-beta (https://dashboardcode.github.io/BsMultiSelect/)
   * Copyright 2017-2020 Roman Pokrovskij (github user rpokrovskij)
   * Licensed under APACHE 2 (https://github.com/DashboardCode/BsMultiSelect/blob/master/LICENSE)
   */
@@ -591,7 +591,7 @@ function MultiSelectInputAspect(window, appendToContainer, filterInputElement, p
     if (isChoicesVisible()) {
       setChoicesVisible(false);
       picksElement.removeEventListener("mousedown", skipoutMousedown);
-      choicesElement.addEventListener("mousedown", skipoutMousedown);
+      choicesElement.removeEventListener("mousedown", skipoutMousedown);
       document.removeEventListener("mouseup", documentMouseup);
     }
   }
@@ -938,26 +938,28 @@ function PlaceholderAspect(placeholderText, isEmpty, picksElement, inputElement,
   };
 }
 
+function ChoiceHidden(option, isOptionHidden) {
+  return {
+    option: option,
+    isOptionHidden: isOptionHidden
+  };
+}
 function Choice(option, isOptionSelected, isOptionDisabled, isOptionHidden) {
   var choice = {
     option: option,
-    isOptionDisabled: isOptionDisabled,
     isOptionHidden: isOptionHidden,
+    isOptionDisabled: isOptionDisabled,
     isOptionSelected: isOptionSelected,
     isHoverIn: false,
     searchText: option.text.toLowerCase().trim(),
-    excludedFromSearch: isOptionSelected || isOptionDisabled || isOptionHidden,
-    setVisible: null,
+    //setVisible: null,
     visible: false,
     visibleIndex: null,
-    // todo: check for errors
     updateHoverIn: null,
     select: null,
     disable: null,
     updateSelectedFalse: null,
-    // TODO remove / replace with updateSelected
     updateSelectedTrue: null,
-    // TODO remove / replace with updateSelected
     dispose: null
   };
   return choice;
@@ -996,14 +998,17 @@ function updateSelected(choice) {
   var newIsSelected = choice.option.selected;
 
   if (newIsSelected != choice.isOptionSelected) {
-    if (newIsSelected) choice.updateSelectedTrue();else choice.updateSelectedFalse();
+    if (!choice.isOptionHidden) // TODO - soemthing wrong there
+      {
+        if (newIsSelected) choice.updateSelectedTrue();else choice.updateSelectedFalse();
+      }
   }
 }
 
 function filterMultiSelectData(choice, isFiltered, visibleIndex) {
   choice.visible = isFiltered;
   choice.visibleIndex = visibleIndex;
-  choice.updateVisible(); //MultiSelectData.choiceElement.style.display = isFiltered ? 'block': 'none';
+  choice.updateVisible();
 }
 
 function resetChoices(choicesList) {
@@ -1024,7 +1029,7 @@ function collectFilterChoices(choicesList, text) {
     var choice = choicesList[i];
 
     if (!choice.isOptionHidden) {
-      if (choice.excludedFromSearch || choice.searchText.indexOf(text) < 0) {
+      if (choice.isOptionSelected || choice.isOptionDisabled || choice.isOptionHidden || choice.searchText.indexOf(text) < 0) {
         filterMultiSelectData(choice, false, null);
       } else {
         filterMultiSelectData(choice, true, j++);
@@ -1174,7 +1179,7 @@ var MultiSelect = /*#__PURE__*/function () {
 
     for (var i = 0; i < this.choicesList.length; i++) {
       var choice = this.choicesList[i];
-      if (!choice.excludedFromSearch) if (!choice.isOptionSelected && !choice.isOptionDisabled && !choice.isOptionHidden) setOptionSelectedTrue(choice, this.setSelected);
+      if (!choice.isOptionSelected && !choice.isOptionDisabled && !choice.isOptionHidden) setOptionSelectedTrue(choice, this.setSelected);
     }
 
     this.resetFilter();
@@ -1268,7 +1273,6 @@ var MultiSelect = /*#__PURE__*/function () {
       removeFromList();
       pick.dispose();
       choice.isOptionSelected = false;
-      choice.excludedFromSearch = choice.isOptionDisabled;
 
       if (choice.isOptionDisabled) {
         choice.disable(
@@ -1291,8 +1295,6 @@ var MultiSelect = /*#__PURE__*/function () {
     pick.remove = setSelectedFalse;
     this.aspect.handleOnRemoveButton(pickContent.onRemove, setSelectedFalse);
     choice.isOptionSelected = true;
-    choice.excludedFromSearch = true; // all selected excluded from search
-
     choice.select();
     if (this.picksList.getCount() == 1) this.placeholderAspect.updatePlacehodlerVisibility();
   };
@@ -1300,17 +1302,22 @@ var MultiSelect = /*#__PURE__*/function () {
   _proto.createChoice = function createChoice(option, i) {
     var _this2 = this;
 
+    var isOptionHidden = this.getIsOptionHidden(option);
     var isOptionSelected = option.selected;
     var isOptionDisabled = this.getIsOptionDisabled(option);
-    var isOptionHidden = this.getIsOptionHidden(option);
-    var choice = Choice(option, isOptionSelected, isOptionDisabled, isOptionHidden);
+    if (isOptionHidden) return ChoiceHidden(option, isOptionHidden);else {
+      var choice = Choice(option, isOptionSelected, isOptionDisabled, isOptionHidden);
 
-    if (!isOptionHidden) {
       var _this$staticContent$c = this.staticContent.createChoiceElement(),
           choiceElement = _this$staticContent$c.choiceElement,
           setVisible = _this$staticContent$c.setVisible,
           attach = _this$staticContent$c.attach;
 
+      var choiceContent = this.choiceContentGenerator(choiceElement, function () {
+        _this2.toggleOptionSelected(choice);
+
+        _this2.filterPanel.setFocus();
+      });
       var unbindChoiceElement = this.aspect.adoptChoiceElement(choice, choiceElement);
 
       choice.updateSelectedTrue = function () {
@@ -1321,11 +1328,6 @@ var MultiSelect = /*#__PURE__*/function () {
 
       choice.visible = true;
       choice.visibleIndex = i;
-      var choiceContent = this.choiceContentGenerator(choiceElement, function () {
-        _this2.toggleOptionSelected(choice);
-
-        _this2.filterPanel.setFocus();
-      });
       attach();
       choiceContent.setData(choice.option);
 
@@ -1361,12 +1363,10 @@ var MultiSelect = /*#__PURE__*/function () {
 
       if (isOptionSelected) {
         this.createPick(choice);
-      } else {
-        choice.excludedFromSearch = choice.isOptionDisabled;
       }
-    }
 
-    return choice;
+      return choice;
+    }
   };
 
   _proto.updateDataImpl = function updateDataImpl() {
@@ -1403,8 +1403,7 @@ var MultiSelect = /*#__PURE__*/function () {
   };
 
   _proto.Dispose = function Dispose() {
-    sync( //this.ChoicesPanel.resetMouseCandidateChoice, // guarantee unbind mouse event
-    this.aspect.hideChoices, this.picksList.dispose, this.filterPanel.dispose, this.labelAdapter.dispose, this.aspect.dispose, this.staticContent.dispose);
+    sync(this.aspect.hideChoices, this.picksList.dispose, this.filterPanel.dispose, this.labelAdapter.dispose, this.aspect.dispose, this.staticContent.dispose);
 
     for (var i = 0; i < this.choicesList.length; i++) {
       var choice = this.choicesList[i];
@@ -1579,9 +1578,11 @@ var MultiSelect = /*#__PURE__*/function () {
       if (_this4.staticContent.isChoicesVisible()) {
         _this4.hoveredToSelected();
       } else {
-        _this4.aspect.alignToFilterInputItemLocation(true);
+        if (_this4.getVisibleChoicesList().length > 0) {
+          _this4.aspect.alignToFilterInputItemLocation(true);
 
-        _this4.aspect.showChoices();
+          _this4.aspect.showChoices();
+        }
       }
     }, // tab/enter "compleate hovered"
     function (isEmpty, event) {

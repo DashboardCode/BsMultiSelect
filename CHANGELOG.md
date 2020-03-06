@@ -1,5 +1,6 @@
 # CHANGELOG
 ````
+0.5.31 - resolved: notselective filter + enter opens empty dropdown
 0.5.30 - changes in hidden API, possible memory leak bug resolved (on detach wtith open dropdown)
 0.5.29 - optimizations, ENTER inside empty filter opens dropdown
 0.5.28 - partial single match enter/tab reset filter

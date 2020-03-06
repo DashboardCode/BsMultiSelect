@@ -31,7 +31,7 @@ export function choiceContentGenerator(choiceElement, common, css, toggle){
         setData(option) {choiceLabelElement.textContent = option.text;},
         select(isOptionSelected){ 
             selectToggleStyling(isOptionSelected);
-            choiceCheckBoxElement.checked = isOptionSelected 
+            choiceCheckBoxElement.checked = isOptionSelected;
         }, 
         disable(isOptionDisabled, isOptionSelected){
             disable1ToggleStyling(isOptionDisabled)
