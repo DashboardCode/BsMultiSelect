@@ -1,5 +1,5 @@
 /*!
-  * DashboardCode BsMultiSelect v0.5.32-beta (https://dashboardcode.github.io/BsMultiSelect/)
+  * DashboardCode BsMultiSelect v0.5.32 (https://dashboardcode.github.io/BsMultiSelect/)
   * Copyright 2017-2020 Roman Pokrovskij (github user rpokrovskij)
   * Licensed under APACHE 2 (https://github.com/DashboardCode/BsMultiSelect/blob/master/LICENSE)
   */
@@ -1022,26 +1022,18 @@
       };
     }
 
-    function ChoiceHidden(option, isOptionHidden) {
-      return {
-        option: option,
-        isOptionHidden: isOptionHidden
-      };
-    }
     function Choice(option, isOptionSelected, isOptionDisabled, isOptionHidden) {
       var choice = {
         option: option,
         isOptionHidden: isOptionHidden,
-        isOptionDisabled: isOptionDisabled,
         isOptionSelected: isOptionSelected,
+        isOptionDisabled: isOptionDisabled,
         isHoverIn: false,
         isVisible: false,
         visibleIndex: null,
         searchText: option.text.toLowerCase().trim(),
         updateDisabled: null,
-        updateSelectedFalse: null,
-        // TODO: wired. make as updateDisabled (and move setter isOptionSelected outside ?)
-        updateSelectedTrue: null,
+        updateSelected: null,
         // internal state handlers
         updateVisible: null,
         updateHoverIn: null,
@@ -1049,53 +1041,32 @@
       };
       return choice;
     }
-    function setOptionSelectedTrue(choice, setSelected) {
-      var value = false;
-      var confirmed = setSelected(choice.option, true);
-
-      if (!(confirmed === false)) {
-        choice.updateSelectedTrue();
-        value = true;
-      }
-
-      return value;
-    }
-    function setOptionSelectedFalse(choice, setSelected) {
-      var value = false;
-      var confirmed = setSelected(choice.option, false);
-
-      if (!(confirmed === false)) {
-        choice.updateSelectedFalse();
-        value = true;
-      }
-
-      return value;
-    }
     function setOptionSelected(choice, value, setSelected) {
-      if (value) return setOptionSelectedTrue(choice, setSelected);else return setOptionSelectedFalse(choice, setSelected);
-    }
-    function toggleOptionSelected(choice, setSelected) {
-      var value = false;
-      if (choice.isOptionSelected) value = setOptionSelectedFalse(choice, setSelected);else if (!choice.isOptionDisabled) value = setOptionSelectedTrue(choice, setSelected);
-      return value;
-    }
-    function updateSelected(choice) {
-      if (!choice.isOptionHidden) {
-        var newIsSelected = choice.option.selected;
+      var success = false;
+      var confirmed = setSelected(choice.option, value);
 
-        if (newIsSelected != choice.isOptionSelected) {
-          if (newIsSelected) choice.updateSelectedTrue();else choice.updateSelectedFalse();
-        }
+      if (!(confirmed === false)) {
+        choice.isOptionSelected = value;
+        choice.updateSelected();
+        success = true;
+      }
+
+      return success;
+    }
+    function updateSelectedChoice(choice) {
+      var newIsSelected = choice.option.selected;
+
+      if (newIsSelected != choice.isOptionSelected) {
+        choice.isOptionSelected = newIsSelected;
+        if (!choice.isOptionHidden) choice.updateSelected();
       }
     }
-    function updateDisabled(choice, getIsOptionDisabled) {
-      if (!choice.isOptionHidden) {
-        var newIsDisabled = getIsOptionDisabled(choice.option);
+    function updateDisabledChoice(choice, getIsOptionDisabled) {
+      var newIsDisabled = getIsOptionDisabled(choice.option);
 
-        if (newIsDisabled != choice.isOptionDisabled) {
-          choice.isOptionDisabled = newIsDisabled;
-          choice.updateDisabled();
-        }
+      if (newIsDisabled != choice.isOptionDisabled) {
+        choice.isOptionDisabled = newIsDisabled;
+        if (!choice.isOptionHidden) choice.updateDisabled();
       }
     }
 
@@ -1165,8 +1136,10 @@
 
       var _proto = MultiSelect.prototype;
 
-      _proto.toggleOptionSelected = function toggleOptionSelected$1(choice) {
-        return toggleOptionSelected(choice, this.setSelected);
+      _proto.toggleOptionSelected = function toggleOptionSelected(choice) {
+        var success = false;
+        if (choice.isOptionSelected || !choice.isOptionDisabled) success = setOptionSelected(choice, !choice.isOptionSelected, this.setSelected);
+        return success;
       };
 
       _proto.resetChoicesList = function resetChoicesList() {
@@ -1273,7 +1246,7 @@
 
         for (var i = 0; i < this.choicesList.length; i++) {
           var choice = this.choicesList[i];
-          if (!choice.isOptionSelected && !choice.isOptionDisabled && !choice.isOptionHidden) setOptionSelectedTrue(choice, this.setSelected);
+          if (!choice.isOptionSelected && !choice.isOptionDisabled && !choice.isOptionHidden) setOptionSelected(choice, true, this.setSelected);
         }
 
         this.resetFilter();
@@ -1314,7 +1287,7 @@
       _proto.UpdateOptionDisabled = function UpdateOptionDisabled(key) {
         var choice = this.choicesList[key]; // TODO: 
 
-        updateDisabled(choice, this.getIsOptionDisabled);
+        updateDisabledChoice(choice, this.getIsOptionDisabled);
       };
 
       _proto.UpdateOptionsSelected = function UpdateOptionsSelected() {
@@ -1328,15 +1301,15 @@
       _proto.UpdateOptionSelected = function UpdateOptionSelected(key) {
         var choice = this.choicesList[key]; // TODO: 
 
-        updateSelected(choice);
+        updateSelectedChoice(choice);
       };
 
-      _proto.SetSelectedChoice = function SetSelectedChoice(key, value) {
+      _proto.SetOptionSelected = function SetOptionSelected(key, value) {
         var choice = this.choicesList[key];
         setOptionSelected(choice, value, this.setSelected);
       };
 
-      _proto.createPick = function createPick(choice, choiceContent) {
+      _proto.createPick = function createPick(choice) {
         var _this = this;
 
         var pickElement = this.staticContent.createPickElement();
@@ -1378,27 +1351,24 @@
         choice.updateDisabled = composeSync(choiceUpdateDisabledBackup, pick.disable);
         var removeFromList = this.picksList.addPick(pick);
 
-        choice.updateSelectedFalse = function () {
+        var updateSelectedFalse = function updateSelectedFalse() {
           removeFromList();
           pick.dispose();
-          choice.isOptionSelected = false;
           choice.updateDisabled = choiceUpdateDisabledBackup;
           choice.updateDisabled();
-          choiceContent.select(choice.isOptionSelected);
           if (_this.picksList.getCount() == 0) _this.placeholderAspect.updatePlacehodlerVisibility();
 
           _this.onChange();
         };
 
         var setSelectedFalse = function setSelectedFalse() {
-          return setOptionSelectedFalse(choice, _this.setSelected);
+          return setOptionSelected(choice, false, _this.setSelected);
         };
 
         pick.remove = setSelectedFalse;
         this.aspect.handleOnRemoveButton(pickContent.onRemove, setSelectedFalse);
-        choice.isOptionSelected = true;
-        choiceContent.select(choice.isOptionSelected);
         if (this.picksList.getCount() == 1) this.placeholderAspect.updatePlacehodlerVisibility();
+        return updateSelectedFalse;
       };
 
       _proto.createChoice = function createChoice(option, i) {
@@ -1407,9 +1377,9 @@
         var isOptionHidden = this.getIsOptionHidden(option);
         var isOptionSelected = option.selected;
         var isOptionDisabled = this.getIsOptionDisabled(option);
-        if (isOptionHidden) return ChoiceHidden(option, isOptionHidden);else {
-          var choice = Choice(option, isOptionSelected, isOptionDisabled, isOptionHidden);
+        var choice = Choice(option, isOptionSelected, isOptionDisabled, isOptionHidden);
 
+        if (!isOptionHidden) {
           var _this$staticContent$c = this.staticContent.createChoiceElement(),
               choiceElement = _this$staticContent$c.choiceElement,
               setVisible = _this$staticContent$c.setVisible,
@@ -1421,18 +1391,33 @@
             _this2.filterPanel.setFocus();
           });
 
-          var createPick = function createPick() {
-            return _this2.createPick(choice, choiceContent);
+          var updateSelectedChoiceContent = function updateSelectedChoiceContent() {
+            return choiceContent.select(choice.isOptionSelected);
           };
 
-          var unbindChoiceElement = this.aspect.adoptChoiceElement(choice, choiceElement);
+          var pickTools = {
+            updateSelectedTrue: null,
+            updateSelectedFalse: null
+          };
 
-          choice.updateSelectedTrue = function () {
+          var createPick = function createPick() {
+            var removePick = _this2.createPick(choice);
+
+            pickTools.updateSelectedFalse = removePick;
+          };
+
+          pickTools.updateSelectedTrue = function () {
             createPick();
 
             _this2.onChange();
           };
 
+          choice.updateSelected = function () {
+            updateSelectedChoiceContent();
+            if (choice.isOptionSelected) pickTools.updateSelectedTrue();else pickTools.updateSelectedFalse();
+          };
+
+          var unbindChoiceElement = this.aspect.adoptChoiceElement(choice, choiceElement);
           choice.isVisible = true;
           choice.visibleIndex = i;
           attach();
@@ -1445,8 +1430,8 @@
           choice.dispose = function () {
             unbindChoiceElement();
             choiceContent.dispose();
-            choice.updateSelectedFalse = null;
-            choice.updateSelectedTrue = null; // not real data manipulation but internal state
+            choice.updateSelected = null;
+            choice.updateDisabled = null; // not real data manipulation but internal state
 
             choice.updateVisible = null; // filter in
 
@@ -1459,16 +1444,18 @@
           };
 
           choice.updateDisabled = function () {
-            return choiceContent.disable(choice.isOptionDisabled, choice.isOptionSelected);
+            choiceContent.disable(choice.isOptionDisabled, choice.isOptionSelected);
           };
 
-          if (isOptionSelected) {
+          if (choice.isOptionSelected) {
+            updateSelectedChoiceContent();
             createPick();
           }
 
           choice.updateDisabled();
-          return choice;
         }
+
+        return choice;
       };
 
       _proto.updateDataImpl = function updateDataImpl() {
@@ -1543,7 +1530,7 @@
             var fullMatchChoice = this.filteredChoicesList[0];
 
             if (fullMatchChoice.searchText == text) {
-              setOptionSelectedTrue(fullMatchChoice, this.setSelected);
+              setOptionSelected(fullMatchChoice, true, this.setSelected);
               this.filterPanel.setEmpty(); // clear
 
               this.placeholderAspect.updateEmptyInputWidth();

@@ -55,9 +55,10 @@ export function staticContentGenerator(element, createElement, containerClass, f
     var createChoiceElement = () => {
         var choiceElement = createElement('LI');
         addStyling(choiceElement, css.choice);
-        return {choiceElement, 
-            setVisible: (isVisible)=> choiceElement.style.display = isVisible ? 'block': 'none',
-            attach: ()=>choicesElement.appendChild(choiceElement)
+        return {
+            choiceElement, 
+            setVisible: (isVisible) => choiceElement.style.display = isVisible ? 'block': 'none',
+            attach: () => choicesElement.appendChild(choiceElement)
         };
     }
 
