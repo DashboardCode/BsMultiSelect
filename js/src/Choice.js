@@ -54,3 +54,17 @@ export function updateDisabledChoice(choice, getIsOptionDisabled){
             choice.updateDisabled();
     }
 }
+
+export function updateHiddenChoice(choice, getIsOptionHidden){
+    let newIsOptionHidden = getIsOptionHidden(choice.option);
+    if (newIsOptionHidden != choice.isOptionHidden)
+    {
+        choice.isOptionHidden= newIsOptionHidden;
+        if (!choice.isOptionHidden)
+            choice.updateHidden();
+    }
+}
+
+export function isVisibleChoice(choice){
+    return choice.isFilteredIn /*&& !choice.isOptionHidden*/
+}

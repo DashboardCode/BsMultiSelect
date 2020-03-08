@@ -1,5 +1,5 @@
 /*!
-  * DashboardCode BsMultiSelect v0.5.32 (https://dashboardcode.github.io/BsMultiSelect/)
+  * DashboardCode BsMultiSelect v0.5.33 (https://dashboardcode.github.io/BsMultiSelect/)
   * Copyright 2017-2020 Roman Pokrovskij (github user rpokrovskij)
   * Licensed under APACHE 2 (https://github.com/DashboardCode/BsMultiSelect/blob/master/LICENSE)
   */
@@ -985,9 +985,21 @@ function updateDisabledChoice(choice, getIsOptionDisabled) {
     if (!choice.isOptionHidden) choice.updateDisabled();
   }
 }
+function updateHiddenChoice(choice, getIsOptionHidden) {
+  var newIsOptionHidden = getIsOptionHidden(choice.option);
 
-function filterMultiSelectData(choice, isVisible, visibleIndex) {
-  choice.isVisible = isVisible;
+  if (newIsOptionHidden != choice.isOptionHidden) {
+    choice.isOptionHidden = newIsOptionHidden;
+    if (!choice.isOptionHidden) choice.updateHidden();
+  }
+}
+function isVisibleChoice(choice) {
+  return choice.isFilteredIn;
+  /*&& !choice.isOptionHidden*/
+}
+
+function filterMultiSelectData(choice, isFilteredIn, visibleIndex) {
+  choice.isFilteredIn = isFilteredIn;
   choice.visibleIndex = visibleIndex;
   choice.updateVisible();
 }
@@ -1098,53 +1110,7 @@ var MultiSelect = /*#__PURE__*/function () {
   _proto.Update = function Update() {
     this.UpdateAppearance();
     this.UpdateData();
-  }
-  /*
-  UpdateOption(index){
-      let multiSelectData = this.MultiSelectDataList[index];
-      let option = multiSelectData.option;
-      multiSelectData.searchText = option.text.toLowerCase().trim();
-      if (multiSelectData.isOptionHidden != option.isHidden)
-      {
-          multiSelectData.isOptionHidden=option.isHidden;
-          if (multiSelectData.isOptionHidden)
-              this.optionsPanel.insertChoice(multiSelectData, 
-                  (p1,p2,p3)=>this.picksList.addPick(p1,p2,p3),
-                  ()=>this.optionsAdapter.triggerChange(),
-                  option.isOptionSelected, option.isDisabled);
-          else
-              multiSelectData.removeChoiceElement();
-      }
-      else 
-      {
-          if (multiSelectData.isOptionSelected != option.isOptionSelected)
-          {
-              multiSelectData.isOptionSelected=option.isOptionSelected;
-              if (multiSelectData.isOptionSelected)
-              {
-                  // this.insertChoice(multiSelectData, (e)=>this.choicesElement.appendChild(e), isOptionSelected, isDisabled);
-              }
-              else
-              {
-                  // multiSelectData.removeChoiceElement();
-              }
-          }
-          if (multiSelectData.isDisabled != option.isDisabled)
-          {
-              multiSelectData.isDisabled=option.isDisabled;
-              if (multiSelectData.isDisabled)
-              {
-                  // this.insertChoice(multiSelectData, (e)=>this.choicesElement.appendChild(e), isOptionSelected, isDisabled);
-              }
-              else
-              {
-                  // multiSelectData.removeChoiceElement();
-              }
-          }
-      }    
-      //multiSelectData.updateOption();
-  }*/
-  ;
+  };
 
   _proto.DeselectAll = function DeselectAll() {
     this.aspect.hideChoices(); // always hide 1st
@@ -1198,10 +1164,16 @@ var MultiSelect = /*#__PURE__*/function () {
     for (var i = 0; i < options.length; i++) {
       this.UpdateOptionDisabled(i);
     }
-  };
+  } // UpdateOption(key){
+  //     let choice = this.choicesList[key]; // TODO: 
+  //     updateDisabledChoice(choice, this.getIsOptionDisabled)
+  //     updateSelectedChoice(choice)
+  //     // TODO REFRESH the content
+  // }
+  ;
 
   _proto.UpdateOptionDisabled = function UpdateOptionDisabled(key) {
-    var choice = this.choicesList[key]; // TODO: 
+    var choice = this.choicesList[key]; // TODO: generalize index as key 
 
     updateDisabledChoice(choice, this.getIsOptionDisabled);
   };
@@ -1215,9 +1187,9 @@ var MultiSelect = /*#__PURE__*/function () {
   };
 
   _proto.UpdateOptionSelected = function UpdateOptionSelected(key) {
-    var choice = this.choicesList[key]; // TODO: 
+    var choice = this.choicesList[key]; // TODO: generalize index as key 
 
-    updateSelectedChoice(choice);
+    updateSelectedChoice(choice); // TODO: invite this.getIsOptionSelected
   };
 
   _proto.SetOptionSelected = function SetOptionSelected(key, value) {
@@ -1225,14 +1197,26 @@ var MultiSelect = /*#__PURE__*/function () {
     setOptionSelected(choice, value, this.setSelected);
   };
 
+  _proto.UpdateOptionsHidden = function UpdateOptionsHidden() {
+    var options = this.getOptions();
+
+    for (var i = 0; i < options.length; i++) {
+      this.UpdateOptionHidden(i);
+    }
+  };
+
+  _proto.UpdateOptionHidden = function UpdateOptionHidden(key) {
+    var choice = this.choicesList[key]; // TODO: generalize index as key 
+
+    updateHiddenChoice(choice); // TODO: invite this.getIsOptionSelected
+  };
+
   _proto.createPick = function createPick(choice) {
     var _this = this;
 
-    var pickElement = this.staticContent.createPickElement();
-
-    var attachPickElement = function attachPickElement() {
-      return _this.staticContent.picksElement.insertBefore(pickElement, _this.staticContent.pickFilterElement);
-    };
+    var _this$staticContent$c = this.staticContent.createPickElement(),
+        pickElement = _this$staticContent$c.pickElement,
+        attach = _this$staticContent$c.attach;
 
     var detach = function detach() {
       return removeElement(pickElement);
@@ -1250,28 +1234,35 @@ var MultiSelect = /*#__PURE__*/function () {
         return pickContent.disable(_this.getIsOptionDisabled(choice.option));
       },
       remove: null,
+      //visible: () => setVisible( !choice.isOptionHidden ),
       dispose: function dispose() {
         detach();
         pickContent.dispose();
         pick.disableRemove = null;
         pick.setData = null;
         pick.disable = null;
-        pick.remove = null;
+        pick.remove = null; // setVisible=null;
+
         pick.dispose = null;
       }
     };
     pick.setData();
-    pick.disableRemove();
-    attachPickElement();
+    pick.disableRemove(); //pick.visible();
+
+    attach();
     var choiceUpdateDisabledBackup = choice.updateDisabled;
-    choice.updateDisabled = composeSync(choiceUpdateDisabledBackup, pick.disable);
+    choice.updateDisabled = composeSync(choiceUpdateDisabledBackup, pick.disable); //let choiceUpdateVisibleBackup = choice.updateVisible;
+    //choice.updateVisible = composeSync(choiceUpdateDisabledBackup, pick.visible);
+
     var removeFromList = this.picksList.addPick(pick);
 
     var updateSelectedFalse = function updateSelectedFalse() {
       removeFromList();
-      pick.dispose();
+      pick.dispose(); //choice.updateVisible = choiceUpdateVisibleBackup; 
+
       choice.updateDisabled = choiceUpdateDisabledBackup;
-      choice.updateDisabled();
+      choice.updateDisabled(); //choice.updateVisible();
+
       if (_this.picksList.getCount() == 0) _this.placeholderAspect.updatePlacehodlerVisibility();
 
       _this.onChange();
@@ -1287,7 +1278,7 @@ var MultiSelect = /*#__PURE__*/function () {
     return updateSelectedFalse;
   };
 
-  _proto.createChoice = function createChoice(option, i) {
+  _proto.createChoice = function createChoice(option, i, afterElement) {
     var _this2 = this;
 
     var isOptionHidden = this.getIsOptionHidden(option);
@@ -1296,11 +1287,12 @@ var MultiSelect = /*#__PURE__*/function () {
     var choice = Choice(option, isOptionSelected, isOptionDisabled, isOptionHidden);
 
     if (!isOptionHidden) {
-      var _this$staticContent$c = this.staticContent.createChoiceElement(),
-          choiceElement = _this$staticContent$c.choiceElement,
-          setVisible = _this$staticContent$c.setVisible,
-          attach = _this$staticContent$c.attach;
+      var _this$staticContent$c2 = this.staticContent.createChoiceElement(),
+          choiceElement = _this$staticContent$c2.choiceElement,
+          setVisible = _this$staticContent$c2.setVisible,
+          attach = _this$staticContent$c2.attach;
 
+      choice.choiceElement = choiceElement;
       var choiceContent = this.choiceContentGenerator(choiceElement, function () {
         _this2.toggleOptionSelected(choice);
 
@@ -1334,33 +1326,35 @@ var MultiSelect = /*#__PURE__*/function () {
       };
 
       var unbindChoiceElement = this.aspect.adoptChoiceElement(choice, choiceElement);
-      choice.isVisible = true;
+      choice.isFilteredIn = true;
       choice.visibleIndex = i;
-      attach();
+      attach(afterElement);
       choiceContent.setData(choice.option);
 
       choice.updateHoverIn = function () {
         choiceContent.hoverIn(choice.isHoverIn);
       };
 
-      choice.dispose = function () {
-        unbindChoiceElement();
-        choiceContent.dispose();
-        choice.updateSelected = null;
-        choice.updateDisabled = null; // not real data manipulation but internal state
-
-        choice.updateVisible = null; // filter in
-
-        choice.updateHoverIn = null;
-        choice.dispose = null;
-      };
-
       choice.updateVisible = function () {
-        return setVisible(choice.isVisible);
-      };
+        return setVisible(isVisibleChoice(choice));
+      }; // updateHidden
+
 
       choice.updateDisabled = function () {
         choiceContent.disable(choice.isOptionDisabled, choice.isOptionSelected);
+      };
+
+      choice.dispose = function () {
+        unbindChoiceElement();
+        choiceContent.dispose();
+        choice.choiceElement = null;
+        choice.updateSelected = null;
+        choice.updateDisabled = null; // not real data manipulation but internal state
+
+        choice.updateVisible = null; // TODO: refactor it there should be 3 types of not visibility: for hidden, for filtered out, for optgroup, for message item
+
+        choice.updateHoverIn = null;
+        choice.dispose = null;
       };
 
       if (choice.isOptionSelected) {
@@ -1501,7 +1495,7 @@ var MultiSelect = /*#__PURE__*/function () {
         while (i < length) {
           iChoice = visibleChoices[i];
 
-          if (iChoice.isVisible) {
+          if (isVisibleChoice(iChoice)) {
             break;
           }
 
@@ -1513,7 +1507,7 @@ var MultiSelect = /*#__PURE__*/function () {
         while (_i >= 0) {
           iChoice = visibleChoices[_i];
 
-          if (iChoice.isVisible) {
+          if (isVisibleChoice(iChoice)) {
             break;
           }
 
@@ -2182,7 +2176,13 @@ function staticContentGenerator(element, createElement, containerClass, forceRtl
   var createPickElement = function createPickElement() {
     var pickElement = createElement('LI');
     addStyling(pickElement, css.pick);
-    return pickElement;
+    return {
+      pickElement: pickElement,
+      //setVisible: (isVisible) => pickElement.style.display = isVisible ? 'block': 'none' //,
+      attach: function attach() {
+        return picksElement.insertBefore(pickElement, pickFilterElement);
+      }
+    };
   };
 
   var createChoiceElement = function createChoiceElement() {
@@ -2193,8 +2193,8 @@ function staticContentGenerator(element, createElement, containerClass, forceRtl
       setVisible: function setVisible(isVisible) {
         return choiceElement.style.display = isVisible ? 'block' : 'none';
       },
-      attach: function attach() {
-        return choicesElement.appendChild(choiceElement);
+      attach: function attach(element) {
+        if (element) element.parentNode.insertBefore(choiceElement, element.nextSibling);else choicesElement.appendChild(choiceElement);
       }
     };
   };
