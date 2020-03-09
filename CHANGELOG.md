@@ -1,5 +1,6 @@
 # CHANGELOG
 ````
+0.5.34 - optimizations
 0.5.33 - optimizations
 0.5.32 - new method UpdateOptionsDisabled (breaking change UpdateSelected renamed to UpdateOptionsSelected)
 0.5.31 - resolved: notselective filter + enter opens empty dropdown

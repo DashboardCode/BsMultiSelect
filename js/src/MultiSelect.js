@@ -268,18 +268,17 @@ export class MultiSelect {
         //choice.updateVisible = composeSync(choiceUpdateDisabledBackup, pick.visible);
 
         var removeFromList = this.picksList.addPick(pick);
-        let updateSelectedFalse = () => {
+        let removePick = () => {
             removeFromList();
             pick.dispose();
 
             //choice.updateVisible = choiceUpdateVisibleBackup; 
-            choice.updateDisabled = choiceUpdateDisabledBackup; 
-            choice.updateDisabled();
             //choice.updateVisible();
+            choice.updateDisabled = choiceUpdateDisabledBackup; 
+            choice.updateDisabled(); // make "true disabled" without it checkbox looks disabled
             
             if (this.picksList.getCount()==0) 
                 this.placeholderAspect.updatePlacehodlerVisibility()
-            this.onChange();
         }
         let setSelectedFalse = () => setOptionSelected(choice, false, this.setSelected)
         pick.remove = setSelectedFalse;
@@ -288,7 +287,7 @@ export class MultiSelect {
 
         if (this.picksList.getCount()==1) 
             this.placeholderAspect.updatePlacehodlerVisibility()
-        return updateSelectedFalse;
+        return removePick;
     }
     
     createChoice(option, i, afterElement){
@@ -300,8 +299,16 @@ export class MultiSelect {
 
         if (!isOptionHidden) { 
             var {choiceElement, setVisible, attach} = this.staticContent.createChoiceElement();
-            choice.choiceElement=choiceElement;
+            
+            // choice.delete = () => {
+            //     removeElement(choiceElement);
+            // }
+            //choice.choiceElement=choiceElement;
 
+            choice.insertAfter = (option, i) => {
+                var nextChoice = createChoice(option, i, choiceElement)
+                return nextChoice;
+            };
             let choiceContent = this.choiceContentGenerator(choiceElement, () => {
                 this.toggleOptionSelected(choice);
                 this.filterPanel.setFocus();
@@ -316,10 +323,7 @@ export class MultiSelect {
                 pickTools.updateSelectedFalse = removePick;
             };
 
-            pickTools.updateSelectedTrue = () => {
-                createPick();
-                this.onChange();
-            }
+            pickTools.updateSelectedTrue = createPick;
 
             choice.updateSelected = () => {
                 updateSelectedChoiceContent();
@@ -327,6 +331,7 @@ export class MultiSelect {
                     pickTools.updateSelectedTrue();
                 else 
                     pickTools.updateSelectedFalse();
+                this.onChange();
             }
 
             var unbindChoiceElement = this.aspect.adoptChoiceElement(choice, choiceElement);
@@ -353,7 +358,7 @@ export class MultiSelect {
             choice.dispose = ()=> {
                 unbindChoiceElement();
                 choiceContent.dispose();
-                choice.choiceElement = null;
+                choice.insertAfter = null;
                 choice.updateSelected = null;
                 choice.updateDisabled = null;
 

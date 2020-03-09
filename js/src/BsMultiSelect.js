@@ -147,10 +147,10 @@ export function BsMultiSelect(element, environment, settings){
         if(!getValidity)
             getValidity = composeGetValidity(selectElement);
     
-        if (!getDisabled) 
+        if(!getDisabled) 
             getDisabled = composeGetDisabled(selectElement);
 
-        if (!getSize) 
+        if(!getSize) 
             getSize = composeGetSize(selectElement);
 
         getOptions = ()=>selectElement.options, //.getElementsByTagName('OPTION'), 

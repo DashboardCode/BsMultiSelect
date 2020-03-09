@@ -1,5 +1,5 @@
 /*!
-  * DashboardCode BsMultiSelect v0.5.33 (https://dashboardcode.github.io/BsMultiSelect/)
+  * DashboardCode BsMultiSelect v0.5.34 (https://dashboardcode.github.io/BsMultiSelect/)
   * Copyright 2017-2020 Roman Pokrovskij (github user rpokrovskij)
   * Licensed under APACHE 2 (https://github.com/DashboardCode/BsMultiSelect/blob/master/LICENSE)
   */
@@ -1256,16 +1256,15 @@ var MultiSelect = /*#__PURE__*/function () {
 
     var removeFromList = this.picksList.addPick(pick);
 
-    var updateSelectedFalse = function updateSelectedFalse() {
+    var removePick = function removePick() {
       removeFromList();
       pick.dispose(); //choice.updateVisible = choiceUpdateVisibleBackup; 
+      //choice.updateVisible();
 
       choice.updateDisabled = choiceUpdateDisabledBackup;
-      choice.updateDisabled(); //choice.updateVisible();
+      choice.updateDisabled(); // make "true disabled" without it checkbox looks disabled
 
       if (_this.picksList.getCount() == 0) _this.placeholderAspect.updatePlacehodlerVisibility();
-
-      _this.onChange();
     };
 
     var setSelectedFalse = function setSelectedFalse() {
@@ -1275,10 +1274,20 @@ var MultiSelect = /*#__PURE__*/function () {
     pick.remove = setSelectedFalse;
     this.aspect.handleOnRemoveButton(pickContent.onRemove, setSelectedFalse);
     if (this.picksList.getCount() == 1) this.placeholderAspect.updatePlacehodlerVisibility();
-    return updateSelectedFalse;
+    return removePick;
   };
 
-  _proto.createChoice = function createChoice(option, i, afterElement) {
+  _proto.createChoice = function (_createChoice) {
+    function createChoice(_x, _x2, _x3) {
+      return _createChoice.apply(this, arguments);
+    }
+
+    createChoice.toString = function () {
+      return _createChoice.toString();
+    };
+
+    return createChoice;
+  }(function (option, i, afterElement) {
     var _this2 = this;
 
     var isOptionHidden = this.getIsOptionHidden(option);
@@ -1290,9 +1299,17 @@ var MultiSelect = /*#__PURE__*/function () {
       var _this$staticContent$c2 = this.staticContent.createChoiceElement(),
           choiceElement = _this$staticContent$c2.choiceElement,
           setVisible = _this$staticContent$c2.setVisible,
-          attach = _this$staticContent$c2.attach;
+          attach = _this$staticContent$c2.attach; // choice.delete = () => {
+      //     removeElement(choiceElement);
+      // }
+      //choice.choiceElement=choiceElement;
 
-      choice.choiceElement = choiceElement;
+
+      choice.insertAfter = function (option, i) {
+        var nextChoice = createChoice(option, i, choiceElement);
+        return nextChoice;
+      };
+
       var choiceContent = this.choiceContentGenerator(choiceElement, function () {
         _this2.toggleOptionSelected(choice);
 
@@ -1314,15 +1331,13 @@ var MultiSelect = /*#__PURE__*/function () {
         pickTools.updateSelectedFalse = removePick;
       };
 
-      pickTools.updateSelectedTrue = function () {
-        createPick();
-
-        _this2.onChange();
-      };
+      pickTools.updateSelectedTrue = createPick;
 
       choice.updateSelected = function () {
         updateSelectedChoiceContent();
         if (choice.isOptionSelected) pickTools.updateSelectedTrue();else pickTools.updateSelectedFalse();
+
+        _this2.onChange();
       };
 
       var unbindChoiceElement = this.aspect.adoptChoiceElement(choice, choiceElement);
@@ -1347,7 +1362,7 @@ var MultiSelect = /*#__PURE__*/function () {
       choice.dispose = function () {
         unbindChoiceElement();
         choiceContent.dispose();
-        choice.choiceElement = null;
+        choice.insertAfter = null;
         choice.updateSelected = null;
         choice.updateDisabled = null; // not real data manipulation but internal state
 
@@ -1366,7 +1381,7 @@ var MultiSelect = /*#__PURE__*/function () {
     }
 
     return choice;
-  };
+  });
 
   _proto.updateDataImpl = function updateDataImpl() {
     var _this3 = this;
