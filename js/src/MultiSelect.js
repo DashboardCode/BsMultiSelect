@@ -533,12 +533,6 @@ export class MultiSelect {
         this.filterPanel = FilterPanel(
             this.staticContent.filterInputElement,
             () => {
-                this.staticContent.pickFilterElement.appendChild(this.staticContent.filterInputElement);
-                this.labelAdapter.init(this.staticContent.filterInputElement); 
-                this.staticContent.picksElement.appendChild(
-                    this.staticContent.pickFilterElement); // located filter in selectionsPanel                    
-            },
-            () => {
                 this.staticContent.setIsFocusIn(true)
                 this.staticContent.toggleFocusStyling();
             },  // focus in - show dropdown
@@ -574,22 +568,25 @@ export class MultiSelect {
                 }
             },
             // tab/enter "compleate hovered"
-            (isEmpty, event) => {
-                if (!isEmpty || this.staticContent.isChoicesVisible()) // supports bs modal - stop esc (close modal) propogation
-                    event.stopPropagation();
-            }, // esc keydown
-            () => {
+            /*stopEscKeyDownPropogation */() => this.staticContent.isChoicesVisible(),
+            /*onKeyUpEsc*/() => {
                 this.aspect.hideChoices(); // always hide 1st
                 this.choicesPanel.resetHoveredChoice();
                 this.resetFilter();
             }, // esc keyup 
-            (filterInputValue, resetLength) =>
+            /*onInput*/(filterInputValue, resetLength) =>
             { 
                 this.placeholderAspect.updatePlacehodlerVisibility();
                 this.input(filterInputValue, resetLength) 
             }
         );
         
+        // attach filterInputElement
+        this.staticContent.pickFilterElement.appendChild(this.staticContent.filterInputElement);
+        this.labelAdapter.init(this.staticContent.filterInputElement); 
+        this.staticContent.picksElement.appendChild(
+            this.staticContent.pickFilterElement); // located filter in selectionsPanel       
+
         this.picksList =  PicksList();
 
         this.choicesPanel = ChoicesPanel(

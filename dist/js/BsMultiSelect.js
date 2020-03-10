@@ -1,5 +1,5 @@
 /*!
-  * DashboardCode BsMultiSelect v0.5.34 (https://dashboardcode.github.io/BsMultiSelect/)
+  * DashboardCode BsMultiSelect v0.5.35 (https://dashboardcode.github.io/BsMultiSelect/)
   * Copyright 2017-2020 Roman Pokrovskij (github user rpokrovskij)
   * Licensed under APACHE 2 (https://github.com/DashboardCode/BsMultiSelect/blob/master/LICENSE)
   */
@@ -87,58 +87,207 @@
       $.fn[prototypableName].defaults = defaults;
     }
 
-    function FilterPanel(filterInputElement, insertIntoDom, onFocusIn, // show dropdown
+    function removeElement(e) {
+      e.parentNode.removeChild(e);
+    }
+    function findDirectChildByTagName(element, tagName) {
+      var value = null;
+
+      for (var i = 0; i < element.children.length; i++) {
+        var tmp = element.children[i];
+
+        if (tmp.tagName == tagName) {
+          value = tmp;
+          break;
+        }
+      }
+
+      return value;
+    }
+    function closestByTagName(element, tagName) {
+      return closest(element, function (e) {
+        return e.tagName === tagName;
+      }); // TODO support xhtml?  e.tagName.toUpperCase() ?
+    }
+    function closestByClassName(element, className) {
+      return closest(element, function (e) {
+        return e.classList.contains(className);
+      });
+    }
+    function closestByAttribute(element, attributeName, attribute) {
+      return closest(element, function (e) {
+        return e.getAttribute(attributeName) === attribute;
+      });
+    }
+    function getDataGuardedWithPrefix(element, prefix, name) {
+      var tmp1 = element.getAttribute('data-' + prefix + '-' + name);
+
+      if (tmp1) {
+        return tmp1;
+      } else {
+        var tmp2 = element.getAttribute('data-' + name);
+        if (tmp2) return tmp2;
+      }
+
+      return null;
+    }
+
+    function closest(element, predicate) {
+      if (!element || !(element instanceof Element)) return null; // should be element, not document (TODO: check iframe)
+
+      if (predicate(element)) return element;
+      return closest(element.parentNode, predicate);
+    }
+
+    function siblingsAsArray(element) {
+      var value = [];
+
+      if (element.parentNode) {
+        var children = element.parentNode.children;
+        var l = element.parentNode.children.length;
+
+        if (children.length > 1) {
+          for (var i = 0; i < l; ++i) {
+            var e = children[i];
+            if (e != element) value.push(e);
+          }
+        }
+      }
+
+      return value;
+    } // export function ShowBinder(element){
+    //     return {
+    //         show(){
+    //         },
+    //         hide(){
+    //             //
+    //         }
+    //     }
+    // }
+
+    function getIsRtl(element) {
+      var isRtl = false;
+      var e = closestByAttribute(element, "dir", "rtl");
+      if (e) isRtl = true;
+      return isRtl;
+    }
+    function EventBinder() {
+      var list = [];
+      return {
+        bind: function bind(element, eventName, handler) {
+          element.addEventListener(eventName, handler);
+          list.push({
+            element: element,
+            eventName: eventName,
+            handler: handler
+          });
+        },
+        unbind: function unbind() {
+          list.forEach(function (e) {
+            var element = e.element,
+                eventName = e.eventName,
+                handler = e.handler;
+            element.removeEventListener(eventName, handler);
+          });
+        }
+      };
+    }
+    function AttributeBackup() {
+      var list = [];
+      return {
+        set: function set(element, attributeName, attribute) {
+          var currentAtribute = element.getAttribute(attributeName);
+          list.push({
+            element: element,
+            currentAtribute: currentAtribute,
+            attribute: attribute
+          });
+          element.setAttribute(attributeName, attribute);
+        },
+        restore: function restore() {
+          list.forEach(function (e) {
+            var element = e.element,
+                attributeName = e.attributeName,
+                attribute = e.attribute;
+            if (attributeName) element.setAttribute(attributeName, attribute);else element.removeAttribute(attributeName);
+          });
+        }
+      };
+    }
+    function EventLoopFlag(window) {
+      var flag = false;
+      return {
+        get: function get() {
+          return flag;
+        },
+        set: function set() {
+          flag = true;
+          window.setTimeout(function () {
+            flag = false;
+          }, 0);
+        }
+      };
+    }
+
+    function FilterPanel(filterInputElement, onFocusIn, // show dropdown
     onFocusOut, // hide dropdown
     onKeyDownArrowUp, onKeyDownArrowDown, onTabForEmpty, // tab on empty
     onBackspace, // backspace alike
     onTabToCompleate, // "compleate alike"
-    onEnterToCompleate, onKeyDownEsc, onKeyUpEsc, // "esc" alike
+    onEnterToCompleate, stopEscKeyDownPropogation, onKeyUpEsc, // "esc" alike
     onInput //, // filter
     ) {
       filterInputElement.setAttribute("type", "search");
-      filterInputElement.setAttribute("autocomplete", "off"); //setStyle(filterInputElement, filterInputStyle);
+      filterInputElement.setAttribute("autocomplete", "off");
 
-      insertIntoDom();
+      var isEmpty = function isEmpty() {
+        return filterInputElement.value ? false : true;
+      };
 
       var onfilterInputKeyDown = function onfilterInputKeyDown(event) {
-        if ([38, 40, 13, 27].indexOf(event.which) >= 0 || event.which == 9 && filterInputElement.value) {
-          event.preventDefault(); // preventDefault for '9-tab' it enables keyup,
-          // prevent form default button '13-enter' 
+        var keyCode = event.which;
+        var empty = isEmpty();
+
+        if ([38, 40, 13, 27].indexOf(keyCode) >= 0 || keyCode == 9 && !empty) {
+          event.preventDefault(); // NOTE: prevention there enables handling on keyup otherwice there are no keyup (true at least for '9-tab'),
+          // '13-enter'  - prevention against form's default button 
           // but doesn't help with bootsrap modal ESC or ENTER (close behaviour);
-          // '27-esc' there is just in case
+          // '27-esc' there is "just in case"
         }
 
-        if (event.which == 27) {
-          onKeyDownEsc(filterInputElement.value ? false : true, event); // support BS do not close modal - event.stopPropagation inside
-        } else if (event.which == 38) {
+        if (keyCode == 27) {
+          if (!empty || stopEscKeyDownPropogation()) event.stopPropagation(); //onKeyDownEsc(empty, event); // support BS do not close modal - event.stopPropagation inside
+        } else if (keyCode == 38) {
           onKeyDownArrowUp();
-        } else if (event.which == 40) {
+        } else if (keyCode == 40) {
           onKeyDownArrowDown();
-        } else if (event.which == 9
+        } else if (keyCode == 9
         /*tab*/
         ) {
             // no keydown for this
-            if (!filterInputElement.value) {
+            if (empty) {
               onTabForEmpty(); // filter is empty, nothing to reset
             }
-          } else if (event.which == 8
+          } else if (keyCode == 8
         /*backspace*/
         ) {
             // NOTE: this will process backspace only if there are no text in the input field
             // If user will find this inconvinient, we will need to calculate something like this
             // this.isBackspaceAtStartPoint = (this.filterInput.selectionStart == 0 && this.filterInput.selectionEnd == 0);
-            if (!filterInputElement.value) {
+            if (empty) {
               onBackspace();
             }
           }
       };
 
       var onFilterInputKeyUp = function onFilterInputKeyUp(event) {
-        if (event.which == 9) {
+        var keyCode = event.which;
+
+        if (keyCode == 9) {
           onTabToCompleate();
-        } else if (event.which == 13) {
+        } else if (keyCode == 13) {
           onEnterToCompleate();
-        } else if (event.which == 27) {
+        } else if (keyCode == 27) {
           // escape
           onKeyUpEsc(); // is it always empty (bs x can still it) 
         }
@@ -152,18 +301,18 @@
         var filterInputValue = filterInputElement.value;
         onInput(filterInputValue, function () {
           filterInputElement.style.width = filterInputValue.length * 1.3 + 2 + "ch";
-        });
+        } // TODO: better width calculation
+        );
       };
 
-      filterInputElement.addEventListener('focusin', onFocusIn);
-      filterInputElement.addEventListener('focusout', onFocusOut);
-      filterInputElement.addEventListener('keydown', onfilterInputKeyDown);
-      filterInputElement.addEventListener('keyup', onFilterInputKeyUp);
-      filterInputElement.addEventListener('input', onFilterInputInput);
+      var eventBinder = EventBinder();
+      eventBinder.bind(filterInputElement, 'focusin', onFocusIn);
+      eventBinder.bind(filterInputElement, 'focusout', onFocusOut);
+      eventBinder.bind(filterInputElement, 'input', onFilterInputInput);
+      eventBinder.bind(filterInputElement, 'keydown', onfilterInputKeyDown);
+      eventBinder.bind(filterInputElement, 'keyup', onFilterInputKeyUp);
       return {
-        isEmpty: function isEmpty() {
-          return filterInputElement.value ? false : true;
-        },
+        isEmpty: isEmpty,
         setEmpty: function setEmpty() {
           filterInputElement.value = '';
         },
@@ -174,11 +323,7 @@
           return event.target == filterInputElement;
         },
         dispose: function dispose() {
-          filterInputElement.removeEventListener('focusin', onFocusIn);
-          filterInputElement.removeEventListener('focusout', onFocusOut);
-          filterInputElement.removeEventListener('keydown', onfilterInputKeyDown);
-          filterInputElement.removeEventListener('keyup', onFilterInputKeyUp);
-          filterInputElement.removeEventListener('input', onFilterInputInput);
+          eventBinder.unbind();
         }
       };
     }
@@ -433,148 +578,6 @@
           list.forEach(function (i) {
             return i.dispose();
           });
-        }
-      };
-    }
-
-    function removeElement(e) {
-      e.parentNode.removeChild(e);
-    }
-    function findDirectChildByTagName(element, tagName) {
-      var value = null;
-
-      for (var i = 0; i < element.children.length; i++) {
-        var tmp = element.children[i];
-
-        if (tmp.tagName == tagName) {
-          value = tmp;
-          break;
-        }
-      }
-
-      return value;
-    }
-    function closestByTagName(element, tagName) {
-      return closest(element, function (e) {
-        return e.tagName === tagName;
-      }); // TODO support xhtml?  e.tagName.toUpperCase() ?
-    }
-    function closestByClassName(element, className) {
-      return closest(element, function (e) {
-        return e.classList.contains(className);
-      });
-    }
-    function closestByAttribute(element, attributeName, attribute) {
-      return closest(element, function (e) {
-        return e.getAttribute(attributeName) === attribute;
-      });
-    }
-    function getDataGuardedWithPrefix(element, prefix, name) {
-      var tmp1 = element.getAttribute('data-' + prefix + '-' + name);
-
-      if (tmp1) {
-        return tmp1;
-      } else {
-        var tmp2 = element.getAttribute('data-' + name);
-        if (tmp2) return tmp2;
-      }
-
-      return null;
-    }
-
-    function closest(element, predicate) {
-      if (!element || !(element instanceof Element)) return null; // should be element, not document (TODO: check iframe)
-
-      if (predicate(element)) return element;
-      return closest(element.parentNode, predicate);
-    }
-
-    function siblingsAsArray(element) {
-      var value = [];
-
-      if (element.parentNode) {
-        var children = element.parentNode.children;
-        var l = element.parentNode.children.length;
-
-        if (children.length > 1) {
-          for (var i = 0; i < l; ++i) {
-            var e = children[i];
-            if (e != element) value.push(e);
-          }
-        }
-      }
-
-      return value;
-    } // export function ShowBinder(element){
-    //     return {
-    //         show(){
-    //         },
-    //         hide(){
-    //             //
-    //         }
-    //     }
-    // }
-
-    function getIsRtl(element) {
-      var isRtl = false;
-      var e = closestByAttribute(element, "dir", "rtl");
-      if (e) isRtl = true;
-      return isRtl;
-    }
-    function EventBinder() {
-      var list = [];
-      return {
-        bind: function bind(element, eventName, handler) {
-          element.addEventListener(eventName, handler);
-          list.push({
-            element: element,
-            eventName: eventName,
-            handler: handler
-          });
-        },
-        unbind: function unbind() {
-          list.forEach(function (e) {
-            var element = e.element,
-                eventName = e.eventName,
-                handler = e.handler;
-            element.removeEventListener(eventName, handler);
-          });
-        }
-      };
-    }
-    function AttributeBackup() {
-      var list = [];
-      return {
-        set: function set(element, attributeName, attribute) {
-          var currentAtribute = element.getAttribute(attributeName);
-          list.push({
-            element: element,
-            currentAtribute: currentAtribute,
-            attribute: attribute
-          });
-          element.setAttribute(attributeName, attribute);
-        },
-        restore: function restore() {
-          list.forEach(function (e) {
-            var element = e.element,
-                attributeName = e.attributeName,
-                attribute = e.attribute;
-            if (attributeName) element.setAttribute(attributeName, attribute);else element.removeAttribute(attributeName);
-          });
-        }
-      };
-    }
-    function EventLoopFlag(window) {
-      var flag = false;
-      return {
-        get: function get() {
-          return flag;
-        },
-        set: function set() {
-          flag = true;
-          window.setTimeout(function () {
-            flag = false;
-          }, 0);
         }
       };
     }
@@ -1626,13 +1629,6 @@
         var _this4 = this;
 
         this.filterPanel = FilterPanel(this.staticContent.filterInputElement, function () {
-          _this4.staticContent.pickFilterElement.appendChild(_this4.staticContent.filterInputElement);
-
-          _this4.labelAdapter.init(_this4.staticContent.filterInputElement);
-
-          _this4.staticContent.picksElement.appendChild(_this4.staticContent.pickFilterElement); // located filter in selectionsPanel                    
-
-        }, function () {
           _this4.staticContent.setIsFocusIn(true);
 
           _this4.staticContent.toggleFocusStyling();
@@ -1683,10 +1679,12 @@
             }
           }
         }, // tab/enter "compleate hovered"
-        function (isEmpty, event) {
-          if (!isEmpty || _this4.staticContent.isChoicesVisible()) // supports bs modal - stop esc (close modal) propogation
-            event.stopPropagation();
-        }, // esc keydown
+
+        /*stopEscKeyDownPropogation */
+        function () {
+          return _this4.staticContent.isChoicesVisible();
+        },
+        /*onKeyUpEsc*/
         function () {
           _this4.aspect.hideChoices(); // always hide 1st
 
@@ -1695,11 +1693,18 @@
 
           _this4.resetFilter();
         }, // esc keyup 
+
+        /*onInput*/
         function (filterInputValue, resetLength) {
           _this4.placeholderAspect.updatePlacehodlerVisibility();
 
           _this4.input(filterInputValue, resetLength);
-        });
+        }); // attach filterInputElement
+
+        this.staticContent.pickFilterElement.appendChild(this.staticContent.filterInputElement);
+        this.labelAdapter.init(this.staticContent.filterInputElement);
+        this.staticContent.picksElement.appendChild(this.staticContent.pickFilterElement); // located filter in selectionsPanel       
+
         this.picksList = PicksList();
         this.choicesPanel = ChoicesPanel();
         this.placeholderAspect = PlaceholderAspect(this.placeholderText, function () {
