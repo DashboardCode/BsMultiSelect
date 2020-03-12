@@ -1,5 +1,6 @@
 # CHANGELOG
 ````
+0.5.36 - UpdateOptionInserted new method
 0.5.35 - optimizations
 0.5.34 - optimizations
 0.5.33 - optimizations

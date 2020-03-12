@@ -140,6 +140,7 @@ export class MultiSelect {
     GetFilterInput(){
         return this.staticContent.filterInputElement;
     }
+    
     Update(){
         this.UpdateAppearance();
         this.UpdateData();
@@ -236,6 +237,16 @@ export class MultiSelect {
     UpdateOptionHidden(key){
         let choice = this.choicesList[key]; // TODO: generalize index as key 
         updateHiddenChoice(choice) // TODO: invite this.getIsOptionSelected
+    }
+
+    UpdateOptionInserted(key){
+        //let choice = this.choicesList[key]; // TODO: generalize index as key 
+        //updateDisabledChoice(choice, this.getIsOptionDisabled)
+        let option = options[key];
+        let newChoice = this.createChoice(option, key);
+        this.choicesList.splice(key, 0, newChoice);
+        this.aspect.hideChoices(); // always hide 1st
+        this.resetFilter();
     }
 
     createPick(choice){
@@ -547,11 +558,13 @@ export class MultiSelect {
             }, // focus out - hide dropdown
             () => this.keyDownArrow(false), // arrow up
             () => this.keyDownArrow(true),  // arrow down
-            () => this.aspect.hideChoices(),  // tab on empty
+            /*onTabForEmpty*/() => this.aspect.hideChoices(),  // tab on empty
             () => {
                 this.picksList.removePicksTail();
                 this.aspect.alignToFilterInputItemLocation(false);
             }, // backspace - "remove last"
+
+
             /*onTabToCompleate*/() => { 
                 if (this.staticContent.isChoicesVisible()) {
                     this.hoveredToSelected();
@@ -567,13 +580,16 @@ export class MultiSelect {
                     }
                 }
             },
-            // tab/enter "compleate hovered"
-            /*stopEscKeyDownPropogation */() => this.staticContent.isChoicesVisible(),
+           
             /*onKeyUpEsc*/() => {
                 this.aspect.hideChoices(); // always hide 1st
                 this.choicesPanel.resetHoveredChoice();
                 this.resetFilter();
             }, // esc keyup 
+
+             // tab/enter "compleate hovered"
+            /*stopEscKeyDownPropogation */() => this.staticContent.isChoicesVisible(),
+
             /*onInput*/(filterInputValue, resetLength) =>
             { 
                 this.placeholderAspect.updatePlacehodlerVisibility();

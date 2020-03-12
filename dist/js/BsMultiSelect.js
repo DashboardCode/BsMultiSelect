@@ -1,5 +1,5 @@
 /*!
-  * DashboardCode BsMultiSelect v0.5.35 (https://dashboardcode.github.io/BsMultiSelect/)
+  * DashboardCode BsMultiSelect v0.5.36 (https://dashboardcode.github.io/BsMultiSelect/)
   * Copyright 2017-2020 Roman Pokrovskij (github user rpokrovskij)
   * Licensed under APACHE 2 (https://github.com/DashboardCode/BsMultiSelect/blob/master/LICENSE)
   */
@@ -234,8 +234,8 @@
     onKeyDownArrowUp, onKeyDownArrowDown, onTabForEmpty, // tab on empty
     onBackspace, // backspace alike
     onTabToCompleate, // "compleate alike"
-    onEnterToCompleate, stopEscKeyDownPropogation, onKeyUpEsc, // "esc" alike
-    onInput //, // filter
+    onEnterToCompleate, onKeyUpEsc, // "esc" alike
+    stopEscKeyDownPropogation, onInput //, // filter
     ) {
       filterInputElement.setAttribute("type", "search");
       filterInputElement.setAttribute("autocomplete", "off");
@@ -248,40 +248,48 @@
         var keyCode = event.which;
         var empty = isEmpty();
 
-        if ([38, 40, 13, 27].indexOf(keyCode) >= 0 || keyCode == 9 && !empty) {
-          event.preventDefault(); // NOTE: prevention there enables handling on keyup otherwice there are no keyup (true at least for '9-tab'),
-          // '13-enter'  - prevention against form's default button 
-          // but doesn't help with bootsrap modal ESC or ENTER (close behaviour);
-          // '27-esc' there is "just in case"
-        }
-
-        if (keyCode == 27) {
-          if (!empty || stopEscKeyDownPropogation()) event.stopPropagation(); //onKeyDownEsc(empty, event); // support BS do not close modal - event.stopPropagation inside
-        } else if (keyCode == 38) {
-          onKeyDownArrowUp();
-        } else if (keyCode == 40) {
-          onKeyDownArrowDown();
-        } else if (keyCode == 9
-        /*tab*/
+        if ([13, 27 // '27-esc' there is "just in case", I can imagine that there are user agents that do UNDO
+        ].indexOf(keyCode) >= 0 || keyCode == 9 && !empty //  otherwice there are no keyup (true at least for '9-tab'),
         ) {
-            // no keydown for this
-            if (empty) {
-              onTabForEmpty(); // filter is empty, nothing to reset
-            }
-          } else if (keyCode == 8
+            event.preventDefault(); // '13-enter'  - prevention against form's default button 
+            // but doesn't help with bootsrap modal ESC or ENTER (close behaviour);
+          }
+
+        if ([38, 40].indexOf(keyCode) >= 0) event.preventDefault();
+
+        if (keyCode == 8
         /*backspace*/
         ) {
             // NOTE: this will process backspace only if there are no text in the input field
             // If user will find this inconvinient, we will need to calculate something like this
-            // this.isBackspaceAtStartPoint = (this.filterInput.selectionStart == 0 && this.filterInput.selectionEnd == 0);
+            // let isBackspaceAtStartPoint = (this.filterInput.selectionStart == 0 && this.filterInput.selectionEnd == 0);
             if (empty) {
               onBackspace();
             }
+          } // ---------------------------------------------------------------------------------
+          // NOTE: no preventDefault called in case of empty for 9-tab
+        else if (keyCode == 9
+          /*tab*/
+          ) {
+              // NOTE: no keydown for this (without preventDefaul after TAB keyup event will be targeted another element)  
+              if (empty) {
+                onTabForEmpty(); // hideChoices inside (and no filter reset since it is empty) 
+              }
+            } else if (keyCode == 27
+          /*esc*/
+          ) {
+              // NOTE: forbid the ESC to close the modal (in case the nonempty or dropdown is open)
+              if (!empty || stopEscKeyDownPropogation()) event.stopPropagation();
+            } else if (keyCode == 38) {
+            onKeyDownArrowUp();
+          } else if (keyCode == 40) {
+            onKeyDownArrowDown();
           }
       };
 
       var onFilterInputKeyUp = function onFilterInputKeyUp(event) {
-        var keyCode = event.which;
+        var keyCode = event.which; //var handler = keyUp[event.which/* key code */];
+        //handler();
 
         if (keyCode == 9) {
           onTabToCompleate();
@@ -1298,6 +1306,17 @@
         updateHiddenChoice(choice); // TODO: invite this.getIsOptionSelected
       };
 
+      _proto.UpdateOptionInserted = function UpdateOptionInserted(key) {
+        //let choice = this.choicesList[key]; // TODO: generalize index as key 
+        //updateDisabledChoice(choice, this.getIsOptionDisabled)
+        var option = options[key];
+        var newChoice = this.createChoice(option, key);
+        this.choicesList.splice(key, 0, newChoice);
+        this.aspect.hideChoices(); // always hide 1st
+
+        this.resetFilter();
+      };
+
       _proto.createPick = function createPick(choice) {
         var _this = this;
 
@@ -1652,6 +1671,8 @@
         function () {
           return _this4.keyDownArrow(true);
         }, // arrow down
+
+        /*onTabForEmpty*/
         function () {
           return _this4.aspect.hideChoices();
         }, // tab on empty
@@ -1678,11 +1699,6 @@
               _this4.aspect.showChoices();
             }
           }
-        }, // tab/enter "compleate hovered"
-
-        /*stopEscKeyDownPropogation */
-        function () {
-          return _this4.staticContent.isChoicesVisible();
         },
         /*onKeyUpEsc*/
         function () {
@@ -1693,7 +1709,12 @@
 
           _this4.resetFilter();
         }, // esc keyup 
+        // tab/enter "compleate hovered"
 
+        /*stopEscKeyDownPropogation */
+        function () {
+          return _this4.staticContent.isChoicesVisible();
+        },
         /*onInput*/
         function (filterInputValue, resetLength) {
           _this4.placeholderAspect.updatePlacehodlerVisibility();
