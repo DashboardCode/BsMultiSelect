@@ -109,6 +109,7 @@ export function MultiSelectInputAspect (
 
     function hideChoices() {
         resetMouseCandidateChoice();
+        resetHoveredChoice();
         if (isChoicesVisible())
         {
             setChoicesVisible(false);

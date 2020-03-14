@@ -54,10 +54,10 @@ export function List(){
     return {
         add(e){
             if (tail){
-                tail.next = {value:e, prev:tail};
+                tail.next = {value:e, prev:tail, next:null};
                 tail = tail.next;
             } else 
-                tail = {value:e}
+                tail = {value:e, prev:null, next:null}
             count++;
             let node = tail;
             function remove(){
@@ -85,11 +85,63 @@ export function List(){
     }
 }
 
+export function ListFacade(getPrev, setPrev, getNext, setNext){
+    var head = null, tail = null;
+    var count = 0;
+    var remove = (e) => {
+        if (getPrev(e)) {
+            setNext(getPrev(e), getNext(e))
+        }
+        if (getNext(e)) {
+             setPrev(getNext(e), getPrev(e))
+        }
+        if (tail == e) {
+            tail = getPrev(e);
+        }
+        if (head == e) {
+            head = null;
+        }
+        count--;
+    }
+    return {
+        add(e, prev){
+            if (!tail){
+                head = tail = e;
+            }
+            else {
+                if (!prev || prev===tail){
+                    setPrev(e, tail);
+                    setNext(tail, e);
+                    tail = e;
+                }
+                else{
+                    setPrev(e, prev);
+                    setNext(e, getNext(prev));
+                    setNext(prev, e);
+                    setPrev(e.next, e);
+                } 
+            }
+            count++;
+        },
+        remove, 
+        forEach(f){
+            forEachRecursion(f, tail);
+        },
+        getHead(){ return head },
+        getTail(){ return tail },
+        getCount(){ return count },
+        isEmpty(){ return count==0 },
+        reset(){ 
+            tail=head=null; 
+            count = 0; }
+    }
+}
+
 export function pushUnique(array, item){
     if(array.indexOf(item) == -1) {
         array.push(item);
             return true;
-        }
+    }
     return false;
 } 
 

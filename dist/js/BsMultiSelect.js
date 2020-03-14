@@ -1,5 +1,5 @@
 /*!
-  * DashboardCode BsMultiSelect v0.5.36 (https://dashboardcode.github.io/BsMultiSelect/)
+  * DashboardCode BsMultiSelect v0.5.37 (https://dashboardcode.github.io/BsMultiSelect/)
   * Copyright 2017-2020 Roman Pokrovskij (github user rpokrovskij)
   * Licensed under APACHE 2 (https://github.com/DashboardCode/BsMultiSelect/blob/master/LICENSE)
   */
@@ -336,32 +336,6 @@
       };
     }
 
-    function ChoicesPanel() {
-      var hoveredChoice = null;
-
-      function resetHoveredChoice() {
-        if (hoveredChoice) {
-          hoveredChoice.isHoverIn = false;
-          hoveredChoice.updateHoverIn();
-          hoveredChoice = null;
-        }
-      }
-
-      var item = {
-        getHoveredChoice: function getHoveredChoice() {
-          return hoveredChoice;
-        },
-        hoverIn: function hoverIn(choice) {
-          resetHoveredChoice();
-          hoveredChoice = choice;
-          hoveredChoice.isHoverIn = true;
-          hoveredChoice.updateHoverIn();
-        },
-        resetHoveredChoice: resetHoveredChoice
-      };
-      return item;
-    }
-
     function isBoolean(value) {
       return value === true || value === false;
     }
@@ -417,11 +391,14 @@
           if (tail) {
             tail.next = {
               value: e,
-              prev: tail
+              prev: tail,
+              next: null
             };
             tail = tail.next;
           } else tail = {
-            value: e
+            value: e,
+            prev: null,
+            next: null
           };
 
           count++;
@@ -459,6 +436,72 @@
         },
         reset: function reset() {
           tail = null;
+          count = 0;
+        }
+      };
+    }
+    function ListFacade(getPrev, setPrev, getNext, setNext) {
+      var head = null,
+          tail = null;
+      var count = 0;
+
+      var remove = function remove(e) {
+        if (getPrev(e)) {
+          setNext(getPrev(e), getNext(e));
+        }
+
+        if (getNext(e)) {
+          setPrev(getNext(e), getPrev(e));
+        }
+
+        if (tail == e) {
+          tail = getPrev(e);
+        }
+
+        if (head == e) {
+          head = null;
+        }
+
+        count--;
+      };
+
+      return {
+        add: function add(e, prev) {
+          if (!tail) {
+            head = tail = e;
+          } else {
+            if (!prev || prev === tail) {
+              setPrev(e, tail);
+              setNext(tail, e);
+              tail = e;
+            } else {
+              setPrev(e, prev);
+              setNext(e, getNext(prev));
+              setNext(prev, e);
+              setPrev(e.next, e);
+            }
+          }
+
+          count++;
+        },
+        remove: remove,
+        forEach: function forEach(f) {
+          forEachRecursion(f, tail);
+        },
+        getHead: function getHead() {
+          return head;
+        },
+        getTail: function getTail() {
+          return tail;
+        },
+        getCount: function getCount() {
+          return count;
+        },
+        isEmpty: function isEmpty() {
+          return count == 0;
+        },
+        reset: function reset() {
+          tail = head = null;
           count = 0;
         }
       };
@@ -550,6 +593,132 @@
           list.reset();
         }
       };
+    }
+
+    function setChoices(forEach, filterFacade, getFilterIn) {
+      filterFacade.reset();
+      forEach(function (choice) {
+        choice.prev = choice.next = null;
+
+        if (!choice.isOptionHidden) {
+          var v = getFilterIn(choice);
+          if (v) filterFacade.add(choice);
+          choice.isFilteredIn = v;
+          choice.updateVisible();
+        }
+      });
+    }
+
+    function ChoicesPanel() {
+      var choicesList = [];
+      var hoveredChoice = null;
+      var filterFacade = ListFacade(function (choice) {
+        return choice.prev;
+      }, function (choice, v) {
+        return choice.prev = v;
+      }, function (choice) {
+        return choice.next;
+      }, function (choice, v) {
+        return choice.next = v;
+      });
+
+      function resetHoveredChoice() {
+        if (hoveredChoice) {
+          hoveredChoice.isHoverIn = false;
+          hoveredChoice.updateHoverIn();
+          hoveredChoice = null;
+        }
+      }
+
+      function forEach(processChoice) {
+        for (var i = 0; i < choicesList.length; i++) {
+          var choice = choicesList[i];
+          processChoice(choice);
+        }
+      }
+
+      var item = {
+        push: function push(choice) {
+          if (!choice.isOptionHidden) {
+            filterFacade.add(choice);
+          }
+
+          choicesList.push(choice);
+        },
+        get: function get(key) {
+          return choicesList[key];
+        },
+        add: function add(key, choice) {
+          if (!choice.isOptionHidden) {
+            if (key == 0) filterFacade.add(choice);else {
+              var keyAfter = key - 1;
+              var afterChoice = choicesList[keyAfter];
+
+              while (afterChoice.isOptionHidden) {
+                keyAfter--;
+                afterChoice = choicesList[keyAfter];
+              }
+
+              filterFacade.add(choice, afterChoice);
+            }
+          }
+
+          choicesList.splice(key, 0, choice);
+        },
+        remove: function remove(key) {
+          filterFacade.remove(choicesList[key]);
+          choicesList.splice(key, 1);
+        },
+        forEach: forEach,
+        getFirstVisibleChoice: function getFirstVisibleChoice() {
+          return filterFacade.getHead();
+        },
+        getVisibleCount: function getVisibleCount() {
+          return filterFacade.getCount();
+        },
+        getHasVisible: function getHasVisible() {
+          return filterFacade.getCount() > 0;
+        },
+        getHoveredChoice: function getHoveredChoice() {
+          return hoveredChoice;
+        },
+        hoverIn: function hoverIn(choice) {
+          resetHoveredChoice();
+          hoveredChoice = choice;
+          hoveredChoice.isHoverIn = true;
+          hoveredChoice.updateHoverIn();
+        },
+        resetHoveredChoice: resetHoveredChoice,
+        setFilter: function setFilter(text) {
+          return setChoices(forEach, filterFacade, function (choice) {
+            return !choice.isOptionSelected && !choice.isOptionDisabled && choice.searchText.indexOf(text) >= 0;
+          });
+        },
+        resetFilter: function resetFilter() {
+          return setChoices(forEach, filterFacade, function () {
+            return true;
+          });
+        },
+        navigate: function navigate(down) {
+          if (down) {
+            return hoveredChoice === null ? filterFacade.getHead() : hoveredChoice.next;
+          } else {
+            return hoveredChoice === null ? filterFacade.getTail() : hoveredChoice.prev;
+          }
+        },
+        clear: function clear() {
+          choicesList = [];
+          filterFacade.reset();
+        },
+        dispose: function dispose() {
+          forEach(function (choice) {
+            if (choice.dispose) {
+              choice.dispose();
+            }
+          });
+        }
+      };
+      return item;
     }
 
     function PicksList() {
@@ -682,6 +851,7 @@
 
       function hideChoices() {
         resetMouseCandidateChoice();
+        resetHoveredChoice();
 
         if (isChoicesVisible()) {
           setChoicesVisible(false);
@@ -1040,9 +1210,12 @@
         isOptionSelected: isOptionSelected,
         isOptionDisabled: isOptionDisabled,
         isHoverIn: false,
-        isVisible: false,
-        visibleIndex: null,
+        isFilterIn: false,
+        prev: null,
+        next: null,
         searchText: option.text.toLowerCase().trim(),
+        insertAfter: null,
+        remove: null,
         updateDisabled: null,
         updateSelected: null,
         // internal state handlers
@@ -1087,47 +1260,9 @@
         choice.isOptionHidden = newIsOptionHidden;
         if (!choice.isOptionHidden) choice.updateHidden();
       }
-    }
-    function isVisibleChoice(choice) {
-      return choice.isFilteredIn;
-      /*&& !choice.isOptionHidden*/
-    }
-
-    function filterMultiSelectData(choice, isFilteredIn, visibleIndex) {
-      choice.isFilteredIn = isFilteredIn;
-      choice.visibleIndex = visibleIndex;
-      choice.updateVisible();
-    }
-
-    function resetChoices(choicesList) {
-      for (var i = 0; i < choicesList.length; i++) {
-        var choice = choicesList[i];
-
-        if (!choice.isOptionHidden) {
-          filterMultiSelectData(choice, true, i);
-        }
-      }
-    }
-
-    function collectFilterChoices(choicesList, text) {
-      var list = [];
-      var j = 0;
-
-      for (var i = 0; i < choicesList.length; i++) {
-        var choice = choicesList[i];
-
-        if (!choice.isOptionHidden) {
-          if (choice.isOptionSelected || choice.isOptionDisabled || choice.isOptionHidden || choice.searchText.indexOf(text) < 0) {
-            filterMultiSelectData(choice, false, null);
-          } else {
-            filterMultiSelectData(choice, true, j++);
-            list.push(choice);
-          }
-        }
-      }
-
-      return list;
-    }
+    } // export function isVisibleChoice(choice){
+    //     return choice.isFilteredIn /*&& !choice.isOptionHidden*/
+    // }
 
     var MultiSelect = /*#__PURE__*/function () {
       function MultiSelect(getOptions, common, getIsComponentDisabled, setSelected, getIsOptionDisabled, getIsOptionHidden, staticContent, pickContentGenerator, choiceContentGenerator, labelAdapter, placeholderText, isRtl, onChange, css, popper, window) {
@@ -1154,7 +1289,6 @@
         this.stylingComposite = null;
         this.onChange = onChange;
         this.getIsComponentDisabled = getIsComponentDisabled;
-        this.resetChoicesList();
       }
 
       var _proto = MultiSelect.prototype;
@@ -1163,15 +1297,6 @@
         var success = false;
         if (choice.isOptionSelected || !choice.isOptionDisabled) success = setOptionSelected(choice, !choice.isOptionSelected, this.setSelected);
         return success;
-      };
-
-      _proto.resetChoicesList = function resetChoicesList() {
-        this.choicesList = [];
-        this.filteredChoicesList = null;
-      };
-
-      _proto.getVisibleChoicesList = function getVisibleChoicesList() {
-        return this.filteredChoicesList ? this.filteredChoicesList : this.choicesList;
       };
 
       _proto.resetFilter = function resetFilter() {
@@ -1185,8 +1310,7 @@
 
       _proto.processEmptyInput = function processEmptyInput() {
         this.placeholderAspect.updateEmptyInputWidth();
-        resetChoices(this.choicesList);
-        this.filteredChoicesList = null;
+        this.choicesPanel.resetFilter();
       } // -----------------------------------------------------------------------------------------------------------------------
       ;
 
@@ -1219,13 +1343,13 @@
       };
 
       _proto.SelectAll = function SelectAll() {
+        var _this = this;
+
         this.aspect.hideChoices(); // always hide 1st
 
-        for (var i = 0; i < this.choicesList.length; i++) {
-          var choice = this.choicesList[i];
-          if (!choice.isOptionSelected && !choice.isOptionDisabled && !choice.isOptionHidden) setOptionSelected(choice, true, this.setSelected);
-        }
-
+        this.choicesPanel.forEach(function (choice) {
+          if (!choice.isOptionSelected && !choice.isOptionDisabled && !choice.isOptionHidden) setOptionSelected(choice, true, _this.setSelected);
+        });
         this.resetFilter();
       };
 
@@ -1242,7 +1366,7 @@
         //         multiSelectData.choice.remove();
         // }
 
-        this.resetChoicesList();
+        this.choicesPanel.clear();
         this.picksList.clear();
         this.placeholderAspect.updatePlacehodlerVisibility();
       };
@@ -1260,7 +1384,7 @@
           this.UpdateOptionDisabled(i);
         }
       } // UpdateOption(key){
-      //     let choice = this.choicesList[key]; // TODO: 
+      //     let choice = this.choicesPanel.get(key); // TODO: 
       //     updateDisabledChoice(choice, this.getIsOptionDisabled)
       //     updateSelectedChoice(choice)
       //     // TODO REFRESH the content
@@ -1268,7 +1392,7 @@
       ;
 
       _proto.UpdateOptionDisabled = function UpdateOptionDisabled(key) {
-        var choice = this.choicesList[key]; // TODO: generalize index as key 
+        var choice = this.choicesPanel.get(key); // TODO: generalize index as key 
 
         updateDisabledChoice(choice, this.getIsOptionDisabled);
       };
@@ -1282,13 +1406,13 @@
       };
 
       _proto.UpdateOptionSelected = function UpdateOptionSelected(key) {
-        var choice = this.choicesList[key]; // TODO: generalize index as key 
+        var choice = this.choicesPanel.get(key); // TODO: generalize index as key 
 
         updateSelectedChoice(choice); // TODO: invite this.getIsOptionSelected
       };
 
       _proto.SetOptionSelected = function SetOptionSelected(key, value) {
-        var choice = this.choicesList[key];
+        var choice = this.choicesPanel.get(key);
         setOptionSelected(choice, value, this.setSelected);
       };
 
@@ -1301,24 +1425,43 @@
       };
 
       _proto.UpdateOptionHidden = function UpdateOptionHidden(key) {
-        var choice = this.choicesList[key]; // TODO: generalize index as key 
+        var choice = this.choicesPanel.get(key); // TODO: generalize index as key 
 
         updateHiddenChoice(choice); // TODO: invite this.getIsOptionSelected
       };
 
-      _proto.UpdateOptionInserted = function UpdateOptionInserted(key) {
-        //let choice = this.choicesList[key]; // TODO: generalize index as key 
-        //updateDisabledChoice(choice, this.getIsOptionDisabled)
+      _proto.UpdateOptionAdded = function UpdateOptionAdded(key) {
+        // TODO: generalize index as key 
+        var options = this.getOptions();
         var option = options[key];
-        var newChoice = this.createChoice(option, key);
-        this.choicesList.splice(key, 0, newChoice);
+        var newChoice;
+
+        if (key == 0) {
+          newChoice = this.createChoice(option);
+        } else {
+          var tmp = this.choicesPanel.get(key - 1);
+          newChoice = tmp.insertAfter ? tmp.insertAfter(option) : this.createChoice(option);
+        }
+
+        this.choicesPanel.add(key, newChoice);
         this.aspect.hideChoices(); // always hide 1st
 
-        this.resetFilter();
+        this.choicesPanel.resetFilter();
+      };
+
+      _proto.UpdateOptionRemoved = function UpdateOptionRemoved(key) {
+        // TODO: generalize index as key 
+        var choice = this.choicesPanel.get(key);
+        if (choice.remove) choice.remove();
+        choice.dispose();
+        this.choicesPanel.remove(key);
+        this.aspect.hideChoices(); // always hide 1st
+
+        this.choicesPanel.resetFilter();
       };
 
       _proto.createPick = function createPick(choice) {
-        var _this = this;
+        var _this2 = this;
 
         var _this$staticContent$c = this.staticContent.createPickElement(),
             pickElement = _this$staticContent$c.pickElement,
@@ -1331,13 +1474,13 @@
         var pickContent = this.pickContentGenerator(pickElement);
         var pick = {
           disableRemove: function disableRemove() {
-            return pickContent.disableRemove(_this.getIsComponentDisabled());
+            return pickContent.disableRemove(_this2.getIsComponentDisabled());
           },
           setData: function setData() {
             return pickContent.setData(choice.option);
           },
           disable: function disable() {
-            return pickContent.disable(_this.getIsOptionDisabled(choice.option));
+            return pickContent.disable(_this2.getIsOptionDisabled(choice.option));
           },
           remove: null,
           //visible: () => setVisible( !choice.isOptionHidden ),
@@ -1370,11 +1513,11 @@
           choice.updateDisabled = choiceUpdateDisabledBackup;
           choice.updateDisabled(); // make "true disabled" without it checkbox looks disabled
 
-          if (_this.picksList.getCount() == 0) _this.placeholderAspect.updatePlacehodlerVisibility();
+          if (_this2.picksList.getCount() == 0) _this2.placeholderAspect.updatePlacehodlerVisibility();
         };
 
         var setSelectedFalse = function setSelectedFalse() {
-          return setOptionSelected(choice, false, _this.setSelected);
+          return setOptionSelected(choice, false, _this2.setSelected);
         };
 
         pick.remove = setSelectedFalse;
@@ -1383,43 +1526,32 @@
         return removePick;
       };
 
-      _proto.createChoice = function (_createChoice) {
-        function createChoice(_x, _x2, _x3) {
-          return _createChoice.apply(this, arguments);
-        }
-
-        createChoice.toString = function () {
-          return _createChoice.toString();
-        };
-
-        return createChoice;
-      }(function (option, i, afterElement) {
-        var _this2 = this;
+      _proto.createChoice = function createChoice(option, prevVisibleChoice, prevVisibleChoiceElement) {
+        var _this3 = this;
 
         var isOptionHidden = this.getIsOptionHidden(option);
         var isOptionSelected = option.selected;
         var isOptionDisabled = this.getIsOptionDisabled(option);
         var choice = Choice(option, isOptionSelected, isOptionDisabled, isOptionHidden);
 
-        if (!isOptionHidden) {
+        if (isOptionHidden) {
+          choice.insertAfter = prevVisibleChoice ? prevVisibleChoice.insertAfter : null;
+        } else {
           var _this$staticContent$c2 = this.staticContent.createChoiceElement(),
               choiceElement = _this$staticContent$c2.choiceElement,
               setVisible = _this$staticContent$c2.setVisible,
-              attach = _this$staticContent$c2.attach; // choice.delete = () => {
-          //     removeElement(choiceElement);
-          // }
-          //choice.choiceElement=choiceElement;
+              attach = _this$staticContent$c2.attach;
 
+          choice.insertAfter = function (option) {
+            var nextChoice = _this3.createChoice(option, choice, choiceElement);
 
-          choice.insertAfter = function (option, i) {
-            var nextChoice = createChoice(option, i, choiceElement);
             return nextChoice;
           };
 
           var choiceContent = this.choiceContentGenerator(choiceElement, function () {
-            _this2.toggleOptionSelected(choice);
+            _this3.toggleOptionSelected(choice);
 
-            _this2.filterPanel.setFocus();
+            _this3.filterPanel.setFocus();
           });
 
           var updateSelectedChoiceContent = function updateSelectedChoiceContent() {
@@ -1432,24 +1564,28 @@
           };
 
           var createPick = function createPick() {
-            var removePick = _this2.createPick(choice);
+            var removePick = _this3.createPick(choice);
 
             pickTools.updateSelectedFalse = removePick;
           };
 
           pickTools.updateSelectedTrue = createPick;
 
+          choice.remove = function () {
+            removeElement(choiceElement);
+            if (pickTools.updateSelectedFalse) pickTools.updateSelectedFalse();
+          };
+
           choice.updateSelected = function () {
             updateSelectedChoiceContent();
             if (choice.isOptionSelected) pickTools.updateSelectedTrue();else pickTools.updateSelectedFalse();
 
-            _this2.onChange();
+            _this3.onChange();
           };
 
           var unbindChoiceElement = this.aspect.adoptChoiceElement(choice, choiceElement);
           choice.isFilteredIn = true;
-          choice.visibleIndex = i;
-          attach(afterElement);
+          attach(prevVisibleChoiceElement);
           choiceContent.setData(choice.option);
 
           choice.updateHoverIn = function () {
@@ -1457,7 +1593,7 @@
           };
 
           choice.updateVisible = function () {
-            return setVisible(isVisibleChoice(choice));
+            return setVisible(choice.isFilteredIn);
           }; // updateHidden
 
 
@@ -1487,23 +1623,27 @@
         }
 
         return choice;
-      });
+      };
 
       _proto.updateDataImpl = function updateDataImpl() {
-        var _this3 = this;
+        var _this4 = this;
 
         var fillChoices = function fillChoices() {
-          var options = _this3.getOptions();
+          var options = _this4.getOptions();
+
+          var prevChoice = null;
 
           for (var i = 0; i < options.length; i++) {
             var option = options[i];
+            if (i == 0) prevChoice = _this4.createChoice(option); // insertAfter
+            else {
+                prevChoice = prevChoice.insertAfter ? prevChoice.insertAfter(option) : _this4.createChoice(option);
+              }
 
-            var choice = _this3.createChoice(option, i);
-
-            _this3.choicesList.push(choice);
+            _this4.choicesPanel.push(prevChoice);
           }
 
-          _this3.aspect.alignToFilterInputItemLocation(false);
+          _this4.aspect.alignToFilterInputItemLocation(false);
         }; // browsers can change select value as part of "autocomplete" (IE11) 
         // or "show preserved on go back" (Chrome) after page is loaded but before "ready" event;
         // but they never "restore" selected-disabled options.
@@ -1523,15 +1663,7 @@
       };
 
       _proto.Dispose = function Dispose() {
-        sync(this.aspect.hideChoices, this.picksList.dispose, this.filterPanel.dispose, this.labelAdapter.dispose, this.aspect.dispose, this.staticContent.dispose);
-
-        for (var i = 0; i < this.choicesList.length; i++) {
-          var choice = this.choicesList[i];
-
-          if (choice.dispose) {
-            choice.dispose();
-          }
-        }
+        sync(this.aspect.hideChoices, this.picksList.dispose, this.filterPanel.dispose, this.labelAdapter.dispose, this.aspect.dispose, this.staticContent.dispose, this.choicesPanel.dispose);
       };
 
       _proto.UpdateAppearance = function UpdateAppearance() {
@@ -1555,10 +1687,10 @@
         var isEmpty = false;
         if (text == '') isEmpty = true;else {
           // check if exact match, otherwise new search
-          this.filteredChoicesList = collectFilterChoices(this.choicesList, text);
+          this.choicesPanel.setFilter(text);
 
-          if (this.filteredChoicesList.length == 1) {
-            var fullMatchChoice = this.filteredChoicesList[0];
+          if (this.choicesPanel.getVisibleCount() == 1) {
+            var fullMatchChoice = this.choicesPanel.getFirstVisibleChoice();
 
             if (fullMatchChoice.searchText == text) {
               setOptionSelected(fullMatchChoice, true, this.setSelected);
@@ -1570,17 +1702,14 @@
           }
         }
         if (isEmpty) this.processEmptyInput();else resetLength();
-        this.choicesPanel.resetHoveredChoice();
         this.aspect.eventLoopFlag.set(); // means disable some mouse handlers; otherwise we will get "Hover On MouseEnter" when filter's changes should remove hover
 
-        var choicesList = this.getVisibleChoicesList();
-
-        if (choicesList.length == 1) {
-          // NOTE: do not require the resetHoveredChoice since we sure that there is no hovered (menu was just opened)
-          this.choicesPanel.hoverIn(choicesList[0]);
+        if (this.choicesPanel.getVisibleCount() == 1) {
+          this.choicesPanel.resetHoveredChoice();
+          this.choicesPanel.hoverIn(this.choicesPanel.getFirstVisibleChoice());
         }
 
-        if (this.getVisibleChoicesList().length > 0) {
+        if (this.choicesPanel.getHasVisible()) {
           this.aspect.alignToFilterInputItemLocation(true); // we need it to support case when textbox changes its place because of line break (texbox grow with each key press)
 
           this.aspect.showChoices();
@@ -1596,7 +1725,7 @@
           var wasToggled = this.toggleOptionSelected(hoveredChoice);
 
           if (wasToggled) {
-            this.choicesPanel.resetHoveredChoice();
+            //this.choicesPanel.resetHoveredChoice();
             this.aspect.hideChoices();
             this.resetFilter();
           }
@@ -1604,38 +1733,7 @@
       };
 
       _proto.keyDownArrow = function keyDownArrow(down) {
-        var visibleChoices = this.getVisibleChoicesList();
-        var length = visibleChoices.length;
-        var iChoice = null;
-        var hoveredChoice = this.choicesPanel.getHoveredChoice();
-
-        if (length > 0) {
-          if (down) {
-            var i = hoveredChoice === null ? 0 : hoveredChoice.visibleIndex + 1;
-
-            while (i < length) {
-              iChoice = visibleChoices[i];
-
-              if (isVisibleChoice(iChoice)) {
-                break;
-              }
-
-              i++;
-            }
-          } else {
-            var _i = hoveredChoice === null ? length - 1 : hoveredChoice.visibleIndex - 1;
-
-            while (_i >= 0) {
-              iChoice = visibleChoices[_i];
-
-              if (isVisibleChoice(iChoice)) {
-                break;
-              }
-
-              _i--;
-            }
-          }
-        }
+        var iChoice = this.choicesPanel.navigate(down);
 
         if (iChoice) {
           this.choicesPanel.hoverIn(iChoice);
@@ -1645,81 +1743,80 @@
       };
 
       _proto.init = function init() {
-        var _this4 = this;
+        var _this5 = this;
 
         this.filterPanel = FilterPanel(this.staticContent.filterInputElement, function () {
-          _this4.staticContent.setIsFocusIn(true);
+          _this5.staticContent.setIsFocusIn(true);
 
-          _this4.staticContent.toggleFocusStyling();
+          _this5.staticContent.toggleFocusStyling();
         }, // focus in - show dropdown
         function () {
-          if (!_this4.aspect.getSkipFocusout()) // skip initiated by mouse click (we manage it different way)
+          if (!_this5.aspect.getSkipFocusout()) // skip initiated by mouse click (we manage it different way)
             {
-              _this4.resetFilter(); // if do not do this we will return to filtered list without text filter in input
+              _this5.resetFilter(); // if do not do this we will return to filtered list without text filter in input
 
 
-              _this4.staticContent.setIsFocusIn(false);
+              _this5.staticContent.setIsFocusIn(false);
 
-              _this4.staticContent.toggleFocusStyling();
+              _this5.staticContent.toggleFocusStyling();
             }
 
-          _this4.aspect.resetSkipFocusout();
+          _this5.aspect.resetSkipFocusout();
         }, // focus out - hide dropdown
         function () {
-          return _this4.keyDownArrow(false);
+          return _this5.keyDownArrow(false);
         }, // arrow up
         function () {
-          return _this4.keyDownArrow(true);
+          return _this5.keyDownArrow(true);
         }, // arrow down
 
         /*onTabForEmpty*/
         function () {
-          return _this4.aspect.hideChoices();
+          return _this5.aspect.hideChoices();
         }, // tab on empty
         function () {
-          _this4.picksList.removePicksTail();
+          _this5.picksList.removePicksTail();
 
-          _this4.aspect.alignToFilterInputItemLocation(false);
+          _this5.aspect.alignToFilterInputItemLocation(false);
         }, // backspace - "remove last"
 
         /*onTabToCompleate*/
         function () {
-          if (_this4.staticContent.isChoicesVisible()) {
-            _this4.hoveredToSelected();
+          if (_this5.staticContent.isChoicesVisible()) {
+            _this5.hoveredToSelected();
           }
         },
         /*onEnterToCompleate*/
         function () {
-          if (_this4.staticContent.isChoicesVisible()) {
-            _this4.hoveredToSelected();
+          if (_this5.staticContent.isChoicesVisible()) {
+            _this5.hoveredToSelected();
           } else {
-            if (_this4.getVisibleChoicesList().length > 0) {
-              _this4.aspect.alignToFilterInputItemLocation(true);
+            if (_this5.choicesPanel.getHasVisible()) {
+              _this5.aspect.alignToFilterInputItemLocation(true);
 
-              _this4.aspect.showChoices();
+              _this5.aspect.showChoices();
             }
           }
         },
         /*onKeyUpEsc*/
         function () {
-          _this4.aspect.hideChoices(); // always hide 1st
+          _this5.aspect.hideChoices(); // always hide 1st
+          //this.choicesPanel.resetHoveredChoice();
 
 
-          _this4.choicesPanel.resetHoveredChoice();
-
-          _this4.resetFilter();
+          _this5.resetFilter();
         }, // esc keyup 
         // tab/enter "compleate hovered"
 
         /*stopEscKeyDownPropogation */
         function () {
-          return _this4.staticContent.isChoicesVisible();
+          return _this5.staticContent.isChoicesVisible();
         },
         /*onInput*/
         function (filterInputValue, resetLength) {
-          _this4.placeholderAspect.updatePlacehodlerVisibility();
+          _this5.placeholderAspect.updatePlacehodlerVisibility();
 
-          _this4.input(filterInputValue, resetLength);
+          _this5.input(filterInputValue, resetLength);
         }); // attach filterInputElement
 
         this.staticContent.pickFilterElement.appendChild(this.staticContent.filterInputElement);
@@ -1729,27 +1826,27 @@
         this.picksList = PicksList();
         this.choicesPanel = ChoicesPanel();
         this.placeholderAspect = PlaceholderAspect(this.placeholderText, function () {
-          return _this4.picksList.isEmpty() && _this4.filterPanel.isEmpty();
+          return _this5.picksList.isEmpty() && _this5.filterPanel.isEmpty();
         }, this.staticContent.picksElement, this.staticContent.filterInputElement, this.css);
         this.placeholderAspect.updateEmptyInputWidth();
         this.aspect = MultiSelectInputAspect(this.window, function () {
-          return _this4.staticContent.appendToContainer();
+          return _this5.staticContent.appendToContainer();
         }, this.staticContent.filterInputElement, this.staticContent.picksElement, this.staticContent.choicesElement, function () {
-          return _this4.staticContent.isChoicesVisible();
+          return _this5.staticContent.isChoicesVisible();
         }, function (visible) {
-          return _this4.staticContent.setChoicesVisible(visible);
+          return _this5.staticContent.setChoicesVisible(visible);
         }, function () {
-          return _this4.choicesPanel.resetHoveredChoice();
+          return _this5.choicesPanel.resetHoveredChoice();
         }, function (choice) {
-          return _this4.choicesPanel.hoverIn(choice);
+          return _this5.choicesPanel.hoverIn(choice);
         }, function () {
-          return _this4.resetFilter();
+          return _this5.resetFilter();
         }, function () {
-          return _this4.getVisibleChoicesList().length == 0;
+          return !_this5.choicesPanel.getHasVisible();
         },
         /*onClick*/
         function (event) {
-          if (!_this4.filterPanel.isEventTarget(event)) _this4.filterPanel.setFocus();
+          if (!_this5.filterPanel.isEventTarget(event)) _this5.filterPanel.setFocus();
         }, this.isRtl, this.popper);
         this.staticContent.attachContainer();
         this.updateDataImpl();
@@ -2303,7 +2400,6 @@
         addStyling(pickElement, css.pick);
         return {
           pickElement: pickElement,
-          //setVisible: (isVisible) => pickElement.style.display = isVisible ? 'block': 'none' //,
           attach: function attach() {
             return picksElement.insertBefore(pickElement, pickFilterElement);
           }
@@ -2319,7 +2415,7 @@
             return choiceElement.style.display = isVisible ? 'block' : 'none';
           },
           attach: function attach(element) {
-            if (element) element.parentNode.insertBefore(choiceElement, element.nextSibling);else choicesElement.appendChild(choiceElement);
+            if (element) element.parentNode.insertBefore(choiceElement, element.nextSibling);else choicesElement.insertBefore(choiceElement, choicesElement.firstChild);
           }
         };
       };

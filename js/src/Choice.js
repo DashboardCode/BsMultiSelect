@@ -8,10 +8,15 @@ export function Choice(option, isOptionSelected, isOptionDisabled, isOptionHidde
         
         isHoverIn: false,
 
-        isVisible: false,
-        visibleIndex: null, 
+        isFilterIn: false,
+
+        prev: null, 
+        next: null, 
         searchText: option.text.toLowerCase().trim(),
 
+        insertAfter: null,
+        remove: null,
+        
         updateDisabled: null,
         updateSelected: null,
 
@@ -65,6 +70,6 @@ export function updateHiddenChoice(choice, getIsOptionHidden){
     }
 }
 
-export function isVisibleChoice(choice){
-    return choice.isFilteredIn /*&& !choice.isOptionHidden*/
-}
+// export function isVisibleChoice(choice){
+//     return choice.isFilteredIn /*&& !choice.isOptionHidden*/
+// }

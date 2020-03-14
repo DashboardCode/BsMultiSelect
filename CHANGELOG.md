@@ -1,5 +1,6 @@
 # CHANGELOG
 ````
+0.5.37 - UpdateOptionRemoved, UpdateOptionInserted improved renamed to UpdateOptionAdded
 0.5.36 - UpdateOptionInserted new method
 0.5.35 - optimizations
 0.5.34 - optimizations
