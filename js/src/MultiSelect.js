@@ -210,7 +210,8 @@ export class MultiSelect {
         var choice = this.choicesPanel.get(key);
         if (choice.remove)
             choice.remove();
-        choice.dispose();
+        if (choice.dispose)
+            choice.dispose();
         
         this.choicesPanel.remove(key);
 
@@ -279,6 +280,7 @@ export class MultiSelect {
 
         if (isOptionHidden) {
             choice.insertAfter = prevVisibleChoice ? prevVisibleChoice.insertAfter : null;
+            choice.dispose = ()=>{ choice.insertAfter=null; choice.dispose = null;};
         }
         else { 
             var {choiceElement, setVisible, attach} = this.staticContent.createChoiceElement();

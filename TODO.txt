@@ -1,4 +1,8 @@
--4. refactore isOptionHidden. Hidden's should be precreated. 
+-5. check IE 11
+
+-4. refactore isOptionHidden. Hidden's should be precreated. hidden two mode: showing and ignoring picks
+
+-4a. extract "fake input component", extract autosuggestion component
 
 -4b. multicolumn dropdown; fake input extracted as component.
 

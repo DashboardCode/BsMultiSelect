@@ -1,5 +1,5 @@
 /*!
-  * DashboardCode BsMultiSelect v0.5.37 (https://dashboardcode.github.io/BsMultiSelect/)
+  * DashboardCode BsMultiSelect v0.5.38 (https://dashboardcode.github.io/BsMultiSelect/)
   * Copyright 2017-2020 Roman Pokrovskij (github user rpokrovskij)
   * Licensed under APACHE 2 (https://github.com/DashboardCode/BsMultiSelect/blob/master/LICENSE)
   */
@@ -1369,7 +1369,7 @@ var MultiSelect = /*#__PURE__*/function () {
     // TODO: generalize index as key 
     var choice = this.choicesPanel.get(key);
     if (choice.remove) choice.remove();
-    choice.dispose();
+    if (choice.dispose) choice.dispose();
     this.choicesPanel.remove(key);
     this.aspect.hideChoices(); // always hide 1st
 
@@ -1452,6 +1452,11 @@ var MultiSelect = /*#__PURE__*/function () {
 
     if (isOptionHidden) {
       choice.insertAfter = prevVisibleChoice ? prevVisibleChoice.insertAfter : null;
+
+      choice.dispose = function () {
+        choice.insertAfter = null;
+        choice.dispose = null;
+      };
     } else {
       var _this$staticContent$c2 = this.staticContent.createChoiceElement(),
           choiceElement = _this$staticContent$c2.choiceElement,
