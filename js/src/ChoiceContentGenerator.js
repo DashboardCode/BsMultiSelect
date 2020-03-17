@@ -1,4 +1,4 @@
-import  {EventBinder} from './ToolsDom';
+import  {EventBinder, containsAndSelf} from './ToolsDom';
 import  {addStyling, toggleStyling} from './ToolsStyling';
 
 export function choiceContentGenerator(choiceElement, common, css, toggle){
@@ -22,7 +22,7 @@ export function choiceContentGenerator(choiceElement, common, css, toggle){
     eventBinder.bind(choiceCheckBoxElement, "change", toggle);
     eventBinder.bind(choiceElement, "click", 
         event => {
-            if (choiceElement === event.target || choiceElement.contains(event.target)) 
+            if (containsAndSelf(choiceElement, event.target)) 
                 toggle();
         }
     );

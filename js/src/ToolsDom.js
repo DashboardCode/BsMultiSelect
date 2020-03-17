@@ -26,6 +26,10 @@ export function closestByAttribute(element, attributeName, attribute){
     return closest(element, e => e.getAttribute(attributeName)===attribute )
 }
 
+export function containsAndSelf(node, otherNode ){
+    return node === otherNode || node.contains(otherNode);  
+}
+
 export function getDataGuardedWithPrefix(element, prefix, name){
     var tmp1 = element.getAttribute('data-' + prefix + '-' + name);
     if (tmp1) {

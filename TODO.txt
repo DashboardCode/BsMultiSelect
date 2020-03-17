@@ -1,4 +1,6 @@
--5. check IE 11
+-6. click on opened should close 
+
+-5. check IE 11 (after restart)
 
 -4. refactore isOptionHidden. Hidden's should be precreated. hidden two mode: showing and ignoring picks
 

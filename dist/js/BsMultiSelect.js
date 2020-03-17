@@ -1,5 +1,5 @@
 /*!
-  * DashboardCode BsMultiSelect v0.5.38 (https://dashboardcode.github.io/BsMultiSelect/)
+  * DashboardCode BsMultiSelect v0.5.39 (https://dashboardcode.github.io/BsMultiSelect/)
   * Copyright 2017-2020 Roman Pokrovskij (github user rpokrovskij)
   * Licensed under APACHE 2 (https://github.com/DashboardCode/BsMultiSelect/blob/master/LICENSE)
   */
@@ -118,6 +118,9 @@
       return closest(element, function (e) {
         return e.getAttribute(attributeName) === attribute;
       });
+    }
+    function containsAndSelf(node, otherNode) {
+      return node === otherNode || node.contains(otherNode);
     }
     function getDataGuardedWithPrefix(element, prefix, name) {
       var tmp1 = element.getAttribute('data-' + prefix + '-' + name);
@@ -772,7 +775,7 @@
 
       var documentMouseup = function documentMouseup(event) {
         // if click outside container - close dropdown
-        if (!(choicesElement === event.target || picksElement === event.target || choicesElement.contains(event.target) || picksElement.contains(event.target))) {
+        if (!containsAndSelf(choicesElement, event.target) && !containsAndSelf(picksElement, event.target)) {
           hideChoices();
           resetFilter();
         }
@@ -816,9 +819,13 @@
 
       function alignAndShowChoices(event) {
         if (preventDefaultClickEvent != event) {
-          if (!isChoiceEmpty()) {
-            alignToFilterInputItemLocation(true);
-            showChoices();
+          if (isChoicesVisible()) {
+            hideChoices();
+          } else {
+            if (!isChoiceEmpty()) {
+              alignToFilterInputItemLocation(true);
+              showChoices();
+            }
           }
         }
 
@@ -960,6 +967,7 @@
         },
         disable: function disable(isComponentDisabled) {
           if (isComponentDisabled) componentDisabledEventBinder.unbind();else componentDisabledEventBinder.bind(picksElement, "click", function (event) {
+            // console.log('showChoices');
             onClick(event);
             alignAndShowChoices(event);
           }); // OPEN dropdown
@@ -2329,7 +2337,7 @@
       var eventBinder = EventBinder();
       eventBinder.bind(choiceCheckBoxElement, "change", toggle);
       eventBinder.bind(choiceElement, "click", function (event) {
-        if (choiceElement === event.target || choiceElement.contains(event.target)) toggle();
+        if (containsAndSelf(choiceElement, event.target)) toggle();
       });
       return {
         setData: function setData(option) {

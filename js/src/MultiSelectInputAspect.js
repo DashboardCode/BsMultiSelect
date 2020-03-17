@@ -1,4 +1,4 @@
-import {EventBinder, EventLoopFlag} from './ToolsDom'
+import {EventBinder, EventLoopFlag, containsAndSelf} from './ToolsDom'
 
 export function MultiSelectInputAspect (
     window,
@@ -29,12 +29,7 @@ export function MultiSelectInputAspect (
 
     var documentMouseup = function(event) {
         // if click outside container - close dropdown
-        if (  !(choicesElement === event.target 
-                || picksElement === event.target 
-                || choicesElement.contains(event.target)
-                || picksElement.contains(event.target)
-               )
-            ) {
+        if ( !containsAndSelf(choicesElement, event.target) && !containsAndSelf(picksElement, event.target)) {
             hideChoices();
             resetFilter();
         }
@@ -74,10 +69,14 @@ export function MultiSelectInputAspect (
 
     function alignAndShowChoices(event){
         if (preventDefaultClickEvent != event) {
-            if (!isChoiceEmpty())
-            {
-                alignToFilterInputItemLocation(true);
-                showChoices();
+            if (isChoicesVisible()){
+                hideChoices()
+            }else {
+                if (!isChoiceEmpty())
+                {
+                    alignToFilterInputItemLocation(true);
+                    showChoices();
+                }
             }
         }
         preventDefaultClickEvent=null;
@@ -222,7 +221,8 @@ export function MultiSelectInputAspect (
             if (isComponentDisabled)
                 componentDisabledEventBinder.unbind();
             else
-                componentDisabledEventBinder.bind(picksElement,"click", event => {
+                componentDisabledEventBinder.bind(picksElement, "click", event => {
+                    // console.log('showChoices');
                     onClick(event);
                     alignAndShowChoices(event);
                 });  // OPEN dropdown
