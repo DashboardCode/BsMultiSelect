@@ -967,7 +967,6 @@
         },
         disable: function disable(isComponentDisabled) {
           if (isComponentDisabled) componentDisabledEventBinder.unbind();else componentDisabledEventBinder.bind(picksElement, "click", function (event) {
-            // console.log('showChoices');
             onClick(event);
             alignAndShowChoices(event);
           }); // OPEN dropdown

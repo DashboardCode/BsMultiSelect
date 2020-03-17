@@ -222,7 +222,6 @@ export function MultiSelectInputAspect (
                 componentDisabledEventBinder.unbind();
             else
                 componentDisabledEventBinder.bind(picksElement, "click", event => {
-                    // console.log('showChoices');
                     onClick(event);
                     alignAndShowChoices(event);
                 });  // OPEN dropdown
