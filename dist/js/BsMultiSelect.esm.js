@@ -556,10 +556,7 @@ function ChoicesPanel() {
 
   var item = {
     push: function push(choice) {
-      if (!choice.isOptionHidden) {
-        filterFacade.add(choice);
-      }
-
+      if (!choice.isOptionHidden) filterFacade.add(choice);
       choicesList.push(choice);
     },
     get: function get(key) {
