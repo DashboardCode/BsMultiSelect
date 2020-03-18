@@ -9,8 +9,7 @@ function setChoices(forEach, filterFacade, getFilterIn) {
             var v = getFilterIn(choice);
             if (v)
                 filterFacade.add(choice);
-            choice.isFilteredIn = v;
-            choice.updateVisible();
+            choice.setVisible(v);
         }
     });
 }
@@ -28,8 +27,7 @@ export function ChoicesPanel()
 
     function resetHoveredChoice() {
         if (hoveredChoice) {
-            hoveredChoice.isHoverIn = false;
-            hoveredChoice.updateHoverIn()
+            hoveredChoice.setHoverIn(false)
             hoveredChoice = null;
         }
     }
@@ -44,10 +42,8 @@ export function ChoicesPanel()
 
     var item = {
         push : (choice) => {
-
-            if (!choice.isOptionHidden ){
+            if (!choice.isOptionHidden)
                 filterFacade.add(choice);
-            }
             choicesList.push(choice);
         },
         get: (key) => choicesList[key],
@@ -82,8 +78,7 @@ export function ChoicesPanel()
         hoverIn(choice){
             resetHoveredChoice(); 
             hoveredChoice = choice;
-            hoveredChoice.isHoverIn = true;
-            hoveredChoice.updateHoverIn()
+            hoveredChoice.setHoverIn(true)
         },
         resetHoveredChoice,
         
@@ -97,9 +92,9 @@ export function ChoicesPanel()
         
         navigate: (down) => {
             if (down) {
-                return hoveredChoice===null?filterFacade.getHead() : hoveredChoice.next;
+                return hoveredChoice?hoveredChoice.next: filterFacade.getHead();
             } else {
-                return hoveredChoice===null?filterFacade.getTail() : hoveredChoice.prev;
+                return hoveredChoice?hoveredChoice.prev: filterFacade.getTail();
             }
         },
         clear:()=>{
@@ -116,4 +111,3 @@ export function ChoicesPanel()
     }
     return item;
 }
-

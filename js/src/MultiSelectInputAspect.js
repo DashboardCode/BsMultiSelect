@@ -211,10 +211,10 @@ export function MultiSelectInputAspect (
         },
         alignToFilterInputItemLocation,
         
-        getSkipFocusout : function() {
+        getSkipFocusout() {
              return skipFocusout;
         },
-        resetSkipFocusout : function() {
+        resetSkipFocusout() {
              skipFocusout=false;
         },
         disable(isComponentDisabled){

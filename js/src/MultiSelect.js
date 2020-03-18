@@ -229,32 +229,26 @@ export class MultiSelect {
             setData: () => pickContent.setData(choice.option),
             disable: () => pickContent.disable( this.getIsOptionDisabled(choice.option) ),
             remove: null,
-            //visible: () => setVisible( !choice.isOptionHidden ),
             dispose: () => { 
                 detach(); 
                 pickContent.dispose(); 
-                pick.disableRemove=null; pick.setData=null; pick.disable=null; pick.remove=null; // setVisible=null;
+                pick.disableRemove=null; pick.setData=null; pick.disable=null; pick.remove=null; 
                 pick.dispose=null;  
             }, 
         }
         pick.setData();
         pick.disableRemove();
-        //pick.visible();
         
         attach();
         let choiceUpdateDisabledBackup = choice.updateDisabled;
         choice.updateDisabled = composeSync(choiceUpdateDisabledBackup, pick.disable);
 
-        //let choiceUpdateVisibleBackup = choice.updateVisible;
-        //choice.updateVisible = composeSync(choiceUpdateDisabledBackup, pick.visible);
 
         var removeFromList = this.picksList.addPick(pick);
         let removePick = () => {
             removeFromList();
             pick.dispose();
 
-            //choice.updateVisible = choiceUpdateVisibleBackup; 
-            //choice.updateVisible();
             choice.updateDisabled = choiceUpdateDisabledBackup; 
             choice.updateDisabled(); // make "true disabled" without it checkbox looks disabled
             
@@ -329,11 +323,15 @@ export class MultiSelect {
 
             choiceContent.setData(choice.option);
             
-            choice.updateHoverIn = () => {
+            choice.setHoverIn = (v) => {
+                choice.isHoverIn =v ;
                 choiceContent.hoverIn(choice.isHoverIn);
             }
 
-            choice.updateVisible = () => setVisible(choice.isFilteredIn)
+            choice.setVisible = (v) => {
+                choice.isFilteredIn = v;
+                setVisible(choice.isFilteredIn)
+            }
 
             // updateHidden
             choice.updateDisabled = () => {
@@ -348,8 +346,8 @@ export class MultiSelect {
                 choice.updateDisabled = null;
 
                 // not real data manipulation but internal state
-                choice.updateVisible = null; // TODO: refactor it there should be 3 types of not visibility: for hidden, for filtered out, for optgroup, for message item
-                choice.updateHoverIn = null;
+                choice.setVisible = null; // TODO: refactor it there should be 3 types of not visibility: for hidden, for filtered out, for optgroup, for message item
+                choice.setHoverIn = null;
 
                 choice.dispose = null;
             }

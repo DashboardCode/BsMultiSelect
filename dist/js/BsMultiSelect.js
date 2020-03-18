@@ -1,5 +1,5 @@
 /*!
-  * DashboardCode BsMultiSelect v0.5.39 (https://dashboardcode.github.io/BsMultiSelect/)
+  * DashboardCode BsMultiSelect v0.5.40 (https://dashboardcode.github.io/BsMultiSelect/)
   * Copyright 2017-2020 Roman Pokrovskij (github user rpokrovskij)
   * Licensed under APACHE 2 (https://github.com/DashboardCode/BsMultiSelect/blob/master/LICENSE)
   */
@@ -606,8 +606,7 @@
         if (!choice.isOptionHidden) {
           var v = getFilterIn(choice);
           if (v) filterFacade.add(choice);
-          choice.isFilteredIn = v;
-          choice.updateVisible();
+          choice.setVisible(v);
         }
       });
     }
@@ -627,8 +626,7 @@
 
       function resetHoveredChoice() {
         if (hoveredChoice) {
-          hoveredChoice.isHoverIn = false;
-          hoveredChoice.updateHoverIn();
+          hoveredChoice.setHoverIn(false);
           hoveredChoice = null;
         }
       }
@@ -688,8 +686,7 @@
         hoverIn: function hoverIn(choice) {
           resetHoveredChoice();
           hoveredChoice = choice;
-          hoveredChoice.isHoverIn = true;
-          hoveredChoice.updateHoverIn();
+          hoveredChoice.setHoverIn(true);
         },
         resetHoveredChoice: resetHoveredChoice,
         setFilter: function setFilter(text) {
@@ -704,9 +701,9 @@
         },
         navigate: function navigate(down) {
           if (down) {
-            return hoveredChoice === null ? filterFacade.getHead() : hoveredChoice.next;
+            return hoveredChoice ? hoveredChoice.next : filterFacade.getHead();
           } else {
-            return hoveredChoice === null ? filterFacade.getTail() : hoveredChoice.prev;
+            return hoveredChoice ? hoveredChoice.prev : filterFacade.getTail();
           }
         },
         clear: function clear() {
@@ -1225,9 +1222,9 @@
         remove: null,
         updateDisabled: null,
         updateSelected: null,
-        // internal state handlers
-        updateVisible: null,
-        updateHoverIn: null,
+        // internal state handlers, so they do not have "update semantics"
+        setVisible: null,
+        setHoverIn: null,
         dispose: null
       };
       return choice;
@@ -1490,33 +1487,26 @@
             return pickContent.disable(_this2.getIsOptionDisabled(choice.option));
           },
           remove: null,
-          //visible: () => setVisible( !choice.isOptionHidden ),
           dispose: function dispose() {
             detach();
             pickContent.dispose();
             pick.disableRemove = null;
             pick.setData = null;
             pick.disable = null;
-            pick.remove = null; // setVisible=null;
-
+            pick.remove = null;
             pick.dispose = null;
           }
         };
         pick.setData();
-        pick.disableRemove(); //pick.visible();
-
+        pick.disableRemove();
         attach();
         var choiceUpdateDisabledBackup = choice.updateDisabled;
-        choice.updateDisabled = composeSync(choiceUpdateDisabledBackup, pick.disable); //let choiceUpdateVisibleBackup = choice.updateVisible;
-        //choice.updateVisible = composeSync(choiceUpdateDisabledBackup, pick.visible);
-
+        choice.updateDisabled = composeSync(choiceUpdateDisabledBackup, pick.disable);
         var removeFromList = this.picksList.addPick(pick);
 
         var removePick = function removePick() {
           removeFromList();
-          pick.dispose(); //choice.updateVisible = choiceUpdateVisibleBackup; 
-          //choice.updateVisible();
-
+          pick.dispose();
           choice.updateDisabled = choiceUpdateDisabledBackup;
           choice.updateDisabled(); // make "true disabled" without it checkbox looks disabled
 
@@ -1600,12 +1590,14 @@
           attach(prevVisibleChoiceElement);
           choiceContent.setData(choice.option);
 
-          choice.updateHoverIn = function () {
+          choice.setHoverIn = function (v) {
+            choice.isHoverIn = v;
             choiceContent.hoverIn(choice.isHoverIn);
           };
 
-          choice.updateVisible = function () {
-            return setVisible(choice.isFilteredIn);
+          choice.setVisible = function (v) {
+            choice.isFilteredIn = v;
+            setVisible(choice.isFilteredIn);
           }; // updateHidden
 
 
@@ -1620,9 +1612,9 @@
             choice.updateSelected = null;
             choice.updateDisabled = null; // not real data manipulation but internal state
 
-            choice.updateVisible = null; // TODO: refactor it there should be 3 types of not visibility: for hidden, for filtered out, for optgroup, for message item
+            choice.setVisible = null; // TODO: refactor it there should be 3 types of not visibility: for hidden, for filtered out, for optgroup, for message item
 
-            choice.updateHoverIn = null;
+            choice.setHoverIn = null;
             choice.dispose = null;
           };
 

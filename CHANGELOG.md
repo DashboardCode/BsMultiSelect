@@ -1,6 +1,7 @@
 # CHANGELOG
 ````
-0.5.39 - optimisations, better UX (I hope) click on picks with opened dropdown - closes dropdown
+0.5.40 - optimizations
+0.5.39 - optimizations, better UX (I hope) click on picks with opened dropdown - closes dropdown
 0.5.38 - problem disposing hidden options resolved
 0.5.37 - UpdateOptionRemoved, UpdateOptionInserted improved renamed to UpdateOptionAdded
 0.5.36 - UpdateOptionInserted new method

@@ -20,9 +20,9 @@ export function Choice(option, isOptionSelected, isOptionDisabled, isOptionHidde
         updateDisabled: null,
         updateSelected: null,
 
-        // internal state handlers
-        updateVisible: null,
-        updateHoverIn: null,
+        // internal state handlers, so they do not have "update semantics"
+        setVisible: null,
+        setHoverIn: null,
         
         dispose: null
     }
