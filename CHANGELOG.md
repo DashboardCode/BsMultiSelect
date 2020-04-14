@@ -1,5 +1,6 @@
 # CHANGELOG
 ````
+0.5.41 - High risk update: Changed API - UpdateOptionHidden; Additionally two problems solved: (filter do not reset hover, default empty validation message)
 0.5.40 - optimizations
 0.5.39 - optimizations, better UX (I hope) click on picks with opened dropdown - closes dropdown
 0.5.38 - problem disposing hidden options resolved

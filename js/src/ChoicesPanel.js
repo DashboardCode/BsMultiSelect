@@ -1,5 +1,5 @@
 import {ListFacade} from './ToolsJs'
-
+import {getNextNonHidden} from './Choice'
 function setChoices(forEach, filterFacade, getFilterIn) {
     filterFacade.reset();
     forEach( choice => {
@@ -25,6 +25,13 @@ export function ChoicesPanel()
         (choice, v)=>choice.next=v, 
     );
 
+    let listFacade = ListFacade(
+        (choice)=>choice.itemPrev, 
+        (choice, v)=>choice.itemPrev=v, 
+        (choice)=>choice.itemNext, 
+        (choice, v)=>choice.itemNext=v, 
+    );
+
     function resetHoveredChoice() {
         if (hoveredChoice) {
             hoveredChoice.setHoverIn(false)
@@ -40,36 +47,42 @@ export function ChoicesPanel()
         }
     }
 
+    var push = (choice) => {
+        if (!choice.isOptionHidden){
+            filterFacade.add(choice);
+        }
+        listFacade.add(choice);
+        choicesList.push(choice);
+    }
     var item = {
-        push : (choice) => {
-            if (!choice.isOptionHidden)
-                filterFacade.add(choice);
-            choicesList.push(choice);
-        },
+        push,
         get: (key) => choicesList[key],
         add: (key, choice) => {
-            if (!choice.isOptionHidden){
-                if (key==0)
-                    filterFacade.add(choice);
-                else {
-                    var keyAfter = key-1;
-                    var afterChoice = choicesList[keyAfter];
-                    
-                    while(afterChoice.isOptionHidden)
-                    {
-                        keyAfter--;
-                        afterChoice = choicesList[keyAfter];
-                    }
-                    filterFacade.add(choice, afterChoice);
+            if (key>=choicesList.length) {
+                push(choice);
+            }
+            else {
+                let choiceBefore = choicesList[key];
+                listFacade.add(choice, choiceBefore);
+                choicesList.splice(key, 0, choice);
+                if (!choice.isOptionHidden){
+                    let choiceNonhiddenBefore = getNextNonHidden(choice);
+                    filterFacade.add(choice, choiceNonhiddenBefore);
                 }
             }
-            choicesList.splice(key, 0, choice);
         },
         remove: (key) => {
-            filterFacade.remove(choicesList[key]);
+            var choice = choicesList[key];
+            filterFacade.remove(choice);
+            listFacade.remove(choice);
             choicesList.splice(key, 1);
         },
-
+        updateHiddenOn: (choice) => {
+            filterFacade.remove(choice);
+        },
+        updateHiddenOff: (choice, beforeChoice) => {
+            filterFacade.add(choice, beforeChoice);
+        },
         forEach,
         getFirstVisibleChoice: ()=> filterFacade.getHead(),
         getVisibleCount: () => filterFacade.getCount(),
@@ -100,6 +113,7 @@ export function ChoicesPanel()
         clear:()=>{
             choicesList = [];
             filterFacade.reset();
+            listFacade.reset();
         },
         dispose:()=>{
             forEach(function(choice){

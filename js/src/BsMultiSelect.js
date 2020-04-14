@@ -102,6 +102,7 @@ export function BsMultiSelect(element, environment, settings){
     let staticContentGenerator = def(configuration.staticContentGenerator, defStaticContentGenerator);
     let pickContentGenerator = def(configuration.pickContentGenerator, defPickContentGenerator);
     let choiceContentGenerator = def(configuration.choiceContentGenerator, defChoiceContentGenerator);
+
     let valueMissingMessage = defCall(configuration.valueMissingMessage,
         ()=> getDataGuardedWithPrefix(element,"bsmultiselect","value-missing-message"),
         defValueMissingMessage)

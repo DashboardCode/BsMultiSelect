@@ -104,21 +104,28 @@ export function ListFacade(getPrev, setPrev, getNext, setNext){
         count--;
     }
     return {
-        add(e, prev){
+        add(e, next){
             if (!tail){
                 head = tail = e;
             }
             else {
-                if (!prev || prev===tail){
+                if (!next){
                     setPrev(e, tail);
                     setNext(tail, e);
                     tail = e;
-                }
+                } 
                 else{
-                    setPrev(e, prev);
-                    setNext(e, getNext(prev));
-                    setNext(prev, e);
-                    setPrev(e.next, e);
+                    if (next===head)
+                        head=e;
+                    let prev = getPrev(next);
+                    setNext(e, next);
+                    setPrev(next, e);
+                    if (prev){
+                        setPrev(e, prev);
+                        setNext(prev, e);
+                    } else {
+                        setPrev(e, null);
+                    }
                 } 
             }
             count++;
@@ -168,8 +175,11 @@ export function def(...functions){
 export function defCall(...functions){
     for (let f of functions) 
         if (f) {
-            if (f instanceof Function)
-                return f()
+            if (f instanceof Function){
+                let tmp =  f();
+                if (tmp)
+                    return tmp;
+            }
             else
                 return f 
         }

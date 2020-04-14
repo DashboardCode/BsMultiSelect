@@ -51,8 +51,7 @@ export function staticContentGenerator(element, createElement, containerClass, f
         addStyling(pickElement, css.pick);
         return {
             pickElement, 
-            attach: () => 
-                picksElement.insertBefore(pickElement, pickFilterElement)
+            attach: () => picksElement.insertBefore(pickElement, pickFilterElement)
         };
     }
 
@@ -62,12 +61,7 @@ export function staticContentGenerator(element, createElement, containerClass, f
         return {
             choiceElement, 
             setVisible: (isVisible) => choiceElement.style.display = isVisible ? 'block': 'none',
-            attach: (element) => { 
-                if (element)
-                    element.parentNode.insertBefore(choiceElement, element.nextSibling);
-                else
-                    choicesElement.insertBefore(choiceElement, choicesElement.firstChild);
-            }
+            attach: (element) => choicesElement.insertBefore(choiceElement, element)
         };
     }
 
