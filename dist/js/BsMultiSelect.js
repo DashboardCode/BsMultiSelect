@@ -1,5 +1,5 @@
 /*!
-  * DashboardCode BsMultiSelect v0.5.41 (https://dashboardcode.github.io/BsMultiSelect/)
+  * DashboardCode BsMultiSelect v0.5.42 (https://dashboardcode.github.io/BsMultiSelect/)
   * Copyright 2017-2020 Roman Pokrovskij (github user rpokrovskij)
   * Licensed under APACHE 2 (https://github.com/DashboardCode/BsMultiSelect/blob/master/LICENSE)
   */
@@ -1810,18 +1810,24 @@
         if (isEmpty) this.processEmptyInput();else resetLength();
         this.aspect.eventLoopFlag.set(); // means disable some mouse handlers; otherwise we will get "Hover On MouseEnter" when filter's changes should remove hover
 
-        this.choicesPanel.resetHoveredChoice();
+        var visibleCount = this.choicesPanel.getVisibleCount();
 
-        if (this.choicesPanel.getVisibleCount() == 1) {
-          this.choicesPanel.hoverIn(this.choicesPanel.getFirstVisibleChoice());
-        }
+        if (visibleCount > 0) {
+          var panelIsVisble = this.staticContent.isChoicesVisible();
 
-        if (this.choicesPanel.getHasVisible()) {
-          this.aspect.alignToFilterInputItemLocation(true); // we need it to support case when textbox changes its place because of line break (texbox grow with each key press)
+          if (!panelIsVisble) {
+            this.aspect.alignToFilterInputItemLocation(true); // we need it to support case when textbox changes its place because of line break (texbox grow with each key press)
 
-          this.aspect.showChoices();
+            this.aspect.showChoices();
+          }
+
+          if (visibleCount == 1) {
+            this.choicesPanel.hoverIn(this.choicesPanel.getFirstVisibleChoice());
+          } else {
+            if (panelIsVisble) this.choicesPanel.resetHoveredChoice();
+          }
         } else {
-          this.aspect.hideChoices();
+          if (this.staticContent.isChoicesVisible()) this.aspect.hideChoices();
         }
       };
 

@@ -491,19 +491,23 @@ export class MultiSelect {
         
         this.aspect.eventLoopFlag.set(); // means disable some mouse handlers; otherwise we will get "Hover On MouseEnter" when filter's changes should remove hover
 
-        this.choicesPanel.resetHoveredChoice();
-        if (this.choicesPanel.getVisibleCount() == 1) {
-            
-            this.choicesPanel.hoverIn(
-                this.choicesPanel.getFirstVisibleChoice()
-                )
-        }
+        let visibleCount = this.choicesPanel.getVisibleCount();
 
-        if (this.choicesPanel.getHasVisible()) {
-            this.aspect.alignToFilterInputItemLocation(true); // we need it to support case when textbox changes its place because of line break (texbox grow with each key press)
-            this.aspect.showChoices();
-        } else {
-            this.aspect.hideChoices();
+        if (visibleCount>0){
+            let panelIsVisble = this.staticContent.isChoicesVisible();
+            if (!panelIsVisble){
+                this.aspect.alignToFilterInputItemLocation(true); // we need it to support case when textbox changes its place because of line break (texbox grow with each key press)
+                this.aspect.showChoices();
+            }
+            if (visibleCount == 1) {
+                this.choicesPanel.hoverIn(this.choicesPanel.getFirstVisibleChoice())
+            } else {
+                if (panelIsVisble)
+                    this.choicesPanel.resetHoveredChoice();
+            }   
+        }else{
+            if (this.staticContent.isChoicesVisible())
+                this.aspect.hideChoices();
         }
     }
 

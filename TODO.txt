@@ -1,4 +1,8 @@
--6. click on opened should close 
+-6. UpdateOption (for all selected, hidden and disabled)
+
+-6b. UpdateOptionContent ?
+
+-6c. Move option manipulation api to plugin, move disabled to plugin, hidden to plugin?
 
 -5. check IE 11 (after restart)
 
@@ -85,7 +89,7 @@ file icons: https://marketplace.visualstudio.com/items?itemName=robertohuertasm.
 git history: https://marketplace.visualstudio.com/items?itemName=donjayamanne.githistory
 
 
-Use thos VS Code options:
+Use those VS Code options:
     Files: Auto Save
     Smooth Scrolling
     Inline Values

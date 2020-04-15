@@ -11,6 +11,8 @@ Snippets:
 
 4. [ES6 module, no jquery](https://dashboardcode.github.io/BsMultiSelect/snippetEsm.html)
 
+5. [Options manipulation API](https://dashboardcode.github.io/BsMultiSelect/snippetJs.html)
+
 CodePen, use it for bug reporting: https://codepen.io/rpokrovskij/pen/yLymQwW 
 
 There are many similar plugins but this reuses maximum of Bootrap 4 styles/classes and code. In many cases it can be adjusted for your Bootsrap theme without editing CSS or with minimal efforts. 
@@ -29,9 +31,9 @@ BsMultiSelect follows Bootstrap 4 conventions and use the same instruments (babe
 `npm install @dashboardcode/bsmultiselect`
 
 # CDN
-https://cdn.jsdelivr.net/npm/@dashboardcode/bsmultiselect@0.5.41/dist/js/BsMultiSelect.min.js
-https://cdn.jsdelivr.net/npm/@dashboardcode/bsmultiselect@0.5.41/dist/js/BsMultiSelect.esm.min.js
-https://cdn.jsdelivr.net/npm/@dashboardcode/bsmultiselect@0.5.41/dist/css/BsMultiSelect.min.css
+https://cdn.jsdelivr.net/npm/@dashboardcode/bsmultiselect@0.5.42/dist/js/BsMultiSelect.min.js
+https://cdn.jsdelivr.net/npm/@dashboardcode/bsmultiselect@0.5.42/dist/js/BsMultiSelect.esm.min.js
+https://cdn.jsdelivr.net/npm/@dashboardcode/bsmultiselect@0.5.42/dist/css/BsMultiSelect.min.css
 
 
 # Architecture
@@ -128,8 +130,8 @@ Inspite plugin subscribes to form's `reset` event listener, there are no `Mutati
 
 If you change original `select`'s appearance after `BsMultiSelecte` was created then you will need to push changes to component with corresponded methods `UpdateIsValid`, `UpdateDisabled`, `UpdateSize`, `UpdateWasValidated`, `UpdateValidy`. Or All together with `UpdateAppearance`.
 
-If you change options/items properties (text, `selected`, `disabled`, `hidden`) or if you delete them or insert new items you need to push changes to component with  `UpdateData`. There is specific `UpdateOptionsSelected` method synchronize only `selected` states of options and `UpdateOptionsDisabled` to synchronize only `disabled` states of options.
- 
+If you change options/items properties (text, `selected`, `disabled`, `hidden`) or if you delete them or insert new items you need to push changes to component with  `UpdateData`. There is specific `UpdateOptionsSelected` method synchronize only `selected` states of options, `UpdateOptionsDisabled` to synchronize only `disabled` states of options, `UpdateOptionsHidden` for `hidden`.
+
 `Update` method works like "update all": it call `UpdateAppearance` and `UpdateData`.
 
 Samples:
@@ -153,6 +155,15 @@ Other way to access the component's instance is using `data` :
               // there you are sure that component is attached
           }
 ````         
+
+To update specific option `UpdateOptionSelected`,`UpdateOptionDisabled`,`UpdateOptionHidden` (*Option* here without *s*) with index argument could be used:
+
+````
+          var index =15;
+          bsMultiSelect.UpdateOptionSelected(index);
+          bsMultiSelect.UpdateOptionDisabled(index);
+          bsMultiSelect.UpdateOptionHidden(index);
+````    
 
 ## jQuery factories
 
