@@ -1,5 +1,6 @@
 # CHANGELOG
 ````
+0.5.43 - optimizations
 0.5.42 - optimizations
 0.5.41 - High risk update: Changed API - UpdateOptionHidden; Additionally two problems solved: (filter do not reset hover, default empty validation message)
 0.5.40 - optimizations

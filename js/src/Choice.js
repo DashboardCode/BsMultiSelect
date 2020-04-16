@@ -1,10 +1,11 @@
 export function Choice(option, isOptionSelected, isOptionDisabled, isOptionHidden){
     let choice = {
         option: option,
-        isOptionHidden: isOptionHidden,
+        
         isOptionSelected: isOptionSelected,
         isOptionDisabled: isOptionDisabled,
-
+        isOptionHidden: isOptionHidden,
+        
         updateHidden: null,
         updateDisabled: null,
         updateSelected: null,
@@ -96,7 +97,3 @@ export function getNextNonHidden(choice) { // TODO get next visible
     }
     return getNextNonHidden(next)
 }
-
-// export function isVisibleChoice(choice){
-//     return choice.isFilteredIn /*&& !choice.isOptionHidden*/
-// }

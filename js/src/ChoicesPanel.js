@@ -76,6 +76,7 @@ export function ChoicesPanel()
             filterFacade.remove(choice);
             listFacade.remove(choice);
             choicesList.splice(key, 1);
+            return choice;
         },
         updateHiddenOn: (choice) => {
             filterFacade.remove(choice);

@@ -119,11 +119,12 @@
             font-weight: $font-weight-normal;
             color: $dropdown-link-color;
             text-align: inherit;
+            
             white-space: nowrap;
             background-color: transparent;
             border: 0;
             .custom-control{ // BS problem: without this dropdown menu's custom checkboxes on inline form justified center
-                justify-content: initial;
+                justify-content: flex-start; // 'initial' works well but not for IE11
             }
             .custom-control-input.disabled ~ .custom-control-label {
                 color: $custom-control-label-disabled-color;

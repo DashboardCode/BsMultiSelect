@@ -57,7 +57,7 @@ export const cssPatch = {
     pickContent_disabled: {opacity: '.65'}, 
     
     // used in choiceContentGenerator
-    choiceContent: {justifyContent: 'initial'}, // BS problem: without this on inline form menu items justified center
+    choiceContent: {justifyContent: 'flex-start'}, // BS problem: without this on inline form menu items justified center
     choiceLabel: {color: 'inherit'}, // otherwise BS .was-validated set its color
     choiceCheckBox: {color: 'inherit'},
     choiceLabel_disabled: {opacity: '.65'}  // more flexible than {color: '#6c757d'}; note: avoid opacity on pickElement's border; TODO write to BS4 

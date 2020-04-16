@@ -144,12 +144,12 @@ export class MultiSelect {
         }
     }
 
-    // UpdateOption(key){
-    //     let choice = this.choicesPanel.get(key); // TODO: 
-    //     updateDisabledChoice(choice, this.getIsOptionDisabled)
-    //     updateSelectedChoice(choice)
-    //     // TODO REFRESH the content
-    // }
+    UpdateOption(key){
+        let choice = this.choicesPanel.get(key)
+        updateDisabledChoice(choice, this.getIsOptionDisabled)
+        updateHiddenChoice(choice, this.getIsOptionHidden)
+        updateSelectedChoice(choice)
+    }
 
     UpdateOptionDisabled(key){
         let choice = this.choicesPanel.get(key); // TODO: generalize index as key 
@@ -186,7 +186,6 @@ export class MultiSelect {
     }
 
     UpdateOptionAdded(key){  // TODO: generalize index as key 
-
         let options = this.getOptions();
         let option = options[key];
         let choice = this.createChoice(option);
@@ -202,23 +201,15 @@ export class MultiSelect {
             choice.choiceElementAttach(nextChoice?.choiceElement);
         }
         choice.updateHidden = () => this.updateHidden(choice);
-
-        //this.aspect.hideChoices(); // always hide 1st
-        //this.choicesPanel.resetFilter();
     }
 
     UpdateOptionRemoved(key){ // TODO: generalize index as key 
-
-        var choice = this.choicesPanel.get(key);
-        if (choice.remove)
-            choice.remove();
-        if (choice.dispose)
-            choice.dispose();
-        
-        this.choicesPanel.remove(key);
-
-        this.aspect.hideChoices(); // always hide 1st
+        this.aspect.hideChoices(); // always hide 1st, then reset filter
         this.choicesPanel.resetFilter();
+
+        var choice = this.choicesPanel.remove(key);
+        choice.remove?.();
+        choice.dispose?.();
     }
 
     createPick(choice){

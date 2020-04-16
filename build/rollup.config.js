@@ -7,20 +7,20 @@ const pkg     = require(path.resolve(__dirname, '../package.json'))
 const year    = new Date().getFullYear()
 const isEsm   = process.env.ESM === 'true'
 
-let presets = [
-  [
-      "@babel/env",
-      {
-          loose: true,
-          modules: false,
-          targets: {
-              browsers: [
-                  "chrome  >= 45", "Firefox >= 38", "Explorer >= 10", "edge >= 12", "iOS >= 9","Safari >= 9","Android >= 4.4","Opera >= 30"]
-          },
-          debug: true
-      }
-  ]
-];
+// let presets = [
+//   [
+//       "@babel/env",
+//       {
+//           loose: true,
+//           modules: false,
+//           targets: {
+//               browsers: [
+//                   "chrome  >= 45", "Firefox >= 38", "Explorer >= 10", "edge >= 12", "iOS >= 9","Safari >= 9","Android >= 4.4","Opera >= 30"]
+//           },
+//           debug: true
+//       }
+//   ]
+// ];
 
 
 
@@ -31,8 +31,8 @@ let globals   = {'jquery': 'jQuery', 'popper.js': 'Popper'};
 // NOTE: with Babel 7 babel helpers are managed in .babelrc
 const plugins = [
   babel({
-    exclude: 'node_modules/**',
-    presets: presets
+    exclude: 'node_modules/**'//,
+    //presets: presets
   })]
 
 module.exports = {

@@ -1,5 +1,5 @@
 /*!
-  * DashboardCode BsMultiSelect v0.5.42 (https://dashboardcode.github.io/BsMultiSelect/)
+  * DashboardCode BsMultiSelect v0.5.43 (https://dashboardcode.github.io/BsMultiSelect/)
   * Copyright 2017-2020 Roman Pokrovskij (github user rpokrovskij)
   * Licensed under APACHE 2 (https://github.com/DashboardCode/BsMultiSelect/blob/master/LICENSE)
   */
@@ -528,9 +528,9 @@ function ObservableLambda(func) {
 function Choice(option, isOptionSelected, isOptionDisabled, isOptionHidden) {
   var choice = {
     option: option,
-    isOptionHidden: isOptionHidden,
     isOptionSelected: isOptionSelected,
     isOptionDisabled: isOptionDisabled,
+    isOptionHidden: isOptionHidden,
     updateHidden: null,
     updateDisabled: null,
     updateSelected: null,
@@ -601,9 +601,7 @@ function getNextNonHidden(choice) {
   }
 
   return getNextNonHidden(next);
-} // export function isVisibleChoice(choice){
-//     return choice.isFilteredIn /*&& !choice.isOptionHidden*/
-// }
+}
 
 function setChoices(forEach, filterFacade, getFilterIn) {
   filterFacade.reset();
@@ -687,6 +685,7 @@ function ChoicesPanel() {
       filterFacade.remove(choice);
       listFacade.remove(choice);
       choicesList.splice(key, 1);
+      return choice;
     },
     updateHiddenOn: function updateHiddenOn(choice) {
       filterFacade.remove(choice);
@@ -1351,13 +1350,14 @@ var MultiSelect = /*#__PURE__*/function () {
     for (var i = 0; i < options.length; i++) {
       this.UpdateOptionDisabled(i);
     }
-  } // UpdateOption(key){
-  //     let choice = this.choicesPanel.get(key); // TODO: 
-  //     updateDisabledChoice(choice, this.getIsOptionDisabled)
-  //     updateSelectedChoice(choice)
-  //     // TODO REFRESH the content
-  // }
-  ;
+  };
+
+  _proto.UpdateOption = function UpdateOption(key) {
+    var choice = this.choicesPanel.get(key);
+    updateDisabledChoice(choice, this.getIsOptionDisabled);
+    updateHiddenChoice(choice, this.getIsOptionHidden);
+    updateSelectedChoice(choice);
+  };
 
   _proto.UpdateOptionDisabled = function UpdateOptionDisabled(key) {
     var choice = this.choicesPanel.get(key); // TODO: generalize index as key 
@@ -1417,20 +1417,17 @@ var MultiSelect = /*#__PURE__*/function () {
 
     choice.updateHidden = function () {
       return _this2.updateHidden(choice);
-    }; //this.aspect.hideChoices(); // always hide 1st
-    //this.choicesPanel.resetFilter();
-
+    };
   };
 
   _proto.UpdateOptionRemoved = function UpdateOptionRemoved(key) {
     // TODO: generalize index as key 
-    var choice = this.choicesPanel.get(key);
-    if (choice.remove) choice.remove();
-    if (choice.dispose) choice.dispose();
-    this.choicesPanel.remove(key);
-    this.aspect.hideChoices(); // always hide 1st
+    this.aspect.hideChoices(); // always hide 1st, then reset filter
 
     this.choicesPanel.resetFilter();
+    var choice = this.choicesPanel.remove(key);
+    choice.remove == null ? void 0 : choice.remove();
+    choice.dispose == null ? void 0 : choice.dispose();
   };
 
   _proto.createPick = function createPick(choice) {
@@ -2673,7 +2670,7 @@ var cssPatch = {
   },
   // used in choiceContentGenerator
   choiceContent: {
-    justifyContent: 'initial'
+    justifyContent: 'flex-start'
   },
   // BS problem: without this on inline form menu items justified center
   choiceLabel: {
