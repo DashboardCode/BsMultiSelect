@@ -236,7 +236,6 @@ export class MultiSelect {
         let choiceUpdateDisabledBackup = choice.updateDisabled;
         choice.updateDisabled = composeSync(choiceUpdateDisabledBackup, pick.disable);
 
-
         var removeFromList = this.picksList.addPick(pick);
         let removePick = () => {
             removeFromList();
@@ -406,7 +405,6 @@ export class MultiSelect {
                 }
                 choice.updateHidden = () => this.updateHidden(choice);
             } 
-            this.aspect.alignToFilterInputItemLocation(false);
         }
         
 
@@ -487,7 +485,6 @@ export class MultiSelect {
         if (visibleCount>0){
             let panelIsVisble = this.staticContent.isChoicesVisible();
             if (!panelIsVisble){
-                this.aspect.alignToFilterInputItemLocation(true); // we need it to support case when textbox changes its place because of line break (texbox grow with each key press)
                 this.aspect.showChoices();
             }
             if (visibleCount == 1) {
@@ -507,7 +504,6 @@ export class MultiSelect {
         if (hoveredChoice){
             var wasToggled = this.toggleOptionSelected(hoveredChoice);
             if (wasToggled) {
-                //this.choicesPanel.resetHoveredChoice();
                 this.aspect.hideChoices();
                 this.resetFilter();
             }
@@ -519,7 +515,6 @@ export class MultiSelect {
         if (iChoice)
         {
             this.choicesPanel.hoverIn(iChoice);
-            this.aspect.alignToFilterInputItemLocation(true);
             this.aspect.showChoices();
         }
     }
@@ -544,10 +539,10 @@ export class MultiSelect {
             () => this.keyDownArrow(true),  // arrow down
             /*onTabForEmpty*/() => this.aspect.hideChoices(),  // tab on empty
             () => {
-                this.picksList.removePicksTail();
-                this.aspect.alignToFilterInputItemLocation(false);
+                let p = this.picksList.removePicksTail();
+                if (p)
+                    this.aspect.alignToFilterInputItemLocation();
             }, // backspace - "remove last"
-
 
             /*onTabToCompleate*/() => { 
                 if (this.staticContent.isChoicesVisible()) {
@@ -559,7 +554,6 @@ export class MultiSelect {
                     this.hoveredToSelected();
                 } else {
                     if (this.choicesPanel.getHasVisible()){
-                        this.aspect.alignToFilterInputItemLocation(true);
                         this.aspect.showChoices();
                     }
                 }

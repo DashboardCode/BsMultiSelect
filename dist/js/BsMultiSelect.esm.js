@@ -1,5 +1,5 @@
 /*!
-  * DashboardCode BsMultiSelect v0.5.43 (https://dashboardcode.github.io/BsMultiSelect/)
+  * DashboardCode BsMultiSelect v0.5.44 (https://dashboardcode.github.io/BsMultiSelect/)
   * Copyright 2017-2020 Roman Pokrovskij (github user rpokrovskij)
   * Licensed under APACHE 2 (https://github.com/DashboardCode/BsMultiSelect/blob/master/LICENSE)
   */
@@ -753,8 +753,10 @@ function PicksList() {
       return removeFromList;
     },
     removePicksTail: function removePicksTail() {
-      var i = list.getTail();
-      if (i) i.remove(); // always remove in this case
+      var pick = list.getTail();
+      if (pick) pick.remove(); // always remove in this case
+
+      return pick;
     },
     isEmpty: list.isEmpty,
     // function
@@ -786,8 +788,7 @@ function PicksList() {
 function MultiSelectInputAspect(window, appendToContainer, filterInputElement, picksElement, choicesElement, isChoicesVisible, setChoicesVisible, resetHoveredChoice, hoverIn, resetFilter, isChoiceEmpty, onClick, isRtl, Popper) {
   appendToContainer();
   var document = window.document;
-  var eventLoopFlag = EventLoopFlag(window); // showChoices
-
+  var eventLoopFlag = EventLoopFlag(window);
   var skipFocusout = false; // we want to escape the closing of the menu (because of focus out from) on a user's click inside the container
 
   var skipoutMousedown = function skipoutMousedown() {
@@ -833,48 +834,45 @@ function MultiSelectInputAspect(window, appendToContainer, filterInputElement, p
           // }
       );
   }*/
-
-  var filterInputItemOffsetLeft = null; // used to detect changes in input field position (by comparision with current value)
+  //var filterInputItemOffsetLeft = filterInputElement.offsetLeft; // used to detect changes in input field position (by comparision with current value)
 
   var preventDefaultClickEvent = null;
 
-  function alignAndShowChoices(event) {
-    if (preventDefaultClickEvent != event) {
-      if (isChoicesVisible()) {
-        hideChoices();
-      } else {
-        if (!isChoiceEmpty()) {
-          alignToFilterInputItemLocation(true);
-          showChoices();
-        }
-      }
-    }
-
-    preventDefaultClickEvent = null;
-  }
-
-  function alignToFilterInputItemLocation(force) {
-    var offsetLeft = filterInputElement.offsetLeft;
-
-    if (force || filterInputItemOffsetLeft != offsetLeft) {
-      // position changed
-      popper.update();
-      filterInputItemOffsetLeft = offsetLeft;
-    }
+  function alignToFilterInputItemLocation() {
+    popper.update(); // let offsetLeft = filterInputElement.offsetLeft;
+    // if (/*force ||*/ filterInputItemOffsetLeft !== offsetLeft) { // position changed
+    //     //
+    //     filterInputItemOffsetLeft = offsetLeft;
+    // }
   }
 
   var componentDisabledEventBinder = EventBinder();
 
   function showChoices() {
     if (!isChoicesVisible()) {
+      alignToFilterInputItemLocation();
       eventLoopFlag.set();
       setChoicesVisible(true); // add listeners that manages close dropdown on input's focusout and click outside container
-      //container.removeEventListener("mousedown", containerMousedown);
+      // container.removeEventListener("mousedown", containerMousedown);
 
       picksElement.addEventListener("mousedown", skipoutMousedown);
       choicesElement.addEventListener("mousedown", skipoutMousedown);
       document.addEventListener("mouseup", documentMouseup);
     }
+  }
+
+  function clickToShowChoices(event) {
+    onClick(event);
+
+    if (preventDefaultClickEvent != event) {
+      if (isChoicesVisible()) {
+        hideChoices();
+      } else {
+        if (!isChoiceEmpty()) showChoices();
+      }
+    }
+
+    preventDefaultClickEvent = null;
   }
 
   function hideChoices() {
@@ -987,10 +985,7 @@ function MultiSelectInputAspect(window, appendToContainer, filterInputElement, p
       skipFocusout = false;
     },
     disable: function disable(isComponentDisabled) {
-      if (isComponentDisabled) componentDisabledEventBinder.unbind();else componentDisabledEventBinder.bind(picksElement, "click", function (event) {
-        onClick(event);
-        alignAndShowChoices(event);
-      }); // OPEN dropdown
+      if (isComponentDisabled) componentDisabledEventBinder.unbind();else componentDisabledEventBinder.bind(picksElement, "click", clickToShowChoices);
     },
     eventLoopFlag: eventLoopFlag,
     hideChoices: hideChoices,
@@ -1660,8 +1655,6 @@ var MultiSelect = /*#__PURE__*/function () {
       for (var i = 0; i < options.length; i++) {
         _loop(i);
       }
-
-      _this5.aspect.alignToFilterInputItemLocation(false);
     }; // browsers can change select value as part of "autocomplete" (IE11) 
     // or "show preserved on go back" (Chrome) after page is loaded but before "ready" event;
     // but they never "restore" selected-disabled options.
@@ -1729,8 +1722,6 @@ var MultiSelect = /*#__PURE__*/function () {
       var panelIsVisble = this.staticContent.isChoicesVisible();
 
       if (!panelIsVisble) {
-        this.aspect.alignToFilterInputItemLocation(true); // we need it to support case when textbox changes its place because of line break (texbox grow with each key press)
-
         this.aspect.showChoices();
       }
 
@@ -1751,7 +1742,6 @@ var MultiSelect = /*#__PURE__*/function () {
       var wasToggled = this.toggleOptionSelected(hoveredChoice);
 
       if (wasToggled) {
-        //this.choicesPanel.resetHoveredChoice();
         this.aspect.hideChoices();
         this.resetFilter();
       }
@@ -1763,7 +1753,6 @@ var MultiSelect = /*#__PURE__*/function () {
 
     if (iChoice) {
       this.choicesPanel.hoverIn(iChoice);
-      this.aspect.alignToFilterInputItemLocation(true);
       this.aspect.showChoices();
     }
   };
@@ -1801,9 +1790,9 @@ var MultiSelect = /*#__PURE__*/function () {
       return _this6.aspect.hideChoices();
     }, // tab on empty
     function () {
-      _this6.picksList.removePicksTail();
+      var p = _this6.picksList.removePicksTail();
 
-      _this6.aspect.alignToFilterInputItemLocation(false);
+      if (p) _this6.aspect.alignToFilterInputItemLocation();
     }, // backspace - "remove last"
 
     /*onTabToCompleate*/
@@ -1818,8 +1807,6 @@ var MultiSelect = /*#__PURE__*/function () {
         _this6.hoveredToSelected();
       } else {
         if (_this6.choicesPanel.getHasVisible()) {
-          _this6.aspect.alignToFilterInputItemLocation(true);
-
           _this6.aspect.showChoices();
         }
       }

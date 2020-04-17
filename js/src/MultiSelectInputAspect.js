@@ -19,7 +19,7 @@ export function MultiSelectInputAspect (
 {
     appendToContainer();
     var document = window.document;
-    var eventLoopFlag = EventLoopFlag(window); // showChoices
+    var eventLoopFlag = EventLoopFlag(window); 
     var skipFocusout = false;
 
     // we want to escape the closing of the menu (because of focus out from) on a user's click inside the container
@@ -64,46 +64,47 @@ export function MultiSelectInputAspect (
         );
     }*/
 
-    var filterInputItemOffsetLeft = null; // used to detect changes in input field position (by comparision with current value)
+    //var filterInputItemOffsetLeft = filterInputElement.offsetLeft; // used to detect changes in input field position (by comparision with current value)
     var preventDefaultClickEvent = null;
-
-    function alignAndShowChoices(event){
-        if (preventDefaultClickEvent != event) {
-            if (isChoicesVisible()){
-                hideChoices()
-            }else {
-                if (!isChoiceEmpty())
-                {
-                    alignToFilterInputItemLocation(true);
-                    showChoices();
-                }
-            }
-        }
-        preventDefaultClickEvent=null;
-    }
     
-    function alignToFilterInputItemLocation(force) {
-        let offsetLeft = filterInputElement.offsetLeft;
-        if (force || filterInputItemOffsetLeft != offsetLeft){ // position changed
-            popper.update();
-            filterInputItemOffsetLeft = offsetLeft;
-        }
+    function alignToFilterInputItemLocation() {
+        popper.update();
+        // let offsetLeft = filterInputElement.offsetLeft;
+        // if (/*force ||*/ filterInputItemOffsetLeft !== offsetLeft) { // position changed
+        //     //
+        //     filterInputItemOffsetLeft = offsetLeft;
+        // }
     }
+
     var componentDisabledEventBinder = EventBinder();
 
     function showChoices() {
         if ( !isChoicesVisible() )
         {
+            alignToFilterInputItemLocation();
             eventLoopFlag.set();
             setChoicesVisible(true);
             
             // add listeners that manages close dropdown on input's focusout and click outside container
-            //container.removeEventListener("mousedown", containerMousedown);
+            // container.removeEventListener("mousedown", containerMousedown);
 
             picksElement.addEventListener("mousedown", skipoutMousedown);
             choicesElement.addEventListener("mousedown", skipoutMousedown);
             document.addEventListener("mouseup", documentMouseup);
         }
+    }
+
+    function clickToShowChoices(event){
+        onClick(event);
+        if (preventDefaultClickEvent != event) {
+            if (isChoicesVisible()){
+                hideChoices()
+            } else {
+                if (!isChoiceEmpty())
+                    showChoices();
+            }
+        }
+        preventDefaultClickEvent=null;
     }
 
     function hideChoices() {
@@ -221,10 +222,7 @@ export function MultiSelectInputAspect (
             if (isComponentDisabled)
                 componentDisabledEventBinder.unbind();
             else
-                componentDisabledEventBinder.bind(picksElement, "click", event => {
-                    onClick(event);
-                    alignAndShowChoices(event);
-                });  // OPEN dropdown
+                componentDisabledEventBinder.bind(picksElement, "click",  clickToShowChoices); 
         },
         eventLoopFlag,
         hideChoices,

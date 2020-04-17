@@ -9,9 +9,10 @@ export function PicksList()
             return removeFromList;
         },
         removePicksTail(){  
-            var i = list.getTail();
-            if (i) 
-                i.remove(); // always remove in this case
+            var pick = list.getTail();
+            if (pick) 
+                pick.remove(); // always remove in this case
+            return pick;
         },
         isEmpty: list.isEmpty, // function
         getCount: list.getCount,
