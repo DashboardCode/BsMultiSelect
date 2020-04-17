@@ -51,7 +51,6 @@ export class MultiSelect {
         this.onChange=onChange;
 
         this.getIsComponentDisabled = getIsComponentDisabled;
-                
     }
 
     toggleOptionSelected(choice){
@@ -60,7 +59,6 @@ export class MultiSelect {
             success = setOptionSelected(choice, !choice.isOptionSelected, this.setSelected);
         return success;
     }
-
    
     resetFilter(){
         if (!this.filterPanel.isEmpty()) {
@@ -133,7 +131,6 @@ export class MultiSelect {
 
     UpdateData(){
         this.empty();
-        // reinitiate
         this.updateDataImpl();
     }
 
@@ -371,9 +368,6 @@ export class MultiSelect {
             choice.updateHidden = null;
         };
     }
-
-    
-
     
     updateHidden(choice) {
         if (choice.isOptionHidden) {
@@ -406,7 +400,6 @@ export class MultiSelect {
                 choice.updateHidden = () => this.updateHidden(choice);
             } 
         }
-        
 
         // browsers can change select value as part of "autocomplete" (IE11) 
         // or "show preserved on go back" (Chrome) after page is loaded but before "ready" event;
@@ -476,7 +469,6 @@ export class MultiSelect {
             this.processEmptyInput();
         else
             resetLength();  
-        
         
         this.aspect.eventLoopFlag.set(); // means disable some mouse handlers; otherwise we will get "Hover On MouseEnter" when filter's changes should remove hover
 
@@ -561,7 +553,6 @@ export class MultiSelect {
            
             /*onKeyUpEsc*/() => {
                 this.aspect.hideChoices(); // always hide 1st
-                //this.choicesPanel.resetHoveredChoice();
                 this.resetFilter();
             }, // esc keyup 
 
@@ -570,7 +561,6 @@ export class MultiSelect {
 
             /*onInput*/(filterInputValue, resetLength) =>
             { 
-                
                 this.input(filterInputValue, resetLength) 
             }
         );
@@ -617,7 +607,6 @@ export class MultiSelect {
         );
         
         this.staticContent.attachContainer();
-
         
         this.updateDataImpl();
         this.UpdateAppearance(); // TODO: now appearance should be done after updateDataImpl, because items should be "already in place", correct it
