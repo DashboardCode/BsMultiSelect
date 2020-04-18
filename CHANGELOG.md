@@ -1,5 +1,6 @@
 # CHANGELOG
 ````
+0.5.45 - improved remove pick behaviour - "focus out" skipped
 0.5.44 - optimizations
 0.5.43 - optimizations
 0.5.42 - optimizations

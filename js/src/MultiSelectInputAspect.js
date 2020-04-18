@@ -21,10 +21,20 @@ export function MultiSelectInputAspect (
     var document = window.document;
     var eventLoopFlag = EventLoopFlag(window); 
     var skipFocusout = false;
+    
+    function getSkipFocusout() {
+        return skipFocusout;
+    };
+    function resetSkipFocusout() {
+        skipFocusout = false;
+    };
+    function setSkipFocusout() {
+        skipFocusout = true;
+    };
 
     // we want to escape the closing of the menu (because of focus out from) on a user's click inside the container
     var skipoutMousedown = function() {
-         skipFocusout = true;
+        setSkipFocusout();
     }
 
     var documentMouseup = function(event) {
@@ -78,6 +88,13 @@ export function MultiSelectInputAspect (
 
     var componentDisabledEventBinder = EventBinder();
 
+    // TODO: remove setTimeout: set on start of mouse event reset on end
+    function skipoutAndResetMousedown(){
+        skipoutMousedown();
+        window.setTimeout(()=>{resetSkipFocusout()}, 0);
+    }
+    picksElement.addEventListener("mousedown", skipoutAndResetMousedown);
+
     function showChoices() {
         if ( !isChoicesVisible() )
         {
@@ -85,10 +102,7 @@ export function MultiSelectInputAspect (
             eventLoopFlag.set();
             setChoicesVisible(true);
             
-            // add listeners that manages close dropdown on input's focusout and click outside container
-            // container.removeEventListener("mousedown", containerMousedown);
-
-            picksElement.addEventListener("mousedown", skipoutMousedown);
+            // add listeners that manages close dropdown on  click outside container
             choicesElement.addEventListener("mousedown", skipoutMousedown);
             document.addEventListener("mouseup", documentMouseup);
         }
@@ -114,7 +128,6 @@ export function MultiSelectInputAspect (
         {
             setChoicesVisible(false);
             
-            picksElement.removeEventListener("mousedown", skipoutMousedown);
             choicesElement.removeEventListener("mousedown", skipoutMousedown);
             document.removeEventListener("mouseup", documentMouseup);
         }
@@ -203,20 +216,22 @@ export function MultiSelectInputAspect (
         return overAndLeaveEventBinder.unbind;
     }
 
+
     return {
         adoptChoiceElement,
         dispose(){
             resetMouseCandidateChoice();
             popper.destroy();
+            picksElement.removeEventListener("mousedown", skipoutAndResetMousedown);
             componentDisabledEventBinder.unbind();
         },
         alignToFilterInputItemLocation,
-        
-        getSkipFocusout() {
-             return skipFocusout;
-        },
-        resetSkipFocusout() {
-             skipFocusout=false;
+        onFocusOut(action){
+            if (!getSkipFocusout()){ // skip initiated by mouse click (we manage it different way)
+                resetFilter(); // if do not do this we will return to filtered list without text filter in input
+                action();
+            }
+            resetSkipFocusout();
         },
         disable(isComponentDisabled){
             if (isComponentDisabled)

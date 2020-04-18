@@ -105,25 +105,6 @@ export function bsAppearance(
                     addStyling(staticContent.picksElement, css.picks_focus_valid)  
                 }              
             }
-            // if (isFocusIn)
-            // {
-            //     if (validity===false) { 
-            //         // but not toggle events (I know it will be done in future)
-            //         staticContent.setIsFocusIn(isFocusIn);
-                    
-            //         addStyling(staticContent.picksElement, css.picks_focus_invalid)
-            //     } else if (validity===true) {
-            //         // but not toggle events (I know it will be done in future)
-            //         staticContent.setIsFocusIn(isFocusIn);
-                    
-            //         addStyling(staticContent.picksElement, css.picks_focus_valid)
-            //     } else {
-            //         defToggleFocusStyling(isFocusIn)
-            //     }
-            // }
-            // else{
-            //     defToggleFocusStyling(isFocusIn)
-            // }
         }
     }
 
@@ -170,6 +151,7 @@ export function bsAppearance(
     multiSelect.Dispose = composeSync(wasUpdatedObservable.detachAll, validationObservable.detachAll, getManualValidationObservable.detachAll,
         multiSelect.Dispose.bind(multiSelect));
 }
+
 export function composeGetValidity(selectElement){
     var getValidity = () => 
         selectElement.classList.contains('is-invalid')?false:

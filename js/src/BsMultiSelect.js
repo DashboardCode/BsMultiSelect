@@ -167,7 +167,6 @@ export function BsMultiSelect(element, environment, settings){
             getIsOptionHidden = (option)=>option.hidden;     
     }
 
-
     if (!getIsValueMissing){
         getIsValueMissing = () => {
             let count = 0;
@@ -192,8 +191,6 @@ export function BsMultiSelect(element, environment, settings){
     {
         placeholder = getDataGuardedWithPrefix(element,"bsmultiselect","placeholder");
     }
-
-
 
     if (!setSelected){
         setSelected = (option, value) => {option.selected = value};

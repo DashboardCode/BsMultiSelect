@@ -1,5 +1,5 @@
 /*!
-  * DashboardCode BsMultiSelect v0.5.44 (https://dashboardcode.github.io/BsMultiSelect/)
+  * DashboardCode BsMultiSelect v0.5.45 (https://dashboardcode.github.io/BsMultiSelect/)
   * Copyright 2017-2020 Roman Pokrovskij (github user rpokrovskij)
   * Licensed under APACHE 2 (https://github.com/DashboardCode/BsMultiSelect/blob/master/LICENSE)
   */
@@ -873,10 +873,22 @@
       appendToContainer();
       var document = window.document;
       var eventLoopFlag = EventLoopFlag(window);
-      var skipFocusout = false; // we want to escape the closing of the menu (because of focus out from) on a user's click inside the container
+      var skipFocusout = false;
+
+      function getSkipFocusout() {
+        return skipFocusout;
+      }
+
+      function resetSkipFocusout() {
+        skipFocusout = false;
+      }
+
+      function setSkipFocusout() {
+        skipFocusout = true;
+      }
 
       var skipoutMousedown = function skipoutMousedown() {
-        skipFocusout = true;
+        setSkipFocusout();
       };
 
       var documentMouseup = function documentMouseup(event) {
@@ -930,16 +942,23 @@
         // }
       }
 
-      var componentDisabledEventBinder = EventBinder();
+      var componentDisabledEventBinder = EventBinder(); // TODO: remove setTimeout: set on start of mouse event reset on end
+
+      function skipoutAndResetMousedown() {
+        skipoutMousedown();
+        window.setTimeout(function () {
+          resetSkipFocusout();
+        }, 0);
+      }
+
+      picksElement.addEventListener("mousedown", skipoutAndResetMousedown);
 
       function showChoices() {
         if (!isChoicesVisible()) {
           alignToFilterInputItemLocation();
           eventLoopFlag.set();
-          setChoicesVisible(true); // add listeners that manages close dropdown on input's focusout and click outside container
-          // container.removeEventListener("mousedown", containerMousedown);
+          setChoicesVisible(true); // add listeners that manages close dropdown on  click outside container
 
-          picksElement.addEventListener("mousedown", skipoutMousedown);
           choicesElement.addEventListener("mousedown", skipoutMousedown);
           document.addEventListener("mouseup", documentMouseup);
         }
@@ -965,7 +984,6 @@
 
         if (isChoicesVisible()) {
           setChoicesVisible(false);
-          picksElement.removeEventListener("mousedown", skipoutMousedown);
           choicesElement.removeEventListener("mousedown", skipoutMousedown);
           document.removeEventListener("mouseup", documentMouseup);
         }
@@ -1059,14 +1077,19 @@
         dispose: function dispose() {
           resetMouseCandidateChoice();
           popper.destroy();
+          picksElement.removeEventListener("mousedown", skipoutAndResetMousedown);
           componentDisabledEventBinder.unbind();
         },
         alignToFilterInputItemLocation: alignToFilterInputItemLocation,
-        getSkipFocusout: function getSkipFocusout() {
-          return skipFocusout;
-        },
-        resetSkipFocusout: function resetSkipFocusout() {
-          skipFocusout = false;
+        onFocusOut: function onFocusOut(action) {
+          if (!getSkipFocusout()) {
+            // skip initiated by mouse click (we manage it different way)
+            resetFilter(); // if do not do this we will return to filtered list without text filter in input
+
+            action();
+          }
+
+          resetSkipFocusout();
         },
         disable: function disable(isComponentDisabled) {
           if (isComponentDisabled) componentDisabledEventBinder.unbind();else componentDisabledEventBinder.bind(picksElement, "click", clickToShowChoices);
@@ -1418,8 +1441,7 @@
       };
 
       _proto.UpdateData = function UpdateData() {
-        this.empty(); // reinitiate
-
+        this.empty();
         this.updateDataImpl();
       };
 
@@ -1841,26 +1863,21 @@
         }
       };
 
+      _proto.setFocusIn = function setFocusIn(focus) {
+        this.staticContent.setIsFocusIn(focus);
+        this.staticContent.toggleFocusStyling();
+      };
+
       _proto.init = function init() {
         var _this6 = this;
 
         this.filterPanel = FilterPanel(this.staticContent.filterInputElement, function () {
-          _this6.staticContent.setIsFocusIn(true);
-
-          _this6.staticContent.toggleFocusStyling();
+          return _this6.setFocusIn(true);
         }, // focus in - show dropdown
         function () {
-          if (!_this6.aspect.getSkipFocusout()) // skip initiated by mouse click (we manage it different way)
-            {
-              _this6.resetFilter(); // if do not do this we will return to filtered list without text filter in input
-
-
-              _this6.staticContent.setIsFocusIn(false);
-
-              _this6.staticContent.toggleFocusStyling();
-            }
-
-          _this6.aspect.resetSkipFocusout();
+          return _this6.aspect.onFocusOut(function () {
+            return _this6.setFocusIn(false);
+          });
         }, // focus out - hide dropdown
         function () {
           return _this6.keyDownArrow(false);
@@ -1898,7 +1915,6 @@
         /*onKeyUpEsc*/
         function () {
           _this6.aspect.hideChoices(); // always hide 1st
-          //this.choicesPanel.resetHoveredChoice();
 
 
           _this6.resetFilter();
@@ -2084,24 +2100,7 @@
               staticContent.setIsFocusIn(isFocusIn);
               addStyling(staticContent.picksElement, css.picks_focus_valid);
             }
-          } // if (isFocusIn)
-          // {
-          //     if (validity===false) { 
-          //         // but not toggle events (I know it will be done in future)
-          //         staticContent.setIsFocusIn(isFocusIn);
-          //         addStyling(staticContent.picksElement, css.picks_focus_invalid)
-          //     } else if (validity===true) {
-          //         // but not toggle events (I know it will be done in future)
-          //         staticContent.setIsFocusIn(isFocusIn);
-          //         addStyling(staticContent.picksElement, css.picks_focus_valid)
-          //     } else {
-          //         defToggleFocusStyling(isFocusIn)
-          //     }
-          // }
-          // else{
-          //     defToggleFocusStyling(isFocusIn)
-          // }
-
+          }
         };
       }
 

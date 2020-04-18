@@ -511,22 +511,18 @@ export class MultiSelect {
         }
     }
 
+    setFocusIn(focus){
+        this.staticContent.setIsFocusIn(focus)
+        this.staticContent.toggleFocusStyling();
+    }
+
     init() {
         this.filterPanel = FilterPanel(
             this.staticContent.filterInputElement,
-            () => {
-                this.staticContent.setIsFocusIn(true)
-                this.staticContent.toggleFocusStyling();
-            },  // focus in - show dropdown
-            () => {
-                if (!this.aspect.getSkipFocusout()) // skip initiated by mouse click (we manage it different way)
-                {
-                    this.resetFilter(); // if do not do this we will return to filtered list without text filter in input
-                    this.staticContent.setIsFocusIn(false);
-                    this.staticContent.toggleFocusStyling();
-                }
-                this.aspect.resetSkipFocusout();
-            }, // focus out - hide dropdown
+            () => this.setFocusIn(true),  // focus in - show dropdown
+            () => this.aspect.onFocusOut(
+                    ()=>this.setFocusIn(false)
+                  ), // focus out - hide dropdown
             () => this.keyDownArrow(false), // arrow up
             () => this.keyDownArrow(true),  // arrow down
             /*onTabForEmpty*/() => this.aspect.hideChoices(),  // tab on empty
