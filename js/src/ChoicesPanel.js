@@ -1,23 +1,12 @@
-import {ListFacade} from './ToolsJs'
-import {getNextNonHidden} from './Choice'
-function setChoices(forEach, filterFacade, getFilterIn) {
-    filterFacade.reset();
-    forEach( choice => {
-        choice.prev = choice.next = null;
-        if ( !choice.isOptionHidden )
-        {
-            var v = getFilterIn(choice);
-            if (v)
-                filterFacade.add(choice);
-            choice.setVisible(v);
-        }
-    });
-}
+import {ListFacade, CollectionFacade} from './ToolsJs'
 
-export function ChoicesPanel() 
+export function ChoicesPanel(
+    getNext,
+    composeFilterPredicate 
+    ) 
 {
-    let choicesList = [];
     let hoveredChoice=null;
+    
     let filterFacade = ListFacade(
         (choice)=>choice.prev, 
         (choice, v)=>choice.prev=v, 
@@ -25,7 +14,37 @@ export function ChoicesPanel()
         (choice, v)=>choice.next=v, 
     );
 
-    let listFacade = ListFacade(
+    function setChoices(getFilterIn) {
+        filterFacade.reset();
+        collection.forLoop( choice => {
+            choice.prev = choice.next = null;
+            //-------------------------------
+            if ( !choice.isOptionHidden )
+            {
+                var v = getFilterIn(choice);
+                if (v)
+                    filterFacade.add(choice);
+                choice.setVisible(v);
+            }
+        });
+    }
+
+    function addFilterFacade(choice){
+        if ( !choice.isOptionHidden ) {
+            filterFacade.add(choice);
+        }
+    }
+
+    function insertFilterFacade(choice){
+        if ( !choice.isOptionHidden ){
+            let choiceNonhiddenBefore = getNext(choice);
+            filterFacade.add(choice, choiceNonhiddenBefore);
+        }
+    }
+
+    // ------------------------------------ ------------------------------------ 
+
+    let collection = CollectionFacade(
         (choice)=>choice.itemPrev, 
         (choice, v)=>choice.itemPrev=v, 
         (choice)=>choice.itemNext, 
@@ -39,55 +58,37 @@ export function ChoicesPanel()
         }
     }
 
-    function forEach(processChoice){
-        for(let i=0; i<choicesList.length; i++)
-        {
-            let choice = choicesList[i];
-            processChoice(choice);
-        }
+    var push = (choice) => {
+        addFilterFacade(choice);
+        collection.push(choice);
     }
 
-    var push = (choice) => {
-        if (!choice.isOptionHidden){
-            filterFacade.add(choice);
-        }
-        listFacade.add(choice);
-        choicesList.push(choice);
-    }
     var item = {
         push,
-        get: (key) => choicesList[key],
-        add: (key, choice) => {
-            if (key>=choicesList.length) {
+        get: (key) => collection.get(key),
+        insert: (key, choice) => {
+            if (key>=collection.getLength()) {
                 push(choice);
             }
             else {
-                let choiceBefore = choicesList[key];
-                listFacade.add(choice, choiceBefore);
-                choicesList.splice(key, 0, choice);
-                if (!choice.isOptionHidden){
-                    let choiceNonhiddenBefore = getNextNonHidden(choice);
-                    filterFacade.add(choice, choiceNonhiddenBefore);
-                }
+                collection.add(choice, key);
+                insertFilterFacade(choice);
             }
         },
         remove: (key) => {
-            var choice = choicesList[key];
+            var choice = collection.remove(key);
             filterFacade.remove(choice);
-            listFacade.remove(choice);
-            choicesList.splice(key, 1);
             return choice;
         },
-        updateHiddenOn: (choice) => {
-            filterFacade.remove(choice);
-        },
-        updateHiddenOff: (choice, beforeChoice) => {
-            filterFacade.add(choice, beforeChoice);
-        },
-        forEach,
+
+        filterOut: (choice) => filterFacade.remove(choice),
+        filterIn: (choice, beforeChoice) => filterFacade.add(choice, beforeChoice),
         getFirstVisibleChoice: ()=> filterFacade.getHead(),
         getVisibleCount: () => filterFacade.getCount(),
         getHasVisible: () => filterFacade.getCount()>0,
+        setFilter: (text)=> setChoices(composeFilterPredicate(text)),
+        resetFilter: () => setChoices(()=>true),
+        forEach: (f)=>collection.forLoop(f),
         getHoveredChoice: () => hoveredChoice,
         hoverIn(choice){
             resetHoveredChoice(); 
@@ -95,15 +96,6 @@ export function ChoicesPanel()
             hoveredChoice.setHoverIn(true)
         },
         resetHoveredChoice,
-        
-        setFilter: (text)=>
-            setChoices(forEach, filterFacade, choice=>!choice.isOptionSelected 
-                && !choice.isOptionDisabled 
-                && choice.searchText.indexOf(text)>=0 ),
-        
-        resetFilter: () => 
-            setChoices(forEach, filterFacade, ()=>true),
-        
         navigate: (down) => {
             if (down) {
                 return hoveredChoice?hoveredChoice.next: filterFacade.getHead();
@@ -112,17 +104,10 @@ export function ChoicesPanel()
             }
         },
         clear:()=>{
-            choicesList = [];
+            collection.reset();
             filterFacade.reset();
-            listFacade.reset();
         },
-        dispose:()=>{
-            forEach(function(choice){
-                if (choice.dispose){
-                    choice.dispose();
-                }
-            });
-        }
+        dispose: () => collection.forLoop(choice => choice.dispose?.())
     }
     return item;
 }

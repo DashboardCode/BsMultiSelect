@@ -4,8 +4,7 @@ import {PicksList} from './PicksList'
 import {MultiSelectInputAspect} from './MultiSelectInputAspect'
 import {PlaceholderAspect} from './PlaceholderAspect'
 import {removeElement} from './ToolsDom'
-import {Choice, updateDisabledChoice, updateSelectedChoice, updateHiddenChoice, setOptionSelected, getNextNonHidden} from './Choice'
-
+import {Choice, updateDisabledChoice, updateSelectedChoice, setOptionSelected} from './Choice'
 import {sync, composeSync} from './ToolsJs'
 
 export class MultiSelect {
@@ -14,8 +13,8 @@ export class MultiSelect {
         common,
         getIsComponentDisabled,
         setSelected, 
+        getIsOptionSelected,
         getIsOptionDisabled,
-        getIsOptionHidden,
         staticContent, 
         pickContentGenerator, 
         choiceContentGenerator, 
@@ -29,8 +28,8 @@ export class MultiSelect {
         // readonly
         this.common = common;
         this.getOptions=getOptions;
+        this.getIsOptionSelected = getIsOptionSelected;
         this.getIsOptionDisabled = getIsOptionDisabled;
-        this.getIsOptionHidden = getIsOptionHidden;
         this.staticContent = staticContent;
         //this.styling = styling;
         this.pickContentGenerator = pickContentGenerator;
@@ -100,12 +99,16 @@ export class MultiSelect {
         return this.picksList.getCount();
     }
 
+    isSelectable(choice){
+        return !choice.isOptionSelected  && !choice.isOptionDisabled;
+    }
+
     SelectAll(){
         this.aspect.hideChoices(); // always hide 1st
         this.choicesPanel.forEach(
             (choice) => {
-                if (!choice.isOptionSelected  && !choice.isOptionDisabled && !choice.isOptionHidden)
-                setOptionSelected(choice, true, this.setSelected)
+                if (this.isSelectable(choice))
+                    setOptionSelected(choice, true, this.setSelected)
             }
         ); 
         this.resetFilter();
@@ -141,12 +144,13 @@ export class MultiSelect {
         }
     }
 
+    /*
     UpdateOption(key){
         let choice = this.choicesPanel.get(key)
         updateDisabledChoice(choice, this.getIsOptionDisabled)
         updateHiddenChoice(choice, this.getIsOptionHidden)
         updateSelectedChoice(choice)
-    }
+    }*/
 
     UpdateOptionDisabled(key){
         let choice = this.choicesPanel.get(key); // TODO: generalize index as key 
@@ -162,7 +166,7 @@ export class MultiSelect {
 
     UpdateOptionSelected(key){
         let choice = this.choicesPanel.get(key); // TODO: generalize index as key 
-        updateSelectedChoice(choice) // TODO: invite this.getIsOptionSelected
+        updateSelectedChoice(choice, this.getIsOptionSelected ) // TODO: invite this.getIsOptionSelected
     }
 
     SetOptionSelected(key, value){
@@ -170,35 +174,19 @@ export class MultiSelect {
         setOptionSelected(choice, value, this.setSelected);
     }
 
-    UpdateOptionsHidden(){
-        let options = this.getOptions();
-        for(let i = 0; i<options.length; i++){
-            this.UpdateOptionHidden(i)
-        }
-    }
-
-    UpdateOptionHidden(key){
-        let choice = this.choicesPanel.get(key); // TODO: generalize index as key 
-        updateHiddenChoice(choice, this.getIsOptionHidden) // TODO: invite this.getIsOptionSelected
+    getNext(choice){
+        let next = choice.itemNext;
+        return next;
     }
 
     UpdateOptionAdded(key){  // TODO: generalize index as key 
         let options = this.getOptions();
         let option = options[key];
         let choice = this.createChoice(option);
-
-        this.choicesPanel.add(key, choice);
-
-        if (choice.isOptionHidden){ 
-            this.buildHiddenChoice(choice);
-        }
-        else{ 
-            this.createChoiceElement(choice);
-            let nextChoice = getNextNonHidden(choice);
-            choice.choiceElementAttach(nextChoice?.choiceElement);
-        }
-        choice.updateHidden = () => this.updateHidden(choice);
+        this.choicesPanel.insert(key, choice);
+        this.insertChoiceItem(choice)
     }
+
 
     UpdateOptionRemoved(key){ // TODO: generalize index as key 
         this.aspect.hideChoices(); // always hide 1st, then reset filter
@@ -324,15 +312,11 @@ export class MultiSelect {
             
             choice.updateSelected = null;
             choice.updateDisabled = null;
-            choice.updateHidden = null;
     
             // not real data manipulation but internal state
             choice.setVisible = null; // TODO: refactor it there should be 3 types of not visibility: for hidden, for filtered out, for optgroup, for message item
             choice.setHoverIn = null;
     
-            //choice.itemPrev = null;
-            //choice.itemNext = null;
-            
             choice.dispose = null;
         }
     
@@ -344,43 +328,22 @@ export class MultiSelect {
     }
 
     createChoice(option /*, prevChoice*/ /*, prevVisibleChoiceElement*/){
-        let isOptionHidden   = this.getIsOptionHidden(option);
-        let isOptionSelected = option.selected;
+        let isOptionSelected = this.getIsOptionSelected(option);
         let isOptionDisabled = this.getIsOptionDisabled(option); 
         
-        var choice = Choice(option, isOptionSelected, isOptionDisabled, isOptionHidden);
-
+        var choice = Choice(option, isOptionSelected, isOptionDisabled);
         return choice;
     }
 
-    buildHiddenChoice(choice){
-        choice.updateSelected = () => void 0;
-        choice.updateDisabled = () => void 0;
-        
-        choice.choiceElement = null;
-        choice.choiceElementAttach = null;
-        choice.setVisible = null; 
-        choice.setHoverIn = null;
-        choice.remove = null; 
-        
-        choice.dispose = () => { 
-            choice.dispose = null;
-            choice.updateHidden = null;
-        };
+    insertChoiceItem(choice){
+        this.createChoiceElement(choice);
+        let nextChoice = this.getNext(choice);
+        choice.choiceElementAttach(nextChoice?.choiceElement);
     }
-    
-    updateHidden(choice) {
-        if (choice.isOptionHidden) {
-            this.choicesPanel.updateHiddenOn(choice);
-            choice.remove(); 
-            this.buildHiddenChoice(choice);
-        } else {
 
-            let nextChoice = getNextNonHidden(choice);
-            this.choicesPanel.updateHiddenOff(choice, nextChoice);
-            this.createChoiceElement(choice);
-            choice.choiceElementAttach(nextChoice?.choiceElement); // itemPrev?.choiceElement
-        }
+    pushChoiceItem(choice){
+        this.createChoiceElement(choice);
+        choice.choiceElementAttach();
     }
 
     updateDataImpl(){
@@ -390,14 +353,7 @@ export class MultiSelect {
                 let option = options[i];
                 let choice = this.createChoice(option);
                 this.choicesPanel.push(choice);
-                if (choice.isOptionHidden){ 
-                    this.buildHiddenChoice(choice);
-                }
-                else{ 
-                    this.createChoiceElement(choice);
-                    choice.choiceElementAttach();
-                }
-                choice.updateHidden = () => this.updateHidden(choice);
+                this.pushChoiceItem(choice);
             } 
         }
 
@@ -569,8 +525,14 @@ export class MultiSelect {
             this.staticContent.pickFilterElement); // located filter in selectionsPanel       
 
         this.picksList =  PicksList();
+        
+        let composeFilterPredicate = (text) => 
+            (choice) => !choice.isOptionSelected  && !choice.isOptionDisabled  && choice.searchText.indexOf(text) >= 0 
 
-        this.choicesPanel = ChoicesPanel();
+        this.choicesPanel = ChoicesPanel(
+            (choice)=>this.getNext(choice),
+            composeFilterPredicate
+        );
 
         this.placeholderAspect = PlaceholderAspect(
             this.placeholderText, 
@@ -594,10 +556,7 @@ export class MultiSelect {
             (choice) => this.choicesPanel.hoverIn(choice),
             () => this.resetFilter(),
             () => !this.choicesPanel.getHasVisible(), 
-            /*onClick*/(event) => {
-                if (!this.filterPanel.isEventTarget(event))
-                     this.filterPanel.setFocus();
-            },
+            /*onClick*/(event) => this.filterPanel.setFocusIfNotTarget(event.target),
             this.isRtl,
             this.popper
         );

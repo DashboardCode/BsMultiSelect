@@ -111,8 +111,10 @@ export function FilterPanel(
         setFocus(){
             filterInputElement.focus();
         },
-        isEventTarget(event){
-            return event.target == filterInputElement;
+        // TODO: check why I need this comparision? 
+        setFocusIfNotTarget(target){
+            if (target != filterInputElement)
+                filterInputElement.focus();
         },
         dispose(){
             eventBinder.unbind();

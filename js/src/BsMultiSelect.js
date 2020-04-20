@@ -16,6 +16,8 @@ import {choiceContentGenerator as defChoiceContentGenerator} from './ChoiceConte
 import {staticContentGenerator  as defStaticContentGenerator} from './StaticContentGenerator';
 import {css, cssPatch} from './BsCss'
 
+import {apply} from './HiddenPlugin'
+
 const defValueMissingMessage = 'Please select an item in the list'
 
 export const defaults = {
@@ -30,6 +32,7 @@ export const defaults = {
     choiceContentGenerator : null, 
     buildConfiguration: null,
     isRtl: null,
+    getSelected: null,
     setSelected: null,
     required: null, /* null means look on select[required] or false if jso-source */
     common: null,
@@ -89,7 +92,7 @@ export function BsMultiSelect(element, environment, settings){
     let {
         css, cssPatch, useCssPatch,
         containerClass, label, isRtl, required,
-        getIsValueMissing, setSelected, placeholder, 
+        getIsValueMissing, getSelected, setSelected, placeholder, 
         common,
         options, getDisabled, getValidity, getSize,
         getIsOptionDisabled,  getIsOptionHidden
@@ -191,13 +194,14 @@ export function BsMultiSelect(element, environment, settings){
     {
         placeholder = getDataGuardedWithPrefix(element,"bsmultiselect","placeholder");
     }
-
+    if (!getSelected){
+        getSelected = (option) => option.selected;
+    }
     if (!setSelected){
         setSelected = (option, value) => {option.selected = value};
         // NOTE: adding this break Chrome's form reset functionality
         // if (value) option.setAttribute('selected','');
         // else  option.removeAttribute('selected');
-        
     }
     var validationApi = ValidityApi(
         staticContent.filterInputElement, 
@@ -219,8 +223,9 @@ export function BsMultiSelect(element, environment, settings){
         common,
         getDisabled,
         setSelected,
+        getSelected,
         getIsOptionDisabled,
-        getIsOptionHidden,
+        //getIsOptionHidden,
         staticContent,
         (pickElement) => pickContentGenerator(pickElement, common, css),
         (choiceElement, toggle) => choiceContentGenerator(choiceElement, common, css, toggle),
@@ -231,6 +236,8 @@ export function BsMultiSelect(element, environment, settings){
         css,
         Popper,
         window);
+    
+    apply(multiSelect, getIsOptionHidden);
 
     var resetDispose=null;
     if (staticContent.selectElement){

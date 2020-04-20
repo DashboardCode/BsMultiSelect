@@ -1,12 +1,10 @@
-export function Choice(option, isOptionSelected, isOptionDisabled, isOptionHidden){
+export function Choice(option, isOptionSelected, isOptionDisabled){
     let choice = {
         option: option,
         
         isOptionSelected: isOptionSelected,
         isOptionDisabled: isOptionDisabled,
-        isOptionHidden: isOptionHidden,
         
-        updateHidden: null,
         updateDisabled: null,
         updateSelected: null,
 
@@ -31,7 +29,9 @@ export function Choice(option, isOptionSelected, isOptionDisabled, isOptionHidde
         
         remove: null,
 
-        dispose: null
+        dispose: null,
+
+        isOptionHidden: null
     }
     return choice;
 }
@@ -42,7 +42,7 @@ export function dispose(choice) {
     
     choice.updateSelected = null;
     choice.updateDisabled = null;
-    choice.updateHidden   = null;
+
     // not real data manipulation but internal state
     choice.setVisible = null; // TODO: refactor it there should be 3 types of not visibility: for hidden, for filtered out, for optgroup, for message item
     choice.setHoverIn = null;
@@ -61,8 +61,8 @@ export function setOptionSelected(choice, value, setSelected){
     return success;
 }
 
-export function updateSelectedChoice(choice){
-    let newIsSelected = choice.option.selected;
+export function updateSelectedChoice(choice, getIsOptionSelected){
+    let newIsSelected = getIsOptionSelected(choice.option);
     if (newIsSelected != choice.isOptionSelected)
     {
         choice.isOptionSelected= newIsSelected;
@@ -77,23 +77,4 @@ export function updateDisabledChoice(choice, getIsOptionDisabled){
         choice.isOptionDisabled= newIsDisabled;
         choice.updateDisabled();
     }
-}
-
-export function updateHiddenChoice(choice, getIsOptionHidden){
-    let newIsOptionHidden = getIsOptionHidden(choice.option);
-    if (newIsOptionHidden != choice.isOptionHidden)
-    {
-        choice.isOptionHidden= newIsOptionHidden;
-        choice.updateHidden();
-    }
-}
-
-export function getNextNonHidden(choice) { // TODO get next visible
-    let next = choice.itemNext;
-    if (!next) {
-        return null;
-    } else if (next.choiceElement) {
-        return next;
-    }
-    return getNextNonHidden(next)
 }

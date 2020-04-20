@@ -89,17 +89,19 @@ export function ListFacade(getPrev, setPrev, getNext, setNext){
     var head = null, tail = null;
     var count = 0;
     var remove = (e) => {
-        if (getPrev(e)) {
-            setNext(getPrev(e), getNext(e))
+        let next = getNext(e);
+        let prev = getPrev(e);
+        if (prev) {
+            setNext(prev, next)
         }
-        if (getNext(e)) {
-             setPrev(getNext(e), getPrev(e))
+        if (next) {
+             setPrev(next, prev)
         }
         if (tail == e) {
-            tail = getPrev(e);
+            tail = prev;
         }
         if (head == e) {
-            head = null;
+            head = next; 
         }
         count--;
     }
@@ -139,6 +141,98 @@ export function ListFacade(getPrev, setPrev, getNext, setNext){
         getCount(){ return count },
         isEmpty(){ return count==0 },
         reset(){ 
+            tail=head=null; 
+            count = 0; }
+    }
+}
+
+export function CollectionFacade(getPrev, setPrev, getNext, setNext){
+    var list = [];
+    var head = null, tail = null;
+    var count = 0;
+    var remove = (key) => {
+        var e = list[key];
+        list.splice(key, 1);
+        let next = getNext(e);
+        let prev = getPrev(e);
+        if (prev) {
+            setNext(prev, next)
+        }
+        if (next) {
+             setPrev(next, prev)
+        }
+        if (tail == e) {
+            tail = prev;
+        }
+        if (head == e) {
+            head = next; 
+        }
+        count--;
+        return e;
+    }
+    return {
+        getLength(){
+            return list.length;
+        },
+        push(e){
+            list.push(e);
+            if (!tail){
+                head = tail = e;
+            }
+            else {
+                setPrev(e, tail);
+                setNext(tail, e);
+                tail = e;
+            }
+            count++;
+        },
+        add(e, key){
+            if (!tail){
+                head = tail = e;
+            }
+            else {
+                let next = list[key];
+                if (!next) {
+                    setPrev(e, tail);
+                    setNext(tail, e);
+                    tail = e;
+                } 
+                else {
+                    list.splice(key, 0, e);
+
+                    if (next===head)
+                        head=e;
+                    let prev = getPrev(next);
+                    setNext(e, next);
+                    setPrev(next, e);
+                    if (prev){
+                        setPrev(e, prev);
+                        setNext(prev, e);
+                    } else {
+                        setPrev(e, null);
+                    }
+                } 
+            }
+            count++;
+        },
+        get: (key) => list[key],
+        remove, 
+        forEach(f){
+            forEachRecursion(f, tail);
+        },
+        forLoop(f){
+            for(let i=0; i<list.length; i++)
+            {
+                let e = list[i];
+                f(e);
+            }
+        },
+        getHead(){ return head },
+        getTail(){ return tail },
+        getCount(){ return count },
+        isEmpty(){ return count==0 },
+        reset(){ 
+            list=[];
             tail=head=null; 
             count = 0; }
     }

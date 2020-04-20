@@ -10,6 +10,7 @@ import { pickContentGenerator as defPickContentGenerator } from './PickContentGe
 import { choiceContentGenerator as defChoiceContentGenerator } from './ChoiceContentGenerator';
 import { staticContentGenerator as defStaticContentGenerator } from './StaticContentGenerator';
 import { css, cssPatch } from './BsCss';
+import { apply } from './HiddenPlugin';
 var defValueMissingMessage = 'Please select an item in the list';
 export var defaults = {
   useCssPatch: true,
@@ -23,6 +24,7 @@ export var defaults = {
   choiceContentGenerator: null,
   buildConfiguration: null,
   isRtl: null,
+  getSelected: null,
   setSelected: null,
   required: null,
 
@@ -90,6 +92,7 @@ export function BsMultiSelect(element, environment, settings) {
       isRtl = configuration.isRtl,
       required = configuration.required,
       getIsValueMissing = configuration.getIsValueMissing,
+      getSelected = configuration.getSelected,
       setSelected = configuration.setSelected,
       placeholder = configuration.placeholder,
       common = configuration.common,
@@ -193,6 +196,12 @@ export function BsMultiSelect(element, environment, settings) {
     placeholder = getDataGuardedWithPrefix(element, "bsmultiselect", "placeholder");
   }
 
+  if (!getSelected) {
+    getSelected = function getSelected(option) {
+      return option.selected;
+    };
+  }
+
   if (!setSelected) {
     setSelected = function setSelected(option, value) {
       option.selected = value;
@@ -214,11 +223,13 @@ export function BsMultiSelect(element, environment, settings) {
     };
   }
 
-  var multiSelect = new MultiSelect(getOptions, common, getDisabled, setSelected, getIsOptionDisabled, getIsOptionHidden, staticContent, function (pickElement) {
+  var multiSelect = new MultiSelect(getOptions, common, getDisabled, setSelected, getSelected, getIsOptionDisabled, //getIsOptionHidden,
+  staticContent, function (pickElement) {
     return pickContentGenerator(pickElement, common, css);
   }, function (choiceElement, toggle) {
     return choiceContentGenerator(choiceElement, common, css, toggle);
   }, labelAdapter, placeholder, isRtl, onChange, css, Popper, window);
+  apply(multiSelect, getIsOptionHidden);
   var resetDispose = null;
 
   if (staticContent.selectElement) {

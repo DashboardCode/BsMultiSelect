@@ -1,5 +1,5 @@
 /*!
-  * DashboardCode BsMultiSelect v0.5.45 (https://dashboardcode.github.io/BsMultiSelect/)
+  * DashboardCode BsMultiSelect v0.5.46 (https://dashboardcode.github.io/BsMultiSelect/)
   * Copyright 2017-2020 Roman Pokrovskij (github user rpokrovskij)
   * Licensed under APACHE 2 (https://github.com/DashboardCode/BsMultiSelect/blob/master/LICENSE)
   */
@@ -330,8 +330,9 @@
         setFocus: function setFocus() {
           filterInputElement.focus();
         },
-        isEventTarget: function isEventTarget(event) {
-          return event.target == filterInputElement;
+        // TODO: check why I need this comparision? 
+        setFocusIfNotTarget: function setFocusIfNotTarget(target) {
+          if (target != filterInputElement) filterInputElement.focus();
         },
         dispose: function dispose() {
           eventBinder.unbind();
@@ -449,20 +450,23 @@
       var count = 0;
 
       var remove = function remove(e) {
-        if (getPrev(e)) {
-          setNext(getPrev(e), getNext(e));
+        var next = getNext(e);
+        var prev = getPrev(e);
+
+        if (prev) {
+          setNext(prev, next);
         }
 
-        if (getNext(e)) {
-          setPrev(getNext(e), getPrev(e));
+        if (next) {
+          setPrev(next, prev);
         }
 
         if (tail == e) {
-          tail = getPrev(e);
+          tail = prev;
         }
 
         if (head == e) {
-          head = null;
+          head = next;
         }
 
         count--;
@@ -511,6 +515,115 @@
           return count == 0;
         },
         reset: function reset() {
+          tail = head = null;
+          count = 0;
+        }
+      };
+    }
+    function CollectionFacade(getPrev, setPrev, getNext, setNext) {
+      var list = [];
+      var head = null,
+          tail = null;
+      var count = 0;
+
+      var remove = function remove(key) {
+        var e = list[key];
+        list.splice(key, 1);
+        var next = getNext(e);
+        var prev = getPrev(e);
+
+        if (prev) {
+          setNext(prev, next);
+        }
+
+        if (next) {
+          setPrev(next, prev);
+        }
+
+        if (tail == e) {
+          tail = prev;
+        }
+
+        if (head == e) {
+          head = next;
+        }
+
+        count--;
+        return e;
+      };
+
+      return {
+        getLength: function getLength() {
+          return list.length;
+        },
+        push: function push(e) {
+          list.push(e);
+
+          if (!tail) {
+            head = tail = e;
+          } else {
+            setPrev(e, tail);
+            setNext(tail, e);
+            tail = e;
+          }
+
+          count++;
+        },
+        add: function add(e, key) {
+          if (!tail) {
+            head = tail = e;
+          } else {
+            var next = list[key];
+
+            if (!next) {
+              setPrev(e, tail);
+              setNext(tail, e);
+              tail = e;
+            } else {
+              list.splice(key, 0, e);
+              if (next === head) head = e;
+              var prev = getPrev(next);
+              setNext(e, next);
+              setPrev(next, e);
+
+              if (prev) {
+                setPrev(e, prev);
+                setNext(prev, e);
+              } else {
+                setPrev(e, null);
+              }
+            }
+          }
+
+          count++;
+        },
+        get: function get(key) {
+          return list[key];
+        },
+        remove: remove,
+        forEach: function forEach(f) {
+          forEachRecursion(f, tail);
+        },
+        forLoop: function forLoop(f) {
+          for (var i = 0; i < list.length; i++) {
+            var e = list[i];
+            f(e);
+          }
+        },
+        getHead: function getHead() {
+          return head;
+        },
+        getTail: function getTail() {
+          return tail;
+        },
+        getCount: function getCount() {
+          return count;
+        },
+        isEmpty: function isEmpty() {
+          return count == 0;
+        },
+        reset: function reset() {
+          list = [];
           tail = head = null;
           count = 0;
         }
@@ -609,99 +722,7 @@
       };
     }
 
-    function Choice(option, isOptionSelected, isOptionDisabled, isOptionHidden) {
-      var choice = {
-        option: option,
-        isOptionSelected: isOptionSelected,
-        isOptionDisabled: isOptionDisabled,
-        isOptionHidden: isOptionHidden,
-        updateHidden: null,
-        updateDisabled: null,
-        updateSelected: null,
-        // navigation and filter support
-        prev: null,
-        next: null,
-        searchText: option.text.toLowerCase().trim(),
-        // TODO make an index abstraction
-        // internal state handlers, so they do not have "update semantics"
-        isHoverIn: false,
-        isFilterIn: false,
-        setVisible: null,
-        setHoverIn: null,
-        // TODO: is it a really sense to have them there?
-        choiceElement: null,
-        choiceElementAttach: null,
-        itemPrev: null,
-        itemNext: null,
-        remove: null,
-        dispose: null
-      };
-      return choice;
-    }
-    function setOptionSelected(choice, value, setSelected) {
-      var success = false;
-      var confirmed = setSelected(choice.option, value);
-
-      if (!(confirmed === false)) {
-        choice.isOptionSelected = value;
-        choice.updateSelected();
-        success = true;
-      }
-
-      return success;
-    }
-    function updateSelectedChoice(choice) {
-      var newIsSelected = choice.option.selected;
-
-      if (newIsSelected != choice.isOptionSelected) {
-        choice.isOptionSelected = newIsSelected;
-        choice.updateSelected();
-      }
-    }
-    function updateDisabledChoice(choice, getIsOptionDisabled) {
-      var newIsDisabled = getIsOptionDisabled(choice.option);
-
-      if (newIsDisabled != choice.isOptionDisabled) {
-        choice.isOptionDisabled = newIsDisabled;
-        choice.updateDisabled();
-      }
-    }
-    function updateHiddenChoice(choice, getIsOptionHidden) {
-      var newIsOptionHidden = getIsOptionHidden(choice.option);
-
-      if (newIsOptionHidden != choice.isOptionHidden) {
-        choice.isOptionHidden = newIsOptionHidden;
-        choice.updateHidden();
-      }
-    }
-    function getNextNonHidden(choice) {
-      // TODO get next visible
-      var next = choice.itemNext;
-
-      if (!next) {
-        return null;
-      } else if (next.choiceElement) {
-        return next;
-      }
-
-      return getNextNonHidden(next);
-    }
-
-    function setChoices(forEach, filterFacade, getFilterIn) {
-      filterFacade.reset();
-      forEach(function (choice) {
-        choice.prev = choice.next = null;
-
-        if (!choice.isOptionHidden) {
-          var v = getFilterIn(choice);
-          if (v) filterFacade.add(choice);
-          choice.setVisible(v);
-        }
-      });
-    }
-
-    function ChoicesPanel() {
-      var choicesList = [];
+    function ChoicesPanel(getNext, composeFilterPredicate) {
       var hoveredChoice = null;
       var filterFacade = ListFacade(function (choice) {
         return choice.prev;
@@ -712,7 +733,35 @@
       }, function (choice, v) {
         return choice.next = v;
       });
-      var listFacade = ListFacade(function (choice) {
+
+      function setChoices(getFilterIn) {
+        filterFacade.reset();
+        collection.forLoop(function (choice) {
+          choice.prev = choice.next = null; //-------------------------------
+
+          if (!choice.isOptionHidden) {
+            var v = getFilterIn(choice);
+            if (v) filterFacade.add(choice);
+            choice.setVisible(v);
+          }
+        });
+      }
+
+      function addFilterFacade(choice) {
+        if (!choice.isOptionHidden) {
+          filterFacade.add(choice);
+        }
+      }
+
+      function insertFilterFacade(choice) {
+        if (!choice.isOptionHidden) {
+          var choiceNonhiddenBefore = getNext(choice);
+          filterFacade.add(choice, choiceNonhiddenBefore);
+        }
+      } // ------------------------------------ ------------------------------------ 
+
+
+      var collection = CollectionFacade(function (choice) {
         return choice.itemPrev;
       }, function (choice, v) {
         return choice.itemPrev = v;
@@ -729,55 +778,35 @@
         }
       }
 
-      function forEach(processChoice) {
-        for (var i = 0; i < choicesList.length; i++) {
-          var choice = choicesList[i];
-          processChoice(choice);
-        }
-      }
-
       var push = function push(choice) {
-        if (!choice.isOptionHidden) {
-          filterFacade.add(choice);
-        }
-
-        listFacade.add(choice);
-        choicesList.push(choice);
+        addFilterFacade(choice);
+        collection.push(choice);
       };
 
       var item = {
         push: push,
         get: function get(key) {
-          return choicesList[key];
+          return collection.get(key);
         },
-        add: function add(key, choice) {
-          if (key >= choicesList.length) {
+        insert: function insert(key, choice) {
+          if (key >= collection.getLength()) {
             push(choice);
           } else {
-            var choiceBefore = choicesList[key];
-            listFacade.add(choice, choiceBefore);
-            choicesList.splice(key, 0, choice);
-
-            if (!choice.isOptionHidden) {
-              var choiceNonhiddenBefore = getNextNonHidden(choice);
-              filterFacade.add(choice, choiceNonhiddenBefore);
-            }
+            collection.add(choice, key);
+            insertFilterFacade(choice);
           }
         },
         remove: function remove(key) {
-          var choice = choicesList[key];
+          var choice = collection.remove(key);
           filterFacade.remove(choice);
-          listFacade.remove(choice);
-          choicesList.splice(key, 1);
           return choice;
         },
-        updateHiddenOn: function updateHiddenOn(choice) {
-          filterFacade.remove(choice);
+        filterOut: function filterOut(choice) {
+          return filterFacade.remove(choice);
         },
-        updateHiddenOff: function updateHiddenOff(choice, beforeChoice) {
-          filterFacade.add(choice, beforeChoice);
+        filterIn: function filterIn(choice, beforeChoice) {
+          return filterFacade.add(choice, beforeChoice);
         },
-        forEach: forEach,
         getFirstVisibleChoice: function getFirstVisibleChoice() {
           return filterFacade.getHead();
         },
@@ -786,6 +815,17 @@
         },
         getHasVisible: function getHasVisible() {
           return filterFacade.getCount() > 0;
+        },
+        setFilter: function setFilter(text) {
+          return setChoices(composeFilterPredicate(text));
+        },
+        resetFilter: function resetFilter() {
+          return setChoices(function () {
+            return true;
+          });
+        },
+        forEach: function forEach(f) {
+          return collection.forLoop(f);
         },
         getHoveredChoice: function getHoveredChoice() {
           return hoveredChoice;
@@ -796,16 +836,6 @@
           hoveredChoice.setHoverIn(true);
         },
         resetHoveredChoice: resetHoveredChoice,
-        setFilter: function setFilter(text) {
-          return setChoices(forEach, filterFacade, function (choice) {
-            return !choice.isOptionSelected && !choice.isOptionDisabled && choice.searchText.indexOf(text) >= 0;
-          });
-        },
-        resetFilter: function resetFilter() {
-          return setChoices(forEach, filterFacade, function () {
-            return true;
-          });
-        },
         navigate: function navigate(down) {
           if (down) {
             return hoveredChoice ? hoveredChoice.next : filterFacade.getHead();
@@ -814,15 +844,12 @@
           }
         },
         clear: function clear() {
-          choicesList = [];
+          collection.reset();
           filterFacade.reset();
-          listFacade.reset();
         },
         dispose: function dispose() {
-          forEach(function (choice) {
-            if (choice.dispose) {
-              choice.dispose();
-            }
+          return collection.forLoop(function (choice) {
+            return choice.dispose == null ? void 0 : choice.dispose();
           });
         }
       };
@@ -1333,14 +1360,71 @@
       };
     }
 
+    function Choice(option, isOptionSelected, isOptionDisabled) {
+      var choice = {
+        option: option,
+        isOptionSelected: isOptionSelected,
+        isOptionDisabled: isOptionDisabled,
+        updateDisabled: null,
+        updateSelected: null,
+        // navigation and filter support
+        prev: null,
+        next: null,
+        searchText: option.text.toLowerCase().trim(),
+        // TODO make an index abstraction
+        // internal state handlers, so they do not have "update semantics"
+        isHoverIn: false,
+        isFilterIn: false,
+        setVisible: null,
+        setHoverIn: null,
+        // TODO: is it a really sense to have them there?
+        choiceElement: null,
+        choiceElementAttach: null,
+        itemPrev: null,
+        itemNext: null,
+        remove: null,
+        dispose: null,
+        isOptionHidden: null
+      };
+      return choice;
+    }
+    function setOptionSelected(choice, value, setSelected) {
+      var success = false;
+      var confirmed = setSelected(choice.option, value);
+
+      if (!(confirmed === false)) {
+        choice.isOptionSelected = value;
+        choice.updateSelected();
+        success = true;
+      }
+
+      return success;
+    }
+    function updateSelectedChoice(choice, getIsOptionSelected) {
+      var newIsSelected = getIsOptionSelected(choice.option);
+
+      if (newIsSelected != choice.isOptionSelected) {
+        choice.isOptionSelected = newIsSelected;
+        choice.updateSelected();
+      }
+    }
+    function updateDisabledChoice(choice, getIsOptionDisabled) {
+      var newIsDisabled = getIsOptionDisabled(choice.option);
+
+      if (newIsDisabled != choice.isOptionDisabled) {
+        choice.isOptionDisabled = newIsDisabled;
+        choice.updateDisabled();
+      }
+    }
+
     var MultiSelect = /*#__PURE__*/function () {
-      function MultiSelect(getOptions, common, getIsComponentDisabled, setSelected, getIsOptionDisabled, getIsOptionHidden, staticContent, pickContentGenerator, choiceContentGenerator, labelAdapter, placeholderText, isRtl, onChange, css, popper, window) {
+      function MultiSelect(getOptions, common, getIsComponentDisabled, setSelected, getIsOptionSelected, getIsOptionDisabled, staticContent, pickContentGenerator, choiceContentGenerator, labelAdapter, placeholderText, isRtl, onChange, css, popper, window) {
         this.isRtl = isRtl; // readonly
 
         this.common = common;
         this.getOptions = getOptions;
+        this.getIsOptionSelected = getIsOptionSelected;
         this.getIsOptionDisabled = getIsOptionDisabled;
-        this.getIsOptionHidden = getIsOptionHidden;
         this.staticContent = staticContent; //this.styling = styling;
 
         this.pickContentGenerator = pickContentGenerator;
@@ -1411,13 +1495,17 @@
         return this.picksList.getCount();
       };
 
+      _proto.isSelectable = function isSelectable(choice) {
+        return !choice.isOptionSelected && !choice.isOptionDisabled;
+      };
+
       _proto.SelectAll = function SelectAll() {
         var _this = this;
 
         this.aspect.hideChoices(); // always hide 1st
 
         this.choicesPanel.forEach(function (choice) {
-          if (!choice.isOptionSelected && !choice.isOptionDisabled && !choice.isOptionHidden) setOptionSelected(choice, true, _this.setSelected);
+          if (_this.isSelectable(choice)) setOptionSelected(choice, true, _this.setSelected);
         });
         this.resetFilter();
       };
@@ -1451,14 +1539,15 @@
         for (var i = 0; i < options.length; i++) {
           this.UpdateOptionDisabled(i);
         }
-      };
-
-      _proto.UpdateOption = function UpdateOption(key) {
-        var choice = this.choicesPanel.get(key);
-        updateDisabledChoice(choice, this.getIsOptionDisabled);
-        updateHiddenChoice(choice, this.getIsOptionHidden);
-        updateSelectedChoice(choice);
-      };
+      }
+      /*
+      UpdateOption(key){
+          let choice = this.choicesPanel.get(key)
+          updateDisabledChoice(choice, this.getIsOptionDisabled)
+          updateHiddenChoice(choice, this.getIsOptionHidden)
+          updateSelectedChoice(choice)
+      }*/
+      ;
 
       _proto.UpdateOptionDisabled = function UpdateOptionDisabled(key) {
         var choice = this.choicesPanel.get(key); // TODO: generalize index as key 
@@ -1477,7 +1566,7 @@
       _proto.UpdateOptionSelected = function UpdateOptionSelected(key) {
         var choice = this.choicesPanel.get(key); // TODO: generalize index as key 
 
-        updateSelectedChoice(choice); // TODO: invite this.getIsOptionSelected
+        updateSelectedChoice(choice, this.getIsOptionSelected); // TODO: invite this.getIsOptionSelected
       };
 
       _proto.SetOptionSelected = function SetOptionSelected(key, value) {
@@ -1485,40 +1574,18 @@
         setOptionSelected(choice, value, this.setSelected);
       };
 
-      _proto.UpdateOptionsHidden = function UpdateOptionsHidden() {
-        var options = this.getOptions();
-
-        for (var i = 0; i < options.length; i++) {
-          this.UpdateOptionHidden(i);
-        }
-      };
-
-      _proto.UpdateOptionHidden = function UpdateOptionHidden(key) {
-        var choice = this.choicesPanel.get(key); // TODO: generalize index as key 
-
-        updateHiddenChoice(choice, this.getIsOptionHidden); // TODO: invite this.getIsOptionSelected
+      _proto.getNext = function getNext(choice) {
+        var next = choice.itemNext;
+        return next;
       };
 
       _proto.UpdateOptionAdded = function UpdateOptionAdded(key) {
-        var _this2 = this;
-
         // TODO: generalize index as key 
         var options = this.getOptions();
         var option = options[key];
         var choice = this.createChoice(option);
-        this.choicesPanel.add(key, choice);
-
-        if (choice.isOptionHidden) {
-          this.buildHiddenChoice(choice);
-        } else {
-          this.createChoiceElement(choice);
-          var nextChoice = getNextNonHidden(choice);
-          choice.choiceElementAttach(nextChoice == null ? void 0 : nextChoice.choiceElement);
-        }
-
-        choice.updateHidden = function () {
-          return _this2.updateHidden(choice);
-        };
+        this.choicesPanel.insert(key, choice);
+        this.insertChoiceItem(choice);
       };
 
       _proto.UpdateOptionRemoved = function UpdateOptionRemoved(key) {
@@ -1532,7 +1599,7 @@
       };
 
       _proto.createPick = function createPick(choice) {
-        var _this3 = this;
+        var _this2 = this;
 
         var _this$staticContent$c = this.staticContent.createPickElement(),
             pickElement = _this$staticContent$c.pickElement,
@@ -1545,13 +1612,13 @@
         var pickContent = this.pickContentGenerator(pickElement);
         var pick = {
           disableRemove: function disableRemove() {
-            return pickContent.disableRemove(_this3.getIsComponentDisabled());
+            return pickContent.disableRemove(_this2.getIsComponentDisabled());
           },
           setData: function setData() {
             return pickContent.setData(choice.option);
           },
           disable: function disable() {
-            return pickContent.disable(_this3.getIsOptionDisabled(choice.option));
+            return pickContent.disable(_this2.getIsOptionDisabled(choice.option));
           },
           remove: null,
           dispose: function dispose() {
@@ -1577,11 +1644,11 @@
           choice.updateDisabled = choiceUpdateDisabledBackup;
           choice.updateDisabled(); // make "true disabled" without it checkbox looks disabled
 
-          if (_this3.picksList.getCount() == 0) _this3.placeholderAspect.updatePlacehodlerVisibility();
+          if (_this2.picksList.getCount() == 0) _this2.placeholderAspect.updatePlacehodlerVisibility();
         };
 
         var setSelectedFalse = function setSelectedFalse() {
-          return setOptionSelected(choice, false, _this3.setSelected);
+          return setOptionSelected(choice, false, _this2.setSelected);
         };
 
         pick.remove = setSelectedFalse;
@@ -1591,7 +1658,7 @@
       };
 
       _proto.createChoiceElement = function createChoiceElement(choice) {
-        var _this4 = this;
+        var _this3 = this;
 
         var _this$staticContent$c2 = this.staticContent.createChoiceElement(),
             choiceElement = _this$staticContent$c2.choiceElement,
@@ -1601,9 +1668,9 @@
         choice.choiceElement = choiceElement;
         choice.choiceElementAttach = attach;
         var choiceContent = this.choiceContentGenerator(choiceElement, function () {
-          _this4.toggleOptionSelected(choice);
+          _this3.toggleOptionSelected(choice);
 
-          _this4.filterPanel.setFocus();
+          _this3.filterPanel.setFocus();
         });
 
         var updateSelectedChoiceContent = function updateSelectedChoiceContent() {
@@ -1616,7 +1683,7 @@
         };
 
         var createPick = function createPick() {
-          var removePick = _this4.createPick(choice);
+          var removePick = _this3.createPick(choice);
 
           pickTools.updateSelectedFalse = removePick;
         };
@@ -1639,7 +1706,7 @@
             pickTools.updateSelectedFalse = null;
           }
 
-          _this4.onChange();
+          _this3.onChange();
         };
 
         var unbindChoiceElement = this.aspect.adoptChoiceElement(choice, choiceElement);
@@ -1667,14 +1734,11 @@
           choice.choiceElementAttach = null;
           choice.remove = null;
           choice.updateSelected = null;
-          choice.updateDisabled = null;
-          choice.updateHidden = null; // not real data manipulation but internal state
+          choice.updateDisabled = null; // not real data manipulation but internal state
 
           choice.setVisible = null; // TODO: refactor it there should be 3 types of not visibility: for hidden, for filtered out, for optgroup, for message item
 
-          choice.setHoverIn = null; //choice.itemPrev = null;
-          //choice.itemNext = null;
-
+          choice.setHoverIn = null;
           choice.dispose = null;
         };
 
@@ -1691,75 +1755,37 @@
 
       /*, prevVisibleChoiceElement*/
       ) {
-        var isOptionHidden = this.getIsOptionHidden(option);
-        var isOptionSelected = option.selected;
+        var isOptionSelected = this.getIsOptionSelected(option);
         var isOptionDisabled = this.getIsOptionDisabled(option);
-        var choice = Choice(option, isOptionSelected, isOptionDisabled, isOptionHidden);
+        var choice = Choice(option, isOptionSelected, isOptionDisabled);
         return choice;
       };
 
-      _proto.buildHiddenChoice = function buildHiddenChoice(choice) {
-        choice.updateSelected = function () {
-          return void 0;
-        };
-
-        choice.updateDisabled = function () {
-          return void 0;
-        };
-
-        choice.choiceElement = null;
-        choice.choiceElementAttach = null;
-        choice.setVisible = null;
-        choice.setHoverIn = null;
-        choice.remove = null;
-
-        choice.dispose = function () {
-          choice.dispose = null;
-          choice.updateHidden = null;
-        };
+      _proto.insertChoiceItem = function insertChoiceItem(choice) {
+        this.createChoiceElement(choice);
+        var nextChoice = this.getNext(choice);
+        choice.choiceElementAttach(nextChoice == null ? void 0 : nextChoice.choiceElement);
       };
 
-      _proto.updateHidden = function updateHidden(choice) {
-        if (choice.isOptionHidden) {
-          this.choicesPanel.updateHiddenOn(choice);
-          choice.remove();
-          this.buildHiddenChoice(choice);
-        } else {
-          var nextChoice = getNextNonHidden(choice);
-          this.choicesPanel.updateHiddenOff(choice, nextChoice);
-          this.createChoiceElement(choice);
-          choice.choiceElementAttach(nextChoice == null ? void 0 : nextChoice.choiceElement); // itemPrev?.choiceElement
-        }
+      _proto.pushChoiceItem = function pushChoiceItem(choice) {
+        this.createChoiceElement(choice);
+        choice.choiceElementAttach();
       };
 
       _proto.updateDataImpl = function updateDataImpl() {
-        var _this5 = this;
+        var _this4 = this;
 
         var fillChoices = function fillChoices() {
-          var options = _this5.getOptions();
-
-          var _loop = function _loop(i) {
-            var option = options[i];
-
-            var choice = _this5.createChoice(option);
-
-            _this5.choicesPanel.push(choice);
-
-            if (choice.isOptionHidden) {
-              _this5.buildHiddenChoice(choice);
-            } else {
-              _this5.createChoiceElement(choice);
-
-              choice.choiceElementAttach();
-            }
-
-            choice.updateHidden = function () {
-              return _this5.updateHidden(choice);
-            };
-          };
+          var options = _this4.getOptions();
 
           for (var i = 0; i < options.length; i++) {
-            _loop(i);
+            var option = options[i];
+
+            var choice = _this4.createChoice(option);
+
+            _this4.choicesPanel.push(choice);
+
+            _this4.pushChoiceItem(choice);
           }
         }; // browsers can change select value as part of "autocomplete" (IE11) 
         // or "show preserved on go back" (Chrome) after page is loaded but before "ready" event;
@@ -1869,65 +1895,65 @@
       };
 
       _proto.init = function init() {
-        var _this6 = this;
+        var _this5 = this;
 
         this.filterPanel = FilterPanel(this.staticContent.filterInputElement, function () {
-          return _this6.setFocusIn(true);
+          return _this5.setFocusIn(true);
         }, // focus in - show dropdown
         function () {
-          return _this6.aspect.onFocusOut(function () {
-            return _this6.setFocusIn(false);
+          return _this5.aspect.onFocusOut(function () {
+            return _this5.setFocusIn(false);
           });
         }, // focus out - hide dropdown
         function () {
-          return _this6.keyDownArrow(false);
+          return _this5.keyDownArrow(false);
         }, // arrow up
         function () {
-          return _this6.keyDownArrow(true);
+          return _this5.keyDownArrow(true);
         }, // arrow down
 
         /*onTabForEmpty*/
         function () {
-          return _this6.aspect.hideChoices();
+          return _this5.aspect.hideChoices();
         }, // tab on empty
         function () {
-          var p = _this6.picksList.removePicksTail();
+          var p = _this5.picksList.removePicksTail();
 
-          if (p) _this6.aspect.alignToFilterInputItemLocation();
+          if (p) _this5.aspect.alignToFilterInputItemLocation();
         }, // backspace - "remove last"
 
         /*onTabToCompleate*/
         function () {
-          if (_this6.staticContent.isChoicesVisible()) {
-            _this6.hoveredToSelected();
+          if (_this5.staticContent.isChoicesVisible()) {
+            _this5.hoveredToSelected();
           }
         },
         /*onEnterToCompleate*/
         function () {
-          if (_this6.staticContent.isChoicesVisible()) {
-            _this6.hoveredToSelected();
+          if (_this5.staticContent.isChoicesVisible()) {
+            _this5.hoveredToSelected();
           } else {
-            if (_this6.choicesPanel.getHasVisible()) {
-              _this6.aspect.showChoices();
+            if (_this5.choicesPanel.getHasVisible()) {
+              _this5.aspect.showChoices();
             }
           }
         },
         /*onKeyUpEsc*/
         function () {
-          _this6.aspect.hideChoices(); // always hide 1st
+          _this5.aspect.hideChoices(); // always hide 1st
 
 
-          _this6.resetFilter();
+          _this5.resetFilter();
         }, // esc keyup 
         // tab/enter "compleate hovered"
 
         /*stopEscKeyDownPropogation */
         function () {
-          return _this6.staticContent.isChoicesVisible();
+          return _this5.staticContent.isChoicesVisible();
         },
         /*onInput*/
         function (filterInputValue, resetLength) {
-          _this6.input(filterInputValue, resetLength);
+          _this5.input(filterInputValue, resetLength);
         }); // attach filterInputElement
 
         this.staticContent.pickFilterElement.appendChild(this.staticContent.filterInputElement);
@@ -1935,29 +1961,38 @@
         this.staticContent.picksElement.appendChild(this.staticContent.pickFilterElement); // located filter in selectionsPanel       
 
         this.picksList = PicksList();
-        this.choicesPanel = ChoicesPanel();
+
+        var composeFilterPredicate = function composeFilterPredicate(text) {
+          return function (choice) {
+            return !choice.isOptionSelected && !choice.isOptionDisabled && choice.searchText.indexOf(text) >= 0;
+          };
+        };
+
+        this.choicesPanel = ChoicesPanel(function (choice) {
+          return _this5.getNext(choice);
+        }, composeFilterPredicate);
         this.placeholderAspect = PlaceholderAspect(this.placeholderText, function () {
-          return _this6.picksList.isEmpty() && _this6.filterPanel.isEmpty();
+          return _this5.picksList.isEmpty() && _this5.filterPanel.isEmpty();
         }, this.staticContent.picksElement, this.staticContent.filterInputElement, this.css);
         this.placeholderAspect.updateEmptyInputWidth();
         this.aspect = MultiSelectInputAspect(this.window, function () {
-          return _this6.staticContent.appendToContainer();
+          return _this5.staticContent.appendToContainer();
         }, this.staticContent.filterInputElement, this.staticContent.picksElement, this.staticContent.choicesElement, function () {
-          return _this6.staticContent.isChoicesVisible();
+          return _this5.staticContent.isChoicesVisible();
         }, function (visible) {
-          return _this6.staticContent.setChoicesVisible(visible);
+          return _this5.staticContent.setChoicesVisible(visible);
         }, function () {
-          return _this6.choicesPanel.resetHoveredChoice();
+          return _this5.choicesPanel.resetHoveredChoice();
         }, function (choice) {
-          return _this6.choicesPanel.hoverIn(choice);
+          return _this5.choicesPanel.hoverIn(choice);
         }, function () {
-          return _this6.resetFilter();
+          return _this5.resetFilter();
         }, function () {
-          return !_this6.choicesPanel.getHasVisible();
+          return !_this5.choicesPanel.getHasVisible();
         },
         /*onClick*/
         function (event) {
-          if (!_this6.filterPanel.isEventTarget(event)) _this6.filterPanel.setFocus();
+          return _this5.filterPanel.setFocusIfNotTarget(event.target);
         }, this.isRtl, this.popper);
         this.staticContent.attachContainer();
         this.updateDataImpl();
@@ -2756,6 +2791,128 @@
 
     };
 
+    function updateHiddenChoice(choice, updateHidden, getIsOptionHidden) {
+      var newIsOptionHidden = getIsOptionHidden(choice.option);
+
+      if (newIsOptionHidden != choice.isOptionHidden) {
+        choice.isOptionHidden = newIsOptionHidden;
+        updateHidden(choice);
+      }
+    }
+
+    function getNextNonHidden(choice) {
+      // TODO get next visible
+      var next = choice.itemNext;
+
+      if (!next) {
+        return null;
+      } else if (next.choiceElement) {
+        return next;
+      }
+
+      return getNextNonHidden(next);
+    }
+
+    function apply(multiSelect, getIsOptionHidden) {
+      multiSelect.getNext = function (c) {
+        return getNextNonHidden(c);
+      };
+
+      var origIsSelectable = multiSelect.isSelectable.bind(multiSelect);
+
+      multiSelect.isSelectable = function (choice) {
+        return origIsSelectable(choice) && !choice.isOptionHidden;
+      };
+
+      function buildHiddenChoice(choice) {
+        choice.updateSelected = function () {
+          return void 0;
+        };
+
+        choice.updateDisabled = function () {
+          return void 0;
+        };
+
+        choice.choiceElement = null;
+        choice.choiceElementAttach = null;
+        choice.setVisible = null;
+        choice.setHoverIn = null;
+        choice.remove = null;
+
+        choice.dispose = function () {
+          choice.dispose = null;
+        };
+      }
+
+      function updateHidden(choice) {
+        if (choice.isOptionHidden) {
+          multiSelect.choicesPanel.filterOut(choice);
+          choice.remove();
+          buildHiddenChoice(choice);
+        } else {
+          var nextChoice = getNextNonHidden(choice);
+          multiSelect.choicesPanel.filterIn(choice, nextChoice);
+          multiSelect.createChoiceElement(choice);
+          choice.choiceElementAttach(nextChoice == null ? void 0 : nextChoice.choiceElement); // itemPrev?.choiceElement
+        }
+      }
+
+      multiSelect.updateHidden = function (c) {
+        return updateHidden(c);
+      };
+
+      function UpdateOptionHidden(key) {
+        var choice = multiSelect.choicesPanel.get(key); // TODO: generalize index as key 
+
+        updateHiddenChoice(choice, function (c) {
+          return multiSelect.updateHidden(c);
+        }, getIsOptionHidden); // TODO: invite this.getIsOptionSelected
+      }
+
+      function UpdateOptionsHidden() {
+        var options = multiSelect.getOptions();
+
+        for (var i = 0; i < options.length; i++) {
+          UpdateOptionHidden(i);
+        }
+      }
+
+      multiSelect.UpdateOptionsHidden = function () {
+        return UpdateOptionsHidden();
+      };
+
+      multiSelect.UpdateOptionHidden = function (key) {
+        return UpdateOptionHidden(key);
+      };
+
+      var origСreateChoice = multiSelect.createChoice.bind(multiSelect);
+
+      multiSelect.createChoice = function (option) {
+        var choice = origСreateChoice(option);
+        choice.isOptionHidden = getIsOptionHidden(option);
+        return choice;
+      };
+
+      var origInsertChoiceItem = multiSelect.insertChoiceItem.bind(multiSelect);
+      var origPushChoiceItem = multiSelect.pushChoiceItem.bind(multiSelect);
+
+      multiSelect.insertChoiceItem = function (choice) {
+        if (choice.isOptionHidden) {
+          buildHiddenChoice(choice);
+        } else {
+          origInsertChoiceItem(choice);
+        }
+      };
+
+      multiSelect.pushChoiceItem = function (choice) {
+        if (choice.isOptionHidden) {
+          buildHiddenChoice(choice);
+        } else {
+          origPushChoiceItem(choice);
+        }
+      };
+    }
+
     var defValueMissingMessage = 'Please select an item in the list';
     var defaults = {
       useCssPatch: true,
@@ -2769,6 +2926,7 @@
       choiceContentGenerator: null,
       buildConfiguration: null,
       isRtl: null,
+      getSelected: null,
       setSelected: null,
       required: null,
 
@@ -2836,6 +2994,7 @@
           isRtl = configuration.isRtl,
           required = configuration.required,
           getIsValueMissing = configuration.getIsValueMissing,
+          getSelected = configuration.getSelected,
           setSelected = configuration.setSelected,
           placeholder = configuration.placeholder,
           common = configuration.common,
@@ -2939,6 +3098,12 @@
         placeholder = getDataGuardedWithPrefix(element, "bsmultiselect", "placeholder");
       }
 
+      if (!getSelected) {
+        getSelected = function getSelected(option) {
+          return option.selected;
+        };
+      }
+
       if (!setSelected) {
         setSelected = function setSelected(option, value) {
           option.selected = value;
@@ -2960,11 +3125,13 @@
         };
       }
 
-      var multiSelect = new MultiSelect(getOptions, common, getDisabled, setSelected, getIsOptionDisabled, getIsOptionHidden, staticContent, function (pickElement) {
+      var multiSelect = new MultiSelect(getOptions, common, getDisabled, setSelected, getSelected, getIsOptionDisabled, //getIsOptionHidden,
+      staticContent, function (pickElement) {
         return pickContentGenerator$1(pickElement, common, css);
       }, function (choiceElement, toggle) {
         return choiceContentGenerator$1(choiceElement, common, css, toggle);
       }, labelAdapter, placeholder, isRtl, onChange, css, Popper, window);
+      apply(multiSelect, getIsOptionHidden);
       var resetDispose = null;
 
       if (staticContent.selectElement) {
