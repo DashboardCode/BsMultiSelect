@@ -1,5 +1,5 @@
 /*!
-  * DashboardCode BsMultiSelect v0.5.46 (https://dashboardcode.github.io/BsMultiSelect/)
+  * DashboardCode BsMultiSelect v0.5.47 (https://dashboardcode.github.io/BsMultiSelect/)
   * Copyright 2017-2020 Roman Pokrovskij (github user rpokrovskij)
   * Licensed under APACHE 2 (https://github.com/DashboardCode/BsMultiSelect/blob/master/LICENSE)
   */
@@ -812,7 +812,7 @@ function PicksList() {
   };
 }
 
-function MultiSelectInputAspect(window, appendToContainer, filterInputElement, picksElement, choicesElement, isChoicesVisible, setChoicesVisible, resetHoveredChoice, hoverIn, resetFilter, isChoiceEmpty, onClick, isRtl, Popper) {
+function MultiSelectInputAspect(window, appendToContainer, filterInputElement, picksElement, choicesElement, isChoicesVisible, setChoicesVisible, resetHoveredChoice, hoverIn, resetFilter, isChoiceEmpty, onClick, resetFocus, isRtl, Popper) {
   appendToContainer();
   var document = window.document;
   var eventLoopFlag = EventLoopFlag(window);
@@ -835,11 +835,13 @@ function MultiSelectInputAspect(window, appendToContainer, filterInputElement, p
   };
 
   var documentMouseup = function documentMouseup(event) {
-    // if click outside container - close dropdown
-    if (!containsAndSelf(choicesElement, event.target) && !containsAndSelf(picksElement, event.target)) {
-      hideChoices();
-      resetFilter();
-    }
+    // if we would left without focus then "close the drop" do not remove focus border
+    if (choicesElement == event.target) filterInputElement.focus(); // if click outside container - close dropdown
+    else if (!containsAndSelf(choicesElement, event.target) && !containsAndSelf(picksElement, event.target)) {
+        hideChoices();
+        resetFilter();
+        resetFocus();
+      }
   };
 
   var popper = null; //if (!!Popper.prototype && !!Popper.prototype.constructor.name) {
@@ -1909,6 +1911,10 @@ var MultiSelect = /*#__PURE__*/function () {
     /*onClick*/
     function (event) {
       return _this5.filterPanel.setFocusIfNotTarget(event.target);
+    },
+    /*resetFocus*/
+    function () {
+      return _this5.setFocusIn(false);
     }, this.isRtl, this.popper);
     this.staticContent.attachContainer();
     this.updateDataImpl();

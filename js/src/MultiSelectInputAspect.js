@@ -13,6 +13,7 @@ export function MultiSelectInputAspect (
     resetFilter,
     isChoiceEmpty,
     onClick,
+    resetFocus,
     isRtl,
     Popper
     ) 
@@ -38,10 +39,15 @@ export function MultiSelectInputAspect (
     }
 
     var documentMouseup = function(event) {
+        // if we would left without focus then "close the drop" do not remove focus border
+        if (choicesElement == event.target) 
+            filterInputElement.focus()
+
         // if click outside container - close dropdown
-        if ( !containsAndSelf(choicesElement, event.target) && !containsAndSelf(picksElement, event.target)) {
+        else if ( !containsAndSelf(choicesElement, event.target) && !containsAndSelf(picksElement, event.target)) {
             hideChoices();
             resetFilter();
+            resetFocus();
         }
     }
 
@@ -132,6 +138,7 @@ export function MultiSelectInputAspect (
             document.removeEventListener("mouseup", documentMouseup);
         }
     }
+
     function processUncheck(uncheckOption, event){
         // we can't remove item on "click" in the same loop iteration - it is unfrendly for 3PP event handlers (they will get detached element)
         // never remove elements in the same event iteration
@@ -215,7 +222,6 @@ export function MultiSelectInputAspect (
 
         return overAndLeaveEventBinder.unbind;
     }
-
 
     return {
         adoptChoiceElement,

@@ -557,6 +557,7 @@ export class MultiSelect {
             () => this.resetFilter(),
             () => !this.choicesPanel.getHasVisible(), 
             /*onClick*/(event) => this.filterPanel.setFocusIfNotTarget(event.target),
+            /*resetFocus*/() => this.setFocusIn(false),
             this.isRtl,
             this.popper
         );

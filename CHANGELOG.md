@@ -1,5 +1,6 @@
 # CHANGELOG
 ````
+0.5.47 - focus-border problem resolved; mouseup on dropdown return focus 
 0.5.46 - api changes (hidden support as plugin)
 0.5.45 - improved remove pick behaviour - "focus out" skipped
 0.5.44 - optimizations
