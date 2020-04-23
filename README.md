@@ -13,6 +13,8 @@ Snippets:
 
 5. [Options manipulation API](https://dashboardcode.github.io/BsMultiSelect/snippetJs.html)
 
+6. [Columns](https://dashboardcode.github.io/BsMultiSelect/snippetColumns.html)
+
 CodePen, use it for bug reporting: https://codepen.io/rpokrovskij/pen/yLymQwW 
 
 There are many similar plugins but this reuses maximum of Bootrap 4 styles/classes and code. In many cases it can be adjusted for your Bootsrap theme without editing CSS or with minimal efforts. 
