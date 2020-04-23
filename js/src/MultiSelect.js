@@ -5,7 +5,8 @@ import {MultiSelectInputAspect} from './MultiSelectInputAspect'
 import {PlaceholderAspect} from './PlaceholderAspect'
 import {removeElement} from './ToolsDom'
 import {Choice, updateDisabledChoice, updateSelectedChoice, setOptionSelected} from './Choice'
-import {sync, composeSync} from './ToolsJs'
+import {ListFacade, sync, composeSync} from './ToolsJs'
+import {FilterFacade} from './FilterFacade'
 
 export class MultiSelect {
     constructor(
@@ -70,7 +71,7 @@ export class MultiSelect {
 
     processEmptyInput(){
         this.placeholderAspect.updateEmptyInputWidth();
-        this.choicesPanel.resetFilter();
+        this.filterFacade.resetFilter();
     }
 
     // -----------------------------------------------------------------------------------------------------------------------
@@ -105,7 +106,7 @@ export class MultiSelect {
 
     SelectAll(){
         this.aspect.hideChoices(); // always hide 1st
-        this.choicesPanel.forEach(
+        this.choicesPanel.forLoop(
             (choice) => {
                 if (this.isSelectable(choice))
                     setOptionSelected(choice, true, this.setSelected)
@@ -174,11 +175,6 @@ export class MultiSelect {
         setOptionSelected(choice, value, this.setSelected);
     }
 
-    getNext(choice){
-        let next = choice.itemNext;
-        return next;
-    }
-
     UpdateOptionAdded(key){  // TODO: generalize index as key 
         let options = this.getOptions();
         let option = options[key];
@@ -190,7 +186,7 @@ export class MultiSelect {
 
     UpdateOptionRemoved(key){ // TODO: generalize index as key 
         this.aspect.hideChoices(); // always hide 1st, then reset filter
-        this.choicesPanel.resetFilter();
+        this.filterFacade.resetFilter();
 
         var choice = this.choicesPanel.remove(key);
         choice.remove?.();
@@ -408,10 +404,10 @@ export class MultiSelect {
         else
         {
             // check if exact match, otherwise new search
-            this.choicesPanel.setFilter(text);
-            if (this.choicesPanel.getVisibleCount() == 1)
+            this.filterFacade.setFilter(text);
+            if (this.filterListFacade.getCount() == 1)
             {
-                let fullMatchChoice =  this.choicesPanel.getFirstVisibleChoice();
+                let fullMatchChoice =  this.filterListFacade.getHead();
                 if (fullMatchChoice.searchText == text)
                 {
                     setOptionSelected(fullMatchChoice, true, this.setSelected);
@@ -428,7 +424,7 @@ export class MultiSelect {
         
         this.aspect.eventLoopFlag.set(); // means disable some mouse handlers; otherwise we will get "Hover On MouseEnter" when filter's changes should remove hover
 
-        let visibleCount = this.choicesPanel.getVisibleCount();
+        let visibleCount = this.filterListFacade.getCount();
 
         if (visibleCount>0){
             let panelIsVisble = this.staticContent.isChoicesVisible();
@@ -436,7 +432,7 @@ export class MultiSelect {
                 this.aspect.showChoices();
             }
             if (visibleCount == 1) {
-                this.choicesPanel.hoverIn(this.choicesPanel.getFirstVisibleChoice())
+                this.choicesPanel.hoverIn(this.filterListFacade.getHead())
             } else {
                 if (panelIsVisble)
                     this.choicesPanel.resetHoveredChoice();
@@ -472,6 +468,34 @@ export class MultiSelect {
         this.staticContent.toggleFocusStyling();
     }
 
+    forEach(f){
+        let choice = this.choicesPanel.getHead();
+        while(choice){
+            forEach( (choice)=>{
+                f(choice);
+                choice = this.getNext(choice);
+            });
+        }
+    }
+
+    getNext(choice){
+        let next = choice.itemNext;
+        return next;
+    }
+
+    navigate(down, hoveredChoice){
+        return this.filterFacade.navigate(down, hoveredChoice);
+    }
+
+    addFilterFacade(choice){
+        this.filterListFacade.add(choice);
+    }
+
+    insertFilterFacade(choice){
+        let choiceNonhiddenBefore = this.getNext(choice);
+        this.filterListFacade.add(choice, choiceNonhiddenBefore);
+    }
+
     init() {
         this.filterPanel = FilterPanel(
             this.staticContent.filterInputElement,
@@ -497,7 +521,7 @@ export class MultiSelect {
                 if (this.staticContent.isChoicesVisible()) {
                     this.hoveredToSelected();
                 } else {
-                    if (this.choicesPanel.getHasVisible()){
+                    if (this.filterListFacade.getCount()>0){
                         this.aspect.showChoices();
                     }
                 }
@@ -529,10 +553,23 @@ export class MultiSelect {
         let composeFilterPredicate = (text) => 
             (choice) => !choice.isOptionSelected  && !choice.isOptionDisabled  && choice.searchText.indexOf(text) >= 0 
 
-        this.choicesPanel = ChoicesPanel(
-            (choice)=>this.getNext(choice),
+        this.filterListFacade = ListFacade(
+            (choice)=>choice.filteredPrev, 
+            (choice, v)=>choice.filteredPrev=v, 
+            (choice)=>choice.filteredNext, 
+            (choice, v)=>choice.filteredNext=v
+        );
+
+        this.filterFacade = FilterFacade(
+            this.filterListFacade,
+            (f) => this.forEach(f),
             composeFilterPredicate
         );
+        
+        this.choicesPanel = ChoicesPanel(this.filterListFacade, 
+            (down, hoveredChoice)=>this.navigate(down, hoveredChoice),
+            (c)=>this.addFilterFacade(c), 
+            (c)=>this.insertFilterFacade(c));
 
         this.placeholderAspect = PlaceholderAspect(
             this.placeholderText, 
@@ -555,15 +592,16 @@ export class MultiSelect {
             () => this.choicesPanel.resetHoveredChoice(), 
             (choice) => this.choicesPanel.hoverIn(choice),
             () => this.resetFilter(),
-            () => !this.choicesPanel.getHasVisible(), 
+            () => this.filterListFacade.getCount()==0, 
             /*onClick*/(event) => this.filterPanel.setFocusIfNotTarget(event.target),
             /*resetFocus*/() => this.setFocusIn(false),
             this.isRtl,
             this.popper
         );
-        
         this.staticContent.attachContainer();
-        
+    }
+
+    load(){
         this.updateDataImpl();
         this.UpdateAppearance(); // TODO: now appearance should be done after updateDataImpl, because items should be "already in place", correct it
     }

@@ -217,9 +217,6 @@ export function CollectionFacade(getPrev, setPrev, getNext, setNext){
         },
         get: (key) => list[key],
         remove, 
-        forEach(f){
-            forEachRecursion(f, tail);
-        },
         forLoop(f){
             for(let i=0; i<list.length; i++)
             {

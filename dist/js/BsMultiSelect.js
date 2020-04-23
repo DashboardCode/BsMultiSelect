@@ -1,5 +1,5 @@
 /*!
-  * DashboardCode BsMultiSelect v0.5.47 (https://dashboardcode.github.io/BsMultiSelect/)
+  * DashboardCode BsMultiSelect v0.5.48 (https://dashboardcode.github.io/BsMultiSelect/)
   * Copyright 2017-2020 Roman Pokrovskij (github user rpokrovskij)
   * Licensed under APACHE 2 (https://github.com/DashboardCode/BsMultiSelect/blob/master/LICENSE)
   */
@@ -601,9 +601,6 @@
           return list[key];
         },
         remove: remove,
-        forEach: function forEach(f) {
-          forEachRecursion(f, tail);
-        },
         forLoop: function forLoop(f) {
           for (var i = 0; i < list.length; i++) {
             var e = list[i];
@@ -722,45 +719,8 @@
       };
     }
 
-    function ChoicesPanel(getNext, composeFilterPredicate) {
+    function ChoicesPanel(listFacade, _navigate, addFilterFacade, insertFilterFacade) {
       var hoveredChoice = null;
-      var filterFacade = ListFacade(function (choice) {
-        return choice.prev;
-      }, function (choice, v) {
-        return choice.prev = v;
-      }, function (choice) {
-        return choice.next;
-      }, function (choice, v) {
-        return choice.next = v;
-      });
-
-      function setChoices(getFilterIn) {
-        filterFacade.reset();
-        collection.forLoop(function (choice) {
-          choice.prev = choice.next = null; //-------------------------------
-
-          if (!choice.isOptionHidden) {
-            var v = getFilterIn(choice);
-            if (v) filterFacade.add(choice);
-            choice.setVisible(v);
-          }
-        });
-      }
-
-      function addFilterFacade(choice) {
-        if (!choice.isOptionHidden) {
-          filterFacade.add(choice);
-        }
-      }
-
-      function insertFilterFacade(choice) {
-        if (!choice.isOptionHidden) {
-          var choiceNonhiddenBefore = getNext(choice);
-          filterFacade.add(choice, choiceNonhiddenBefore);
-        }
-      } // ------------------------------------ ------------------------------------ 
-
-
       var collection = CollectionFacade(function (choice) {
         return choice.itemPrev;
       }, function (choice, v) {
@@ -788,6 +748,9 @@
         get: function get(key) {
           return collection.get(key);
         },
+        getHead: function getHead() {
+          return collection.getHead();
+        },
         insert: function insert(key, choice) {
           if (key >= collection.getLength()) {
             push(choice);
@@ -798,33 +761,10 @@
         },
         remove: function remove(key) {
           var choice = collection.remove(key);
-          filterFacade.remove(choice);
+          listFacade.remove(choice);
           return choice;
         },
-        filterOut: function filterOut(choice) {
-          return filterFacade.remove(choice);
-        },
-        filterIn: function filterIn(choice, beforeChoice) {
-          return filterFacade.add(choice, beforeChoice);
-        },
-        getFirstVisibleChoice: function getFirstVisibleChoice() {
-          return filterFacade.getHead();
-        },
-        getVisibleCount: function getVisibleCount() {
-          return filterFacade.getCount();
-        },
-        getHasVisible: function getHasVisible() {
-          return filterFacade.getCount() > 0;
-        },
-        setFilter: function setFilter(text) {
-          return setChoices(composeFilterPredicate(text));
-        },
-        resetFilter: function resetFilter() {
-          return setChoices(function () {
-            return true;
-          });
-        },
-        forEach: function forEach(f) {
+        forLoop: function forLoop(f) {
           return collection.forLoop(f);
         },
         getHoveredChoice: function getHoveredChoice() {
@@ -837,15 +777,11 @@
         },
         resetHoveredChoice: resetHoveredChoice,
         navigate: function navigate(down) {
-          if (down) {
-            return hoveredChoice ? hoveredChoice.next : filterFacade.getHead();
-          } else {
-            return hoveredChoice ? hoveredChoice.prev : filterFacade.getTail();
-          }
+          return _navigate(down, hoveredChoice);
         },
         clear: function clear() {
           collection.reset();
-          filterFacade.reset();
+          listFacade.reset();
         },
         dispose: function dispose() {
           return collection.forLoop(function (choice) {
@@ -1370,8 +1306,8 @@
         updateDisabled: null,
         updateSelected: null,
         // navigation and filter support
-        prev: null,
-        next: null,
+        filteredPrev: null,
+        filteredNext: null,
         searchText: option.text.toLowerCase().trim(),
         // TODO make an index abstraction
         // internal state handlers, so they do not have "update semantics"
@@ -1417,6 +1353,36 @@
         choice.isOptionDisabled = newIsDisabled;
         choice.updateDisabled();
       }
+    }
+
+    function FilterFacade(listFacade, forEach, composeFilterPredicate) {
+      return {
+        setFilter: function setFilter(text) {
+          var getFilterIn = composeFilterPredicate(text);
+          listFacade.reset();
+          forEach(function (choice) {
+            choice.filteredPrev = choice.filteredNext = null;
+            var v = getFilterIn(choice);
+            if (v) listFacade.add(choice);
+            choice.setVisible(v);
+          });
+        },
+        resetFilter: function resetFilter() {
+          listFacade.reset();
+          forEach(function (choice) {
+            choice.filteredPrev = choice.filteredNext = null;
+            listFacade.add(choice);
+            choice.setVisible(true);
+          });
+        },
+        navigate: function navigate(down, choice) {
+          if (down) {
+            return choice ? choice.filteredNext : listFacade.getHead();
+          } else {
+            return choice ? choice.filteredPrev : listFacade.getTail();
+          }
+        }
+      };
     }
 
     var MultiSelect = /*#__PURE__*/function () {
@@ -1465,7 +1431,7 @@
 
       _proto.processEmptyInput = function processEmptyInput() {
         this.placeholderAspect.updateEmptyInputWidth();
-        this.choicesPanel.resetFilter();
+        this.filterFacade.resetFilter();
       } // -----------------------------------------------------------------------------------------------------------------------
       ;
 
@@ -1506,7 +1472,7 @@
 
         this.aspect.hideChoices(); // always hide 1st
 
-        this.choicesPanel.forEach(function (choice) {
+        this.choicesPanel.forLoop(function (choice) {
           if (_this.isSelectable(choice)) setOptionSelected(choice, true, _this.setSelected);
         });
         this.resetFilter();
@@ -1576,11 +1542,6 @@
         setOptionSelected(choice, value, this.setSelected);
       };
 
-      _proto.getNext = function getNext(choice) {
-        var next = choice.itemNext;
-        return next;
-      };
-
       _proto.UpdateOptionAdded = function UpdateOptionAdded(key) {
         // TODO: generalize index as key 
         var options = this.getOptions();
@@ -1594,7 +1555,7 @@
         // TODO: generalize index as key 
         this.aspect.hideChoices(); // always hide 1st, then reset filter
 
-        this.choicesPanel.resetFilter();
+        this.filterFacade.resetFilter();
         var choice = this.choicesPanel.remove(key);
         choice.remove == null ? void 0 : choice.remove();
         choice.dispose == null ? void 0 : choice.dispose();
@@ -1833,10 +1794,10 @@
         var isEmpty = false;
         if (text == '') isEmpty = true;else {
           // check if exact match, otherwise new search
-          this.choicesPanel.setFilter(text);
+          this.filterFacade.setFilter(text);
 
-          if (this.choicesPanel.getVisibleCount() == 1) {
-            var fullMatchChoice = this.choicesPanel.getFirstVisibleChoice();
+          if (this.filterListFacade.getCount() == 1) {
+            var fullMatchChoice = this.filterListFacade.getHead();
 
             if (fullMatchChoice.searchText == text) {
               setOptionSelected(fullMatchChoice, true, this.setSelected);
@@ -1850,7 +1811,7 @@
         if (isEmpty) this.processEmptyInput();else resetLength();
         this.aspect.eventLoopFlag.set(); // means disable some mouse handlers; otherwise we will get "Hover On MouseEnter" when filter's changes should remove hover
 
-        var visibleCount = this.choicesPanel.getVisibleCount();
+        var visibleCount = this.filterListFacade.getCount();
 
         if (visibleCount > 0) {
           var panelIsVisble = this.staticContent.isChoicesVisible();
@@ -1860,7 +1821,7 @@
           }
 
           if (visibleCount == 1) {
-            this.choicesPanel.hoverIn(this.choicesPanel.getFirstVisibleChoice());
+            this.choicesPanel.hoverIn(this.filterListFacade.getHead());
           } else {
             if (panelIsVisble) this.choicesPanel.resetHoveredChoice();
           }
@@ -1896,66 +1857,107 @@
         this.staticContent.toggleFocusStyling();
       };
 
-      _proto.init = function init() {
+      _proto.forEach = function (_forEach) {
+        function forEach(_x) {
+          return _forEach.apply(this, arguments);
+        }
+
+        forEach.toString = function () {
+          return _forEach.toString();
+        };
+
+        return forEach;
+      }(function (f) {
         var _this5 = this;
 
+        var choice = this.choicesPanel.getHead();
+
+        while (choice) {
+          forEach(function (choice) {
+            f(choice);
+            choice = _this5.getNext(choice);
+          });
+        }
+      });
+
+      _proto.getNext = function getNext(choice) {
+        var next = choice.itemNext;
+        return next;
+      };
+
+      _proto.navigate = function navigate(down, hoveredChoice) {
+        return this.filterFacade.navigate(down, hoveredChoice);
+      };
+
+      _proto.addFilterFacade = function addFilterFacade(choice) {
+        this.filterListFacade.add(choice);
+      };
+
+      _proto.insertFilterFacade = function insertFilterFacade(choice) {
+        var choiceNonhiddenBefore = this.getNext(choice);
+        this.filterListFacade.add(choice, choiceNonhiddenBefore);
+      };
+
+      _proto.init = function init() {
+        var _this6 = this;
+
         this.filterPanel = FilterPanel(this.staticContent.filterInputElement, function () {
-          return _this5.setFocusIn(true);
+          return _this6.setFocusIn(true);
         }, // focus in - show dropdown
         function () {
-          return _this5.aspect.onFocusOut(function () {
-            return _this5.setFocusIn(false);
+          return _this6.aspect.onFocusOut(function () {
+            return _this6.setFocusIn(false);
           });
         }, // focus out - hide dropdown
         function () {
-          return _this5.keyDownArrow(false);
+          return _this6.keyDownArrow(false);
         }, // arrow up
         function () {
-          return _this5.keyDownArrow(true);
+          return _this6.keyDownArrow(true);
         }, // arrow down
 
         /*onTabForEmpty*/
         function () {
-          return _this5.aspect.hideChoices();
+          return _this6.aspect.hideChoices();
         }, // tab on empty
         function () {
-          var p = _this5.picksList.removePicksTail();
+          var p = _this6.picksList.removePicksTail();
 
-          if (p) _this5.aspect.alignToFilterInputItemLocation();
+          if (p) _this6.aspect.alignToFilterInputItemLocation();
         }, // backspace - "remove last"
 
         /*onTabToCompleate*/
         function () {
-          if (_this5.staticContent.isChoicesVisible()) {
-            _this5.hoveredToSelected();
+          if (_this6.staticContent.isChoicesVisible()) {
+            _this6.hoveredToSelected();
           }
         },
         /*onEnterToCompleate*/
         function () {
-          if (_this5.staticContent.isChoicesVisible()) {
-            _this5.hoveredToSelected();
+          if (_this6.staticContent.isChoicesVisible()) {
+            _this6.hoveredToSelected();
           } else {
-            if (_this5.choicesPanel.getHasVisible()) {
-              _this5.aspect.showChoices();
+            if (_this6.filterListFacade.getCount() > 0) {
+              _this6.aspect.showChoices();
             }
           }
         },
         /*onKeyUpEsc*/
         function () {
-          _this5.aspect.hideChoices(); // always hide 1st
+          _this6.aspect.hideChoices(); // always hide 1st
 
 
-          _this5.resetFilter();
+          _this6.resetFilter();
         }, // esc keyup 
         // tab/enter "compleate hovered"
 
         /*stopEscKeyDownPropogation */
         function () {
-          return _this5.staticContent.isChoicesVisible();
+          return _this6.staticContent.isChoicesVisible();
         },
         /*onInput*/
         function (filterInputValue, resetLength) {
-          _this5.input(filterInputValue, resetLength);
+          _this6.input(filterInputValue, resetLength);
         }); // attach filterInputElement
 
         this.staticContent.pickFilterElement.appendChild(this.staticContent.filterInputElement);
@@ -1970,37 +1972,56 @@
           };
         };
 
-        this.choicesPanel = ChoicesPanel(function (choice) {
-          return _this5.getNext(choice);
+        this.filterListFacade = ListFacade(function (choice) {
+          return choice.filteredPrev;
+        }, function (choice, v) {
+          return choice.filteredPrev = v;
+        }, function (choice) {
+          return choice.filteredNext;
+        }, function (choice, v) {
+          return choice.filteredNext = v;
+        });
+        this.filterFacade = FilterFacade(this.filterListFacade, function (f) {
+          return _this6.forEach(f);
         }, composeFilterPredicate);
+        this.choicesPanel = ChoicesPanel(this.filterListFacade, function (down, hoveredChoice) {
+          return _this6.navigate(down, hoveredChoice);
+        }, function (c) {
+          return _this6.addFilterFacade(c);
+        }, function (c) {
+          return _this6.insertFilterFacade(c);
+        });
         this.placeholderAspect = PlaceholderAspect(this.placeholderText, function () {
-          return _this5.picksList.isEmpty() && _this5.filterPanel.isEmpty();
+          return _this6.picksList.isEmpty() && _this6.filterPanel.isEmpty();
         }, this.staticContent.picksElement, this.staticContent.filterInputElement, this.css);
         this.placeholderAspect.updateEmptyInputWidth();
         this.aspect = MultiSelectInputAspect(this.window, function () {
-          return _this5.staticContent.appendToContainer();
+          return _this6.staticContent.appendToContainer();
         }, this.staticContent.filterInputElement, this.staticContent.picksElement, this.staticContent.choicesElement, function () {
-          return _this5.staticContent.isChoicesVisible();
+          return _this6.staticContent.isChoicesVisible();
         }, function (visible) {
-          return _this5.staticContent.setChoicesVisible(visible);
+          return _this6.staticContent.setChoicesVisible(visible);
         }, function () {
-          return _this5.choicesPanel.resetHoveredChoice();
+          return _this6.choicesPanel.resetHoveredChoice();
         }, function (choice) {
-          return _this5.choicesPanel.hoverIn(choice);
+          return _this6.choicesPanel.hoverIn(choice);
         }, function () {
-          return _this5.resetFilter();
+          return _this6.resetFilter();
         }, function () {
-          return !_this5.choicesPanel.getHasVisible();
+          return _this6.filterListFacade.getCount() == 0;
         },
         /*onClick*/
         function (event) {
-          return _this5.filterPanel.setFocusIfNotTarget(event.target);
+          return _this6.filterPanel.setFocusIfNotTarget(event.target);
         },
         /*resetFocus*/
         function () {
-          return _this5.setFocusIn(false);
+          return _this6.setFocusIn(false);
         }, this.isRtl, this.popper);
         this.staticContent.attachContainer();
+      };
+
+      _proto.load = function load() {
         this.updateDataImpl();
         this.UpdateAppearance(); // TODO: now appearance should be done after updateDataImpl, because items should be "already in place", correct it
       };
@@ -2852,12 +2873,12 @@
 
       function updateHidden(choice) {
         if (choice.isOptionHidden) {
-          multiSelect.choicesPanel.filterOut(choice);
+          multiSelect.filterListFacade.remove(choice);
           choice.remove();
           buildHiddenChoice(choice);
         } else {
           var nextChoice = getNextNonHidden(choice);
-          multiSelect.choicesPanel.filterIn(choice, nextChoice);
+          multiSelect.filterListFacade.add(choice, nextChoice);
           multiSelect.createChoiceElement(choice);
           choice.choiceElementAttach(nextChoice == null ? void 0 : nextChoice.choiceElement); // itemPrev?.choiceElement
         }
@@ -2915,6 +2936,31 @@
           buildHiddenChoice(choice);
         } else {
           origPushChoiceItem(choice);
+        }
+      };
+
+      multiSelect.forEach = function (f) {
+        var choice = multiSelect.choicesPanel.getHead();
+
+        while (choice) {
+          if (!choice.isOptionHidden) f(choice);
+          choice = multiSelect.getNext(choice);
+        }
+      };
+
+      var origAddFilterFacade = multiSelect.addFilterFacade.bind(multiSelect);
+
+      multiSelect.addFilterFacade = function (choice) {
+        if (!choice.isOptionHidden) {
+          origAddFilterFacade(choice);
+        }
+      };
+
+      var origInsertFilterFacade = multiSelect.insertFilterFacade.bind(multiSelect);
+
+      multiSelect.addFilterFacade = function (choice) {
+        if (!choice.isOptionHidden) {
+          origInsertFilterFacade(choice);
         }
       };
     }
@@ -3161,7 +3207,8 @@
       multiSelect.validationApi = validationApi;
       bsAppearance(multiSelect, staticContent, getValidity, getSize, validationApiObservable, useCssPatch, css);
       if (init && init instanceof Function) init(multiSelect);
-      multiSelect.init(); // support browser's "step backward" on form restore
+      multiSelect.init();
+      multiSelect.load(); // support browser's "step backward" on form restore
 
       if (staticContent.selectElement && window.document.readyState != "complete") {
         window.setTimeout(function () {

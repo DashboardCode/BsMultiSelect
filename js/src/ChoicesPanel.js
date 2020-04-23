@@ -1,48 +1,8 @@
-import {ListFacade, CollectionFacade} from './ToolsJs'
+import {CollectionFacade} from './ToolsJs'
 
-export function ChoicesPanel(
-    getNext,
-    composeFilterPredicate 
-    ) 
+export function ChoicesPanel(listFacade, navigate, addFilterFacade, insertFilterFacade) 
 {
     let hoveredChoice=null;
-    
-    let filterFacade = ListFacade(
-        (choice)=>choice.prev, 
-        (choice, v)=>choice.prev=v, 
-        (choice)=>choice.next, 
-        (choice, v)=>choice.next=v, 
-    );
-
-    function setChoices(getFilterIn) {
-        filterFacade.reset();
-        collection.forLoop( choice => {
-            choice.prev = choice.next = null;
-            //-------------------------------
-            if ( !choice.isOptionHidden )
-            {
-                var v = getFilterIn(choice);
-                if (v)
-                    filterFacade.add(choice);
-                choice.setVisible(v);
-            }
-        });
-    }
-
-    function addFilterFacade(choice){
-        if ( !choice.isOptionHidden ) {
-            filterFacade.add(choice);
-        }
-    }
-
-    function insertFilterFacade(choice){
-        if ( !choice.isOptionHidden ){
-            let choiceNonhiddenBefore = getNext(choice);
-            filterFacade.add(choice, choiceNonhiddenBefore);
-        }
-    }
-
-    // ------------------------------------ ------------------------------------ 
 
     let collection = CollectionFacade(
         (choice)=>choice.itemPrev, 
@@ -66,6 +26,7 @@ export function ChoicesPanel(
     var item = {
         push,
         get: (key) => collection.get(key),
+        getHead: () => collection.getHead(),
         insert: (key, choice) => {
             if (key>=collection.getLength()) {
                 push(choice);
@@ -77,18 +38,11 @@ export function ChoicesPanel(
         },
         remove: (key) => {
             var choice = collection.remove(key);
-            filterFacade.remove(choice);
+            listFacade.remove(choice);
             return choice;
         },
-
-        filterOut: (choice) => filterFacade.remove(choice),
-        filterIn: (choice, beforeChoice) => filterFacade.add(choice, beforeChoice),
-        getFirstVisibleChoice: ()=> filterFacade.getHead(),
-        getVisibleCount: () => filterFacade.getCount(),
-        getHasVisible: () => filterFacade.getCount()>0,
-        setFilter: (text)=> setChoices(composeFilterPredicate(text)),
-        resetFilter: () => setChoices(()=>true),
-        forEach: (f)=>collection.forLoop(f),
+        
+        forLoop: (f)=>collection.forLoop(f),
         getHoveredChoice: () => hoveredChoice,
         hoverIn(choice){
             resetHoveredChoice(); 
@@ -96,16 +50,11 @@ export function ChoicesPanel(
             hoveredChoice.setHoverIn(true)
         },
         resetHoveredChoice,
-        navigate: (down) => {
-            if (down) {
-                return hoveredChoice?hoveredChoice.next: filterFacade.getHead();
-            } else {
-                return hoveredChoice?hoveredChoice.prev: filterFacade.getTail();
-            }
-        },
+        navigate: (down) => navigate(down, hoveredChoice),
+        
         clear:()=>{
             collection.reset();
-            filterFacade.reset();
+            listFacade.reset();
         },
         dispose: () => collection.forLoop(choice => choice.dispose?.())
     }

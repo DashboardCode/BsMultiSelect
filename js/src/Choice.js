@@ -9,8 +9,8 @@ export function Choice(option, isOptionSelected, isOptionDisabled){
         updateSelected: null,
 
         // navigation and filter support
-        prev: null, 
-        next: null, 
+        filteredPrev: null, 
+        filteredNext: null, 
         searchText: option.text.toLowerCase().trim(), // TODO make an index abstraction
 
         // internal state handlers, so they do not have "update semantics"

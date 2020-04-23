@@ -40,12 +40,12 @@ export function apply(multiSelect, getIsOptionHidden){
 
     function updateHidden(choice) {
         if (choice.isOptionHidden) {
-            multiSelect.choicesPanel.filterOut(choice);
+            multiSelect.filterListFacade.remove(choice);
             choice.remove(); 
             buildHiddenChoice(choice);
         } else {
             let nextChoice = getNextNonHidden(choice);
-            multiSelect.choicesPanel.filterIn(choice, nextChoice);
+            multiSelect.filterListFacade.add(choice, nextChoice);
             multiSelect.createChoiceElement(choice);
             choice.choiceElementAttach(nextChoice?.choiceElement); // itemPrev?.choiceElement
         }
@@ -94,6 +94,29 @@ export function apply(multiSelect, getIsOptionHidden){
         }
         else{ 
             origPushChoiceItem(choice);
+        }
+    }
+
+    multiSelect.forEach = (f) => {
+        let choice = multiSelect.choicesPanel.getHead();
+        while(choice){
+            if (!choice.isOptionHidden)
+                f(choice);
+            choice = multiSelect.getNext(choice);
+        }
+    }
+
+    var origAddFilterFacade = multiSelect.addFilterFacade.bind(multiSelect);
+    multiSelect.addFilterFacade = (choice) => {
+        if ( !choice.isOptionHidden ) {
+            origAddFilterFacade(choice);
+        }
+    }
+
+    var origInsertFilterFacade = multiSelect.insertFilterFacade.bind(multiSelect);
+    multiSelect.addFilterFacade = (choice) => {
+        if ( !choice.isOptionHidden ){
+            origInsertFilterFacade(choice);
         }
     }
 }

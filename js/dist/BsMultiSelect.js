@@ -253,7 +253,8 @@ export function BsMultiSelect(element, environment, settings) {
   multiSelect.validationApi = validationApi;
   bsAppearance(multiSelect, staticContent, getValidity, getSize, validationApiObservable, useCssPatch, css);
   if (init && init instanceof Function) init(multiSelect);
-  multiSelect.init(); // support browser's "step backward" on form restore
+  multiSelect.init();
+  multiSelect.load(); // support browser's "step backward" on form restore
 
   if (staticContent.selectElement && window.document.readyState != "complete") {
     window.setTimeout(function () {
