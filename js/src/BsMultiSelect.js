@@ -1,7 +1,7 @@
 import {MultiSelect} from './MultiSelect'
 import {LabelAdapter} from './LabelAdapter';
 
-import {bsAppearance, getLabelElement,  composeGetValidity, composeGetDisabled, composeGetSize} from './BsAppearance';
+import {BsAppearancePlugin, getLabelElement, composeGetDisabled} from './BsAppearancePlugin';
 import {ValidityApi} from './ValidityApi'
 
 import {getDataGuardedWithPrefix, EventBinder, closestByTagName, getIsRtl} from './ToolsDom';
@@ -16,7 +16,8 @@ import {choiceContentGenerator as defChoiceContentGenerator} from './ChoiceConte
 import {staticContentGenerator  as defStaticContentGenerator} from './StaticContentGenerator';
 import {css, cssPatch} from './BsCss'
 
-import {apply} from './HiddenPlugin'
+import {HiddenPlugin} from './HiddenPlugin'
+import {PluginManager} from './PluginManager'
 
 const defValueMissingMessage = 'Please select an item in the list'
 
@@ -94,8 +95,8 @@ export function BsMultiSelect(element, environment, settings){
         containerClass, label, isRtl, required,
         getIsValueMissing, getSelected, setSelected, placeholder, 
         common,
-        options, getDisabled, getValidity, getSize,
-        getIsOptionDisabled,  getIsOptionHidden
+        options, getDisabled,
+        getIsOptionDisabled
         } = configuration;
 
     if (useCssPatch){
@@ -128,12 +129,8 @@ export function BsMultiSelect(element, environment, settings){
     let getOptions;
     
     if (options){
-        if (!getValidity)
-            getValidity = () => null
         if (!getDisabled)
             getDisabled = () => false;
-        if (!getSize)
-            getSize = () => null;
         getOptions = () => options,
         onChange = () => {
             lazyDefinedEvent()
@@ -142,20 +139,13 @@ export function BsMultiSelect(element, environment, settings){
         
         if (!getIsOptionDisabled)
             getIsOptionDisabled = (option)=>(option.disabled===undefined)?false:option.disabled;
-        if (!getIsOptionHidden)
-            getIsOptionHidden = (option)=>(option.hidden===undefined)?false:option.hidden;     
     } 
     else  
     {
         let selectElement = staticContent.selectElement;
-        if(!getValidity)
-            getValidity = composeGetValidity(selectElement);
-    
         if(!getDisabled) 
             getDisabled = composeGetDisabled(selectElement);
 
-        if(!getSize) 
-            getSize = composeGetSize(selectElement);
 
         getOptions = ()=>selectElement.options, //.getElementsByTagName('OPTION'), 
         onChange = () => {
@@ -166,8 +156,6 @@ export function BsMultiSelect(element, environment, settings){
 
         if (!getIsOptionDisabled)
             getIsOptionDisabled = (option)=>option.disabled;
-        if (!getIsOptionHidden)
-            getIsOptionHidden = (option)=>option.hidden;     
     }
 
     if (!getIsValueMissing){
@@ -190,8 +178,7 @@ export function BsMultiSelect(element, environment, settings){
         labelElement=getLabelElement(staticContent.selectElement); 
     let labelAdapter = LabelAdapter(labelElement, staticContent.createInputId);
 
-    if (!placeholder)
-    {
+    if (!placeholder){
         placeholder = getDataGuardedWithPrefix(element,"bsmultiselect","placeholder");
     }
     if (!getSelected){
@@ -203,6 +190,7 @@ export function BsMultiSelect(element, environment, settings){
         // if (value) option.setAttribute('selected','');
         // else  option.removeAttribute('selected');
     }
+
     var validationApi = ValidityApi(
         staticContent.filterInputElement, 
         isValueMissingObservable, 
@@ -211,21 +199,16 @@ export function BsMultiSelect(element, environment, settings){
 
     
     if (!common){
-        common = {
-            getDisabled,
-            getValidity,
-            getSize,
-        }
+        common = {}
     }
+    common.getDisabled=getDisabled;
 
     var multiSelect = new MultiSelect(
         getOptions,
-        common,
         getDisabled,
         setSelected,
         getSelected,
         getIsOptionDisabled,
-        //getIsOptionHidden,
         staticContent,
         (pickElement) => pickContentGenerator(pickElement, common, css),
         (choiceElement, toggle) => choiceContentGenerator(choiceElement, common, css, toggle),
@@ -236,8 +219,18 @@ export function BsMultiSelect(element, environment, settings){
         css,
         Popper,
         window);
-    
-    apply(multiSelect, getIsOptionHidden);
+
+    let plugins = [];
+    plugins.push(
+        HiddenPlugin(configuration, options, common, staticContent));
+    plugins.push(
+        BsAppearancePlugin(
+            configuration, options,  common, staticContent, 
+            validationApiObservable,
+            css, useCssPatch));
+
+    let pluginManager = PluginManager(plugins);
+    pluginManager.afterConstructor(multiSelect);
 
     var resetDispose=null;
     if (staticContent.selectElement){
@@ -251,20 +244,17 @@ export function BsMultiSelect(element, environment, settings){
          }
     }
             
-    multiSelect.Dispose = composeSync(multiSelect.Dispose.bind(multiSelect), isValueMissingObservable.detachAll, validationApiObservable.detachAll, resetDispose);
+    multiSelect.Dispose = composeSync(multiSelect.Dispose.bind(multiSelect), 
+        isValueMissingObservable.detachAll, validationApiObservable.detachAll, resetDispose);
     multiSelect.validationApi = validationApi;
-    
-    bsAppearance(
-        multiSelect, staticContent, getValidity, getSize,
-        validationApiObservable,
-        useCssPatch, css);
     
     if (init && init instanceof Function)
         init(multiSelect);
    
     multiSelect.init();
-
+    pluginManager.afterInit(multiSelect);
     multiSelect.load();
+    pluginManager.afterLoad(multiSelect);
 
     // support browser's "step backward" on form restore
     if (staticContent.selectElement && window.document.readyState !="complete"){

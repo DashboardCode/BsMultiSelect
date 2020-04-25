@@ -11,7 +11,6 @@ import {FilterFacade} from './FilterFacade'
 export class MultiSelect {
     constructor(
         getOptions,
-        common,
         getIsComponentDisabled,
         setSelected, 
         getIsOptionSelected,
@@ -27,7 +26,6 @@ export class MultiSelect {
         popper, window) {
         this.isRtl = isRtl;
         // readonly
-        this.common = common;
         this.getOptions=getOptions;
         this.getIsOptionSelected = getIsOptionSelected;
         this.getIsOptionDisabled = getIsOptionDisabled;

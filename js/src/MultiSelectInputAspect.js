@@ -55,10 +55,11 @@ export function MultiSelectInputAspect (
     //if (!!Popper.prototype && !!Popper.prototype.constructor.name) {
         popper=new Popper( 
             filterInputElement, 
-            choicesElement, {
+            choicesElement, 
+            {
                 placement: isRtl?'bottom-end':'bottom-start',
                 modifiers: {
-                    preventOverflow: {enabled:false},
+                    preventOverflow: {enabled:true},
                     hide: {enabled:false},
                     flip: {enabled:false}
                 }

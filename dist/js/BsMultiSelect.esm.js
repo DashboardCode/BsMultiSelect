@@ -1,5 +1,5 @@
 /*!
-  * DashboardCode BsMultiSelect v0.5.48 (https://dashboardcode.github.io/BsMultiSelect/)
+  * DashboardCode BsMultiSelect v0.5.49 (https://dashboardcode.github.io/BsMultiSelect/)
   * Copyright 2017-2020 Roman Pokrovskij (github user rpokrovskij)
   * Licensed under APACHE 2 (https://github.com/DashboardCode/BsMultiSelect/blob/master/LICENSE)
   */
@@ -786,7 +786,7 @@ function MultiSelectInputAspect(window, appendToContainer, filterInputElement, p
     placement: isRtl ? 'bottom-end' : 'bottom-start',
     modifiers: {
       preventOverflow: {
-        enabled: false
+        enabled: true
       },
       hide: {
         enabled: false
@@ -1302,10 +1302,9 @@ function FilterFacade(listFacade, forEach, composeFilterPredicate) {
 }
 
 var MultiSelect = /*#__PURE__*/function () {
-  function MultiSelect(getOptions, common, getIsComponentDisabled, setSelected, getIsOptionSelected, getIsOptionDisabled, staticContent, pickContentGenerator, choiceContentGenerator, labelAdapter, placeholderText, isRtl, onChange, css, popper, window) {
+  function MultiSelect(getOptions, getIsComponentDisabled, setSelected, getIsOptionSelected, getIsOptionDisabled, staticContent, pickContentGenerator, choiceContentGenerator, labelAdapter, placeholderText, isRtl, onChange, css, popper, window) {
     this.isRtl = isRtl; // readonly
 
-    this.common = common;
     this.getOptions = getOptions;
     this.getIsOptionSelected = getIsOptionSelected;
     this.getIsOptionDisabled = getIsOptionDisabled;
@@ -2041,90 +2040,114 @@ function getMessagesElements(containerElement) {
   };
 }
 
-function bsAppearance(multiSelect, staticContent, getValidity, getSize, validityApiObservable, useCssPatch, css) {
-  var updateSize;
+function BsAppearancePlugin(configuration, options, common, staticContent, // --
+validityApiObservable, css, useCssPatch) {
+  var getValidity = configuration.getValidity,
+      getSize = configuration.getSize;
+  var selectElement = staticContent.selectElement;
 
-  if (!useCssPatch) {
-    updateSize = function updateSize() {
-      return updateSizeForAdapter(staticContent.picksElement, getSize);
+  if (options) {
+    if (!getValidity) getValidity = function getValidity() {
+      return null;
+    };
+    if (!getSize) getSize = function getSize() {
+      return null;
     };
   } else {
-    var picks_lg = css.picks_lg,
-        picks_sm = css.picks_sm,
-        picks_def = css.picks_def;
-
-    updateSize = function updateSize() {
-      return updateSizeJsForAdapter(staticContent.picksElement, picks_lg, picks_sm, picks_def, getSize);
-    };
+    if (!getValidity) getValidity = composeGetValidity(selectElement);
+    if (!getSize) getSize = composeGetSize(selectElement);
   }
 
-  multiSelect.UpdateSize = updateSize;
+  common.getSize = getSize;
+  common.getValidity = getValidity;
+  return {
+    afterConstructor: function afterConstructor(multiSelect) {
+      var updateSize;
 
-  if (useCssPatch) {
-    var defToggleFocusStyling = staticContent.toggleFocusStyling;
+      if (!useCssPatch) {
+        updateSize = function updateSize() {
+          return updateSizeForAdapter(staticContent.picksElement, getSize);
+        };
+      } else {
+        var picks_lg = css.picks_lg,
+            picks_sm = css.picks_sm,
+            picks_def = css.picks_def;
 
-    staticContent.toggleFocusStyling = function () {
-      var validity = validationObservable.getValue();
-      var isFocusIn = staticContent.getIsFocusIn();
-      defToggleFocusStyling(isFocusIn);
-
-      if (isFocusIn) {
-        if (validity === false) {
-          // but not toggle events (I know it will be done in future)
-          staticContent.setIsFocusIn(isFocusIn);
-          addStyling(staticContent.picksElement, css.picks_focus_invalid);
-        } else if (validity === true) {
-          // but not toggle events (I know it will be done in future)
-          staticContent.setIsFocusIn(isFocusIn);
-          addStyling(staticContent.picksElement, css.picks_focus_valid);
-        }
+        updateSize = function updateSize() {
+          return updateSizeJsForAdapter(staticContent.picksElement, picks_lg, picks_sm, picks_def, getSize);
+        };
       }
-    };
-  }
 
-  var getWasValidated = function getWasValidated() {
-    var wasValidatedElement = closestByClassName(staticContent.initialElement, 'was-validated');
-    return wasValidatedElement ? true : false;
+      multiSelect.UpdateSize = updateSize;
+
+      if (useCssPatch) {
+        var defToggleFocusStyling = staticContent.toggleFocusStyling;
+
+        staticContent.toggleFocusStyling = function () {
+          var validity = validationObservable.getValue();
+          var isFocusIn = staticContent.getIsFocusIn();
+          defToggleFocusStyling(isFocusIn);
+
+          if (isFocusIn) {
+            if (validity === false) {
+              // but not toggle events (I know it will be done in future)
+              staticContent.setIsFocusIn(isFocusIn);
+              addStyling(staticContent.picksElement, css.picks_focus_invalid);
+            } else if (validity === true) {
+              // but not toggle events (I know it will be done in future)
+              staticContent.setIsFocusIn(isFocusIn);
+              addStyling(staticContent.picksElement, css.picks_focus_valid);
+            }
+          }
+        };
+      }
+
+      var getWasValidated = function getWasValidated() {
+        var wasValidatedElement = closestByClassName(staticContent.initialElement, 'was-validated');
+        return wasValidatedElement ? true : false;
+      };
+
+      var wasUpdatedObservable = ObservableLambda(function () {
+        return getWasValidated();
+      });
+      var getManualValidationObservable = ObservableLambda(function () {
+        return getValidity();
+      });
+      var validationObservable = ObservableLambda(function () {
+        return wasUpdatedObservable.getValue() ? validityApiObservable.getValue() : getManualValidationObservable.getValue();
+      });
+      validationObservable.attach(function (value) {
+        var _getMessagesElements = getMessagesElements(staticContent.containerElement),
+            validMessages = _getMessagesElements.validMessages,
+            invalidMessages = _getMessagesElements.invalidMessages;
+
+        updateValidity(staticContent.picksElement, validMessages, invalidMessages, value);
+        staticContent.toggleFocusStyling();
+      });
+      wasUpdatedObservable.attach(function () {
+        return validationObservable.call();
+      });
+      validityApiObservable.attach(function () {
+        return validationObservable.call();
+      });
+      getManualValidationObservable.attach(function () {
+        return validationObservable.call();
+      });
+
+      multiSelect.UpdateValidity = function () {
+        return getManualValidationObservable.call();
+      };
+
+      multiSelect.UpdateWasValidated = function () {
+        return wasUpdatedObservable.call();
+      };
+
+      multiSelect.UpdateAppearance = composeSync(multiSelect.UpdateAppearance.bind(multiSelect), updateSize, validationObservable.call, getManualValidationObservable.call);
+      multiSelect.Dispose = composeSync(wasUpdatedObservable.detachAll, validationObservable.detachAll, getManualValidationObservable.detachAll, multiSelect.Dispose.bind(multiSelect));
+    }
   };
-
-  var wasUpdatedObservable = ObservableLambda(function () {
-    return getWasValidated();
-  });
-  var getManualValidationObservable = ObservableLambda(function () {
-    return getValidity();
-  });
-  var validationObservable = ObservableLambda(function () {
-    return wasUpdatedObservable.getValue() ? validityApiObservable.getValue() : getManualValidationObservable.getValue();
-  });
-  validationObservable.attach(function (value) {
-    var _getMessagesElements = getMessagesElements(staticContent.containerElement),
-        validMessages = _getMessagesElements.validMessages,
-        invalidMessages = _getMessagesElements.invalidMessages;
-
-    updateValidity(staticContent.picksElement, validMessages, invalidMessages, value);
-    staticContent.toggleFocusStyling();
-  });
-  wasUpdatedObservable.attach(function () {
-    return validationObservable.call();
-  });
-  validityApiObservable.attach(function () {
-    return validationObservable.call();
-  });
-  getManualValidationObservable.attach(function () {
-    return validationObservable.call();
-  });
-
-  multiSelect.UpdateValidity = function () {
-    return getManualValidationObservable.call();
-  };
-
-  multiSelect.UpdateWasValidated = function () {
-    return wasUpdatedObservable.call();
-  };
-
-  multiSelect.UpdateAppearance = composeSync(multiSelect.UpdateAppearance.bind(multiSelect), updateSize, validationObservable.call, getManualValidationObservable.call);
-  multiSelect.Dispose = composeSync(wasUpdatedObservable.detachAll, validationObservable.detachAll, getManualValidationObservable.detachAll, multiSelect.Dispose.bind(multiSelect));
 }
+
 function composeGetValidity(selectElement) {
   var getValidity = function getValidity() {
     return selectElement.classList.contains('is-invalid') ? false : selectElement.classList.contains('is-valid') ? true : null;
@@ -2132,22 +2155,7 @@ function composeGetValidity(selectElement) {
 
   return getValidity;
 }
-function composeGetDisabled(selectElement) {
-  var fieldsetElement = closestByTagName(selectElement, 'FIELDSET');
-  var getDisabled = null;
 
-  if (fieldsetElement) {
-    getDisabled = function getDisabled() {
-      return selectElement.disabled || fieldsetElement.disabled;
-    };
-  } else {
-    getDisabled = function getDisabled() {
-      return selectElement.disabled;
-    };
-  }
-
-  return getDisabled;
-}
 function composeGetSize(selectElement) {
   var inputGroupElement = closestByClassName(selectElement, 'input-group');
   var getSize = null;
@@ -2167,6 +2175,23 @@ function composeGetSize(selectElement) {
   }
 
   return getSize;
+}
+
+function composeGetDisabled(selectElement) {
+  var fieldsetElement = closestByTagName(selectElement, 'FIELDSET');
+  var getDisabled = null;
+
+  if (fieldsetElement) {
+    getDisabled = function getDisabled() {
+      return selectElement.disabled || fieldsetElement.disabled;
+    };
+  } else {
+    getDisabled = function getDisabled() {
+      return selectElement.disabled;
+    };
+  }
+
+  return getDisabled;
 }
 function getLabelElement(selectElement) {
   var value = null;
@@ -2756,127 +2781,176 @@ function getNextNonHidden(choice) {
   return getNextNonHidden(next);
 }
 
-function apply(multiSelect, getIsOptionHidden) {
-  multiSelect.getNext = function (c) {
-    return getNextNonHidden(c);
-  };
+function HiddenPlugin(configuration, options, common, staticContent) {
+  var getIsOptionHidden = configuration.getIsOptionHidden;
 
-  var origIsSelectable = multiSelect.isSelectable.bind(multiSelect);
-
-  multiSelect.isSelectable = function (choice) {
-    return origIsSelectable(choice) && !choice.isOptionHidden;
-  };
-
-  function buildHiddenChoice(choice) {
-    choice.updateSelected = function () {
-      return void 0;
+  if (options) {
+    if (!getIsOptionHidden) getIsOptionHidden = function getIsOptionHidden(option) {
+      return option.hidden === undefined ? false : option.hidden;
     };
-
-    choice.updateDisabled = function () {
-      return void 0;
-    };
-
-    choice.choiceElement = null;
-    choice.choiceElementAttach = null;
-    choice.setVisible = null;
-    choice.setHoverIn = null;
-    choice.remove = null;
-
-    choice.dispose = function () {
-      choice.dispose = null;
+  } else {
+    if (!getIsOptionHidden) getIsOptionHidden = function getIsOptionHidden(option) {
+      return option.hidden;
     };
   }
 
-  function updateHidden(choice) {
-    if (choice.isOptionHidden) {
-      multiSelect.filterListFacade.remove(choice);
-      choice.remove();
-      buildHiddenChoice(choice);
-    } else {
-      var nextChoice = getNextNonHidden(choice);
-      multiSelect.filterListFacade.add(choice, nextChoice);
-      multiSelect.createChoiceElement(choice);
-      choice.choiceElementAttach(nextChoice == null ? void 0 : nextChoice.choiceElement); // itemPrev?.choiceElement
+  return {
+    afterConstructor: function afterConstructor(multiSelect) {
+      multiSelect.getNext = function (c) {
+        return getNextNonHidden(c);
+      };
+
+      var origIsSelectable = multiSelect.isSelectable.bind(multiSelect);
+
+      multiSelect.isSelectable = function (choice) {
+        return origIsSelectable(choice) && !choice.isOptionHidden;
+      };
+
+      function buildHiddenChoice(choice) {
+        choice.updateSelected = function () {
+          return void 0;
+        };
+
+        choice.updateDisabled = function () {
+          return void 0;
+        };
+
+        choice.choiceElement = null;
+        choice.choiceElementAttach = null;
+        choice.setVisible = null;
+        choice.setHoverIn = null;
+        choice.remove = null;
+
+        choice.dispose = function () {
+          choice.dispose = null;
+        };
+      }
+
+      function updateHidden(choice) {
+        if (choice.isOptionHidden) {
+          multiSelect.filterListFacade.remove(choice);
+          choice.remove();
+          buildHiddenChoice(choice);
+        } else {
+          var nextChoice = getNextNonHidden(choice);
+          multiSelect.filterListFacade.add(choice, nextChoice);
+          multiSelect.createChoiceElement(choice);
+          choice.choiceElementAttach(nextChoice == null ? void 0 : nextChoice.choiceElement); // itemPrev?.choiceElement
+        }
+      }
+
+      multiSelect.updateHidden = function (c) {
+        return updateHidden(c);
+      };
+
+      function UpdateOptionHidden(key) {
+        var choice = multiSelect.choicesPanel.get(key); // TODO: generalize index as key 
+
+        updateHiddenChoice(choice, function (c) {
+          return multiSelect.updateHidden(c);
+        }, getIsOptionHidden); // TODO: invite this.getIsOptionSelected
+      }
+
+      function UpdateOptionsHidden() {
+        var options = multiSelect.getOptions();
+
+        for (var i = 0; i < options.length; i++) {
+          UpdateOptionHidden(i);
+        }
+      }
+
+      multiSelect.UpdateOptionsHidden = function () {
+        return UpdateOptionsHidden();
+      };
+
+      multiSelect.UpdateOptionHidden = function (key) {
+        return UpdateOptionHidden(key);
+      };
+
+      var origСreateChoice = multiSelect.createChoice.bind(multiSelect);
+
+      multiSelect.createChoice = function (option) {
+        var choice = origСreateChoice(option);
+        choice.isOptionHidden = getIsOptionHidden(option);
+        return choice;
+      };
+
+      var origInsertChoiceItem = multiSelect.insertChoiceItem.bind(multiSelect);
+      var origPushChoiceItem = multiSelect.pushChoiceItem.bind(multiSelect);
+
+      multiSelect.insertChoiceItem = function (choice) {
+        if (choice.isOptionHidden) {
+          buildHiddenChoice(choice);
+        } else {
+          origInsertChoiceItem(choice);
+        }
+      };
+
+      multiSelect.pushChoiceItem = function (choice) {
+        if (choice.isOptionHidden) {
+          buildHiddenChoice(choice);
+        } else {
+          origPushChoiceItem(choice);
+        }
+      };
+
+      multiSelect.forEach = function (f) {
+        var choice = multiSelect.choicesPanel.getHead();
+
+        while (choice) {
+          if (!choice.isOptionHidden) f(choice);
+          choice = multiSelect.getNext(choice);
+        }
+      };
+
+      var origAddFilterFacade = multiSelect.addFilterFacade.bind(multiSelect);
+
+      multiSelect.addFilterFacade = function (choice) {
+        if (!choice.isOptionHidden) {
+          origAddFilterFacade(choice);
+        }
+      };
+
+      var origInsertFilterFacade = multiSelect.insertFilterFacade.bind(multiSelect);
+
+      multiSelect.addFilterFacade = function (choice) {
+        if (!choice.isOptionHidden) {
+          origInsertFilterFacade(choice);
+        }
+      };
     }
-  }
+    /*,
+    afterInit(multiSelect){
+      },
+    afterLoad(multiSelect){
+    
+    }*/
 
-  multiSelect.updateHidden = function (c) {
-    return updateHidden(c);
   };
+}
 
-  function UpdateOptionHidden(key) {
-    var choice = multiSelect.choicesPanel.get(key); // TODO: generalize index as key 
+function PluginManager(plugins) {
+  return {
+    afterConstructor: function afterConstructor(multiSelect) {
+      for (var i = 0; i < plugins.length; i++) {
+        var _plugins$i$afterConst, _plugins$i;
 
-    updateHiddenChoice(choice, function (c) {
-      return multiSelect.updateHidden(c);
-    }, getIsOptionHidden); // TODO: invite this.getIsOptionSelected
-  }
+        (_plugins$i$afterConst = (_plugins$i = plugins[i]).afterConstructor) == null ? void 0 : _plugins$i$afterConst.call(_plugins$i, multiSelect);
+      }
+    },
+    afterInit: function afterInit(multiSelect) {
+      for (var i = 0; i < plugins.length; i++) {
+        var _plugins$i$afterInit, _plugins$i2;
 
-  function UpdateOptionsHidden() {
-    var options = multiSelect.getOptions();
+        (_plugins$i$afterInit = (_plugins$i2 = plugins[i]).afterInit) == null ? void 0 : _plugins$i$afterInit.call(_plugins$i2, multiSelect);
+      }
+    },
+    afterLoad: function afterLoad(multiSelect) {
+      for (var i = 0; i < plugins.length; i++) {
+        var _plugins$i$afterLoad, _plugins$i3;
 
-    for (var i = 0; i < options.length; i++) {
-      UpdateOptionHidden(i);
-    }
-  }
-
-  multiSelect.UpdateOptionsHidden = function () {
-    return UpdateOptionsHidden();
-  };
-
-  multiSelect.UpdateOptionHidden = function (key) {
-    return UpdateOptionHidden(key);
-  };
-
-  var origСreateChoice = multiSelect.createChoice.bind(multiSelect);
-
-  multiSelect.createChoice = function (option) {
-    var choice = origСreateChoice(option);
-    choice.isOptionHidden = getIsOptionHidden(option);
-    return choice;
-  };
-
-  var origInsertChoiceItem = multiSelect.insertChoiceItem.bind(multiSelect);
-  var origPushChoiceItem = multiSelect.pushChoiceItem.bind(multiSelect);
-
-  multiSelect.insertChoiceItem = function (choice) {
-    if (choice.isOptionHidden) {
-      buildHiddenChoice(choice);
-    } else {
-      origInsertChoiceItem(choice);
-    }
-  };
-
-  multiSelect.pushChoiceItem = function (choice) {
-    if (choice.isOptionHidden) {
-      buildHiddenChoice(choice);
-    } else {
-      origPushChoiceItem(choice);
-    }
-  };
-
-  multiSelect.forEach = function (f) {
-    var choice = multiSelect.choicesPanel.getHead();
-
-    while (choice) {
-      if (!choice.isOptionHidden) f(choice);
-      choice = multiSelect.getNext(choice);
-    }
-  };
-
-  var origAddFilterFacade = multiSelect.addFilterFacade.bind(multiSelect);
-
-  multiSelect.addFilterFacade = function (choice) {
-    if (!choice.isOptionHidden) {
-      origAddFilterFacade(choice);
-    }
-  };
-
-  var origInsertFilterFacade = multiSelect.insertFilterFacade.bind(multiSelect);
-
-  multiSelect.addFilterFacade = function (choice) {
-    if (!choice.isOptionHidden) {
-      origInsertFilterFacade(choice);
+        (_plugins$i$afterLoad = (_plugins$i3 = plugins[i]).afterLoad) == null ? void 0 : _plugins$i$afterLoad.call(_plugins$i3, multiSelect);
+      }
     }
   };
 }
@@ -2968,10 +3042,7 @@ function BsMultiSelect(element, environment, settings) {
       common = configuration.common,
       options = configuration.options,
       getDisabled = configuration.getDisabled,
-      getValidity = configuration.getValidity,
-      getSize = configuration.getSize,
-      getIsOptionDisabled = configuration.getIsOptionDisabled,
-      getIsOptionHidden = configuration.getIsOptionHidden;
+      getIsOptionDisabled = configuration.getIsOptionDisabled;
 
   if (useCssPatch) {
     extendCss(css, cssPatch);
@@ -2994,14 +3065,8 @@ function BsMultiSelect(element, environment, settings) {
   var getOptions;
 
   if (options) {
-    if (!getValidity) getValidity = function getValidity() {
-      return null;
-    };
     if (!getDisabled) getDisabled = function getDisabled() {
       return false;
-    };
-    if (!getSize) getSize = function getSize() {
-      return null;
     };
     getOptions = function getOptions() {
       return options;
@@ -3012,14 +3077,9 @@ function BsMultiSelect(element, environment, settings) {
     if (!getIsOptionDisabled) getIsOptionDisabled = function getIsOptionDisabled(option) {
       return option.disabled === undefined ? false : option.disabled;
     };
-    if (!getIsOptionHidden) getIsOptionHidden = function getIsOptionHidden(option) {
-      return option.hidden === undefined ? false : option.hidden;
-    };
   } else {
     var selectElement = staticContent.selectElement;
-    if (!getValidity) getValidity = composeGetValidity(selectElement);
     if (!getDisabled) getDisabled = composeGetDisabled(selectElement);
-    if (!getSize) getSize = composeGetSize(selectElement);
     getOptions = function getOptions() {
       return selectElement.options;
     }, //.getElementsByTagName('OPTION'), 
@@ -3030,9 +3090,6 @@ function BsMultiSelect(element, environment, settings) {
     };
     if (!getIsOptionDisabled) getIsOptionDisabled = function getIsOptionDisabled(option) {
       return option.disabled;
-    };
-    if (!getIsOptionHidden) getIsOptionHidden = function getIsOptionHidden(option) {
-      return option.hidden;
     };
   }
 
@@ -3086,20 +3143,20 @@ function BsMultiSelect(element, environment, settings) {
   });
 
   if (!common) {
-    common = {
-      getDisabled: getDisabled,
-      getValidity: getValidity,
-      getSize: getSize
-    };
+    common = {};
   }
 
-  var multiSelect = new MultiSelect(getOptions, common, getDisabled, setSelected, getSelected, getIsOptionDisabled, //getIsOptionHidden,
-  staticContent, function (pickElement) {
+  common.getDisabled = getDisabled;
+  var multiSelect = new MultiSelect(getOptions, getDisabled, setSelected, getSelected, getIsOptionDisabled, staticContent, function (pickElement) {
     return pickContentGenerator$1(pickElement, common, css);
   }, function (choiceElement, toggle) {
     return choiceContentGenerator$1(choiceElement, common, css, toggle);
   }, labelAdapter, placeholder, isRtl, onChange, css, Popper, window);
-  apply(multiSelect, getIsOptionHidden);
+  var plugins = [];
+  plugins.push(HiddenPlugin(configuration, options));
+  plugins.push(BsAppearancePlugin(configuration, options, common, staticContent, validationApiObservable, css, useCssPatch));
+  var pluginManager = PluginManager(plugins);
+  pluginManager.afterConstructor(multiSelect);
   var resetDispose = null;
 
   if (staticContent.selectElement) {
@@ -3121,10 +3178,11 @@ function BsMultiSelect(element, environment, settings) {
 
   multiSelect.Dispose = composeSync(multiSelect.Dispose.bind(multiSelect), isValueMissingObservable.detachAll, validationApiObservable.detachAll, resetDispose);
   multiSelect.validationApi = validationApi;
-  bsAppearance(multiSelect, staticContent, getValidity, getSize, validationApiObservable, useCssPatch, css);
   if (init && init instanceof Function) init(multiSelect);
   multiSelect.init();
-  multiSelect.load(); // support browser's "step backward" on form restore
+  pluginManager.afterInit(multiSelect);
+  multiSelect.load();
+  pluginManager.afterLoad(multiSelect); // support browser's "step backward" on form restore
 
   if (staticContent.selectElement && window.document.readyState != "complete") {
     window.setTimeout(function () {

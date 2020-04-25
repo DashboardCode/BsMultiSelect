@@ -1,6 +1,6 @@
 import { MultiSelect } from './MultiSelect';
 import { LabelAdapter } from './LabelAdapter';
-import { bsAppearance, getLabelElement, composeGetValidity, composeGetDisabled, composeGetSize } from './BsAppearance';
+import { BsAppearancePlugin, getLabelElement, composeGetDisabled } from './BsAppearancePlugin';
 import { ValidityApi } from './ValidityApi';
 import { getDataGuardedWithPrefix, EventBinder, closestByTagName, getIsRtl } from './ToolsDom';
 import { createCss, extendCss } from './ToolsStyling';
@@ -10,7 +10,8 @@ import { pickContentGenerator as defPickContentGenerator } from './PickContentGe
 import { choiceContentGenerator as defChoiceContentGenerator } from './ChoiceContentGenerator';
 import { staticContentGenerator as defStaticContentGenerator } from './StaticContentGenerator';
 import { css, cssPatch } from './BsCss';
-import { apply } from './HiddenPlugin';
+import { HiddenPlugin } from './HiddenPlugin';
+import { PluginManager } from './PluginManager';
 var defValueMissingMessage = 'Please select an item in the list';
 export var defaults = {
   useCssPatch: true,
@@ -98,10 +99,7 @@ export function BsMultiSelect(element, environment, settings) {
       common = configuration.common,
       options = configuration.options,
       getDisabled = configuration.getDisabled,
-      getValidity = configuration.getValidity,
-      getSize = configuration.getSize,
-      getIsOptionDisabled = configuration.getIsOptionDisabled,
-      getIsOptionHidden = configuration.getIsOptionHidden;
+      getIsOptionDisabled = configuration.getIsOptionDisabled;
 
   if (useCssPatch) {
     extendCss(css, cssPatch);
@@ -124,14 +122,8 @@ export function BsMultiSelect(element, environment, settings) {
   var getOptions;
 
   if (options) {
-    if (!getValidity) getValidity = function getValidity() {
-      return null;
-    };
     if (!getDisabled) getDisabled = function getDisabled() {
       return false;
-    };
-    if (!getSize) getSize = function getSize() {
-      return null;
     };
     getOptions = function getOptions() {
       return options;
@@ -142,14 +134,9 @@ export function BsMultiSelect(element, environment, settings) {
     if (!getIsOptionDisabled) getIsOptionDisabled = function getIsOptionDisabled(option) {
       return option.disabled === undefined ? false : option.disabled;
     };
-    if (!getIsOptionHidden) getIsOptionHidden = function getIsOptionHidden(option) {
-      return option.hidden === undefined ? false : option.hidden;
-    };
   } else {
     var selectElement = staticContent.selectElement;
-    if (!getValidity) getValidity = composeGetValidity(selectElement);
     if (!getDisabled) getDisabled = composeGetDisabled(selectElement);
-    if (!getSize) getSize = composeGetSize(selectElement);
     getOptions = function getOptions() {
       return selectElement.options;
     }, //.getElementsByTagName('OPTION'), 
@@ -160,9 +147,6 @@ export function BsMultiSelect(element, environment, settings) {
     };
     if (!getIsOptionDisabled) getIsOptionDisabled = function getIsOptionDisabled(option) {
       return option.disabled;
-    };
-    if (!getIsOptionHidden) getIsOptionHidden = function getIsOptionHidden(option) {
-      return option.hidden;
     };
   }
 
@@ -216,20 +200,20 @@ export function BsMultiSelect(element, environment, settings) {
   });
 
   if (!common) {
-    common = {
-      getDisabled: getDisabled,
-      getValidity: getValidity,
-      getSize: getSize
-    };
+    common = {};
   }
 
-  var multiSelect = new MultiSelect(getOptions, common, getDisabled, setSelected, getSelected, getIsOptionDisabled, //getIsOptionHidden,
-  staticContent, function (pickElement) {
+  common.getDisabled = getDisabled;
+  var multiSelect = new MultiSelect(getOptions, getDisabled, setSelected, getSelected, getIsOptionDisabled, staticContent, function (pickElement) {
     return pickContentGenerator(pickElement, common, css);
   }, function (choiceElement, toggle) {
     return choiceContentGenerator(choiceElement, common, css, toggle);
   }, labelAdapter, placeholder, isRtl, onChange, css, Popper, window);
-  apply(multiSelect, getIsOptionHidden);
+  var plugins = [];
+  plugins.push(HiddenPlugin(configuration, options, common, staticContent));
+  plugins.push(BsAppearancePlugin(configuration, options, common, staticContent, validationApiObservable, css, useCssPatch));
+  var pluginManager = PluginManager(plugins);
+  pluginManager.afterConstructor(multiSelect);
   var resetDispose = null;
 
   if (staticContent.selectElement) {
@@ -251,10 +235,11 @@ export function BsMultiSelect(element, environment, settings) {
 
   multiSelect.Dispose = composeSync(multiSelect.Dispose.bind(multiSelect), isValueMissingObservable.detachAll, validationApiObservable.detachAll, resetDispose);
   multiSelect.validationApi = validationApi;
-  bsAppearance(multiSelect, staticContent, getValidity, getSize, validationApiObservable, useCssPatch, css);
   if (init && init instanceof Function) init(multiSelect);
   multiSelect.init();
-  multiSelect.load(); // support browser's "step backward" on form restore
+  pluginManager.afterInit(multiSelect);
+  multiSelect.load();
+  pluginManager.afterLoad(multiSelect); // support browser's "step backward" on form restore
 
   if (staticContent.selectElement && window.document.readyState != "complete") {
     window.setTimeout(function () {
