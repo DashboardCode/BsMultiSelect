@@ -1,7 +1,7 @@
 import {findDirectChildByTagName, closestByClassName, AttributeBackup} from './ToolsDom';
 import  {addStyling, toggleStyling} from './ToolsStyling';
 
-export function staticContentGenerator(element, createElement, containerClass, forceRtlOnContainer, css) { 
+export function staticContentGenerator(element, labelElement,  createElement, containerClass, forceRtlOnContainer, css) { 
     var selectElement = null;
     var containerElement = null;
     var picksElement = null;
@@ -168,6 +168,9 @@ export function staticContentGenerator(element, createElement, containerClass, f
         },
         setChoicesVisible(visible){
             choicesElement.style.display = visible?'block':'none';
+        },
+        getLabelElement(){
+            return labelElement;
         },
         dispose(){
             if (ownContainerElement)

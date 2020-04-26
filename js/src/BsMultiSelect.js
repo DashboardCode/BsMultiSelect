@@ -1,13 +1,14 @@
 import {MultiSelect} from './MultiSelect'
-import {LabelAdapter} from './LabelAdapter';
 
-import {BsAppearancePlugin, getLabelElement, composeGetDisabled} from './BsAppearancePlugin';
-import {ValidityApi} from './ValidityApi'
+import {LabelPlugin} from './LabelPlugin';
+import {FormResetPlugin} from './FormResetPlugin';
+import {ValidationApiPlugin} from './ValidationApiPlugin';
+import {BsAppearancePlugin} from './BsAppearancePlugin';
 
-import {getDataGuardedWithPrefix, EventBinder, closestByTagName, getIsRtl} from './ToolsDom';
+import {getDataGuardedWithPrefix, closestByTagName, getIsRtl} from './ToolsDom';
 
 import {createCss, extendCss} from './ToolsStyling';
-import {extendOverriding, extendIfUndefined, composeSync, ObservableValue, ObservableLambda, def, defCall, isBoolean} from './ToolsJs';
+import {extendOverriding, extendIfUndefined, composeSync, def, defCall, isBoolean} from './ToolsJs';
 
 import {adjustLegacyConfiguration as adjustLegacySettings} from './BsMultiSelectDepricatedParameters'
 
@@ -18,8 +19,6 @@ import {css, cssPatch} from './BsCss'
 
 import {HiddenPlugin} from './HiddenPlugin'
 import {PluginManager} from './PluginManager'
-
-const defValueMissingMessage = 'Please select an item in the list'
 
 export const defaults = {
     useCssPatch : true,
@@ -91,12 +90,12 @@ export function BsMultiSelect(element, environment, settings){
         init = configuration.buildConfiguration(element, configuration);
     
     let {
-        css, cssPatch, useCssPatch,
-        containerClass, label, isRtl, required,
-        getIsValueMissing, getSelected, setSelected, placeholder, 
-        common,
-        options, getDisabled,
-        getIsOptionDisabled
+            css, cssPatch, useCssPatch,
+            containerClass, label, isRtl, 
+            getSelected, setSelected, placeholder, 
+            common,
+            options, getDisabled,
+            getIsOptionDisabled
         } = configuration;
 
     if (useCssPatch){
@@ -107,23 +106,18 @@ export function BsMultiSelect(element, environment, settings){
     let pickContentGenerator = def(configuration.pickContentGenerator, defPickContentGenerator);
     let choiceContentGenerator = def(configuration.choiceContentGenerator, defChoiceContentGenerator);
 
-    let valueMissingMessage = defCall(configuration.valueMissingMessage,
-        ()=> getDataGuardedWithPrefix(element,"bsmultiselect","value-missing-message"),
-        defValueMissingMessage)
-
     let forceRtlOnContainer = false; 
     if (isBoolean(isRtl))
         forceRtlOnContainer = true;
     else
         isRtl = getIsRtl(element);
 
+    let labelElement = defCall(label);
+
     let staticContent = staticContentGenerator(
-        element, name=>window.document.createElement(name), containerClass, forceRtlOnContainer, css
+        element, labelElement, name=>window.document.createElement(name), containerClass, forceRtlOnContainer, css
     );
     
-    required = def(required, staticContent.required);
-
-    let lazyDefinedEvent;
 
     let onChange;
     let getOptions;
@@ -131,9 +125,8 @@ export function BsMultiSelect(element, environment, settings){
     if (options){
         if (!getDisabled)
             getDisabled = () => false;
-        getOptions = () => options,
+        getOptions = () => options;
         onChange = () => {
-            lazyDefinedEvent()
             trigger('dashboardcode.multiselect:change')
         }
         
@@ -143,13 +136,17 @@ export function BsMultiSelect(element, environment, settings){
     else  
     {
         let selectElement = staticContent.selectElement;
-        if(!getDisabled) 
-            getDisabled = composeGetDisabled(selectElement);
+        if(!getDisabled){
+            var fieldsetElement = closestByTagName(selectElement, 'FIELDSET');
+            if (fieldsetElement) {
+                getDisabled = () => selectElement.disabled || fieldsetElement.disabled;
+            } else {
+                getDisabled = () => selectElement.disabled;
+            }
+        } 
 
-
-        getOptions = ()=>selectElement.options, //.getElementsByTagName('OPTION'), 
+        getOptions = ()=>selectElement.options; //.getElementsByTagName('OPTION'), 
         onChange = () => {
-            lazyDefinedEvent()
             trigger('change')
             trigger('dashboardcode.multiselect:change')
         }
@@ -157,26 +154,6 @@ export function BsMultiSelect(element, environment, settings){
         if (!getIsOptionDisabled)
             getIsOptionDisabled = (option)=>option.disabled;
     }
-
-    if (!getIsValueMissing){
-        getIsValueMissing = () => {
-            let count = 0;
-            let optionsArray = getOptions();
-            for (var i=0; i < optionsArray.length; i++) {
-                if (optionsArray[i].selected) 
-                    count++;
-            }
-            return count===0;
-        }
-    }
-    var isValueMissingObservable = ObservableLambda(()=>required && getIsValueMissing());
-    var validationApiObservable = ObservableValue(!isValueMissingObservable.getValue())
-    lazyDefinedEvent = () => isValueMissingObservable.call();
-
-    let labelElement = defCall(label);
-    if (!labelElement) 
-        labelElement=getLabelElement(staticContent.selectElement); 
-    let labelAdapter = LabelAdapter(labelElement, staticContent.createInputId);
 
     if (!placeholder){
         placeholder = getDataGuardedWithPrefix(element,"bsmultiselect","placeholder");
@@ -190,18 +167,9 @@ export function BsMultiSelect(element, environment, settings){
         // if (value) option.setAttribute('selected','');
         // else  option.removeAttribute('selected');
     }
-
-    var validationApi = ValidityApi(
-        staticContent.filterInputElement, 
-        isValueMissingObservable, 
-        valueMissingMessage,
-        (isValid)=>validationApiObservable.setValue(isValid));
-
-    
     if (!common){
-        common = {}
+        common = {getDisabled}
     }
-    common.getDisabled=getDisabled;
 
     var multiSelect = new MultiSelect(
         getOptions,
@@ -212,7 +180,6 @@ export function BsMultiSelect(element, environment, settings){
         staticContent,
         (pickElement) => pickContentGenerator(pickElement, common, css),
         (choiceElement, toggle) => choiceContentGenerator(choiceElement, common, css, toggle),
-        labelAdapter,
         placeholder,
         isRtl,
         onChange,
@@ -220,41 +187,20 @@ export function BsMultiSelect(element, environment, settings){
         Popper,
         window);
 
-    let plugins = [];
-    plugins.push(
-        HiddenPlugin(configuration, options, common, staticContent));
-    plugins.push(
-        BsAppearancePlugin(
-            configuration, options,  common, staticContent, 
-            validationApiObservable,
-            css, useCssPatch));
+    // ------------------------------------
+    let plugins = [LabelPlugin, HiddenPlugin, ValidationApiPlugin, BsAppearancePlugin, FormResetPlugin];
+    let pluginData = {configuration, options, common, staticContent, element, css, useCssPatch, window}
 
-    let pluginManager = PluginManager(plugins);
+    let pluginManager = PluginManager(plugins, pluginData);
     pluginManager.afterConstructor(multiSelect);
 
-    var resetDispose=null;
-    if (staticContent.selectElement){
-         var form = closestByTagName(staticContent.selectElement, 'FORM');
-         if (form) {
-             var eventBuilder = EventBinder();
-             eventBuilder.bind(form, 
-                     'reset', 
-                     () => window.setTimeout( ()=>multiSelect.UpdateData() ) );
-             resetDispose = ()=>eventBuilder.unbind();
-         }
-    }
-            
-    multiSelect.Dispose = composeSync(multiSelect.Dispose.bind(multiSelect), 
-        isValueMissingObservable.detachAll, validationApiObservable.detachAll, resetDispose);
-    multiSelect.validationApi = validationApi;
+    multiSelect.Dispose = composeSync(pluginManager.dispose, multiSelect.Dispose.bind(multiSelect));
     
     if (init && init instanceof Function)
         init(multiSelect);
    
     multiSelect.init();
-    pluginManager.afterInit(multiSelect);
     multiSelect.load();
-    pluginManager.afterLoad(multiSelect);
 
     // support browser's "step backward" on form restore
     if (staticContent.selectElement && window.document.readyState !="complete"){

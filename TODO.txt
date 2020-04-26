@@ -2,17 +2,13 @@
 
 -6b. UpdateOptionContent ?
 
--6c. Move option manipulation api to plugin, move disabled to plugin, hidden to plugin?
+-6c. Move option manipulation api to plugin, move disabled to plugin,
 
 -5. check IE 11 (after restart)
 
 -4. refactore isOptionHidden. Hidden's should be precreated. hidden two mode: showing and ignoring picks
 
 -4a. extract "fake input component", extract autosuggestion component
-
--4b. multicolumn dropdown; fake input extracted as component.
-
--4c. generalize index to key and invite getIsComponentSelected.
 
 -3. create snippet for `selected disabled`. -> need updateSelectedDisabled to support browser's `step back` behaviour.
 

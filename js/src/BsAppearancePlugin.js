@@ -1,6 +1,126 @@
-import {closestByTagName, closestByClassName, siblingsAsArray} from './ToolsDom';
+import {closestByClassName, siblingsAsArray} from './ToolsDom';
 import {addStyling} from './ToolsStyling'
 import {ObservableLambda, composeSync} from './ToolsJs';
+
+export function BsAppearancePlugin(pluginData){
+    let { configuration, options, common, staticContent, css, useCssPatch} = pluginData;
+    let {getValidity, getSize} = configuration;
+    let selectElement = staticContent.selectElement;
+    
+    let origGetLabelElement = staticContent.getLabelElement;
+    staticContent.getLabelElement = () => {
+        var e = origGetLabelElement();
+        if (e)
+            return e;
+        else
+            return getLabelElement(selectElement);
+    }
+    
+    if (options) {
+        if (!getValidity)
+            getValidity = () => null
+        if (!getSize)
+            getSize = () => null;
+    } else {
+        if(!getValidity)
+            getValidity = composeGetValidity(selectElement);
+        if(!getSize) 
+            getSize = composeGetSize(selectElement);
+    }
+    common.getSize=getSize;
+    common.getValidity=getValidity;
+    return {
+        afterConstructor(multiSelect){
+            
+            var updateSize;
+            if (!useCssPatch){
+                updateSize= () => updateSizeForAdapter(staticContent.picksElement, getSize)
+            }
+            else{
+                const {picks_lg, picks_sm, picks_def} = css;
+                updateSize = () => updateSizeJsForAdapter(staticContent.picksElement, picks_lg, picks_sm, picks_def, getSize);
+            }
+            multiSelect.UpdateSize = updateSize;
+            
+            if (useCssPatch){
+                var defToggleFocusStyling = staticContent.toggleFocusStyling;
+                staticContent.toggleFocusStyling = () => {
+                    var validity =  validationObservable.getValue();
+                    var isFocusIn = staticContent.getIsFocusIn();
+                    defToggleFocusStyling(isFocusIn)
+                    if (isFocusIn){
+                        if (validity===false) { 
+                            // but not toggle events (I know it will be done in future)
+                            staticContent.setIsFocusIn(isFocusIn);
+                            
+                            addStyling(staticContent.picksElement, css.picks_focus_invalid)
+                        } else if (validity===true) {
+                            // but not toggle events (I know it will be done in future)
+                            staticContent.setIsFocusIn(isFocusIn);
+                            
+                            addStyling(staticContent.picksElement, css.picks_focus_valid)  
+                        }              
+                    }
+                }
+            }
+        
+            var getWasValidated = () => {
+                var wasValidatedElement = closestByClassName(staticContent.initialElement, 'was-validated');
+                return wasValidatedElement?true:false;
+            }
+            var wasUpdatedObservable = ObservableLambda(()=>getWasValidated());
+            var getManualValidationObservable = ObservableLambda(()=>getValidity());
+            let validationApiObservable = staticContent.validationApiObservable;
+            
+            var validationObservable = ObservableLambda(
+                () => wasUpdatedObservable.getValue()?validationApiObservable.getValue():getManualValidationObservable.getValue()
+            )
+          
+            validationObservable.attach(
+                (value)=>{
+                    var  {validMessages, invalidMessages} = getMessagesElements(staticContent.containerElement);
+                    updateValidity( 
+                    staticContent.picksElement,
+                    validMessages, invalidMessages,
+                    value);
+                    staticContent.toggleFocusStyling();
+                }
+            )
+            wasUpdatedObservable.attach(
+                ()=>validationObservable.call()
+            )
+            validationApiObservable.attach(
+                ()=>validationObservable.call()
+            )
+            getManualValidationObservable.attach(
+                ()=>validationObservable.call()
+            )
+               
+            multiSelect.UpdateValidity = ()=> getManualValidationObservable.call();
+            multiSelect.UpdateWasValidated = ()=>wasUpdatedObservable.call();
+            
+            multiSelect.UpdateAppearance = composeSync(
+                multiSelect.UpdateAppearance.bind(multiSelect), 
+                updateSize, 
+                validationObservable.call, getManualValidationObservable.call);
+            
+            return /* dispose */() => {
+                wasUpdatedObservable.detachAll();
+                validationObservable.detachAll();
+                getManualValidationObservable.detachAll();
+            }
+        }
+    }
+}
+
+function getLabelElement(selectElement){
+    let value = null;
+    let formGroup = closestByClassName(selectElement,'form-group');
+    if (formGroup) {
+        value = formGroup.querySelector(`label[for="${selectElement.id}"]`);
+    }
+    return value;
+}
 
 function updateValidity(picksElement, validMessages, invalidMessages, validity){
     if (validity===false){
@@ -21,8 +141,6 @@ function updateValidity(picksElement, validMessages, invalidMessages, validity){
         validMessages.map(e=>e.style.display=''); 
     }
 }
-
-
 
 function updateSize(picksElement, size){
     if (size=="lg"){
@@ -67,113 +185,6 @@ function getMessagesElements(containerElement){
     return {validMessages, invalidMessages}    
 } 
 
-export function BsAppearancePlugin(
-    configuration, 
-    options, 
-    common,
-    staticContent,
-    // --
-    validityApiObservable,
-    css, 
-    useCssPatch
-    ){
-
-    let {getValidity, getSize} = configuration;
-    let selectElement = staticContent.selectElement;
-    if (options) {
-        if (!getValidity)
-            getValidity = () => null
-        if (!getSize)
-            getSize = () => null;
-    } else {
-        if(!getValidity)
-            getValidity = composeGetValidity(selectElement);
-        if(!getSize) 
-            getSize = composeGetSize(selectElement);
-    }
-    common.getSize=getSize;
-    common.getValidity=getValidity;
-    return {
-        afterConstructor(multiSelect){
-
-            var updateSize;
-            if (!useCssPatch){
-                updateSize= () => updateSizeForAdapter(staticContent.picksElement, getSize)
-            }
-            else{
-                const {picks_lg, picks_sm, picks_def} = css;
-                updateSize = () => updateSizeJsForAdapter(staticContent.picksElement, picks_lg, picks_sm, picks_def, getSize);
-            }
-            multiSelect.UpdateSize = updateSize;
-            
-            if (useCssPatch){
-                var defToggleFocusStyling = staticContent.toggleFocusStyling;
-                staticContent.toggleFocusStyling = () => {
-                    var validity =  validationObservable.getValue();
-                    var isFocusIn = staticContent.getIsFocusIn();
-                    defToggleFocusStyling(isFocusIn)
-                    if (isFocusIn){
-                        if (validity===false) { 
-                            // but not toggle events (I know it will be done in future)
-                            staticContent.setIsFocusIn(isFocusIn);
-                            
-                            addStyling(staticContent.picksElement, css.picks_focus_invalid)
-                        } else if (validity===true) {
-                            // but not toggle events (I know it will be done in future)
-                            staticContent.setIsFocusIn(isFocusIn);
-                            
-                            addStyling(staticContent.picksElement, css.picks_focus_valid)  
-                        }              
-                    }
-                }
-            }
-        
-            var getWasValidated = () => {
-                var wasValidatedElement = closestByClassName(staticContent.initialElement, 'was-validated');
-                return wasValidatedElement?true:false;
-            }
-            var wasUpdatedObservable = ObservableLambda(()=>getWasValidated());
-            var getManualValidationObservable = ObservableLambda(()=>getValidity());
-            
-            var validationObservable = ObservableLambda(
-                () => wasUpdatedObservable.getValue()?validityApiObservable.getValue():getManualValidationObservable.getValue()
-            )
-          
-            validationObservable.attach(
-                (value)=>{
-                    var  {validMessages, invalidMessages} = getMessagesElements(staticContent.containerElement);
-                    updateValidity( 
-                    staticContent.picksElement,
-                    validMessages, invalidMessages,
-                    value);
-                    staticContent.toggleFocusStyling();
-                }
-            )
-            wasUpdatedObservable.attach(
-                ()=>validationObservable.call()
-            )
-            validityApiObservable.attach(
-                ()=>validationObservable.call()
-            )
-            getManualValidationObservable.attach(
-                ()=>validationObservable.call()
-            )
-               
-            multiSelect.UpdateValidity = ()=> getManualValidationObservable.call();
-            multiSelect.UpdateWasValidated = ()=>wasUpdatedObservable.call();
-            
-            multiSelect.UpdateAppearance = composeSync(
-                multiSelect.UpdateAppearance.bind(multiSelect), 
-                updateSize, 
-                validationObservable.call, getManualValidationObservable.call);
-        
-            
-            multiSelect.Dispose = composeSync(wasUpdatedObservable.detachAll, validationObservable.detachAll, getManualValidationObservable.detachAll,
-                multiSelect.Dispose.bind(multiSelect));
-        }
-    }
-}
-
 function composeGetValidity(selectElement){
     var getValidity = () => 
         selectElement.classList.contains('is-invalid')?false:
@@ -207,22 +218,3 @@ function composeGetSize(selectElement){
     return getSize;
 }
 
-export function composeGetDisabled(selectElement){
-    var fieldsetElement = closestByTagName(selectElement, 'FIELDSET');
-    var getDisabled = null;
-    if (fieldsetElement) {
-        getDisabled = () => selectElement.disabled || fieldsetElement.disabled;
-    } else {
-        getDisabled = () => selectElement.disabled;
-    }
-    return getDisabled;
-}
-
-export function getLabelElement(selectElement){
-    let value = null;
-    let formGroup = closestByClassName(selectElement,'form-group');
-    if (formGroup) {
-        value = formGroup.querySelector(`label[for="${selectElement.id}"]`);
-    }
-    return value;
-}

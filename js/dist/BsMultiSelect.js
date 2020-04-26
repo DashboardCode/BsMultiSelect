@@ -1,10 +1,11 @@
 import { MultiSelect } from './MultiSelect';
-import { LabelAdapter } from './LabelAdapter';
-import { BsAppearancePlugin, getLabelElement, composeGetDisabled } from './BsAppearancePlugin';
-import { ValidityApi } from './ValidityApi';
-import { getDataGuardedWithPrefix, EventBinder, closestByTagName, getIsRtl } from './ToolsDom';
+import { LabelPlugin } from './LabelPlugin';
+import { FormResetPlugin } from './FormResetPlugin';
+import { ValidationApiPlugin } from './ValidationApiPlugin';
+import { BsAppearancePlugin } from './BsAppearancePlugin';
+import { getDataGuardedWithPrefix, closestByTagName, getIsRtl } from './ToolsDom';
 import { createCss, extendCss } from './ToolsStyling';
-import { extendOverriding, extendIfUndefined, composeSync, ObservableValue, ObservableLambda, def, defCall, isBoolean } from './ToolsJs';
+import { extendOverriding, extendIfUndefined, composeSync, def, defCall, isBoolean } from './ToolsJs';
 import { adjustLegacyConfiguration as adjustLegacySettings } from './BsMultiSelectDepricatedParameters';
 import { pickContentGenerator as defPickContentGenerator } from './PickContentGenerator';
 import { choiceContentGenerator as defChoiceContentGenerator } from './ChoiceContentGenerator';
@@ -12,7 +13,6 @@ import { staticContentGenerator as defStaticContentGenerator } from './StaticCon
 import { css, cssPatch } from './BsCss';
 import { HiddenPlugin } from './HiddenPlugin';
 import { PluginManager } from './PluginManager';
-var defValueMissingMessage = 'Please select an item in the list';
 export var defaults = {
   useCssPatch: true,
   containerClass: "dashboardcode-bsmultiselect",
@@ -91,8 +91,6 @@ export function BsMultiSelect(element, environment, settings) {
       containerClass = configuration.containerClass,
       label = configuration.label,
       isRtl = configuration.isRtl,
-      required = configuration.required,
-      getIsValueMissing = configuration.getIsValueMissing,
       getSelected = configuration.getSelected,
       setSelected = configuration.setSelected,
       placeholder = configuration.placeholder,
@@ -108,16 +106,12 @@ export function BsMultiSelect(element, environment, settings) {
   var staticContentGenerator = def(configuration.staticContentGenerator, defStaticContentGenerator);
   var pickContentGenerator = def(configuration.pickContentGenerator, defPickContentGenerator);
   var choiceContentGenerator = def(configuration.choiceContentGenerator, defChoiceContentGenerator);
-  var valueMissingMessage = defCall(configuration.valueMissingMessage, function () {
-    return getDataGuardedWithPrefix(element, "bsmultiselect", "value-missing-message");
-  }, defValueMissingMessage);
   var forceRtlOnContainer = false;
   if (isBoolean(isRtl)) forceRtlOnContainer = true;else isRtl = getIsRtl(element);
-  var staticContent = staticContentGenerator(element, function (name) {
+  var labelElement = defCall(label);
+  var staticContent = staticContentGenerator(element, labelElement, function (name) {
     return window.document.createElement(name);
   }, containerClass, forceRtlOnContainer, css);
-  required = def(required, staticContent.required);
-  var lazyDefinedEvent;
   var onChange;
   var getOptions;
 
@@ -125,56 +119,49 @@ export function BsMultiSelect(element, environment, settings) {
     if (!getDisabled) getDisabled = function getDisabled() {
       return false;
     };
+
     getOptions = function getOptions() {
       return options;
-    }, onChange = function onChange() {
-      lazyDefinedEvent();
+    };
+
+    onChange = function onChange() {
       trigger('dashboardcode.multiselect:change');
     };
+
     if (!getIsOptionDisabled) getIsOptionDisabled = function getIsOptionDisabled(option) {
       return option.disabled === undefined ? false : option.disabled;
     };
   } else {
     var selectElement = staticContent.selectElement;
-    if (!getDisabled) getDisabled = composeGetDisabled(selectElement);
+
+    if (!getDisabled) {
+      var fieldsetElement = closestByTagName(selectElement, 'FIELDSET');
+
+      if (fieldsetElement) {
+        getDisabled = function getDisabled() {
+          return selectElement.disabled || fieldsetElement.disabled;
+        };
+      } else {
+        getDisabled = function getDisabled() {
+          return selectElement.disabled;
+        };
+      }
+    }
+
     getOptions = function getOptions() {
       return selectElement.options;
-    }, //.getElementsByTagName('OPTION'), 
+    }; //.getElementsByTagName('OPTION'), 
+
+
     onChange = function onChange() {
-      lazyDefinedEvent();
       trigger('change');
       trigger('dashboardcode.multiselect:change');
     };
+
     if (!getIsOptionDisabled) getIsOptionDisabled = function getIsOptionDisabled(option) {
       return option.disabled;
     };
   }
-
-  if (!getIsValueMissing) {
-    getIsValueMissing = function getIsValueMissing() {
-      var count = 0;
-      var optionsArray = getOptions();
-
-      for (var i = 0; i < optionsArray.length; i++) {
-        if (optionsArray[i].selected) count++;
-      }
-
-      return count === 0;
-    };
-  }
-
-  var isValueMissingObservable = ObservableLambda(function () {
-    return required && getIsValueMissing();
-  });
-  var validationApiObservable = ObservableValue(!isValueMissingObservable.getValue());
-
-  lazyDefinedEvent = function lazyDefinedEvent() {
-    return isValueMissingObservable.call();
-  };
-
-  var labelElement = defCall(label);
-  if (!labelElement) labelElement = getLabelElement(staticContent.selectElement);
-  var labelAdapter = LabelAdapter(labelElement, staticContent.createInputId);
 
   if (!placeholder) {
     placeholder = getDataGuardedWithPrefix(element, "bsmultiselect", "placeholder");
@@ -195,51 +182,35 @@ export function BsMultiSelect(element, environment, settings) {
 
   }
 
-  var validationApi = ValidityApi(staticContent.filterInputElement, isValueMissingObservable, valueMissingMessage, function (isValid) {
-    return validationApiObservable.setValue(isValid);
-  });
-
   if (!common) {
-    common = {};
+    common = {
+      getDisabled: getDisabled
+    };
   }
 
-  common.getDisabled = getDisabled;
   var multiSelect = new MultiSelect(getOptions, getDisabled, setSelected, getSelected, getIsOptionDisabled, staticContent, function (pickElement) {
     return pickContentGenerator(pickElement, common, css);
   }, function (choiceElement, toggle) {
     return choiceContentGenerator(choiceElement, common, css, toggle);
-  }, labelAdapter, placeholder, isRtl, onChange, css, Popper, window);
-  var plugins = [];
-  plugins.push(HiddenPlugin(configuration, options, common, staticContent));
-  plugins.push(BsAppearancePlugin(configuration, options, common, staticContent, validationApiObservable, css, useCssPatch));
-  var pluginManager = PluginManager(plugins);
+  }, placeholder, isRtl, onChange, css, Popper, window); // ------------------------------------
+
+  var plugins = [LabelPlugin, HiddenPlugin, ValidationApiPlugin, BsAppearancePlugin, FormResetPlugin];
+  var pluginData = {
+    configuration: configuration,
+    options: options,
+    common: common,
+    staticContent: staticContent,
+    element: element,
+    css: css,
+    useCssPatch: useCssPatch,
+    window: window
+  };
+  var pluginManager = PluginManager(plugins, pluginData);
   pluginManager.afterConstructor(multiSelect);
-  var resetDispose = null;
-
-  if (staticContent.selectElement) {
-    var form = closestByTagName(staticContent.selectElement, 'FORM');
-
-    if (form) {
-      var eventBuilder = EventBinder();
-      eventBuilder.bind(form, 'reset', function () {
-        return window.setTimeout(function () {
-          return multiSelect.UpdateData();
-        });
-      });
-
-      resetDispose = function resetDispose() {
-        return eventBuilder.unbind();
-      };
-    }
-  }
-
-  multiSelect.Dispose = composeSync(multiSelect.Dispose.bind(multiSelect), isValueMissingObservable.detachAll, validationApiObservable.detachAll, resetDispose);
-  multiSelect.validationApi = validationApi;
+  multiSelect.Dispose = composeSync(pluginManager.dispose, multiSelect.Dispose.bind(multiSelect));
   if (init && init instanceof Function) init(multiSelect);
   multiSelect.init();
-  pluginManager.afterInit(multiSelect);
-  multiSelect.load();
-  pluginManager.afterLoad(multiSelect); // support browser's "step backward" on form restore
+  multiSelect.load(); // support browser's "step backward" on form restore
 
   if (staticContent.selectElement && window.document.readyState != "complete") {
     window.setTimeout(function () {

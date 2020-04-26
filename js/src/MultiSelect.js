@@ -18,7 +18,6 @@ export class MultiSelect {
         staticContent, 
         pickContentGenerator, 
         choiceContentGenerator, 
-        labelAdapter, 
         placeholderText,
         isRtl, 
         onChange,
@@ -33,7 +32,6 @@ export class MultiSelect {
         //this.styling = styling;
         this.pickContentGenerator = pickContentGenerator;
         this.choiceContentGenerator = choiceContentGenerator;
-        this.labelAdapter = labelAdapter;
         //this.createStylingComposite = createStylingComposite;
         this.placeholderText = placeholderText;
         this.setSelected=setSelected; // should I rebind this for callbacks? setSelected.bind(this);
@@ -371,7 +369,6 @@ export class MultiSelect {
             this.aspect.hideChoices,
             this.picksList.dispose,
             this.filterPanel.dispose,
-            this.labelAdapter.dispose,
             this.aspect.dispose,
             this.staticContent.dispose,
             this.choicesPanel.dispose
@@ -541,7 +538,6 @@ export class MultiSelect {
         
         // attach filterInputElement
         this.staticContent.pickFilterElement.appendChild(this.staticContent.filterInputElement);
-        this.labelAdapter.init(this.staticContent.filterInputElement); 
 
         this.staticContent.picksElement.appendChild(
             this.staticContent.pickFilterElement); // located filter in selectionsPanel       

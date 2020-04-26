@@ -131,13 +131,5 @@ export function HiddenPlugin(configuration, options, common, staticContent){
                 }
             }
         }
-        /*,
-        afterInit(multiSelect){
-
-        },
-        afterLoad(multiSelect){
-        
-        }*/
     }
-
 }

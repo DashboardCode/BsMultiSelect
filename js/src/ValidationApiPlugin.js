@@ -1,0 +1,50 @@
+import {ValidityApi} from './ValidityApi'
+import {ObservableValue, ObservableLambda, def, defCall, composeSync } from './ToolsJs';
+import {getDataGuardedWithPrefix} from './ToolsDom';
+
+const defValueMissingMessage = 'Please select an item in the list'
+
+export function ValidationApiPlugin(pluginData){
+    var {configuration, staticContent, element} = pluginData;
+    let {getIsValueMissing, valueMissingMessage, required} = configuration
+    required = def(required, staticContent.required);
+    valueMissingMessage = defCall(valueMissingMessage,
+        ()=> getDataGuardedWithPrefix(element,"bsmultiselect","value-missing-message"),
+        defValueMissingMessage)
+
+    return {
+        afterConstructor(multiSelect){
+            if (!getIsValueMissing) {
+                getIsValueMissing = () => {
+                    let count = 0;
+                    let optionsArray = multiSelect.getOptions();
+                    for (var i=0; i < optionsArray.length; i++) {
+                        if (optionsArray[i].selected) 
+                            count++;
+                    }
+                    return count===0;
+                }
+            }
+        
+            var isValueMissingObservable = ObservableLambda(()=>required && getIsValueMissing());
+            var validationApiObservable = ObservableValue(!isValueMissingObservable.getValue());
+
+            staticContent.validationApiObservable = validationApiObservable;
+
+            let origOnChange = multiSelect.onChange;
+            multiSelect.onChange = () => { 
+                isValueMissingObservable.call();
+                origOnChange(); 
+            };
+        
+            var validationApi = ValidityApi(
+                staticContent.filterInputElement, 
+                isValueMissingObservable, 
+                valueMissingMessage,
+                (isValid)=>validationApiObservable.setValue(isValid));
+            multiSelect.validationApi = validationApi;
+
+            return ()=> composeSync(isValueMissingObservable.detachAll, validationApiObservable.detachAll)
+        }
+    }
+}
