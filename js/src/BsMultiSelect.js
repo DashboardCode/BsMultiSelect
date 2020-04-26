@@ -138,7 +138,7 @@ export function BsMultiSelect(element, environment, settings){
             }
         } 
 
-        getOptions = ()=>selectElement.options; //.getElementsByTagName('OPTION'), 
+        getOptions = () => selectElement.options; 
         onChange = () => {
             trigger('change')
             trigger('dashboardcode.multiselect:change')
