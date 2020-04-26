@@ -66,17 +66,6 @@ export function siblingsAsArray(element){
     return value;
 }
 
-// export function ShowBinder(element){
-//     return {
-//         show(){
-            
-//         },
-//         hide(){
-//             //
-//         }
-//     }
-// }
-
 export function getIsRtl(element){
     var isRtl = false;
     var e = closestByAttribute(element,"dir","rtl");

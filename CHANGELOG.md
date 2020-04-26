@@ -1,5 +1,6 @@
 # CHANGELOG
 ````
+0.5.51 - optimizations
 0.5.50 - plugin api available for BsMultiSelect esm module
 0.5.49 - popper preventOverflow: {enabled:true} to columns support 
 0.5.48 - api changes

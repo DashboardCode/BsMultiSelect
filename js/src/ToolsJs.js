@@ -276,7 +276,6 @@ export function defCall(...functions){
         }
 }
 
-
 export function Observable(){
     var list = [];
     return {

@@ -3,7 +3,6 @@ import {ChoicesPanel} from './ChoicesPanel'
 import {PicksList} from './PicksList'
 import {MultiSelectInputAspect} from './MultiSelectInputAspect'
 import {PlaceholderAspect} from './PlaceholderAspect'
-import {removeElement} from './ToolsDom'
 import {Choice, updateDisabledChoice, updateSelectedChoice, setOptionSelected} from './Choice'
 import {ListFacade, sync, composeSync} from './ToolsJs'
 import {FilterFacade} from './FilterFacade'
@@ -70,7 +69,6 @@ export class MultiSelect {
         this.filterFacade.resetFilter();
     }
 
-    // -----------------------------------------------------------------------------------------------------------------------
     GetContainer(){
         return this.staticContent.containerElement;
     }
@@ -117,12 +115,6 @@ export class MultiSelect {
         this.resetFilter();
 
         this.staticContent.choicesElement.innerHTML = ""; // TODO: there should better "optimization"
-        // for(let i=0; i<this.MultiSelectDataList.length; i++)
-        // {
-        //     let multiSelectData = this.MultiSelectDataList[i];
-        //     if (multiSelectData.choice)
-        //         multiSelectData.choice.remove();
-        // }
         
         this.choicesPanel.clear();
         this.picksList.clear();
@@ -190,8 +182,7 @@ export class MultiSelect {
     }
 
     createPick(choice){
-        let { pickElement, attach } = this.staticContent.createPickElement(); 
-        let detach = () => removeElement(pickElement);
+        let { pickElement, attach, detach } = this.staticContent.createPickElement(); // TODO move removeElement to staticContent
         let pickContent = this.pickContentGenerator(pickElement);
         
         var pick = {
@@ -235,7 +226,7 @@ export class MultiSelect {
     }
     
     createChoiceElement(choice){
-        var {choiceElement, setVisible, attach} = this.staticContent.createChoiceElement();
+        var {choiceElement, setVisible, attach, detach} = this.staticContent.createChoiceElement();
         choice.choiceElement = choiceElement;
         choice.choiceElementAttach = attach;
                 
@@ -256,7 +247,7 @@ export class MultiSelect {
         pickTools.updateSelectedTrue = createPick;
         
         choice.remove = () => {
-            removeElement(choiceElement);
+            detach();
             if (pickTools.updateSelectedFalse) {
                 pickTools.updateSelectedFalse();
                 pickTools.updateSelectedFalse=null;
@@ -319,7 +310,7 @@ export class MultiSelect {
         choice.updateDisabled(); 
     }
 
-    createChoice(option /*, prevChoice*/ /*, prevVisibleChoiceElement*/){
+    createChoice(option){
         let isOptionSelected = this.getIsOptionSelected(option);
         let isOptionDisabled = this.getIsOptionDisabled(option); 
         

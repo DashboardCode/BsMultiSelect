@@ -1,5 +1,5 @@
 /*!
-  * DashboardCode BsMultiSelect v0.5.50 (https://dashboardcode.github.io/BsMultiSelect/)
+  * DashboardCode BsMultiSelect v0.5.51beta (https://dashboardcode.github.io/BsMultiSelect/)
   * Copyright 2017-2020 Roman Pokrovskij (github user rpokrovskij)
   * Licensed under APACHE 2 (https://github.com/DashboardCode/BsMultiSelect/blob/master/LICENSE)
   */
@@ -74,16 +74,7 @@ function siblingsAsArray(element) {
   }
 
   return value;
-} // export function ShowBinder(element){
-//     return {
-//         show(){
-//         },
-//         hide(){
-//             //
-//         }
-//     }
-// }
-
+}
 function getIsRtl(element) {
   var isRtl = false;
   var e = closestByAttribute(element, "dir", "rtl");
@@ -1346,8 +1337,7 @@ var MultiSelect = /*#__PURE__*/function () {
   _proto.processEmptyInput = function processEmptyInput() {
     this.placeholderAspect.updateEmptyInputWidth();
     this.filterFacade.resetFilter();
-  } // -----------------------------------------------------------------------------------------------------------------------
-  ;
+  };
 
   _proto.GetContainer = function GetContainer() {
     return this.staticContent.containerElement;
@@ -1398,12 +1388,6 @@ var MultiSelect = /*#__PURE__*/function () {
 
     this.resetFilter();
     this.staticContent.choicesElement.innerHTML = ""; // TODO: there should better "optimization"
-    // for(let i=0; i<this.MultiSelectDataList.length; i++)
-    // {
-    //     let multiSelectData = this.MultiSelectDataList[i];
-    //     if (multiSelectData.choice)
-    //         multiSelectData.choice.remove();
-    // }
 
     this.choicesPanel.clear();
     this.picksList.clear();
@@ -1480,11 +1464,9 @@ var MultiSelect = /*#__PURE__*/function () {
 
     var _this$staticContent$c = this.staticContent.createPickElement(),
         pickElement = _this$staticContent$c.pickElement,
-        attach = _this$staticContent$c.attach;
+        attach = _this$staticContent$c.attach,
+        detach = _this$staticContent$c.detach; // TODO move removeElement to staticContent
 
-    var detach = function detach() {
-      return removeElement(pickElement);
-    };
 
     var pickContent = this.pickContentGenerator(pickElement);
     var pick = {
@@ -1540,7 +1522,8 @@ var MultiSelect = /*#__PURE__*/function () {
     var _this$staticContent$c2 = this.staticContent.createChoiceElement(),
         choiceElement = _this$staticContent$c2.choiceElement,
         setVisible = _this$staticContent$c2.setVisible,
-        attach = _this$staticContent$c2.attach;
+        attach = _this$staticContent$c2.attach,
+        detach = _this$staticContent$c2.detach;
 
     choice.choiceElement = choiceElement;
     choice.choiceElementAttach = attach;
@@ -1568,7 +1551,7 @@ var MultiSelect = /*#__PURE__*/function () {
     pickTools.updateSelectedTrue = createPick;
 
     choice.remove = function () {
-      removeElement(choiceElement);
+      detach();
 
       if (pickTools.updateSelectedFalse) {
         pickTools.updateSelectedFalse();
@@ -1627,11 +1610,7 @@ var MultiSelect = /*#__PURE__*/function () {
     choice.updateDisabled();
   };
 
-  _proto.createChoice = function createChoice(option
-  /*, prevChoice*/
-
-  /*, prevVisibleChoiceElement*/
-  ) {
+  _proto.createChoice = function createChoice(option) {
     var isOptionSelected = this.getIsOptionSelected(option);
     var isOptionDisabled = this.getIsOptionDisabled(option);
     var choice = Choice(option, isOptionSelected, isOptionDisabled);
@@ -2225,6 +2204,9 @@ function staticContentGenerator(element, labelElement, createElement, containerC
       pickElement: pickElement,
       attach: function attach() {
         return picksElement.insertBefore(pickElement, pickFilterElement);
+      },
+      detach: function detach() {
+        return removeElement(pickElement);
       }
     };
   };
@@ -2239,6 +2221,9 @@ function staticContentGenerator(element, labelElement, createElement, containerC
       },
       attach: function attach(element) {
         return choicesElement.insertBefore(choiceElement, element);
+      },
+      detach: function detach() {
+        return removeElement(choiceElement);
       }
     };
   };

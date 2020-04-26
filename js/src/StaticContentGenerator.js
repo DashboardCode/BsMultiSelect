@@ -1,4 +1,4 @@
-import {findDirectChildByTagName, closestByClassName, AttributeBackup} from './ToolsDom';
+import {findDirectChildByTagName, closestByClassName, removeElement, AttributeBackup} from './ToolsDom';
 import  {addStyling, toggleStyling} from './ToolsStyling';
 
 export function staticContentGenerator(element, labelElement,  createElement, containerClass, forceRtlOnContainer, css) { 
@@ -51,7 +51,8 @@ export function staticContentGenerator(element, labelElement,  createElement, co
         addStyling(pickElement, css.pick);
         return {
             pickElement, 
-            attach: () => picksElement.insertBefore(pickElement, pickFilterElement)
+            attach: () => picksElement.insertBefore(pickElement, pickFilterElement),
+            detach: () => removeElement(pickElement)
         };
     }
 
@@ -61,7 +62,8 @@ export function staticContentGenerator(element, labelElement,  createElement, co
         return {
             choiceElement, 
             setVisible: (isVisible) => choiceElement.style.display = isVisible ? 'block': 'none',
-            attach: (element) => choicesElement.insertBefore(choiceElement, element)
+            attach: (element) => choicesElement.insertBefore(choiceElement, element),
+            detach: () => removeElement(choiceElement)
         };
     }
 
