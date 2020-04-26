@@ -1,6 +1,6 @@
-import {ValidityApi} from './ValidityApi'
-import {ObservableValue, ObservableLambda, def, defCall, composeSync } from './ToolsJs';
-import {getDataGuardedWithPrefix} from './ToolsDom';
+import {ValidityApi} from '../ValidityApi'
+import {ObservableValue, ObservableLambda, def, defCall, composeSync } from '../ToolsJs';
+import {getDataGuardedWithPrefix} from '../ToolsDom';
 
 const defValueMissingMessage = 'Please select an item in the list'
 

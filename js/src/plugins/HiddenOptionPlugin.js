@@ -17,8 +17,9 @@ function getNextNonHidden(choice) { // TODO get next visible
     return getNextNonHidden(next)
 }
 
-export function HiddenPlugin(configuration, options, common, staticContent){
-    let { getIsOptionHidden } = configuration;
+export function HiddenOptionPlugin(pluginData){
+    let {configuration, options} = pluginData;
+    let {getIsOptionHidden} = configuration;
     if (options){
         if (!getIsOptionHidden)
             getIsOptionHidden = (option)=>(option.hidden===undefined)?false:option.hidden;     

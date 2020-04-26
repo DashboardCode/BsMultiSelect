@@ -1,5 +1,5 @@
 
-import {EventBinder, closestByTagName} from './ToolsDom';
+import {EventBinder, closestByTagName} from '../ToolsDom';
 
 export function FormResetPlugin(pluginData){
     var {staticContent, window} = pluginData;

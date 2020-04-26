@@ -1,6 +1,6 @@
-import {closestByClassName, siblingsAsArray} from './ToolsDom';
-import {addStyling} from './ToolsStyling'
-import {ObservableLambda, composeSync} from './ToolsJs';
+import {closestByClassName, siblingsAsArray} from '../ToolsDom';
+import {addStyling} from '../ToolsStyling'
+import {ObservableLambda, composeSync} from '../ToolsJs';
 
 export function BsAppearancePlugin(pluginData){
     let { configuration, options, common, staticContent, css, useCssPatch} = pluginData;

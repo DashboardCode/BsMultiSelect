@@ -1,8 +1,5 @@
 import { MultiSelect } from './MultiSelect';
-import { LabelPlugin } from './LabelPlugin';
-import { FormResetPlugin } from './FormResetPlugin';
-import { ValidationApiPlugin } from './ValidationApiPlugin';
-import { BsAppearancePlugin } from './BsAppearancePlugin';
+import { PluginManager } from './PluginManager';
 import { getDataGuardedWithPrefix, closestByTagName, getIsRtl } from './ToolsDom';
 import { createCss, extendCss } from './ToolsStyling';
 import { extendOverriding, extendIfUndefined, composeSync, def, defCall, isBoolean } from './ToolsJs';
@@ -11,8 +8,6 @@ import { pickContentGenerator as defPickContentGenerator } from './PickContentGe
 import { choiceContentGenerator as defChoiceContentGenerator } from './ChoiceContentGenerator';
 import { staticContentGenerator as defStaticContentGenerator } from './StaticContentGenerator';
 import { css, cssPatch } from './BsCss';
-import { HiddenPlugin } from './HiddenPlugin';
-import { PluginManager } from './PluginManager';
 export var defaults = {
   useCssPatch: true,
   containerClass: "dashboardcode-bsmultiselect",
@@ -59,7 +54,8 @@ function extendConfigurtion(configuration, defaults) {
 
 export function BsMultiSelect(element, environment, settings) {
   var Popper = environment.Popper,
-      window = environment.window;
+      window = environment.window,
+      plugins = environment.plugins;
 
   var trigger = function trigger(eventName) {
     return environment.trigger(element, eventName);
@@ -192,9 +188,7 @@ export function BsMultiSelect(element, environment, settings) {
     return pickContentGenerator(pickElement, common, css);
   }, function (choiceElement, toggle) {
     return choiceContentGenerator(choiceElement, common, css, toggle);
-  }, placeholder, isRtl, onChange, css, Popper, window); // ------------------------------------
-
-  var plugins = [LabelPlugin, HiddenPlugin, ValidationApiPlugin, BsAppearancePlugin, FormResetPlugin];
+  }, placeholder, isRtl, onChange, css, Popper, window);
   var pluginData = {
     configuration: configuration,
     options: options,

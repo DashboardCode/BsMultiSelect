@@ -1,9 +1,11 @@
 export function PluginManager(plugins, pluginData){
     let instances = [];
-    for(let i = 0; i<plugins.length; i++){
-        let instance = plugins[i](pluginData)
-        if (instance)
-            instances.push(instance);
+    if (plugins){
+        for(let i = 0; i<plugins.length; i++){
+            let instance = plugins[i](pluginData)
+            if (instance)
+                instances.push(instance);
+        }
     }
     
     let disposes = [];

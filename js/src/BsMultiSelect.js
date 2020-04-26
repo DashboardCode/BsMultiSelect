@@ -1,9 +1,7 @@
 import {MultiSelect} from './MultiSelect'
+import {PluginManager} from './PluginManager'
 
-import {LabelPlugin} from './LabelPlugin';
-import {FormResetPlugin} from './FormResetPlugin';
-import {ValidationApiPlugin} from './ValidationApiPlugin';
-import {BsAppearancePlugin} from './BsAppearancePlugin';
+
 
 import {getDataGuardedWithPrefix, closestByTagName, getIsRtl} from './ToolsDom';
 
@@ -16,9 +14,6 @@ import {pickContentGenerator as defPickContentGenerator} from './PickContentGene
 import {choiceContentGenerator as defChoiceContentGenerator} from './ChoiceContentGenerator';
 import {staticContentGenerator  as defStaticContentGenerator} from './StaticContentGenerator';
 import {css, cssPatch} from './BsCss'
-
-import {HiddenPlugin} from './HiddenPlugin'
-import {PluginManager} from './PluginManager'
 
 export const defaults = {
     useCssPatch : true,
@@ -65,7 +60,7 @@ function extendConfigurtion(configuration, defaults){
 }
 
 export function BsMultiSelect(element, environment, settings){
-    var {Popper, window} = environment;
+    var {Popper, window, plugins} = environment;
     var trigger = (eventName)=> environment.trigger(element, eventName);
     if (typeof Popper === 'undefined') {
         throw new Error("BsMultiSelect: Popper.js (https://popper.js.org) is required")
@@ -89,13 +84,12 @@ export function BsMultiSelect(element, environment, settings){
     if (configuration.buildConfiguration)
         init = configuration.buildConfiguration(element, configuration);
     
-    let {
-            css, cssPatch, useCssPatch,
-            containerClass, label, isRtl, 
-            getSelected, setSelected, placeholder, 
-            common,
-            options, getDisabled,
-            getIsOptionDisabled
+    let { css, cssPatch, useCssPatch,
+          containerClass, label, isRtl, 
+          getSelected, setSelected, placeholder, 
+          common,
+          options, getDisabled,
+          getIsOptionDisabled
         } = configuration;
 
     if (useCssPatch){
@@ -117,7 +111,6 @@ export function BsMultiSelect(element, environment, settings){
     let staticContent = staticContentGenerator(
         element, labelElement, name=>window.document.createElement(name), containerClass, forceRtlOnContainer, css
     );
-    
 
     let onChange;
     let getOptions;
@@ -187,8 +180,6 @@ export function BsMultiSelect(element, environment, settings){
         Popper,
         window);
 
-    // ------------------------------------
-    let plugins = [LabelPlugin, HiddenPlugin, ValidationApiPlugin, BsAppearancePlugin, FormResetPlugin];
     let pluginData = {configuration, options, common, staticContent, element, css, useCssPatch, window}
 
     let pluginManager = PluginManager(plugins, pluginData);
