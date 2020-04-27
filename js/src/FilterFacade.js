@@ -24,7 +24,6 @@ export function FilterFacade(
                 choice.setVisible(true);
             });
         },
-
         navigate: (down, choice) => {
             if (down) {
                 return choice?choice.filteredNext: listFacade.getHead();

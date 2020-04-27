@@ -1,5 +1,5 @@
 /*!
-  * DashboardCode BsMultiSelect v0.5.51beta (https://dashboardcode.github.io/BsMultiSelect/)
+  * DashboardCode BsMultiSelect v0.5.51 (https://dashboardcode.github.io/BsMultiSelect/)
   * Copyright 2017-2020 Roman Pokrovskij (github user rpokrovskij)
   * Licensed under APACHE 2 (https://github.com/DashboardCode/BsMultiSelect/blob/master/LICENSE)
   */
@@ -2162,9 +2162,6 @@ function staticContentGenerator(element, labelElement, createElement, containerC
     selectElement = element;
 
     if (containerClass) {
-      //if (selectElement.nextSibling  && selectElement.nextSibling.classList.contains(containerClass) )
-      //    containerElement = selectElement.nextSibling;
-      //else 
       containerElement = closestByClassName(selectElement, containerClass);
     }
   } else if (element.tagName == "DIV" || element.tagName == "UL") {
@@ -2503,17 +2500,17 @@ var defaults = {
 
 function extendConfigurtion(configuration, defaults) {
   var cfgCss = configuration.css;
-  var cfgCssPatch = configuration.cssPatch;
   configuration.css = null;
+  var cfgCssPatch = configuration.cssPatch;
   configuration.cssPatch = null;
   extendIfUndefined(configuration, defaults);
   var defCss = createCss(defaults.css, cfgCss); // replace classes, merge styles
 
+  configuration.css = defCss;
   if (defaults.cssPatch instanceof Boolean || typeof defaults.cssPatch === "boolean" || cfgCssPatch instanceof Boolean || typeof cfgCssPatch === "boolean") throw new Error("BsMultiSelect: 'cssPatch' was used instead of 'useCssPatch'"); // often type of error
 
   var defCssPatch = createCss(defaults.cssPatch, cfgCssPatch); // replace classes, merge styles
 
-  configuration.css = defCss;
   configuration.cssPatch = defCssPatch;
 }
 
@@ -2558,7 +2555,7 @@ function BsMultiSelect(element, environment, settings) {
       common = configuration.common,
       options = configuration.options,
       getDisabled = configuration.getDisabled,
-      getIsOptionDisabled = configuration.getIsOptionDisabled;
+      getIsOptionDisabled = configuration.getIsOptionDisabled; // TODO 
 
   if (useCssPatch) {
     extendCss(css, cssPatch);
@@ -2573,6 +2570,21 @@ function BsMultiSelect(element, environment, settings) {
   var staticContent = staticContentGenerator$1(element, labelElement, function (name) {
     return window.document.createElement(name);
   }, containerClass, forceRtlOnContainer, css);
+
+  if (!common) {
+    common = {};
+  }
+
+  var pluginData = {
+    configuration: configuration,
+    options: options,
+    common: common,
+    staticContent: staticContent,
+    css: css,
+    useCssPatch: useCssPatch,
+    window: window
+  };
+  var pluginManager = PluginManager(plugins, pluginData);
   var onChange;
   var getOptions;
 
@@ -2611,8 +2623,7 @@ function BsMultiSelect(element, environment, settings) {
 
     getOptions = function getOptions() {
       return selectElement.options;
-    }; //.getElementsByTagName('OPTION'), 
-
+    };
 
     onChange = function onChange() {
       trigger('change');
@@ -2643,28 +2654,12 @@ function BsMultiSelect(element, environment, settings) {
 
   }
 
-  if (!common) {
-    common = {
-      getDisabled: getDisabled
-    };
-  }
-
+  common.getDisabled = getDisabled;
   var multiSelect = new MultiSelect(getOptions, getDisabled, setSelected, getSelected, getIsOptionDisabled, staticContent, function (pickElement) {
     return pickContentGenerator$1(pickElement, common, css);
   }, function (choiceElement, toggle) {
     return choiceContentGenerator$1(choiceElement, common, css, toggle);
   }, placeholder, isRtl, onChange, css, Popper, window);
-  var pluginData = {
-    configuration: configuration,
-    options: options,
-    common: common,
-    staticContent: staticContent,
-    element: element,
-    css: css,
-    useCssPatch: useCssPatch,
-    window: window
-  };
-  var pluginManager = PluginManager(plugins, pluginData);
   pluginManager.afterConstructor(multiSelect);
   multiSelect.Dispose = composeSync(pluginManager.dispose, multiSelect.Dispose.bind(multiSelect));
   if (init && init instanceof Function) init(multiSelect);
@@ -2773,13 +2768,14 @@ var defValueMissingMessage = 'Please select an item in the list';
 function ValidationApiPlugin(pluginData) {
   var configuration = pluginData.configuration,
       staticContent = pluginData.staticContent,
-      element = pluginData.element;
-  var getIsValueMissing = configuration.getIsValueMissing,
-      valueMissingMessage = configuration.valueMissingMessage,
-      required = configuration.required;
+      staticContent = pluginData.staticContent;
+  var _configuration = configuration,
+      getIsValueMissing = _configuration.getIsValueMissing,
+      valueMissingMessage = _configuration.valueMissingMessage,
+      required = _configuration.required;
   required = def(required, staticContent.required);
   valueMissingMessage = defCall(valueMissingMessage, function () {
-    return getDataGuardedWithPrefix(element, "bsmultiselect", "value-missing-message");
+    return getDataGuardedWithPrefix(staticContent.initialElement, "bsmultiselect", "value-missing-message");
   }, defValueMissingMessage);
   return {
     afterConstructor: function afterConstructor(multiSelect) {

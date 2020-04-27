@@ -9,10 +9,7 @@ export function staticContentGenerator(element, labelElement,  createElement, co
     if (element.tagName=='SELECT'){
         selectElement = element;
         if (containerClass){
-            //if (selectElement.nextSibling  && selectElement.nextSibling.classList.contains(containerClass) )
-            //    containerElement = selectElement.nextSibling;
-            //else 
-                containerElement = closestByClassName(selectElement, containerClass)
+            containerElement = closestByClassName(selectElement, containerClass)
         }
     }
     else if (element.tagName=="DIV" || element.tagName=="UL" )

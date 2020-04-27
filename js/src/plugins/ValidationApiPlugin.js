@@ -5,11 +5,11 @@ import {getDataGuardedWithPrefix} from '../ToolsDom';
 const defValueMissingMessage = 'Please select an item in the list'
 
 export function ValidationApiPlugin(pluginData){
-    var {configuration, staticContent, element} = pluginData;
+    var {configuration, staticContent, staticContent} = pluginData;
     let {getIsValueMissing, valueMissingMessage, required} = configuration
     required = def(required, staticContent.required);
     valueMissingMessage = defCall(valueMissingMessage,
-        ()=> getDataGuardedWithPrefix(element,"bsmultiselect","value-missing-message"),
+        ()=> getDataGuardedWithPrefix(staticContent.initialElement,"bsmultiselect","value-missing-message"),
         defValueMissingMessage)
 
     return {

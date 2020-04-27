@@ -1,8 +1,6 @@
 import {MultiSelect} from './MultiSelect'
 import {PluginManager} from './PluginManager'
 
-
-
 import {getDataGuardedWithPrefix, closestByTagName, getIsRtl} from './ToolsDom';
 
 import {createCss, extendCss} from './ToolsStyling';
@@ -43,19 +41,22 @@ export const defaults = {
     getIsValueMissing: null
 };
 
+
 function extendConfigurtion(configuration, defaults){
     let cfgCss = configuration.css;
-    let cfgCssPatch = configuration.cssPatch;
     configuration.css = null;
+    let cfgCssPatch = configuration.cssPatch;
     configuration.cssPatch = null;
     extendIfUndefined(configuration, defaults); 
+
     var defCss = createCss(defaults.css, cfgCss); // replace classes, merge styles
+    configuration.css = defCss;
+
     if (defaults.cssPatch instanceof Boolean || typeof defaults.cssPatch ==="boolean" 
         || cfgCssPatch instanceof Boolean || typeof cfgCssPatch==="boolean" 
     )
-    throw new Error("BsMultiSelect: 'cssPatch' was used instead of 'useCssPatch'") // often type of error
+        throw new Error("BsMultiSelect: 'cssPatch' was used instead of 'useCssPatch'") // often type of error
     var defCssPatch = createCss(defaults.cssPatch, cfgCssPatch); // replace classes, merge styles
-    configuration.css = defCss;
     configuration.cssPatch = defCssPatch;
 }
 
@@ -92,6 +93,7 @@ export function BsMultiSelect(element, environment, settings){
           getIsOptionDisabled
         } = configuration;
 
+    // TODO 
     if (useCssPatch){
         extendCss(css, cssPatch); 
     }
@@ -112,6 +114,12 @@ export function BsMultiSelect(element, environment, settings){
         element, labelElement, name=>window.document.createElement(name), containerClass, forceRtlOnContainer, css
     );
 
+    if (!common){
+        common = {}
+    }
+    let pluginData = {configuration, options, common, staticContent, css, useCssPatch, window}
+    let pluginManager = PluginManager(plugins, pluginData);
+
     let onChange;
     let getOptions;
     
@@ -124,7 +132,7 @@ export function BsMultiSelect(element, environment, settings){
         }
         
         if (!getIsOptionDisabled)
-            getIsOptionDisabled = (option)=>(option.disabled===undefined)?false:option.disabled;
+            getIsOptionDisabled = option => (option.disabled===undefined)?false:option.disabled;
     } 
     else  
     {
@@ -145,7 +153,7 @@ export function BsMultiSelect(element, environment, settings){
         }
 
         if (!getIsOptionDisabled)
-            getIsOptionDisabled = (option)=>option.disabled;
+            getIsOptionDisabled = option => option.disabled;
     }
 
     if (!placeholder){
@@ -160,9 +168,8 @@ export function BsMultiSelect(element, environment, settings){
         // if (value) option.setAttribute('selected','');
         // else  option.removeAttribute('selected');
     }
-    if (!common){
-        common = {getDisabled}
-    }
+
+    common.getDisabled = getDisabled;
 
     var multiSelect = new MultiSelect(
         getOptions,
@@ -180,9 +187,7 @@ export function BsMultiSelect(element, environment, settings){
         Popper,
         window);
 
-    let pluginData = {configuration, options, common, staticContent, element, css, useCssPatch, window}
 
-    let pluginManager = PluginManager(plugins, pluginData);
     pluginManager.afterConstructor(multiSelect);
 
     multiSelect.Dispose = composeSync(pluginManager.dispose, multiSelect.Dispose.bind(multiSelect));
