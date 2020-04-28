@@ -6,6 +6,7 @@ import {BsMultiSelect, defaults} from './BsMultiSelect';
 import {composeSync} from './ToolsJs';
 
 import {LabelPlugin} from './plugins/LabelPlugin';
+import {RtlPlugin} from './plugins/RtlPlugin';
 import {FormResetPlugin} from './plugins/FormResetPlugin';
 import {ValidationApiPlugin} from './plugins/ValidationApiPlugin';
 import {BsAppearancePlugin} from './plugins/BsAppearancePlugin';
@@ -17,7 +18,7 @@ import {HiddenOptionPlugin} from './plugins/HiddenOptionPlugin';
             let trigger = (e, eventName) => $(e).trigger(eventName);
             let environment = {trigger, window, Popper}
 
-            environment.plugins = [LabelPlugin, HiddenOptionPlugin, ValidationApiPlugin, BsAppearancePlugin, FormResetPlugin];
+            environment.plugins = [LabelPlugin, HiddenOptionPlugin, ValidationApiPlugin, BsAppearancePlugin, FormResetPlugin, RtlPlugin];
             
             let multiSelect = BsMultiSelect(element, environment, settings);
             multiSelect.Dispose = composeSync(multiSelect.Dispose, removeInstanceData);

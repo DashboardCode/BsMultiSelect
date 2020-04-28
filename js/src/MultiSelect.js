@@ -18,30 +18,26 @@ export class MultiSelect {
         pickContentGenerator, 
         choiceContentGenerator, 
         placeholderText,
-        isRtl, 
         onChange,
         css,
-        popper, window) {
-        this.isRtl = isRtl;
+        Popper, window) {
         // readonly
         this.getOptions=getOptions;
         this.getIsOptionSelected = getIsOptionSelected;
         this.getIsOptionDisabled = getIsOptionDisabled;
         this.staticContent = staticContent;
-        //this.styling = styling;
         this.pickContentGenerator = pickContentGenerator;
         this.choiceContentGenerator = choiceContentGenerator;
-        //this.createStylingComposite = createStylingComposite;
         this.placeholderText = placeholderText;
-        this.setSelected=setSelected; // should I rebind this for callbacks? setSelected.bind(this);
+        this.setSelected=setSelected; 
         this.css = css;
-        this.popper = popper;
+        this.Popper = Popper;
         this.window = window;
 
         this.visibleCount=10;
 
         this.choicesPanel = null;
-
+        this.popper = null;
         this.stylingComposite = null;
         this.onChange=onChange;
 
@@ -362,7 +358,8 @@ export class MultiSelect {
             this.filterPanel.dispose,
             this.aspect.dispose,
             this.staticContent.dispose,
-            this.choicesPanel.dispose
+            this.choicesPanel.dispose,
+            this.popper.dispose
         );
     }
 
@@ -483,6 +480,8 @@ export class MultiSelect {
     }
 
     init() {
+        this.popper = this.getPopper();
+
         this.filterPanel = FilterPanel(
             this.staticContent.filterInputElement,
             () => this.setFocusIn(true),  // focus in - show dropdown
@@ -495,7 +494,7 @@ export class MultiSelect {
             () => {
                 let p = this.picksList.removePicksTail();
                 if (p)
-                    this.aspect.alignToFilterInputItemLocation();
+                    this.popper.update();
             }, // backspace - "remove last"
 
             /*onTabToCompleate*/() => { 
@@ -563,12 +562,11 @@ export class MultiSelect {
             this.staticContent.filterInputElement,
             this.css
         )
-
         this.placeholderAspect.updateEmptyInputWidth();
-        
+
+        this.staticContent.appendToContainer();
         this.aspect =  MultiSelectInputAspect(
             this.window,
-            ()=>this.staticContent.appendToContainer(), 
             this.staticContent.filterInputElement, 
             this.staticContent.picksElement, 
             this.staticContent.choicesElement, 
@@ -580,11 +578,56 @@ export class MultiSelect {
             () => this.filterListFacade.getCount()==0, 
             /*onClick*/(event) => this.filterPanel.setFocusIfNotTarget(event.target),
             /*resetFocus*/() => this.setFocusIn(false),
-            this.isRtl,
-            this.popper
+            /*alignToFilterInputItemLocation*/() => this.popper.update()
         );
         this.staticContent.attachContainer();
     }
+
+    createPopperConfiguration(){
+        return {
+            placement: 'bottom-start',
+            modifiers: {
+                preventOverflow: {enabled:true},
+                hide: {enabled:false},
+                flip: {enabled:false}
+            }
+        }
+    }
+
+    getPopper(){
+        let popperConfiguration = this.createPopperConfiguration();
+        let Popper = this.Popper;
+        //if (!!Popper.prototype && !!Popper.prototype.constructor.name) {
+        var popper=new Popper( 
+            this.staticContent.filterInputElement, 
+            this.staticContent.choicesElement, 
+            popperConfiguration,
+        );
+        /*}else{
+            popper=Popper.createPopper(
+                filterInputElement,
+                choicesElement,
+                //  https://github.com/popperjs/popper.js/blob/next/docs/src/pages/docs/modifiers/prevent-overflow.mdx#mainaxis
+                // {
+                //     placement: isRtl?'bottom-end':'bottom-start',
+                //     modifiers: {
+                //         preventOverflow: {enabled:false},
+                //         hide: {enabled:false},
+                //         flip: {enabled:false}
+                //     }
+                // }
+            );
+        }*/
+
+        return {
+            update(){
+                popper.update();
+            },
+            dispose(){
+                popper.destroy();
+            }
+        }
+    };
 
     load(){
         this.updateDataImpl();

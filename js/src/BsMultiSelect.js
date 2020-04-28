@@ -1,10 +1,10 @@
 import {MultiSelect} from './MultiSelect'
 import {PluginManager} from './PluginManager'
 
-import {getDataGuardedWithPrefix, closestByTagName, getIsRtl} from './ToolsDom';
+import {getDataGuardedWithPrefix, closestByTagName /*, getIsRtl*/} from './ToolsDom';
 
 import {createCss, extendCss} from './ToolsStyling';
-import {extendOverriding, extendIfUndefined, composeSync, def, defCall, isBoolean} from './ToolsJs';
+import {extendOverriding, extendIfUndefined, composeSync, def /*, isBoolean*/} from './ToolsJs';
 
 import {adjustLegacyConfiguration as adjustLegacySettings} from './BsMultiSelectDepricatedParameters'
 
@@ -86,7 +86,7 @@ export function BsMultiSelect(element, environment, settings){
         init = configuration.buildConfiguration(element, configuration);
     
     let { css, cssPatch, useCssPatch,
-          containerClass, label, isRtl, 
+          containerClass, 
           getSelected, setSelected, placeholder, 
           common,
           options, getDisabled,
@@ -102,16 +102,8 @@ export function BsMultiSelect(element, environment, settings){
     let pickContentGenerator = def(configuration.pickContentGenerator, defPickContentGenerator);
     let choiceContentGenerator = def(configuration.choiceContentGenerator, defChoiceContentGenerator);
 
-    let forceRtlOnContainer = false; 
-    if (isBoolean(isRtl))
-        forceRtlOnContainer = true;
-    else
-        isRtl = getIsRtl(element);
-
-    let labelElement = defCall(label);
-
     let staticContent = staticContentGenerator(
-        element, labelElement, name=>window.document.createElement(name), containerClass, forceRtlOnContainer, css
+        element, name=>window.document.createElement(name), containerClass, css
     );
 
     if (!common){
@@ -181,12 +173,10 @@ export function BsMultiSelect(element, environment, settings){
         (pickElement) => pickContentGenerator(pickElement, common, css),
         (choiceElement, toggle) => choiceContentGenerator(choiceElement, common, css, toggle),
         placeholder,
-        isRtl,
         onChange,
         css,
         Popper,
         window);
-
 
     pluginManager.afterConstructor(multiSelect);
 

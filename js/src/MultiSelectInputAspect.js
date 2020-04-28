@@ -2,7 +2,6 @@ import {EventBinder, EventLoopFlag, containsAndSelf} from './ToolsDom'
 
 export function MultiSelectInputAspect (
     window,
-    appendToContainer, 
     filterInputElement, 
     picksElement,
     choicesElement, 
@@ -14,11 +13,9 @@ export function MultiSelectInputAspect (
     isChoiceEmpty,
     onClick,
     resetFocus,
-    isRtl,
-    Popper
+    alignToFilterInputItemLocation
     ) 
 {
-    appendToContainer();
     var document = window.document;
     var eventLoopFlag = EventLoopFlag(window); 
     var skipFocusout = false;
@@ -51,20 +48,21 @@ export function MultiSelectInputAspect (
         }
     }
 
-    var popper = null;
+    
+    //var popper = null;
     //if (!!Popper.prototype && !!Popper.prototype.constructor.name) {
-        popper=new Popper( 
-            filterInputElement, 
-            choicesElement, 
-            {
-                placement: isRtl?'bottom-end':'bottom-start',
-                modifiers: {
-                    preventOverflow: {enabled:true},
-                    hide: {enabled:false},
-                    flip: {enabled:false}
-                }
-            }
-        );
+        // popper=new Popper( 
+        //     filterInputElement, 
+        //     choicesElement, 
+        //     {
+        //         placement: isRtl?'bottom-end':'bottom-start',
+        //         modifiers: {
+        //             preventOverflow: {enabled:true},
+        //             hide: {enabled:false},
+        //             flip: {enabled:false}
+        //         }
+        //     }
+        // );
     /*}else{
         popper=Popper.createPopper(
             filterInputElement,
@@ -84,14 +82,14 @@ export function MultiSelectInputAspect (
     //var filterInputItemOffsetLeft = filterInputElement.offsetLeft; // used to detect changes in input field position (by comparision with current value)
     var preventDefaultClickEvent = null;
     
-    function alignToFilterInputItemLocation() {
-        popper.update();
-        // let offsetLeft = filterInputElement.offsetLeft;
-        // if (/*force ||*/ filterInputItemOffsetLeft !== offsetLeft) { // position changed
-        //     //
-        //     filterInputItemOffsetLeft = offsetLeft;
-        // }
-    }
+    // function alignToFilterInputItemLocation() {
+    //     popper.update();
+    //     // let offsetLeft = filterInputElement.offsetLeft;
+    //     // if (/*force ||*/ filterInputItemOffsetLeft !== offsetLeft) { // position changed
+    //     //     //
+    //     //     filterInputItemOffsetLeft = offsetLeft;
+    //     // }
+    // }
 
     var componentDisabledEventBinder = EventBinder();
 
@@ -228,11 +226,9 @@ export function MultiSelectInputAspect (
         adoptChoiceElement,
         dispose(){
             resetMouseCandidateChoice();
-            popper.destroy();
             picksElement.removeEventListener("mousedown", skipoutAndResetMousedown);
             componentDisabledEventBinder.unbind();
         },
-        alignToFilterInputItemLocation,
         onFocusOut(action){
             if (!getSkipFocusout()){ // skip initiated by mouse click (we manage it different way)
                 resetFilter(); // if do not do this we will return to filtered list without text filter in input

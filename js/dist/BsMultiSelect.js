@@ -1,8 +1,12 @@
 import { MultiSelect } from './MultiSelect';
 import { PluginManager } from './PluginManager';
-import { getDataGuardedWithPrefix, closestByTagName, getIsRtl } from './ToolsDom';
+import { getDataGuardedWithPrefix, closestByTagName
+/*, getIsRtl*/
+} from './ToolsDom';
 import { createCss, extendCss } from './ToolsStyling';
-import { extendOverriding, extendIfUndefined, composeSync, def, defCall, isBoolean } from './ToolsJs';
+import { extendOverriding, extendIfUndefined, composeSync, def
+/*, isBoolean*/
+} from './ToolsJs';
 import { adjustLegacyConfiguration as adjustLegacySettings } from './BsMultiSelectDepricatedParameters';
 import { pickContentGenerator as defPickContentGenerator } from './PickContentGenerator';
 import { choiceContentGenerator as defChoiceContentGenerator } from './ChoiceContentGenerator';
@@ -85,8 +89,6 @@ export function BsMultiSelect(element, environment, settings) {
       cssPatch = configuration.cssPatch,
       useCssPatch = configuration.useCssPatch,
       containerClass = configuration.containerClass,
-      label = configuration.label,
-      isRtl = configuration.isRtl,
       getSelected = configuration.getSelected,
       setSelected = configuration.setSelected,
       placeholder = configuration.placeholder,
@@ -102,12 +104,9 @@ export function BsMultiSelect(element, environment, settings) {
   var staticContentGenerator = def(configuration.staticContentGenerator, defStaticContentGenerator);
   var pickContentGenerator = def(configuration.pickContentGenerator, defPickContentGenerator);
   var choiceContentGenerator = def(configuration.choiceContentGenerator, defChoiceContentGenerator);
-  var forceRtlOnContainer = false;
-  if (isBoolean(isRtl)) forceRtlOnContainer = true;else isRtl = getIsRtl(element);
-  var labelElement = defCall(label);
-  var staticContent = staticContentGenerator(element, labelElement, function (name) {
+  var staticContent = staticContentGenerator(element, function (name) {
     return window.document.createElement(name);
-  }, containerClass, forceRtlOnContainer, css);
+  }, containerClass, css);
 
   if (!common) {
     common = {};
@@ -197,7 +196,7 @@ export function BsMultiSelect(element, environment, settings) {
     return pickContentGenerator(pickElement, common, css);
   }, function (choiceElement, toggle) {
     return choiceContentGenerator(choiceElement, common, css, toggle);
-  }, placeholder, isRtl, onChange, css, Popper, window);
+  }, placeholder, onChange, css, Popper, window);
   pluginManager.afterConstructor(multiSelect);
   multiSelect.Dispose = composeSync(pluginManager.dispose, multiSelect.Dispose.bind(multiSelect));
   if (init && init instanceof Function) init(multiSelect);

@@ -7,13 +7,15 @@ export function BsAppearancePlugin(pluginData){
     let {getValidity, getSize} = configuration;
     let selectElement = staticContent.selectElement;
     
-    let origGetLabelElement = staticContent.getLabelElement;
-    staticContent.getLabelElement = () => {
-        var e = origGetLabelElement();
-        if (e)
-            return e;
-        else
-            return getLabelElement(selectElement);
+    if (staticContent.getLabelElement){
+        let origGetLabelElement = staticContent.getLabelElement;
+        staticContent.getLabelElement = () => {
+            var e = origGetLabelElement();
+            if (e)
+                return e;
+            else
+                return getLabelElement(selectElement);
+        }
     }
     
     if (options) {

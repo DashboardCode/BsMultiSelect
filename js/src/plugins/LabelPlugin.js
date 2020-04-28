@@ -1,6 +1,11 @@
 
+import {defCall} from '../ToolsJs';
+
 export function LabelPlugin(pluginData){
-    var {staticContent} = pluginData;
+    let {configuration, staticContent} = pluginData;
+    let {label} = configuration;
+    staticContent.getLabelElement = () => defCall(label);
+
     return {
         afterConstructor(){
             let labelElement = staticContent.getLabelElement();

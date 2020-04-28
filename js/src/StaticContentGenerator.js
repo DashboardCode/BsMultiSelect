@@ -1,11 +1,17 @@
-import {findDirectChildByTagName, closestByClassName, removeElement, AttributeBackup} from './ToolsDom';
+import {findDirectChildByTagName, closestByClassName, removeElement} from './ToolsDom';
 import  {addStyling, toggleStyling} from './ToolsStyling';
 
-export function staticContentGenerator(element, labelElement,  createElement, containerClass, forceRtlOnContainer, css) { 
+export function staticContentGenerator(element, createElement, containerClass, css) { 
     var selectElement = null;
     var containerElement = null;
     var picksElement = null;
     var ownPicksElement = false;
+
+    function showError(message){
+        element.style.backgroundColor = 'red';
+        element.style.color = 'white';
+        throw new Error(message);
+    }
     if (element.tagName=='SELECT'){
         selectElement = element;
         if (containerClass){
@@ -22,46 +28,21 @@ export function staticContentGenerator(element, labelElement,  createElement, co
             containerElement = closestByClassName(element, containerClass);
             if (!containerElement){
                 // TODO: create error message submethod
-                element.style.backgroundColor = 'red';
-                element.style.color = 'white';
-                throw new Error('BsMultiSelect: definde on UL but container parent not found');
+                showError('BsMultiSelect: definde on UL but container parent not found');
             }
         }
     } 
     else 
     {
-        element.style.backgroundColor = 'red';
-        element.style.color = 'white';
-        throw new Error('BsMultiSelect: Only DIV and SELECT supported');
+        showError('BsMultiSelect: Only DIV and SELECT supported');
     }
-
 
     if (containerElement)
         picksElement = findDirectChildByTagName(containerElement, 'UL');
+
     if (!picksElement){
         picksElement = createElement('UL');
         ownPicksElement = true;
-    }
-    
-    var createPickElement = () => {
-        var pickElement = createElement('LI');
-        addStyling(pickElement, css.pick);
-        return {
-            pickElement, 
-            attach: () => picksElement.insertBefore(pickElement, pickFilterElement),
-            detach: () => removeElement(pickElement)
-        };
-    }
-
-    var createChoiceElement = () => {
-        var choiceElement = createElement('LI');
-        addStyling(choiceElement, css.choice);
-        return {
-            choiceElement, 
-            setVisible: (isVisible) => choiceElement.style.display = isVisible ? 'block': 'none',
-            attach: (element) => choicesElement.insertBefore(choiceElement, element),
-            detach: () => removeElement(choiceElement)
-        };
     }
 
     var ownContainerElement = false;        
@@ -71,28 +52,13 @@ export function staticContentGenerator(element, labelElement,  createElement, co
     }
     containerElement.classList.add(containerClass);
 
-    var attributeBackup = AttributeBackup();
-    if (forceRtlOnContainer){
-        attributeBackup.set(containerElement, "dir", "rtl");
-    }
-    else if (selectElement){
-        var dirAttributeValue = selectElement.getAttribute("dir");
-        if (dirAttributeValue){
-            attributeBackup.set(containerElement, "dir", dirAttributeValue);
-        }
-    } 
-
-    var choicesElement = createElement('UL');
-    choicesElement.style.display = 'none';
-    
+   
     var backupDisplay = null;
     if (selectElement){ 
         backupDisplay = selectElement.style.display;
         selectElement.style.display = 'none';
     }
     
-    var pickFilterElement = createElement('LI');
-    var filterInputElement = createElement('INPUT');
     var required = false;
     if (selectElement){
         var backupedRequired = selectElement.required;
@@ -102,30 +68,58 @@ export function staticContentGenerator(element, labelElement,  createElement, co
         }
     }
 
-    addStyling(picksElement,       css.picks);
-    addStyling(choicesElement,     css.choices);
-    addStyling(pickFilterElement,  css.pickFilter);
-    addStyling(filterInputElement, css.filterInput);
-
     var createInputId = null;
     if(selectElement)
         createInputId = () => `${containerClass}-generated-input-${((selectElement.id)?selectElement.id:selectElement.name).toLowerCase()}-id`;
     else
         createInputId = () => `${containerClass}-generated-filter-${containerElement.id}`;
 
+    var choicesElement = createElement('UL');
+    choicesElement.style.display = 'none';
+    
+    var pickFilterElement  = createElement('LI');
+    var filterInputElement = createElement('INPUT');
+    
+    addStyling(picksElement,       css.picks);
+    addStyling(choicesElement,     css.choices);
+    addStyling(pickFilterElement,  css.pickFilter);
+    addStyling(filterInputElement, css.filterInput);
+
     let isFocusIn = false;
     let disableToggleStyling = toggleStyling(picksElement, css.picks_disabled);
-    let focusToggleStyling = toggleStyling(picksElement, css.picks_focus);
+    let focusToggleStyling   = toggleStyling(picksElement, css.picks_focus);
+
     return {
         initialElement:element,
         selectElement, 
         containerElement,
-        picksElement,
-        createPickElement,
-        choicesElement,
-        createChoiceElement,
+
         pickFilterElement,
         filterInputElement,
+        picksElement,
+        // ---------------------------------------
+        createPickElement(){
+            var pickElement = createElement('LI');
+            addStyling(pickElement, css.pick);
+            return {
+                pickElement, 
+                attach: () => picksElement.insertBefore(pickElement, pickFilterElement),
+                detach: () => removeElement(pickElement)
+            };
+        },
+
+        choicesElement,
+        createChoiceElement(){
+            var choiceElement = createElement('LI');
+            addStyling(choiceElement, css.choice);
+            return {
+                choiceElement, 
+                setVisible: (isVisible) => choiceElement.style.display = isVisible ? 'block': 'none',
+                attach: (element) => choicesElement.insertBefore(choiceElement, element),
+                detach: () => removeElement(choiceElement)
+            };
+        },
+
         createInputId,
         required,
         attachContainer(){
@@ -168,14 +162,10 @@ export function staticContentGenerator(element, labelElement,  createElement, co
         setChoicesVisible(visible){
             choicesElement.style.display = visible?'block':'none';
         },
-        getLabelElement(){
-            return labelElement;
-        },
         dispose(){
             if (ownContainerElement)
                 containerElement.parentNode.removeChild(containerElement);
-            else
-                attributeBackup.restore();
+            
             if (ownPicksElement){
                 picksElement.parentNode.removeChild(picksElement);
             }else{

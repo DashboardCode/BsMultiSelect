@@ -1,5 +1,5 @@
 /*!
-  * DashboardCode BsMultiSelect v0.5.51 (https://dashboardcode.github.io/BsMultiSelect/)
+  * DashboardCode BsMultiSelect v0.5.52 (https://dashboardcode.github.io/BsMultiSelect/)
   * Copyright 2017-2020 Roman Pokrovskij (github user rpokrovskij)
   * Licensed under APACHE 2 (https://github.com/DashboardCode/BsMultiSelect/blob/master/LICENSE)
   */
@@ -739,8 +739,7 @@ function PicksList() {
   };
 }
 
-function MultiSelectInputAspect(window, appendToContainer, filterInputElement, picksElement, choicesElement, isChoicesVisible, setChoicesVisible, resetHoveredChoice, hoverIn, resetFilter, isChoiceEmpty, onClick, resetFocus, isRtl, Popper) {
-  appendToContainer();
+function MultiSelectInputAspect(window, filterInputElement, picksElement, choicesElement, isChoicesVisible, setChoicesVisible, resetHoveredChoice, hoverIn, resetFilter, isChoiceEmpty, onClick, resetFocus, alignToFilterInputItemLocation) {
   var document = window.document;
   var eventLoopFlag = EventLoopFlag(window);
   var skipFocusout = false;
@@ -769,24 +768,21 @@ function MultiSelectInputAspect(window, appendToContainer, filterInputElement, p
         resetFilter();
         resetFocus();
       }
-  };
+  }; //var popper = null;
+  //if (!!Popper.prototype && !!Popper.prototype.constructor.name) {
+  // popper=new Popper( 
+  //     filterInputElement, 
+  //     choicesElement, 
+  //     {
+  //         placement: isRtl?'bottom-end':'bottom-start',
+  //         modifiers: {
+  //             preventOverflow: {enabled:true},
+  //             hide: {enabled:false},
+  //             flip: {enabled:false}
+  //         }
+  //     }
+  // );
 
-  var popper = null; //if (!!Popper.prototype && !!Popper.prototype.constructor.name) {
-
-  popper = new Popper(filterInputElement, choicesElement, {
-    placement: isRtl ? 'bottom-end' : 'bottom-start',
-    modifiers: {
-      preventOverflow: {
-        enabled: true
-      },
-      hide: {
-        enabled: false
-      },
-      flip: {
-        enabled: false
-      }
-    }
-  });
   /*}else{
       popper=Popper.createPopper(
           filterInputElement,
@@ -804,15 +800,15 @@ function MultiSelectInputAspect(window, appendToContainer, filterInputElement, p
   }*/
   //var filterInputItemOffsetLeft = filterInputElement.offsetLeft; // used to detect changes in input field position (by comparision with current value)
 
-  var preventDefaultClickEvent = null;
 
-  function alignToFilterInputItemLocation() {
-    popper.update(); // let offsetLeft = filterInputElement.offsetLeft;
-    // if (/*force ||*/ filterInputItemOffsetLeft !== offsetLeft) { // position changed
-    //     //
-    //     filterInputItemOffsetLeft = offsetLeft;
-    // }
-  }
+  var preventDefaultClickEvent = null; // function alignToFilterInputItemLocation() {
+  //     popper.update();
+  //     // let offsetLeft = filterInputElement.offsetLeft;
+  //     // if (/*force ||*/ filterInputItemOffsetLeft !== offsetLeft) { // position changed
+  //     //     //
+  //     //     filterInputItemOffsetLeft = offsetLeft;
+  //     // }
+  // }
 
   var componentDisabledEventBinder = EventBinder(); // TODO: remove setTimeout: set on start of mouse event reset on end
 
@@ -948,11 +944,9 @@ function MultiSelectInputAspect(window, appendToContainer, filterInputElement, p
     adoptChoiceElement: adoptChoiceElement,
     dispose: function dispose() {
       resetMouseCandidateChoice();
-      popper.destroy();
       picksElement.removeEventListener("mousedown", skipoutAndResetMousedown);
       componentDisabledEventBinder.unbind();
     },
-    alignToFilterInputItemLocation: alignToFilterInputItemLocation,
     onFocusOut: function onFocusOut(action) {
       if (!getSkipFocusout()) {
         // skip initiated by mouse click (we manage it different way)
@@ -1293,25 +1287,22 @@ function FilterFacade(listFacade, forEach, composeFilterPredicate) {
 }
 
 var MultiSelect = /*#__PURE__*/function () {
-  function MultiSelect(getOptions, getIsComponentDisabled, setSelected, getIsOptionSelected, getIsOptionDisabled, staticContent, pickContentGenerator, choiceContentGenerator, placeholderText, isRtl, onChange, css, popper, window) {
-    this.isRtl = isRtl; // readonly
-
+  function MultiSelect(getOptions, getIsComponentDisabled, setSelected, getIsOptionSelected, getIsOptionDisabled, staticContent, pickContentGenerator, choiceContentGenerator, placeholderText, onChange, css, Popper, window) {
+    // readonly
     this.getOptions = getOptions;
     this.getIsOptionSelected = getIsOptionSelected;
     this.getIsOptionDisabled = getIsOptionDisabled;
-    this.staticContent = staticContent; //this.styling = styling;
-
+    this.staticContent = staticContent;
     this.pickContentGenerator = pickContentGenerator;
-    this.choiceContentGenerator = choiceContentGenerator; //this.createStylingComposite = createStylingComposite;
-
+    this.choiceContentGenerator = choiceContentGenerator;
     this.placeholderText = placeholderText;
-    this.setSelected = setSelected; // should I rebind this for callbacks? setSelected.bind(this);
-
+    this.setSelected = setSelected;
     this.css = css;
-    this.popper = popper;
+    this.Popper = Popper;
     this.window = window;
     this.visibleCount = 10;
     this.choicesPanel = null;
+    this.popper = null;
     this.stylingComposite = null;
     this.onChange = onChange;
     this.getIsComponentDisabled = getIsComponentDisabled;
@@ -1662,7 +1653,7 @@ var MultiSelect = /*#__PURE__*/function () {
   };
 
   _proto.Dispose = function Dispose() {
-    sync(this.aspect.hideChoices, this.picksList.dispose, this.filterPanel.dispose, this.aspect.dispose, this.staticContent.dispose, this.choicesPanel.dispose);
+    sync(this.aspect.hideChoices, this.picksList.dispose, this.filterPanel.dispose, this.aspect.dispose, this.staticContent.dispose, this.choicesPanel.dispose, this.popper.dispose);
   };
 
   _proto.UpdateAppearance = function UpdateAppearance() {
@@ -1794,6 +1785,7 @@ var MultiSelect = /*#__PURE__*/function () {
   _proto.init = function init() {
     var _this6 = this;
 
+    this.popper = this.getPopper();
     this.filterPanel = FilterPanel(this.staticContent.filterInputElement, function () {
       return _this6.setFocusIn(true);
     }, // focus in - show dropdown
@@ -1816,7 +1808,7 @@ var MultiSelect = /*#__PURE__*/function () {
     function () {
       var p = _this6.picksList.removePicksTail();
 
-      if (p) _this6.aspect.alignToFilterInputItemLocation();
+      if (p) _this6.popper.update();
     }, // backspace - "remove last"
 
     /*onTabToCompleate*/
@@ -1887,9 +1879,8 @@ var MultiSelect = /*#__PURE__*/function () {
       return _this6.picksList.isEmpty() && _this6.filterPanel.isEmpty();
     }, this.staticContent.picksElement, this.staticContent.filterInputElement, this.css);
     this.placeholderAspect.updateEmptyInputWidth();
-    this.aspect = MultiSelectInputAspect(this.window, function () {
-      return _this6.staticContent.appendToContainer();
-    }, this.staticContent.filterInputElement, this.staticContent.picksElement, this.staticContent.choicesElement, function () {
+    this.staticContent.appendToContainer();
+    this.aspect = MultiSelectInputAspect(this.window, this.staticContent.filterInputElement, this.staticContent.picksElement, this.staticContent.choicesElement, function () {
       return _this6.staticContent.isChoicesVisible();
     }, function (visible) {
       return _this6.staticContent.setChoicesVisible(visible);
@@ -1909,8 +1900,60 @@ var MultiSelect = /*#__PURE__*/function () {
     /*resetFocus*/
     function () {
       return _this6.setFocusIn(false);
-    }, this.isRtl, this.popper);
+    },
+    /*alignToFilterInputItemLocation*/
+    function () {
+      return _this6.popper.update();
+    });
     this.staticContent.attachContainer();
+  };
+
+  _proto.createPopperConfiguration = function createPopperConfiguration() {
+    return {
+      placement: 'bottom-start',
+      modifiers: {
+        preventOverflow: {
+          enabled: true
+        },
+        hide: {
+          enabled: false
+        },
+        flip: {
+          enabled: false
+        }
+      }
+    };
+  };
+
+  _proto.getPopper = function getPopper() {
+    var popperConfiguration = this.createPopperConfiguration();
+    var Popper = this.Popper; //if (!!Popper.prototype && !!Popper.prototype.constructor.name) {
+
+    var popper = new Popper(this.staticContent.filterInputElement, this.staticContent.choicesElement, popperConfiguration);
+    /*}else{
+        popper=Popper.createPopper(
+            filterInputElement,
+            choicesElement,
+            //  https://github.com/popperjs/popper.js/blob/next/docs/src/pages/docs/modifiers/prevent-overflow.mdx#mainaxis
+            // {
+            //     placement: isRtl?'bottom-end':'bottom-start',
+            //     modifiers: {
+            //         preventOverflow: {enabled:false},
+            //         hide: {enabled:false},
+            //         flip: {enabled:false}
+            //     }
+            // }
+        );
+    }*/
+
+    return {
+      update: function update() {
+        popper.update();
+      },
+      dispose: function dispose() {
+        popper.destroy();
+      }
+    };
   };
 
   _proto.load = function load() {
@@ -2152,11 +2195,17 @@ function choiceContentGenerator(choiceElement, common, css, toggle) {
   };
 }
 
-function staticContentGenerator(element, labelElement, createElement, containerClass, forceRtlOnContainer, css) {
+function staticContentGenerator(element, createElement, containerClass, css) {
   var selectElement = null;
   var containerElement = null;
   var picksElement = null;
   var ownPicksElement = false;
+
+  function showError(message) {
+    element.style.backgroundColor = 'red';
+    element.style.color = 'white';
+    throw new Error(message);
+  }
 
   if (element.tagName == 'SELECT') {
     selectElement = element;
@@ -2176,15 +2225,11 @@ function staticContentGenerator(element, labelElement, createElement, containerC
 
         if (!containerElement) {
           // TODO: create error message submethod
-          element.style.backgroundColor = 'red';
-          element.style.color = 'white';
-          throw new Error('BsMultiSelect: definde on UL but container parent not found');
+          showError('BsMultiSelect: definde on UL but container parent not found');
         }
       }
   } else {
-    element.style.backgroundColor = 'red';
-    element.style.color = 'white';
-    throw new Error('BsMultiSelect: Only DIV and SELECT supported');
+    showError('BsMultiSelect: Only DIV and SELECT supported');
   }
 
   if (containerElement) picksElement = findDirectChildByTagName(containerElement, 'UL');
@@ -2194,37 +2239,6 @@ function staticContentGenerator(element, labelElement, createElement, containerC
     ownPicksElement = true;
   }
 
-  var createPickElement = function createPickElement() {
-    var pickElement = createElement('LI');
-    addStyling(pickElement, css.pick);
-    return {
-      pickElement: pickElement,
-      attach: function attach() {
-        return picksElement.insertBefore(pickElement, pickFilterElement);
-      },
-      detach: function detach() {
-        return removeElement(pickElement);
-      }
-    };
-  };
-
-  var createChoiceElement = function createChoiceElement() {
-    var choiceElement = createElement('LI');
-    addStyling(choiceElement, css.choice);
-    return {
-      choiceElement: choiceElement,
-      setVisible: function setVisible(isVisible) {
-        return choiceElement.style.display = isVisible ? 'block' : 'none';
-      },
-      attach: function attach(element) {
-        return choicesElement.insertBefore(choiceElement, element);
-      },
-      detach: function detach() {
-        return removeElement(choiceElement);
-      }
-    };
-  };
-
   var ownContainerElement = false;
 
   if (!containerElement) {
@@ -2233,20 +2247,6 @@ function staticContentGenerator(element, labelElement, createElement, containerC
   }
 
   containerElement.classList.add(containerClass);
-  var attributeBackup = AttributeBackup();
-
-  if (forceRtlOnContainer) {
-    attributeBackup.set(containerElement, "dir", "rtl");
-  } else if (selectElement) {
-    var dirAttributeValue = selectElement.getAttribute("dir");
-
-    if (dirAttributeValue) {
-      attributeBackup.set(containerElement, "dir", dirAttributeValue);
-    }
-  }
-
-  var choicesElement = createElement('UL');
-  choicesElement.style.display = 'none';
   var backupDisplay = null;
 
   if (selectElement) {
@@ -2254,8 +2254,6 @@ function staticContentGenerator(element, labelElement, createElement, containerC
     selectElement.style.display = 'none';
   }
 
-  var pickFilterElement = createElement('LI');
-  var filterInputElement = createElement('INPUT');
   var required = false;
 
   if (selectElement) {
@@ -2267,16 +2265,20 @@ function staticContentGenerator(element, labelElement, createElement, containerC
     }
   }
 
-  addStyling(picksElement, css.picks);
-  addStyling(choicesElement, css.choices);
-  addStyling(pickFilterElement, css.pickFilter);
-  addStyling(filterInputElement, css.filterInput);
   var createInputId = null;
   if (selectElement) createInputId = function createInputId() {
     return containerClass + "-generated-input-" + (selectElement.id ? selectElement.id : selectElement.name).toLowerCase() + "-id";
   };else createInputId = function createInputId() {
     return containerClass + "-generated-filter-" + containerElement.id;
   };
+  var choicesElement = createElement('UL');
+  choicesElement.style.display = 'none';
+  var pickFilterElement = createElement('LI');
+  var filterInputElement = createElement('INPUT');
+  addStyling(picksElement, css.picks);
+  addStyling(choicesElement, css.choices);
+  addStyling(pickFilterElement, css.pickFilter);
+  addStyling(filterInputElement, css.filterInput);
   var isFocusIn = false;
   var disableToggleStyling = toggleStyling(picksElement, css.picks_disabled);
   var focusToggleStyling = toggleStyling(picksElement, css.picks_focus);
@@ -2284,12 +2286,40 @@ function staticContentGenerator(element, labelElement, createElement, containerC
     initialElement: element,
     selectElement: selectElement,
     containerElement: containerElement,
-    picksElement: picksElement,
-    createPickElement: createPickElement,
-    choicesElement: choicesElement,
-    createChoiceElement: createChoiceElement,
     pickFilterElement: pickFilterElement,
     filterInputElement: filterInputElement,
+    picksElement: picksElement,
+    // ---------------------------------------
+    createPickElement: function createPickElement() {
+      var pickElement = createElement('LI');
+      addStyling(pickElement, css.pick);
+      return {
+        pickElement: pickElement,
+        attach: function attach() {
+          return picksElement.insertBefore(pickElement, pickFilterElement);
+        },
+        detach: function detach() {
+          return removeElement(pickElement);
+        }
+      };
+    },
+    choicesElement: choicesElement,
+    createChoiceElement: function createChoiceElement() {
+      var choiceElement = createElement('LI');
+      addStyling(choiceElement, css.choice);
+      return {
+        choiceElement: choiceElement,
+        setVisible: function setVisible(isVisible) {
+          return choiceElement.style.display = isVisible ? 'block' : 'none';
+        },
+        attach: function attach(element) {
+          return choicesElement.insertBefore(choiceElement, element);
+        },
+        detach: function detach() {
+          return removeElement(choiceElement);
+        }
+      };
+    },
     createInputId: createInputId,
     required: required,
     attachContainer: function attachContainer() {
@@ -2326,11 +2356,8 @@ function staticContentGenerator(element, labelElement, createElement, containerC
     setChoicesVisible: function setChoicesVisible(visible) {
       choicesElement.style.display = visible ? 'block' : 'none';
     },
-    getLabelElement: function getLabelElement() {
-      return labelElement;
-    },
     dispose: function dispose() {
-      if (ownContainerElement) containerElement.parentNode.removeChild(containerElement);else attributeBackup.restore();
+      if (ownContainerElement) containerElement.parentNode.removeChild(containerElement);
 
       if (ownPicksElement) {
         picksElement.parentNode.removeChild(picksElement);
@@ -2547,8 +2574,6 @@ function BsMultiSelect(element, environment, settings) {
       cssPatch = configuration.cssPatch,
       useCssPatch = configuration.useCssPatch,
       containerClass = configuration.containerClass,
-      label = configuration.label,
-      isRtl = configuration.isRtl,
       getSelected = configuration.getSelected,
       setSelected = configuration.setSelected,
       placeholder = configuration.placeholder,
@@ -2564,12 +2589,9 @@ function BsMultiSelect(element, environment, settings) {
   var staticContentGenerator$1 = def(configuration.staticContentGenerator, staticContentGenerator);
   var pickContentGenerator$1 = def(configuration.pickContentGenerator, pickContentGenerator);
   var choiceContentGenerator$1 = def(configuration.choiceContentGenerator, choiceContentGenerator);
-  var forceRtlOnContainer = false;
-  if (isBoolean(isRtl)) forceRtlOnContainer = true;else isRtl = getIsRtl(element);
-  var labelElement = defCall(label);
-  var staticContent = staticContentGenerator$1(element, labelElement, function (name) {
+  var staticContent = staticContentGenerator$1(element, function (name) {
     return window.document.createElement(name);
-  }, containerClass, forceRtlOnContainer, css);
+  }, containerClass, css);
 
   if (!common) {
     common = {};
@@ -2659,7 +2681,7 @@ function BsMultiSelect(element, environment, settings) {
     return pickContentGenerator$1(pickElement, common, css);
   }, function (choiceElement, toggle) {
     return choiceContentGenerator$1(choiceElement, common, css, toggle);
-  }, placeholder, isRtl, onChange, css, Popper, window);
+  }, placeholder, onChange, css, Popper, window);
   pluginManager.afterConstructor(multiSelect);
   multiSelect.Dispose = composeSync(pluginManager.dispose, multiSelect.Dispose.bind(multiSelect));
   if (init && init instanceof Function) init(multiSelect);
@@ -2676,7 +2698,14 @@ function BsMultiSelect(element, environment, settings) {
 }
 
 function LabelPlugin(pluginData) {
-  var staticContent = pluginData.staticContent;
+  var configuration = pluginData.configuration,
+      staticContent = pluginData.staticContent;
+  var label = configuration.label;
+
+  staticContent.getLabelElement = function () {
+    return defCall(label);
+  };
+
   return {
     afterConstructor: function afterConstructor() {
       var labelElement = staticContent.getLabelElement();
@@ -2692,6 +2721,39 @@ function LabelPlugin(pluginData) {
       if (backupedForAttribute) return function () {
         return labelElement.setAttribute('for', backupedForAttribute);
       };
+    }
+  };
+}
+
+function RtlPlugin(pluginData) {
+  var configuration = pluginData.configuration,
+      staticContent = pluginData.staticContent;
+  var isRtl = configuration.isRtl;
+  var forceRtlOnContainer = false;
+  if (isBoolean(isRtl)) forceRtlOnContainer = true;else isRtl = getIsRtl(staticContent.initialElement);
+  var attributeBackup = AttributeBackup();
+
+  if (forceRtlOnContainer) {
+    attributeBackup.set(staticContent.containerElement, "dir", "rtl");
+  } else if (staticContent.selectElement) {
+    var dirAttributeValue = staticContent.selectElement.getAttribute("dir");
+
+    if (dirAttributeValue) {
+      attributeBackup.set(staticContent.containerElement, "dir", dirAttributeValue);
+    }
+  }
+
+  return {
+    afterConstructor: function afterConstructor(multiSelect) {
+      var origCreatePopperConfiguration = multiSelect.createPopperConfiguration.bind(multiSelect);
+
+      multiSelect.createPopperConfiguration = function () {
+        var configuration = origCreatePopperConfiguration();
+        configuration.placement = isRtl ? 'bottom-end' : 'bottom-start';
+        return configuration;
+      };
+
+      return attributeBackup.restore;
     }
   };
 }
@@ -2825,12 +2887,15 @@ function BsAppearancePlugin(pluginData) {
   var getValidity = configuration.getValidity,
       getSize = configuration.getSize;
   var selectElement = staticContent.selectElement;
-  var origGetLabelElement = staticContent.getLabelElement;
 
-  staticContent.getLabelElement = function () {
-    var e = origGetLabelElement();
-    if (e) return e;else return getLabelElement(selectElement);
-  };
+  if (staticContent.getLabelElement) {
+    var origGetLabelElement = staticContent.getLabelElement;
+
+    staticContent.getLabelElement = function () {
+      var e = origGetLabelElement();
+      if (e) return e;else return getLabelElement(selectElement);
+    };
+  }
 
   if (options) {
     if (!getValidity) getValidity = function getValidity() {
@@ -3229,7 +3294,7 @@ function BsMultiSelect$1(element, environment, settings) {
   if (!environment.trigger) environment.trigger = function (e, name) {
     return e.dispatchEvent(new environment.window.Event(name));
   };
-  if (!environment.plugins) environment.plugins = [LabelPlugin, HiddenOptionPlugin, ValidationApiPlugin, BsAppearancePlugin, FormResetPlugin];
+  if (!environment.plugins) environment.plugins = [LabelPlugin, HiddenOptionPlugin, ValidationApiPlugin, BsAppearancePlugin, FormResetPlugin, RtlPlugin];
   return BsMultiSelect(element, environment, settings);
 }
 

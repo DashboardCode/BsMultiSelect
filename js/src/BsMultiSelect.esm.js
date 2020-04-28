@@ -1,6 +1,7 @@
 import {BsMultiSelect as BsMultiSelectBase}  from './BsMultiSelect'
 
 import {LabelPlugin} from './plugins/LabelPlugin';
+import {RtlPlugin} from './plugins/RtlPlugin';
 import {FormResetPlugin} from './plugins/FormResetPlugin';
 import {ValidationApiPlugin} from './plugins/ValidationApiPlugin';
 import {BsAppearancePlugin} from './plugins/BsAppearancePlugin';
@@ -11,7 +12,7 @@ export function BsMultiSelect(element, environment, settings){
         environment.trigger = (e, name) => e.dispatchEvent(new environment.window.Event(name))
 
     if (!environment.plugins)
-        environment.plugins = [LabelPlugin, HiddenOptionPlugin, ValidationApiPlugin, BsAppearancePlugin, FormResetPlugin];
+        environment.plugins = [LabelPlugin, HiddenOptionPlugin, ValidationApiPlugin, BsAppearancePlugin, FormResetPlugin, RtlPlugin];
     
     return BsMultiSelectBase(element, environment, settings)
 }
