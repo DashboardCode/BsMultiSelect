@@ -15,4 +15,4 @@
 //             choicesElement.parentNode.removeChild(choicesElement);
 //         }
 //     }
-// }
+// } 

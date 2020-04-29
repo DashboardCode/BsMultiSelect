@@ -22,62 +22,62 @@ const transformClasses = [
     {old:'selectedItemContentDisabledClass', opt:'pick_disabled'}
 ]
 
-export function adjustLegacyConfiguration(configuration){
-    if (!configuration.css)
-        configuration.css={}
-    var css =configuration.css;
+export function adjustLegacySettings(settings){
+    if (!settings.css)
+        settings.css={}
+    var css =settings.css;
 
-    if (!configuration.cssPatch)
-        configuration.cssPatch={}
-    var cssPatch =configuration.cssPatch;
+    if (!settings.cssPatch)
+        settings.cssPatch={}
+    var cssPatch =settings.cssPatch;
 
-    if (configuration.selectedPanelFocusBorderColor || configuration.selectedPanelFocusBoxShadow){
+    if (settings.selectedPanelFocusBorderColor || settings.selectedPanelFocusBoxShadow){
         console.log("DashboarCode.BsMultiSelect: selectedPanelFocusBorderColor and selectedPanelFocusBoxShadow are depricated, use - cssPatch:{picks_focus:{borderColor:'myValue', boxShadow:'myValue'}}");
         if(!cssPatch.picks_focus){
-            cssPatch.picks_focus = {boxShadow: configuration.selectedPanelFocusBoxShadow, borderColor: configuration.selectedPanelFocusBorderColor}
+            cssPatch.picks_focus = {boxShadow: settings.selectedPanelFocusBoxShadow, borderColor: settings.selectedPanelFocusBorderColor}
         }
-        delete configuration.selectedPanelFocusBorderColor;
-        delete configuration.selectedPanelFocusBoxShadow;
+        delete settings.selectedPanelFocusBorderColor;
+        delete settings.selectedPanelFocusBoxShadow;
     }
 
     transformStyles.forEach(
         (i)=>{
-            if (configuration[i.old]){
+            if (settings[i.old]){
                 console.log(`DashboarCode.BsMultiSelect: ${i.old} is depricated, use - cssPatch:{${i.opt}:{${i.style}:'myValue'}}`);
-                if(!configuration[i.opt]){
+                if(!settings[i.opt]){
                     let opt = {}
-                    opt[i.style] = configuration[i.old]
-                    configuration.cssPatch[i.opt]=opt;
+                    opt[i.style] = settings[i.old]
+                    settings.cssPatch[i.opt]=opt;
                 }
-                delete configuration[i.old];
+                delete settings[i.old];
             }
         }
     )
     
     transformClasses.forEach( (i) => {
-        if (configuration[i.old]){
+        if (settings[i.old]){
             console.log(`DashboarCode.BsMultiSelect: ${i.old} is depricated, use - css:{${i.opt}:'myValue'}`);
             if(!css[i.opt]){
-                css[i.opt]= configuration[i.old]
+                css[i.opt]= settings[i.old]
             }
-            delete configuration[i.old];
+            delete settings[i.old];
         }
     })
     
-    if (configuration.inputColor){
+    if (settings.inputColor){
         console.log("DashboarCode.BsMultiSelect: inputColor is depricated, remove parameter");
-        delete configuration.inputColor;
+        delete settings.inputColor;
     }
 
-    if (configuration.useCss){
+    if (settings.useCss){
         console.log("DashboarCode.BsMultiSelect: useCss(=true) is depricated, use - 'useCssPatch: false'");
         if(!css.pick_disabled){
-            configuration.useCssPatch = !configuration.useCss
+            settings.useCssPatch = !settings.useCss
         }
-        delete configuration.useCss;
+        delete settings.useCss;
     }  
 
-    if (configuration.getIsValid || configuration.getIsInValid){
+    if (settings.getIsValid || settings.getIsInValid){
         throw "DashboarCode.BsMultiSelect: parameters getIsValid and getIsInValid are depricated and removed, use - getValidity that should return (true|false|null) "
     } 
 }

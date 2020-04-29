@@ -1,5 +1,5 @@
 /*!
-  * DashboardCode BsMultiSelect v0.5.52 (https://dashboardcode.github.io/BsMultiSelect/)
+  * DashboardCode BsMultiSelect v0.5.53 (https://dashboardcode.github.io/BsMultiSelect/)
   * Copyright 2017-2020 Roman Pokrovskij (github user rpokrovskij)
   * Licensed under APACHE 2 (https://github.com/DashboardCode/BsMultiSelect/blob/master/LICENSE)
   */
@@ -2059,67 +2059,67 @@ var transformClasses = [{
   old: 'selectedItemContentDisabledClass',
   opt: 'pick_disabled'
 }];
-function adjustLegacyConfiguration(configuration) {
-  if (!configuration.css) configuration.css = {};
-  var css = configuration.css;
-  if (!configuration.cssPatch) configuration.cssPatch = {};
-  var cssPatch = configuration.cssPatch;
+function adjustLegacySettings(settings) {
+  if (!settings.css) settings.css = {};
+  var css = settings.css;
+  if (!settings.cssPatch) settings.cssPatch = {};
+  var cssPatch = settings.cssPatch;
 
-  if (configuration.selectedPanelFocusBorderColor || configuration.selectedPanelFocusBoxShadow) {
+  if (settings.selectedPanelFocusBorderColor || settings.selectedPanelFocusBoxShadow) {
     console.log("DashboarCode.BsMultiSelect: selectedPanelFocusBorderColor and selectedPanelFocusBoxShadow are depricated, use - cssPatch:{picks_focus:{borderColor:'myValue', boxShadow:'myValue'}}");
 
     if (!cssPatch.picks_focus) {
       cssPatch.picks_focus = {
-        boxShadow: configuration.selectedPanelFocusBoxShadow,
-        borderColor: configuration.selectedPanelFocusBorderColor
+        boxShadow: settings.selectedPanelFocusBoxShadow,
+        borderColor: settings.selectedPanelFocusBorderColor
       };
     }
 
-    delete configuration.selectedPanelFocusBorderColor;
-    delete configuration.selectedPanelFocusBoxShadow;
+    delete settings.selectedPanelFocusBorderColor;
+    delete settings.selectedPanelFocusBoxShadow;
   }
 
   transformStyles.forEach(function (i) {
-    if (configuration[i.old]) {
+    if (settings[i.old]) {
       console.log("DashboarCode.BsMultiSelect: " + i.old + " is depricated, use - cssPatch:{" + i.opt + ":{" + i.style + ":'myValue'}}");
 
-      if (!configuration[i.opt]) {
+      if (!settings[i.opt]) {
         var opt = {};
-        opt[i.style] = configuration[i.old];
-        configuration.cssPatch[i.opt] = opt;
+        opt[i.style] = settings[i.old];
+        settings.cssPatch[i.opt] = opt;
       }
 
-      delete configuration[i.old];
+      delete settings[i.old];
     }
   });
   transformClasses.forEach(function (i) {
-    if (configuration[i.old]) {
+    if (settings[i.old]) {
       console.log("DashboarCode.BsMultiSelect: " + i.old + " is depricated, use - css:{" + i.opt + ":'myValue'}");
 
       if (!css[i.opt]) {
-        css[i.opt] = configuration[i.old];
+        css[i.opt] = settings[i.old];
       }
 
-      delete configuration[i.old];
+      delete settings[i.old];
     }
   });
 
-  if (configuration.inputColor) {
+  if (settings.inputColor) {
     console.log("DashboarCode.BsMultiSelect: inputColor is depricated, remove parameter");
-    delete configuration.inputColor;
+    delete settings.inputColor;
   }
 
-  if (configuration.useCss) {
+  if (settings.useCss) {
     console.log("DashboarCode.BsMultiSelect: useCss(=true) is depricated, use - 'useCssPatch: false'");
 
     if (!css.pick_disabled) {
-      configuration.useCssPatch = !configuration.useCss;
+      settings.useCssPatch = !settings.useCss;
     }
 
-    delete configuration.useCss;
+    delete settings.useCss;
   }
 
-  if (configuration.getIsValid || configuration.getIsInValid) {
+  if (settings.getIsValid || settings.getIsInValid) {
     throw "DashboarCode.BsMultiSelect: parameters getIsValid and getIsInValid are depricated and removed, use - getValidity that should return (true|false|null) ";
   }
 }
@@ -2265,12 +2265,6 @@ function staticContentGenerator(element, createElement, containerClass, css) {
     }
   }
 
-  var createInputId = null;
-  if (selectElement) createInputId = function createInputId() {
-    return containerClass + "-generated-input-" + (selectElement.id ? selectElement.id : selectElement.name).toLowerCase() + "-id";
-  };else createInputId = function createInputId() {
-    return containerClass + "-generated-filter-" + containerElement.id;
-  };
   var choicesElement = createElement('UL');
   choicesElement.style.display = 'none';
   var pickFilterElement = createElement('LI');
@@ -2320,7 +2314,6 @@ function staticContentGenerator(element, createElement, containerClass, css) {
         }
       };
     },
-    createInputId: createInputId,
     required: required,
     attachContainer: function attachContainer() {
       if (ownContainerElement && selectElement) // otherwise it is attached
@@ -2395,7 +2388,7 @@ var css = {
   pick_disabled: '',
   pickFilter: '',
   filterInput: '',
-  // used in BsPickContentStylingCorrector
+  // used in pickContentGenerator
   pick: 'badge',
   // bs4
   pickContent: '',
@@ -2403,7 +2396,7 @@ var css = {
   // not bs4, in scss 'ul.form-control li span.disabled'
   pickButton: 'close',
   // bs4
-  // used in BsChoiceContentStylingCorrector
+  // used in choiceContentGenerator
   // choice:  'dropdown-item', // it seems like hover should be managed manually since there should be keyboard support
   choiceCheckBox_disabled: 'disabled',
   //  not bs4, in scss as 'ul.form-control li .custom-control-input.disabled ~ .custom-control-label'
@@ -2525,16 +2518,17 @@ var defaults = {
   getIsValueMissing: null
 };
 
-function extendConfigurtion(configuration, defaults) {
+function extendConfigurtion(configuration) {
   var cfgCss = configuration.css;
   configuration.css = null;
   var cfgCssPatch = configuration.cssPatch;
   configuration.cssPatch = null;
-  extendIfUndefined(configuration, defaults);
+  extendIfUndefined(configuration, defaults); // copy 1st level of properties
+
   var defCss = createCss(defaults.css, cfgCss); // replace classes, merge styles
 
   configuration.css = defCss;
-  if (defaults.cssPatch instanceof Boolean || typeof defaults.cssPatch === "boolean" || cfgCssPatch instanceof Boolean || typeof cfgCssPatch === "boolean") throw new Error("BsMultiSelect: 'cssPatch' was used instead of 'useCssPatch'"); // often type of error
+  if (isBoolean(defaults.cssPatch) || isBoolean(cfgCssPatch)) throw new Error("BsMultiSelect: 'cssPatch' was used instead of 'useCssPatch'"); // often type of error
 
   var defCssPatch = createCss(defaults.cssPatch, cfgCssPatch); // replace classes, merge styles
 
@@ -2555,18 +2549,18 @@ function BsMultiSelect(element, environment, settings) {
   }
 
   var configuration = {};
-  var init = null;
+  var init = null; //let pluginManager = PluginManager(configuration, defaults);
 
   if (settings instanceof Function) {
-    extendConfigurtion(configuration, defaults);
+    extendConfigurtion(configuration);
     init = settings(element, configuration);
   } else {
     if (settings) {
-      adjustLegacyConfiguration(settings);
+      adjustLegacySettings(settings);
       extendOverriding(configuration, settings); // settings used per jQuery intialization, configuration per element
     }
 
-    extendConfigurtion(configuration, defaults);
+    extendConfigurtion(configuration);
   }
 
   if (configuration.buildConfiguration) init = configuration.buildConfiguration(element, configuration);
@@ -2580,7 +2574,7 @@ function BsMultiSelect(element, environment, settings) {
       common = configuration.common,
       options = configuration.options,
       getDisabled = configuration.getDisabled,
-      getIsOptionDisabled = configuration.getIsOptionDisabled; // TODO 
+      getIsOptionDisabled = configuration.getIsOptionDisabled; // TODO move to plugin
 
   if (useCssPatch) {
     extendCss(css, cssPatch);
@@ -2598,14 +2592,12 @@ function BsMultiSelect(element, environment, settings) {
   }
 
   var pluginData = {
+    window: window,
     configuration: configuration,
-    options: options,
-    common: common,
     staticContent: staticContent,
-    css: css,
-    useCssPatch: useCssPatch,
-    window: window
-  };
+    common: common
+  }; // TODO replace common with staticContent (but staticContent should be splitted)
+
   var pluginManager = PluginManager(plugins, pluginData);
   var onChange;
   var getOptions;
@@ -2704,8 +2696,18 @@ function LabelPlugin(pluginData) {
 
   staticContent.getLabelElement = function () {
     return defCall(label);
-  };
+  }; // overrided by BS Appearance Plugin
 
+
+  var createInputId = null;
+  var selectElement = staticContent.selectElement,
+      containerClass = staticContent.containerClass,
+      containerElement = staticContent.containerElement;
+  if (selectElement) createInputId = function createInputId() {
+    return containerClass + "-generated-input-" + (selectElement.id ? selectElement.id : selectElement.name).toLowerCase() + "-id";
+  };else createInputId = function createInputId() {
+    return containerClass + "-generated-filter-" + containerElement.id;
+  };
   return {
     afterConstructor: function afterConstructor() {
       var labelElement = staticContent.getLabelElement();
@@ -2713,7 +2715,7 @@ function LabelPlugin(pluginData) {
 
       if (labelElement) {
         backupedForAttribute = labelElement.getAttribute('for');
-        var newId = staticContent.createInputId();
+        var newId = createInputId();
         staticContent.filterInputElement.setAttribute('id', newId);
         labelElement.setAttribute('for', newId);
       }
@@ -2749,7 +2751,7 @@ function RtlPlugin(pluginData) {
 
       multiSelect.createPopperConfiguration = function () {
         var configuration = origCreatePopperConfiguration();
-        configuration.placement = isRtl ? 'bottom-end' : 'bottom-start';
+        if (isRtl) configuration.placement = 'bottom-end';
         return configuration;
       };
 
@@ -2879,13 +2881,12 @@ function ValidationApiPlugin(pluginData) {
 
 function BsAppearancePlugin(pluginData) {
   var configuration = pluginData.configuration,
-      options = pluginData.options,
       common = pluginData.common,
-      staticContent = pluginData.staticContent,
-      css = pluginData.css,
-      useCssPatch = pluginData.useCssPatch;
+      staticContent = pluginData.staticContent;
   var getValidity = configuration.getValidity,
-      getSize = configuration.getSize;
+      getSize = configuration.getSize,
+      useCssPatch = configuration.useCssPatch,
+      css = configuration.css;
   var selectElement = staticContent.selectElement;
 
   if (staticContent.getLabelElement) {
@@ -2897,16 +2898,16 @@ function BsAppearancePlugin(pluginData) {
     };
   }
 
-  if (options) {
+  if (staticContent.selectElement) {
+    if (!getValidity) getValidity = composeGetValidity(selectElement);
+    if (!getSize) getSize = composeGetSize(selectElement);
+  } else {
     if (!getValidity) getValidity = function getValidity() {
       return null;
     };
     if (!getSize) getSize = function getSize() {
       return null;
     };
-  } else {
-    if (!getValidity) getValidity = composeGetValidity(selectElement);
-    if (!getSize) getSize = composeGetSize(selectElement);
   }
 
   common.getSize = getSize;

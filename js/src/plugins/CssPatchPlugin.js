@@ -1,17 +1,24 @@
-// import {extendCss} from './ToolsStyling';
+// import {createCss, extendCss} from './ToolsStyling';
 
-
-// export function CssPatchPlugin(pluginData){
-//     var {configuration} = pluginData;
-
-//     let {css, cssPatch, useCssPatch} = configuration;
-
-//     if (useCssPatch) {
-//         extendCss(css, cssPatch); 
-//     }
-
+// export function CssPatchPlugin(configuration, defaults){
+//         let cfgCssPatch = configuration.cssPatch;
+//         configuration.cssPatch = null;
+//         if (defaults.cssPatch instanceof Boolean || typeof defaults.cssPatch ==="boolean" 
+//             || cfgCssPatch instanceof Boolean || typeof cfgCssPatch==="boolean" 
+//         )
+//             throw new Error("BsMultiSelect: 'cssPatch' was used instead of 'useCssPatch'") // often type of error
+//         var defCssPatch = createCss(defaults.cssPatch, cfgCssPatch); // replace classes, merge styles
+//         configuration.cssPatch = defCssPatch;
 //     return {
-//         afterConstructor(){
+//         onBuildConfiguration(){
+//             let {css, cssPatch, useCssPatch} = configuration;
+        
+//             if (useCssPatch) {
+//                 extendCss(css, cssPatch); 
+//             }
+//         },
+//         onStaticContent(staticContent){
+//              staticContent.useCssPatch=useCssPatch;
 //         }
 //     }
 // }

@@ -1,4 +1,4 @@
-export function addToJQueryPrototype(pluginName, createPlugin, defaults, $){
+export function addToJQueryPrototype(pluginName, createPlugin, $){
     const firstChar = pluginName.charAt(0);
     const firstCharLower = firstChar.toLowerCase();
     if (firstCharLower == firstChar) {
@@ -66,5 +66,5 @@ export function addToJQueryPrototype(pluginName, createPlugin, defaults, $){
         return prototypableForInstance;
     }
 
-    $.fn[prototypableName].defaults = defaults;
+    return prototypable;
 }

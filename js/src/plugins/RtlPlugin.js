@@ -25,7 +25,8 @@ export function RtlPlugin(pluginData){
             var origCreatePopperConfiguration = multiSelect.createPopperConfiguration.bind(multiSelect);
             multiSelect.createPopperConfiguration = () => {
                 var configuration = origCreatePopperConfiguration();
-                configuration.placement = isRtl?'bottom-end':'bottom-start';
+                if (isRtl)
+                    configuration.placement = 'bottom-end';
                 return configuration;
             }
             return attributeBackup.restore;

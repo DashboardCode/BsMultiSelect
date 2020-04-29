@@ -14,6 +14,7 @@ import {HiddenOptionPlugin} from './plugins/HiddenOptionPlugin';
 
 (
     (window, $, Popper) => {
+
         let createPlugin = (element, settings, removeInstanceData) => { 
             let trigger = (e, eventName) => $(e).trigger(eventName);
             let environment = {trigger, window, Popper}
@@ -24,6 +25,7 @@ import {HiddenOptionPlugin} from './plugins/HiddenOptionPlugin';
             multiSelect.Dispose = composeSync(multiSelect.Dispose, removeInstanceData);
             return multiSelect;
         }
-        addToJQueryPrototype('BsMultiSelect', createPlugin, defaults, $);
+        let prototypable = addToJQueryPrototype('BsMultiSelect', createPlugin, $);
+        prototypable.defaults = defaults;
     }
 )(window, $, Popper)

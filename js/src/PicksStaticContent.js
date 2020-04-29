@@ -12,7 +12,7 @@
 //                 attach: () => picksElement.insertBefore(pickElement, pickFilterElement),
 //                 detach: () => removeElement(pickElement)
 //             };
-//         },
+//         }, 
 //         dispose(){
 //             if (ownPicksElement){
 //                 picksElement.parentNode.removeChild(picksElement);

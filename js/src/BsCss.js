@@ -12,13 +12,13 @@ export const css = {
     pickFilter: '', 
     filterInput: '',
 
-    // used in BsPickContentStylingCorrector
+    // used in pickContentGenerator
     pick: 'badge', // bs4
     pickContent: '',
     pickContent_disabled: 'disabled', // not bs4, in scss 'ul.form-control li span.disabled'
     pickButton: 'close', // bs4
 
-    // used in BsChoiceContentStylingCorrector
+    // used in choiceContentGenerator
     // choice:  'dropdown-item', // it seems like hover should be managed manually since there should be keyboard support
     choiceCheckBox_disabled: 'disabled', //  not bs4, in scss as 'ul.form-control li .custom-control-input.disabled ~ .custom-control-label'
     choiceContent: 'custom-control custom-checkbox d-flex', // bs4 d-flex required for rtl to align items

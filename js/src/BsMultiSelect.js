@@ -4,9 +4,9 @@ import {PluginManager} from './PluginManager'
 import {getDataGuardedWithPrefix, closestByTagName /*, getIsRtl*/} from './ToolsDom';
 
 import {createCss, extendCss} from './ToolsStyling';
-import {extendOverriding, extendIfUndefined, composeSync, def /*, isBoolean*/} from './ToolsJs';
+import {extendOverriding, extendIfUndefined, composeSync, def , isBoolean} from './ToolsJs';
 
-import {adjustLegacyConfiguration as adjustLegacySettings} from './BsMultiSelectDepricatedParameters'
+import {adjustLegacySettings} from './BsMultiSelectDepricatedParameters'
 
 import {pickContentGenerator as defPickContentGenerator} from './PickContentGenerator';
 import {choiceContentGenerator as defChoiceContentGenerator} from './ChoiceContentGenerator';
@@ -18,6 +18,7 @@ export const defaults = {
     containerClass : "dashboardcode-bsmultiselect",
     css: css,
     cssPatch: cssPatch,
+    
     label: null,
     placeholder: '',
     staticContentGenerator : null, 
@@ -42,19 +43,17 @@ export const defaults = {
 };
 
 
-function extendConfigurtion(configuration, defaults){
+function extendConfigurtion(configuration){
     let cfgCss = configuration.css;
     configuration.css = null;
     let cfgCssPatch = configuration.cssPatch;
     configuration.cssPatch = null;
-    extendIfUndefined(configuration, defaults); 
+    extendIfUndefined(configuration, defaults); // copy 1st level of properties
 
     var defCss = createCss(defaults.css, cfgCss); // replace classes, merge styles
     configuration.css = defCss;
 
-    if (defaults.cssPatch instanceof Boolean || typeof defaults.cssPatch ==="boolean" 
-        || cfgCssPatch instanceof Boolean || typeof cfgCssPatch==="boolean" 
-    )
+    if (isBoolean(defaults.cssPatch) || isBoolean(cfgCssPatch))
         throw new Error("BsMultiSelect: 'cssPatch' was used instead of 'useCssPatch'") // often type of error
     var defCssPatch = createCss(defaults.cssPatch, cfgCssPatch); // replace classes, merge styles
     configuration.cssPatch = defCssPatch;
@@ -69,8 +68,10 @@ export function BsMultiSelect(element, environment, settings){
 
     let configuration = {};
     let init = null;
+    
+    //let pluginManager = PluginManager(configuration, defaults);
     if (settings instanceof Function){
-        extendConfigurtion(configuration, defaults);
+        extendConfigurtion(configuration);
         init = settings(element, configuration);
     }
     else
@@ -79,7 +80,8 @@ export function BsMultiSelect(element, environment, settings){
             adjustLegacySettings(settings);            
             extendOverriding(configuration, settings); // settings used per jQuery intialization, configuration per element
         }
-        extendConfigurtion(configuration, defaults);
+
+        extendConfigurtion(configuration);
     }
     
     if (configuration.buildConfiguration)
@@ -93,7 +95,7 @@ export function BsMultiSelect(element, environment, settings){
           getIsOptionDisabled
         } = configuration;
 
-    // TODO 
+    // TODO move to plugin
     if (useCssPatch){
         extendCss(css, cssPatch); 
     }
@@ -109,7 +111,7 @@ export function BsMultiSelect(element, environment, settings){
     if (!common){
         common = {}
     }
-    let pluginData = {configuration, options, common, staticContent, css, useCssPatch, window}
+    let pluginData = {window, configuration, staticContent, common} // TODO replace common with staticContent (but staticContent should be splitted)
     let pluginManager = PluginManager(plugins, pluginData);
 
     let onChange;
@@ -124,7 +126,7 @@ export function BsMultiSelect(element, environment, settings){
         }
         
         if (!getIsOptionDisabled)
-            getIsOptionDisabled = option => (option.disabled===undefined)?false:option.disabled;
+            getIsOptionDisabled = option => (option.disabled===undefined) ? false : option.disabled;
     } 
     else  
     {

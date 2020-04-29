@@ -68,12 +68,6 @@ export function staticContentGenerator(element, createElement, containerClass, c
         }
     }
 
-    var createInputId = null;
-    if(selectElement)
-        createInputId = () => `${containerClass}-generated-input-${((selectElement.id)?selectElement.id:selectElement.name).toLowerCase()}-id`;
-    else
-        createInputId = () => `${containerClass}-generated-filter-${containerElement.id}`;
-
     var choicesElement = createElement('UL');
     choicesElement.style.display = 'none';
     
@@ -119,8 +113,6 @@ export function staticContentGenerator(element, createElement, containerClass, c
                 detach: () => removeElement(choiceElement)
             };
         },
-
-        createInputId,
         required,
         attachContainer(){
             if (ownContainerElement && selectElement) // otherwise it is attached

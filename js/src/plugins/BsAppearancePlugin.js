@@ -3,8 +3,8 @@ import {addStyling} from '../ToolsStyling'
 import {ObservableLambda, composeSync} from '../ToolsJs';
 
 export function BsAppearancePlugin(pluginData){
-    let { configuration, options, common, staticContent, css, useCssPatch} = pluginData;
-    let {getValidity, getSize} = configuration;
+    let {configuration, common, staticContent} = pluginData;
+    let {getValidity, getSize, useCssPatch, css} = configuration;
     let selectElement = staticContent.selectElement;
     
     if (staticContent.getLabelElement){
@@ -18,17 +18,18 @@ export function BsAppearancePlugin(pluginData){
         }
     }
     
-    if (options) {
-        if (!getValidity)
-            getValidity = () => null
-        if (!getSize)
-            getSize = () => null;
-    } else {
+    if (staticContent.selectElement) {
         if(!getValidity)
             getValidity = composeGetValidity(selectElement);
         if(!getSize) 
             getSize = composeGetSize(selectElement);
+    } else {
+        if (!getValidity)
+            getValidity = () => null
+        if (!getSize)
+            getSize = () => null;
     }
+
     common.getSize=getSize;
     common.getValidity=getValidity;
     return {
