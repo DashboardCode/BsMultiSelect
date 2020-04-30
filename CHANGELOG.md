@@ -1,5 +1,6 @@
 # CHANGELOG
 ````
+0.5.54 - optimizations
 0.5.53 - optimizations
 0.5.52 - optimizations: rtl support moved to plugin 
 0.5.51 - optimizations

@@ -6,7 +6,7 @@ const defValueMissingMessage = 'Please select an item in the list'
 
 export function ValidationApiPlugin(pluginData){
     var {configuration, staticContent, staticContent} = pluginData;
-    let {getIsValueMissing, valueMissingMessage, required} = configuration
+    let {getIsValueMissing, valueMissingMessage, required} = configuration;
     required = def(required, staticContent.required);
     valueMissingMessage = defCall(valueMissingMessage,
         ()=> getDataGuardedWithPrefix(staticContent.initialElement,"bsmultiselect","value-missing-message"),
@@ -47,4 +47,8 @@ export function ValidationApiPlugin(pluginData){
             return ()=> composeSync(isValueMissingObservable.detachAll, validationApiObservable.detachAll)
         }
     }
+}
+
+ValidationApiPlugin.setDefaults = (defaults)=>{
+    defaults.valueMissingMessage = '';
 }

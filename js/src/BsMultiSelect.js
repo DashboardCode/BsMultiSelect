@@ -4,46 +4,40 @@ import {PluginManager} from './PluginManager'
 import {getDataGuardedWithPrefix, closestByTagName /*, getIsRtl*/} from './ToolsDom';
 
 import {createCss, extendCss} from './ToolsStyling';
-import {extendOverriding, extendIfUndefined, composeSync, def , isBoolean} from './ToolsJs';
+import {extendOverriding, extendIfUndefined, composeSync, def , isBoolean, isObject} from './ToolsJs';
 
 import {adjustLegacySettings} from './BsMultiSelectDepricatedParameters'
 
 import {pickContentGenerator as defPickContentGenerator} from './PickContentGenerator';
 import {choiceContentGenerator as defChoiceContentGenerator} from './ChoiceContentGenerator';
 import {staticContentGenerator  as defStaticContentGenerator} from './StaticContentGenerator';
-import {css, cssPatch} from './BsCss'
+import {css} from './BsCss'
 
 export const defaults = {
     useCssPatch : true,
     containerClass : "dashboardcode-bsmultiselect",
     css: css,
-    cssPatch: cssPatch,
+}
+
+export function initiateDefaults(constructors){
+    for(let i = 0; i<constructors.length; i++){
+        constructors[i].setDefaults?.(defaults)
+    }
+}
+
+export function BsMultiSelect(element, environment, settings){
+    var {Popper, window, plugins} = environment;
+    var trigger = (eventName)=> environment.trigger(element, eventName);
+    if (typeof Popper === 'undefined') {
+        throw new Error("BsMultiSelect: Popper.js (https://popper.js.org) is required")
+    }
+
+    let configuration = {};
+    if (isObject(settings)){
+        adjustLegacySettings(settings);            
+        extendOverriding(configuration, settings); // settings used per jQuery intialization, configuration per element
+    }
     
-    label: null,
-    placeholder: '',
-    staticContentGenerator : null, 
-    pickContentGenerator: null, 
-    choiceContentGenerator : null, 
-    buildConfiguration: null,
-    isRtl: null,
-    getSelected: null,
-    setSelected: null,
-    required: null, /* null means look on select[required] or false if jso-source */
-    common: null,
-    options: null,
-    getIsOptionDisabled: null,
-    getIsOptionHidden: null,
-
-    getDisabled: null,
-    getSize: null,
-    getValidity: null,
-    
-    valueMissingMessage: '',
-    getIsValueMissing: null
-};
-
-
-function extendConfigurtion(configuration){
     let cfgCss = configuration.css;
     configuration.css = null;
     let cfgCssPatch = configuration.cssPatch;
@@ -57,34 +51,11 @@ function extendConfigurtion(configuration){
         throw new Error("BsMultiSelect: 'cssPatch' was used instead of 'useCssPatch'") // often type of error
     var defCssPatch = createCss(defaults.cssPatch, cfgCssPatch); // replace classes, merge styles
     configuration.cssPatch = defCssPatch;
-}
 
-export function BsMultiSelect(element, environment, settings){
-    var {Popper, window, plugins} = environment;
-    var trigger = (eventName)=> environment.trigger(element, eventName);
-    if (typeof Popper === 'undefined') {
-        throw new Error("BsMultiSelect: Popper.js (https://popper.js.org) is required")
-    }
-
-    let configuration = {};
     let init = null;
-    
-    //let pluginManager = PluginManager(configuration, defaults);
-    if (settings instanceof Function){
-        extendConfigurtion(configuration);
+    if ( settings instanceof Function) 
         init = settings(element, configuration);
-    }
-    else
-    { 
-        if (settings){
-            adjustLegacySettings(settings);            
-            extendOverriding(configuration, settings); // settings used per jQuery intialization, configuration per element
-        }
-
-        extendConfigurtion(configuration);
-    }
-    
-    if (configuration.buildConfiguration)
+    else if (configuration.buildConfiguration)
         init = configuration.buildConfiguration(element, configuration);
     
     let { css, cssPatch, useCssPatch,

@@ -4,57 +4,24 @@ import { getDataGuardedWithPrefix, closestByTagName
 /*, getIsRtl*/
 } from './ToolsDom';
 import { createCss, extendCss } from './ToolsStyling';
-import { extendOverriding, extendIfUndefined, composeSync, def, isBoolean } from './ToolsJs';
+import { extendOverriding, extendIfUndefined, composeSync, def, isBoolean, isObject } from './ToolsJs';
 import { adjustLegacySettings } from './BsMultiSelectDepricatedParameters';
 import { pickContentGenerator as defPickContentGenerator } from './PickContentGenerator';
 import { choiceContentGenerator as defChoiceContentGenerator } from './ChoiceContentGenerator';
 import { staticContentGenerator as defStaticContentGenerator } from './StaticContentGenerator';
-import { css, cssPatch } from './BsCss';
+import { css } from './BsCss';
 export var defaults = {
   useCssPatch: true,
   containerClass: "dashboardcode-bsmultiselect",
-  css: css,
-  cssPatch: cssPatch,
-  label: null,
-  placeholder: '',
-  staticContentGenerator: null,
-  pickContentGenerator: null,
-  choiceContentGenerator: null,
-  buildConfiguration: null,
-  isRtl: null,
-  getSelected: null,
-  setSelected: null,
-  required: null,
-
-  /* null means look on select[required] or false if jso-source */
-  common: null,
-  options: null,
-  getIsOptionDisabled: null,
-  getIsOptionHidden: null,
-  getDisabled: null,
-  getSize: null,
-  getValidity: null,
-  valueMissingMessage: '',
-  getIsValueMissing: null
+  css: css
 };
+export function initiateDefaults(constructors) {
+  for (var i = 0; i < constructors.length; i++) {
+    var _constructors$i$setDe, _constructors$i;
 
-function extendConfigurtion(configuration) {
-  var cfgCss = configuration.css;
-  configuration.css = null;
-  var cfgCssPatch = configuration.cssPatch;
-  configuration.cssPatch = null;
-  extendIfUndefined(configuration, defaults); // copy 1st level of properties
-
-  var defCss = createCss(defaults.css, cfgCss); // replace classes, merge styles
-
-  configuration.css = defCss;
-  if (isBoolean(defaults.cssPatch) || isBoolean(cfgCssPatch)) throw new Error("BsMultiSelect: 'cssPatch' was used instead of 'useCssPatch'"); // often type of error
-
-  var defCssPatch = createCss(defaults.cssPatch, cfgCssPatch); // replace classes, merge styles
-
-  configuration.cssPatch = defCssPatch;
+    (_constructors$i$setDe = (_constructors$i = constructors[i]).setDefaults) == null ? void 0 : _constructors$i$setDe.call(_constructors$i, defaults);
+  }
 }
-
 export function BsMultiSelect(element, environment, settings) {
   var Popper = environment.Popper,
       window = environment.window,
@@ -69,21 +36,28 @@ export function BsMultiSelect(element, environment, settings) {
   }
 
   var configuration = {};
-  var init = null; //let pluginManager = PluginManager(configuration, defaults);
 
-  if (settings instanceof Function) {
-    extendConfigurtion(configuration);
-    init = settings(element, configuration);
-  } else {
-    if (settings) {
-      adjustLegacySettings(settings);
-      extendOverriding(configuration, settings); // settings used per jQuery intialization, configuration per element
-    }
-
-    extendConfigurtion(configuration);
+  if (isObject(settings)) {
+    adjustLegacySettings(settings);
+    extendOverriding(configuration, settings); // settings used per jQuery intialization, configuration per element
   }
 
-  if (configuration.buildConfiguration) init = configuration.buildConfiguration(element, configuration);
+  var cfgCss = configuration.css;
+  configuration.css = null;
+  var cfgCssPatch = configuration.cssPatch;
+  configuration.cssPatch = null;
+  extendIfUndefined(configuration, defaults); // copy 1st level of properties
+
+  var defCss = createCss(defaults.css, cfgCss); // replace classes, merge styles
+
+  configuration.css = defCss;
+  if (isBoolean(defaults.cssPatch) || isBoolean(cfgCssPatch)) throw new Error("BsMultiSelect: 'cssPatch' was used instead of 'useCssPatch'"); // often type of error
+
+  var defCssPatch = createCss(defaults.cssPatch, cfgCssPatch); // replace classes, merge styles
+
+  configuration.cssPatch = defCssPatch;
+  var init = null;
+  if (settings instanceof Function) init = settings(element, configuration);else if (configuration.buildConfiguration) init = configuration.buildConfiguration(element, configuration);
   var css = configuration.css,
       cssPatch = configuration.cssPatch,
       useCssPatch = configuration.useCssPatch,

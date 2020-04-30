@@ -1,5 +1,5 @@
 /*!
-  * DashboardCode BsMultiSelect v0.5.53 (https://dashboardcode.github.io/BsMultiSelect/)
+  * DashboardCode BsMultiSelect v0.5.54 (https://dashboardcode.github.io/BsMultiSelect/)
   * Copyright 2017-2020 Roman Pokrovskij (github user rpokrovskij)
   * Licensed under APACHE 2 (https://github.com/DashboardCode/BsMultiSelect/blob/master/LICENSE)
   */
@@ -247,6 +247,9 @@ stopEscKeyDownPropogation, onInput //, // filter
   };
 }
 
+function isObject(value) {
+  return typeof value === 'object' && value !== null;
+}
 function isBoolean(value) {
   return value === true || value === false;
 }
@@ -2490,51 +2493,18 @@ var cssPatch = {
 
 };
 
-var defaults = {
+var defaults$1 = {
   useCssPatch: true,
   containerClass: "dashboardcode-bsmultiselect",
-  css: css,
-  cssPatch: cssPatch,
-  label: null,
-  placeholder: '',
-  staticContentGenerator: null,
-  pickContentGenerator: null,
-  choiceContentGenerator: null,
-  buildConfiguration: null,
-  isRtl: null,
-  getSelected: null,
-  setSelected: null,
-  required: null,
-
-  /* null means look on select[required] or false if jso-source */
-  common: null,
-  options: null,
-  getIsOptionDisabled: null,
-  getIsOptionHidden: null,
-  getDisabled: null,
-  getSize: null,
-  getValidity: null,
-  valueMissingMessage: '',
-  getIsValueMissing: null
+  css: css
 };
+function initiateDefaults(constructors) {
+  for (var i = 0; i < constructors.length; i++) {
+    var _constructors$i$setDe, _constructors$i;
 
-function extendConfigurtion(configuration) {
-  var cfgCss = configuration.css;
-  configuration.css = null;
-  var cfgCssPatch = configuration.cssPatch;
-  configuration.cssPatch = null;
-  extendIfUndefined(configuration, defaults); // copy 1st level of properties
-
-  var defCss = createCss(defaults.css, cfgCss); // replace classes, merge styles
-
-  configuration.css = defCss;
-  if (isBoolean(defaults.cssPatch) || isBoolean(cfgCssPatch)) throw new Error("BsMultiSelect: 'cssPatch' was used instead of 'useCssPatch'"); // often type of error
-
-  var defCssPatch = createCss(defaults.cssPatch, cfgCssPatch); // replace classes, merge styles
-
-  configuration.cssPatch = defCssPatch;
+    (_constructors$i$setDe = (_constructors$i = constructors[i]).setDefaults) == null ? void 0 : _constructors$i$setDe.call(_constructors$i, defaults$1);
+  }
 }
-
 function BsMultiSelect(element, environment, settings) {
   var Popper = environment.Popper,
       window = environment.window,
@@ -2549,21 +2519,28 @@ function BsMultiSelect(element, environment, settings) {
   }
 
   var configuration = {};
-  var init = null; //let pluginManager = PluginManager(configuration, defaults);
 
-  if (settings instanceof Function) {
-    extendConfigurtion(configuration);
-    init = settings(element, configuration);
-  } else {
-    if (settings) {
-      adjustLegacySettings(settings);
-      extendOverriding(configuration, settings); // settings used per jQuery intialization, configuration per element
-    }
-
-    extendConfigurtion(configuration);
+  if (isObject(settings)) {
+    adjustLegacySettings(settings);
+    extendOverriding(configuration, settings); // settings used per jQuery intialization, configuration per element
   }
 
-  if (configuration.buildConfiguration) init = configuration.buildConfiguration(element, configuration);
+  var cfgCss = configuration.css;
+  configuration.css = null;
+  var cfgCssPatch = configuration.cssPatch;
+  configuration.cssPatch = null;
+  extendIfUndefined(configuration, defaults$1); // copy 1st level of properties
+
+  var defCss = createCss(defaults$1.css, cfgCss); // replace classes, merge styles
+
+  configuration.css = defCss;
+  if (isBoolean(defaults$1.cssPatch) || isBoolean(cfgCssPatch)) throw new Error("BsMultiSelect: 'cssPatch' was used instead of 'useCssPatch'"); // often type of error
+
+  var defCssPatch = createCss(defaults$1.cssPatch, cfgCssPatch); // replace classes, merge styles
+
+  configuration.cssPatch = defCssPatch;
+  var init = null;
+  if (settings instanceof Function) init = settings(element, configuration);else if (configuration.buildConfiguration) init = configuration.buildConfiguration(element, configuration);
   var css = configuration.css,
       cssPatch = configuration.cssPatch,
       useCssPatch = configuration.useCssPatch,
@@ -2878,6 +2855,10 @@ function ValidationApiPlugin(pluginData) {
     }
   };
 }
+
+ValidationApiPlugin.setDefaults = function (defaults) {
+  defaults.valueMissingMessage = '';
+};
 
 function BsAppearancePlugin(pluginData) {
   var configuration = pluginData.configuration,
@@ -3291,13 +3272,43 @@ function HiddenOptionPlugin(pluginData) {
   };
 }
 
+//import {createCss, extendCss} from './ToolsStyling';
+function CssPatchPlugin() {
+  // configuration, defaults
+  // let cfgCssPatch = configuration.cssPatch;
+  // configuration.cssPatch = null;
+  // if (defaults.cssPatch instanceof Boolean || typeof defaults.cssPatch ==="boolean" 
+  //     || cfgCssPatch instanceof Boolean || typeof cfgCssPatch==="boolean" 
+  // )
+  //     throw new Error("BsMultiSelect: 'cssPatch' was used instead of 'useCssPatch'") // often type of error
+  // var defCssPatch = createCss(defaults.cssPatch, cfgCssPatch); // replace classes, merge styles
+  // configuration.cssPatch = defCssPatch;
+  return {//     onBuildConfiguration(){
+    //         let {css, cssPatch, useCssPatch} = configuration;
+    //         if (useCssPatch) {
+    //             extendCss(css, cssPatch); 
+    //         }
+    //     },
+    //     onStaticContent(staticContent){
+    //          staticContent.useCssPatch=useCssPatch;
+    //     }
+  };
+}
+
+CssPatchPlugin.setDefaults = function (defaults) {
+  defaults.cssPatch = cssPatch;
+};
+
+var defaultPlugins = [CssPatchPlugin, LabelPlugin, HiddenOptionPlugin, ValidationApiPlugin, BsAppearancePlugin, FormResetPlugin, RtlPlugin];
 function BsMultiSelect$1(element, environment, settings) {
   if (!environment.trigger) environment.trigger = function (e, name) {
     return e.dispatchEvent(new environment.window.Event(name));
   };
-  if (!environment.plugins) environment.plugins = [LabelPlugin, HiddenOptionPlugin, ValidationApiPlugin, BsAppearancePlugin, FormResetPlugin, RtlPlugin];
+  if (!environment.plugins) environment.plugins = defaultPlugins;
   return BsMultiSelect(element, environment, settings);
 }
+initiateDefaults(defaultPlugins);
+BsMultiSelect$1.defaults = defaults;
 
 export { BsMultiSelect$1 as BsMultiSelect };
 //# sourceMappingURL=BsMultiSelect.esm.js.map
