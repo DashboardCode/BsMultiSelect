@@ -1,4 +1,4 @@
-import {BsMultiSelect as BsMultiSelectBase, initiateDefaults}  from './BsMultiSelect'
+import {BsMultiSelect as BsMultiSelectBase, defaults, initiateDefaults}  from './BsMultiSelect'
 
 import {LabelPlugin} from './plugins/LabelPlugin';
 import {RtlPlugin} from './plugins/RtlPlugin';

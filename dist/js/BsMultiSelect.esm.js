@@ -2493,7 +2493,7 @@ var cssPatch = {
 
 };
 
-var defaults$1 = {
+var defaults = {
   useCssPatch: true,
   containerClass: "dashboardcode-bsmultiselect",
   css: css
@@ -2502,7 +2502,7 @@ function initiateDefaults(constructors) {
   for (var i = 0; i < constructors.length; i++) {
     var _constructors$i$setDe, _constructors$i;
 
-    (_constructors$i$setDe = (_constructors$i = constructors[i]).setDefaults) == null ? void 0 : _constructors$i$setDe.call(_constructors$i, defaults$1);
+    (_constructors$i$setDe = (_constructors$i = constructors[i]).setDefaults) == null ? void 0 : _constructors$i$setDe.call(_constructors$i, defaults);
   }
 }
 function BsMultiSelect(element, environment, settings) {
@@ -2529,14 +2529,14 @@ function BsMultiSelect(element, environment, settings) {
   configuration.css = null;
   var cfgCssPatch = configuration.cssPatch;
   configuration.cssPatch = null;
-  extendIfUndefined(configuration, defaults$1); // copy 1st level of properties
+  extendIfUndefined(configuration, defaults); // copy 1st level of properties
 
-  var defCss = createCss(defaults$1.css, cfgCss); // replace classes, merge styles
+  var defCss = createCss(defaults.css, cfgCss); // replace classes, merge styles
 
   configuration.css = defCss;
-  if (isBoolean(defaults$1.cssPatch) || isBoolean(cfgCssPatch)) throw new Error("BsMultiSelect: 'cssPatch' was used instead of 'useCssPatch'"); // often type of error
+  if (isBoolean(defaults.cssPatch) || isBoolean(cfgCssPatch)) throw new Error("BsMultiSelect: 'cssPatch' was used instead of 'useCssPatch'"); // often type of error
 
-  var defCssPatch = createCss(defaults$1.cssPatch, cfgCssPatch); // replace classes, merge styles
+  var defCssPatch = createCss(defaults.cssPatch, cfgCssPatch); // replace classes, merge styles
 
   configuration.cssPatch = defCssPatch;
   var init = null;
