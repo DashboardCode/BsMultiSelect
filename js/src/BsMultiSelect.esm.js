@@ -1,5 +1,6 @@
-import {BsMultiSelect as BsMultiSelectBase, defaults, initiateDefaults}  from './BsMultiSelect'
-
+import {BsMultiSelect as BsMultiSelectBase}  from './BsMultiSelect'
+import {initiateDefaults} from './PluginManager';
+import {css} from './BsCss'
 import {LabelPlugin} from './plugins/LabelPlugin';
 import {RtlPlugin} from './plugins/RtlPlugin';
 import {FormResetPlugin} from './plugins/FormResetPlugin';
@@ -8,6 +9,10 @@ import {BsAppearancePlugin} from './plugins/BsAppearancePlugin';
 import {HiddenOptionPlugin} from './plugins/HiddenOptionPlugin';
 import {CssPatchPlugin} from './plugins/CssPatchPlugin';
 
+import {createCss} from './ToolsStyling';
+import {extendIfUndefined} from './ToolsJs';
+
+const defaults = {containerClass : "dashboardcode-bsmultiselect", css: css}
 const defaultPlugins = [CssPatchPlugin, LabelPlugin, HiddenOptionPlugin, ValidationApiPlugin, BsAppearancePlugin, FormResetPlugin, RtlPlugin];
 
 export function BsMultiSelect(element, environment, settings){
@@ -17,8 +22,21 @@ export function BsMultiSelect(element, environment, settings){
     if (!environment.plugins)
         environment.plugins = defaultPlugins;
     
-    return BsMultiSelectBase(element, environment, settings)
+    let configuration = {};
+   
+    if (settings)
+        adjustLegacySettings(settings);
+    
+    configuration.css = createCss(defaults.css, settings?.css);
+    mergeDefaults(defaultPlugins, configuration, defaults, settings);
+
+    extendIfUndefined(configuration, settings); 
+    extendIfUndefined(configuration, defaults); 
+
+    buildedConfiguration(defaultPlugins, configuration);
+
+    return BsMultiSelect(element, environment, configuration, settings?.onInit);
 }
 
-initiateDefaults(defaultPlugins);
+initiateDefaults(defaultPlugins, defaults);
 BsMultiSelect.defaults=defaults;

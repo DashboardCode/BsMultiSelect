@@ -26,3 +26,21 @@ export function PluginManager(plugins, pluginData){
         }
     }
 }
+
+export function initiateDefaults(constructors, defaults){
+    for(let i = 0; i<constructors.length; i++){
+        constructors[i].setDefaults?.(defaults)
+    }
+}
+
+export function mergeDefaults(constructors, configuration, defaults, settings){
+    for(let i = 0; i<constructors.length; i++){
+        constructors[i].mergeDefaults?.(configuration, defaults, settings)
+    }
+}
+
+export function buildedConfiguration(constructors, configuration){
+    for(let i = 0; i<constructors.length; i++){
+        constructors[i].buildedConfiguration?.(configuration)
+    }
+}

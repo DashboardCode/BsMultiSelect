@@ -1,5 +1,5 @@
 /*!
-  * DashboardCode BsMultiSelect v0.5.54 (https://dashboardcode.github.io/BsMultiSelect/)
+  * DashboardCode BsMultiSelect v0.5.55 (https://dashboardcode.github.io/BsMultiSelect/)
   * Copyright 2017-2020 Roman Pokrovskij (github user rpokrovskij)
   * Licensed under APACHE 2 (https://github.com/DashboardCode/BsMultiSelect/blob/master/LICENSE)
   */
@@ -331,9 +331,6 @@
       };
     }
 
-    function isObject(value) {
-      return typeof value === 'object' && value !== null;
-    }
     function isBoolean(value) {
       return value === true || value === false;
     }
@@ -343,11 +340,6 @@
     function extendIfUndefined(destination, source) {
       for (var property in source) {
         if (destination[property] === undefined) destination[property] = source[property];
-      }
-    }
-    function extendOverriding(destination, source) {
-      for (var property in source) {
-        destination[property] = source[property];
       }
     }
     function shallowClearClone(source) {
@@ -2082,132 +2074,25 @@
         }
       };
     }
+    function initiateDefaults(constructors, defaults) {
+      for (var i = 0; i < constructors.length; i++) {
+        var _constructors$i$setDe, _constructors$i;
 
-    var transformStyles = [{
-      old: 'selectedPanelDisabledBackgroundColor',
-      opt: 'picks_disabled',
-      style: "backgroundColor"
-    }, {
-      old: 'selectedPanelFocusValidBoxShadow',
-      opt: 'picks_focus_valid',
-      style: "boxShadow"
-    }, {
-      old: 'selectedPanelFocusInvalidBoxShadow',
-      opt: 'picks_focus_invalid',
-      style: "boxShadow"
-    }, {
-      old: 'selectedPanelDefMinHeight',
-      opt: 'picks_def',
-      style: "minHeight"
-    }, {
-      old: 'selectedPanelLgMinHeight',
-      opt: 'picks_lg',
-      style: "minHeight"
-    }, {
-      old: 'selectedPanelSmMinHeight',
-      opt: 'picks_sm',
-      style: "minHeight"
-    }, {
-      old: 'selectedItemContentDisabledOpacity',
-      opt: 'choiceLabel_disabled',
-      style: "opacity"
-    }];
-    var transformClasses = [{
-      old: 'dropDownMenuClass',
-      opt: 'choices'
-    }, {
-      old: 'dropDownItemClass',
-      opt: 'choice'
-    }, {
-      old: 'dropDownItemHoverClass',
-      opt: 'choice_hover'
-    }, {
-      old: 'selectedPanelClass',
-      opt: 'picks'
-    }, {
-      old: 'selectedItemClass',
-      opt: 'pick'
-    }, {
-      old: 'removeSelectedItemButtonClass',
-      opt: 'pickButton'
-    }, {
-      old: 'filterInputItemClass',
-      opt: 'pickFilter'
-    }, {
-      old: 'filterInputClass',
-      opt: 'filterInput'
-    }, {
-      old: 'selectedPanelFocusClass',
-      opt: 'picks_focus'
-    }, {
-      old: 'selectedPanelDisabledClass',
-      opt: 'picks_disabled'
-    }, {
-      old: 'selectedItemContentDisabledClass',
-      opt: 'pick_disabled'
-    }];
-    function adjustLegacySettings(settings) {
-      if (!settings.css) settings.css = {};
-      var css = settings.css;
-      if (!settings.cssPatch) settings.cssPatch = {};
-      var cssPatch = settings.cssPatch;
-
-      if (settings.selectedPanelFocusBorderColor || settings.selectedPanelFocusBoxShadow) {
-        console.log("DashboarCode.BsMultiSelect: selectedPanelFocusBorderColor and selectedPanelFocusBoxShadow are depricated, use - cssPatch:{picks_focus:{borderColor:'myValue', boxShadow:'myValue'}}");
-
-        if (!cssPatch.picks_focus) {
-          cssPatch.picks_focus = {
-            boxShadow: settings.selectedPanelFocusBoxShadow,
-            borderColor: settings.selectedPanelFocusBorderColor
-          };
-        }
-
-        delete settings.selectedPanelFocusBorderColor;
-        delete settings.selectedPanelFocusBoxShadow;
+        (_constructors$i$setDe = (_constructors$i = constructors[i]).setDefaults) == null ? void 0 : _constructors$i$setDe.call(_constructors$i, defaults);
       }
+    }
+    function mergeDefaults(constructors, configuration, defaults, settings) {
+      for (var i = 0; i < constructors.length; i++) {
+        var _constructors$i$merge, _constructors$i2;
 
-      transformStyles.forEach(function (i) {
-        if (settings[i.old]) {
-          console.log("DashboarCode.BsMultiSelect: " + i.old + " is depricated, use - cssPatch:{" + i.opt + ":{" + i.style + ":'myValue'}}");
-
-          if (!settings[i.opt]) {
-            var opt = {};
-            opt[i.style] = settings[i.old];
-            settings.cssPatch[i.opt] = opt;
-          }
-
-          delete settings[i.old];
-        }
-      });
-      transformClasses.forEach(function (i) {
-        if (settings[i.old]) {
-          console.log("DashboarCode.BsMultiSelect: " + i.old + " is depricated, use - css:{" + i.opt + ":'myValue'}");
-
-          if (!css[i.opt]) {
-            css[i.opt] = settings[i.old];
-          }
-
-          delete settings[i.old];
-        }
-      });
-
-      if (settings.inputColor) {
-        console.log("DashboarCode.BsMultiSelect: inputColor is depricated, remove parameter");
-        delete settings.inputColor;
+        (_constructors$i$merge = (_constructors$i2 = constructors[i]).mergeDefaults) == null ? void 0 : _constructors$i$merge.call(_constructors$i2, configuration, defaults, settings);
       }
+    }
+    function buildedConfiguration(constructors, configuration) {
+      for (var i = 0; i < constructors.length; i++) {
+        var _constructors$i$build, _constructors$i3;
 
-      if (settings.useCss) {
-        console.log("DashboarCode.BsMultiSelect: useCss(=true) is depricated, use - 'useCssPatch: false'");
-
-        if (!css.pick_disabled) {
-          settings.useCssPatch = !settings.useCss;
-        }
-
-        delete settings.useCss;
-      }
-
-      if (settings.getIsValid || settings.getIsInValid) {
-        throw "DashboarCode.BsMultiSelect: parameters getIsValid and getIsInValid are depricated and removed, use - getValidity that should return (true|false|null) ";
+        (_constructors$i$build = (_constructors$i3 = constructors[i]).buildedConfiguration) == null ? void 0 : _constructors$i$build.call(_constructors$i3, configuration);
       }
     }
 
@@ -2459,6 +2344,137 @@
       };
     }
 
+    function BsMultiSelect(element, environment, configuration, onInit) {
+      var Popper = environment.Popper,
+          window = environment.window,
+          plugins = environment.plugins;
+
+      var trigger = function trigger(eventName) {
+        return environment.trigger(element, eventName);
+      };
+
+      if (typeof Popper === 'undefined') {
+        throw new Error("BsMultiSelect: Popper.js (https://popper.js.org) is required");
+      }
+
+      var containerClass = configuration.containerClass,
+          css = configuration.css,
+          getSelected = configuration.getSelected,
+          setSelected = configuration.setSelected,
+          placeholder = configuration.placeholder,
+          common = configuration.common,
+          options = configuration.options,
+          getDisabled = configuration.getDisabled,
+          getIsOptionDisabled = configuration.getIsOptionDisabled;
+      var staticContentGenerator$1 = def(configuration.staticContentGenerator, staticContentGenerator);
+      var pickContentGenerator$1 = def(configuration.pickContentGenerator, pickContentGenerator);
+      var choiceContentGenerator$1 = def(configuration.choiceContentGenerator, choiceContentGenerator);
+      var staticContent = staticContentGenerator$1(element, function (name) {
+        return window.document.createElement(name);
+      }, containerClass, css);
+
+      if (!common) {
+        common = {};
+      }
+
+      var pluginData = {
+        window: window,
+        configuration: configuration,
+        staticContent: staticContent,
+        common: common
+      }; // TODO replace common with staticContent (but staticContent should be splitted)
+
+      var pluginManager = PluginManager(plugins, pluginData);
+      var onChange;
+      var getOptions;
+
+      if (options) {
+        if (!getDisabled) getDisabled = function getDisabled() {
+          return false;
+        };
+
+        getOptions = function getOptions() {
+          return options;
+        };
+
+        onChange = function onChange() {
+          trigger('dashboardcode.multiselect:change');
+        };
+
+        if (!getIsOptionDisabled) getIsOptionDisabled = function getIsOptionDisabled(option) {
+          return option.disabled === undefined ? false : option.disabled;
+        };
+      } else {
+        var selectElement = staticContent.selectElement;
+
+        if (!getDisabled) {
+          var fieldsetElement = closestByTagName(selectElement, 'FIELDSET');
+
+          if (fieldsetElement) {
+            getDisabled = function getDisabled() {
+              return selectElement.disabled || fieldsetElement.disabled;
+            };
+          } else {
+            getDisabled = function getDisabled() {
+              return selectElement.disabled;
+            };
+          }
+        }
+
+        getOptions = function getOptions() {
+          return selectElement.options;
+        };
+
+        onChange = function onChange() {
+          trigger('change');
+          trigger('dashboardcode.multiselect:change');
+        };
+
+        if (!getIsOptionDisabled) getIsOptionDisabled = function getIsOptionDisabled(option) {
+          return option.disabled;
+        };
+      }
+
+      if (!placeholder) {
+        placeholder = getDataGuardedWithPrefix(element, "bsmultiselect", "placeholder");
+      }
+
+      if (!getSelected) {
+        getSelected = function getSelected(option) {
+          return option.selected;
+        };
+      }
+
+      if (!setSelected) {
+        setSelected = function setSelected(option, value) {
+          option.selected = value;
+        }; // NOTE: adding this break Chrome's form reset functionality
+        // if (value) option.setAttribute('selected','');
+        // else  option.removeAttribute('selected');
+
+      }
+
+      common.getDisabled = getDisabled;
+      var multiSelect = new MultiSelect(getOptions, getDisabled, setSelected, getSelected, getIsOptionDisabled, staticContent, function (pickElement) {
+        return pickContentGenerator$1(pickElement, common, css);
+      }, function (choiceElement, toggle) {
+        return choiceContentGenerator$1(choiceElement, common, css, toggle);
+      }, placeholder, onChange, css, Popper, window);
+      pluginManager.afterConstructor(multiSelect);
+      multiSelect.Dispose = composeSync(pluginManager.dispose, multiSelect.Dispose.bind(multiSelect));
+      onInit == null ? void 0 : onInit(multiSelect);
+      multiSelect.init();
+      multiSelect.load(); // support browser's "step backward" on form restore
+
+      if (staticContent.selectElement && window.document.readyState != "complete") {
+        window.setTimeout(function () {
+          multiSelect.UpdateOptionsSelected();
+        });
+      }
+
+      return multiSelect;
+    }
+
     var css = {
       choices: 'dropdown-menu',
       // bs4, in bsmultiselect.scss as ul.dropdown-menu
@@ -2576,179 +2592,6 @@
       } // more flexible than {color: '#6c757d'}; note: avoid opacity on pickElement's border; TODO write to BS4 
 
     };
-
-    var defaults = {
-      useCssPatch: true,
-      containerClass: "dashboardcode-bsmultiselect",
-      css: css
-    };
-    function initiateDefaults(constructors) {
-      for (var i = 0; i < constructors.length; i++) {
-        var _constructors$i$setDe, _constructors$i;
-
-        (_constructors$i$setDe = (_constructors$i = constructors[i]).setDefaults) == null ? void 0 : _constructors$i$setDe.call(_constructors$i, defaults);
-      }
-    }
-    function BsMultiSelect(element, environment, settings) {
-      var Popper = environment.Popper,
-          window = environment.window,
-          plugins = environment.plugins;
-
-      var trigger = function trigger(eventName) {
-        return environment.trigger(element, eventName);
-      };
-
-      if (typeof Popper === 'undefined') {
-        throw new Error("BsMultiSelect: Popper.js (https://popper.js.org) is required");
-      }
-
-      var configuration = {};
-
-      if (isObject(settings)) {
-        adjustLegacySettings(settings);
-        extendOverriding(configuration, settings); // settings used per jQuery intialization, configuration per element
-      }
-
-      var cfgCss = configuration.css;
-      configuration.css = null;
-      var cfgCssPatch = configuration.cssPatch;
-      configuration.cssPatch = null;
-      extendIfUndefined(configuration, defaults); // copy 1st level of properties
-
-      var defCss = createCss(defaults.css, cfgCss); // replace classes, merge styles
-
-      configuration.css = defCss;
-      if (isBoolean(defaults.cssPatch) || isBoolean(cfgCssPatch)) throw new Error("BsMultiSelect: 'cssPatch' was used instead of 'useCssPatch'"); // often type of error
-
-      var defCssPatch = createCss(defaults.cssPatch, cfgCssPatch); // replace classes, merge styles
-
-      configuration.cssPatch = defCssPatch;
-      var init = null;
-      if (settings instanceof Function) init = settings(element, configuration);else if (configuration.buildConfiguration) init = configuration.buildConfiguration(element, configuration);
-      var css = configuration.css,
-          cssPatch = configuration.cssPatch,
-          useCssPatch = configuration.useCssPatch,
-          containerClass = configuration.containerClass,
-          getSelected = configuration.getSelected,
-          setSelected = configuration.setSelected,
-          placeholder = configuration.placeholder,
-          common = configuration.common,
-          options = configuration.options,
-          getDisabled = configuration.getDisabled,
-          getIsOptionDisabled = configuration.getIsOptionDisabled; // TODO move to plugin
-
-      if (useCssPatch) {
-        extendCss(css, cssPatch);
-      }
-
-      var staticContentGenerator$1 = def(configuration.staticContentGenerator, staticContentGenerator);
-      var pickContentGenerator$1 = def(configuration.pickContentGenerator, pickContentGenerator);
-      var choiceContentGenerator$1 = def(configuration.choiceContentGenerator, choiceContentGenerator);
-      var staticContent = staticContentGenerator$1(element, function (name) {
-        return window.document.createElement(name);
-      }, containerClass, css);
-
-      if (!common) {
-        common = {};
-      }
-
-      var pluginData = {
-        window: window,
-        configuration: configuration,
-        staticContent: staticContent,
-        common: common
-      }; // TODO replace common with staticContent (but staticContent should be splitted)
-
-      var pluginManager = PluginManager(plugins, pluginData);
-      var onChange;
-      var getOptions;
-
-      if (options) {
-        if (!getDisabled) getDisabled = function getDisabled() {
-          return false;
-        };
-
-        getOptions = function getOptions() {
-          return options;
-        };
-
-        onChange = function onChange() {
-          trigger('dashboardcode.multiselect:change');
-        };
-
-        if (!getIsOptionDisabled) getIsOptionDisabled = function getIsOptionDisabled(option) {
-          return option.disabled === undefined ? false : option.disabled;
-        };
-      } else {
-        var selectElement = staticContent.selectElement;
-
-        if (!getDisabled) {
-          var fieldsetElement = closestByTagName(selectElement, 'FIELDSET');
-
-          if (fieldsetElement) {
-            getDisabled = function getDisabled() {
-              return selectElement.disabled || fieldsetElement.disabled;
-            };
-          } else {
-            getDisabled = function getDisabled() {
-              return selectElement.disabled;
-            };
-          }
-        }
-
-        getOptions = function getOptions() {
-          return selectElement.options;
-        };
-
-        onChange = function onChange() {
-          trigger('change');
-          trigger('dashboardcode.multiselect:change');
-        };
-
-        if (!getIsOptionDisabled) getIsOptionDisabled = function getIsOptionDisabled(option) {
-          return option.disabled;
-        };
-      }
-
-      if (!placeholder) {
-        placeholder = getDataGuardedWithPrefix(element, "bsmultiselect", "placeholder");
-      }
-
-      if (!getSelected) {
-        getSelected = function getSelected(option) {
-          return option.selected;
-        };
-      }
-
-      if (!setSelected) {
-        setSelected = function setSelected(option, value) {
-          option.selected = value;
-        }; // NOTE: adding this break Chrome's form reset functionality
-        // if (value) option.setAttribute('selected','');
-        // else  option.removeAttribute('selected');
-
-      }
-
-      common.getDisabled = getDisabled;
-      var multiSelect = new MultiSelect(getOptions, getDisabled, setSelected, getSelected, getIsOptionDisabled, staticContent, function (pickElement) {
-        return pickContentGenerator$1(pickElement, common, css);
-      }, function (choiceElement, toggle) {
-        return choiceContentGenerator$1(choiceElement, common, css, toggle);
-      }, placeholder, onChange, css, Popper, window);
-      pluginManager.afterConstructor(multiSelect);
-      multiSelect.Dispose = composeSync(pluginManager.dispose, multiSelect.Dispose.bind(multiSelect));
-      if (init && init instanceof Function) init(multiSelect);
-      multiSelect.init();
-      multiSelect.load(); // support browser's "step backward" on form restore
-
-      if (staticContent.selectElement && window.document.readyState != "complete") {
-        window.setTimeout(function () {
-          multiSelect.UpdateOptionsSelected();
-        });
-      }
-
-      return multiSelect;
-    }
 
     function LabelPlugin(pluginData) {
       var configuration = pluginData.configuration,
@@ -3356,37 +3199,163 @@
       };
     }
 
-    //import {createCss, extendCss} from './ToolsStyling';
-    function CssPatchPlugin() {
-      // configuration, defaults
-      // let cfgCssPatch = configuration.cssPatch;
-      // configuration.cssPatch = null;
-      // if (defaults.cssPatch instanceof Boolean || typeof defaults.cssPatch ==="boolean" 
-      //     || cfgCssPatch instanceof Boolean || typeof cfgCssPatch==="boolean" 
-      // )
-      //     throw new Error("BsMultiSelect: 'cssPatch' was used instead of 'useCssPatch'") // often type of error
-      // var defCssPatch = createCss(defaults.cssPatch, cfgCssPatch); // replace classes, merge styles
-      // configuration.cssPatch = defCssPatch;
-      return {//     onBuildConfiguration(){
-        //         let {css, cssPatch, useCssPatch} = configuration;
-        //         if (useCssPatch) {
-        //             extendCss(css, cssPatch); 
-        //         }
-        //     },
-        //     onStaticContent(staticContent){
-        //          staticContent.useCssPatch=useCssPatch;
-        //     }
-      };
-    }
+    function CssPatchPlugin() {}
 
     CssPatchPlugin.setDefaults = function (defaults) {
+      defaults.useCssPatch = true;
       defaults.cssPatch = cssPatch;
     };
 
+    CssPatchPlugin.mergeDefaults = function (configuration, defaults, settings) {
+      if (isBoolean(settings.cssPatch)) throw new Error("BsMultiSelect: 'cssPatch' was used instead of 'useCssPatch'"); // often type of error
+
+      var defCssPatch = createCss(defaults.cssPatch, settings.cssPatch); // replace classes, merge styles
+
+      configuration.cssPatch = defCssPatch;
+    };
+
+    CssPatchPlugin.buildedConfiguration = function (configuration) {
+      if (configuration.useCssPatch) extendCss(configuration.css, configuration.cssPatch);
+    };
+
+    var transformStyles = [{
+      old: 'selectedPanelDisabledBackgroundColor',
+      opt: 'picks_disabled',
+      style: "backgroundColor"
+    }, {
+      old: 'selectedPanelFocusValidBoxShadow',
+      opt: 'picks_focus_valid',
+      style: "boxShadow"
+    }, {
+      old: 'selectedPanelFocusInvalidBoxShadow',
+      opt: 'picks_focus_invalid',
+      style: "boxShadow"
+    }, {
+      old: 'selectedPanelDefMinHeight',
+      opt: 'picks_def',
+      style: "minHeight"
+    }, {
+      old: 'selectedPanelLgMinHeight',
+      opt: 'picks_lg',
+      style: "minHeight"
+    }, {
+      old: 'selectedPanelSmMinHeight',
+      opt: 'picks_sm',
+      style: "minHeight"
+    }, {
+      old: 'selectedItemContentDisabledOpacity',
+      opt: 'choiceLabel_disabled',
+      style: "opacity"
+    }];
+    var transformClasses = [{
+      old: 'dropDownMenuClass',
+      opt: 'choices'
+    }, {
+      old: 'dropDownItemClass',
+      opt: 'choice'
+    }, {
+      old: 'dropDownItemHoverClass',
+      opt: 'choice_hover'
+    }, {
+      old: 'selectedPanelClass',
+      opt: 'picks'
+    }, {
+      old: 'selectedItemClass',
+      opt: 'pick'
+    }, {
+      old: 'removeSelectedItemButtonClass',
+      opt: 'pickButton'
+    }, {
+      old: 'filterInputItemClass',
+      opt: 'pickFilter'
+    }, {
+      old: 'filterInputClass',
+      opt: 'filterInput'
+    }, {
+      old: 'selectedPanelFocusClass',
+      opt: 'picks_focus'
+    }, {
+      old: 'selectedPanelDisabledClass',
+      opt: 'picks_disabled'
+    }, {
+      old: 'selectedItemContentDisabledClass',
+      opt: 'pick_disabled'
+    }];
+    function adjustLegacySettings(settings) {
+      if (!settings.css) settings.css = {};
+      var css = settings.css;
+      if (!settings.cssPatch) settings.cssPatch = {};
+      var cssPatch = settings.cssPatch;
+
+      if (settings.selectedPanelFocusBorderColor || settings.selectedPanelFocusBoxShadow) {
+        console.log("DashboarCode.BsMultiSelect: selectedPanelFocusBorderColor and selectedPanelFocusBoxShadow are depricated, use - cssPatch:{picks_focus:{borderColor:'myValue', boxShadow:'myValue'}}");
+
+        if (!cssPatch.picks_focus) {
+          cssPatch.picks_focus = {
+            boxShadow: settings.selectedPanelFocusBoxShadow,
+            borderColor: settings.selectedPanelFocusBorderColor
+          };
+        }
+
+        delete settings.selectedPanelFocusBorderColor;
+        delete settings.selectedPanelFocusBoxShadow;
+      }
+
+      transformStyles.forEach(function (i) {
+        if (settings[i.old]) {
+          console.log("DashboarCode.BsMultiSelect: " + i.old + " is depricated, use - cssPatch:{" + i.opt + ":{" + i.style + ":'myValue'}}");
+
+          if (!settings[i.opt]) {
+            var opt = {};
+            opt[i.style] = settings[i.old];
+            settings.cssPatch[i.opt] = opt;
+          }
+
+          delete settings[i.old];
+        }
+      });
+      transformClasses.forEach(function (i) {
+        if (settings[i.old]) {
+          console.log("DashboarCode.BsMultiSelect: " + i.old + " is depricated, use - css:{" + i.opt + ":'myValue'}");
+
+          if (!css[i.opt]) {
+            css[i.opt] = settings[i.old];
+          }
+
+          delete settings[i.old];
+        }
+      });
+
+      if (settings.inputColor) {
+        console.log("DashboarCode.BsMultiSelect: inputColor is depricated, remove parameter");
+        delete settings.inputColor;
+      }
+
+      if (settings.useCss) {
+        console.log("DashboarCode.BsMultiSelect: useCss(=true) is depricated, use - 'useCssPatch: false'");
+
+        if (!css.pick_disabled) {
+          settings.useCssPatch = !settings.useCss;
+        }
+
+        delete settings.useCss;
+      }
+
+      if (settings.getIsValid || settings.getIsInValid) {
+        throw "DashboarCode.BsMultiSelect: parameters getIsValid and getIsInValid are depricated and removed, use - getValidity that should return (true|false|null) ";
+      }
+    }
+
     (function (window, $, Popper) {
-      var plugins = [CssPatchPlugin, LabelPlugin, HiddenOptionPlugin, ValidationApiPlugin, BsAppearancePlugin, FormResetPlugin, RtlPlugin];
+      var defaults = {
+        containerClass: "dashboardcode-bsmultiselect",
+        css: css
+      };
+      var defaultPlugins = [CssPatchPlugin, LabelPlugin, HiddenOptionPlugin, ValidationApiPlugin, BsAppearancePlugin, FormResetPlugin, RtlPlugin];
 
       var createBsMultiSelect = function createBsMultiSelect(element, settings, removeInstanceData) {
+        var _settings2;
+
         var trigger = function trigger(e, eventName) {
           return $(e).trigger(eventName);
         };
@@ -3396,14 +3365,33 @@
           window: window,
           Popper: Popper
         };
-        environment.plugins = plugins;
-        var bsMultiSelect = BsMultiSelect(element, environment, settings);
+        environment.plugins = defaultPlugins;
+        var configuration = {};
+        var buildConfiguration;
+
+        if (settings instanceof Function) {
+          buildConfiguration = settings;
+          settings = null;
+        } else {
+          var _settings;
+
+          buildConfiguration = (_settings = settings) == null ? void 0 : _settings.buildConfiguration;
+        }
+
+        if (settings) adjustLegacySettings(settings);
+        configuration.css = createCss(defaults.css, (_settings2 = settings) == null ? void 0 : _settings2.css);
+        mergeDefaults(defaultPlugins, configuration, defaults, settings);
+        extendIfUndefined(configuration, settings);
+        extendIfUndefined(configuration, defaults);
+        var onInit = buildConfiguration == null ? void 0 : buildConfiguration(element, configuration);
+        buildedConfiguration(defaultPlugins, configuration);
+        var bsMultiSelect = BsMultiSelect(element, environment, configuration, onInit);
         bsMultiSelect.Dispose = composeSync(bsMultiSelect.Dispose, removeInstanceData);
         return bsMultiSelect;
       };
 
       var prototypable = addToJQueryPrototype('BsMultiSelect', createBsMultiSelect, $);
-      initiateDefaults(plugins);
+      initiateDefaults(defaultPlugins, defaults);
       prototypable.defaults = defaults;
     })(window, $, Popper);
 

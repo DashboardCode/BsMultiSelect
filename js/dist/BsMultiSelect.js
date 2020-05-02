@@ -3,26 +3,12 @@ import { PluginManager } from './PluginManager';
 import { getDataGuardedWithPrefix, closestByTagName
 /*, getIsRtl*/
 } from './ToolsDom';
-import { createCss, extendCss } from './ToolsStyling';
-import { extendOverriding, extendIfUndefined, composeSync, def, isBoolean, isObject } from './ToolsJs';
-import { adjustLegacySettings } from './BsMultiSelectDepricatedParameters';
+import { extendCss } from './ToolsStyling';
+import { composeSync, def } from './ToolsJs';
 import { pickContentGenerator as defPickContentGenerator } from './PickContentGenerator';
 import { choiceContentGenerator as defChoiceContentGenerator } from './ChoiceContentGenerator';
 import { staticContentGenerator as defStaticContentGenerator } from './StaticContentGenerator';
-import { css } from './BsCss';
-export var defaults = {
-  useCssPatch: true,
-  containerClass: "dashboardcode-bsmultiselect",
-  css: css
-};
-export function initiateDefaults(constructors) {
-  for (var i = 0; i < constructors.length; i++) {
-    var _constructors$i$setDe, _constructors$i;
-
-    (_constructors$i$setDe = (_constructors$i = constructors[i]).setDefaults) == null ? void 0 : _constructors$i$setDe.call(_constructors$i, defaults);
-  }
-}
-export function BsMultiSelect(element, environment, settings) {
+export function BsMultiSelect(element, environment, configuration, onInit) {
   var Popper = environment.Popper,
       window = environment.window,
       plugins = environment.plugins;
@@ -35,45 +21,15 @@ export function BsMultiSelect(element, environment, settings) {
     throw new Error("BsMultiSelect: Popper.js (https://popper.js.org) is required");
   }
 
-  var configuration = {};
-
-  if (isObject(settings)) {
-    adjustLegacySettings(settings);
-    extendOverriding(configuration, settings); // settings used per jQuery intialization, configuration per element
-  }
-
-  var cfgCss = configuration.css;
-  configuration.css = null;
-  var cfgCssPatch = configuration.cssPatch;
-  configuration.cssPatch = null;
-  extendIfUndefined(configuration, defaults); // copy 1st level of properties
-
-  var defCss = createCss(defaults.css, cfgCss); // replace classes, merge styles
-
-  configuration.css = defCss;
-  if (isBoolean(defaults.cssPatch) || isBoolean(cfgCssPatch)) throw new Error("BsMultiSelect: 'cssPatch' was used instead of 'useCssPatch'"); // often type of error
-
-  var defCssPatch = createCss(defaults.cssPatch, cfgCssPatch); // replace classes, merge styles
-
-  configuration.cssPatch = defCssPatch;
-  var init = null;
-  if (settings instanceof Function) init = settings(element, configuration);else if (configuration.buildConfiguration) init = configuration.buildConfiguration(element, configuration);
-  var css = configuration.css,
-      cssPatch = configuration.cssPatch,
-      useCssPatch = configuration.useCssPatch,
-      containerClass = configuration.containerClass,
+  var containerClass = configuration.containerClass,
+      css = configuration.css,
       getSelected = configuration.getSelected,
       setSelected = configuration.setSelected,
       placeholder = configuration.placeholder,
       common = configuration.common,
       options = configuration.options,
       getDisabled = configuration.getDisabled,
-      getIsOptionDisabled = configuration.getIsOptionDisabled; // TODO move to plugin
-
-  if (useCssPatch) {
-    extendCss(css, cssPatch);
-  }
-
+      getIsOptionDisabled = configuration.getIsOptionDisabled;
   var staticContentGenerator = def(configuration.staticContentGenerator, defStaticContentGenerator);
   var pickContentGenerator = def(configuration.pickContentGenerator, defPickContentGenerator);
   var choiceContentGenerator = def(configuration.choiceContentGenerator, defChoiceContentGenerator);
@@ -170,7 +126,7 @@ export function BsMultiSelect(element, environment, settings) {
   }, placeholder, onChange, css, Popper, window);
   pluginManager.afterConstructor(multiSelect);
   multiSelect.Dispose = composeSync(pluginManager.dispose, multiSelect.Dispose.bind(multiSelect));
-  if (init && init instanceof Function) init(multiSelect);
+  onInit == null ? void 0 : onInit(multiSelect);
   multiSelect.init();
   multiSelect.load(); // support browser's "step backward" on form restore
 

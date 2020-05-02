@@ -2,8 +2,10 @@ import $ from 'jquery'
 import Popper from 'popper.js'
 
 import {addToJQueryPrototype} from './AddToJQueryPrototype'
-import {BsMultiSelect, defaults, initiateDefaults} from './BsMultiSelect';
-import {composeSync} from './ToolsJs';
+import {BsMultiSelect} from './BsMultiSelect';
+import {initiateDefaults, mergeDefaults, buildedConfiguration} from './PluginManager';
+
+import {css} from './BsCss'
 
 import {LabelPlugin} from './plugins/LabelPlugin';
 import {RtlPlugin} from './plugins/RtlPlugin';
@@ -13,20 +15,51 @@ import {BsAppearancePlugin} from './plugins/BsAppearancePlugin';
 import {HiddenOptionPlugin} from './plugins/HiddenOptionPlugin';
 import {CssPatchPlugin} from './plugins/CssPatchPlugin';
 
+import {adjustLegacySettings} from './BsMultiSelectDepricatedParameters'
+
+import {createCss} from './ToolsStyling';
+import {extendIfUndefined, composeSync} from './ToolsJs';
+
 (
     (window, $, Popper) => {
-        let plugins = [CssPatchPlugin, LabelPlugin, HiddenOptionPlugin, ValidationApiPlugin, BsAppearancePlugin, FormResetPlugin, RtlPlugin];
+        const defaults = {containerClass : "dashboardcode-bsmultiselect", css: css}
+        let defaultPlugins = [CssPatchPlugin, LabelPlugin, HiddenOptionPlugin, ValidationApiPlugin, 
+        BsAppearancePlugin, FormResetPlugin, RtlPlugin];
         let createBsMultiSelect = (element, settings, removeInstanceData) => { 
             let trigger = (e, eventName) => $(e).trigger(eventName);
             let environment = {trigger, window, Popper}
-            environment.plugins = plugins;
-            let bsMultiSelect = BsMultiSelect(element, environment, settings);
+            environment.plugins = defaultPlugins;
+
+            let configuration = {};
+            let buildConfiguration;
+            if (settings instanceof Function){
+                buildConfiguration = settings;
+                settings = null;
+            } else {
+                buildConfiguration = settings?.buildConfiguration;
+            }
+
+            if (settings)
+                adjustLegacySettings(settings);
+            
+            configuration.css = createCss(defaults.css, settings?.css);
+            mergeDefaults(defaultPlugins, configuration, defaults, settings);
+
+            extendIfUndefined(configuration, settings); 
+            extendIfUndefined(configuration, defaults); 
+        
+            let onInit = buildConfiguration?.(element, configuration);
+
+            buildedConfiguration(defaultPlugins, configuration);
+
+            let bsMultiSelect = BsMultiSelect(element, environment, configuration, onInit);
             bsMultiSelect.Dispose = composeSync(bsMultiSelect.Dispose, removeInstanceData);
             return bsMultiSelect;
         }
         let prototypable = addToJQueryPrototype('BsMultiSelect', createBsMultiSelect, $);
 
-        initiateDefaults(plugins);
+        initiateDefaults(defaultPlugins, defaults);
         prototypable.defaults = defaults;
     }
 )(window, $, Popper)
+
