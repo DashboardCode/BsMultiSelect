@@ -1,9 +1,8 @@
 import {MultiSelect} from './MultiSelect'
 import {PluginManager} from './PluginManager'
 
-import {getDataGuardedWithPrefix, closestByTagName /*, getIsRtl*/} from './ToolsDom';
+import {closestByTagName} from './ToolsDom';
 
-import {extendCss} from './ToolsStyling';
 import {composeSync, def} from './ToolsJs';
 
 import {pickContentGenerator as defPickContentGenerator} from './PickContentGenerator';
@@ -17,13 +16,11 @@ export function BsMultiSelect(element, environment, configuration, onInit){
         throw new Error("BsMultiSelect: Popper.js (https://popper.js.org) is required")
     }
 
-    let { containerClass, 
-          css, 
-          getSelected, setSelected, placeholder, 
-          common,
-          options, getDisabled,
-          getIsOptionDisabled
-        } = configuration;
+    let { containerClass, css, 
+          options, getDisabled,  
+          getSelected, setSelected, 
+          getIsOptionDisabled,
+          common } = configuration;
     
     let staticContentGenerator = def(configuration.staticContentGenerator, defStaticContentGenerator);
     let pickContentGenerator = def(configuration.pickContentGenerator, defPickContentGenerator);
@@ -33,9 +30,9 @@ export function BsMultiSelect(element, environment, configuration, onInit){
         element, name=>window.document.createElement(name), containerClass, css
     );
 
-    if (!common){ 
+    if (!common) 
         common = {}
-    }
+    
     let pluginData = {window, configuration, staticContent, common} // TODO replace common with staticContent (but staticContent should be splitted)
     let pluginManager = PluginManager(plugins, pluginData);
 
@@ -75,9 +72,6 @@ export function BsMultiSelect(element, environment, configuration, onInit){
             getIsOptionDisabled = option => option.disabled;
     }
 
-    if (!placeholder){
-        placeholder = getDataGuardedWithPrefix(element,"bsmultiselect","placeholder");
-    }
     if (!getSelected){
         getSelected = (option) => option.selected;
     }
@@ -99,9 +93,7 @@ export function BsMultiSelect(element, environment, configuration, onInit){
         staticContent,
         (pickElement) => pickContentGenerator(pickElement, common, css),
         (choiceElement, toggle) => choiceContentGenerator(choiceElement, common, css, toggle),
-        placeholder,
         onChange,
-        css,
         Popper,
         window);
 

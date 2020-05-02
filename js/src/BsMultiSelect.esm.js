@@ -8,12 +8,14 @@ import {ValidationApiPlugin} from './plugins/ValidationApiPlugin';
 import {BsAppearancePlugin} from './plugins/BsAppearancePlugin';
 import {HiddenOptionPlugin} from './plugins/HiddenOptionPlugin';
 import {CssPatchPlugin} from './plugins/CssPatchPlugin';
+import {PlaceholderPlugin} from './plugins/PlaceholderPlugin';
 
 import {createCss} from './ToolsStyling';
 import {extendIfUndefined} from './ToolsJs';
 
 const defaults = {containerClass : "dashboardcode-bsmultiselect", css: css}
-const defaultPlugins = [CssPatchPlugin, LabelPlugin, HiddenOptionPlugin, ValidationApiPlugin, BsAppearancePlugin, FormResetPlugin, RtlPlugin];
+const defaultPlugins = [CssPatchPlugin, LabelPlugin, HiddenOptionPlugin, ValidationApiPlugin, BsAppearancePlugin, FormResetPlugin, 
+    RtlPlugin, PlaceholderPlugin];
 
 export function BsMultiSelect(element, environment, settings){
     if (!environment.trigger)

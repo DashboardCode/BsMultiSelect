@@ -1,9 +1,6 @@
 import { MultiSelect } from './MultiSelect';
 import { PluginManager } from './PluginManager';
-import { getDataGuardedWithPrefix, closestByTagName
-/*, getIsRtl*/
-} from './ToolsDom';
-import { extendCss } from './ToolsStyling';
+import { closestByTagName } from './ToolsDom';
 import { composeSync, def } from './ToolsJs';
 import { pickContentGenerator as defPickContentGenerator } from './PickContentGenerator';
 import { choiceContentGenerator as defChoiceContentGenerator } from './ChoiceContentGenerator';
@@ -23,24 +20,19 @@ export function BsMultiSelect(element, environment, configuration, onInit) {
 
   var containerClass = configuration.containerClass,
       css = configuration.css,
-      getSelected = configuration.getSelected,
-      setSelected = configuration.setSelected,
-      placeholder = configuration.placeholder,
-      common = configuration.common,
       options = configuration.options,
       getDisabled = configuration.getDisabled,
-      getIsOptionDisabled = configuration.getIsOptionDisabled;
+      getSelected = configuration.getSelected,
+      setSelected = configuration.setSelected,
+      getIsOptionDisabled = configuration.getIsOptionDisabled,
+      common = configuration.common;
   var staticContentGenerator = def(configuration.staticContentGenerator, defStaticContentGenerator);
   var pickContentGenerator = def(configuration.pickContentGenerator, defPickContentGenerator);
   var choiceContentGenerator = def(configuration.choiceContentGenerator, defChoiceContentGenerator);
   var staticContent = staticContentGenerator(element, function (name) {
     return window.document.createElement(name);
   }, containerClass, css);
-
-  if (!common) {
-    common = {};
-  }
-
+  if (!common) common = {};
   var pluginData = {
     window: window,
     configuration: configuration,
@@ -99,10 +91,6 @@ export function BsMultiSelect(element, environment, configuration, onInit) {
     };
   }
 
-  if (!placeholder) {
-    placeholder = getDataGuardedWithPrefix(element, "bsmultiselect", "placeholder");
-  }
-
   if (!getSelected) {
     getSelected = function getSelected(option) {
       return option.selected;
@@ -123,7 +111,7 @@ export function BsMultiSelect(element, environment, configuration, onInit) {
     return pickContentGenerator(pickElement, common, css);
   }, function (choiceElement, toggle) {
     return choiceContentGenerator(choiceElement, common, css, toggle);
-  }, placeholder, onChange, css, Popper, window);
+  }, onChange, Popper, window);
   pluginManager.afterConstructor(multiSelect);
   multiSelect.Dispose = composeSync(pluginManager.dispose, multiSelect.Dispose.bind(multiSelect));
   onInit == null ? void 0 : onInit(multiSelect);

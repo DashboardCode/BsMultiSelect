@@ -2,7 +2,6 @@ import {FilterPanel} from './FilterPanel'
 import {ChoicesPanel} from './ChoicesPanel'
 import {PicksList} from './PicksList'
 import {MultiSelectInputAspect} from './MultiSelectInputAspect'
-import {PlaceholderAspect} from './PlaceholderAspect'
 import {Choice, updateDisabledChoice, updateSelectedChoice, setOptionSelected} from './Choice'
 import {ListFacade, sync, composeSync} from './ToolsJs'
 import {FilterFacade} from './FilterFacade'
@@ -17,9 +16,7 @@ export class MultiSelect {
         staticContent, 
         pickContentGenerator, 
         choiceContentGenerator, 
-        placeholderText,
         onChange,
-        css,
         Popper, window) {
         // readonly
         this.getOptions=getOptions;
@@ -28,9 +25,7 @@ export class MultiSelect {
         this.staticContent = staticContent;
         this.pickContentGenerator = pickContentGenerator;
         this.choiceContentGenerator = choiceContentGenerator;
-        this.placeholderText = placeholderText;
         this.setSelected=setSelected; 
-        this.css = css;
         this.Popper = Popper;
         this.window = window;
 
@@ -52,16 +47,16 @@ export class MultiSelect {
     }
    
     resetFilter(){
-        if (!this.filterPanel.isEmpty()) {
-            this.filterPanel.setEmpty();
-            this.placeholderAspect.updateEmptyInputWidth();
-            this.processEmptyInput();
-            this.placeholderAspect.updatePlacehodlerVisibility();
-        }
+        if (!this.filterPanel.isEmpty()) 
+            this.forceResetFilter();
+    }
+
+    forceResetFilter(){
+        this.filterPanel.setEmpty();
+        this.processEmptyInput();
     }
 
     processEmptyInput(){
-        this.placeholderAspect.updateEmptyInputWidth();
         this.filterFacade.resetFilter();
     }
 
@@ -114,7 +109,6 @@ export class MultiSelect {
         
         this.choicesPanel.clear();
         this.picksList.clear();
-        this.placeholderAspect.updatePlacehodlerVisibility();
     }
 
     UpdateData(){
@@ -128,14 +122,6 @@ export class MultiSelect {
             this.UpdateOptionDisabled(i)
         }
     }
-
-    /*
-    UpdateOption(key){
-        let choice = this.choicesPanel.get(key)
-        updateDisabledChoice(choice, this.getIsOptionDisabled)
-        updateHiddenChoice(choice, this.getIsOptionHidden)
-        updateSelectedChoice(choice)
-    }*/
 
     UpdateOptionDisabled(key){
         let choice = this.choicesPanel.get(key); // TODO: generalize index as key 
@@ -207,20 +193,14 @@ export class MultiSelect {
 
             choice.updateDisabled = choiceUpdateDisabledBackup; 
             choice.updateDisabled(); // make "true disabled" without it checkbox looks disabled
-            
-            if (this.picksList.getCount()==0) 
-                this.placeholderAspect.updatePlacehodlerVisibility()
         }
         let setSelectedFalse = () => setOptionSelected(choice, false, this.setSelected)
         pick.remove = setSelectedFalse;
     
         this.aspect.handleOnRemoveButton(pickContent.onRemove, setSelectedFalse);
-
-        if (this.picksList.getCount()==1) 
-            this.placeholderAspect.updatePlacehodlerVisibility()
         return removePick;
     }
-    
+
     createChoiceElement(choice){
         var {choiceElement, setVisible, attach, detach} = this.staticContent.createChoiceElement();
         choice.choiceElement = choiceElement;
@@ -310,8 +290,7 @@ export class MultiSelect {
         let isOptionSelected = this.getIsOptionSelected(option);
         let isOptionDisabled = this.getIsOptionDisabled(option); 
         
-        var choice = Choice(option, isOptionSelected, isOptionDisabled);
-        return choice;
+        return Choice(option, isOptionSelected, isOptionDisabled);
     }
 
     insertChoiceItem(choice){
@@ -370,16 +349,15 @@ export class MultiSelect {
     UpdateDisabled(){
         let isComponentDisabled = this.getIsComponentDisabled();
         if (this.isComponentDisabled!==isComponentDisabled){
+            this.isComponentDisabled=isComponentDisabled;
             this.picksList.disableRemoveAll(isComponentDisabled);
             this.aspect.disable(isComponentDisabled);
-            this.placeholderAspect.setDisabled(isComponentDisabled);
             this.staticContent.disable(isComponentDisabled);
-            this.isComponentDisabled=isComponentDisabled;
         }
     }
- 
+    
+
     input(filterInputValue, resetLength){
-        this.placeholderAspect.updatePlacehodlerVisibility();
         let text = filterInputValue.trim().toLowerCase();
         var isEmpty=false;
         if (text == '')
@@ -394,14 +372,15 @@ export class MultiSelect {
                 if (fullMatchChoice.searchText == text)
                 {
                     setOptionSelected(fullMatchChoice, true, this.setSelected);
+                    // DONE
                     this.filterPanel.setEmpty(); // clear
-                    this.placeholderAspect.updateEmptyInputWidth();
                     isEmpty=true;
                 }
             }
         }
-        if (isEmpty)
+        if (isEmpty){
             this.processEmptyInput();
+        }
         else
             resetLength();  
         
@@ -477,6 +456,10 @@ export class MultiSelect {
     insertFilterFacade(choice){
         let choiceNonhiddenBefore = this.getNext(choice);
         this.filterListFacade.add(choice, choiceNonhiddenBefore);
+    }
+
+    isEmpty(){
+        return this.picksList.isEmpty() && this.filterPanel.isEmpty()
     }
 
     init() {
@@ -555,16 +538,9 @@ export class MultiSelect {
             (c)=>this.addFilterFacade(c), 
             (c)=>this.insertFilterFacade(c));
 
-        this.placeholderAspect = PlaceholderAspect(
-            this.placeholderText, 
-            () => this.picksList.isEmpty() && this.filterPanel.isEmpty(), 
-            this.staticContent.picksElement, 
-            this.staticContent.filterInputElement,
-            this.css
-        )
-        this.placeholderAspect.updateEmptyInputWidth();
 
         this.staticContent.appendToContainer();
+
         this.aspect =  MultiSelectInputAspect(
             this.window,
             this.staticContent.filterInputElement, 

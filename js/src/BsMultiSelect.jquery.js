@@ -14,6 +14,7 @@ import {ValidationApiPlugin} from './plugins/ValidationApiPlugin';
 import {BsAppearancePlugin} from './plugins/BsAppearancePlugin';
 import {HiddenOptionPlugin} from './plugins/HiddenOptionPlugin';
 import {CssPatchPlugin} from './plugins/CssPatchPlugin';
+import {PlaceholderPlugin} from './plugins/PlaceholderPlugin';
 
 import {adjustLegacySettings} from './BsMultiSelectDepricatedParameters'
 
@@ -24,7 +25,7 @@ import {extendIfUndefined, composeSync} from './ToolsJs';
     (window, $, Popper) => {
         const defaults = {containerClass : "dashboardcode-bsmultiselect", css: css}
         let defaultPlugins = [CssPatchPlugin, LabelPlugin, HiddenOptionPlugin, ValidationApiPlugin, 
-        BsAppearancePlugin, FormResetPlugin, RtlPlugin];
+        BsAppearancePlugin, FormResetPlugin, RtlPlugin, PlaceholderPlugin];
         let createBsMultiSelect = (element, settings, removeInstanceData) => { 
             let trigger = (e, eventName) => $(e).trigger(eventName);
             let environment = {trigger, window, Popper}
