@@ -1,5 +1,5 @@
 import {BsMultiSelect as BsMultiSelectBase}  from './BsMultiSelect'
-import {initiateDefaults, mergeDefaults, buildedConfiguration} from './PluginManager';
+import {initiateDefaults, mergeDefaults, onConfiguration}  from './PluginManager';
 import {css} from './BsCss'
 import {LabelPlugin} from './plugins/LabelPlugin';
 import {RtlPlugin} from './plugins/RtlPlugin';
@@ -33,7 +33,7 @@ export function BsMultiSelect(element, environment, settings){
     extendIfUndefined(configuration, settings); 
     extendIfUndefined(configuration, defaults); 
 
-    buildedConfiguration(defaultPlugins, configuration);
+    onConfiguration(defaultPlugins, configuration);
 
     return BsMultiSelectBase(element, environment, configuration, settings?.onInit);
 }

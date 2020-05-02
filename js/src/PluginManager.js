@@ -39,8 +39,8 @@ export function mergeDefaults(constructors, configuration, defaults, settings){
     }
 }
 
-export function buildedConfiguration(constructors, configuration){
+export function onConfiguration(constructors, configuration){
     for(let i = 0; i<constructors.length; i++){
-        constructors[i].buildedConfiguration?.(configuration)
+        constructors[i].onConfiguration?.(configuration)
     }
 }

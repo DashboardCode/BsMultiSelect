@@ -2088,11 +2088,11 @@
         (_constructors$i$merge = (_constructors$i2 = constructors[i]).mergeDefaults) == null ? void 0 : _constructors$i$merge.call(_constructors$i2, configuration, defaults, settings);
       }
     }
-    function buildedConfiguration(constructors, configuration) {
+    function onConfiguration(constructors, configuration) {
       for (var i = 0; i < constructors.length; i++) {
-        var _constructors$i$build, _constructors$i3;
+        var _constructors$i$onCon, _constructors$i3;
 
-        (_constructors$i$build = (_constructors$i3 = constructors[i]).buildedConfiguration) == null ? void 0 : _constructors$i$build.call(_constructors$i3, configuration);
+        (_constructors$i$onCon = (_constructors$i3 = constructors[i]).onConfiguration) == null ? void 0 : _constructors$i$onCon.call(_constructors$i3, configuration);
       }
     }
 
@@ -3207,14 +3207,13 @@
     };
 
     CssPatchPlugin.mergeDefaults = function (configuration, defaults, settings) {
-      if (isBoolean(settings == null ? void 0 : settings.cssPatch)) throw new Error("BsMultiSelect: 'cssPatch' was used instead of 'useCssPatch'"); // often type of error
+      var cssPatch = settings == null ? void 0 : settings.cssPatch;
+      if (isBoolean(cssPatch)) throw new Error("BsMultiSelect: 'cssPatch' was used instead of 'useCssPatch'"); // often type of error
 
-      var defCssPatch = createCss(defaults.cssPatch, settings == null ? void 0 : settings.cssPatch); // replace classes, merge styles
-
-      configuration.cssPatch = defCssPatch;
+      configuration.cssPatch = createCss(defaults.cssPatch, cssPatch); // replace classes, merge styles
     };
 
-    CssPatchPlugin.buildedConfiguration = function (configuration) {
+    CssPatchPlugin.onConfiguration = function (configuration) {
       if (configuration.useCssPatch) extendCss(configuration.css, configuration.cssPatch);
     };
 
@@ -3384,7 +3383,7 @@
         extendIfUndefined(configuration, settings);
         extendIfUndefined(configuration, defaults);
         var onInit = buildConfiguration == null ? void 0 : buildConfiguration(element, configuration);
-        buildedConfiguration(defaultPlugins, configuration);
+        onConfiguration(defaultPlugins, configuration);
         var bsMultiSelect = BsMultiSelect(element, environment, configuration, onInit);
         bsMultiSelect.Dispose = composeSync(bsMultiSelect.Dispose, removeInstanceData);
         return bsMultiSelect;
