@@ -11,9 +11,9 @@ CssPatchPlugin.setDefaults = (defaults)=>{
 }
 
 CssPatchPlugin.mergeDefaults = (configuration, defaults, settings)=>{
-    if (isBoolean(settings.cssPatch))
+    if (isBoolean(settings?.cssPatch))
         throw new Error("BsMultiSelect: 'cssPatch' was used instead of 'useCssPatch'") // often type of error
-    var defCssPatch = createCss(defaults.cssPatch, settings.cssPatch); // replace classes, merge styles
+    var defCssPatch = createCss(defaults.cssPatch, settings?.cssPatch); // replace classes, merge styles
     configuration.cssPatch = defCssPatch;
 }
 

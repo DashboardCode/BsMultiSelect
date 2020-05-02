@@ -3207,9 +3207,9 @@
     };
 
     CssPatchPlugin.mergeDefaults = function (configuration, defaults, settings) {
-      if (isBoolean(settings.cssPatch)) throw new Error("BsMultiSelect: 'cssPatch' was used instead of 'useCssPatch'"); // often type of error
+      if (isBoolean(settings == null ? void 0 : settings.cssPatch)) throw new Error("BsMultiSelect: 'cssPatch' was used instead of 'useCssPatch'"); // often type of error
 
-      var defCssPatch = createCss(defaults.cssPatch, settings.cssPatch); // replace classes, merge styles
+      var defCssPatch = createCss(defaults.cssPatch, settings == null ? void 0 : settings.cssPatch); // replace classes, merge styles
 
       configuration.cssPatch = defCssPatch;
     };
