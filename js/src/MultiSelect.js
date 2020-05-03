@@ -334,8 +334,6 @@ export class MultiSelect {
         choice.choiceElementAttach();
     }
 
-    
-
     input(filterInputValue, resetLength){
         let text = filterInputValue.trim().toLowerCase();
         var isEmpty=false;
