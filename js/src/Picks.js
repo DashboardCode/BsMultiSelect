@@ -1,6 +1,6 @@
 import {List} from './ToolsJs'
 
-export function PicksList() 
+export function Picks() 
 {
     var list = List();
     return {

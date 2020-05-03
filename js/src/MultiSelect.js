@@ -1,8 +1,8 @@
 import {FilterPanel} from './FilterPanel'
-import {ChoicesPanel} from './ChoicesPanel'
-import {PicksList} from './PicksList'
+import {Choices} from './Choices'
+import {Picks} from './Picks'
 import {MultiSelectInputAspect} from './MultiSelectInputAspect'
-import {Choice, updateDisabledChoice, updateSelectedChoice, setOptionSelected} from './Choice'
+import {Choice} from './Choice'
 import {ListFacade, sync, composeSync} from './ToolsJs'
 import {FilterFacade} from './FilterFacade'
 
@@ -31,7 +31,8 @@ export class MultiSelect {
 
         this.visibleCount=10;
 
-        this.choicesPanel = null;
+        this.choices = null;
+        this.picks = null;
         this.popper = null;
         this.stylingComposite = null;
         this.onChange=onChange;
@@ -39,10 +40,67 @@ export class MultiSelect {
         this.getIsComponentDisabled = getIsComponentDisabled;
     }
 
+    createPopperConfiguration(){
+        return {
+            placement: 'bottom-start',
+            modifiers: {
+                preventOverflow: {enabled:true},
+                hide: {enabled:false},
+                flip: {enabled:false}
+            }
+        }
+    }
+
+    getPopper(){
+        let popperConfiguration = this.createPopperConfiguration();
+        let Popper = this.Popper;
+        //if (!!Popper.prototype && !!Popper.prototype.constructor.name) {
+        var popper=new Popper( 
+            this.staticContent.filterInputElement, 
+            this.staticContent.choicesElement, 
+            popperConfiguration,
+        );
+        /*}else{
+            popper=Popper.createPopper(
+                filterInputElement,
+                choicesElement,
+                //  https://github.com/popperjs/popper.js/blob/next/docs/src/pages/docs/modifiers/prevent-overflow.mdx#mainaxis
+                // {
+                //     placement: isRtl?'bottom-end':'bottom-start',
+                //     modifiers: {
+                //         preventOverflow: {enabled:false},
+                //         hide: {enabled:false},
+                //         flip: {enabled:false}
+                //     }
+                // }
+            );
+        }*/
+
+        return {
+            update(){
+                popper.update();
+            },
+            dispose(){
+                popper.destroy();
+            }
+        }
+    };
+
+    setOptionSelected(choice, value){
+        let success = false;
+        var confirmed = this.setSelected(choice.option, value);
+        if (!(confirmed===false)) {
+            choice.isOptionSelected = value;
+            choice.updateSelected();
+            success = true;
+        }
+        return success;
+    }
+
     toggleOptionSelected(choice){
         var success = false;
         if (choice.isOptionSelected || !choice.isOptionDisabled)
-            success = setOptionSelected(choice, !choice.isOptionSelected, this.setSelected);
+            success = this.setOptionSelected(choice, !choice.isOptionSelected);
         return success;
     }
    
@@ -60,46 +118,10 @@ export class MultiSelect {
         this.filterFacade.resetFilter();
     }
 
-    GetContainer(){
-        return this.staticContent.containerElement;
-    }
-    GetChoices(){
-        return this.staticContent.choicesElement;
-    }
-    GetFilterInput(){
-        return this.staticContent.filterInputElement;
-    }
-    
-    Update(){
-        this.UpdateAppearance();
-        this.UpdateData();
-    }
-    
-    DeselectAll(){
-        this.aspect.hideChoices(); // always hide 1st
-        this.picksList.removeAll();
-        this.resetFilter();
-    }
-
-    PicksCount(){
-        return this.picksList.getCount();
-    }
-
     isSelectable(choice){
         return !choice.isOptionSelected  && !choice.isOptionDisabled;
     }
-
-    SelectAll(){
-        this.aspect.hideChoices(); // always hide 1st
-        this.choicesPanel.forLoop(
-            (choice) => {
-                if (this.isSelectable(choice))
-                    setOptionSelected(choice, true, this.setSelected)
-            }
-        ); 
-        this.resetFilter();
-    }
-
+    
     empty(){
         // close drop down , remove filter
         this.aspect.hideChoices(); // always hide 1st
@@ -107,60 +129,68 @@ export class MultiSelect {
 
         this.staticContent.choicesElement.innerHTML = ""; // TODO: there should better "optimization"
         
-        this.choicesPanel.clear();
-        this.picksList.clear();
+        this.choices.clear();
+        this.picks.clear();
     }
-
-    UpdateData(){
+    
+    update(){
+        this.updateAppearance();
+        this.updateData();
+    }
+    updateData(){
         this.empty();
         this.updateDataImpl();
     }
-
-    UpdateOptionsDisabled(){
-        let options = this.getOptions();
-        for(let i = 0; i<options.length; i++){
-            this.UpdateOptionDisabled(i)
+    updateAppearance(){
+        this.updateDisabled();    
+    }
+    updateDisabled(){
+        let isComponentDisabled = this.getIsComponentDisabled();
+        if (this.isComponentDisabled!==isComponentDisabled){
+            this.isComponentDisabled=isComponentDisabled;
+            this.picks.disableRemoveAll(isComponentDisabled);
+            this.aspect.disable(isComponentDisabled);
+            this.staticContent.disable(isComponentDisabled);
         }
     }
-
-    UpdateOptionDisabled(key){
-        let choice = this.choicesPanel.get(key); // TODO: generalize index as key 
-        updateDisabledChoice(choice, this.getIsOptionDisabled)
+    updateOptionsDisabled(){
+        this.choices.forLoop(
+            choice => {
+                let newIsDisabled = multiSelect.getIsOptionDisabled(choice.option);
+                if (newIsDisabled != choice.isOptionDisabled)
+                {
+                    choice.isOptionDisabled= newIsDisabled;
+                    choice.updateDisabled();
+                }
+            }
+        );
     }
-
-    UpdateOptionsSelected(){
-        let options = this.getOptions();
-        for(let i = 0; i<options.length; i++){
-            this.UpdateOptionSelected(i)
-        }
+    updateOptionsSelected(){
+        this.choices.forLoop(
+            choice => {
+                let newIsSelected = this.getIsOptionSelected(choice.option);
+                if (newIsSelected != choice.isOptionSelected)
+                {
+                    choice.isOptionSelected = newIsSelected;
+                    choice.updateSelected();
+                }
+            }
+        );
     }
-
-    UpdateOptionSelected(key){
-        let choice = this.choicesPanel.get(key); // TODO: generalize index as key 
-        updateSelectedChoice(choice, this.getIsOptionSelected ) // TODO: invite this.getIsOptionSelected
+    selectAll(){
+        this.aspect.hideChoices(); // always hide 1st
+        this.choices.forLoop(
+            choice => {
+                if (this.isSelectable(choice))
+                    this.setOptionSelected(choice, true)
+            }
+        ); 
+        this.resetFilter();
     }
-
-    SetOptionSelected(key, value){
-        let choice = this.choicesPanel.get(key);
-        setOptionSelected(choice, value, this.setSelected);
-    }
-
-    UpdateOptionAdded(key){  // TODO: generalize index as key 
-        let options = this.getOptions();
-        let option = options[key];
-        let choice = this.createChoice(option);
-        this.choicesPanel.insert(key, choice);
-        this.insertChoiceItem(choice)
-    }
-
-
-    UpdateOptionRemoved(key){ // TODO: generalize index as key 
-        this.aspect.hideChoices(); // always hide 1st, then reset filter
-        this.filterFacade.resetFilter();
-
-        var choice = this.choicesPanel.remove(key);
-        choice.remove?.();
-        choice.dispose?.();
+    deselectAll(){
+        this.aspect.hideChoices(); // always hide 1st
+        this.picks.removeAll();
+        this.resetFilter();
     }
 
     createPick(choice){
@@ -186,7 +216,7 @@ export class MultiSelect {
         let choiceUpdateDisabledBackup = choice.updateDisabled;
         choice.updateDisabled = composeSync(choiceUpdateDisabledBackup, pick.disable);
 
-        var removeFromList = this.picksList.addPick(pick);
+        var removeFromList = this.picks.addPick(pick);
         let removePick = () => {
             removeFromList();
             pick.dispose();
@@ -194,7 +224,7 @@ export class MultiSelect {
             choice.updateDisabled = choiceUpdateDisabledBackup; 
             choice.updateDisabled(); // make "true disabled" without it checkbox looks disabled
         }
-        let setSelectedFalse = () => setOptionSelected(choice, false, this.setSelected)
+        let setSelectedFalse = () => this.setOptionSelected(choice, false)
         pick.remove = setSelectedFalse;
     
         this.aspect.handleOnRemoveButton(pickContent.onRemove, setSelectedFalse);
@@ -304,57 +334,6 @@ export class MultiSelect {
         choice.choiceElementAttach();
     }
 
-    updateDataImpl(){
-        var fillChoices = () => {
-            let options = this.getOptions();
-            for(let i = 0; i<options.length; i++) {
-                let option = options[i];
-                let choice = this.createChoice(option);
-                this.choicesPanel.push(choice);
-                this.pushChoiceItem(choice);
-            } 
-        }
-
-        // browsers can change select value as part of "autocomplete" (IE11) 
-        // or "show preserved on go back" (Chrome) after page is loaded but before "ready" event;
-        // but they never "restore" selected-disabled options.
-        // TODO: make the FROM Validation for 'selected-disabled' easy.
-        if (document.readyState != 'loading'){
-            fillChoices();
-        } else {
-            var domContentLoadedHandler = function(){
-                fillChoices();
-                document.removeEventListener("DOMContentLoaded", domContentLoadedHandler);
-            }
-            document.addEventListener('DOMContentLoaded', domContentLoadedHandler); // IE9+
-        }
-    }
-
-    Dispose(){
-        sync(
-            this.aspect.hideChoices,
-            this.picksList.dispose,
-            this.filterPanel.dispose,
-            this.aspect.dispose,
-            this.staticContent.dispose,
-            this.choicesPanel.dispose,
-            this.popper.dispose
-        );
-    }
-
-    UpdateAppearance(){
-        this.UpdateDisabled();    
-    }
-
-    UpdateDisabled(){
-        let isComponentDisabled = this.getIsComponentDisabled();
-        if (this.isComponentDisabled!==isComponentDisabled){
-            this.isComponentDisabled=isComponentDisabled;
-            this.picksList.disableRemoveAll(isComponentDisabled);
-            this.aspect.disable(isComponentDisabled);
-            this.staticContent.disable(isComponentDisabled);
-        }
-    }
     
 
     input(filterInputValue, resetLength){
@@ -371,9 +350,8 @@ export class MultiSelect {
                 let fullMatchChoice =  this.filterListFacade.getHead();
                 if (fullMatchChoice.searchText == text)
                 {
-                    setOptionSelected(fullMatchChoice, true, this.setSelected);
-                    // DONE
-                    this.filterPanel.setEmpty(); // clear
+                    this.setOptionSelected(fullMatchChoice, true);
+                    this.filterPanel.setEmpty();
                     isEmpty=true;
                 }
             }
@@ -394,10 +372,10 @@ export class MultiSelect {
                 this.aspect.showChoices();
             }
             if (visibleCount == 1) {
-                this.choicesPanel.hoverIn(this.filterListFacade.getHead())
+                this.choices.hoverIn(this.filterListFacade.getHead())
             } else {
                 if (panelIsVisble)
-                    this.choicesPanel.resetHoveredChoice();
+                    this.choices.resetHoveredChoice();
             }   
         }else{
             if (this.staticContent.isChoicesVisible())
@@ -406,7 +384,7 @@ export class MultiSelect {
     }
 
     hoveredToSelected(){
-        let hoveredChoice = this.choicesPanel.getHoveredChoice();
+        let hoveredChoice = this.choices.getHoveredChoice();
         if (hoveredChoice){
             var wasToggled = this.toggleOptionSelected(hoveredChoice);
             if (wasToggled) {
@@ -417,10 +395,10 @@ export class MultiSelect {
     }
 
     keyDownArrow(down) {
-        let iChoice = this.choicesPanel.navigate(down);
+        let iChoice = this.choices.navigate(down);
         if (iChoice)
         {
-            this.choicesPanel.hoverIn(iChoice);
+            this.choices.hoverIn(iChoice);
             this.aspect.showChoices();
         }
     }
@@ -431,7 +409,7 @@ export class MultiSelect {
     }
 
     forEach(f){
-        let choice = this.choicesPanel.getHead();
+        let choice = this.choices.getHead();
         while(choice){
             forEach( (choice)=>{
                 f(choice);
@@ -459,7 +437,7 @@ export class MultiSelect {
     }
 
     isEmpty(){
-        return this.picksList.isEmpty() && this.filterPanel.isEmpty()
+        return this.picks.isEmpty() && this.filterPanel.isEmpty();
     }
 
     init() {
@@ -475,7 +453,7 @@ export class MultiSelect {
             () => this.keyDownArrow(true),  // arrow down
             /*onTabForEmpty*/() => this.aspect.hideChoices(),  // tab on empty
             () => {
-                let p = this.picksList.removePicksTail();
+                let p = this.picks.removePicksTail();
                 if (p)
                     this.popper.update();
             }, // backspace - "remove last"
@@ -515,7 +493,7 @@ export class MultiSelect {
         this.staticContent.picksElement.appendChild(
             this.staticContent.pickFilterElement); // located filter in selectionsPanel       
 
-        this.picksList =  PicksList();
+        this.picks =  Picks();
         
         let composeFilterPredicate = (text) => 
             (choice) => !choice.isOptionSelected  && !choice.isOptionDisabled  && choice.searchText.indexOf(text) >= 0 
@@ -533,7 +511,7 @@ export class MultiSelect {
             composeFilterPredicate
         );
         
-        this.choicesPanel = ChoicesPanel(this.filterListFacade, 
+        this.choices = Choices(this.filterListFacade, 
             (down, hoveredChoice)=>this.navigate(down, hoveredChoice),
             (c)=>this.addFilterFacade(c), 
             (c)=>this.insertFilterFacade(c));
@@ -548,8 +526,8 @@ export class MultiSelect {
             this.staticContent.choicesElement, 
             ()=>this.staticContent.isChoicesVisible(),
             (visible)=>this.staticContent.setChoicesVisible(visible),
-            () => this.choicesPanel.resetHoveredChoice(), 
-            (choice) => this.choicesPanel.hoverIn(choice),
+            () => this.choices.resetHoveredChoice(), 
+            (choice) => this.choices.hoverIn(choice),
             () => this.resetFilter(),
             () => this.filterListFacade.getCount()==0, 
             /*onClick*/(event) => this.filterPanel.setFocusIfNotTarget(event.target),
@@ -559,54 +537,46 @@ export class MultiSelect {
         this.staticContent.attachContainer();
     }
 
-    createPopperConfiguration(){
-        return {
-            placement: 'bottom-start',
-            modifiers: {
-                preventOverflow: {enabled:true},
-                hide: {enabled:false},
-                flip: {enabled:false}
+    load(){
+        this.updateDataImpl();
+        this.updateAppearance(); // TODO: now appearance should be done after updateDataImpl, because items should be "already in place", correct it
+    }
+
+    updateDataImpl(){
+        var fillChoices = () => {
+            let options = this.getOptions();
+            for(let i = 0; i<options.length; i++) {
+                let option = options[i];
+                let choice = this.createChoice(option);
+                this.choices.push(choice);
+                this.pushChoiceItem(choice);
+            } 
+        }
+
+        // browsers can change select value as part of "autocomplete" (IE11) 
+        // or "show preserved on go back" (Chrome) after page is loaded but before "ready" event;
+        // but they never "restore" selected-disabled options.
+        // TODO: make the FROM Validation for 'selected-disabled' easy.
+        if (document.readyState != 'loading'){
+            fillChoices();
+        } else {
+            var domContentLoadedHandler = function(){
+                fillChoices();
+                document.removeEventListener("DOMContentLoaded", domContentLoadedHandler);
             }
+            document.addEventListener('DOMContentLoaded', domContentLoadedHandler); // IE9+
         }
     }
 
-    getPopper(){
-        let popperConfiguration = this.createPopperConfiguration();
-        let Popper = this.Popper;
-        //if (!!Popper.prototype && !!Popper.prototype.constructor.name) {
-        var popper=new Popper( 
-            this.staticContent.filterInputElement, 
-            this.staticContent.choicesElement, 
-            popperConfiguration,
+    dispose(){
+        sync(
+            this.aspect.hideChoices,
+            this.picks.dispose,
+            this.filterPanel.dispose,
+            this.aspect.dispose,
+            this.staticContent.dispose,
+            this.choices.dispose,
+            this.popper.dispose
         );
-        /*}else{
-            popper=Popper.createPopper(
-                filterInputElement,
-                choicesElement,
-                //  https://github.com/popperjs/popper.js/blob/next/docs/src/pages/docs/modifiers/prevent-overflow.mdx#mainaxis
-                // {
-                //     placement: isRtl?'bottom-end':'bottom-start',
-                //     modifiers: {
-                //         preventOverflow: {enabled:false},
-                //         hide: {enabled:false},
-                //         flip: {enabled:false}
-                //     }
-                // }
-            );
-        }*/
-
-        return {
-            update(){
-                popper.update();
-            },
-            dispose(){
-                popper.destroy();
-            }
-        }
-    };
-
-    load(){
-        this.updateDataImpl();
-        this.UpdateAppearance(); // TODO: now appearance should be done after updateDataImpl, because items should be "already in place", correct it
     }
 }

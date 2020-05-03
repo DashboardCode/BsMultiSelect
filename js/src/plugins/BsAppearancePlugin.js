@@ -102,8 +102,8 @@ export function BsAppearancePlugin(pluginData){
             multiSelect.UpdateValidity = ()=> getManualValidationObservable.call();
             multiSelect.UpdateWasValidated = ()=>wasUpdatedObservable.call();
             
-            multiSelect.UpdateAppearance = composeSync(
-                multiSelect.UpdateAppearance.bind(multiSelect), 
+            multiSelect.updateAppearance = composeSync(
+                multiSelect.updateAppearance.bind(multiSelect), 
                 updateSize, 
                 validationObservable.call, getManualValidationObservable.call);
             

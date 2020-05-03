@@ -49,32 +49,3 @@ export function dispose(choice) {
     
     choice.dispose = null;
 }
-
-export function setOptionSelected(choice, value, setSelected){
-    let success = false;
-    var confirmed = setSelected(choice.option, value);
-    if (!(confirmed===false)) {
-        choice.isOptionSelected = value;
-        choice.updateSelected();
-        success = true;
-    }
-    return success;
-}
-
-export function updateSelectedChoice(choice, getIsOptionSelected){
-    let newIsSelected = getIsOptionSelected(choice.option);
-    if (newIsSelected != choice.isOptionSelected)
-    {
-        choice.isOptionSelected= newIsSelected;
-        choice.updateSelected();
-    }
-}
-
-export function updateDisabledChoice(choice, getIsOptionDisabled){
-    let newIsDisabled = getIsOptionDisabled(choice.option);
-    if (newIsDisabled != choice.isOptionDisabled)
-    {
-        choice.isOptionDisabled= newIsDisabled;
-        choice.updateDisabled();
-    }
-}

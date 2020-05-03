@@ -11,7 +11,7 @@ export function FormResetPlugin(pluginData){
                 if (form) {
                     eventBuilder.bind(form, 
                         'reset', 
-                        () => window.setTimeout( ()=>multiSelect.UpdateData() ) );
+                        () => window.setTimeout( ()=>multiSelect.updateData() ) );
                 }
             }
             return eventBuilder.unbind;

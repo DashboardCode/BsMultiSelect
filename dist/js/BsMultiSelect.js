@@ -1,5 +1,5 @@
 /*!
-  * DashboardCode BsMultiSelect v0.5.56-beta (https://dashboardcode.github.io/BsMultiSelect/)
+  * DashboardCode BsMultiSelect v0.5.56 (https://dashboardcode.github.io/BsMultiSelect/)
   * Copyright 2017-2020 Roman Pokrovskij (github user rpokrovskij)
   * Licensed under APACHE 2 (https://github.com/DashboardCode/BsMultiSelect/blob/master/LICENSE)
   */
@@ -705,7 +705,7 @@
       };
     }
 
-    function ChoicesPanel(listFacade, _navigate, addFilterFacade, insertFilterFacade) {
+    function Choices(listFacade, _navigate, addFilterFacade, insertFilterFacade) {
       var hoveredChoice = null;
       var collection = CollectionFacade(function (choice) {
         return choice.itemPrev;
@@ -778,7 +778,7 @@
       return item;
     }
 
-    function PicksList() {
+    function Picks() {
       var list = List();
       return {
         addPick: function addPick(pick) {
@@ -1074,34 +1074,6 @@
       };
       return choice;
     }
-    function setOptionSelected(choice, value, setSelected) {
-      var success = false;
-      var confirmed = setSelected(choice.option, value);
-
-      if (!(confirmed === false)) {
-        choice.isOptionSelected = value;
-        choice.updateSelected();
-        success = true;
-      }
-
-      return success;
-    }
-    function updateSelectedChoice(choice, getIsOptionSelected) {
-      var newIsSelected = getIsOptionSelected(choice.option);
-
-      if (newIsSelected != choice.isOptionSelected) {
-        choice.isOptionSelected = newIsSelected;
-        choice.updateSelected();
-      }
-    }
-    function updateDisabledChoice(choice, getIsOptionDisabled) {
-      var newIsDisabled = getIsOptionDisabled(choice.option);
-
-      if (newIsDisabled != choice.isOptionDisabled) {
-        choice.isOptionDisabled = newIsDisabled;
-        choice.updateDisabled();
-      }
-    }
 
     function FilterFacade(listFacade, forEach, composeFilterPredicate) {
       return {
@@ -1146,7 +1118,8 @@
         this.Popper = Popper;
         this.window = window;
         this.visibleCount = 10;
-        this.choicesPanel = null;
+        this.choices = null;
+        this.picks = null;
         this.popper = null;
         this.stylingComposite = null;
         this.onChange = onChange;
@@ -1155,9 +1128,70 @@
 
       var _proto = MultiSelect.prototype;
 
+      _proto.createPopperConfiguration = function createPopperConfiguration() {
+        return {
+          placement: 'bottom-start',
+          modifiers: {
+            preventOverflow: {
+              enabled: true
+            },
+            hide: {
+              enabled: false
+            },
+            flip: {
+              enabled: false
+            }
+          }
+        };
+      };
+
+      _proto.getPopper = function getPopper() {
+        var popperConfiguration = this.createPopperConfiguration();
+        var Popper = this.Popper; //if (!!Popper.prototype && !!Popper.prototype.constructor.name) {
+
+        var popper = new Popper(this.staticContent.filterInputElement, this.staticContent.choicesElement, popperConfiguration);
+        /*}else{
+            popper=Popper.createPopper(
+                filterInputElement,
+                choicesElement,
+                //  https://github.com/popperjs/popper.js/blob/next/docs/src/pages/docs/modifiers/prevent-overflow.mdx#mainaxis
+                // {
+                //     placement: isRtl?'bottom-end':'bottom-start',
+                //     modifiers: {
+                //         preventOverflow: {enabled:false},
+                //         hide: {enabled:false},
+                //         flip: {enabled:false}
+                //     }
+                // }
+            );
+        }*/
+
+        return {
+          update: function update() {
+            popper.update();
+          },
+          dispose: function dispose() {
+            popper.destroy();
+          }
+        };
+      };
+
+      _proto.setOptionSelected = function setOptionSelected(choice, value) {
+        var success = false;
+        var confirmed = this.setSelected(choice.option, value);
+
+        if (!(confirmed === false)) {
+          choice.isOptionSelected = value;
+          choice.updateSelected();
+          success = true;
+        }
+
+        return success;
+      };
+
       _proto.toggleOptionSelected = function toggleOptionSelected(choice) {
         var success = false;
-        if (choice.isOptionSelected || !choice.isOptionDisabled) success = setOptionSelected(choice, !choice.isOptionSelected, this.setSelected);
+        if (choice.isOptionSelected || !choice.isOptionDisabled) success = this.setOptionSelected(choice, !choice.isOptionSelected);
         return success;
       };
 
@@ -1174,47 +1208,8 @@
         this.filterFacade.resetFilter();
       };
 
-      _proto.GetContainer = function GetContainer() {
-        return this.staticContent.containerElement;
-      };
-
-      _proto.GetChoices = function GetChoices() {
-        return this.staticContent.choicesElement;
-      };
-
-      _proto.GetFilterInput = function GetFilterInput() {
-        return this.staticContent.filterInputElement;
-      };
-
-      _proto.Update = function Update() {
-        this.UpdateAppearance();
-        this.UpdateData();
-      };
-
-      _proto.DeselectAll = function DeselectAll() {
-        this.aspect.hideChoices(); // always hide 1st
-
-        this.picksList.removeAll();
-        this.resetFilter();
-      };
-
-      _proto.PicksCount = function PicksCount() {
-        return this.picksList.getCount();
-      };
-
       _proto.isSelectable = function isSelectable(choice) {
         return !choice.isOptionSelected && !choice.isOptionDisabled;
-      };
-
-      _proto.SelectAll = function SelectAll() {
-        var _this = this;
-
-        this.aspect.hideChoices(); // always hide 1st
-
-        this.choicesPanel.forLoop(function (choice) {
-          if (_this.isSelectable(choice)) setOptionSelected(choice, true, _this.setSelected);
-        });
-        this.resetFilter();
       };
 
       _proto.empty = function empty() {
@@ -1224,69 +1219,79 @@
         this.resetFilter();
         this.staticContent.choicesElement.innerHTML = ""; // TODO: there should better "optimization"
 
-        this.choicesPanel.clear();
-        this.picksList.clear();
+        this.choices.clear();
+        this.picks.clear();
       };
 
-      _proto.UpdateData = function UpdateData() {
+      _proto.update = function update() {
+        this.updateAppearance();
+        this.updateData();
+      };
+
+      _proto.updateData = function updateData() {
         this.empty();
         this.updateDataImpl();
       };
 
-      _proto.UpdateOptionsDisabled = function UpdateOptionsDisabled() {
-        var options = this.getOptions();
+      _proto.updateAppearance = function updateAppearance() {
+        this.updateDisabled();
+      };
 
-        for (var i = 0; i < options.length; i++) {
-          this.UpdateOptionDisabled(i);
+      _proto.updateDisabled = function updateDisabled() {
+        var isComponentDisabled = this.getIsComponentDisabled();
+
+        if (this.isComponentDisabled !== isComponentDisabled) {
+          this.isComponentDisabled = isComponentDisabled;
+          this.picks.disableRemoveAll(isComponentDisabled);
+          this.aspect.disable(isComponentDisabled);
+          this.staticContent.disable(isComponentDisabled);
         }
       };
 
-      _proto.UpdateOptionDisabled = function UpdateOptionDisabled(key) {
-        var choice = this.choicesPanel.get(key); // TODO: generalize index as key 
+      _proto.updateOptionsDisabled = function updateOptionsDisabled() {
+        this.choices.forLoop(function (choice) {
+          var newIsDisabled = multiSelect.getIsOptionDisabled(choice.option);
 
-        updateDisabledChoice(choice, this.getIsOptionDisabled);
+          if (newIsDisabled != choice.isOptionDisabled) {
+            choice.isOptionDisabled = newIsDisabled;
+            choice.updateDisabled();
+          }
+        });
       };
 
-      _proto.UpdateOptionsSelected = function UpdateOptionsSelected() {
-        var options = this.getOptions();
+      _proto.updateOptionsSelected = function updateOptionsSelected() {
+        var _this = this;
 
-        for (var i = 0; i < options.length; i++) {
-          this.UpdateOptionSelected(i);
-        }
+        this.choices.forLoop(function (choice) {
+          var newIsSelected = _this.getIsOptionSelected(choice.option);
+
+          if (newIsSelected != choice.isOptionSelected) {
+            choice.isOptionSelected = newIsSelected;
+            choice.updateSelected();
+          }
+        });
       };
 
-      _proto.UpdateOptionSelected = function UpdateOptionSelected(key) {
-        var choice = this.choicesPanel.get(key); // TODO: generalize index as key 
+      _proto.selectAll = function selectAll() {
+        var _this2 = this;
 
-        updateSelectedChoice(choice, this.getIsOptionSelected); // TODO: invite this.getIsOptionSelected
+        this.aspect.hideChoices(); // always hide 1st
+
+        this.choices.forLoop(function (choice) {
+          if (_this2.isSelectable(choice)) _this2.setOptionSelected(choice, true);
+        });
+        this.resetFilter();
       };
 
-      _proto.SetOptionSelected = function SetOptionSelected(key, value) {
-        var choice = this.choicesPanel.get(key);
-        setOptionSelected(choice, value, this.setSelected);
-      };
+      _proto.deselectAll = function deselectAll() {
+        this.aspect.hideChoices(); // always hide 1st
 
-      _proto.UpdateOptionAdded = function UpdateOptionAdded(key) {
-        // TODO: generalize index as key 
-        var options = this.getOptions();
-        var option = options[key];
-        var choice = this.createChoice(option);
-        this.choicesPanel.insert(key, choice);
-        this.insertChoiceItem(choice);
-      };
-
-      _proto.UpdateOptionRemoved = function UpdateOptionRemoved(key) {
-        // TODO: generalize index as key 
-        this.aspect.hideChoices(); // always hide 1st, then reset filter
-
-        this.filterFacade.resetFilter();
-        var choice = this.choicesPanel.remove(key);
-        choice.remove == null ? void 0 : choice.remove();
-        choice.dispose == null ? void 0 : choice.dispose();
+        this.picks.removeAll();
+        this.resetFilter();
       };
 
       _proto.createPick = function createPick(choice) {
-        var _this2 = this;
+        var _this3 = this;
 
         var _this$staticContent$c = this.staticContent.createPickElement(),
             pickElement = _this$staticContent$c.pickElement,
@@ -1297,13 +1302,13 @@
         var pickContent = this.pickContentGenerator(pickElement);
         var pick = {
           disableRemove: function disableRemove() {
-            return pickContent.disableRemove(_this2.getIsComponentDisabled());
+            return pickContent.disableRemove(_this3.getIsComponentDisabled());
           },
           setData: function setData() {
             return pickContent.setData(choice.option);
           },
           disable: function disable() {
-            return pickContent.disable(_this2.getIsOptionDisabled(choice.option));
+            return pickContent.disable(_this3.getIsOptionDisabled(choice.option));
           },
           remove: null,
           dispose: function dispose() {
@@ -1321,7 +1326,7 @@
         attach();
         var choiceUpdateDisabledBackup = choice.updateDisabled;
         choice.updateDisabled = composeSync(choiceUpdateDisabledBackup, pick.disable);
-        var removeFromList = this.picksList.addPick(pick);
+        var removeFromList = this.picks.addPick(pick);
 
         var removePick = function removePick() {
           removeFromList();
@@ -1331,7 +1336,7 @@
         };
 
         var setSelectedFalse = function setSelectedFalse() {
-          return setOptionSelected(choice, false, _this2.setSelected);
+          return _this3.setOptionSelected(choice, false);
         };
 
         pick.remove = setSelectedFalse;
@@ -1340,7 +1345,7 @@
       };
 
       _proto.createChoiceElement = function createChoiceElement(choice) {
-        var _this3 = this;
+        var _this4 = this;
 
         var _this$staticContent$c2 = this.staticContent.createChoiceElement(),
             choiceElement = _this$staticContent$c2.choiceElement,
@@ -1351,9 +1356,9 @@
         choice.choiceElement = choiceElement;
         choice.choiceElementAttach = attach;
         var choiceContent = this.choiceContentGenerator(choiceElement, function () {
-          _this3.toggleOptionSelected(choice);
+          _this4.toggleOptionSelected(choice);
 
-          _this3.filterPanel.setFocus();
+          _this4.filterPanel.setFocus();
         });
 
         var updateSelectedChoiceContent = function updateSelectedChoiceContent() {
@@ -1366,7 +1371,7 @@
         };
 
         var createPick = function createPick() {
-          var removePick = _this3.createPick(choice);
+          var removePick = _this4.createPick(choice);
 
           pickTools.updateSelectedFalse = removePick;
         };
@@ -1389,7 +1394,7 @@
             pickTools.updateSelectedFalse = null;
           }
 
-          _this3.onChange();
+          _this4.onChange();
         };
 
         var unbindChoiceElement = this.aspect.adoptChoiceElement(choice, choiceElement);
@@ -1450,58 +1455,6 @@
         choice.choiceElementAttach();
       };
 
-      _proto.updateDataImpl = function updateDataImpl() {
-        var _this4 = this;
-
-        var fillChoices = function fillChoices() {
-          var options = _this4.getOptions();
-
-          for (var i = 0; i < options.length; i++) {
-            var option = options[i];
-
-            var choice = _this4.createChoice(option);
-
-            _this4.choicesPanel.push(choice);
-
-            _this4.pushChoiceItem(choice);
-          }
-        }; // browsers can change select value as part of "autocomplete" (IE11) 
-        // or "show preserved on go back" (Chrome) after page is loaded but before "ready" event;
-        // but they never "restore" selected-disabled options.
-        // TODO: make the FROM Validation for 'selected-disabled' easy.
-
-
-        if (document.readyState != 'loading') {
-          fillChoices();
-        } else {
-          var domContentLoadedHandler = function domContentLoadedHandler() {
-            fillChoices();
-            document.removeEventListener("DOMContentLoaded", domContentLoadedHandler);
-          };
-
-          document.addEventListener('DOMContentLoaded', domContentLoadedHandler); // IE9+
-        }
-      };
-
-      _proto.Dispose = function Dispose() {
-        sync(this.aspect.hideChoices, this.picksList.dispose, this.filterPanel.dispose, this.aspect.dispose, this.staticContent.dispose, this.choicesPanel.dispose, this.popper.dispose);
-      };
-
-      _proto.UpdateAppearance = function UpdateAppearance() {
-        this.UpdateDisabled();
-      };
-
-      _proto.UpdateDisabled = function UpdateDisabled() {
-        var isComponentDisabled = this.getIsComponentDisabled();
-
-        if (this.isComponentDisabled !== isComponentDisabled) {
-          this.isComponentDisabled = isComponentDisabled;
-          this.picksList.disableRemoveAll(isComponentDisabled);
-          this.aspect.disable(isComponentDisabled);
-          this.staticContent.disable(isComponentDisabled);
-        }
-      };
-
       _proto.input = function input(filterInputValue, resetLength) {
         var text = filterInputValue.trim().toLowerCase();
         var isEmpty = false;
@@ -1513,10 +1466,8 @@
             var fullMatchChoice = this.filterListFacade.getHead();
 
             if (fullMatchChoice.searchText == text) {
-              setOptionSelected(fullMatchChoice, true, this.setSelected); // DONE
-
-              this.filterPanel.setEmpty(); // clear
-
+              this.setOptionSelected(fullMatchChoice, true);
+              this.filterPanel.setEmpty();
               isEmpty = true;
             }
           }
@@ -1538,9 +1489,9 @@
           }
 
           if (visibleCount == 1) {
-            this.choicesPanel.hoverIn(this.filterListFacade.getHead());
+            this.choices.hoverIn(this.filterListFacade.getHead());
           } else {
-            if (panelIsVisble) this.choicesPanel.resetHoveredChoice();
+            if (panelIsVisble) this.choices.resetHoveredChoice();
           }
         } else {
           if (this.staticContent.isChoicesVisible()) this.aspect.hideChoices();
@@ -1548,7 +1499,7 @@
       };
 
       _proto.hoveredToSelected = function hoveredToSelected() {
-        var hoveredChoice = this.choicesPanel.getHoveredChoice();
+        var hoveredChoice = this.choices.getHoveredChoice();
 
         if (hoveredChoice) {
           var wasToggled = this.toggleOptionSelected(hoveredChoice);
@@ -1561,10 +1512,10 @@
       };
 
       _proto.keyDownArrow = function keyDownArrow(down) {
-        var iChoice = this.choicesPanel.navigate(down);
+        var iChoice = this.choices.navigate(down);
 
         if (iChoice) {
-          this.choicesPanel.hoverIn(iChoice);
+          this.choices.hoverIn(iChoice);
           this.aspect.showChoices();
         }
       };
@@ -1587,7 +1538,7 @@
       }(function (f) {
         var _this5 = this;
 
-        var choice = this.choicesPanel.getHead();
+        var choice = this.choices.getHead();
 
         while (choice) {
           forEach(function (choice) {
@@ -1616,7 +1567,7 @@
       };
 
       _proto.isEmpty = function isEmpty() {
-        return this.picksList.isEmpty() && this.filterPanel.isEmpty();
+        return this.picks.isEmpty() && this.filterPanel.isEmpty();
       };
 
       _proto.init = function init() {
@@ -1643,7 +1594,7 @@
           return _this6.aspect.hideChoices();
         }, // tab on empty
         function () {
-          var p = _this6.picksList.removePicksTail();
+          var p = _this6.picks.removePicksTail();
 
           if (p) _this6.popper.update();
         }, // backspace - "remove last"
@@ -1685,7 +1636,7 @@
         this.staticContent.pickFilterElement.appendChild(this.staticContent.filterInputElement);
         this.staticContent.picksElement.appendChild(this.staticContent.pickFilterElement); // located filter in selectionsPanel       
 
-        this.picksList = PicksList();
+        this.picks = Picks();
 
         var composeFilterPredicate = function composeFilterPredicate(text) {
           return function (choice) {
@@ -1705,7 +1656,7 @@
         this.filterFacade = FilterFacade(this.filterListFacade, function (f) {
           return _this6.forEach(f);
         }, composeFilterPredicate);
-        this.choicesPanel = ChoicesPanel(this.filterListFacade, function (down, hoveredChoice) {
+        this.choices = Choices(this.filterListFacade, function (down, hoveredChoice) {
           return _this6.navigate(down, hoveredChoice);
         }, function (c) {
           return _this6.addFilterFacade(c);
@@ -1718,9 +1669,9 @@
         }, function (visible) {
           return _this6.staticContent.setChoicesVisible(visible);
         }, function () {
-          return _this6.choicesPanel.resetHoveredChoice();
+          return _this6.choices.resetHoveredChoice();
         }, function (choice) {
-          return _this6.choicesPanel.hoverIn(choice);
+          return _this6.choices.hoverIn(choice);
         }, function () {
           return _this6.resetFilter();
         }, function () {
@@ -1741,57 +1692,46 @@
         this.staticContent.attachContainer();
       };
 
-      _proto.createPopperConfiguration = function createPopperConfiguration() {
-        return {
-          placement: 'bottom-start',
-          modifiers: {
-            preventOverflow: {
-              enabled: true
-            },
-            hide: {
-              enabled: false
-            },
-            flip: {
-              enabled: false
-            }
-          }
-        };
-      };
-
-      _proto.getPopper = function getPopper() {
-        var popperConfiguration = this.createPopperConfiguration();
-        var Popper = this.Popper; //if (!!Popper.prototype && !!Popper.prototype.constructor.name) {
-
-        var popper = new Popper(this.staticContent.filterInputElement, this.staticContent.choicesElement, popperConfiguration);
-        /*}else{
-            popper=Popper.createPopper(
-                filterInputElement,
-                choicesElement,
-                //  https://github.com/popperjs/popper.js/blob/next/docs/src/pages/docs/modifiers/prevent-overflow.mdx#mainaxis
-                // {
-                //     placement: isRtl?'bottom-end':'bottom-start',
-                //     modifiers: {
-                //         preventOverflow: {enabled:false},
-                //         hide: {enabled:false},
-                //         flip: {enabled:false}
-                //     }
-                // }
-            );
-        }*/
-
-        return {
-          update: function update() {
-            popper.update();
-          },
-          dispose: function dispose() {
-            popper.destroy();
-          }
-        };
-      };
-
       _proto.load = function load() {
         this.updateDataImpl();
-        this.UpdateAppearance(); // TODO: now appearance should be done after updateDataImpl, because items should be "already in place", correct it
+        this.updateAppearance(); // TODO: now appearance should be done after updateDataImpl, because items should be "already in place", correct it
+      };
+
+      _proto.updateDataImpl = function updateDataImpl() {
+        var _this7 = this;
+
+        var fillChoices = function fillChoices() {
+          var options = _this7.getOptions();
+
+          for (var i = 0; i < options.length; i++) {
+            var option = options[i];
+
+            var choice = _this7.createChoice(option);
+
+            _this7.choices.push(choice);
+
+            _this7.pushChoiceItem(choice);
+          }
+        }; // browsers can change select value as part of "autocomplete" (IE11) 
+        // or "show preserved on go back" (Chrome) after page is loaded but before "ready" event;
+        // but they never "restore" selected-disabled options.
+        // TODO: make the FROM Validation for 'selected-disabled' easy.
+
+
+        if (document.readyState != 'loading') {
+          fillChoices();
+        } else {
+          var domContentLoadedHandler = function domContentLoadedHandler() {
+            fillChoices();
+            document.removeEventListener("DOMContentLoaded", domContentLoadedHandler);
+          };
+
+          document.addEventListener('DOMContentLoaded', domContentLoadedHandler); // IE9+
+        }
+      };
+
+      _proto.dispose = function dispose() {
+        sync(this.aspect.hideChoices, this.picks.dispose, this.filterPanel.dispose, this.aspect.dispose, this.staticContent.dispose, this.choices.dispose, this.popper.dispose);
       };
 
       return MultiSelect;
@@ -2404,14 +2344,14 @@
         return choiceContentGenerator$1(choiceElement, common, css, toggle);
       }, onChange, Popper, window);
       pluginManager.afterConstructor(multiSelect);
-      multiSelect.Dispose = composeSync(pluginManager.dispose, multiSelect.Dispose.bind(multiSelect));
+      multiSelect.dispose = composeSync(pluginManager.dispose, multiSelect.dispose.bind(multiSelect));
       onInit == null ? void 0 : onInit(multiSelect);
       multiSelect.init();
-      multiSelect.load(); // support browser's "step backward" on form restore
+      multiSelect.load(); // support browser's "step backward" and form's values restore
 
       if (staticContent.selectElement && window.document.readyState != "complete") {
         window.setTimeout(function () {
-          multiSelect.UpdateOptionsSelected();
+          multiSelect.updateOptionsSelected();
         });
       }
 
@@ -2620,7 +2560,7 @@
             if (form) {
               eventBuilder.bind(form, 'reset', function () {
                 return window.setTimeout(function () {
-                  return multiSelect.UpdateData();
+                  return multiSelect.updateData();
                 });
               });
             }
@@ -2846,7 +2786,7 @@
             return wasUpdatedObservable.call();
           };
 
-          multiSelect.UpdateAppearance = composeSync(multiSelect.UpdateAppearance.bind(multiSelect), updateSize, validationObservable.call, getManualValidationObservable.call);
+          multiSelect.updateAppearance = composeSync(multiSelect.updateAppearance.bind(multiSelect), updateSize, validationObservable.call, getManualValidationObservable.call);
           return (
             /* dispose */
             function () {
@@ -3055,7 +2995,7 @@
               var nextChoice = getNextNonHidden(choice);
               multiSelect.filterListFacade.add(choice, nextChoice);
               multiSelect.createChoiceElement(choice);
-              choice.choiceElementAttach(nextChoice == null ? void 0 : nextChoice.choiceElement); // itemPrev?.choiceElement
+              choice.choiceElementAttach(nextChoice == null ? void 0 : nextChoice.choiceElement);
             }
           }
 
@@ -3064,11 +3004,10 @@
           };
 
           function UpdateOptionHidden(key) {
-            var choice = multiSelect.choicesPanel.get(key); // TODO: generalize index as key 
-
+            var choice = multiSelect.choices.get(key);
             updateHiddenChoice(choice, function (c) {
               return multiSelect.updateHidden(c);
-            }, getIsOptionHidden); // TODO: invite this.getIsOptionSelected
+            }, getIsOptionHidden);
           }
 
           function UpdateOptionsHidden() {
@@ -3115,7 +3054,7 @@
           };
 
           multiSelect.forEach = function (f) {
-            var choice = multiSelect.choicesPanel.getHead();
+            var choice = multiSelect.choices.getHead();
 
             while (choice) {
               if (!choice.isOptionHidden) f(choice);
@@ -3232,11 +3171,125 @@
 
           multiSelect.createPick = function (choice) {
             var removePick = origCreatePick(choice);
-            if (multiSelect.picksList.getCount() == 1) updatePlacehodlerVisibility();
+            if (multiSelect.picks.getCount() == 1) updatePlacehodlerVisibility();
             return function () {
               removePick();
-              if (multiSelect.picksList.getCount() == 0) updatePlacehodlerVisibility();
+              if (multiSelect.picks.getCount() == 0) updatePlacehodlerVisibility();
             };
+          };
+        }
+      };
+    }
+
+    function JQueryMethodsPlugin(pluginData) {
+      var staticContent = pluginData.staticContent;
+      return {
+        afterConstructor: function afterConstructor(multiSelect) {
+          multiSelect.GetContainer = function () {
+            return staticContent.containerElement;
+          };
+
+          multiSelect.GetChoices = function () {
+            return staticContent.choicesElement;
+          };
+
+          multiSelect.GetFilterInput = function () {
+            return staticContent.filterInputElement;
+          };
+
+          multiSelect.PicksCount = function () {
+            return multiSelect.picks.getCount();
+          };
+
+          multiSelect.Dispose = function () {
+            return multiSelect.dispose();
+          };
+
+          multiSelect.DeselectAll = function () {
+            return multiSelect.deselectAll();
+          };
+
+          multiSelect.SelectAll = function () {
+            return multiSelect.selectAll();
+          };
+
+          multiSelect.UpdateOptionsSelected = function () {
+            return multiSelect.updateOptionsSelected();
+          };
+
+          multiSelect.UpdateOptionsDisabled = function () {
+            return multiSelect.updateOptionsDisabled();
+          };
+
+          multiSelect.UpdateDisabled = function () {
+            return multiSelect.updateDisabled();
+          };
+
+          multiSelect.UpdateAppearance = function () {
+            return multiSelect.updateAppearance();
+          };
+
+          multiSelect.UpdateData = function () {
+            return multiSelect.updateData();
+          };
+
+          multiSelect.Update = function () {
+            return multiSelect.update();
+          };
+        }
+      };
+    }
+
+    function OptionsApiPlugin() {
+      return {
+        afterConstructor: function afterConstructor(multiSelect) {
+          var _this = this;
+
+          multiSelect.SetOptionSelected = function (key, value) {
+            var choice = _this.choices.get(key);
+
+            _this.setOptionSelected(choice, value);
+          };
+
+          multiSelect.UpdateOptionSelected = function (key) {
+            var choice = multiSelect.choices.get(key); // TODO: generalize index as key
+
+            var newIsSelected = multiSelect.getIsOptionSelected(choice.option);
+
+            if (newIsSelected != choice.isOptionSelected) {
+              choice.isOptionSelected = newIsSelected;
+              choice.updateSelected();
+            }
+          };
+
+          multiSelect.UpdateOptionDisabled = function (key) {
+            var choice = multiSelect.choices.get(key); // TODO: generalize index as key 
+
+            var newIsDisabled = multiSelect.getIsOptionDisabled(choice.option);
+
+            if (newIsDisabled != choice.isOptionDisabled) {
+              choice.isOptionDisabled = newIsDisabled;
+              choice.updateDisabled();
+            }
+          };
+
+          multiSelect.UpdateOptionAdded = function (key) {
+            // TODO: generalize index as key 
+            var options = multiSelect.getOptions();
+            var option = options[key];
+            var choice = multiSelect.createChoice(option);
+            multiSelect.choices.insert(key, choice);
+            multiSelect.insertChoiceItem(choice);
+          };
+
+          multiSelect.UpdateOptionRemoved = function (key) {
+            // TODO: generalize index as key 
+            multiSelect.aspect.hideChoices(); // always hide 1st, then reset filter
+
+            multiSelect.filterFacade.resetFilter();
+            var choice = multiSelect.choices.remove(key);
+            choice.remove == null ? void 0 : choice.remove();
+            choice.dispose == null ? void 0 : choice.dispose();
           };
         }
       };
@@ -3375,7 +3428,7 @@
         containerClass: "dashboardcode-bsmultiselect",
         css: css
       };
-      var defaultPlugins = [CssPatchPlugin, LabelPlugin, HiddenOptionPlugin, ValidationApiPlugin, BsAppearancePlugin, FormResetPlugin, RtlPlugin, PlaceholderPlugin];
+      var defaultPlugins = [CssPatchPlugin, LabelPlugin, HiddenOptionPlugin, ValidationApiPlugin, BsAppearancePlugin, FormResetPlugin, RtlPlugin, PlaceholderPlugin, OptionsApiPlugin, JQueryMethodsPlugin];
 
       var createBsMultiSelect = function createBsMultiSelect(element, settings, removeInstanceData) {
         var _settings2;
@@ -3409,9 +3462,9 @@
         extendIfUndefined(configuration, defaults);
         var onInit = buildConfiguration == null ? void 0 : buildConfiguration(element, configuration);
         onConfiguration(defaultPlugins, configuration);
-        var bsMultiSelect = BsMultiSelect(element, environment, configuration, onInit);
-        bsMultiSelect.Dispose = composeSync(bsMultiSelect.Dispose, removeInstanceData);
-        return bsMultiSelect;
+        var multiSelect = BsMultiSelect(element, environment, configuration, onInit);
+        multiSelect.dispose = composeSync(multiSelect.dispose, removeInstanceData);
+        return multiSelect;
       };
 
       var prototypable = addToJQueryPrototype('BsMultiSelect', createBsMultiSelect, $);

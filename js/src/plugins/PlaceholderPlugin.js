@@ -74,12 +74,12 @@ export function PlaceholderPlugin(pluginData){
             let origCreatePick = multiSelect.createPick.bind(multiSelect);
             multiSelect.createPick = (choice)=>{
                 let removePick = origCreatePick(choice);
-                if (multiSelect.picksList.getCount()==1) 
+                if (multiSelect.picks.getCount()==1) 
                     updatePlacehodlerVisibility()
                 return ()=>
                     { 
                         removePick();
-                        if (multiSelect.picksList.getCount()==0) 
+                        if (multiSelect.picks.getCount()==0) 
                             updatePlacehodlerVisibility()
                     }
             };

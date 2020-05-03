@@ -1,6 +1,6 @@
 import {CollectionFacade} from './ToolsJs'
 
-export function ChoicesPanel(listFacade, navigate, addFilterFacade, insertFilterFacade) 
+export function Choices(listFacade, navigate, addFilterFacade, insertFilterFacade) 
 {
     let hoveredChoice=null;
 
@@ -41,7 +41,6 @@ export function ChoicesPanel(listFacade, navigate, addFilterFacade, insertFilter
             listFacade.remove(choice);
             return choice;
         },
-        
         forLoop: (f)=>collection.forLoop(f),
         getHoveredChoice: () => hoveredChoice,
         hoverIn(choice){

@@ -15,6 +15,8 @@ import {BsAppearancePlugin} from './plugins/BsAppearancePlugin';
 import {HiddenOptionPlugin} from './plugins/HiddenOptionPlugin';
 import {CssPatchPlugin} from './plugins/CssPatchPlugin';
 import {PlaceholderPlugin} from './plugins/PlaceholderPlugin';
+import {JQueryMethodsPlugin} from './plugins/JQueryMethodsPlugin';
+import {OptionsApiPlugin} from './plugins/OptionsApiPlugin';
 
 import {adjustLegacySettings} from './BsMultiSelectDepricatedParameters'
 
@@ -25,7 +27,7 @@ import {extendIfUndefined, composeSync} from './ToolsJs';
     (window, $, Popper) => {
         const defaults = {containerClass : "dashboardcode-bsmultiselect", css: css}
         let defaultPlugins = [CssPatchPlugin, LabelPlugin, HiddenOptionPlugin, ValidationApiPlugin, 
-        BsAppearancePlugin, FormResetPlugin, RtlPlugin, PlaceholderPlugin];
+        BsAppearancePlugin, FormResetPlugin, RtlPlugin, PlaceholderPlugin , OptionsApiPlugin, JQueryMethodsPlugin];
         let createBsMultiSelect = (element, settings, removeInstanceData) => { 
             let trigger = (e, eventName) => $(e).trigger(eventName);
             let environment = {trigger, window, Popper}
@@ -53,9 +55,9 @@ import {extendIfUndefined, composeSync} from './ToolsJs';
 
             onConfiguration(defaultPlugins, configuration);
 
-            let bsMultiSelect = BsMultiSelect(element, environment, configuration, onInit);
-            bsMultiSelect.Dispose = composeSync(bsMultiSelect.Dispose, removeInstanceData);
-            return bsMultiSelect;
+            let multiSelect = BsMultiSelect(element, environment, configuration, onInit);
+            multiSelect.dispose = composeSync(multiSelect.dispose, removeInstanceData);
+            return multiSelect;
         }
         let prototypable = addToJQueryPrototype('BsMultiSelect', createBsMultiSelect, $);
 

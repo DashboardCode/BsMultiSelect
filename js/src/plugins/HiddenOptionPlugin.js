@@ -59,15 +59,15 @@ export function HiddenOptionPlugin(pluginData){
                     let nextChoice = getNextNonHidden(choice);
                     multiSelect.filterListFacade.add(choice, nextChoice);
                     multiSelect.createChoiceElement(choice);
-                    choice.choiceElementAttach(nextChoice?.choiceElement); // itemPrev?.choiceElement
+                    choice.choiceElementAttach(nextChoice?.choiceElement);
                 }
             }
             
             multiSelect.updateHidden = (c) => updateHidden(c);
         
             function UpdateOptionHidden(key){
-                let choice = multiSelect.choicesPanel.get(key); // TODO: generalize index as key 
-                updateHiddenChoice(choice, (c)=>multiSelect.updateHidden(c), getIsOptionHidden) // TODO: invite this.getIsOptionSelected
+                let choice = multiSelect.choices.get(key);
+                updateHiddenChoice(choice, (c)=>multiSelect.updateHidden(c), getIsOptionHidden)
             }
             
             function UpdateOptionsHidden(){
@@ -110,7 +110,7 @@ export function HiddenOptionPlugin(pluginData){
             }
         
             multiSelect.forEach = (f) => {
-                let choice = multiSelect.choicesPanel.getHead();
+                let choice = multiSelect.choices.getHead();
                 while(choice){
                     if (!choice.isOptionHidden)
                         f(choice);

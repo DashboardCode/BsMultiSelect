@@ -113,14 +113,14 @@ export function BsMultiSelect(element, environment, configuration, onInit) {
     return choiceContentGenerator(choiceElement, common, css, toggle);
   }, onChange, Popper, window);
   pluginManager.afterConstructor(multiSelect);
-  multiSelect.Dispose = composeSync(pluginManager.dispose, multiSelect.Dispose.bind(multiSelect));
+  multiSelect.dispose = composeSync(pluginManager.dispose, multiSelect.dispose.bind(multiSelect));
   onInit == null ? void 0 : onInit(multiSelect);
   multiSelect.init();
-  multiSelect.load(); // support browser's "step backward" on form restore
+  multiSelect.load(); // support browser's "step backward" and form's values restore
 
   if (staticContent.selectElement && window.document.readyState != "complete") {
     window.setTimeout(function () {
-      multiSelect.UpdateOptionsSelected();
+      multiSelect.updateOptionsSelected();
     });
   }
 
