@@ -23,12 +23,11 @@ export function BsMultiSelect(element, environment, configuration, onInit){
           common } = configuration;
     
     let staticContentGenerator = def(configuration.staticContentGenerator, defStaticContentGenerator);
+    
     let pickContentGenerator = def(configuration.pickContentGenerator, defPickContentGenerator);
     let choiceContentGenerator = def(configuration.choiceContentGenerator, defChoiceContentGenerator);
 
-    let staticContent = staticContentGenerator(
-        element, name=>window.document.createElement(name), containerClass, css
-    );
+    let staticContent = staticContentGenerator(element, name=>window.document.createElement(name), containerClass, css, Popper);
 
     if (!common) 
         common = {}
@@ -77,9 +76,9 @@ export function BsMultiSelect(element, environment, configuration, onInit){
     }
     if (!setSelected){
         setSelected = (option, value) => {option.selected = value};
-        // NOTE: adding this break Chrome's form reset functionality
+        // NOTE: adding this (setAttribute) break Chrome's html form reset functionality:
         // if (value) option.setAttribute('selected','');
-        // else  option.removeAttribute('selected');
+        // else option.removeAttribute('selected');
     }
 
     common.getDisabled = getDisabled;
@@ -94,7 +93,6 @@ export function BsMultiSelect(element, environment, configuration, onInit){
         (pickElement) => pickContentGenerator(pickElement, common, css),
         (choiceElement, toggle) => choiceContentGenerator(choiceElement, common, css, toggle),
         onChange,
-        Popper,
         window);
 
     pluginManager.afterConstructor(multiSelect);

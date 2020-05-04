@@ -48,48 +48,7 @@ export function MultiSelectInputAspect (
         }
     }
 
-    
-    //var popper = null;
-    //if (!!Popper.prototype && !!Popper.prototype.constructor.name) {
-        // popper=new Popper( 
-        //     filterInputElement, 
-        //     choicesElement, 
-        //     {
-        //         placement: isRtl?'bottom-end':'bottom-start',
-        //         modifiers: {
-        //             preventOverflow: {enabled:true},
-        //             hide: {enabled:false},
-        //             flip: {enabled:false}
-        //         }
-        //     }
-        // );
-    /*}else{
-        popper=Popper.createPopper(
-            filterInputElement,
-            choicesElement,
-            //  https://github.com/popperjs/popper.js/blob/next/docs/src/pages/docs/modifiers/prevent-overflow.mdx#mainaxis
-            // {
-            //     placement: isRtl?'bottom-end':'bottom-start',
-            //     modifiers: {
-            //         preventOverflow: {enabled:false},
-            //         hide: {enabled:false},
-            //         flip: {enabled:false}
-            //     }
-            // }
-        );
-    }*/
-
-    //var filterInputItemOffsetLeft = filterInputElement.offsetLeft; // used to detect changes in input field position (by comparision with current value)
     var preventDefaultClickEvent = null;
-    
-    // function alignToFilterInputItemLocation() {
-    //     popper.update();
-    //     // let offsetLeft = filterInputElement.offsetLeft;
-    //     // if (/*force ||*/ filterInputItemOffsetLeft !== offsetLeft) { // position changed
-    //     //     //
-    //     //     filterInputItemOffsetLeft = offsetLeft;
-    //     // }
-    // }
 
     var componentDisabledEventBinder = EventBinder();
 

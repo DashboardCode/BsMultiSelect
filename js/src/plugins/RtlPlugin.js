@@ -20,16 +20,11 @@ export function RtlPlugin(pluginData){
             attributeBackup.set(staticContent.containerElement, "dir", dirAttributeValue);
         }
     } 
+    if (isRtl)
+        staticContent.popperConfiguration.placement = 'bottom-end';
     return {
-        afterConstructor(multiSelect){
-            var origCreatePopperConfiguration = multiSelect.createPopperConfiguration.bind(multiSelect);
-            multiSelect.createPopperConfiguration = () => {
-                var configuration = origCreatePopperConfiguration();
-                if (isRtl)
-                    configuration.placement = 'bottom-end';
-                return configuration;
-            }
-            return attributeBackup.restore;
+        dispose(){
+            attributeBackup.restore;
         }
     }
 }

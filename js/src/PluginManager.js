@@ -16,13 +16,16 @@ export function PluginManager(plugins, pluginData){
                 if (dispose)
                     disposes.push(dispose);
             }
-            instances=null;
         },
         dispose(){
             for(let i = 0; i<disposes.length; i++){
                 disposes[i]()
             }
             disposes=null;
+            for(let i = 0; i<instances.length; i++){
+                instances[i].dispose?.()
+            }
+            instances=null;
         }
     }
 }

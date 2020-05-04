@@ -31,7 +31,7 @@ export function BsMultiSelect(element, environment, configuration, onInit) {
   var choiceContentGenerator = def(configuration.choiceContentGenerator, defChoiceContentGenerator);
   var staticContent = staticContentGenerator(element, function (name) {
     return window.document.createElement(name);
-  }, containerClass, css);
+  }, containerClass, css, Popper);
   if (!common) common = {};
   var pluginData = {
     window: window,
@@ -100,9 +100,9 @@ export function BsMultiSelect(element, environment, configuration, onInit) {
   if (!setSelected) {
     setSelected = function setSelected(option, value) {
       option.selected = value;
-    }; // NOTE: adding this break Chrome's form reset functionality
+    }; // NOTE: adding this (setAttribute) break Chrome's html form reset functionality:
     // if (value) option.setAttribute('selected','');
-    // else  option.removeAttribute('selected');
+    // else option.removeAttribute('selected');
 
   }
 
@@ -111,7 +111,7 @@ export function BsMultiSelect(element, environment, configuration, onInit) {
     return pickContentGenerator(pickElement, common, css);
   }, function (choiceElement, toggle) {
     return choiceContentGenerator(choiceElement, common, css, toggle);
-  }, onChange, Popper, window);
+  }, onChange, window);
   pluginManager.afterConstructor(multiSelect);
   multiSelect.dispose = composeSync(pluginManager.dispose, multiSelect.dispose.bind(multiSelect));
   onInit == null ? void 0 : onInit(multiSelect);

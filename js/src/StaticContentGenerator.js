@@ -1,7 +1,7 @@
 import {findDirectChildByTagName, closestByClassName, removeElement} from './ToolsDom';
 import  {addStyling, toggleStyling} from './ToolsStyling';
 
-export function staticContentGenerator(element, createElement, containerClass, css) { 
+export function staticContentGenerator(element, createElement, containerClass, css, Popper) { 
     var selectElement = null;
     var containerElement = null;
     var picksElement = null;
@@ -83,6 +83,16 @@ export function staticContentGenerator(element, createElement, containerClass, c
     let disableToggleStyling = toggleStyling(picksElement, css.picks_disabled);
     let focusToggleStyling   = toggleStyling(picksElement, css.picks_focus);
 
+    let popper = null;
+    let popperConfiguration = {
+            placement: 'bottom-start',
+            modifiers: {
+                preventOverflow: {enabled:true},
+                hide: {enabled:false},
+                flip: {enabled:false}
+            }
+    };
+
     return {
         initialElement:element,
         selectElement, 
@@ -91,7 +101,6 @@ export function staticContentGenerator(element, createElement, containerClass, c
         pickFilterElement,
         filterInputElement,
         picksElement,
-        // ---------------------------------------
         createPickElement(){
             var pickElement = createElement('LI');
             addStyling(pickElement, css.pick);
@@ -101,7 +110,6 @@ export function staticContentGenerator(element, createElement, containerClass, c
                 detach: () => removeElement(pickElement)
             };
         },
-
         choicesElement,
         createChoiceElement(){
             var choiceElement = createElement('LI');
@@ -117,6 +125,19 @@ export function staticContentGenerator(element, createElement, containerClass, c
         attachContainer(){
             if (ownContainerElement && selectElement) // otherwise it is attached
                 selectElement.parentNode.insertBefore(containerElement, selectElement.nextSibling);
+            //if (!!Popper.prototype && !!Popper.prototype.constructor.name) {
+            popper=new Popper(filterInputElement, choicesElement, popperConfiguration);
+            /*}else{
+                popper=Popper.createPopper(
+                    filterInputElement,
+                    choicesElement,
+                    //  https://github.com/popperjs/popper.js/blob/next/docs/src/pages/docs/modifiers/prevent-overflow.mdx#mainaxis
+                    // {
+                    //     placement: isRtl?'bottom-end':'bottom-start',
+                    //     modifiers: { preventOverflow: {enabled:false}, hide: {enabled:false}, flip: {enabled:false} }
+                    // }
+                );
+            }*/
         },
         appendToContainer(){
             if (ownContainerElement || !selectElement)            
@@ -154,6 +175,10 @@ export function staticContentGenerator(element, createElement, containerClass, c
         setChoicesVisible(visible){
             choicesElement.style.display = visible?'block':'none';
         },
+        popperConfiguration,
+        updatePopupLocation(){
+            popper.update(); 
+        },
         dispose(){
             if (ownContainerElement)
                 containerElement.parentNode.removeChild(containerElement);
@@ -174,6 +199,7 @@ export function staticContentGenerator(element, createElement, containerClass, c
                 selectElement.required = backupedRequired;
                 selectElement.style.display = backupDisplay;
             }
+            popper.destroy();
         }
     }
 }

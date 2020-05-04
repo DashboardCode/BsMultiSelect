@@ -17,7 +17,7 @@ export class MultiSelect {
         pickContentGenerator, 
         choiceContentGenerator, 
         onChange,
-        Popper, window) {
+        window) {
         // readonly
         this.getOptions=getOptions;
         this.getIsOptionSelected = getIsOptionSelected;
@@ -26,65 +26,17 @@ export class MultiSelect {
         this.pickContentGenerator = pickContentGenerator;
         this.choiceContentGenerator = choiceContentGenerator;
         this.setSelected=setSelected; 
-        this.Popper = Popper;
         this.window = window;
 
         this.visibleCount=10;
 
         this.choices = null;
         this.picks = null;
-        this.popper = null;
         this.stylingComposite = null;
         this.onChange=onChange;
 
         this.getIsComponentDisabled = getIsComponentDisabled;
     }
-
-    createPopperConfiguration(){
-        return {
-            placement: 'bottom-start',
-            modifiers: {
-                preventOverflow: {enabled:true},
-                hide: {enabled:false},
-                flip: {enabled:false}
-            }
-        }
-    }
-
-    getPopper(){
-        let popperConfiguration = this.createPopperConfiguration();
-        let Popper = this.Popper;
-        //if (!!Popper.prototype && !!Popper.prototype.constructor.name) {
-        var popper=new Popper( 
-            this.staticContent.filterInputElement, 
-            this.staticContent.choicesElement, 
-            popperConfiguration,
-        );
-        /*}else{
-            popper=Popper.createPopper(
-                filterInputElement,
-                choicesElement,
-                //  https://github.com/popperjs/popper.js/blob/next/docs/src/pages/docs/modifiers/prevent-overflow.mdx#mainaxis
-                // {
-                //     placement: isRtl?'bottom-end':'bottom-start',
-                //     modifiers: {
-                //         preventOverflow: {enabled:false},
-                //         hide: {enabled:false},
-                //         flip: {enabled:false}
-                //     }
-                // }
-            );
-        }*/
-
-        return {
-            update(){
-                popper.update();
-            },
-            dispose(){
-                popper.destroy();
-            }
-        }
-    };
 
     setOptionSelected(choice, value){
         let success = false;
@@ -439,8 +391,6 @@ export class MultiSelect {
     }
 
     init() {
-        this.popper = this.getPopper();
-
         this.filterPanel = FilterPanel(
             this.staticContent.filterInputElement,
             () => this.setFocusIn(true),  // focus in - show dropdown
@@ -453,7 +403,7 @@ export class MultiSelect {
             () => {
                 let p = this.picks.removePicksTail();
                 if (p)
-                    this.popper.update();
+                    this.staticContent.updatePopupLocation();
             }, // backspace - "remove last"
 
             /*onTabToCompleate*/() => { 
@@ -530,7 +480,7 @@ export class MultiSelect {
             () => this.filterListFacade.getCount()==0, 
             /*onClick*/(event) => this.filterPanel.setFocusIfNotTarget(event.target),
             /*resetFocus*/() => this.setFocusIn(false),
-            /*alignToFilterInputItemLocation*/() => this.popper.update()
+            /*alignToFilterInputItemLocation*/() => this.staticContent.updatePopupLocation()
         );
         this.staticContent.attachContainer();
     }
@@ -573,8 +523,7 @@ export class MultiSelect {
             this.filterPanel.dispose,
             this.aspect.dispose,
             this.staticContent.dispose,
-            this.choices.dispose,
-            this.popper.dispose
+            this.choices.dispose
         );
     }
 }
