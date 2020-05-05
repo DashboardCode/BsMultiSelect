@@ -103,11 +103,5 @@ export function BsMultiSelect(element, environment, configuration, onInit){
    
     multiSelect.init();
     multiSelect.load();
-
-    // support browser's "step backward" and form's values restore
-    if (staticContent.selectElement && window.document.readyState !="complete"){
-        window.setTimeout(function(){multiSelect.updateOptionsSelected()});
-    }
-
     return multiSelect;
 }

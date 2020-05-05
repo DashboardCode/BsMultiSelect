@@ -1,5 +1,6 @@
 # CHANGELOG
 ````
+0.5.58 - FormRestoreOnBackwardPlugin
 0.5.57 - optimizations
 0.5.56 - placeholder support moved to plugin, jquery "methods" moved to plugin, option index-api moved to plugin
 0.5.55 - optimizations

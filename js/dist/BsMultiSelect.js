@@ -116,14 +116,7 @@ export function BsMultiSelect(element, environment, configuration, onInit) {
   multiSelect.dispose = composeSync(pluginManager.dispose, multiSelect.dispose.bind(multiSelect));
   onInit == null ? void 0 : onInit(multiSelect);
   multiSelect.init();
-  multiSelect.load(); // support browser's "step backward" and form's values restore
-
-  if (staticContent.selectElement && window.document.readyState != "complete") {
-    window.setTimeout(function () {
-      multiSelect.updateOptionsSelected();
-    });
-  }
-
+  multiSelect.load();
   return multiSelect;
 }
 

@@ -1,5 +1,5 @@
 import {ValidityApi} from '../ValidityApi'
-import {ObservableValue, ObservableLambda, def, defCall, composeSync } from '../ToolsJs';
+import {ObservableValue, ObservableLambda, def, defCall} from '../ToolsJs';
 import {getDataGuardedWithPrefix} from '../ToolsDom';
 
 const defValueMissingMessage = 'Please select an item in the list'
@@ -11,6 +11,8 @@ export function ValidationApiPlugin(pluginData){
     valueMissingMessage = defCall(valueMissingMessage,
         ()=> getDataGuardedWithPrefix(staticContent.initialElement,"bsmultiselect","value-missing-message"),
         defValueMissingMessage)
+    var isValueMissingObservable = ObservableLambda(()=>required && getIsValueMissing());
+    var validationApiObservable = ObservableValue(!isValueMissingObservable.getValue());
 
     return {
         afterConstructor(multiSelect){
@@ -26,9 +28,6 @@ export function ValidationApiPlugin(pluginData){
                 }
             }
         
-            var isValueMissingObservable = ObservableLambda(()=>required && getIsValueMissing());
-            var validationApiObservable = ObservableValue(!isValueMissingObservable.getValue());
-
             staticContent.validationApiObservable = validationApiObservable;
 
             let origOnChange = multiSelect.onChange;
@@ -43,8 +42,10 @@ export function ValidationApiPlugin(pluginData){
                 valueMissingMessage,
                 (isValid)=>validationApiObservable.setValue(isValid));
             multiSelect.validationApi = validationApi;
-
-            return ()=> composeSync(isValueMissingObservable.detachAll, validationApiObservable.detachAll)
+        },
+        dispose(){
+            isValueMissingObservable.detachAll(); 
+            validationApiObservable.detachAll();
         }
     }
 }

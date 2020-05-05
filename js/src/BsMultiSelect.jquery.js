@@ -17,6 +17,7 @@ import {CssPatchPlugin} from './plugins/CssPatchPlugin';
 import {PlaceholderPlugin} from './plugins/PlaceholderPlugin';
 import {JQueryMethodsPlugin} from './plugins/JQueryMethodsPlugin';
 import {OptionsApiPlugin} from './plugins/OptionsApiPlugin';
+import {FormRestoreOnBackwardPlugin} from './plugins/FormRestoreOnBackwardPlugin';
 
 import {adjustLegacySettings} from './BsMultiSelectDepricatedParameters'
 
@@ -25,9 +26,14 @@ import {extendIfUndefined, composeSync} from './ToolsJs';
 
 (
     (window, $, Popper) => {
+        const methodNames = [
+            'dispose', 'deselectAll', 'selectAll', 'updateOptionsSelected', 
+            'updateOptionsDisabled', 'updateDisabled', 'updateAppearance', 'updateData', 'update']
+
         const defaults = {containerClass : "dashboardcode-bsmultiselect", css: css}
         let defaultPlugins = [CssPatchPlugin, LabelPlugin, HiddenOptionPlugin, ValidationApiPlugin, 
-        BsAppearancePlugin, FormResetPlugin, RtlPlugin, PlaceholderPlugin , OptionsApiPlugin, JQueryMethodsPlugin];
+        BsAppearancePlugin, FormResetPlugin, RtlPlugin, PlaceholderPlugin , OptionsApiPlugin, 
+        JQueryMethodsPlugin, FormRestoreOnBackwardPlugin ];
         let createBsMultiSelect = (element, settings, removeInstanceData) => { 
             let trigger = (e, eventName) => $(e).trigger(eventName);
             let environment = {trigger, window, Popper}
@@ -55,11 +61,13 @@ import {extendIfUndefined, composeSync} from './ToolsJs';
 
             onConfiguration(defaultPlugins, configuration);
 
+            
+
             let multiSelect = BsMultiSelect(element, environment, configuration, onInit);
             multiSelect.dispose = composeSync(multiSelect.dispose, removeInstanceData);
             return multiSelect;
         }
-        let prototypable = addToJQueryPrototype('BsMultiSelect', createBsMultiSelect, $);
+        let prototypable = addToJQueryPrototype('BsMultiSelect', createBsMultiSelect, methodNames, $);
 
         initiateDefaults(defaultPlugins, defaults);
         prototypable.defaults = defaults;

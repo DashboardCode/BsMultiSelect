@@ -1,5 +1,5 @@
 /*!
-  * DashboardCode BsMultiSelect v0.5.57 (https://dashboardcode.github.io/BsMultiSelect/)
+  * DashboardCode BsMultiSelect v0.5.58 (https://dashboardcode.github.io/BsMultiSelect/)
   * Copyright 2017-2020 Roman Pokrovskij (github user rpokrovskij)
   * Licensed under APACHE 2 (https://github.com/DashboardCode/BsMultiSelect/blob/master/LICENSE)
   */
@@ -1891,6 +1891,10 @@ function choiceContentGenerator(choiceElement, common, css, toggle) {
   };
 }
 
+//     return {
+//     }
+// }
+
 function staticContentGenerator(element, createElement, containerClass, css, Popper) {
   var selectElement = null;
   var containerElement = null;
@@ -1925,7 +1929,7 @@ function staticContentGenerator(element, createElement, containerClass, css, Pop
         }
       }
   } else {
-    showError('BsMultiSelect: Only DIV and SELECT supported');
+    showError('BsMultiSelect: only DIV and SELECT supported');
   }
 
   if (containerElement) picksElement = findDirectChildByTagName(containerElement, 'UL');
@@ -2026,7 +2030,7 @@ function staticContentGenerator(element, createElement, containerClass, css, Pop
     },
     required: required,
     attachContainer: function attachContainer() {
-      if (ownContainerElement && selectElement) // otherwise it is attached
+      if (selectElement && ownContainerElement) // otherwise it is attached
         selectElement.parentNode.insertBefore(containerElement, selectElement.nextSibling); //if (!!Popper.prototype && !!Popper.prototype.constructor.name) {
 
       popper = new Popper(filterInputElement, choicesElement, popperConfiguration);
@@ -2212,14 +2216,7 @@ function BsMultiSelect(element, environment, configuration, onInit) {
   multiSelect.dispose = composeSync(pluginManager.dispose, multiSelect.dispose.bind(multiSelect));
   onInit == null ? void 0 : onInit(multiSelect);
   multiSelect.init();
-  multiSelect.load(); // support browser's "step backward" and form's values restore
-
-  if (staticContent.selectElement && window.document.readyState != "complete") {
-    window.setTimeout(function () {
-      multiSelect.updateOptionsSelected();
-    });
-  }
-
+  multiSelect.load();
   return multiSelect;
 }
 
@@ -2485,6 +2482,10 @@ function ValidationApiPlugin(pluginData) {
   valueMissingMessage = defCall(valueMissingMessage, function () {
     return getDataGuardedWithPrefix(staticContent.initialElement, "bsmultiselect", "value-missing-message");
   }, defValueMissingMessage);
+  var isValueMissingObservable = ObservableLambda(function () {
+    return required && getIsValueMissing();
+  });
+  var validationApiObservable = ObservableValue(!isValueMissingObservable.getValue());
   return {
     afterConstructor: function afterConstructor(multiSelect) {
       if (!getIsValueMissing) {
@@ -2500,10 +2501,6 @@ function ValidationApiPlugin(pluginData) {
         };
       }
 
-      var isValueMissingObservable = ObservableLambda(function () {
-        return required && getIsValueMissing();
-      });
-      var validationApiObservable = ObservableValue(!isValueMissingObservable.getValue());
       staticContent.validationApiObservable = validationApiObservable;
       var origOnChange = multiSelect.onChange;
 
@@ -2516,9 +2513,10 @@ function ValidationApiPlugin(pluginData) {
         return validationApiObservable.setValue(isValid);
       });
       multiSelect.validationApi = validationApi;
-      return function () {
-        return composeSync(isValueMissingObservable.detachAll, validationApiObservable.detachAll);
-      };
+    },
+    dispose: function dispose() {
+      isValueMissingObservable.detachAll();
+      validationApiObservable.detachAll();
     }
   };
 }
@@ -3056,42 +3054,6 @@ function JQueryMethodsPlugin(pluginData) {
 
       multiSelect.PicksCount = function () {
         return multiSelect.picks.getCount();
-      };
-
-      multiSelect.Dispose = function () {
-        return multiSelect.dispose();
-      };
-
-      multiSelect.DeselectAll = function () {
-        return multiSelect.deselectAll();
-      };
-
-      multiSelect.SelectAll = function () {
-        return multiSelect.selectAll();
-      };
-
-      multiSelect.UpdateOptionsSelected = function () {
-        return multiSelect.updateOptionsSelected();
-      };
-
-      multiSelect.UpdateOptionsDisabled = function () {
-        return multiSelect.updateOptionsDisabled();
-      };
-
-      multiSelect.UpdateDisabled = function () {
-        return multiSelect.updateDisabled();
-      };
-
-      multiSelect.UpdateAppearance = function () {
-        return multiSelect.updateAppearance();
-      };
-
-      multiSelect.UpdateData = function () {
-        return multiSelect.updateData();
-      };
-
-      multiSelect.Update = function () {
-        return multiSelect.update();
       };
     }
   };

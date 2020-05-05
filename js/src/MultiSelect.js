@@ -464,7 +464,6 @@ export class MultiSelect {
             (c)=>this.addFilterFacade(c), 
             (c)=>this.insertFilterFacade(c));
 
-
         this.staticContent.appendToContainer();
 
         this.aspect =  MultiSelectInputAspect(
@@ -478,6 +477,7 @@ export class MultiSelect {
             (choice) => this.choices.hoverIn(choice),
             () => this.resetFilter(),
             () => this.filterListFacade.getCount()==0, 
+            
             /*onClick*/(event) => this.filterPanel.setFocusIfNotTarget(event.target),
             /*resetFocus*/() => this.setFocusIn(false),
             /*alignToFilterInputItemLocation*/() => this.staticContent.updatePopupLocation()
@@ -505,7 +505,7 @@ export class MultiSelect {
         // or "show preserved on go back" (Chrome) after page is loaded but before "ready" event;
         // but they never "restore" selected-disabled options.
         // TODO: make the FROM Validation for 'selected-disabled' easy.
-        if (document.readyState != 'loading'){
+        if (document.readyState != 'loading') {
             fillChoices();
         } else {
             var domContentLoadedHandler = function(){

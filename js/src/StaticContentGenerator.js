@@ -1,6 +1,12 @@
 import {findDirectChildByTagName, closestByClassName, removeElement} from './ToolsDom';
 import  {addStyling, toggleStyling} from './ToolsStyling';
 
+// export function htmlContent(){
+//     return {
+
+//     }
+// }
+
 export function staticContentGenerator(element, createElement, containerClass, css, Popper) { 
     var selectElement = null;
     var containerElement = null;
@@ -12,6 +18,7 @@ export function staticContentGenerator(element, createElement, containerClass, c
         element.style.color = 'white';
         throw new Error(message);
     }
+
     if (element.tagName=='SELECT'){
         selectElement = element;
         if (containerClass){
@@ -34,7 +41,7 @@ export function staticContentGenerator(element, createElement, containerClass, c
     } 
     else 
     {
-        showError('BsMultiSelect: Only DIV and SELECT supported');
+        showError('BsMultiSelect: only DIV and SELECT supported');
     }
 
     if (containerElement)
@@ -85,22 +92,22 @@ export function staticContentGenerator(element, createElement, containerClass, c
 
     let popper = null;
     let popperConfiguration = {
-            placement: 'bottom-start',
-            modifiers: {
-                preventOverflow: {enabled:true},
-                hide: {enabled:false},
-                flip: {enabled:false}
-            }
+        placement: 'bottom-start',
+        modifiers: {
+            preventOverflow: {enabled:true},
+            hide: {enabled:false},
+            flip: {enabled:false}
+        }
     };
 
     return {
         initialElement:element,
         selectElement, 
         containerElement,
-
         pickFilterElement,
         filterInputElement,
         picksElement,
+
         createPickElement(){
             var pickElement = createElement('LI');
             addStyling(pickElement, css.pick);
@@ -123,7 +130,7 @@ export function staticContentGenerator(element, createElement, containerClass, c
         },
         required,
         attachContainer(){
-            if (ownContainerElement && selectElement) // otherwise it is attached
+            if (selectElement && ownContainerElement) // otherwise it is attached
                 selectElement.parentNode.insertBefore(containerElement, selectElement.nextSibling);
             //if (!!Popper.prototype && !!Popper.prototype.constructor.name) {
             popper=new Popper(filterInputElement, choicesElement, popperConfiguration);
