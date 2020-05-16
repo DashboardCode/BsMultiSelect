@@ -8,16 +8,16 @@ export function RtlPlugin(pluginData){
     if (isBoolean(isRtl))
         forceRtlOnContainer = true;
     else
-        isRtl = getIsRtl(staticContent.initialElement);
+        isRtl = getIsRtl(staticContent.staticDom.initialElement);
     
     var attributeBackup = AttributeBackup();
     if (forceRtlOnContainer){
-        attributeBackup.set(staticContent.containerElement, "dir", "rtl");
+        attributeBackup.set(staticContent.staticDom.containerElement, "dir", "rtl");
     }
-    else if (staticContent.selectElement){
-        var dirAttributeValue = staticContent.selectElement.getAttribute("dir");
+    else if (staticContent.staticDom.selectElement){
+        var dirAttributeValue = staticContent.staticDom.selectElement.getAttribute("dir");
         if (dirAttributeValue){
-            attributeBackup.set(staticContent.containerElement, "dir", dirAttributeValue);
+            attributeBackup.set(staticContent.staticDom.containerElement, "dir", dirAttributeValue);
         }
     } 
     if (isRtl)

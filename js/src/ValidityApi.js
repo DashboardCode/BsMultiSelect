@@ -41,7 +41,7 @@ export function ValidityApi(visibleElement, isValueMissingObservable, valueMissi
             return validity.valid;
         },
         reportValidity(){
-            staticContent.filterInputElement.reportValidity();
+            staticContent.staticPicks.filterInputElement.reportValidity();
             return checkValidity();
         }
     }

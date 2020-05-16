@@ -3,11 +3,11 @@ import {defCall} from '../ToolsJs';
 
 export function LabelPlugin(pluginData){
     let {configuration, staticContent} = pluginData;
-    let {label} = configuration;
-    staticContent.getLabelElement = () => defCall(label); // overrided by BS Appearance Plugin
-
+    staticContent.getLabelElement = () => defCall(configuration.label); // overrided by BS Appearance Plugin
     let createInputId = null;
-    let {selectElement, containerClass, containerElement} = staticContent;
+    let {containerClass, staticDom, staticPicks} = staticContent;
+    let {selectElement, containerElement} = staticDom;
+    let {filterInputElement} = staticPicks;
     if(selectElement)
         createInputId = () => `${containerClass}-generated-input-${((selectElement.id)?selectElement.id:selectElement.name).toLowerCase()}-id`;
     else
@@ -20,7 +20,7 @@ export function LabelPlugin(pluginData){
             if (labelElement) {
                 backupedForAttribute = labelElement.getAttribute('for');
                 var newId = createInputId();
-                staticContent.filterInputElement.setAttribute('id', newId);
+                filterInputElement.setAttribute('id', newId);
                 labelElement.setAttribute('for',newId);
             }
             if (backupedForAttribute)

@@ -1,12 +1,12 @@
-export function JQueryMethodsPlugin(pluginData){
-    var {staticContent} = pluginData;
+export function JQueryMethodsPlugin(){
     return {
         afterConstructor(multiSelect){
-            multiSelect.GetContainer = ()=> staticContent.containerElement;
-            multiSelect.GetChoices= ()=> staticContent.choicesElement;
-            multiSelect.GetFilterInput= ()=> staticContent.filterInputElement;
+            let {staticDom, staticDialog, staticPicks} = multiSelect.staticContent;
+            multiSelect.GetContainer = ()=> staticDom.containerElement;
+            multiSelect.GetChoices = ()=> staticDialog.choicesElement;
+            multiSelect.GetFilterInput = ()=> staticPicks.filterInputElement;
             
-            multiSelect.PicksCount= ()=> multiSelect.picks.getCount();
+            multiSelect.PicksCount = ()=> multiSelect.picks.getCount();
         }
     }
 }

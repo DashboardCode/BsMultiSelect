@@ -47,3 +47,9 @@ export function onConfiguration(constructors, configuration){
         constructors[i].onConfiguration?.(configuration)
     }
 }
+
+// export function onConfiguration(constructors, configuration){
+//     for(let i = 0; i<constructors.length; i++){
+//         constructors[i].onConfiguration?.(configuration)
+//     }
+// }

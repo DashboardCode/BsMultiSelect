@@ -5,10 +5,11 @@ import {toggleStyling} from '../ToolsStyling';
 export function PlaceholderPlugin(pluginData){
     let {configuration, staticContent} = pluginData;
     let {placeholder,  css} = configuration;
-    let {initialElement, picksElement, filterInputElement} = staticContent;
+    let {staticDom, staticPicks} = staticContent;
+    let {picksElement, filterInputElement} = staticPicks;
 
     if (!placeholder){
-        placeholder = getDataGuardedWithPrefix(initialElement,"bsmultiselect","placeholder");
+        placeholder = getDataGuardedWithPrefix(staticDom.initialElement,"bsmultiselect","placeholder");
     }
 
     function setEmptyInputWidth(isVisible){
@@ -47,14 +48,14 @@ export function PlaceholderPlugin(pluginData){
                 setEmptyInputWidth(multiSelect.isEmpty())
             };
                     
-            let origDisable = staticContent.disable;
-            staticContent.disable = (isComponentDisabled)=>{
+            let origDisable = staticContent.staticPicks.disable;
+            staticContent.staticPicks.disable = (isComponentDisabled)=>{
                 setDisabled(isComponentDisabled);
                 origDisable(isComponentDisabled);
             };
 
-            let origAppendToContainer = staticContent.appendToContainer;
-            staticContent.appendToContainer = composeSync(updateEmptyInputWidth, origAppendToContainer);
+            let origAttachContainer = staticContent.attachContainer;
+            staticContent.attachContainer = composeSync(updateEmptyInputWidth, origAttachContainer);
 
             let origProcessEmptyInput = multiSelect.processEmptyInput.bind(multiSelect);
             multiSelect.processEmptyInput = composeSync(updateEmptyInputWidth, origProcessEmptyInput);

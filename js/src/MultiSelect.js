@@ -8,39 +8,35 @@ import {FilterFacade} from './FilterFacade'
 
 export class MultiSelect {
     constructor(
-        getOptions,
-        getIsComponentDisabled,
-        setSelected, 
-        getIsOptionSelected,
-        getIsOptionDisabled,
+        dataSourceAspect,
+        componentAspect,
         staticContent, 
+        staticManager,
         pickContentGenerator, 
         choiceContentGenerator, 
-        onChange,
         window) {
-        // readonly
-        this.getOptions=getOptions;
-        this.getIsOptionSelected = getIsOptionSelected;
-        this.getIsOptionDisabled = getIsOptionDisabled;
+
+        this.dataSourceAspect=dataSourceAspect;
+        this.componentAspect=componentAspect;
+
+        this.window = window;
         this.staticContent = staticContent;
+        this.staticManager=staticManager;
         this.pickContentGenerator = pickContentGenerator;
         this.choiceContentGenerator = choiceContentGenerator;
-        this.setSelected=setSelected; 
-        this.window = window;
+        
 
         this.visibleCount=10;
 
         this.choices = null;
         this.picks = null;
         this.stylingComposite = null;
-        this.onChange=onChange;
 
-        this.getIsComponentDisabled = getIsComponentDisabled;
     }
 
     setOptionSelected(choice, value){
         let success = false;
-        var confirmed = this.setSelected(choice.option, value);
+        var confirmed = this.dataSourceAspect.setSelected(choice.option, value);
         if (!(confirmed===false)) {
             choice.isOptionSelected = value;
             choice.updateSelected();
@@ -79,7 +75,7 @@ export class MultiSelect {
         this.aspect.hideChoices(); // always hide 1st
         this.resetFilter();
 
-        this.staticContent.choicesElement.innerHTML = ""; // TODO: there should better "optimization"
+        this.staticContent.staticDialog.choicesElement.innerHTML = ""; // TODO: there should better "optimization"
         
         this.choices.clear();
         this.picks.clear();
@@ -97,18 +93,18 @@ export class MultiSelect {
         this.updateDisabled();    
     }
     updateDisabled(){
-        let isComponentDisabled = this.getIsComponentDisabled();
+        let isComponentDisabled = this.componentAspect.getDisabled();
         if (this.isComponentDisabled!==isComponentDisabled){
             this.isComponentDisabled=isComponentDisabled;
             this.picks.disableRemoveAll(isComponentDisabled);
             this.aspect.disable(isComponentDisabled);
-            this.staticContent.disable(isComponentDisabled);
+            this.staticContent.staticPicks.disable(isComponentDisabled);
         }
     }
     updateOptionsDisabled(){
         this.choices.forLoop(
             choice => {
-                let newIsDisabled = multiSelect.getIsOptionDisabled(choice.option);
+                let newIsDisabled = multiSelect.dataSourceAspect.getDisabled(choice.option);
                 if (newIsDisabled != choice.isOptionDisabled)
                 {
                     choice.isOptionDisabled= newIsDisabled;
@@ -120,7 +116,7 @@ export class MultiSelect {
     updateOptionsSelected(){
         this.choices.forLoop(
             choice => {
-                let newIsSelected = this.getIsOptionSelected(choice.option);
+                let newIsSelected = this.dataSourceAspect.getSelected(choice.option);
                 if (newIsSelected != choice.isOptionSelected)
                 {
                     choice.isOptionSelected = newIsSelected;
@@ -146,13 +142,13 @@ export class MultiSelect {
     }
 
     createPick(choice){
-        let { pickElement, attach, detach } = this.staticContent.createPickElement(); // TODO move removeElement to staticContent
+        let { pickElement, attach, detach } = this.staticContent.staticPicks.createPickElement(); // TODO move removeElement to staticContent
         let pickContent = this.pickContentGenerator(pickElement);
         
         var pick = {
-            disableRemove: () => pickContent.disableRemove(this.getIsComponentDisabled()),
+            disableRemove: () => pickContent.disableRemove(this.componentAspect.getDisabled()),
             setData: () => pickContent.setData(choice.option),
-            disable: () => pickContent.disable( this.getIsOptionDisabled(choice.option) ),
+            disable: () => pickContent.disable( this.dataSourceAspect.getDisabled(choice.option) ),
             remove: null,
             dispose: () => { 
                 detach(); 
@@ -184,7 +180,7 @@ export class MultiSelect {
     }
 
     createChoiceElement(choice){
-        var {choiceElement, setVisible, attach, detach} = this.staticContent.createChoiceElement();
+        var {choiceElement, setVisible, attach, detach} = this.staticContent.staticDialog.createChoiceElement();
         choice.choiceElement = choiceElement;
         choice.choiceElementAttach = attach;
                 
@@ -220,7 +216,7 @@ export class MultiSelect {
                 pickTools.updateSelectedFalse();
                 pickTools.updateSelectedFalse=null;
             }
-            this.onChange();
+            this.componentAspect.onChange();
         }
     
         var unbindChoiceElement = this.aspect.adoptChoiceElement(choice, choiceElement);
@@ -269,8 +265,8 @@ export class MultiSelect {
     }
 
     createChoice(option){
-        let isOptionSelected = this.getIsOptionSelected(option);
-        let isOptionDisabled = this.getIsOptionDisabled(option); 
+        let isOptionSelected = this.dataSourceAspect.getSelected(option);
+        let isOptionDisabled = this.dataSourceAspect.getDisabled(option); 
         
         return Choice(option, isOptionSelected, isOptionDisabled);
     }
@@ -354,8 +350,8 @@ export class MultiSelect {
     }
 
     setFocusIn(focus){
-        this.staticContent.setIsFocusIn(focus)
-        this.staticContent.toggleFocusStyling();
+        this.staticContent.staticPicks.setIsFocusIn(focus)
+        this.staticContent.staticPicks.toggleFocusStyling();
     }
 
     forEach(f){
@@ -392,7 +388,7 @@ export class MultiSelect {
 
     init() {
         this.filterPanel = FilterPanel(
-            this.staticContent.filterInputElement,
+            this.staticContent.staticPicks.filterInputElement,
             () => this.setFocusIn(true),  // focus in - show dropdown
             () => this.aspect.onFocusOut(
                     ()=>this.setFocusIn(false)
@@ -436,10 +432,10 @@ export class MultiSelect {
         );
         
         // attach filterInputElement
-        this.staticContent.pickFilterElement.appendChild(this.staticContent.filterInputElement);
+        this.staticContent.staticPicks.pickFilterElement.appendChild(this.staticContent.staticPicks.filterInputElement);
 
-        this.staticContent.picksElement.appendChild(
-            this.staticContent.pickFilterElement); // located filter in selectionsPanel       
+        this.staticContent.staticPicks.picksElement.appendChild(
+            this.staticContent.staticPicks.pickFilterElement); // located filter in selectionsPanel       
 
         this.picks =  Picks();
         
@@ -464,13 +460,13 @@ export class MultiSelect {
             (c)=>this.addFilterFacade(c), 
             (c)=>this.insertFilterFacade(c));
 
-        this.staticContent.appendToContainer();
+        this.staticManager.appendToContainer();
 
         this.aspect =  MultiSelectInputAspect(
             this.window,
-            this.staticContent.filterInputElement, 
-            this.staticContent.picksElement, 
-            this.staticContent.choicesElement, 
+            this.staticContent.staticPicks.filterInputElement, 
+            this.staticContent.staticPicks.picksElement, 
+            this.staticContent.staticDialog.choicesElement, 
             ()=>this.staticContent.isChoicesVisible(),
             (visible)=>this.staticContent.setChoicesVisible(visible),
             () => this.choices.resetHoveredChoice(), 
@@ -492,7 +488,7 @@ export class MultiSelect {
 
     updateDataImpl(){
         var fillChoices = () => {
-            let options = this.getOptions();
+            let options = this.dataSourceAspect.getOptions();
             for(let i = 0; i<options.length; i++) {
                 let option = options[i];
                 let choice = this.createChoice(option);
@@ -522,6 +518,7 @@ export class MultiSelect {
             this.picks.dispose,
             this.filterPanel.dispose,
             this.aspect.dispose,
+            this.staticManager.dispose,
             this.staticContent.dispose,
             this.choices.dispose
         );

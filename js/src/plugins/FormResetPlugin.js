@@ -2,12 +2,12 @@
 import {EventBinder, closestByTagName} from '../ToolsDom';
 
 export function FormResetPlugin(pluginData){
-    var {staticContent, window} = pluginData;
+    var {staticDom, window} = pluginData;
     return {
         afterConstructor(multiSelect){
             var eventBuilder = EventBinder();
-            if (staticContent.selectElement){
-                var form = closestByTagName(staticContent.selectElement, 'FORM');
+            if (staticDom.selectElement){
+                var form = closestByTagName(staticDom.selectElement, 'FORM');
                 if (form) {
                     eventBuilder.bind(form, 
                         'reset', 

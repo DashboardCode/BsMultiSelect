@@ -71,7 +71,7 @@ export function HiddenOptionPlugin(pluginData){
             }
             
             function UpdateOptionsHidden(){
-                let options = multiSelect.getOptions();
+                let options = multiSelect.dataSourceAspect.getOptions();
                 for(let i = 0; i<options.length; i++){
                     UpdateOptionHidden(i)
                 }

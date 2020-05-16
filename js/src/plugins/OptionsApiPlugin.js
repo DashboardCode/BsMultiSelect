@@ -9,7 +9,7 @@ export function OptionsApiPlugin(){
         
             multiSelect.UpdateOptionSelected = (key) => {
                 let choice = multiSelect.choices.get(key); // TODO: generalize index as key
-                let newIsSelected = multiSelect.getIsOptionSelected(choice.option);
+                let newIsSelected = multiSelect.dataSourceAspect.getSelected(choice.option);
                 if (newIsSelected != choice.isOptionSelected)
                 {
                     choice.isOptionSelected = newIsSelected;
@@ -19,7 +19,7 @@ export function OptionsApiPlugin(){
         
             multiSelect.UpdateOptionDisabled = (key)=>{
                 let choice = multiSelect.choices.get(key); // TODO: generalize index as key 
-                let newIsDisabled = multiSelect.getIsOptionDisabled(choice.option);
+                let newIsDisabled = multiSelect.dataSourceAspect.getDisabled(choice.option);
                 if (newIsDisabled != choice.isOptionDisabled)
                 {
                     choice.isOptionDisabled= newIsDisabled;
@@ -28,7 +28,7 @@ export function OptionsApiPlugin(){
             }
         
             multiSelect.UpdateOptionAdded = (key)=>{  // TODO: generalize index as key 
-                let options = multiSelect.getOptions();
+                let options = multiSelect.dataSourceAspect.getOptions();
                 let option = options[key];
                 let choice = multiSelect.createChoice(option);
                 multiSelect.choices.insert(key, choice);

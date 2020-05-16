@@ -18,6 +18,7 @@ import {PlaceholderPlugin} from './plugins/PlaceholderPlugin';
 import {JQueryMethodsPlugin} from './plugins/JQueryMethodsPlugin';
 import {OptionsApiPlugin} from './plugins/OptionsApiPlugin';
 import {FormRestoreOnBackwardPlugin} from './plugins/FormRestoreOnBackwardPlugin';
+import {SelectElementPlugin} from './plugins/SelectElementPlugin';
 
 import {adjustLegacySettings} from './BsMultiSelectDepricatedParameters'
 
@@ -31,7 +32,7 @@ import {extendIfUndefined, composeSync} from './ToolsJs';
             'updateOptionsDisabled', 'updateDisabled', 'updateAppearance', 'updateData', 'update']
 
         const defaults = {containerClass : "dashboardcode-bsmultiselect", css: css}
-        let defaultPlugins = [CssPatchPlugin, LabelPlugin, HiddenOptionPlugin, ValidationApiPlugin, 
+        let defaultPlugins = [CssPatchPlugin, SelectElementPlugin, LabelPlugin, HiddenOptionPlugin, ValidationApiPlugin, 
         BsAppearancePlugin, FormResetPlugin, RtlPlugin, PlaceholderPlugin , OptionsApiPlugin, 
         JQueryMethodsPlugin, FormRestoreOnBackwardPlugin ];
         let createBsMultiSelect = (element, settings, removeInstanceData) => { 

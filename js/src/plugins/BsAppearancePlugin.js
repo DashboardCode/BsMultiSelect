@@ -3,9 +3,9 @@ import {addStyling} from '../ToolsStyling'
 import {ObservableLambda, composeSync} from '../ToolsJs';
 
 export function BsAppearancePlugin(pluginData){
-    let {configuration, common, staticContent} = pluginData;
+    let {configuration, common, staticContent, staticDom} = pluginData;
     let {getValidity, getSize, useCssPatch, css} = configuration;
-    let selectElement = staticContent.selectElement;
+    let selectElement = staticDom.selectElement;
     
     if (staticContent.getLabelElement){
         let origGetLabelElement = staticContent.getLabelElement;
@@ -18,62 +18,62 @@ export function BsAppearancePlugin(pluginData){
         }
     }
     
-    if (staticContent.selectElement) {
+    if (staticDom.selectElement) {
         if(!getValidity)
-            getValidity = composeGetValidity(selectElement);
+            getValidity = composeGetValidity(selectElement)
         if(!getSize) 
-            getSize = composeGetSize(selectElement);
+            getSize = composeGetSize(selectElement)
     } else {
         if (!getValidity)
             getValidity = () => null
         if (!getSize)
-            getSize = () => null;
+            getSize = () => null
     }
 
     common.getSize=getSize;
     common.getValidity=getValidity;
     return {
         afterConstructor(multiSelect){
-            
+            let staticPicks = staticContent.staticPicks;
             var updateSize;
             if (!useCssPatch){
-                updateSize= () => updateSizeForAdapter(staticContent.picksElement, getSize)
+                updateSize= () => updateSizeForAdapter(staticPicks.picksElement, getSize)
             }
             else{
                 const {picks_lg, picks_sm, picks_def} = css;
-                updateSize = () => updateSizeJsForAdapter(staticContent.picksElement, picks_lg, picks_sm, picks_def, getSize);
+                updateSize = () => updateSizeJsForAdapter(staticPicks.picksElement, picks_lg, picks_sm, picks_def, getSize);
             }
             multiSelect.UpdateSize = updateSize;
             
             if (useCssPatch){
-                var defToggleFocusStyling = staticContent.toggleFocusStyling;
-                staticContent.toggleFocusStyling = () => {
+                var defToggleFocusStyling = staticPicks.toggleFocusStyling;
+                staticPicks.toggleFocusStyling = () => {
                     var validity =  validationObservable.getValue();
-                    var isFocusIn = staticContent.getIsFocusIn();
+                    var isFocusIn = staticPicks.getIsFocusIn();
                     defToggleFocusStyling(isFocusIn)
                     if (isFocusIn){
                         if (validity===false) { 
                             // but not toggle events (I know it will be done in future)
-                            staticContent.setIsFocusIn(isFocusIn);
+                            staticPicks.setIsFocusIn(isFocusIn);
                             
-                            addStyling(staticContent.picksElement, css.picks_focus_invalid)
+                            addStyling(staticPicks.picksElement, css.picks_focus_invalid)
                         } else if (validity===true) {
                             // but not toggle events (I know it will be done in future)
-                            staticContent.setIsFocusIn(isFocusIn);
+                            staticPicks.setIsFocusIn(isFocusIn);
                             
-                            addStyling(staticContent.picksElement, css.picks_focus_valid)  
+                            addStyling(staticPicks.picksElement, css.picks_focus_valid)  
                         }              
                     }
                 }
             }
         
             var getWasValidated = () => {
-                var wasValidatedElement = closestByClassName(staticContent.initialElement, 'was-validated');
+                var wasValidatedElement = closestByClassName(staticDom.initialElement, 'was-validated');
                 return wasValidatedElement?true:false;
             }
             var wasUpdatedObservable = ObservableLambda(()=>getWasValidated());
             var getManualValidationObservable = ObservableLambda(()=>getValidity());
-            let validationApiObservable = staticContent.validationApiObservable;
+            let validationApiObservable = staticContent.validationApiPluginData?.validationApiObservable;
             
             var validationObservable = ObservableLambda(
                 () => wasUpdatedObservable.getValue()?validationApiObservable.getValue():getManualValidationObservable.getValue()
@@ -81,12 +81,12 @@ export function BsAppearancePlugin(pluginData){
           
             validationObservable.attach(
                 (value)=>{
-                    var  {validMessages, invalidMessages} = getMessagesElements(staticContent.containerElement);
+                    var  {validMessages, invalidMessages} = getMessagesElements(staticDom.containerElement);
                     updateValidity( 
-                    staticContent.picksElement,
+                    staticPicks.picksElement,
                     validMessages, invalidMessages,
                     value);
-                    staticContent.toggleFocusStyling();
+                    staticPicks.toggleFocusStyling();
                 }
             )
             wasUpdatedObservable.attach(
