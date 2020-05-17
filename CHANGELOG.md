@@ -1,5 +1,7 @@
 # CHANGELOG
 ````
+0.5.60 - ValidationApi problem resolved
+0.5.59 - SelectElementPlugin
 0.5.58 - FormRestoreOnBackwardPlugin
 0.5.57 - optimizations
 0.5.56 - placeholder support moved to plugin, jquery "methods" moved to plugin, option index-api moved to plugin

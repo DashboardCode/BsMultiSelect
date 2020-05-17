@@ -3,9 +3,8 @@ import {getDataGuardedWithPrefix} from '../ToolsDom';
 import {toggleStyling} from '../ToolsStyling';
 
 export function PlaceholderPlugin(pluginData){
-    let {configuration, staticContent} = pluginData;
+    let {configuration, staticContent, staticPicks, staticDom} = pluginData;
     let {placeholder,  css} = configuration;
-    let {staticDom, staticPicks} = staticContent;
     let {picksElement, filterInputElement} = staticPicks;
 
     if (!placeholder){
@@ -48,8 +47,8 @@ export function PlaceholderPlugin(pluginData){
                 setEmptyInputWidth(multiSelect.isEmpty())
             };
                     
-            let origDisable = staticContent.staticPicks.disable;
-            staticContent.staticPicks.disable = (isComponentDisabled)=>{
+            let origDisable = staticPicks.disable;
+            staticPicks.disable = (isComponentDisabled)=>{
                 setDisabled(isComponentDisabled);
                 origDisable(isComponentDisabled);
             };

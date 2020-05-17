@@ -1,5 +1,5 @@
 /*!
-  * DashboardCode BsMultiSelect v0.5.59 (https://dashboardcode.github.io/BsMultiSelect/)
+  * DashboardCode BsMultiSelect v0.5.60 (https://dashboardcode.github.io/BsMultiSelect/)
   * Copyright 2017-2020 Roman Pokrovskij (github user rpokrovskij)
   * Licensed under APACHE 2 (https://github.com/DashboardCode/BsMultiSelect/blob/master/LICENSE)
   */
@@ -2218,11 +2218,11 @@
 
     function SelectElementPlugin(pluginData) {
       var staticContent = pluginData.staticContent,
+          staticDom = pluginData.staticDom,
           configuration = pluginData.configuration,
           trigger = pluginData.trigger,
           componentAspect = pluginData.componentAspect,
           dataSourceAspect = pluginData.dataSourceAspect;
-      var staticDom = staticContent.staticDom;
       var backupDisplay = null;
       var selectElement = staticDom.selectElement;
 
@@ -2235,7 +2235,7 @@
 
       if (selectElement) {
         backupedRequired = selectElement.required;
-        staticContent.selectElementPluginData = {
+        pluginData.selectElementPluginData = {
           required: selectElement.required
         };
         if (selectElement.required === true) selectElement.required = false;
@@ -2442,9 +2442,12 @@
 
       var pluginData = {
         window: window,
+        containerClass: containerClass,
         configuration: configuration,
         staticDom: staticDom,
         staticContent: staticContent,
+        staticPicks: staticPicks,
+        staticDialog: staticDialog,
         staticManager: staticManager,
         trigger: trigger,
         common: common,
@@ -2627,17 +2630,20 @@
 
     function LabelPlugin(pluginData) {
       var configuration = pluginData.configuration,
-          staticContent = pluginData.staticContent;
+          containerClass = pluginData.containerClass,
+          staticDom = pluginData.staticDom,
+          staticPicks = pluginData.staticPicks;
 
-      staticContent.getLabelElement = function () {
+      var getLabelElementAspect = function getLabelElementAspect() {
         return defCall(configuration.label);
       }; // overrided by BS Appearance Plugin
 
 
+      var labelPluginData = {
+        getLabelElementAspect: getLabelElementAspect
+      };
+      pluginData.labelPluginData = labelPluginData;
       var createInputId = null;
-      var containerClass = staticContent.containerClass,
-          staticDom = staticContent.staticDom,
-          staticPicks = staticContent.staticPicks;
       var selectElement = staticDom.selectElement,
           containerElement = staticDom.containerElement;
       var filterInputElement = staticPicks.filterInputElement;
@@ -2648,7 +2654,7 @@
       };
       return {
         afterConstructor: function afterConstructor() {
-          var labelElement = staticContent.getLabelElement();
+          var labelElement = labelPluginData.getLabelElementAspect();
           var backupedForAttribute = null; // state saved between init and dispose
 
           if (labelElement) {
@@ -2667,19 +2673,20 @@
 
     function RtlPlugin(pluginData) {
       var configuration = pluginData.configuration,
-          staticContent = pluginData.staticContent;
+          staticContent = pluginData.staticContent,
+          staticDom = pluginData.staticDom;
       var isRtl = configuration.isRtl;
       var forceRtlOnContainer = false;
-      if (isBoolean(isRtl)) forceRtlOnContainer = true;else isRtl = getIsRtl(staticContent.staticDom.initialElement);
+      if (isBoolean(isRtl)) forceRtlOnContainer = true;else isRtl = getIsRtl(staticDom.initialElement);
       var attributeBackup = AttributeBackup();
 
       if (forceRtlOnContainer) {
-        attributeBackup.set(staticContent.staticDom.containerElement, "dir", "rtl");
-      } else if (staticContent.staticDom.selectElement) {
-        var dirAttributeValue = staticContent.staticDom.selectElement.getAttribute("dir");
+        attributeBackup.set(staticDom.containerElement, "dir", "rtl");
+      } else if (staticDom.selectElement) {
+        var dirAttributeValue = staticDom.selectElement.getAttribute("dir");
 
         if (dirAttributeValue) {
-          attributeBackup.set(staticContent.staticDom.containerElement, "dir", dirAttributeValue);
+          attributeBackup.set(staticDom.containerElement, "dir", dirAttributeValue);
         }
       }
 
@@ -2722,7 +2729,7 @@
       });
     }
 
-    function ValidityApi(visibleElement, isValueMissingObservable, valueMissingMessage, onValid) {
+    function ValidityApi(visibleElement, isValueMissingObservable, valueMissingMessage, onValid, trigger, filterInputElement) {
       var customValidationMessage = "";
       var validationMessage = "";
       var validity = null;
@@ -2739,6 +2746,12 @@
       isValueMissingObservable.attach(function (value) {
         setMessage(value, validity.customError);
       });
+
+      var checkValidity = function checkValidity() {
+        if (!validity.valid) trigger('dashboardcode.multiselect:invalid');
+        return validity.valid;
+      };
+
       return {
         validationMessage: validationMessage,
         willValidate: willValidate,
@@ -2747,12 +2760,9 @@
           customValidationMessage = message;
           setMessage(validity.valueMissing, customValidationMessage ? true : false);
         },
-        checkValidity: function checkValidity() {
-          if (!validity.valid) trigger('dashboardcode.multiselect:invalid');
-          return validity.valid;
-        },
+        checkValidity: checkValidity,
         reportValidity: function reportValidity() {
-          staticContent.staticPicks.filterInputElement.reportValidity();
+          filterInputElement.reportValidity();
           return checkValidity();
         }
       };
@@ -2760,18 +2770,19 @@
 
     var defValueMissingMessage = 'Please select an item in the list';
     function ValidationApiPlugin(pluginData) {
-      var _staticContent$select;
-
       var configuration = pluginData.configuration,
-          staticContent = pluginData.staticContent,
+          selectElementPluginData = pluginData.selectElementPluginData,
+          staticDom = pluginData.staticDom,
+          staticPicks = pluginData.staticPicks,
           componentAspect = pluginData.componentAspect,
-          dataSourceAspect = pluginData.dataSourceAspect;
+          dataSourceAspect = pluginData.dataSourceAspect,
+          trigger = pluginData.trigger;
       var getIsValueMissing = configuration.getIsValueMissing,
           valueMissingMessage = configuration.valueMissingMessage,
           required = configuration.required;
-      if (!isBoolean(required)) required = (_staticContent$select = staticContent.selectElementPluginData) == null ? void 0 : _staticContent$select.required;else if (!isBoolean(required)) required = false;
+      if (!isBoolean(required)) required = selectElementPluginData == null ? void 0 : selectElementPluginData.required;else if (!isBoolean(required)) required = false;
       valueMissingMessage = defCall(valueMissingMessage, function () {
-        return getDataGuardedWithPrefix(staticContent.staticDom.initialElement, "bsmultiselect", "value-missing-message");
+        return getDataGuardedWithPrefix(staticDom.initialElement, "bsmultiselect", "value-missing-message");
       }, defValueMissingMessage);
 
       if (!getIsValueMissing) {
@@ -2798,12 +2809,12 @@
         origOnChange();
       };
 
-      staticContent.validationApiPluginData = {
+      pluginData.validationApiPluginData = {
         validationApiObservable: validationApiObservable
       };
-      var validationApi = ValidityApi(staticContent.staticPicks.filterInputElement, isValueMissingObservable, valueMissingMessage, function (isValid) {
+      var validationApi = ValidityApi(staticPicks.filterInputElement, isValueMissingObservable, valueMissingMessage, function (isValid) {
         return validationApiObservable.setValue(isValid);
-      });
+      }, trigger, staticPicks.filterInputElement);
       return {
         afterConstructor: function afterConstructor(multiSelect) {
           multiSelect.validationApi = validationApi;
@@ -2822,20 +2833,27 @@
     function BsAppearancePlugin(pluginData) {
       var configuration = pluginData.configuration,
           common = pluginData.common,
-          staticContent = pluginData.staticContent,
-          staticDom = pluginData.staticDom;
+          validationApiPluginData = pluginData.validationApiPluginData,
+          staticPicks = pluginData.staticPicks,
+          staticDom = pluginData.staticDom,
+          labelPluginData = pluginData.labelPluginData;
       var getValidity = configuration.getValidity,
           getSize = configuration.getSize,
           useCssPatch = configuration.useCssPatch,
           css = configuration.css;
       var selectElement = staticDom.selectElement;
 
-      if (staticContent.getLabelElement) {
-        var origGetLabelElement = staticContent.getLabelElement;
+      if (labelPluginData) {
+        var origGetLabelElementAspect = labelPluginData.getLabelElementAspect;
 
-        staticContent.getLabelElement = function () {
-          var e = origGetLabelElement();
-          if (e) return e;else return getLabelElement(selectElement);
+        labelPluginData.getLabelElementAspect = function () {
+          var e = origGetLabelElementAspect();
+          if (e) return e;else {
+            var value = null;
+            var formGroup = closestByClassName(selectElement, 'form-group');
+            if (formGroup) value = formGroup.querySelector("label[for=\"" + selectElement.id + "\"]");
+            return value;
+          }
         };
       }
 
@@ -2855,9 +2873,6 @@
       common.getValidity = getValidity;
       return {
         afterConstructor: function afterConstructor(multiSelect) {
-          var _staticContent$valida;
-
-          var staticPicks = staticContent.staticPicks;
           var updateSize;
 
           if (!useCssPatch) {
@@ -2909,7 +2924,7 @@
           var getManualValidationObservable = ObservableLambda(function () {
             return getValidity();
           });
-          var validationApiObservable = (_staticContent$valida = staticContent.validationApiPluginData) == null ? void 0 : _staticContent$valida.validationApiObservable;
+          var validationApiObservable = validationApiPluginData == null ? void 0 : validationApiPluginData.validationApiObservable;
           var validationObservable = ObservableLambda(function () {
             return wasUpdatedObservable.getValue() ? validationApiObservable.getValue() : getManualValidationObservable.getValue();
           });
@@ -2950,17 +2965,6 @@
           );
         }
       };
-    }
-
-    function getLabelElement(selectElement) {
-      var value = null;
-      var formGroup = closestByClassName(selectElement, 'form-group');
-
-      if (formGroup) {
-        value = formGroup.querySelector("label[for=\"" + selectElement.id + "\"]");
-      }
-
-      return value;
     }
 
     function updateValidity(picksElement, validMessages, invalidMessages, validity) {
@@ -3254,11 +3258,11 @@
 
     function PlaceholderPlugin(pluginData) {
       var configuration = pluginData.configuration,
-          staticContent = pluginData.staticContent;
+          staticContent = pluginData.staticContent,
+          staticPicks = pluginData.staticPicks,
+          staticDom = pluginData.staticDom;
       var placeholder = configuration.placeholder,
           css = configuration.css;
-      var staticDom = staticContent.staticDom,
-          staticPicks = staticContent.staticPicks;
       var picksElement = staticPicks.picksElement,
           filterInputElement = staticPicks.filterInputElement;
 
@@ -3299,9 +3303,9 @@
           function updateEmptyInputWidth() {
             setEmptyInputWidth(multiSelect.isEmpty());
           }
-          var origDisable = staticContent.staticPicks.disable;
+          var origDisable = staticPicks.disable;
 
-          staticContent.staticPicks.disable = function (isComponentDisabled) {
+          staticPicks.disable = function (isComponentDisabled) {
             setDisabled(isComponentDisabled);
             origDisable(isComponentDisabled);
           };
@@ -3335,14 +3339,12 @@
       };
     }
 
-    function JQueryMethodsPlugin() {
+    function JQueryMethodsPlugin(pluginData) {
+      var staticDom = pluginData.staticDom,
+          staticDialog = pluginData.staticDialog,
+          staticPicks = pluginData.staticPicks;
       return {
         afterConstructor: function afterConstructor(multiSelect) {
-          var _multiSelect$staticCo = multiSelect.staticContent,
-              staticDom = _multiSelect$staticCo.staticDom,
-              staticDialog = _multiSelect$staticCo.staticDialog,
-              staticPicks = _multiSelect$staticCo.staticPicks;
-
           multiSelect.GetContainer = function () {
             return staticDom.containerElement;
           };

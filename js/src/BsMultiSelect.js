@@ -86,7 +86,7 @@ export function BsMultiSelect(element, environment, configuration, onInit){
     staticContent.selectElementContainerTools=selectElementContainerTools;
     // ---------------------------------------------------------------------------------------
           
-    let pluginData = {window, configuration, staticDom, staticContent, staticManager, trigger, common,
+    let pluginData = {window, containerClass, configuration, staticDom, staticContent, staticPicks, staticDialog, staticManager, trigger, common,
         dataSourceAspect,componentAspect
     } // TODO replace common with staticContent (but staticContent should be splitted)
     let pluginManager = PluginManager(plugins, pluginData);

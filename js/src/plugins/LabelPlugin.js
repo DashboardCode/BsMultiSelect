@@ -2,10 +2,11 @@
 import {defCall} from '../ToolsJs';
 
 export function LabelPlugin(pluginData){
-    let {configuration, staticContent} = pluginData;
-    staticContent.getLabelElement = () => defCall(configuration.label); // overrided by BS Appearance Plugin
+    let {configuration, containerClass, staticDom, staticPicks} = pluginData;
+    let getLabelElementAspect = () => defCall(configuration.label); // overrided by BS Appearance Plugin
+    let labelPluginData = {getLabelElementAspect};
+    pluginData.labelPluginData=labelPluginData;
     let createInputId = null;
-    let {containerClass, staticDom, staticPicks} = staticContent;
     let {selectElement, containerElement} = staticDom;
     let {filterInputElement} = staticPicks;
     if(selectElement)
@@ -15,7 +16,7 @@ export function LabelPlugin(pluginData){
 
     return {
         afterConstructor(){
-            let labelElement = staticContent.getLabelElement();
+            let labelElement = labelPluginData.getLabelElementAspect();
             let backupedForAttribute = null; // state saved between init and dispose
             if (labelElement) {
                 backupedForAttribute = labelElement.getAttribute('for');
@@ -24,7 +25,7 @@ export function LabelPlugin(pluginData){
                 labelElement.setAttribute('for',newId);
             }
             if (backupedForAttribute)
-                return ()=> labelElement.setAttribute('for',backupedForAttribute);
+                return () => labelElement.setAttribute('for',backupedForAttribute);
         }
     }
 }

@@ -2,9 +2,8 @@ import {closestByTagName, findDirectChildByTagName, closestByClassName} from '..
 import {composeSync} from '../ToolsJs';
 
 export function SelectElementPlugin(pluginData){
-    let {staticContent, configuration, trigger, componentAspect, dataSourceAspect} = pluginData;
+    let {staticContent, staticDom, configuration, trigger, componentAspect, dataSourceAspect} = pluginData;
     
-    let staticDom = staticContent.staticDom;
     var backupDisplay = null;
     let selectElement = staticDom.selectElement;
     if (selectElement){ 
@@ -15,7 +14,7 @@ export function SelectElementPlugin(pluginData){
     var backupedRequired = false;
     if (selectElement){
         backupedRequired = selectElement.required;
-        staticContent.selectElementPluginData =  {required: selectElement.required};
+        pluginData.selectElementPluginData =  {required: selectElement.required};
         if(selectElement.required===true)
             selectElement.required = false;
     }

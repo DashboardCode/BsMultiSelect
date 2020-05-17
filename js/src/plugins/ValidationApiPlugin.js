@@ -5,14 +5,14 @@ import {getDataGuardedWithPrefix} from '../ToolsDom';
 const defValueMissingMessage = 'Please select an item in the list'
 
 export function ValidationApiPlugin(pluginData){
-    var {configuration, staticContent, componentAspect, dataSourceAspect} = pluginData;
+    var {configuration, selectElementPluginData, staticDom, staticPicks, componentAspect, dataSourceAspect, trigger} = pluginData;
     let {getIsValueMissing, valueMissingMessage, required} = configuration;
     if (!isBoolean(required))
-        required = staticContent.selectElementPluginData?.required; 
+        required = selectElementPluginData?.required; 
     else if (!isBoolean(required))
         required = false;
     valueMissingMessage = defCall(valueMissingMessage,
-        ()=> getDataGuardedWithPrefix(staticContent.staticDom.initialElement,"bsmultiselect","value-missing-message"),
+        ()=> getDataGuardedWithPrefix(staticDom.initialElement,"bsmultiselect","value-missing-message"),
         defValueMissingMessage)
 
     if (!getIsValueMissing) {
@@ -36,13 +36,16 @@ export function ValidationApiPlugin(pluginData){
         origOnChange(); 
     };
 
-    staticContent.validationApiPluginData = {validationApiObservable};
+    pluginData.validationApiPluginData = {validationApiObservable};
 
     var validationApi = ValidityApi(
-        staticContent.staticPicks.filterInputElement, 
+        staticPicks.filterInputElement, 
         isValueMissingObservable, 
         valueMissingMessage,
-        (isValid)=>validationApiObservable.setValue(isValid));
+        (isValid)=>validationApiObservable.setValue(isValid),
+        trigger, 
+        staticPicks.filterInputElement
+        );
 
     return {
         afterConstructor(multiSelect){

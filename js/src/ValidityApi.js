@@ -6,7 +6,7 @@ function createValidity(valueMissing, customError){
     });
 }
 
-export function ValidityApi(visibleElement, isValueMissingObservable, valueMissingMessage, onValid){
+export function ValidityApi(visibleElement, isValueMissingObservable, valueMissingMessage, onValid, trigger, filterInputElement){
     var customValidationMessage = "";
     var validationMessage = "";
     var validity = null;
@@ -26,7 +26,11 @@ export function ValidityApi(visibleElement, isValueMissingObservable, valueMissi
             setMessage(value, validity.customError);
         }
     );
-    
+    var checkValidity = () => {
+        if (!validity.valid)
+            trigger('dashboardcode.multiselect:invalid')
+        return validity.valid;
+    }
     return {
         validationMessage,
         willValidate,
@@ -35,13 +39,9 @@ export function ValidityApi(visibleElement, isValueMissingObservable, valueMissi
             customValidationMessage = message;
             setMessage(validity.valueMissing, customValidationMessage?true:false);
         },
-        checkValidity(){
-            if (!validity.valid)
-                trigger('dashboardcode.multiselect:invalid')
-            return validity.valid;
-        },
+        checkValidity,
         reportValidity(){
-            staticContent.staticPicks.filterInputElement.reportValidity();
+            filterInputElement.reportValidity();
             return checkValidity();
         }
     }

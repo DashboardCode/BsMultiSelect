@@ -97,9 +97,12 @@ export function BsMultiSelect(element, environment, configuration, onInit) {
 
   var pluginData = {
     window: window,
+    containerClass: containerClass,
     configuration: configuration,
     staticDom: staticDom,
     staticContent: staticContent,
+    staticPicks: staticPicks,
+    staticDialog: staticDialog,
     staticManager: staticManager,
     trigger: trigger,
     common: common,

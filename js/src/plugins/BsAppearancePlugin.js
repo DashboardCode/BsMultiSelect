@@ -3,18 +3,23 @@ import {addStyling} from '../ToolsStyling'
 import {ObservableLambda, composeSync} from '../ToolsJs';
 
 export function BsAppearancePlugin(pluginData){
-    let {configuration, common, staticContent, staticDom} = pluginData;
+    let {configuration, common, validationApiPluginData, staticPicks, staticDom, labelPluginData} = pluginData;
     let {getValidity, getSize, useCssPatch, css} = configuration;
     let selectElement = staticDom.selectElement;
     
-    if (staticContent.getLabelElement){
-        let origGetLabelElement = staticContent.getLabelElement;
-        staticContent.getLabelElement = () => {
-            var e = origGetLabelElement();
+    if (labelPluginData){
+        let origGetLabelElementAspect = labelPluginData.getLabelElementAspect;
+        labelPluginData.getLabelElementAspect = () => {
+            var e = origGetLabelElementAspect();
             if (e)
                 return e;
-            else
-                return getLabelElement(selectElement);
+            else{
+                let value = null;
+                let formGroup = closestByClassName(selectElement,'form-group');
+                if (formGroup) 
+                    value = formGroup.querySelector(`label[for="${selectElement.id}"]`);
+                return value;
+            }
         }
     }
     
@@ -34,7 +39,6 @@ export function BsAppearancePlugin(pluginData){
     common.getValidity=getValidity;
     return {
         afterConstructor(multiSelect){
-            let staticPicks = staticContent.staticPicks;
             var updateSize;
             if (!useCssPatch){
                 updateSize= () => updateSizeForAdapter(staticPicks.picksElement, getSize)
@@ -73,7 +77,7 @@ export function BsAppearancePlugin(pluginData){
             }
             var wasUpdatedObservable = ObservableLambda(()=>getWasValidated());
             var getManualValidationObservable = ObservableLambda(()=>getValidity());
-            let validationApiObservable = staticContent.validationApiPluginData?.validationApiObservable;
+            let validationApiObservable = validationApiPluginData?.validationApiObservable;
             
             var validationObservable = ObservableLambda(
                 () => wasUpdatedObservable.getValue()?validationApiObservable.getValue():getManualValidationObservable.getValue()
@@ -114,15 +118,6 @@ export function BsAppearancePlugin(pluginData){
             }
         }
     }
-}
-
-function getLabelElement(selectElement){
-    let value = null;
-    let formGroup = closestByClassName(selectElement,'form-group');
-    if (formGroup) {
-        value = formGroup.querySelector(`label[for="${selectElement.id}"]`);
-    }
-    return value;
 }
 
 function updateValidity(picksElement, validMessages, invalidMessages, validity){
