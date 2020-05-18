@@ -2,9 +2,10 @@
 import {defCall} from '../ToolsJs';
 
 export function LabelPlugin(pluginData){
-    let {configuration, containerClass, staticDom, staticPicks} = pluginData;
-    let getLabelElementAspect = () => defCall(configuration.label); // overrided by BS Appearance Plugin
-    let labelPluginData = {getLabelElementAspect};
+    let {configuration, staticDom, staticPicks} = pluginData;
+    let {containerClass, label} = configuration
+    let getLabelElementAspect = () => defCall(label); 
+    let labelPluginData = {getLabelElementAspect}; // overrided by BS Appearance Plugin
     pluginData.labelPluginData=labelPluginData;
     let createInputId = null;
     let {selectElement, containerElement} = staticDom;

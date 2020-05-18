@@ -34,7 +34,7 @@ import {extendIfUndefined, composeSync} from './ToolsJs';
         const defaults = {containerClass : "dashboardcode-bsmultiselect", css: css}
         let defaultPlugins = [CssPatchPlugin, SelectElementPlugin, LabelPlugin, HiddenOptionPlugin, ValidationApiPlugin, 
         BsAppearancePlugin, FormResetPlugin, RtlPlugin, PlaceholderPlugin , OptionsApiPlugin, 
-        JQueryMethodsPlugin, FormRestoreOnBackwardPlugin ];
+        JQueryMethodsPlugin, FormRestoreOnBackwardPlugin];
         let createBsMultiSelect = (element, settings, removeInstanceData) => { 
             let trigger = (e, eventName) => $(e).trigger(eventName);
             let environment = {trigger, window, Popper}
@@ -42,7 +42,7 @@ import {extendIfUndefined, composeSync} from './ToolsJs';
 
             let configuration = {};
             let buildConfiguration;
-            if (settings instanceof Function){
+            if (settings instanceof Function) {
                 buildConfiguration = settings;
                 settings = null;
             } else {
@@ -55,14 +55,12 @@ import {extendIfUndefined, composeSync} from './ToolsJs';
             configuration.css = createCss(defaults.css, settings?.css);
             mergeDefaults(defaultPlugins, configuration, defaults, settings);
 
-            extendIfUndefined(configuration, settings); 
-            extendIfUndefined(configuration, defaults); 
+            extendIfUndefined(configuration, settings);
+            extendIfUndefined(configuration, defaults);
         
             let onInit = buildConfiguration?.(element, configuration);
 
             onConfiguration(defaultPlugins, configuration);
-
-            
 
             let multiSelect = BsMultiSelect(element, environment, configuration, onInit);
             multiSelect.dispose = composeSync(multiSelect.dispose, removeInstanceData);

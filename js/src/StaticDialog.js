@@ -6,7 +6,7 @@ export function StaticDialog(createElement, css) {
     addStyling(choicesElement, css.choices);
     return {
         choicesElement,
-        createChoiceElement(){
+        createChoiceElement() {
             var choiceElement = createElement('LI');
             addStyling(choiceElement, css.choice);
             return {
@@ -15,6 +15,6 @@ export function StaticDialog(createElement, css) {
                 attach: (element) => choicesElement.insertBefore(choiceElement, element),
                 detach: () => removeElement(choiceElement)
             };
-        },
+        }
     }
 }

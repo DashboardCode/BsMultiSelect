@@ -1,7 +1,5 @@
-
-// appendChoices : containerElement.appendChild(choicesElement);
-export function StaticContent(staticDom, staticPicks, staticDialog, Popper) { 
-    staticDialog.choicesElement.style.display = 'none';
+export function StaticContent(filterInputElement, choicesElement, Popper) { 
+    choicesElement.style.display = 'none';
     let popper = null;
     let popperConfiguration = {
         placement: 'bottom-start',
@@ -13,14 +11,9 @@ export function StaticContent(staticDom, staticPicks, staticDialog, Popper) {
     };
 
     return {
-        staticDom,
-        staticPicks,
-        staticDialog,
-
         attachContainer(){ 
             //if (!!Popper.prototype && !!Popper.prototype.constructor.name) {
-            popper=new Popper(
-                staticPicks.filterInputElement, staticDialog.choicesElement, popperConfiguration);
+            popper = new Popper(filterInputElement, choicesElement, popperConfiguration);
             /*}else{
                 popper=Popper.createPopper(
                     filterInputElement,
@@ -33,11 +26,9 @@ export function StaticContent(staticDom, staticPicks, staticDialog, Popper) {
                 );
             }*/
         },        
-        isChoicesVisible(){
-            return staticDialog.choicesElement.style.display != 'none';
-        },
+        isChoicesVisible(){ return choicesElement.style.display != 'none'},
         setChoicesVisible(visible){
-            staticDialog.choicesElement.style.display = visible?'block':'none';
+            choicesElement.style.display = visible ? 'block' : 'none';
         },
         popperConfiguration,
         updatePopupLocation(){
@@ -48,4 +39,3 @@ export function StaticContent(staticDom, staticPicks, staticDialog, Popper) {
         }
     }
 }
-

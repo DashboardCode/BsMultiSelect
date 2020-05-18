@@ -48,8 +48,8 @@ export function onConfiguration(constructors, configuration){
     }
 }
 
-// export function onConfiguration(constructors, configuration){
-//     for(let i = 0; i<constructors.length; i++){
-//         constructors[i].onConfiguration?.(configuration)
-//     }
-// }
+export function staticDomDefaults(constructors, staticDomFactory){
+    for(let i = 0; i<constructors.length; i++){
+        constructors[i].staticDomDefaults?.(staticDomFactory)
+    }
+}

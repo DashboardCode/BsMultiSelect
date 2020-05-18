@@ -1,7 +1,8 @@
 
 
 export function FormRestoreOnBackwardPlugin(pluginData){
-    var {staticDom, window} = pluginData;
+    let {staticDom, environment} = pluginData;
+    let window = environment.window;
     return {
         afterConstructor(multiSelect){
             let origLoad = multiSelect.load.bind(multiSelect);

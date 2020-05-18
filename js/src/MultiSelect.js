@@ -11,6 +11,8 @@ export class MultiSelect {
         dataSourceAspect,
         componentAspect,
         staticContent, 
+        staticPicks, 
+        staticDialog,
         staticManager,
         pickContentGenerator, 
         choiceContentGenerator, 
@@ -21,17 +23,17 @@ export class MultiSelect {
 
         this.window = window;
         this.staticContent = staticContent;
-        this.staticManager=staticManager;
+        this.staticPicks = staticPicks;
+        this.staticDialog = staticDialog;
+        this.staticManager =staticManager;
         this.pickContentGenerator = pickContentGenerator;
         this.choiceContentGenerator = choiceContentGenerator;
-        
 
         this.visibleCount=10;
 
         this.choices = null;
         this.picks = null;
         this.stylingComposite = null;
-
     }
 
     setOptionSelected(choice, value){
@@ -75,7 +77,7 @@ export class MultiSelect {
         this.aspect.hideChoices(); // always hide 1st
         this.resetFilter();
 
-        this.staticContent.staticDialog.choicesElement.innerHTML = ""; // TODO: there should better "optimization"
+        this.staticDialog.choicesElement.innerHTML = ""; // TODO: there should better "optimization"
         
         this.choices.clear();
         this.picks.clear();
@@ -98,7 +100,7 @@ export class MultiSelect {
             this.isComponentDisabled=isComponentDisabled;
             this.picks.disableRemoveAll(isComponentDisabled);
             this.aspect.disable(isComponentDisabled);
-            this.staticContent.staticPicks.disable(isComponentDisabled);
+            this.staticPicks.disable(isComponentDisabled);
         }
     }
     updateOptionsDisabled(){
@@ -142,7 +144,7 @@ export class MultiSelect {
     }
 
     createPick(choice){
-        let { pickElement, attach, detach } = this.staticContent.staticPicks.createPickElement(); // TODO move removeElement to staticContent
+        let { pickElement, attach, detach } = this.staticPicks.createPickElement(); // TODO move removeElement to staticContent
         let pickContent = this.pickContentGenerator(pickElement);
         
         var pick = {
@@ -180,7 +182,7 @@ export class MultiSelect {
     }
 
     createChoiceElement(choice){
-        var {choiceElement, setVisible, attach, detach} = this.staticContent.staticDialog.createChoiceElement();
+        var {choiceElement, setVisible, attach, detach} = this.staticDialog.createChoiceElement();
         choice.choiceElement = choiceElement;
         choice.choiceElementAttach = attach;
                 
@@ -350,8 +352,8 @@ export class MultiSelect {
     }
 
     setFocusIn(focus){
-        this.staticContent.staticPicks.setIsFocusIn(focus)
-        this.staticContent.staticPicks.toggleFocusStyling();
+        this.staticPicks.setIsFocusIn(focus)
+        this.staticPicks.toggleFocusStyling();
     }
 
     forEach(f){
@@ -388,7 +390,7 @@ export class MultiSelect {
 
     init() {
         this.filterPanel = FilterPanel(
-            this.staticContent.staticPicks.filterInputElement,
+            this.staticPicks.filterInputElement,
             () => this.setFocusIn(true),  // focus in - show dropdown
             () => this.aspect.onFocusOut(
                     ()=>this.setFocusIn(false)
@@ -432,10 +434,10 @@ export class MultiSelect {
         );
         
         // attach filterInputElement
-        this.staticContent.staticPicks.pickFilterElement.appendChild(this.staticContent.staticPicks.filterInputElement);
+        this.staticPicks.pickFilterElement.appendChild(this.staticPicks.filterInputElement);
 
-        this.staticContent.staticPicks.picksElement.appendChild(
-            this.staticContent.staticPicks.pickFilterElement); // located filter in selectionsPanel       
+        this.staticPicks.picksElement.appendChild(
+            this.staticPicks.pickFilterElement); // located filter in selectionsPanel       
 
         this.picks =  Picks();
         
@@ -464,9 +466,9 @@ export class MultiSelect {
 
         this.aspect =  MultiSelectInputAspect(
             this.window,
-            this.staticContent.staticPicks.filterInputElement, 
-            this.staticContent.staticPicks.picksElement, 
-            this.staticContent.staticDialog.choicesElement, 
+            this.staticPicks.filterInputElement, 
+            this.staticPicks.picksElement, 
+            this.staticDialog.choicesElement, 
             ()=>this.staticContent.isChoicesVisible(),
             (visible)=>this.staticContent.setChoicesVisible(visible),
             () => this.choices.resetHoveredChoice(), 

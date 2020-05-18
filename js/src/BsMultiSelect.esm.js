@@ -35,8 +35,8 @@ export function BsMultiSelect(element, environment, settings){
     configuration.css = createCss(defaults.css, settings?.css);
     mergeDefaults(defaultPlugins, configuration, defaults, settings);
 
-    extendIfUndefined(configuration, settings); 
-    extendIfUndefined(configuration, defaults); 
+    extendIfUndefined(configuration, settings);
+    extendIfUndefined(configuration, defaults);
 
     onConfiguration(defaultPlugins, configuration);
 

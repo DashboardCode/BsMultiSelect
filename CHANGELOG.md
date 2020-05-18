@@ -1,5 +1,6 @@
 # CHANGELOG
 ````
+0.5.61 - SelectElementPlugin second version
 0.5.60 - ValidationApi problem resolved
 0.5.59 - SelectElementPlugin
 0.5.58 - FormRestoreOnBackwardPlugin

@@ -2,7 +2,7 @@
 import {EventBinder, closestByTagName} from '../ToolsDom';
 
 export function FormResetPlugin(pluginData){
-    var {staticDom, window} = pluginData;
+    var {staticDom, environment} = pluginData;
     return {
         afterConstructor(multiSelect){
             var eventBuilder = EventBinder();
@@ -11,7 +11,7 @@ export function FormResetPlugin(pluginData){
                 if (form) {
                     eventBuilder.bind(form, 
                         'reset', 
-                        () => window.setTimeout( ()=>multiSelect.updateData() ) );
+                        () => environment.window.setTimeout( ()=>multiSelect.updateData() ) );
                 }
             }
             return eventBuilder.unbind;

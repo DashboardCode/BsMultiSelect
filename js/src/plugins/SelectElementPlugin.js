@@ -1,9 +1,10 @@
 import {closestByTagName, findDirectChildByTagName, closestByClassName} from '../ToolsDom';
 import {composeSync} from '../ToolsJs';
+import {completedDomGenerator} from '../StaticDomFactory';
 
 export function SelectElementPlugin(pluginData){
-    let {staticContent, staticDom, configuration, trigger, componentAspect, dataSourceAspect} = pluginData;
-    
+    let {staticContent, staticDom, configuration, environment, componentAspect, dataSourceAspect} = pluginData;
+    let trigger = environment.trigger;
     var backupDisplay = null;
     let selectElement = staticDom.selectElement;
     if (selectElement){ 
@@ -52,11 +53,8 @@ export function SelectElementPlugin(pluginData){
         //     // if (value) option.setAttribute('selected','');
         //     // else option.removeAttribute('selected');
         // }
-
-        let {attachContainerElement, detachContainerElement} = staticContent.selectElementContainerTools;
-        staticContent.attachContainer = composeSync(attachContainerElement, staticContent.attachContainer)
-        staticContent.dispose = composeSync(detachContainerElement, staticContent.dispose)                  
-
+        staticContent.attachContainer = composeSync(staticDom.attachContainerElement, staticContent.attachContainer)
+        staticContent.dispose = composeSync(staticDom.detachContainerElement, staticContent.dispose)                  
     }
 
     return {
@@ -66,47 +64,52 @@ export function SelectElementPlugin(pluginData){
     }
 }
 
-export function selectElementStaticDomGenerator(staticDomGenerator, element, containerClass){
-    let selectElement = null;
-    let containerElement = null;
-    let picksElement = null;
-    if (element.tagName == 'SELECT') {
-        selectElement = element;
-        if (containerClass){
-            containerElement = closestByClassName(selectElement, containerClass)
-            if (containerElement)
-                picksElement = findDirectChildByTagName(containerElement, 'UL');
-        }
-    } else if (element.tagName == 'DIV') {
-        selectElement = findDirectChildByTagName(element, 'SELECT');
-        if (selectElement) {
+SelectElementPlugin.staticDomDefaults = (staticDomFactory)=>{
+    let origStaticDomGenerator = staticDomFactory.staticDomGenerator;
+    staticDomFactory.staticDomGenerator = (element, containerClass) =>
+    {
+        let selectElement = null;
+        let containerElement = null;
+        let picksElement = null;
+        if (element.tagName == 'SELECT') {
+            selectElement = element;
             if (containerClass){
-                containerElement = closestByClassName(element, containerClass);
+                containerElement = closestByClassName(selectElement, containerClass)
                 if (containerElement)
                     picksElement = findDirectChildByTagName(containerElement, 'UL');
             }
+        } else if (element.tagName == 'DIV') {
+            selectElement = findDirectChildByTagName(element, 'SELECT');
+            if (selectElement) {
+                if (containerClass){
+                    containerElement = closestByClassName(element, containerClass);
+                    if (containerElement)
+                        picksElement = findDirectChildByTagName(containerElement, 'UL');
+                }
+            } else {
+                return origStaticDomGenerator(element, containerClass);
+            } 
+        }
+        let ownContainerElement = containerElement?false:true;
+
+        let staticDom = {initialElement:element, selectElement, containerElement, picksElement, ownContainerElement};
+        let createElement = staticDomFactory.createElement;
+        completedDomGenerator(staticDom, createElement);
+
+        if (!staticDom.containerElement) {
+            staticDom.containerElement = createElement('DIV');
+            staticDom.containerElement.classList.add(containerClass);
+            staticDom.attachContainerElement = () => staticDom.selectElement.parentNode.insertBefore(staticDom.containerElement, staticDom.selectElement.nextSibling);
+            staticDom.detachContainerElement = () => staticDom.containerElement.parentNode.removeChild(staticDom.containerElement);
+        }
+
+        if (!ownContainerElement && selectElement) {
+            staticDom.appendChoicesToContainer = (choicesElement) => 
+                selectElement.parentNode.insertBefore(choicesElement, selectElement.nextSibling);
         } else {
-            return staticDomGenerator(element, containerClass);
-        } 
-    }
-    return {initialElement:element, selectElement, containerElement, picksElement};
-}
-
-export function selectElementCompletedDomGenerator(staticDom, containerClass, createElement) {
-    let attachContainerElement = null;
-    let detachContainerElement = null;
-    if (!staticDom.containerElement) {
-        staticDom.containerElement = createElement('DIV');
-        staticDom.containerElement.classList.add(containerClass);
-        attachContainerElement = () => staticDom.selectElement.parentNode.insertBefore(staticDom.containerElement, staticDom.selectElement.nextSibling);
-        detachContainerElement = () => staticDom.containerElement.parentNode.removeChild(staticDom.containerElement);
-    }
-
-    return {
-        attachContainerElement,
-        detachContainerElement
+            staticDom.appendChoicesToContainer = (choicesElement) => 
+                staticDom.containerElement.appendChild(choicesElement);
+        }
+        return staticDom;
     }
 }
-
-// SelectElementPlugin.staticDomDefaults = (configuration, defaults, settings)=>{
-// }
