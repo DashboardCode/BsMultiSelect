@@ -61,6 +61,7 @@ export function BsMultiSelect(element, environment, configuration, onInit) {
   var staticContent = staticContentGenerator(staticPicks.filterInputElement, staticDialog.choicesElement, Popper);
   var pluginData = {
     environment: environment,
+    trigger: trigger,
     configuration: configuration,
     dataSourceAspect: dataSourceAspect,
     componentAspect: componentAspect,

@@ -3,8 +3,7 @@ import {composeSync} from '../ToolsJs';
 import {completedDomGenerator} from '../StaticDomFactory';
 
 export function SelectElementPlugin(pluginData){
-    let {staticContent, staticDom, configuration, environment, componentAspect, dataSourceAspect} = pluginData;
-    let trigger = environment.trigger;
+    let {staticContent, staticDom, configuration, trigger, componentAspect, dataSourceAspect} = pluginData;
     var backupDisplay = null;
     let selectElement = staticDom.selectElement;
     if (selectElement){ 

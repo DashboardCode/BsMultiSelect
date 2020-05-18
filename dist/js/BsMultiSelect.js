@@ -2259,6 +2259,7 @@
       var staticContent = staticContentGenerator(staticPicks.filterInputElement, staticDialog.choicesElement, Popper);
       var pluginData = {
         environment: environment,
+        trigger: trigger,
         configuration: configuration,
         dataSourceAspect: dataSourceAspect,
         componentAspect: componentAspect,
@@ -2506,7 +2507,7 @@
       });
     }
 
-    function ValidityApi(visibleElement, isValueMissingObservable, valueMissingMessage, onValid, trigger, filterInputElement) {
+    function ValidityApi(visibleElement, isValueMissingObservable, valueMissingMessage, onValid, trigger) {
       var customValidationMessage = "";
       var validationMessage = "";
       var validity = null;
@@ -2539,7 +2540,7 @@
         },
         checkValidity: checkValidity,
         reportValidity: function reportValidity() {
-          filterInputElement.reportValidity();
+          visibleElement.reportValidity();
           return checkValidity();
         }
       };
@@ -2553,7 +2554,7 @@
           staticPicks = pluginData.staticPicks,
           componentAspect = pluginData.componentAspect,
           dataSourceAspect = pluginData.dataSourceAspect,
-          environment = pluginData.environment;
+          trigger = pluginData.trigger;
       var getIsValueMissing = configuration.getIsValueMissing,
           valueMissingMessage = configuration.valueMissingMessage,
           required = configuration.required;
@@ -2591,7 +2592,7 @@
       };
       var validationApi = ValidityApi(staticPicks.filterInputElement, isValueMissingObservable, valueMissingMessage, function (isValid) {
         return validationApiObservable.setValue(isValid);
-      }, environment.trigger, staticPicks.filterInputElement);
+      }, trigger);
       return {
         afterConstructor: function afterConstructor(multiSelect) {
           multiSelect.validationApi = validationApi;
@@ -3221,10 +3222,9 @@
       var staticContent = pluginData.staticContent,
           staticDom = pluginData.staticDom,
           configuration = pluginData.configuration,
-          environment = pluginData.environment,
+          trigger = pluginData.trigger,
           componentAspect = pluginData.componentAspect,
           dataSourceAspect = pluginData.dataSourceAspect;
-      var trigger = environment.trigger;
       var backupDisplay = null;
       var selectElement = staticDom.selectElement;
 

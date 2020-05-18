@@ -5,7 +5,7 @@ import {getDataGuardedWithPrefix} from '../ToolsDom';
 const defValueMissingMessage = 'Please select an item in the list'
 
 export function ValidationApiPlugin(pluginData){
-    var {configuration, selectElementPluginData, staticDom, staticPicks, componentAspect, dataSourceAspect, environment} = pluginData;
+    var {configuration, selectElementPluginData, staticDom, staticPicks, componentAspect, dataSourceAspect, trigger} = pluginData;
     let {getIsValueMissing, valueMissingMessage, required} = configuration;
     if (!isBoolean(required))
         required = selectElementPluginData?.required; 
@@ -43,8 +43,7 @@ export function ValidationApiPlugin(pluginData){
         isValueMissingObservable, 
         valueMissingMessage,
         (isValid)=>validationApiObservable.setValue(isValid),
-        environment.trigger, 
-        staticPicks.filterInputElement
+        trigger
         );
 
     return {

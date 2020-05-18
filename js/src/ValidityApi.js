@@ -6,7 +6,7 @@ function createValidity(valueMissing, customError){
     });
 }
 
-export function ValidityApi(visibleElement, isValueMissingObservable, valueMissingMessage, onValid, trigger, filterInputElement){
+export function ValidityApi(visibleElement, isValueMissingObservable, valueMissingMessage, onValid, trigger){
     var customValidationMessage = "";
     var validationMessage = "";
     var validity = null;
@@ -41,7 +41,7 @@ export function ValidityApi(visibleElement, isValueMissingObservable, valueMissi
         },
         checkValidity,
         reportValidity(){
-            filterInputElement.reportValidity();
+            visibleElement.reportValidity();
             return checkValidity();
         }
     }
