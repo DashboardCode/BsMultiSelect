@@ -8,9 +8,9 @@ import {choiceContentGenerator as defChoiceContentGenerator} from './ChoiceConte
 
 import {StaticDomFactory} from './StaticDomFactory';
 
-import {StaticPicks} from './StaticPicks';
-import {StaticDialog} from './StaticDialog';
-import {StaticContent} from './StaticContent';
+import {PicksDom} from './PicksDom';
+import {ChoicesDom} from './ChoicesDom';
+import {PopupAspect as DefaultPopupAspect} from './PopupAspect';
 
 import {ComponentAspect} from './ComponentAspect';
 import {DataSourceAspect} from './DataSourceAspect';
@@ -30,41 +30,33 @@ export function BsMultiSelect(element, environment, configuration, onInit){
     
     if (!common) 
         common = {}
+
     let dataSourceAspect = DataSourceAspect(options, getSelected, setSelected, getIsOptionDisabled); 
     let componentAspect  = ComponentAspect(getDisabled, trigger);
     common.getDisabled = componentAspect.getDisabled;
           
-    let staticContentGenerator = def(configuration.staticContentGenerator, StaticContent);
+    let PopupAspect = def(configuration.staticContentGenerator, DefaultPopupAspect); // TODO: rename configuration.staticContentGenerator
     let createElement =  name=>window.document.createElement(name);
     
-    let staticDomFactory = StaticDomFactory(createElement);
-    staticDomDefaults(plugins, staticDomFactory);
+    let choicesDom = ChoicesDom(createElement, css);
+    let staticDomFactory = StaticDomFactory(createElement, choicesDom.choicesElement);
+    staticDomDefaults(plugins, staticDomFactory); // manipulates with staticDomFactory.staticDomGenerator
    
-    let staticDom = staticDomFactory.staticDomGenerator(element, containerClass)
-    // TODO get staticPicks and staticDialog from staticDomFactory
-    var staticPicks  = StaticPicks(staticDom.picksElement, createElement, css);
-    var staticDialog = StaticDialog(createElement, css);
-    
-    var staticManager = {
-        appendToContainer(){
-            staticDom.appendChoicesToContainer(staticDialog.choicesElement);
-            // add for SE && !ownContainerElement
-            staticDom.attachPicksElement?.();
-        },
-        dispose(){
-            staticDialog.choicesElement.parentNode.removeChild(staticDialog.choicesElement);
-            if (staticDom.detachPicksElement)
-                staticDom.detachPicksElement() // some kind of optimization with abstraction leak
-            else
-                staticPicks.dispose(); // already overrided for SE
-        },
-    };
+    let {staticDom, staticManager} = staticDomFactory.staticDomGenerator(element, containerClass)
+    // TODO get picksDom and choicesDom from staticDomFactory
+    let picksDom  = PicksDom(staticDom.picksElement, createElement, css);
+    let popupAspect = PopupAspect(choicesDom.choicesElement, picksDom.filterInputElement, Popper);
 
-    let staticContent = staticContentGenerator(staticPicks.filterInputElement, staticDialog.choicesElement, Popper);
+    if (!staticDom.ownPicksElement) { // some kind of optimization with abstraction leak: if we remove - everithing is disposed
+        staticManager.dispose = composeSync(
+            staticManager.dispose, 
+            picksDom.dispose 
+        );
+    }
     
     let pluginData = {environment, trigger, configuration, dataSourceAspect, componentAspect, 
-        staticDom, staticPicks, staticDialog, staticContent, staticManager, common
-    } // TODO replace common with staticContent (but staticContent should be splitted)
+        staticDom, picksDom, choicesDom, popupAspect, staticManager, common
+    } // TODO: replace common with something new? 
     let pluginManager = PluginManager(plugins, pluginData);
 
     let pickContentGenerator = def(configuration.pickContentGenerator, defPickContentGenerator);
@@ -73,10 +65,10 @@ export function BsMultiSelect(element, environment, configuration, onInit){
     var multiSelect = new MultiSelect(
         dataSourceAspect,
         componentAspect,
-        staticContent,
-        staticPicks,
-        staticDialog,
+        picksDom,
+        choicesDom,
         staticManager,
+        popupAspect,        
         (pickElement) => pickContentGenerator(pickElement, common, css),
         (choiceElement, toggle) => choiceContentGenerator(choiceElement, common, css, toggle),
         window

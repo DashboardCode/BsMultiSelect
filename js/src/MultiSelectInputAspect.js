@@ -55,7 +55,7 @@ export function MultiSelectInputAspect (
     // TODO: remove setTimeout: set on start of mouse event reset on end
     function skipoutAndResetMousedown(){
         skipoutMousedown();
-        window.setTimeout(()=>{resetSkipFocusout()}, 0);
+        window.setTimeout(()=>resetSkipFocusout());
     }
     picksElement.addEventListener("mousedown", skipoutAndResetMousedown);
 
@@ -101,7 +101,7 @@ export function MultiSelectInputAspect (
         // we can't remove item on "click" in the same loop iteration - it is unfrendly for 3PP event handlers (they will get detached element)
         // never remove elements in the same event iteration
 
-        window.setTimeout(()=>uncheckOption(),0)
+        window.setTimeout(()=>uncheckOption())
         preventDefaultClickEvent = event; // setPreventDefaultMultiSelectEvent
     }
 

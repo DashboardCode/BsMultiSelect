@@ -2,7 +2,7 @@ import {getIsRtl, AttributeBackup} from '../ToolsDom';
 import {isBoolean} from '../ToolsJs';
 
 export function RtlPlugin(pluginData){
-    let {configuration, staticContent, staticDom} = pluginData;
+    let {configuration, popupAspect, staticDom} = pluginData;
     let {isRtl} = configuration;
     let forceRtlOnContainer = false; 
     if (isBoolean(isRtl))
@@ -21,7 +21,7 @@ export function RtlPlugin(pluginData){
         }
     } 
     if (isRtl)
-        staticContent.popperConfiguration.placement = 'bottom-end';
+        popupAspect.popperConfiguration.placement = 'bottom-end';
     return {
         dispose(){
             attributeBackup.restore;

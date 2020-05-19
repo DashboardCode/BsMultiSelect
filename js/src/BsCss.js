@@ -39,7 +39,7 @@ export const cssPatch = {
     },
     filterInput_empty: 'form-control', // need for placeholder, TODO test form-control-plaintext
 
-    // used in staticContentGenerator
+    // used in PicksDom
     picks_disabled: {backgroundColor: '#e9ecef'},
 
     picks_focus: {borderColor: '#80bdff', boxShadow: '0 0 0 0.2rem rgba(0, 123, 255, 0.25)'},

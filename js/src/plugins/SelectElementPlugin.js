@@ -1,9 +1,9 @@
 import {closestByTagName, findDirectChildByTagName, closestByClassName} from '../ToolsDom';
 import {composeSync} from '../ToolsJs';
-import {completedDomGenerator} from '../StaticDomFactory';
+import {completePicksElement} from '../StaticDomFactory';
 
 export function SelectElementPlugin(pluginData){
-    let {staticContent, staticDom, configuration, trigger, componentAspect, dataSourceAspect} = pluginData;
+    let {staticManager, staticDom, configuration, trigger, componentAspect, dataSourceAspect} = pluginData;
     var backupDisplay = null;
     let selectElement = staticDom.selectElement;
     if (selectElement){ 
@@ -19,14 +19,7 @@ export function SelectElementPlugin(pluginData){
             selectElement.required = false;
     }
     
-    let origDispose = staticContent.dispose;
-    if (selectElement){
-        staticContent.dispose = () => {
-            origDispose();
-            selectElement.required = backupedRequired;
-            selectElement.style.display = backupDisplay;
-        }
-    }
+    
 
     let {getDisabled, getIsOptionDisabled} = configuration;
     if (selectElement) {
@@ -52,19 +45,23 @@ export function SelectElementPlugin(pluginData){
         //     // if (value) option.setAttribute('selected','');
         //     // else option.removeAttribute('selected');
         // }
-        staticContent.attachContainer = composeSync(staticDom.attachContainerElement, staticContent.attachContainer)
-        staticContent.dispose = composeSync(staticDom.detachContainerElement, staticContent.dispose)                  
-    }
 
-    return {
-        dispose(){
-            // move staticContent.dispose = composeSync(detachContainerElement, staticContent.dispose)    there
+        let origDispose = staticManager.dispose;
+        if (selectElement){
+            staticManager.dispose = () => {
+                origDispose();
+                selectElement.required = backupedRequired;
+                selectElement.style.display = backupDisplay;
+            }
         }
+
+        staticManager.appendToContainer = composeSync(staticManager.appendToContainer, staticDom.attachContainerElement)
+        staticManager.dispose = composeSync(staticDom.detachContainerElement, staticManager.dispose)                  
     }
 }
 
 SelectElementPlugin.staticDomDefaults = (staticDomFactory)=>{
-    let origStaticDomGenerator = staticDomFactory.staticDomGenerator;
+    let { choicesElement, createElement, staticDomGenerator:origStaticDomGenerator} = staticDomFactory;
     staticDomFactory.staticDomGenerator = (element, containerClass) =>
     {
         let selectElement = null;
@@ -91,24 +88,30 @@ SelectElementPlugin.staticDomDefaults = (staticDomFactory)=>{
         }
         let ownContainerElement = containerElement?false:true;
 
-        let staticDom = {initialElement:element, selectElement, containerElement, picksElement, ownContainerElement};
-        let createElement = staticDomFactory.createElement;
-        completedDomGenerator(staticDom, createElement);
-
-        if (!staticDom.containerElement) {
-            staticDom.containerElement = createElement('DIV');
-            staticDom.containerElement.classList.add(containerClass);
-            staticDom.attachContainerElement = () => staticDom.selectElement.parentNode.insertBefore(staticDom.containerElement, staticDom.selectElement.nextSibling);
-            staticDom.detachContainerElement = () => staticDom.containerElement.parentNode.removeChild(staticDom.containerElement);
+        let staticManager = {};
+        if (!containerElement) {
+            containerElement = createElement('DIV');
+            containerElement.classList.add(containerClass);
+        
+            staticManager = {
+                appendToContainer(){ selectElement.parentNode.insertBefore(containerElement, selectElement.nextSibling) },
+                dispose(){ selectElement.parentNode.removeChild(containerElement) }
+            }
         }
+
+        let staticDom = {initialElement:element, selectElement, containerElement, picksElement};
+        
+        completePicksElement(staticDom, staticManager, createElement);
 
         if (!ownContainerElement && selectElement) {
-            staticDom.appendChoicesToContainer = (choicesElement) => 
-                selectElement.parentNode.insertBefore(choicesElement, selectElement.nextSibling);
+            staticManager.appendToContainer = composeSync(staticManager.appendToContainer,
+                () => selectElement.parentNode.insertBefore(choicesElement, selectElement.nextSibling))
         } else {
-            staticDom.appendChoicesToContainer = (choicesElement) => 
-                staticDom.containerElement.appendChild(choicesElement);
+            staticManager.appendToContainer = composeSync(staticManager.appendToContainer,
+                () => containerElement.appendChild(choicesElement))
         }
-        return staticDom;
+        staticManager.dispose = composeSync(staticManager.dispose,
+            () => choicesElement.parentNode.removeChild(choicesElement));
+        return {staticDom, staticManager};
     }
 }

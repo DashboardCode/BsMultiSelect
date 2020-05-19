@@ -3,9 +3,9 @@ import {getDataGuardedWithPrefix} from '../ToolsDom';
 import {toggleStyling} from '../ToolsStyling';
 
 export function PlaceholderPlugin(pluginData){
-    let {configuration, staticContent, staticPicks, staticDom} = pluginData;
+    let {configuration, staticManager, picksDom, staticDom} = pluginData;
     let {placeholder,  css} = configuration;
-    let {picksElement, filterInputElement} = staticPicks;
+    let {picksElement, filterInputElement} = picksDom;
 
     if (!placeholder){
         placeholder = getDataGuardedWithPrefix(staticDom.initialElement,"bsmultiselect","placeholder");
@@ -47,14 +47,13 @@ export function PlaceholderPlugin(pluginData){
                 setEmptyInputWidth(multiSelect.isEmpty())
             };
                     
-            let origDisable = staticPicks.disable;
-            staticPicks.disable = (isComponentDisabled)=>{
+            let origDisable = picksDom.disable;
+            picksDom.disable = (isComponentDisabled)=>{
                 setDisabled(isComponentDisabled);
                 origDisable(isComponentDisabled);
             };
 
-            let origAttachContainer = staticContent.attachContainer;
-            staticContent.attachContainer = composeSync(updateEmptyInputWidth, origAttachContainer);
+            staticManager.appendToContainer = composeSync(staticManager.appendToContainer, updateEmptyInputWidth);
 
             let origProcessEmptyInput = multiSelect.processEmptyInput.bind(multiSelect);
             multiSelect.processEmptyInput = composeSync(updateEmptyInputWidth, origProcessEmptyInput);

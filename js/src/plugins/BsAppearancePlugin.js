@@ -3,7 +3,7 @@ import {addStyling} from '../ToolsStyling'
 import {ObservableLambda, composeSync} from '../ToolsJs';
 
 export function BsAppearancePlugin(pluginData){
-    let {configuration, common, validationApiPluginData, staticPicks, staticDom, labelPluginData} = pluginData;
+    let {configuration, common, validationApiPluginData, picksDom, staticDom, labelPluginData} = pluginData;
     let {getValidity, getSize, useCssPatch, css} = configuration;
     let selectElement = staticDom.selectElement;
     
@@ -41,31 +41,31 @@ export function BsAppearancePlugin(pluginData){
         afterConstructor(multiSelect){
             var updateSize;
             if (!useCssPatch){
-                updateSize= () => updateSizeForAdapter(staticPicks.picksElement, getSize)
+                updateSize= () => updateSizeForAdapter(picksDom.picksElement, getSize)
             }
             else{
                 const {picks_lg, picks_sm, picks_def} = css;
-                updateSize = () => updateSizeJsForAdapter(staticPicks.picksElement, picks_lg, picks_sm, picks_def, getSize);
+                updateSize = () => updateSizeJsForAdapter(picksDom.picksElement, picks_lg, picks_sm, picks_def, getSize);
             }
             multiSelect.UpdateSize = updateSize;
             
             if (useCssPatch){
-                var defToggleFocusStyling = staticPicks.toggleFocusStyling;
-                staticPicks.toggleFocusStyling = () => {
+                var defToggleFocusStyling = picksDom.toggleFocusStyling;
+                picksDom.toggleFocusStyling = () => {
                     var validity =  validationObservable.getValue();
-                    var isFocusIn = staticPicks.getIsFocusIn();
+                    var isFocusIn = picksDom.getIsFocusIn();
                     defToggleFocusStyling(isFocusIn)
                     if (isFocusIn){
                         if (validity===false) { 
                             // but not toggle events (I know it will be done in future)
-                            staticPicks.setIsFocusIn(isFocusIn);
+                            picksDom.setIsFocusIn(isFocusIn);
                             
-                            addStyling(staticPicks.picksElement, css.picks_focus_invalid)
+                            addStyling(picksDom.picksElement, css.picks_focus_invalid)
                         } else if (validity===true) {
                             // but not toggle events (I know it will be done in future)
-                            staticPicks.setIsFocusIn(isFocusIn);
+                            picksDom.setIsFocusIn(isFocusIn);
                             
-                            addStyling(staticPicks.picksElement, css.picks_focus_valid)  
+                            addStyling(picksDom.picksElement, css.picks_focus_valid)  
                         }              
                     }
                 }
@@ -87,10 +87,10 @@ export function BsAppearancePlugin(pluginData){
                 (value)=>{
                     var  {validMessages, invalidMessages} = getMessagesElements(staticDom.containerElement);
                     updateValidity( 
-                    staticPicks.picksElement,
+                    picksDom.picksElement,
                     validMessages, invalidMessages,
                     value);
-                    staticPicks.toggleFocusStyling();
+                    picksDom.toggleFocusStyling();
                 }
             )
             wasUpdatedObservable.attach(

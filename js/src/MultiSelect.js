@@ -10,21 +10,23 @@ export class MultiSelect {
     constructor(
         dataSourceAspect,
         componentAspect,
-        staticContent, 
-        staticPicks, 
-        staticDialog,
+        picksDom, 
+        choicesDom,
         staticManager,
+        popupAspect,         
+        
         pickContentGenerator, 
         choiceContentGenerator, 
+        
         window) {
 
         this.dataSourceAspect=dataSourceAspect;
         this.componentAspect=componentAspect;
 
         this.window = window;
-        this.staticContent = staticContent;
-        this.staticPicks = staticPicks;
-        this.staticDialog = staticDialog;
+        this.popupAspect = popupAspect;
+        this.picksDom = picksDom;
+        this.choicesDom = choicesDom;
         this.staticManager =staticManager;
         this.pickContentGenerator = pickContentGenerator;
         this.choiceContentGenerator = choiceContentGenerator;
@@ -77,7 +79,7 @@ export class MultiSelect {
         this.aspect.hideChoices(); // always hide 1st
         this.resetFilter();
 
-        this.staticDialog.choicesElement.innerHTML = ""; // TODO: there should better "optimization"
+        this.choicesDom.choicesElement.innerHTML = ""; // TODO: there should better "optimization"
         
         this.choices.clear();
         this.picks.clear();
@@ -100,7 +102,7 @@ export class MultiSelect {
             this.isComponentDisabled=isComponentDisabled;
             this.picks.disableRemoveAll(isComponentDisabled);
             this.aspect.disable(isComponentDisabled);
-            this.staticPicks.disable(isComponentDisabled);
+            this.picksDom.disable(isComponentDisabled);
         }
     }
     updateOptionsDisabled(){
@@ -137,6 +139,7 @@ export class MultiSelect {
         ); 
         this.resetFilter();
     }
+
     deselectAll(){
         this.aspect.hideChoices(); // always hide 1st
         this.picks.removeAll();
@@ -144,7 +147,7 @@ export class MultiSelect {
     }
 
     createPick(choice){
-        let { pickElement, attach, detach } = this.staticPicks.createPickElement(); // TODO move removeElement to staticContent
+        let { pickElement, attach, detach } = this.picksDom.createPickElement(); 
         let pickContent = this.pickContentGenerator(pickElement);
         
         var pick = {
@@ -182,7 +185,7 @@ export class MultiSelect {
     }
 
     createChoiceElement(choice){
-        var {choiceElement, setVisible, attach, detach} = this.staticDialog.createChoiceElement();
+        var {choiceElement, setVisible, attach, detach} = this.choicesDom.createChoiceElement();
         choice.choiceElement = choiceElement;
         choice.choiceElementAttach = attach;
                 
@@ -315,7 +318,7 @@ export class MultiSelect {
         let visibleCount = this.filterListFacade.getCount();
 
         if (visibleCount>0){
-            let panelIsVisble = this.staticContent.isChoicesVisible();
+            let panelIsVisble = this.popupAspect.isChoicesVisible();
             if (!panelIsVisble){
                 this.aspect.showChoices();
             }
@@ -326,7 +329,7 @@ export class MultiSelect {
                     this.choices.resetHoveredChoice();
             }   
         }else{
-            if (this.staticContent.isChoicesVisible())
+            if (this.popupAspect.isChoicesVisible())
                 this.aspect.hideChoices();
         }
     }
@@ -352,8 +355,8 @@ export class MultiSelect {
     }
 
     setFocusIn(focus){
-        this.staticPicks.setIsFocusIn(focus)
-        this.staticPicks.toggleFocusStyling();
+        this.picksDom.setIsFocusIn(focus)
+        this.picksDom.toggleFocusStyling();
     }
 
     forEach(f){
@@ -390,7 +393,7 @@ export class MultiSelect {
 
     init() {
         this.filterPanel = FilterPanel(
-            this.staticPicks.filterInputElement,
+            this.picksDom.filterInputElement,
             () => this.setFocusIn(true),  // focus in - show dropdown
             () => this.aspect.onFocusOut(
                     ()=>this.setFocusIn(false)
@@ -401,16 +404,16 @@ export class MultiSelect {
             () => {
                 let p = this.picks.removePicksTail();
                 if (p)
-                    this.staticContent.updatePopupLocation();
+                    this.popupAspect.updatePopupLocation();
             }, // backspace - "remove last"
 
             /*onTabToCompleate*/() => { 
-                if (this.staticContent.isChoicesVisible()) {
+                if (this.popupAspect.isChoicesVisible()) {
                     this.hoveredToSelected();
                 } 
             },
             /*onEnterToCompleate*/() => { 
-                if (this.staticContent.isChoicesVisible()) {
+                if (this.popupAspect.isChoicesVisible()) {
                     this.hoveredToSelected();
                 } else {
                     if (this.filterListFacade.getCount()>0){
@@ -425,7 +428,7 @@ export class MultiSelect {
             }, // esc keyup 
 
              // tab/enter "compleate hovered"
-            /*stopEscKeyDownPropogation */() => this.staticContent.isChoicesVisible(),
+            /*stopEscKeyDownPropogation */() => this.popupAspect.isChoicesVisible(),
 
             /*onInput*/(filterInputValue, resetLength) =>
             { 
@@ -434,10 +437,10 @@ export class MultiSelect {
         );
         
         // attach filterInputElement
-        this.staticPicks.pickFilterElement.appendChild(this.staticPicks.filterInputElement);
+        this.picksDom.pickFilterElement.appendChild(this.picksDom.filterInputElement);
 
-        this.staticPicks.picksElement.appendChild(
-            this.staticPicks.pickFilterElement); // located filter in selectionsPanel       
+        this.picksDom.picksElement.appendChild(
+            this.picksDom.pickFilterElement); // located filter in selectionsPanel       
 
         this.picks =  Picks();
         
@@ -466,11 +469,11 @@ export class MultiSelect {
 
         this.aspect =  MultiSelectInputAspect(
             this.window,
-            this.staticPicks.filterInputElement, 
-            this.staticPicks.picksElement, 
-            this.staticDialog.choicesElement, 
-            ()=>this.staticContent.isChoicesVisible(),
-            (visible)=>this.staticContent.setChoicesVisible(visible),
+            this.picksDom.filterInputElement, 
+            this.picksDom.picksElement, 
+            this.choicesDom.choicesElement, 
+            ()=>this.popupAspect.isChoicesVisible(),
+            (visible)=>this.popupAspect.setChoicesVisible(visible),
             () => this.choices.resetHoveredChoice(), 
             (choice) => this.choices.hoverIn(choice),
             () => this.resetFilter(),
@@ -478,9 +481,9 @@ export class MultiSelect {
             
             /*onClick*/(event) => this.filterPanel.setFocusIfNotTarget(event.target),
             /*resetFocus*/() => this.setFocusIn(false),
-            /*alignToFilterInputItemLocation*/() => this.staticContent.updatePopupLocation()
+            /*alignToFilterInputItemLocation*/() => this.popupAspect.updatePopupLocation()
         );
-        this.staticContent.attachContainer();
+        this.popupAspect.init();
     }
 
     load(){
@@ -521,7 +524,7 @@ export class MultiSelect {
             this.filterPanel.dispose,
             this.aspect.dispose,
             this.staticManager.dispose,
-            this.staticContent.dispose,
+            this.popupAspect.dispose,
             this.choices.dispose
         );
     }

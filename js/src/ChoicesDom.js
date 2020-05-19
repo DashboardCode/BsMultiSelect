@@ -1,7 +1,6 @@
-import {removeElement} from './ToolsDom';
 import {addStyling} from './ToolsStyling';
 
-export function StaticDialog(createElement, css) { 
+export function ChoicesDom(createElement, css) { 
     var choicesElement = createElement('UL');
     addStyling(choicesElement, css.choices);
     return {
@@ -13,7 +12,7 @@ export function StaticDialog(createElement, css) {
                 choiceElement, 
                 setVisible: (isVisible) => choiceElement.style.display = isVisible ? 'block': 'none',
                 attach: (element) => choicesElement.insertBefore(choiceElement, element),
-                detach: () => removeElement(choiceElement)
+                detach: () => choicesElement.removeChild(choiceElement)
             };
         }
     }

@@ -1,5 +1,3 @@
-export function removeElement(e) {e.parentNode.removeChild(e)}
-
 export function findDirectChildByTagName(element, tagName){
     let value = null;
     for (let i = 0; i<element.children.length; i++)

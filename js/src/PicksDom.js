@@ -1,7 +1,6 @@
-import {removeElement} from './ToolsDom';
 import {addStyling, toggleStyling} from './ToolsStyling';
 
-export function StaticPicks(picksElement, createElement, css){
+export function PicksDom(picksElement, createElement, css){
     var pickFilterElement  = createElement('LI');
     var filterInputElement = createElement('INPUT');
     
@@ -24,7 +23,7 @@ export function StaticPicks(picksElement, createElement, css){
             return {
                 pickElement, 
                 attach: () => picksElement.insertBefore(pickElement, pickFilterElement),
-                detach: () => removeElement(pickElement)
+                detach: () => picksElement.removeChild(pickElement)
             };
         },
         disable(isComponentDisabled){

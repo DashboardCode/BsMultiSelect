@@ -1,4 +1,4 @@
-export function StaticContent(filterInputElement, choicesElement, Popper) { 
+export function PopupAspect(choicesElement, filterInputElement, Popper) { 
     choicesElement.style.display = 'none';
     let popper = null;
     let popperConfiguration = {
@@ -11,7 +11,7 @@ export function StaticContent(filterInputElement, choicesElement, Popper) {
     };
 
     return {
-        attachContainer(){ 
+        init(){ 
             //if (!!Popper.prototype && !!Popper.prototype.constructor.name) {
             popper = new Popper(filterInputElement, choicesElement, popperConfiguration);
             /*}else{

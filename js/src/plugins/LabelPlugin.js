@@ -2,14 +2,14 @@
 import {defCall} from '../ToolsJs';
 
 export function LabelPlugin(pluginData){
-    let {configuration, staticDom, staticPicks} = pluginData;
+    let {configuration, staticDom, picksDom} = pluginData;
     let {containerClass, label} = configuration
     let getLabelElementAspect = () => defCall(label); 
     let labelPluginData = {getLabelElementAspect}; // overrided by BS Appearance Plugin
     pluginData.labelPluginData=labelPluginData;
     let createInputId = null;
     let {selectElement, containerElement} = staticDom;
-    let {filterInputElement} = staticPicks;
+    let {filterInputElement} = picksDom;
     if(selectElement)
         createInputId = () => `${containerClass}-generated-input-${((selectElement.id)?selectElement.id:selectElement.name).toLowerCase()}-id`;
     else
