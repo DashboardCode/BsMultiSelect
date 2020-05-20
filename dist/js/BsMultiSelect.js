@@ -1,5 +1,5 @@
 /*!
-  * DashboardCode BsMultiSelect v0.5.62 (https://dashboardcode.github.io/BsMultiSelect/)
+  * DashboardCode BsMultiSelect v0.5.63 (https://dashboardcode.github.io/BsMultiSelect/)
   * Copyright 2017-2020 Roman Pokrovskij (github user rpokrovskij)
   * Licensed under APACHE 2 (https://github.com/DashboardCode/BsMultiSelect/blob/master/LICENSE)
   */
@@ -2007,9 +2007,16 @@
           }
 
           var containerElement, picksElement;
+          var removeContainerClass = false;
 
           if (element.tagName == 'DIV') {
             containerElement = element;
+
+            if (!containerElement.classList.contains(containerClass)) {
+              containerElement.classList.add(containerClass);
+              removeContainerClass = true;
+            }
+
             picksElement = findDirectChildByTagName(containerElement, 'UL');
           } else if (element.tagName == 'UL') {
             picksElement = element;
@@ -2035,6 +2042,7 @@
             },
             dispose: function dispose() {
               containerElement.removeChild(choicesElement);
+              if (removeContainerClass) containerElement.classList.remove(containerClass);
             }
           };
           completePicksElement(staticDom, staticManager, createElement);
@@ -2252,7 +2260,7 @@
       var popupAspect = PopupAspect$1(choicesDom.choicesElement, picksDom.filterInputElement, Popper);
 
       if (!staticDom.ownPicksElement) {
-        // some kind of optimization with abstraction leak: if we remove - everithing is disposed
+        // some kind of optimization with abstraction leak: if we remove element - no need to dispose picksDom
         staticManager.dispose = composeSync(staticManager.dispose, picksDom.dispose);
       }
 

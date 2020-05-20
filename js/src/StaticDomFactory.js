@@ -24,8 +24,13 @@ export function StaticDomFactory(createElement, choicesElement){
             }
            
             let containerElement, picksElement;
+            let removeContainerClass= false;
             if (element.tagName == 'DIV') {
                 containerElement = element;
+                if (!containerElement.classList.contains(containerClass)){
+                    containerElement.classList.add(containerClass);
+                    removeContainerClass = true;
+                }
                 picksElement = findDirectChildByTagName(containerElement, 'UL');
             }
             else if (element.tagName == 'UL') {
@@ -48,7 +53,11 @@ export function StaticDomFactory(createElement, choicesElement){
 
             let staticManager = {
                 appendToContainer(){ containerElement.appendChild(choicesElement); },
-                dispose(){ containerElement.removeChild(choicesElement); }
+                dispose(){ 
+                    containerElement.removeChild(choicesElement); 
+                    if (removeContainerClass)
+                        containerElement.classList.remove(containerClass);
+                }
             }
              
             completePicksElement(staticDom, staticManager, createElement);
