@@ -33,10 +33,10 @@ export function OptionsApiPlugin(pluginData){
                 let option = options[key];
                 let choice = multiSelect.optionAspect.createChoice(option);
                 multiSelect.choices.insert(key, choice);
-                choiceFactoryAspect.insertChoiceItem(choice,
-                        () => multiSelect.filterPanel.setFocus(),
-                        (c) => multiSelect.createPick(c),
-                        (c,e) => multiSelect.aspect.adoptChoiceElement(c,e)
+                choiceFactoryAspect.insertChoiceItem(
+                        choice,
+                        (c,e) => multiSelect.aspect.adoptChoiceElement(c,e),
+                        (o,s) => multiSelect.aspect.handleOnRemoveButton(o,s)
                     )
             }
         

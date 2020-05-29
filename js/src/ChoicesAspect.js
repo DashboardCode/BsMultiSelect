@@ -1,16 +1,16 @@
 export function ChoicesElementAspect(
-    choicesDom, 
+    choicesDom,
+    filterDom, 
     choiceContentGenerator,
     componentAspect, 
-    optionToggleAspect
+    optionToggleAspect,
+    picksAspect
     ) {
     return {
-        createChoiceElement(
-            choice,
-            setFocus, // filterPanel.setFocus !!
-            createPick, // !! this.createPick
-            adoptChoiceElement, // aspect.adoptChoiceElement
-                    
+        buildChoiceElement(
+                choice,
+                adoptChoiceElement, // aspect.adoptChoiceElement
+                handleOnRemoveButton // aspect.handleOnRemoveButton
             ){
             var {choiceElement, setVisible, attach, detach} = choicesDom.createChoiceElement();
             choice.choiceElement = choiceElement;
@@ -20,15 +20,16 @@ export function ChoicesElementAspect(
                 choiceElement, 
                 () => {
                     optionToggleAspect.toggleOptionSelected(choice);
-                    setFocus();
-            });
+                    filterDom.setFocus();
+                }
+            );
         
             let updateSelectedChoiceContent = () => 
                 choiceContent.select(choice.isOptionSelected)
         
             let pickTools = { updateSelectedTrue: null, updateSelectedFalse: null }
             let updateSelectedTrue = () => { 
-                var removePick = createPick(choice);
+                var removePick = picksAspect.createPick(choice, handleOnRemoveButton);
                 pickTools.updateSelectedFalse = removePick;
             };
         
@@ -103,26 +104,24 @@ export function ChoicesElementAspect(
 
 export function ChoiceFactoryAspect(choicesElementAspect, choicesGetNextAspect){
     return {
-        pushChoiceItem(choice,
-            setFocus, // filterPanel.setFocus !!
-            createPick, // !! this.createPick
+        pushChoiceItem(
+            choice,
             adoptChoiceElement, // aspect.adoptChoiceElement
+            handleOnRemoveButton // this.aspect.handleOnRemoveButton
             ){
-                choicesElementAspect.createChoiceElement(
+                choicesElementAspect.buildChoiceElement(
                     choice,
-                    setFocus, // filterPanel.setFocus !!
-                    createPick, // !! this.createPick
-                    adoptChoiceElement // aspect.adoptChoiceElement
+                    adoptChoiceElement,
+                    handleOnRemoveButton
                     );
                 choice.choiceElementAttach();
         },
         insertChoiceItem(
             choice,
-            setFocus, // filterPanel.setFocus !!
-            createPick, // !! this.createPick
-            adoptChoiceElement // aspect.adoptChoiceElement
+            adoptChoiceElement, // aspect.adoptChoiceElement
+            handleOnRemoveButton
             ){
-                choicesElementAspect.createChoiceElement(choice, setFocus, createPick, adoptChoiceElement);
+                choicesElementAspect.buildChoiceElement(choice, adoptChoiceElement, handleOnRemoveButton);
                 let nextChoice = choicesGetNextAspect.getNext(choice);
                 choice.choiceElementAttach(nextChoice?.choiceElement);
         }
@@ -133,9 +132,8 @@ export function ChoiceFactoryAspect(choicesElementAspect, choicesGetNextAspect){
 export function ChoicesAspect(document, optionAspect, dataSourceAspect, choices, choiceFactoryAspect) { 
     return {
         updateDataImpl(
-            setFocus, // filterPanel.setFocus !!
-            createPick, // !! this.createPick
-            adoptChoiceElement // aspect.adoptChoiceElement
+            adoptChoiceElement, // aspect.adoptChoiceElement
+            handleOnRemoveButton
         ){
             var fillChoices = () => {
                 let options = dataSourceAspect.getOptions();
@@ -145,9 +143,8 @@ export function ChoicesAspect(document, optionAspect, dataSourceAspect, choices,
                     choices.push(choice);
                     choiceFactoryAspect.pushChoiceItem(
                         choice,
-                        setFocus, // filterPanel.setFocus !!
-                        createPick, // !! this.createPick
-                        adoptChoiceElement // aspect.adoptChoiceElement
+                        adoptChoiceElement,
+                        handleOnRemoveButton
                         );
                 } 
             }

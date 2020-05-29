@@ -2,7 +2,7 @@ import {EventBinder, EventLoopFlag, containsAndSelf} from './ToolsDom'
 
 export function MultiSelectInputAspect (
     window,
-    filterInputElement, 
+    setFocus, 
     picksElement,
     choicesElement, 
     isChoicesVisible,
@@ -38,7 +38,7 @@ export function MultiSelectInputAspect (
     var documentMouseup = function(event) {
         // if we would left without focus then "close the drop" do not remove focus border
         if (choicesElement == event.target) 
-            filterInputElement.focus()
+            setFocus()
 
         // if click outside container - close dropdown
         else if ( !containsAndSelf(choicesElement, event.target) && !containsAndSelf(picksElement, event.target)) {

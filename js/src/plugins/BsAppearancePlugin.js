@@ -50,11 +50,11 @@ export function BsAppearancePlugin(pluginData){
             multiSelect.UpdateSize = updateSize;
             
             if (useCssPatch){
-                var defToggleFocusStyling = picksDom.toggleFocusStyling;
+                var origToggleFocusStyling = picksDom.toggleFocusStyling;
                 picksDom.toggleFocusStyling = () => {
                     var validity =  validationObservable.getValue();
                     var isFocusIn = picksDom.getIsFocusIn();
-                    defToggleFocusStyling(isFocusIn)
+                    origToggleFocusStyling(isFocusIn)
                     if (isFocusIn){
                         if (validity===false) { 
                             // but not toggle events (I know it will be done in future)

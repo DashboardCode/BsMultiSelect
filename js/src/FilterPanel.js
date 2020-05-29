@@ -15,11 +15,8 @@ export function FilterPanel(
 
         stopEscKeyDownPropogation, 
         
-        onInput//, // filter
+        onInput // filter
 ){
-    filterInputElement.setAttribute("type","search");
-    filterInputElement.setAttribute("autocomplete","off");
-
     var isEmpty = () => filterInputElement.value ? false:true;
 
     var onfilterInputKeyDown = (event) => {
@@ -97,25 +94,13 @@ export function FilterPanel(
     }
     
     var eventBinder = EventBinder();
-    eventBinder.bind(filterInputElement,'focusin', onFocusIn);
+    eventBinder.bind(filterInputElement,'focusin',  onFocusIn);
     eventBinder.bind(filterInputElement,'focusout', onFocusOut);
-    eventBinder.bind(filterInputElement,'input', onFilterInputInput);
-    eventBinder.bind(filterInputElement,'keydown', onfilterInputKeyDown);    
-    eventBinder.bind(filterInputElement,'keyup', onFilterInputKeyUp);
+    eventBinder.bind(filterInputElement,'input',    onFilterInputInput);
+    eventBinder.bind(filterInputElement,'keydown',  onfilterInputKeyDown);    
+    eventBinder.bind(filterInputElement,'keyup',    onFilterInputKeyUp);
 
     return {
-        isEmpty,
-        setEmpty(){
-            filterInputElement.value ='';
-        },
-        setFocus(){
-            filterInputElement.focus();
-        },
-        // TODO: check why I need this comparision? 
-        setFocusIfNotTarget(target){
-            if (target != filterInputElement)
-                filterInputElement.focus();
-        },
         dispose(){
             eventBinder.unbind();
         }

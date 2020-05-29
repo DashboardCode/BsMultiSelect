@@ -3,10 +3,10 @@ import {getDataGuardedWithPrefix} from '../ToolsDom';
 import {toggleStyling} from '../ToolsStyling';
 
 export function PlaceholderPlugin(pluginData){
-    let {configuration, staticManager, picksDom, staticDom} = pluginData;
+    let {configuration, staticManager, picks, picksDom, filterDom, staticDom, picksAspect, inputAspect} = pluginData;
     let {placeholder,  css} = configuration;
-    let {picksElement, filterInputElement} = picksDom;
-
+    let {picksElement} = picksDom;
+    let filterInputElement = filterDom.filterInputElement;
     if (!placeholder){
         placeholder = getDataGuardedWithPrefix(staticDom.initialElement,"bsmultiselect","placeholder");
     }
@@ -37,14 +37,14 @@ export function PlaceholderPlugin(pluginData){
     function setDisabled(isComponentDisabled){ 
         filterInputElement.disabled = isComponentDisabled;
     };
-
+    let isEmpty = () => picks.isEmpty() && filterDom.isEmpty()
     return {
         afterConstructor(multiSelect){
             function updatePlacehodlerVisibility(){
-                showPlacehodler(multiSelect.isEmpty());
+                showPlacehodler(isEmpty());
             };
             function updateEmptyInputWidth(){
-                setEmptyInputWidth(multiSelect.isEmpty())
+                setEmptyInputWidth(isEmpty())
             };
                     
             let origDisable = picksDom.disable;
@@ -64,15 +64,16 @@ export function PlaceholderPlugin(pluginData){
             let origForceResetFilter = multiSelect.forceResetFilter.bind(multiSelect);
             multiSelect.forceResetFilter = composeSync(origForceResetFilter, updatePlacehodlerVisibility);
             
-            let origInput = multiSelect.input.bind(multiSelect);
-            multiSelect.input = (filterInputValue, resetLength) =>{
+            let origInput = inputAspect.input;
+
+            inputAspect.input = (filterInputValue, resetLength, eventLoopFlag_set, aspect_showChoices, aspect_hideChoices) =>{
                 updatePlacehodlerVisibility();
-                origInput(filterInputValue, resetLength);
+                origInput(filterInputValue, resetLength, eventLoopFlag_set, aspect_showChoices, aspect_hideChoices);
             }
 
-            let origCreatePick = multiSelect.createPick.bind(multiSelect);
-            multiSelect.createPick = (choice)=>{
-                let removePick = origCreatePick(choice);
+            let origCreatePick = picksAspect.createPick;
+            picksAspect.createPick = (choice, handleOnRemoveButton)=>{ 
+                let removePick = origCreatePick(choice, handleOnRemoveButton);
                 if (multiSelect.picks.getCount()==1) 
                     updatePlacehodlerVisibility()
                 return ()=>

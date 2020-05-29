@@ -34,21 +34,22 @@ export function FilterListAspect(choicesGetNextAspect, choicesEnumerableAspect) 
             (choice) => !choice.isOptionSelected  && !choice.isOptionDisabled  && choice.searchText.indexOf(text) >= 0     
 
     return {
-        addFilterFacade(choice){
+        addFilterFacade(choice){ // redefined in HidenOptionPulgin
             filterListFacade.add(choice);
         },
-        insertFilterFacade(choice){
+        insertFilterFacade(choice){ // redefined in HidenOptionPulgin
             let choiceNonhiddenBefore = choicesGetNextAspect.getNext(choice);
             filterListFacade.add(choice, choiceNonhiddenBefore);
         },
-        navigate(down, choice){ // hoveredChoice
+        navigate(down, choice /* hoveredChoice */){ 
             if (down) {
                 return choice?choice.filteredNext: filterListFacade.getHead();
             } else {
                 return choice?choice.filteredPrev: filterListFacade.getTail();
             }
         },        
-        processEmptyInput(){
+        
+        processEmptyInput(){ // redefined in PlaceholderPulgin
             filterListFacade.reset();
             choicesEnumerableAspect.forEach( (choice)=>{
                 choice.filteredPrev = choice.filteredNext = null;
@@ -56,7 +57,8 @@ export function FilterListAspect(choicesGetNextAspect, choicesEnumerableAspect) 
                 choice.setVisible(true);
             });
         },
-        filterFacade_setFilter(text){
+
+        setFilter(text){ 
             let getFilterIn = composeFilterPredicate(text)
             filterListFacade.reset();
             choicesEnumerableAspect.forEach( (choice)=>{
@@ -68,16 +70,16 @@ export function FilterListAspect(choicesGetNextAspect, choicesEnumerableAspect) 
             });
         },
 
-        filterListFacade_getCount(){
+        getCount(){
             return filterListFacade.getCount();
         },
-        filterListFacade_getHead(){
+        getHead(){
             return filterListFacade.getHead();
         },
-        filterListFacade_reset(){
+        reset(){
             return filterListFacade.reset();
         },
-        filterListFacade_remove(c){
+        remove(c){
             filterListFacade.remove(c);
         },
         add(e, next){

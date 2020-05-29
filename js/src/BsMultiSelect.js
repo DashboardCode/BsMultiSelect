@@ -8,7 +8,7 @@ import {choiceContentGenerator as defChoiceContentGenerator} from './ChoiceConte
 
 import {StaticDomFactory} from './StaticDomFactory';
 
-import {PicksDom} from './PicksDom';
+import {PicksDom, FilterDom} from './PicksDom';
 import {ChoicesDom} from './ChoicesDom';
 import {PopupAspect as DefaultPopupAspect} from './PopupAspect';
 
@@ -25,6 +25,9 @@ import {OptionToggleAspect, OptionAspect} from './OptionAspect.js'
 import {Choices} from './Choices'
 import {ChoicesHover} from './ChoicesHover'
 import {Picks} from './Picks'
+import {PicksAspect} from './PicksAspect'
+import {InputAspect} from './InputAspect'
+
 
 export function BsMultiSelect(element, environment, configuration, onInit){
     var {Popper, window, plugins} = environment;
@@ -53,9 +56,11 @@ export function BsMultiSelect(element, environment, configuration, onInit){
     staticDomDefaults(plugins, staticDomFactory); // manipulates with staticDomFactory.staticDomGenerator
    
     let {staticDom, staticManager} = staticDomFactory.staticDomGenerator(element, containerClass)
+
+    let filterDom = FilterDom(staticDom.disposablePicksElement, createElement, css)
     // TODO get picksDom  from staticDomFactory
     let picksDom  = PicksDom(staticDom.picksElement, staticDom.disposablePicksElement, createElement, css);
-    let popupAspect = PopupAspect(choicesDom.choicesElement, picksDom.filterInputElement, Popper);
+    let popupAspect = PopupAspect(choicesDom.choicesElement, filterDom.filterInputElement, Popper);
 
     let collection = DoublyLinkedCollection(
         (choice)=>choice.itemPrev, 
@@ -80,63 +85,69 @@ export function BsMultiSelect(element, environment, configuration, onInit){
     // TODO move to fully index collection
     let choices = Choices(
         collection,
-        ()=>filterListAspect.filterListFacade_reset(), 
-        (c)=>filterListAspect.filterListFacade_remove(c),
+        ()=>filterListAspect.reset(), 
+        (c)=>filterListAspect.remove(c),
         (c)=>filterListAspect.addFilterFacade(c), 
         (c)=>filterListAspect.insertFilterFacade(c));
     
     let choicesHover = ChoicesHover((down, hoveredChoice)=>filterListAspect.navigate(down, hoveredChoice));
 
-    let picks = Picks();
-
     let optionAspect = OptionAspect(dataSourceAspect)
     let optionToggleAspect = OptionToggleAspect(optionAspect)
+    let inputAspect = InputAspect(filterListAspect, optionAspect, filterDom, popupAspect, choicesHover);
+
+    let picks = Picks();
+    let pickContentGenerator = def(configuration.pickContentGenerator, defPickContentGenerator);
+    let picksAspect = PicksAspect(
+        picksDom, 
+        (pickElement) => pickContentGenerator(pickElement, common, css),
+        componentAspect, dataSourceAspect, optionAspect, picks
+    );
 
     let choiceContentGenerator = def(configuration.choiceContentGenerator, defChoiceContentGenerator);
-
-    let choicesElementAspect = ChoicesElementAspect( choicesDom, (choiceElement, toggle) => choiceContentGenerator(choiceElement, common, css, toggle), componentAspect, optionToggleAspect)
+    let choicesElementAspect = ChoicesElementAspect( choicesDom, filterDom, (choiceElement, toggle) => choiceContentGenerator(choiceElement, common, css, toggle), componentAspect, optionToggleAspect, picksAspect)
     let choiceFactoryAspect =  ChoiceFactoryAspect(choicesElementAspect, choicesGetNextAspect);
     let choicesAspect = ChoicesAspect(window.document, optionAspect, dataSourceAspect, choices, choiceFactoryAspect);
+    
 
     let pluginData = {environment, trigger, configuration, dataSourceAspect, componentAspect, 
         staticDom, picksDom, choicesDom, popupAspect, staticManager, 
         choicesGetNextAspect, choicesEnumerableAspect, filterListAspect, choices, choicesHover, picks,
         optionAspect, optionToggleAspect,
         choicesElementAspect, choiceFactoryAspect, choicesAspect,
+        picksAspect,
+        filterDom,
+        inputAspect,
         common
     } 
     
-    
-    
     // TODO: replace common with something new? 
     let pluginManager = PluginManager(plugins, pluginData);
-
-    let pickContentGenerator = def(configuration.pickContentGenerator, defPickContentGenerator);
- 
 
     var multiSelect = new MultiSelect(
         dataSourceAspect,
         componentAspect,
         picksDom,
+        filterDom,
         choicesDom,
         staticManager,
         popupAspect,        
-        (pickElement) => pickContentGenerator(pickElement, common, css),
-        //choicesGetNextAspect,
+        
         filterListAspect,
         choices, 
         choicesHover,
         picks,
         optionAspect,
         optionToggleAspect,
-        //choicesElementAspect, choiceFactoryAspect, 
         choicesAspect,
+        picksAspect,
+        inputAspect,
         window
     );
 
     pluginManager.afterConstructor(multiSelect);
 
-    multiSelect.dispose = composeSync(pluginManager.dispose, multiSelect.dispose.bind(multiSelect), staticManager.dispose, popupAspect.dispose, picksDom.dispose );
+    multiSelect.dispose = composeSync(pluginManager.dispose, multiSelect.dispose.bind(multiSelect), staticManager.dispose, popupAspect.dispose, picksDom.dispose, filterDom.dispose );
     
     onInit?.(multiSelect);
    

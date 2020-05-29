@@ -4,7 +4,7 @@ import { composeSync, def } from './ToolsJs';
 import { pickContentGenerator as defPickContentGenerator } from './PickContentGenerator';
 import { choiceContentGenerator as defChoiceContentGenerator } from './ChoiceContentGenerator';
 import { StaticDomFactory } from './StaticDomFactory';
-import { PicksDom } from './PicksDom';
+import { PicksDom, FilterDom } from './PicksDom';
 import { ChoicesDom } from './ChoicesDom';
 import { PopupAspect as DefaultPopupAspect } from './PopupAspect';
 import { ComponentAspect } from './ComponentAspect';
@@ -16,6 +16,8 @@ import { OptionToggleAspect, OptionAspect } from './OptionAspect.js';
 import { Choices } from './Choices';
 import { ChoicesHover } from './ChoicesHover';
 import { Picks } from './Picks';
+import { PicksAspect } from './PicksAspect';
+import { InputAspect } from './InputAspect';
 export function BsMultiSelect(element, environment, configuration, onInit) {
   var Popper = environment.Popper,
       window = environment.window,
@@ -53,11 +55,12 @@ export function BsMultiSelect(element, environment, configuration, onInit) {
 
   var _staticDomFactory$sta = staticDomFactory.staticDomGenerator(element, containerClass),
       staticDom = _staticDomFactory$sta.staticDom,
-      staticManager = _staticDomFactory$sta.staticManager; // TODO get picksDom  from staticDomFactory
+      staticManager = _staticDomFactory$sta.staticManager;
 
+  var filterDom = FilterDom(staticDom.disposablePicksElement, createElement, css); // TODO get picksDom  from staticDomFactory
 
   var picksDom = PicksDom(staticDom.picksElement, staticDom.disposablePicksElement, createElement, css);
-  var popupAspect = PopupAspect(choicesDom.choicesElement, picksDom.filterInputElement, Popper);
+  var popupAspect = PopupAspect(choicesDom.choicesElement, filterDom.filterInputElement, Popper);
   var collection = DoublyLinkedCollection(function (choice) {
     return choice.itemPrev;
   }, function (choice, v) {
@@ -76,9 +79,9 @@ export function BsMultiSelect(element, environment, configuration, onInit) {
   var filterListAspect = FilterListAspect(choicesGetNextAspect, choicesEnumerableAspect); // TODO move to fully index collection
 
   var choices = Choices(collection, function () {
-    return filterListAspect.filterListFacade_reset();
+    return filterListAspect.reset();
   }, function (c) {
-    return filterListAspect.filterListFacade_remove(c);
+    return filterListAspect.remove(c);
   }, function (c) {
     return filterListAspect.addFilterFacade(c);
   }, function (c) {
@@ -87,13 +90,18 @@ export function BsMultiSelect(element, environment, configuration, onInit) {
   var choicesHover = ChoicesHover(function (down, hoveredChoice) {
     return filterListAspect.navigate(down, hoveredChoice);
   });
-  var picks = Picks();
   var optionAspect = OptionAspect(dataSourceAspect);
   var optionToggleAspect = OptionToggleAspect(optionAspect);
+  var inputAspect = InputAspect(filterListAspect, optionAspect, filterDom, popupAspect, choicesHover);
+  var picks = Picks();
+  var pickContentGenerator = def(configuration.pickContentGenerator, defPickContentGenerator);
+  var picksAspect = PicksAspect(picksDom, function (pickElement) {
+    return pickContentGenerator(pickElement, common, css);
+  }, componentAspect, dataSourceAspect, optionAspect, picks);
   var choiceContentGenerator = def(configuration.choiceContentGenerator, defChoiceContentGenerator);
-  var choicesElementAspect = ChoicesElementAspect(choicesDom, function (choiceElement, toggle) {
+  var choicesElementAspect = ChoicesElementAspect(choicesDom, filterDom, function (choiceElement, toggle) {
     return choiceContentGenerator(choiceElement, common, css, toggle);
-  }, componentAspect, optionToggleAspect);
+  }, componentAspect, optionToggleAspect, picksAspect);
   var choiceFactoryAspect = ChoiceFactoryAspect(choicesElementAspect, choicesGetNextAspect);
   var choicesAspect = ChoicesAspect(window.document, optionAspect, dataSourceAspect, choices, choiceFactoryAspect);
   var pluginData = {
@@ -118,18 +126,16 @@ export function BsMultiSelect(element, environment, configuration, onInit) {
     choicesElementAspect: choicesElementAspect,
     choiceFactoryAspect: choiceFactoryAspect,
     choicesAspect: choicesAspect,
+    picksAspect: picksAspect,
+    filterDom: filterDom,
+    inputAspect: inputAspect,
     common: common
   }; // TODO: replace common with something new? 
 
   var pluginManager = PluginManager(plugins, pluginData);
-  var pickContentGenerator = def(configuration.pickContentGenerator, defPickContentGenerator);
-  var multiSelect = new MultiSelect(dataSourceAspect, componentAspect, picksDom, choicesDom, staticManager, popupAspect, function (pickElement) {
-    return pickContentGenerator(pickElement, common, css);
-  }, //choicesGetNextAspect,
-  filterListAspect, choices, choicesHover, picks, optionAspect, optionToggleAspect, //choicesElementAspect, choiceFactoryAspect, 
-  choicesAspect, window);
+  var multiSelect = new MultiSelect(dataSourceAspect, componentAspect, picksDom, filterDom, choicesDom, staticManager, popupAspect, filterListAspect, choices, choicesHover, picks, optionAspect, optionToggleAspect, choicesAspect, picksAspect, inputAspect, window);
   pluginManager.afterConstructor(multiSelect);
-  multiSelect.dispose = composeSync(pluginManager.dispose, multiSelect.dispose.bind(multiSelect), staticManager.dispose, popupAspect.dispose, picksDom.dispose);
+  multiSelect.dispose = composeSync(pluginManager.dispose, multiSelect.dispose.bind(multiSelect), staticManager.dispose, popupAspect.dispose, picksDom.dispose, filterDom.dispose);
   onInit == null ? void 0 : onInit(multiSelect);
   multiSelect.init();
   multiSelect.load();

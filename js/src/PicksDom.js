@@ -1,12 +1,42 @@
 import {addStyling, toggleStyling} from './ToolsStyling';
 
+export function FilterDom(disposablePicksElement, createElement, css){
+    var filterInputElement = createElement('INPUT');
+    addStyling(filterInputElement, css.filterInput);
+
+    filterInputElement.setAttribute("type","search");
+    filterInputElement.setAttribute("autocomplete","off");
+
+    return {
+        filterInputElement,
+        isEmpty: () => filterInputElement.value ? false:true,
+        setEmpty(){
+            filterInputElement.value ='';
+        },
+        setFocus(){
+            filterInputElement.focus();
+        },
+        // TODO: check why I need this comparision? 
+        setFocusIfNotTarget(target){
+            if (target != filterInputElement)
+                filterInputElement.focus();
+        },
+        
+        dispose(){
+            if (!disposablePicksElement){
+                if (filterInputElement.parentNode)
+                    filterInputElement.parentNode.removeChild(filterInputElement)
+            }
+        }
+    }
+}
+
 export function PicksDom(picksElement, disposablePicksElement, createElement, css){
     var pickFilterElement  = createElement('LI');
-    var filterInputElement = createElement('INPUT');
     
     addStyling(picksElement,       css.picks);
     addStyling(pickFilterElement,  css.pickFilter);
-    addStyling(filterInputElement, css.filterInput);
+
 
     let disableToggleStyling = toggleStyling(picksElement, css.picks_disabled);
     let focusToggleStyling   = toggleStyling(picksElement, css.picks_focus);
@@ -15,7 +45,6 @@ export function PicksDom(picksElement, disposablePicksElement, createElement, cs
     return {
         picksElement,
         pickFilterElement,
-        filterInputElement,
 
         createPickElement(){
             var pickElement = createElement('LI');
@@ -38,6 +67,7 @@ export function PicksDom(picksElement, disposablePicksElement, createElement, cs
         setIsFocusIn(newIsFocusIn){
             isFocusIn = newIsFocusIn
         }, 
+        
         dispose(){
             if (!disposablePicksElement){
                 disableToggleStyling(false)
@@ -45,8 +75,6 @@ export function PicksDom(picksElement, disposablePicksElement, createElement, cs
                 
                 if (pickFilterElement.parentNode)
                     pickFilterElement.parentNode.removeChild(pickFilterElement)
-                if (filterInputElement.parentNode)
-                    filterInputElement.parentNode.removeChild(filterInputElement)
             }
         }
     }

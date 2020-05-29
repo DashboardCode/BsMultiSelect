@@ -53,21 +53,21 @@ export function HiddenOptionPlugin(pluginData){
     let origPushChoiceItem = choiceFactoryAspect.pushChoiceItem;
         
     
-    choiceFactoryAspect.insertChoiceItem=(choice,setFocus, createPick, adoptChoiceElement)=>{
+    choiceFactoryAspect.insertChoiceItem=(choice, adoptChoiceElement, handleOnRemoveButton)=>{
         if (choice.isOptionHidden){ 
             buildHiddenChoice(choice);
         }
         else{ 
-            origInsertChoiceItem(choice,setFocus, createPick, adoptChoiceElement);
+            origInsertChoiceItem(choice, adoptChoiceElement, handleOnRemoveButton);
         }
     }
     
-    choiceFactoryAspect.pushChoiceItem=(choice,setFocus, createPick, adoptChoiceElement)=>{
+    choiceFactoryAspect.pushChoiceItem=(choice, adoptChoiceElement, handleOnRemoveButton)=>{
         if (choice.isOptionHidden){ 
             buildHiddenChoice(choice);
         }
         else{ 
-            origPushChoiceItem(choice,setFocus, createPick, adoptChoiceElement);
+            origPushChoiceItem(choice, adoptChoiceElement, handleOnRemoveButton);
         }
     }
 
@@ -84,10 +84,9 @@ export function HiddenOptionPlugin(pluginData){
                 } else {
                     let nextChoice = getNextNonHidden(choice);
                     filterListAspect.add(choice, nextChoice);
-                    choicesElementAspect.createChoiceElement(choice,
-                        ()=>multiSelect.filterPanel.setFocus(),
-                        (c)=>multiSelect.createPick(c),
-                        (c,e)=>multiSelect.aspect.adoptChoiceElement(c,e) 
+                    choicesElementAspect.buildChoiceElement(choice,
+                        (c,e)=>multiSelect.aspect.adoptChoiceElement(c,e),
+                        (o,s)=>multiSelect.aspect.handleOnRemoveButton(o,s)
                         );
                     choice.choiceElementAttach(nextChoice?.choiceElement);
                 }
