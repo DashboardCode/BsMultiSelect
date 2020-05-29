@@ -1,5 +1,6 @@
 # CHANGELOG
 ````
+0.5.64 - optimizations
 0.5.63 - add and remove container class for js initiated component
 0.5.62 - optimizations
 0.5.61 - SelectElementPlugin second version

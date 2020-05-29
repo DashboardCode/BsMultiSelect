@@ -1,6 +1,6 @@
 import {addStyling, toggleStyling} from './ToolsStyling';
 
-export function PicksDom(picksElement, createElement, css){
+export function PicksDom(picksElement, disposablePicksElement, createElement, css){
     var pickFilterElement  = createElement('LI');
     var filterInputElement = createElement('INPUT');
     
@@ -39,13 +39,15 @@ export function PicksDom(picksElement, createElement, css){
             isFocusIn = newIsFocusIn
         }, 
         dispose(){
-            disableToggleStyling(false)
-            focusToggleStyling(false)
-
-            if (pickFilterElement.parentNode)
-                pickFilterElement.parentNode.removeChild(pickFilterElement)
-            if (filterInputElement.parentNode)
-                filterInputElement.parentNode.removeChild(filterInputElement)
+            if (!disposablePicksElement){
+                disableToggleStyling(false)
+                focusToggleStyling(false)
+                
+                if (pickFilterElement.parentNode)
+                    pickFilterElement.parentNode.removeChild(pickFilterElement)
+                if (filterInputElement.parentNode)
+                    filterInputElement.parentNode.removeChild(filterInputElement)
+            }
         }
     }
 }

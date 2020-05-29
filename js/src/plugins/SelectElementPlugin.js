@@ -1,6 +1,5 @@
 import {closestByTagName, findDirectChildByTagName, closestByClassName} from '../ToolsDom';
 import {composeSync} from '../ToolsJs';
-import {completePicksElement} from '../StaticDomFactory';
 
 export function SelectElementPlugin(pluginData){
     let {staticManager, staticDom, configuration, trigger, componentAspect, dataSourceAspect} = pluginData;
@@ -86,32 +85,44 @@ SelectElementPlugin.staticDomDefaults = (staticDomFactory)=>{
                 return origStaticDomGenerator(element, containerClass);
             } 
         }
-        let ownContainerElement = containerElement?false:true;
-
-        let staticManager = {};
+        let disposableContainerElement = false;
         if (!containerElement) {
             containerElement = createElement('DIV');
             containerElement.classList.add(containerClass);
-        
-            staticManager = {
-                appendToContainer(){ selectElement.parentNode.insertBefore(containerElement, selectElement.nextSibling) },
-                dispose(){ selectElement.parentNode.removeChild(containerElement) }
+            disposableContainerElement= true;
+        }
+
+       
+        let disposablePicksElement = false;
+        if (!picksElement) {
+            picksElement = createElement('UL');
+            disposablePicksElement = true; 
+        }
+
+        return {staticDom: {
+            initialElement:element,
+            containerElement,
+            picksElement,
+            disposablePicksElement,
+            selectElement
+        }, staticManager :{
+            appendToContainer(){ 
+                if (disposableContainerElement){
+                    selectElement.parentNode.insertBefore(containerElement, selectElement.nextSibling) 
+                    containerElement.appendChild(choicesElement)
+                } else {
+                    selectElement.parentNode.insertBefore(choicesElement, selectElement.nextSibling)
+                }
+                if (disposablePicksElement)
+                    containerElement.appendChild(picksElement)
+            },
+            dispose(){ 
+                choicesElement.parentNode.removeChild(choicesElement);
+                if (disposableContainerElement)
+                    selectElement.parentNode.removeChild(containerElement) 
+                if (disposablePicksElement)
+                    containerElement.removeChild(picksElement)
             }
-        }
-
-        let staticDom = {initialElement:element, selectElement, containerElement, picksElement};
-        
-        completePicksElement(staticDom, staticManager, createElement);
-
-        if (!ownContainerElement && selectElement) {
-            staticManager.appendToContainer = composeSync(staticManager.appendToContainer,
-                () => selectElement.parentNode.insertBefore(choicesElement, selectElement.nextSibling))
-        } else {
-            staticManager.appendToContainer = composeSync(staticManager.appendToContainer,
-                () => containerElement.appendChild(choicesElement))
-        }
-        staticManager.dispose = composeSync(staticManager.dispose,
-            () => choicesElement.parentNode.removeChild(choicesElement));
-        return {staticDom, staticManager};
+        }};
     }
 }

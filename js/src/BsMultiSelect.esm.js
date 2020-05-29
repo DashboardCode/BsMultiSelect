@@ -18,7 +18,7 @@ import {extendIfUndefined} from './ToolsJs';
 
 const defaults = {containerClass : "dashboardcode-bsmultiselect", css: css}
 const defaultPlugins = [CssPatchPlugin, SelectElementPlugin, LabelPlugin, HiddenOptionPlugin, ValidationApiPlugin, 
-    BsAppearancePlugin, FormResetPlugin, RtlPlugin, PlaceholderPlugin , OptionsApiPlugin, JQueryMethodsPlugin];
+BsAppearancePlugin, FormResetPlugin, RtlPlugin, PlaceholderPlugin , OptionsApiPlugin, JQueryMethodsPlugin];
 
 export function BsMultiSelect(element, environment, settings){
     if (!environment.trigger)

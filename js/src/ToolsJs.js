@@ -1,7 +1,3 @@
-export function isObject(value){
-    return typeof value === 'object' && value !== null
-}
-
 export function isBoolean(value){
     return value === true || value === false;
 }
@@ -14,11 +10,6 @@ export function extendIfUndefined(destination, source) {
     for (let property in source)
         if (destination[property] === undefined)
             destination[property] = source[property];
-}
-
-export function extendOverriding(destination, source) {
-    for (let property in source)
-        destination[property] = source[property];
 }
 
 export function shallowClearClone(source, ...sources) { // override previous, no null and undefined
@@ -150,7 +141,7 @@ export function ListFacade(getPrev, setPrev, getNext, setNext){
     }
 }
 
-export function CollectionFacade(getPrev, setPrev, getNext, setNext){
+export function DoublyLinkedCollection(getPrev, setPrev, getNext, setNext){
     var list = [];
     var head = null, tail = null;
     var count = 0;
@@ -239,14 +230,6 @@ export function CollectionFacade(getPrev, setPrev, getNext, setNext){
     }
 }
 
-export function pushUnique(array, item){
-    if(array.indexOf(item) == -1) {
-        array.push(item);
-            return true;
-    }
-    return false;
-} 
-
 export function composeSync(...functions){
     return () => sync(...functions)
 }
@@ -280,21 +263,6 @@ export function defCall(...functions){
         }
 }
 
-export function Observable(){
-    var list = [];
-    return {
-        trigger(){
-            f();
-        },
-        attach(f){
-            list.push(f)
-        },
-        detachAll(){
-            list.length = 0;
-        }
-    }
-}
-
 export function ObservableValue(value){
     var list = List();
     return {
@@ -313,10 +281,6 @@ export function ObservableValue(value){
         }
     }
 }
-
-// export function isFunction(obj){
-//     return typeof obj === 'function'
-// }
 
 export function ObservableLambda(func){
     var list = List();

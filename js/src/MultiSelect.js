@@ -1,10 +1,9 @@
 import {FilterPanel} from './FilterPanel'
-import {Choices} from './Choices'
-import {Picks} from './Picks'
 import {MultiSelectInputAspect} from './MultiSelectInputAspect'
-import {Choice} from './Choice'
-import {ListFacade, sync, composeSync} from './ToolsJs'
-import {FilterFacade} from './FilterFacade'
+
+
+import {/*ListFacade,*/ sync, composeSync} from './ToolsJs'
+//import {FilterFacade} from './FilterFacade'
 
 export class MultiSelect {
     constructor(
@@ -16,8 +15,16 @@ export class MultiSelect {
         popupAspect,         
         
         pickContentGenerator, 
-        choiceContentGenerator, 
         
+        filterListAspect,
+        choices, 
+        choicesHover,
+        picks,
+
+        optionAspect,
+        optionToggleAspect,
+        choicesAspect,
+
         window) {
 
         this.dataSourceAspect=dataSourceAspect;
@@ -29,31 +36,16 @@ export class MultiSelect {
         this.choicesDom = choicesDom;
         this.staticManager =staticManager;
         this.pickContentGenerator = pickContentGenerator;
-        this.choiceContentGenerator = choiceContentGenerator;
 
-        this.visibleCount=10;
+        this.filterListAspect = filterListAspect;
+        this.choices =  choices;
+        this.choicesHover = choicesHover;
+        this.picks = picks;
 
-        this.choices = null;
-        this.picks = null;
-        this.stylingComposite = null;
-    }
+        this.optionAspect = optionAspect;
+        this.optionToggleAspect = optionToggleAspect;
 
-    setOptionSelected(choice, value){
-        let success = false;
-        var confirmed = this.dataSourceAspect.setSelected(choice.option, value);
-        if (!(confirmed===false)) {
-            choice.isOptionSelected = value;
-            choice.updateSelected();
-            success = true;
-        }
-        return success;
-    }
-
-    toggleOptionSelected(choice){
-        var success = false;
-        if (choice.isOptionSelected || !choice.isOptionDisabled)
-            success = this.setOptionSelected(choice, !choice.isOptionSelected);
-        return success;
+        this.choicesAspect = choicesAspect;
     }
    
     resetFilter(){
@@ -63,11 +55,7 @@ export class MultiSelect {
 
     forceResetFilter(){
         this.filterPanel.setEmpty();
-        this.processEmptyInput();
-    }
-
-    processEmptyInput(){
-        this.filterFacade.resetFilter();
+        this.filterListAspect.processEmptyInput();
     }
 
     isSelectable(choice){
@@ -89,13 +77,19 @@ export class MultiSelect {
         this.updateAppearance();
         this.updateData();
     }
+
     updateData(){
         this.empty();
-        this.updateDataImpl();
+        this.choicesAspect.updateDataImpl(
+            () => this.filterPanel.setFocus(),
+            (c) => this.createPick(c),
+            (c,e) => this.aspect.adoptChoiceElement(c,e)
+        );
     }
     updateAppearance(){
         this.updateDisabled();    
     }
+    
     updateDisabled(){
         let isComponentDisabled = this.componentAspect.getDisabled();
         if (this.isComponentDisabled!==isComponentDisabled){
@@ -134,7 +128,7 @@ export class MultiSelect {
         this.choices.forLoop(
             choice => {
                 if (this.isSelectable(choice))
-                    this.setOptionSelected(choice, true)
+                    this.optionAspect.setOptionSelected(choice, true)
             }
         ); 
         this.resetFilter();
@@ -177,114 +171,11 @@ export class MultiSelect {
             choice.updateDisabled = choiceUpdateDisabledBackup; 
             choice.updateDisabled(); // make "true disabled" without it checkbox looks disabled
         }
-        let setSelectedFalse = () => this.setOptionSelected(choice, false)
+        let setSelectedFalse = () => this.optionAspect.setOptionSelected(choice, false)
         pick.remove = setSelectedFalse;
     
         this.aspect.handleOnRemoveButton(pickContent.onRemove, setSelectedFalse);
         return removePick;
-    }
-
-    createChoiceElement(choice){
-        var {choiceElement, setVisible, attach, detach} = this.choicesDom.createChoiceElement();
-        choice.choiceElement = choiceElement;
-        choice.choiceElementAttach = attach;
-                
-        let choiceContent = this.choiceContentGenerator(choiceElement, () => {
-            this.toggleOptionSelected(choice);
-            this.filterPanel.setFocus();
-        });
-    
-        let updateSelectedChoiceContent = () => 
-            choiceContent.select(choice.isOptionSelected)
-    
-        let pickTools = { updateSelectedTrue: null, updateSelectedFalse: null }
-        let createPick = () => { 
-            var removePick = this.createPick(choice);
-            pickTools.updateSelectedFalse = removePick;
-        };
-    
-        pickTools.updateSelectedTrue = createPick;
-        
-        choice.remove = () => {
-            detach();
-            if (pickTools.updateSelectedFalse) {
-                pickTools.updateSelectedFalse();
-                pickTools.updateSelectedFalse=null;
-            }
-        };
-        
-        choice.updateSelected = () => {
-            updateSelectedChoiceContent();
-            if (choice.isOptionSelected)
-                pickTools.updateSelectedTrue();
-            else {
-                pickTools.updateSelectedFalse();
-                pickTools.updateSelectedFalse=null;
-            }
-            this.componentAspect.onChange();
-        }
-    
-        var unbindChoiceElement = this.aspect.adoptChoiceElement(choice, choiceElement);
-    
-        choice.isFilteredIn = true;
-    
-        choiceContent.setData(choice.option);
-        
-        choice.setHoverIn = (v) => {
-            choice.isHoverIn =v ;
-            choiceContent.hoverIn(choice.isHoverIn);
-        }
-    
-        choice.setVisible = (v) => {
-            choice.isFilteredIn = v;
-            setVisible(choice.isFilteredIn)
-        }
-    
-        choice.updateDisabled = () => {
-            choiceContent.disable(choice.isOptionDisabled, choice.isOptionSelected); 
-        }
-    
-        choice.dispose = () => {
-            unbindChoiceElement();
-            choiceContent.dispose();
-
-            choice.choiceElement = null;
-            choice.choiceElementAttach = null;
-            choice.remove = null; 
-            
-            choice.updateSelected = null;
-            choice.updateDisabled = null;
-    
-            // not real data manipulation but internal state
-            choice.setVisible = null; // TODO: refactor it there should be 3 types of not visibility: for hidden, for filtered out, for optgroup, for message item
-            choice.setHoverIn = null;
-    
-            choice.dispose = null;
-        }
-    
-        if (choice.isOptionSelected) {
-            updateSelectedChoiceContent();
-            createPick();
-        }
-        choice.updateDisabled(); 
-    }
-
-    createChoice(option){
-        let isOptionSelected = this.dataSourceAspect.getSelected(option);
-        let isOptionDisabled = this.dataSourceAspect.getDisabled(option); 
-        
-        return Choice(option, isOptionSelected, isOptionDisabled);
-    }
-
-    insertChoiceItem(choice){
-        this.createChoiceElement(choice);
-        let nextChoice = this.getNext(choice);
-        choice.choiceElementAttach(nextChoice?.choiceElement);
-    }
-
-    pushChoiceItem(choice){
-        this.createChoiceElement(choice);
-        choice.choiceElementAttach();
     }
 
     input(filterInputValue, resetLength){
@@ -295,27 +186,27 @@ export class MultiSelect {
         else
         {
             // check if exact match, otherwise new search
-            this.filterFacade.setFilter(text);
-            if (this.filterListFacade.getCount() == 1)
+            this.filterListAspect.filterFacade_setFilter(text);
+            if (this.filterListAspect.filterListFacade_getCount() == 1)
             {
-                let fullMatchChoice =  this.filterListFacade.getHead();
+                let fullMatchChoice =  this.filterListAspect.filterListFacade_getHead();
                 if (fullMatchChoice.searchText == text)
                 {
-                    this.setOptionSelected(fullMatchChoice, true);
+                    this.optionAspect.setOptionSelected(fullMatchChoice, true);
                     this.filterPanel.setEmpty();
                     isEmpty=true;
                 }
             }
         }
         if (isEmpty){
-            this.processEmptyInput();
+            this.filterListAspect.processEmptyInput();
         }
         else
             resetLength();  
         
         this.aspect.eventLoopFlag.set(); // means disable some mouse handlers; otherwise we will get "Hover On MouseEnter" when filter's changes should remove hover
 
-        let visibleCount = this.filterListFacade.getCount();
+        let visibleCount = this.filterListAspect.filterListFacade_getCount();
 
         if (visibleCount>0){
             let panelIsVisble = this.popupAspect.isChoicesVisible();
@@ -323,10 +214,10 @@ export class MultiSelect {
                 this.aspect.showChoices();
             }
             if (visibleCount == 1) {
-                this.choices.hoverIn(this.filterListFacade.getHead())
+                this.choicesHover.hoverIn(this.filterListAspect.filterListFacade_getHead())
             } else {
                 if (panelIsVisble)
-                    this.choices.resetHoveredChoice();
+                    this.choicesHover.resetHoveredChoice();
             }   
         }else{
             if (this.popupAspect.isChoicesVisible())
@@ -335,9 +226,9 @@ export class MultiSelect {
     }
 
     hoveredToSelected(){
-        let hoveredChoice = this.choices.getHoveredChoice();
+        let hoveredChoice = this.choicesHover.getHoveredChoice();
         if (hoveredChoice){
-            var wasToggled = this.toggleOptionSelected(hoveredChoice);
+            var wasToggled = this.optionToggleAspect.toggleOptionSelected(hoveredChoice);
             if (wasToggled) {
                 this.aspect.hideChoices();
                 this.resetFilter();
@@ -346,10 +237,10 @@ export class MultiSelect {
     }
 
     keyDownArrow(down) {
-        let iChoice = this.choices.navigate(down);
+        let iChoice = this.choicesHover.navigate(down);
         if (iChoice)
         {
-            this.choices.hoverIn(iChoice);
+            this.choicesHover.hoverIn(iChoice);
             this.aspect.showChoices();
         }
     }
@@ -357,34 +248,6 @@ export class MultiSelect {
     setFocusIn(focus){
         this.picksDom.setIsFocusIn(focus)
         this.picksDom.toggleFocusStyling();
-    }
-
-    forEach(f){
-        let choice = this.choices.getHead();
-        while(choice){
-            forEach( (choice)=>{
-                f(choice);
-                choice = this.getNext(choice);
-            });
-        }
-    }
-
-    getNext(choice){
-        let next = choice.itemNext;
-        return next;
-    }
-
-    navigate(down, hoveredChoice){
-        return this.filterFacade.navigate(down, hoveredChoice);
-    }
-
-    addFilterFacade(choice){
-        this.filterListFacade.add(choice);
-    }
-
-    insertFilterFacade(choice){
-        let choiceNonhiddenBefore = this.getNext(choice);
-        this.filterListFacade.add(choice, choiceNonhiddenBefore);
     }
 
     isEmpty(){
@@ -416,7 +279,7 @@ export class MultiSelect {
                 if (this.popupAspect.isChoicesVisible()) {
                     this.hoveredToSelected();
                 } else {
-                    if (this.filterListFacade.getCount()>0){
+                    if (this.filterListAspect.filterListFacade_getCount()>0){
                         this.aspect.showChoices();
                     }
                 }
@@ -442,29 +305,6 @@ export class MultiSelect {
         this.picksDom.picksElement.appendChild(
             this.picksDom.pickFilterElement); // located filter in selectionsPanel       
 
-        this.picks =  Picks();
-        
-        let composeFilterPredicate = (text) => 
-            (choice) => !choice.isOptionSelected  && !choice.isOptionDisabled  && choice.searchText.indexOf(text) >= 0 
-
-        this.filterListFacade = ListFacade(
-            (choice)=>choice.filteredPrev, 
-            (choice, v)=>choice.filteredPrev=v, 
-            (choice)=>choice.filteredNext, 
-            (choice, v)=>choice.filteredNext=v
-        );
-
-        this.filterFacade = FilterFacade(
-            this.filterListFacade,
-            (f) => this.forEach(f),
-            composeFilterPredicate
-        );
-        
-        this.choices = Choices(this.filterListFacade, 
-            (down, hoveredChoice)=>this.navigate(down, hoveredChoice),
-            (c)=>this.addFilterFacade(c), 
-            (c)=>this.insertFilterFacade(c));
-
         this.staticManager.appendToContainer();
 
         this.aspect =  MultiSelectInputAspect(
@@ -474,10 +314,10 @@ export class MultiSelect {
             this.choicesDom.choicesElement, 
             ()=>this.popupAspect.isChoicesVisible(),
             (visible)=>this.popupAspect.setChoicesVisible(visible),
-            () => this.choices.resetHoveredChoice(), 
-            (choice) => this.choices.hoverIn(choice),
+            () => this.choicesHover.resetHoveredChoice(), 
+            (choice) => this.choicesHover.hoverIn(choice),
             () => this.resetFilter(),
-            () => this.filterListFacade.getCount()==0, 
+            () => this.filterListAspect.filterListFacade_getCount()==0, 
             
             /*onClick*/(event) => this.filterPanel.setFocusIfNotTarget(event.target),
             /*resetFocus*/() => this.setFocusIn(false),
@@ -487,34 +327,13 @@ export class MultiSelect {
     }
 
     load(){
-        this.updateDataImpl();
+        this.choicesAspect.updateDataImpl(
+            ()=>this.filterPanel.setFocus(),
+            (c)=>this.createPick(c),
+            (c,e)=>this.aspect.adoptChoiceElement(c,e)
+
+        );
         this.updateAppearance(); // TODO: now appearance should be done after updateDataImpl, because items should be "already in place", correct it
-    }
-
-    updateDataImpl(){
-        var fillChoices = () => {
-            let options = this.dataSourceAspect.getOptions();
-            for(let i = 0; i<options.length; i++) {
-                let option = options[i];
-                let choice = this.createChoice(option);
-                this.choices.push(choice);
-                this.pushChoiceItem(choice);
-            } 
-        }
-
-        // browsers can change select value as part of "autocomplete" (IE11) 
-        // or "show preserved on go back" (Chrome) after page is loaded but before "ready" event;
-        // but they never "restore" selected-disabled options.
-        // TODO: make the FROM Validation for 'selected-disabled' easy.
-        if (document.readyState != 'loading') {
-            fillChoices();
-        } else {
-            var domContentLoadedHandler = function(){
-                fillChoices();
-                document.removeEventListener("DOMContentLoaded", domContentLoadedHandler);
-            }
-            document.addEventListener('DOMContentLoaded', domContentLoadedHandler); // IE9+
-        }
     }
 
     dispose(){
@@ -523,8 +342,6 @@ export class MultiSelect {
             this.picks.dispose,
             this.filterPanel.dispose,
             this.aspect.dispose,
-            this.staticManager.dispose,
-            this.popupAspect.dispose,
             this.choices.dispose
         );
     }

@@ -1,24 +1,5 @@
-function updateHiddenChoice(choice, updateHidden , getIsOptionHidden){
-    let newIsOptionHidden = getIsOptionHidden(choice.option);
-    if (newIsOptionHidden != choice.isOptionHidden)
-    {
-        choice.isOptionHidden= newIsOptionHidden;
-        updateHidden(choice)
-    }
-}
-
-function getNextNonHidden(choice) { // TODO get next visible
-    let next = choice.itemNext;
-    if (!next) {
-        return null;
-    } else if (next.choiceElement) {
-        return next;
-    }
-    return getNextNonHidden(next)
-}
-
 export function HiddenOptionPlugin(pluginData){
-    let {configuration, options} = pluginData;
+    let {configuration, options, choicesGetNextAspect, choicesEnumerableAspect, filterListAspect, choiceFactoryAspect, choicesElementAspect} = pluginData;
     let {getIsOptionHidden} = configuration;
     if (options){
         if (!getIsOptionHidden)
@@ -28,37 +9,86 @@ export function HiddenOptionPlugin(pluginData){
             getIsOptionHidden = (option)=>option.hidden;     
     }
 
+    choicesGetNextAspect.getNext = (c)=>getNextNonHidden(c);
+
+    choicesEnumerableAspect.forEach = (f) => {
+        let choice = choicesGetNextAspect.getHead();
+        while(choice){
+            if (!choice.isOptionHidden)
+                f(choice);
+            choice = choicesGetNextAspect.getNext(choice);
+        }
+    }    
+
+    var origAddFilterFacade = filterListAspect.addFilterFacade;
+    filterListAspect.addFilterFacade = (choice) => {
+        if ( !choice.isOptionHidden ) {
+            origAddFilterFacade(choice);
+        }
+    }
+    
+    var origInsertFilterFacade = filterListAspect.insertFilterFacade;
+    filterListAspect.insertFilterFacade = (choice) => {
+        if ( !choice.isOptionHidden ){
+            origInsertFilterFacade(choice);
+        }
+    }
+
+    function buildHiddenChoice(choice){
+        choice.updateSelected = () => void 0;
+        choice.updateDisabled = () => void 0;
+        
+        choice.choiceElement = null;
+        choice.choiceElementAttach = null;
+        choice.setVisible = null; 
+        choice.setHoverIn = null;
+        choice.remove = null; 
+        
+        choice.dispose = () => { 
+            choice.dispose = null;
+        };
+    }
+
+    let origInsertChoiceItem = choiceFactoryAspect.insertChoiceItem;
+    let origPushChoiceItem = choiceFactoryAspect.pushChoiceItem;
+        
+    
+    choiceFactoryAspect.insertChoiceItem=(choice,setFocus, createPick, adoptChoiceElement)=>{
+        if (choice.isOptionHidden){ 
+            buildHiddenChoice(choice);
+        }
+        else{ 
+            origInsertChoiceItem(choice,setFocus, createPick, adoptChoiceElement);
+        }
+    }
+    
+    choiceFactoryAspect.pushChoiceItem=(choice,setFocus, createPick, adoptChoiceElement)=>{
+        if (choice.isOptionHidden){ 
+            buildHiddenChoice(choice);
+        }
+        else{ 
+            origPushChoiceItem(choice,setFocus, createPick, adoptChoiceElement);
+        }
+    }
+
     return {
         afterConstructor(multiSelect){
-            multiSelect.getNext = (c)=>getNextNonHidden(c);
-    
             var origIsSelectable = multiSelect.isSelectable.bind(multiSelect);
             multiSelect.isSelectable = (choice) => origIsSelectable(choice) && !choice.isOptionHidden;
-            
-            function buildHiddenChoice(choice){
-                choice.updateSelected = () => void 0;
-                choice.updateDisabled = () => void 0;
-                
-                choice.choiceElement = null;
-                choice.choiceElementAttach = null;
-                choice.setVisible = null; 
-                choice.setHoverIn = null;
-                choice.remove = null; 
-                
-                choice.dispose = () => { 
-                    choice.dispose = null;
-                };
-            }
         
             function updateHidden(choice) {
                 if (choice.isOptionHidden) {
-                    multiSelect.filterListFacade.remove(choice);
+                    filterListAspect.remove(choice);
                     choice.remove(); 
                     buildHiddenChoice(choice);
                 } else {
                     let nextChoice = getNextNonHidden(choice);
-                    multiSelect.filterListFacade.add(choice, nextChoice);
-                    multiSelect.createChoiceElement(choice);
+                    filterListAspect.add(choice, nextChoice);
+                    choicesElementAspect.createChoiceElement(choice,
+                        ()=>multiSelect.filterPanel.setFocus(),
+                        (c)=>multiSelect.createPick(c),
+                        (c,e)=>multiSelect.aspect.adoptChoiceElement(c,e) 
+                        );
                     choice.choiceElementAttach(nextChoice?.choiceElement);
                 }
             }
@@ -80,57 +110,32 @@ export function HiddenOptionPlugin(pluginData){
             multiSelect.UpdateOptionsHidden = () => UpdateOptionsHidden();
             multiSelect.UpdateOptionHidden = (key) => UpdateOptionHidden(key);
         
-            var origСreateChoice = multiSelect.createChoice.bind(multiSelect);
+            var origСreateChoice = multiSelect.optionAspect.createChoice;
         
-            multiSelect.createChoice = (option) => {
+            multiSelect.optionAspect.createChoice = (option) => {
                 let choice = origСreateChoice(option);
                 choice.isOptionHidden = getIsOptionHidden(option);
                 return choice;
             };
-        
-            var origInsertChoiceItem = multiSelect.insertChoiceItem.bind(multiSelect);
-            var origPushChoiceItem = multiSelect.pushChoiceItem.bind(multiSelect);
-        
-            multiSelect.insertChoiceItem=(choice)=>{
-                if (choice.isOptionHidden){ 
-                    buildHiddenChoice(choice);
-                }
-                else{ 
-                    origInsertChoiceItem(choice);
-                }
-            }
-        
-            multiSelect.pushChoiceItem=(choice)=>{
-                if (choice.isOptionHidden){ 
-                    buildHiddenChoice(choice);
-                }
-                else{ 
-                    origPushChoiceItem(choice);
-                }
-            }
-        
-            multiSelect.forEach = (f) => {
-                let choice = multiSelect.choices.getHead();
-                while(choice){
-                    if (!choice.isOptionHidden)
-                        f(choice);
-                    choice = multiSelect.getNext(choice);
-                }
-            }
-        
-            var origAddFilterFacade = multiSelect.addFilterFacade.bind(multiSelect);
-            multiSelect.addFilterFacade = (choice) => {
-                if ( !choice.isOptionHidden ) {
-                    origAddFilterFacade(choice);
-                }
-            }
-        
-            var origInsertFilterFacade = multiSelect.insertFilterFacade.bind(multiSelect);
-            multiSelect.addFilterFacade = (choice) => {
-                if ( !choice.isOptionHidden ){
-                    origInsertFilterFacade(choice);
-                }
-            }
         }
     }
+}
+
+function updateHiddenChoice(choice, updateHidden , getIsOptionHidden){
+    let newIsOptionHidden = getIsOptionHidden(choice.option);
+    if (newIsOptionHidden != choice.isOptionHidden)
+    {
+        choice.isOptionHidden= newIsOptionHidden;
+        updateHidden(choice)
+    }
+}
+
+function getNextNonHidden(choice) { // TODO get next visible
+    let next = choice.itemNext;
+    if (!next) {
+        return null;
+    } else if (next.choiceElement) {
+        return next;
+    }
+    return getNextNonHidden(next)
 }

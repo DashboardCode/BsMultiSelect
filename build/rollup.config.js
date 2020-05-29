@@ -22,9 +22,11 @@ const isEsm   = process.env.ESM === 'true'
 //   ]
 // ];
 
+let bundleName = process.env.ALT;
+if (!bundleName) 
+   bundleName ='BsMultiSelect';
 
-
-let fileDest  = `BsMultiSelect${isEsm ? '.esm' : ''}.js`;
+let fileDest  = `${bundleName}${isEsm ? '.esm' : ''}.js`;
 let external  = ['jquery', 'popper.js'];
 let globals   = {'jquery': 'jQuery', 'popper.js': 'Popper'};
 
@@ -36,22 +38,22 @@ const plugins = [
   })]
 
 module.exports = {
-  input: path.resolve(__dirname, `../js/src/BsMultiSelect${isEsm ? '.esm' : '.jquery'}.js`),
+  input: path.resolve(__dirname, `../js/src/${bundleName}${isEsm ? '.esm' : '.jquery'}.js`),
   output: {
     banner: `/*!
-  * DashboardCode BsMultiSelect v${pkg.version} (${pkg.homepage})
+  * DashboardCode ${bundleName} v${pkg.version} (${pkg.homepage})
   * Copyright 2017-${year} ${pkg.author}
   * Licensed under APACHE 2 (https://github.com/DashboardCode/BsMultiSelect/blob/master/LICENSE)
   */`,
     file: path.resolve(__dirname, `../dist/js/${fileDest}`),
     format: isEsm ? 'esm' :'umd',
     globals,
-    name: 'BsMultiSelect'
+    name: bundleName
   },
   external,
   plugins
 }
 
 if (!isEsm) {
-  module.exports.output.name = 'BsMultiSelect'
+  module.exports.output.name = bundleName
 }

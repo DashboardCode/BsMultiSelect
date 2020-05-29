@@ -55,8 +55,8 @@ export function PlaceholderPlugin(pluginData){
 
             staticManager.appendToContainer = composeSync(staticManager.appendToContainer, updateEmptyInputWidth);
 
-            let origProcessEmptyInput = multiSelect.processEmptyInput.bind(multiSelect);
-            multiSelect.processEmptyInput = composeSync(updateEmptyInputWidth, origProcessEmptyInput);
+            let origProcessEmptyInput = multiSelect.filterListAspect.processEmptyInput;
+            multiSelect.filterListAspect.processEmptyInput = composeSync(updateEmptyInputWidth, origProcessEmptyInput);
 
             let origEmpty = multiSelect.empty.bind(multiSelect);
             multiSelect.empty = composeSync(origEmpty, updatePlacehodlerVisibility);

@@ -1,4 +1,3 @@
-
 import {defCall} from '../ToolsJs';
 
 export function LabelPlugin(pluginData){

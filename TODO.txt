@@ -1,8 +1,13 @@
+-7. Custom Dialog ?
+-7b. request css-live.ru community for UIX help
+
+-8. provide method to manipulate plugins for jquey/bootstrap and esm
+
 -6. UpdateOption (for all selected, hidden and disabled)
 
 -6b. UpdateOptionContent ?
 
--6c. Move option manipulation api to plugin, move disabled to plugin,
+-6c. move option disabled to plugin ?
 
 -5. check IE 11 (after restart)
 
@@ -12,15 +17,18 @@
 
 -3. create snippet for `selected disabled`. -> need updateSelectedDisabled to support browser's `step back` behaviour.
 
--2. create snippet for jquery validate ( https://jqueryvalidation.org/ ) and unobtrusive-validation ( https://exceptionnotfound.net/asp-net-mvc-demystified-unobtrusive-validation/ )
+-2. create snippet for jquery validate ( https://jqueryvalidation.org/ ) and unobtrusive-validation ( 
+landing page: https://exceptionnotfound.net/asp-net-mvc-demystified-unobtrusive-validation/
+multiple pages: https://www.ivarprudnikov.com/static-website-multiple-html-pages-using-webpack-plus-github-example/ )
 
--1. should I have defaultCss ? should I have defaultCssPatch
-
+-7
  use min(), max() и clamp()
 https://habr.com/ru/company/ruvds/blog/501634/
 
+-9 webpack generated bundle and html https://medium.com/@jonas_duri/build-a-landing-page-with-webpack-4-6efe83deb7fe  (handlebars.js ?)
+
 0. search as API
-  include integration with https://fusejs.io/ 
+  include integration with https://fusejs.io/ ?
 
 1. configure package.json for multiple entrypoints. what is "main:src" there?
 

@@ -1,16 +1,4 @@
 import {findDirectChildByTagName, closestByClassName} from './ToolsDom';
-import {composeSync} from './ToolsJs';
-
-export function completePicksElement(staticDom, staticManager, createElement){
-    if (!staticDom.picksElement) {
-        staticDom.picksElement = createElement('UL');
-        staticDom.ownPicksElement = true;
-        //staticManager.picksElement
-        staticManager.appendToContainer = composeSync(staticManager.appendToContainer,  () => staticDom.containerElement.appendChild(staticDom.picksElement));
-        staticManager.dispose = composeSync(staticManager.dispose, () => staticDom.containerElement.removeChild(staticDom.picksElement));
-
-    }
-}
 
 export function StaticDomFactory(createElement, choicesElement){
     return {
@@ -24,12 +12,12 @@ export function StaticDomFactory(createElement, choicesElement){
             }
            
             let containerElement, picksElement;
-            let removeContainerClass= false;
+            let removableContainerClass= false;
             if (element.tagName == 'DIV') {
                 containerElement = element;
                 if (!containerElement.classList.contains(containerClass)){
                     containerElement.classList.add(containerClass);
-                    removeContainerClass = true;
+                    removableContainerClass = true;
                 }
                 picksElement = findDirectChildByTagName(containerElement, 'UL');
             }
@@ -40,28 +28,37 @@ export function StaticDomFactory(createElement, choicesElement){
                     showError('BsMultiSelect: defined on UL but precedentant DIV for container not found; class='+containerClass);
                 }
             } 
-            // TODO: move to new place
-            // else if (element.tagName=="INPUT"){
-            //    showError('BsMultiSelect: INPUT element is not supported');
-            // }
-            
-            let staticDom = {
-                initialElement:element,
-                containerElement,
-                picksElement
+            else if (element.tagName=="INPUT"){
+                showError('BsMultiSelect: INPUT element is not supported');
             }
-
-            let staticManager = {
-                appendToContainer(){ containerElement.appendChild(choicesElement); },
-                dispose(){ 
-                    containerElement.removeChild(choicesElement); 
-                    if (removeContainerClass)
-                        containerElement.classList.remove(containerClass);
+            let disposablePicksElement=false;
+            if (!picksElement) {
+                picksElement = createElement('UL');
+                disposablePicksElement = true; 
+            }
+        
+            return {
+                staticDom: {
+                            initialElement:element,
+                            containerElement,
+                            picksElement,
+                            disposablePicksElement
+                },
+                staticManager: {
+                    appendToContainer(){ 
+                        containerElement.appendChild(choicesElement); 
+                        if (disposablePicksElement)
+                            containerElement.appendChild(picksElement)
+                    },
+                    dispose(){ 
+                        containerElement.removeChild(choicesElement); 
+                        if (removableContainerClass)
+                            containerElement.classList.remove(containerClass);
+                        if (disposablePicksElement)
+                            containerElement.removeChild(picksElement)
+                    }
                 }
-            }
-             
-            completePicksElement(staticDom, staticManager, createElement);
-            return {staticDom, staticManager};
+            };
         }
     }
 }

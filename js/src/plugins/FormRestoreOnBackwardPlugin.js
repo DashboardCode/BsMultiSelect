@@ -1,5 +1,3 @@
-
-
 export function FormRestoreOnBackwardPlugin(pluginData){
     let {staticDom, environment} = pluginData;
     let window = environment.window;

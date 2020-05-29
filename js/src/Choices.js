@@ -1,22 +1,5 @@
-import {CollectionFacade} from './ToolsJs'
-
-export function Choices(listFacade, navigate, addFilterFacade, insertFilterFacade) 
+export function Choices(collection, listFacade_reset, listFacade_remove, addFilterFacade, insertFilterFacade) 
 {
-    let hoveredChoice=null;
-
-    let collection = CollectionFacade(
-        (choice)=>choice.itemPrev, 
-        (choice, v)=>choice.itemPrev=v, 
-        (choice)=>choice.itemNext, 
-        (choice, v)=>choice.itemNext=v, 
-    );
-
-    function resetHoveredChoice() {
-        if (hoveredChoice) {
-            hoveredChoice.setHoverIn(false)
-            hoveredChoice = null;
-        }
-    }
 
     var push = (choice) => {
         addFilterFacade(choice);
@@ -26,7 +9,6 @@ export function Choices(listFacade, navigate, addFilterFacade, insertFilterFacad
     var item = {
         push,
         get: (key) => collection.get(key),
-        getHead: () => collection.getHead(),
         insert: (key, choice) => {
             if (key>=collection.getLength()) {
                 push(choice);
@@ -38,24 +20,20 @@ export function Choices(listFacade, navigate, addFilterFacade, insertFilterFacad
         },
         remove: (key) => {
             var choice = collection.remove(key);
-            listFacade.remove(choice);
+            listFacade_remove(choice);
             return choice;
         },
+
+        //  ---- dialog AI
+        getHead: () => collection.getHead(),
         forLoop: (f)=>collection.forLoop(f),
-        getHoveredChoice: () => hoveredChoice,
-        hoverIn(choice){
-            resetHoveredChoice(); 
-            hoveredChoice = choice;
-            hoveredChoice.setHoverIn(true)
-        },
-        resetHoveredChoice,
-        navigate: (down) => navigate(down, hoveredChoice),
+        
         
         clear:()=>{
             collection.reset();
-            listFacade.reset();
-        },
-        dispose: () => collection.forLoop(choice => choice.dispose?.())
+            listFacade_reset();
+        }, 
+        dispose: () => collection.forLoop(choice => choice.dispose?.()) 
     }
     return item;
 }

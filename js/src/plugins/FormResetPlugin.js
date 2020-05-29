@@ -1,4 +1,3 @@
-
 import {EventBinder, closestByTagName} from '../ToolsDom';
 
 export function FormResetPlugin(pluginData){

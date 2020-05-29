@@ -1,10 +1,11 @@
-export function OptionsApiPlugin(){
+export function OptionsApiPlugin(pluginData){
+    let {choiceFactoryAspect} = pluginData;
     return {
         afterConstructor(multiSelect){
 
             multiSelect.SetOptionSelected = (key, value) => {
-                let choice = this.choices.get(key);
-                this.setOptionSelected(choice, value);
+                let choice = multiSelect.choices.get(key);
+                multiSelect.optionAspect.setOptionSelected(choice, value);
             }
         
             multiSelect.UpdateOptionSelected = (key) => {
@@ -30,9 +31,13 @@ export function OptionsApiPlugin(){
             multiSelect.UpdateOptionAdded = (key)=>{  // TODO: generalize index as key 
                 let options = multiSelect.dataSourceAspect.getOptions();
                 let option = options[key];
-                let choice = multiSelect.createChoice(option);
+                let choice = multiSelect.optionAspect.createChoice(option);
                 multiSelect.choices.insert(key, choice);
-                multiSelect.insertChoiceItem(choice)
+                choiceFactoryAspect.insertChoiceItem(choice,
+                        () => multiSelect.filterPanel.setFocus(),
+                        (c) => multiSelect.createPick(c),
+                        (c,e) => multiSelect.aspect.adoptChoiceElement(c,e)
+                    )
             }
         
             multiSelect.UpdateOptionRemoved = (key)=>{ // TODO: generalize index as key 
