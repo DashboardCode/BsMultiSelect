@@ -42,8 +42,8 @@ export function OptionsApiPlugin(pluginData){
         
             multiSelect.UpdateOptionRemoved = (key)=>{ // TODO: generalize index as key 
                 multiSelect.aspect.hideChoices(); // always hide 1st, then reset filter
-                multiSelect.filterFacade.resetFilter();
-        
+                multiSelect.resetFilter();
+                
                 var choice = multiSelect.choices.remove(key);
                 choice.remove?.();
                 choice.dispose?.();

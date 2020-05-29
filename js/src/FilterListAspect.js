@@ -49,7 +49,6 @@ export function FilterListAspect(choicesGetNextAspect, choicesEnumerableAspect) 
             }
         },        
         processEmptyInput(){
-            //filterFacade.resetFilter();
             filterListFacade.reset();
             choicesEnumerableAspect.forEach( (choice)=>{
                 choice.filteredPrev = choice.filteredNext = null;
@@ -58,7 +57,6 @@ export function FilterListAspect(choicesGetNextAspect, choicesEnumerableAspect) 
             });
         },
         filterFacade_setFilter(text){
-            //filterFacade.setFilter(text);
             let getFilterIn = composeFilterPredicate(text)
             filterListFacade.reset();
             choicesEnumerableAspect.forEach( (choice)=>{

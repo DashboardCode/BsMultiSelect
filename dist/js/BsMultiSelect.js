@@ -1,5 +1,5 @@
 /*!
-  * DashboardCode BsMultiSelect v0.5.63 (https://dashboardcode.github.io/BsMultiSelect/)
+  * DashboardCode BsMultiSelect v0.5.65 (https://dashboardcode.github.io/BsMultiSelect/)
   * Copyright 2017-2020 Roman Pokrovskij (github user rpokrovskij)
   * Licensed under APACHE 2 (https://github.com/DashboardCode/BsMultiSelect/blob/master/LICENSE)
   */
@@ -894,10 +894,7 @@
     }
 
     var MultiSelect = /*#__PURE__*/function () {
-      function MultiSelect(dataSourceAspect, componentAspect, picksDom, choicesDom, staticManager, popupAspect, pickContentGenerator, //choicesGetNextAspect,
-      filterListAspect, choices, choicesHover, picks, optionAspect, optionToggleAspect, //choicesElementAspect, 
-      //choiceFactoryAspect, 
-      choicesAspect, window) {
+      function MultiSelect(dataSourceAspect, componentAspect, picksDom, choicesDom, staticManager, popupAspect, pickContentGenerator, filterListAspect, choices, choicesHover, picks, optionAspect, optionToggleAspect, choicesAspect, window) {
         this.dataSourceAspect = dataSourceAspect;
         this.componentAspect = componentAspect;
         this.window = window;
@@ -905,16 +902,13 @@
         this.picksDom = picksDom;
         this.choicesDom = choicesDom;
         this.staticManager = staticManager;
-        this.pickContentGenerator = pickContentGenerator; //this.choicesGetNextAspect = choicesGetNextAspect;
-
+        this.pickContentGenerator = pickContentGenerator;
         this.filterListAspect = filterListAspect;
         this.choices = choices;
         this.choicesHover = choicesHover;
         this.picks = picks;
         this.optionAspect = optionAspect;
-        this.optionToggleAspect = optionToggleAspect; //this.choicesElementAspect = choicesElementAspect; 
-        //this.choiceFactoryAspect = choiceFactoryAspect; 
-
+        this.optionToggleAspect = optionToggleAspect;
         this.choicesAspect = choicesAspect;
       }
 
@@ -927,10 +921,7 @@
       _proto.forceResetFilter = function forceResetFilter() {
         this.filterPanel.setEmpty();
         this.filterListAspect.processEmptyInput();
-      } // processEmptyInput(){
-      //     this.filterFacade.resetFilter();
-      // }
-      ;
+      };
 
       _proto.isSelectable = function isSelectable(choice) {
         return !choice.isOptionSelected && !choice.isOptionDisabled;
@@ -1890,7 +1881,6 @@
           }
         },
         processEmptyInput: function processEmptyInput() {
-          //filterFacade.resetFilter();
           filterListFacade.reset();
           choicesEnumerableAspect.forEach(function (choice) {
             choice.filteredPrev = choice.filteredNext = null;
@@ -1899,7 +1889,6 @@
           });
         },
         filterFacade_setFilter: function filterFacade_setFilter(text) {
-          //filterFacade.setFilter(text);
           var getFilterIn = composeFilterPredicate(text);
           filterListFacade.reset();
           choicesEnumerableAspect.forEach(function (choice) {
@@ -3292,7 +3281,7 @@
             // TODO: generalize index as key 
             multiSelect.aspect.hideChoices(); // always hide 1st, then reset filter
 
-            multiSelect.filterFacade.resetFilter();
+            multiSelect.resetFilter();
             var choice = multiSelect.choices.remove(key);
             choice.remove == null ? void 0 : choice.remove();
             choice.dispose == null ? void 0 : choice.dispose();

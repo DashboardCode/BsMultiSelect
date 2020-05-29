@@ -1,5 +1,6 @@
 # CHANGELOG
 ````
+0.5.65 - bug in remove option method (options API) resolved
 0.5.64 - optimizations
 0.5.63 - add and remove container class for js initiated component
 0.5.62 - optimizations
