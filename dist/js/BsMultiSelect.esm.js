@@ -3389,13 +3389,13 @@ function UpdateOptionsSelectedApiPlugin(pluginData) {
 function DisabledOptionApiPlugin(pluginData) {
   var choices = pluginData.choices,
       dataSourceAspect = pluginData.dataSourceAspect;
-  return Object.create({
+  return {
     buildApi: function buildApi(api) {
       api.updateOptionsDisabled = function () {
         return updateOptionsDisabled(choices, dataSourceAspect);
       };
     }
-  });
+  };
 }
 
 function updateOptionsDisabled(choices, dataSourceAspect) {
