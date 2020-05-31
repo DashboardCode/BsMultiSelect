@@ -1,7 +1,7 @@
 export function DisabledComponentAspect(componentAspect, picks, multiSelectInputAspect, picksDom){
     let isComponentDisabled;
     return {
-        updateDisabled(){
+        updateDisabledComponent(){
             let newIsComponentDisabled = componentAspect.getDisabled();
             if (isComponentDisabled!==newIsComponentDisabled){
                 isComponentDisabled=newIsComponentDisabled;
@@ -16,7 +16,7 @@ export function DisabledComponentAspect(componentAspect, picks, multiSelectInput
 export function AppearanceAspect(disabledComponentAspect){
     return {
         updateAppearance(){
-            disabledComponentAspect.updateDisabled();
+            disabledComponentAspect.updateDisabledComponent();
         }
     }
 }

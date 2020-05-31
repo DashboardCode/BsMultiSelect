@@ -20,6 +20,8 @@ import {OptionsApiPlugin} from './plugins/OptionsApiPlugin';
 import {FormRestoreOnBackwardPlugin} from './plugins/FormRestoreOnBackwardPlugin';
 import {SelectElementPlugin} from './plugins/SelectElementPlugin';
 import {SelectAllApiPlugin} from './plugins/SelectAllApiPlugin';
+import {UpdateOptionsSelectedApiPlugin} from './plugins/UpdateOptionsSelectedApiPlugin'
+import {DisabledOptionApiPlugin} from './plugins/DisabledOptionApiPlugin'
 
 import {adjustLegacySettings} from './BsMultiSelectDepricatedParameters'
 
@@ -31,7 +33,7 @@ import {extendIfUndefined, composeSync} from './ToolsJs';
         const defaults = {containerClass : "dashboardcode-bsmultiselect", css: css}
         let defaultPlugins = [CssPatchPlugin, SelectElementPlugin, LabelPlugin, HiddenOptionPlugin, ValidationApiPlugin, 
         BsAppearancePlugin, FormResetPlugin, RtlPlugin, PlaceholderPlugin , OptionsApiPlugin, SelectAllApiPlugin,
-        JQueryMethodsPlugin, FormRestoreOnBackwardPlugin];
+        JQueryMethodsPlugin, UpdateOptionsSelectedApiPlugin, FormRestoreOnBackwardPlugin,  DisabledOptionApiPlugin];
         let createBsMultiSelect = (element, settings, removeInstanceData) => { 
             let trigger = (e, eventName) => $(e).trigger(eventName);
             let environment = {trigger, window, Popper}

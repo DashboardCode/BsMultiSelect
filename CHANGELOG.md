@@ -1,5 +1,6 @@
 # CHANGELOG
 ````
+0.5.68 - optimizations
 0.5.67 - optimizations
 0.5.66 - optimizations
 0.5.65 - bug in remove option method (options API) resolved

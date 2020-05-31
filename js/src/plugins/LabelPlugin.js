@@ -15,7 +15,7 @@ export function LabelPlugin(pluginData){
         createInputId = () => `${containerClass}-generated-filter-${containerElement.id}`;
 
     return {
-        afterConstructor(){
+        buildApi(){
             let labelElement = labelPluginData.getLabelElementAspect();
             let backupedForAttribute = null; // state saved between init and dispose
             if (labelElement) {

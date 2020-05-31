@@ -3,8 +3,8 @@ import {addStyling} from '../ToolsStyling'
 import {ObservableLambda, composeSync} from '../ToolsJs';
 
 export function BsAppearancePlugin(pluginData){
-    let {configuration, common, validationApiPluginData, picksDom, staticDom, 
-        labelPluginData, appearanceAspect} = pluginData;
+    let {configuration, common, validationApiPluginData, 
+        picksDom, staticDom, labelPluginData, appearanceAspect} = pluginData;
     let {getValidity, getSize, useCssPatch, css} = configuration;
     let selectElement = staticDom.selectElement;
     
@@ -38,79 +38,81 @@ export function BsAppearancePlugin(pluginData){
 
     common.getSize=getSize;
     common.getValidity=getValidity;
+
+    var updateSize;
+    if (!useCssPatch){
+        updateSize= () => updateSizeForAdapter(picksDom.picksElement, getSize)
+    }
+    else{
+        const {picks_lg, picks_sm, picks_def} = css;
+        updateSize = () => updateSizeJsForAdapter(picksDom.picksElement, picks_lg, picks_sm, picks_def, getSize);
+    }
+
+    if (useCssPatch){
+        var origToggleFocusStyling = picksDom.toggleFocusStyling;
+        picksDom.toggleFocusStyling = () => {
+            var validity =  validationObservable.getValue();
+            var isFocusIn = picksDom.getIsFocusIn();
+            origToggleFocusStyling(isFocusIn)
+            if (isFocusIn){
+                if (validity===false) { 
+                    // but not toggle events (I know it will be done in future)
+                    picksDom.setIsFocusIn(isFocusIn);
+                    
+                    addStyling(picksDom.picksElement, css.picks_focus_invalid)
+                } else if (validity===true) {
+                    // but not toggle events (I know it will be done in future)
+                    picksDom.setIsFocusIn(isFocusIn);
+                    
+                    addStyling(picksDom.picksElement, css.picks_focus_valid)  
+                }              
+            }
+        }
+    }
+
+    var getWasValidated = () => {
+        var wasValidatedElement = closestByClassName(staticDom.initialElement, 'was-validated');
+        return wasValidatedElement?true:false;
+    }
+    var wasUpdatedObservable = ObservableLambda(()=>getWasValidated());
+    var getManualValidationObservable = ObservableLambda(()=>getValidity());
+    let validationApiObservable = validationApiPluginData?.validationApiObservable;
+    
+    var validationObservable = ObservableLambda(
+        () => wasUpdatedObservable.getValue()?validationApiObservable.getValue():getManualValidationObservable.getValue()
+    )
+  
+    validationObservable.attach(
+        (value)=>{
+            var  {validMessages, invalidMessages} = getMessagesElements(staticDom.containerElement);
+            updateValidity( 
+            picksDom.picksElement,
+            validMessages, invalidMessages,
+            value);
+            picksDom.toggleFocusStyling();
+        }
+    )
+    wasUpdatedObservable.attach(
+        ()=>validationObservable.call()
+    )
+    validationApiObservable.attach(
+        ()=>validationObservable.call()
+    )
+    getManualValidationObservable.attach(
+        ()=>validationObservable.call()
+    )
+
+    appearanceAspect.updateAppearance = composeSync(
+        appearanceAspect.updateAppearance, 
+        updateSize, 
+        validationObservable.call, getManualValidationObservable.call);
+
     return {
-        afterConstructor(multiSelect){
-            var updateSize;
-            if (!useCssPatch){
-                updateSize= () => updateSizeForAdapter(picksDom.picksElement, getSize)
-            }
-            else{
-                const {picks_lg, picks_sm, picks_def} = css;
-                updateSize = () => updateSizeJsForAdapter(picksDom.picksElement, picks_lg, picks_sm, picks_def, getSize);
-            }
-            multiSelect.UpdateSize = updateSize;
+        buildApi(api){
             
-            if (useCssPatch){
-                var origToggleFocusStyling = picksDom.toggleFocusStyling;
-                picksDom.toggleFocusStyling = () => {
-                    var validity =  validationObservable.getValue();
-                    var isFocusIn = picksDom.getIsFocusIn();
-                    origToggleFocusStyling(isFocusIn)
-                    if (isFocusIn){
-                        if (validity===false) { 
-                            // but not toggle events (I know it will be done in future)
-                            picksDom.setIsFocusIn(isFocusIn);
-                            
-                            addStyling(picksDom.picksElement, css.picks_focus_invalid)
-                        } else if (validity===true) {
-                            // but not toggle events (I know it will be done in future)
-                            picksDom.setIsFocusIn(isFocusIn);
-                            
-                            addStyling(picksDom.picksElement, css.picks_focus_valid)  
-                        }              
-                    }
-                }
-            }
-        
-            var getWasValidated = () => {
-                var wasValidatedElement = closestByClassName(staticDom.initialElement, 'was-validated');
-                return wasValidatedElement?true:false;
-            }
-            var wasUpdatedObservable = ObservableLambda(()=>getWasValidated());
-            var getManualValidationObservable = ObservableLambda(()=>getValidity());
-            let validationApiObservable = validationApiPluginData?.validationApiObservable;
-            
-            var validationObservable = ObservableLambda(
-                () => wasUpdatedObservable.getValue()?validationApiObservable.getValue():getManualValidationObservable.getValue()
-            )
-          
-            validationObservable.attach(
-                (value)=>{
-                    var  {validMessages, invalidMessages} = getMessagesElements(staticDom.containerElement);
-                    updateValidity( 
-                    picksDom.picksElement,
-                    validMessages, invalidMessages,
-                    value);
-                    picksDom.toggleFocusStyling();
-                }
-            )
-            wasUpdatedObservable.attach(
-                ()=>validationObservable.call()
-            )
-            validationApiObservable.attach(
-                ()=>validationObservable.call()
-            )
-            getManualValidationObservable.attach(
-                ()=>validationObservable.call()
-            )
-               
-            multiSelect.UpdateValidity = ()=> getManualValidationObservable.call();
-            multiSelect.UpdateWasValidated = ()=>wasUpdatedObservable.call();
-            
-            appearanceAspect.updateAppearance = composeSync(
-                appearanceAspect.updateAppearance, 
-                updateSize, 
-                validationObservable.call, getManualValidationObservable.call);
+            api.UpdateSize = updateSize;
+            api.UpdateValidity = ()=> getManualValidationObservable.call();
+            api.UpdateWasValidated = ()=>wasUpdatedObservable.call();
             
             return /* dispose */() => {
                 wasUpdatedObservable.detachAll();

@@ -10,9 +10,9 @@ export function PluginManager(plugins, pluginData){
     
     let disposes = [];
     return {
-        afterConstructor(multiSelect){
+        buildApi(api){
             for(let i = 0; i<instances.length; i++){
-                let dispose = instances[i].afterConstructor?.(multiSelect)
+                let dispose = instances[i].buildApi?.(api)
                 if (dispose)
                     disposes.push(dispose);
             }

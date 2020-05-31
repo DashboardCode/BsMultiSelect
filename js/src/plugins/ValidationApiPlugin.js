@@ -47,8 +47,8 @@ export function ValidationApiPlugin(pluginData){
         );
 
     return {
-        afterConstructor(multiSelect){
-            multiSelect.validationApi = validationApi;
+        buildApi(api){
+            api.validationApi = validationApi;
         },
         dispose(){
             isValueMissingObservable.detachAll(); 

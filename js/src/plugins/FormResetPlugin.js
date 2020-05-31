@@ -3,14 +3,14 @@ import {EventBinder, closestByTagName} from '../ToolsDom';
 export function FormResetPlugin(pluginData){
     var {staticDom, environment} = pluginData;
     return {
-        afterConstructor(multiSelect){
+        buildApi(api){
             var eventBuilder = EventBinder();
             if (staticDom.selectElement){
                 var form = closestByTagName(staticDom.selectElement, 'FORM');
                 if (form) {
                     eventBuilder.bind(form, 
                         'reset', 
-                        () => environment.window.setTimeout( ()=>multiSelect.updateData() ) );
+                        () => environment.window.setTimeout( ()=>api.updateData() ) );
                 }
             }
             return eventBuilder.unbind;

@@ -13,13 +13,17 @@ import {JQueryMethodsPlugin} from './plugins/JQueryMethodsPlugin';
 import {OptionsApiPlugin} from './plugins/OptionsApiPlugin';
 import {SelectElementPlugin} from './plugins/SelectElementPlugin';
 import {SelectAllApiPlugin} from './plugins/SelectAllApiPlugin';
+import {UpdateOptionsSelectedApiPlugin} from './plugins/UpdateOptionsSelectedApiPlugin'
+import {DisabledOptionApiPlugin} from './plugins/DisabledOptionApiPlugin'
+import {FormRestoreOnBackwardPlugin} from './plugins/FormRestoreOnBackwardPlugin'
 
 import {createCss} from './ToolsStyling';
 import {extendIfUndefined} from './ToolsJs';
 
 const defaults = {containerClass : "dashboardcode-bsmultiselect", css: css}
 const defaultPlugins = [CssPatchPlugin, SelectElementPlugin, LabelPlugin, HiddenOptionPlugin, ValidationApiPlugin, 
-BsAppearancePlugin, FormResetPlugin, RtlPlugin, PlaceholderPlugin , OptionsApiPlugin, SelectAllApiPlugin, JQueryMethodsPlugin];
+    BsAppearancePlugin, FormResetPlugin, RtlPlugin, PlaceholderPlugin , OptionsApiPlugin, SelectAllApiPlugin,
+    JQueryMethodsPlugin, UpdateOptionsSelectedApiPlugin, FormRestoreOnBackwardPlugin,  DisabledOptionApiPlugin];
 
 export function BsMultiSelect(element, environment, settings){
     if (!environment.trigger)

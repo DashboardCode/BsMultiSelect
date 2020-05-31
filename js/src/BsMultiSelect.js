@@ -1,4 +1,3 @@
-import {MultiSelect} from './MultiSelect'
 import {PluginManager, staticDomDefaults} from './PluginManager'
 
 import {composeSync, def} from './ToolsJs';
@@ -21,7 +20,7 @@ import {DoublyLinkedCollection} from './ToolsJs'
 
 import {FilterListAspect, ChoicesGetNextAspect, ChoicesEnumerableAspect } from './FilterListAspect'
 import {ChoicesElementAspect, ChoiceFactoryAspect, ChoicesAspect } from './ChoicesAspect'
-
+import {UpdateDataAspect } from './UpdateDataAspect'
 
 import {OptionToggleAspect, OptionAspect} from './OptionAspect.js'
 import {Choices} from './Choices'
@@ -51,9 +50,13 @@ export function BsMultiSelect(element, environment, configuration, onInit){
     if (!common) 
         common = {}
 
-    let dataSourceAspect = DataSourceAspect(options, getSelected, setSelected, getIsOptionDisabled); 
     let componentAspect  = ComponentAspect(getDisabled, trigger);
     common.getDisabled = componentAspect.getDisabled;
+    
+    let dataSourceAspect = DataSourceAspect(options, getSelected, setSelected, getIsOptionDisabled); 
+    let optionAspect = OptionAspect(dataSourceAspect)
+    let optionToggleAspect = OptionToggleAspect(optionAspect)
+
           
     let PopupAspect = def(configuration.staticContentGenerator, DefaultPopupAspect); // TODO: rename configuration.staticContentGenerator
     let createElement =  name=>window.document.createElement(name);
@@ -99,8 +102,6 @@ export function BsMultiSelect(element, environment, configuration, onInit){
     
     let choicesHover = ChoicesHover((down, hoveredChoice)=>filterListAspect.navigate(down, hoveredChoice));
 
-    let optionAspect = OptionAspect(dataSourceAspect)
-    let optionToggleAspect = OptionToggleAspect(optionAspect)
     let inputAspect = InputAspect(filterListAspect, optionAspect, filterDom, popupAspect, choicesHover);
 
     let picks = Picks();
@@ -208,6 +209,9 @@ export function BsMultiSelect(element, environment, configuration, onInit){
         }
     );
 
+    let updateDataAspect = UpdateDataAspect(multiSelectInputAspect, manageableResetFilterListAspect,
+        choicesDom, choices, picks, choicesAspect);
+
     let pluginData = {environment, trigger, configuration, dataSourceAspect, componentAspect, 
         staticDom, picksDom, choicesDom, popupAspect, staticManager, 
         choicesGetNextAspect, choicesEnumerableAspect, filterListAspect, choices, choicesHover, picks,
@@ -224,27 +228,18 @@ export function BsMultiSelect(element, environment, configuration, onInit){
         disabledComponentAspect,
         appearanceAspect,
         loadAspect,
+        updateDataAspect,
         common // TODO: replace common with something new? 
     } 
     
     
     let pluginManager = PluginManager(plugins, pluginData);
         
-    var multiSelect = new MultiSelect(
-        dataSourceAspect,
-        choicesDom,
-        choices, 
-        picks,
-        choicesAspect,
-        manageableResetFilterListAspect,
-        multiSelectInputAspect,
-        disabledComponentAspect,
-        appearanceAspect
-    );
+    let api = {component: "BsMultiSelect.api"} 
+   
+    pluginManager.buildApi(api);
 
-    pluginManager.afterConstructor(multiSelect);
-
-    multiSelect.dispose = composeSync(
+    api.dispose = composeSync(
         multiSelectInputAspect.hideChoices,
         pluginManager.dispose, 
         picks.dispose,
@@ -252,15 +247,25 @@ export function BsMultiSelect(element, environment, configuration, onInit){
         choices.dispose,
         staticManager.dispose, popupAspect.dispose, picksDom.dispose, filterDom.dispose, filterAspect.dispose );
     
-    multiSelect.updateDisabled = disabledComponentAspect.updateDisabled;
-    onInit?.(multiSelect);
-   
-    
+    api.updateDisabled = disabledComponentAspect.updateDisabledComponent;
+    api.updateData = updateDataAspect.updateData;
+
+    api.update = () => {
+        updateDataAspect.updateData();
+        appearanceAspect.updateAppearance();
+    }
+
+    api.updateAppearance = () => {
+        appearanceAspect.updateAppearance();    
+    }
+
+    onInit?.(api);
+       
     picksDom.pickFilterElement.appendChild(filterDom.filterInputElement);
     picksDom.picksElement.appendChild(picksDom.pickFilterElement); 
     staticManager.appendToContainer();
     popupAspect.init();
     loadAspect.load();
 
-    return multiSelect;
+    return api;
 }

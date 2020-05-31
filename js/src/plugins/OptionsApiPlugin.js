@@ -1,16 +1,16 @@
 export function OptionsApiPlugin(pluginData){
-    let {choiceFactoryAspect, manageableResetFilterListAspect} = pluginData;
+    let {choiceFactoryAspect, manageableResetFilterListAspect, choices, optionAspect, dataSourceAspect, multiSelectInputAspect} = pluginData;
     return {
-        afterConstructor(multiSelect){
+        buildApi(api){
 
-            multiSelect.SetOptionSelected = (key, value) => {
-                let choice = multiSelect.choices.get(key);
-                multiSelect.optionAspect.setOptionSelected(choice, value);
+            api.SetOptionSelected = (key, value) => {
+                let choice = choices.get(key);
+                optionAspect.setOptionSelected(choice, value);
             }
         
-            multiSelect.UpdateOptionSelected = (key) => {
-                let choice = multiSelect.choices.get(key); // TODO: generalize index as key
-                let newIsSelected = multiSelect.dataSourceAspect.getSelected(choice.option);
+            api.UpdateOptionSelected = (key) => {
+                let choice = choices.get(key); // TODO: generalize index as key
+                let newIsSelected = dataSourceAspect.getSelected(choice.option);
                 if (newIsSelected != choice.isOptionSelected)
                 {
                     choice.isOptionSelected = newIsSelected;
@@ -18,9 +18,9 @@ export function OptionsApiPlugin(pluginData){
                 }
             }
         
-            multiSelect.UpdateOptionDisabled = (key)=>{
-                let choice = multiSelect.choices.get(key); // TODO: generalize index as key 
-                let newIsDisabled = multiSelect.dataSourceAspect.getDisabled(choice.option);
+            api.UpdateOptionDisabled = (key)=>{
+                let choice = choices.get(key); // TODO: generalize index as key 
+                let newIsDisabled = dataSourceAspect.getDisabled(choice.option);
                 if (newIsDisabled != choice.isOptionDisabled)
                 {
                     choice.isOptionDisabled= newIsDisabled;
@@ -28,23 +28,23 @@ export function OptionsApiPlugin(pluginData){
                 }
             }
         
-            multiSelect.UpdateOptionAdded = (key)=>{  // TODO: generalize index as key 
-                let options = multiSelect.dataSourceAspect.getOptions();
+            api.UpdateOptionAdded = (key)=>{  // TODO: generalize index as key 
+                let options = dataSourceAspect.getOptions();
                 let option = options[key];
-                let choice = multiSelect.optionAspect.createChoice(option);
-                multiSelect.choices.insert(key, choice);
+                let choice = optionAspect.createChoice(option);
+                choices.insert(key, choice);
                 choiceFactoryAspect.insertChoiceItem(
                         choice,
-                        (c,e) => multiSelect.multiSelectInputAspect.adoptChoiceElement(c,e),
-                        (o,s) => multiSelect.multiSelectInputAspect.handleOnRemoveButton(o,s)
+                        (c,e) => multiSelectInputAspect.adoptChoiceElement(c,e),
+                        (o,s) => multiSelectInputAspect.handleOnRemoveButton(o,s)
                     )
             }
         
-            multiSelect.UpdateOptionRemoved = (key)=>{ // TODO: generalize index as key 
-                multiSelect.multiSelectInputAspect.hideChoices(); // always hide 1st, then reset filter
+            api.UpdateOptionRemoved = (key)=>{ // TODO: generalize index as key 
+                multiSelectInputAspect.hideChoices(); // always hide 1st, then reset filter
                 manageableResetFilterListAspect.resetFilter();
                 
-                var choice = multiSelect.choices.remove(key);
+                var choice = choices.remove(key);
                 choice.remove?.();
                 choice.dispose?.();
             }

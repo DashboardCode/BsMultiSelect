@@ -1,8 +1,8 @@
 export function SelectAllApiPlugin(pluginData){
     let {multiSelectInputAspect, choices, picks, optionAspect, manageableResetFilterListAspect} = pluginData;
     return {
-        afterConstructor(multiSelect){
-            multiSelect.selectAll= ()=>{
+        buildApi(api){
+            api.selectAll= ()=>{
                 multiSelectInputAspect.hideChoices(); // always hide 1st
                 choices.forLoop(
                     choice => {
@@ -13,7 +13,7 @@ export function SelectAllApiPlugin(pluginData){
                 manageableResetFilterListAspect.resetFilter();
             }
         
-            multiSelect.deselectAll= ()=>{
+            api.deselectAll= ()=>{
                 multiSelectInputAspect.hideChoices(); // always hide 1st
                 picks.removeAll();
                 manageableResetFilterListAspect.resetFilter();

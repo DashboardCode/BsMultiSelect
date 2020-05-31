@@ -3,7 +3,8 @@ import {getDataGuardedWithPrefix} from '../ToolsDom';
 import {toggleStyling} from '../ToolsStyling';
 
 export function PlaceholderPlugin(pluginData){
-    let {configuration, staticManager, picks, picksDom, filterDom, staticDom, picksAspect, inputAspect, resetFilterListAspect, filterListAspect} = pluginData;
+    let {configuration, staticManager, picks, picksDom, filterDom, staticDom, updateDataAspect,
+        picksAspect, inputAspect, resetFilterListAspect, filterListAspect} = pluginData;
     let {placeholder,  css} = configuration;
     let {picksElement} = picksDom;
     let filterInputElement = filterDom.filterInputElement;
@@ -78,12 +79,6 @@ export function PlaceholderPlugin(pluginData){
             }
     };
 
-    return {
-        afterConstructor(multiSelect){
-            // let origEmpty = multiSelect.empty.bind(multiSelect);
-            // multiSelect.empty = composeSync(origEmpty, updatePlacehodlerVisibility);
-            let origUpdateData = multiSelect.updateData.bind(multiSelect); 
-            multiSelect.updateData = composeSync(origUpdateData, updatePlacehodlerVisibility);
-        }
-    }
+    updateDataAspect.updateData = composeSync(updateDataAspect.updateData, updatePlacehodlerVisibility);
+    
 }
