@@ -106,8 +106,8 @@ export function ChoiceFactoryAspect(choicesElementAspect, choicesGetNextAspect){
     return {
         pushChoiceItem(
             choice,
-            adoptChoiceElement, // aspect.adoptChoiceElement
-            handleOnRemoveButton // this.aspect.handleOnRemoveButton
+            adoptChoiceElement, // multiSelectInputAspect.adoptChoiceElement
+            handleOnRemoveButton // multiSelectInputAspect.handleOnRemoveButton
             ){
                 choicesElementAspect.buildChoiceElement(
                     choice,

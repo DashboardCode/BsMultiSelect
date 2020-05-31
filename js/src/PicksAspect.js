@@ -3,7 +3,7 @@ import {composeSync} from './ToolsJs';
 export function PicksAspect(picksDom, pickContentGenerator, 
      componentAspect, dataSourceAspect, optionAspect, picks){
     return {
-        createPick(choice, handleOnRemoveButton /* this.aspect.handleOnRemoveButton */){
+        createPick(choice, handleOnRemoveButton /* multiSelectInputAspect.handleOnRemoveButton */){
             let { pickElement, attach, detach } = picksDom.createPickElement(); 
             let pickContent = pickContentGenerator(pickElement);
             

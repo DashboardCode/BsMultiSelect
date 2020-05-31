@@ -3,7 +3,8 @@ import {addStyling} from '../ToolsStyling'
 import {ObservableLambda, composeSync} from '../ToolsJs';
 
 export function BsAppearancePlugin(pluginData){
-    let {configuration, common, validationApiPluginData, picksDom, staticDom, labelPluginData} = pluginData;
+    let {configuration, common, validationApiPluginData, picksDom, staticDom, 
+        labelPluginData, appearanceAspect} = pluginData;
     let {getValidity, getSize, useCssPatch, css} = configuration;
     let selectElement = staticDom.selectElement;
     
@@ -106,8 +107,8 @@ export function BsAppearancePlugin(pluginData){
             multiSelect.UpdateValidity = ()=> getManualValidationObservable.call();
             multiSelect.UpdateWasValidated = ()=>wasUpdatedObservable.call();
             
-            multiSelect.updateAppearance = composeSync(
-                multiSelect.updateAppearance.bind(multiSelect), 
+            appearanceAspect.updateAppearance = composeSync(
+                appearanceAspect.updateAppearance, 
                 updateSize, 
                 validationObservable.call, getManualValidationObservable.call);
             

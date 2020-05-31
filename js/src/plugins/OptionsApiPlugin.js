@@ -1,5 +1,5 @@
 export function OptionsApiPlugin(pluginData){
-    let {choiceFactoryAspect} = pluginData;
+    let {choiceFactoryAspect, manageableResetFilterListAspect} = pluginData;
     return {
         afterConstructor(multiSelect){
 
@@ -35,14 +35,14 @@ export function OptionsApiPlugin(pluginData){
                 multiSelect.choices.insert(key, choice);
                 choiceFactoryAspect.insertChoiceItem(
                         choice,
-                        (c,e) => multiSelect.aspect.adoptChoiceElement(c,e),
-                        (o,s) => multiSelect.aspect.handleOnRemoveButton(o,s)
+                        (c,e) => multiSelect.multiSelectInputAspect.adoptChoiceElement(c,e),
+                        (o,s) => multiSelect.multiSelectInputAspect.handleOnRemoveButton(o,s)
                     )
             }
         
             multiSelect.UpdateOptionRemoved = (key)=>{ // TODO: generalize index as key 
-                multiSelect.aspect.hideChoices(); // always hide 1st, then reset filter
-                multiSelect.resetFilter();
+                multiSelect.multiSelectInputAspect.hideChoices(); // always hide 1st, then reset filter
+                manageableResetFilterListAspect.resetFilter();
                 
                 var choice = multiSelect.choices.remove(key);
                 choice.remove?.();

@@ -3,7 +3,7 @@ import {getDataGuardedWithPrefix} from '../ToolsDom';
 import {toggleStyling} from '../ToolsStyling';
 
 export function PlaceholderPlugin(pluginData){
-    let {configuration, staticManager, picks, picksDom, filterDom, staticDom, picksAspect, inputAspect} = pluginData;
+    let {configuration, staticManager, picks, picksDom, filterDom, staticDom, picksAspect, inputAspect, resetFilterListAspect, filterListAspect} = pluginData;
     let {placeholder,  css} = configuration;
     let {picksElement} = picksDom;
     let filterInputElement = filterDom.filterInputElement;
@@ -38,51 +38,52 @@ export function PlaceholderPlugin(pluginData){
         filterInputElement.disabled = isComponentDisabled;
     };
     let isEmpty = () => picks.isEmpty() && filterDom.isEmpty()
+
+    function updatePlacehodlerVisibility(){
+        showPlacehodler(isEmpty());
+    };
+    function updateEmptyInputWidth(){
+        setEmptyInputWidth(isEmpty())
+    };
+            
+    let origDisable = picksDom.disable;
+    picksDom.disable = (isComponentDisabled)=>{
+        setDisabled(isComponentDisabled);
+        origDisable(isComponentDisabled);
+    };
+
+    staticManager.appendToContainer = composeSync(staticManager.appendToContainer, updateEmptyInputWidth);
+
+    filterListAspect.processEmptyInput = composeSync(updateEmptyInputWidth, filterListAspect.processEmptyInput);
+
+    resetFilterListAspect.forceResetFilter = composeSync(resetFilterListAspect.forceResetFilter, updatePlacehodlerVisibility);
+            
+    let origInput = inputAspect.input;
+
+    inputAspect.input = (filterInputValue, resetLength, eventLoopFlag_set, aspect_showChoices, aspect_hideChoices) =>{
+        updatePlacehodlerVisibility();
+        origInput(filterInputValue, resetLength, eventLoopFlag_set, aspect_showChoices, aspect_hideChoices);
+    }
+
+    let origCreatePick = picksAspect.createPick;
+    picksAspect.createPick = (choice, handleOnRemoveButton)=>{ 
+        let removePick = origCreatePick(choice, handleOnRemoveButton);
+        if (picks.getCount()==1) 
+            updatePlacehodlerVisibility()
+        return ()=>
+            { 
+                removePick();
+                if (picks.getCount()==0) 
+                    updatePlacehodlerVisibility()
+            }
+    };
+
     return {
         afterConstructor(multiSelect){
-            function updatePlacehodlerVisibility(){
-                showPlacehodler(isEmpty());
-            };
-            function updateEmptyInputWidth(){
-                setEmptyInputWidth(isEmpty())
-            };
-                    
-            let origDisable = picksDom.disable;
-            picksDom.disable = (isComponentDisabled)=>{
-                setDisabled(isComponentDisabled);
-                origDisable(isComponentDisabled);
-            };
-
-            staticManager.appendToContainer = composeSync(staticManager.appendToContainer, updateEmptyInputWidth);
-
-            let origProcessEmptyInput = multiSelect.filterListAspect.processEmptyInput;
-            multiSelect.filterListAspect.processEmptyInput = composeSync(updateEmptyInputWidth, origProcessEmptyInput);
-
-            let origEmpty = multiSelect.empty.bind(multiSelect);
-            multiSelect.empty = composeSync(origEmpty, updatePlacehodlerVisibility);
-
-            let origForceResetFilter = multiSelect.forceResetFilter.bind(multiSelect);
-            multiSelect.forceResetFilter = composeSync(origForceResetFilter, updatePlacehodlerVisibility);
-            
-            let origInput = inputAspect.input;
-
-            inputAspect.input = (filterInputValue, resetLength, eventLoopFlag_set, aspect_showChoices, aspect_hideChoices) =>{
-                updatePlacehodlerVisibility();
-                origInput(filterInputValue, resetLength, eventLoopFlag_set, aspect_showChoices, aspect_hideChoices);
-            }
-
-            let origCreatePick = picksAspect.createPick;
-            picksAspect.createPick = (choice, handleOnRemoveButton)=>{ 
-                let removePick = origCreatePick(choice, handleOnRemoveButton);
-                if (multiSelect.picks.getCount()==1) 
-                    updatePlacehodlerVisibility()
-                return ()=>
-                    { 
-                        removePick();
-                        if (multiSelect.picks.getCount()==0) 
-                            updatePlacehodlerVisibility()
-                    }
-            };
+            // let origEmpty = multiSelect.empty.bind(multiSelect);
+            // multiSelect.empty = composeSync(origEmpty, updatePlacehodlerVisibility);
+            let origUpdateData = multiSelect.updateData.bind(multiSelect); 
+            multiSelect.updateData = composeSync(origUpdateData, updatePlacehodlerVisibility);
         }
     }
 }

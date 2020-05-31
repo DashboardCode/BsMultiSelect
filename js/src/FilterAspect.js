@@ -1,5 +1,5 @@
 import {EventBinder} from './ToolsDom';
-export function FilterPanel(
+export function FilterAspect(
         filterInputElement,
 
         onFocusIn,  // show dropdown

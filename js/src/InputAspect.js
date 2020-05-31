@@ -4,9 +4,9 @@ export function InputAspect(
 
     return {
         input(filterInputValue, resetLength, 
-            eventLoopFlag_set, //this.aspect.eventLoopFlag.set(); 
-            aspect_showChoices, //this.aspect.showChoices();
-            aspect_hideChoices// this.aspect.hideChoices();
+            eventLoopFlag_set, //multiSelectInputAspect.eventLoopFlag.set(); 
+            aspect_showChoices, //multiSelectInputAspect.showChoices();
+            aspect_hideChoices// multiSelectInputAspect.hideChoices();
             ){
             let text = filterInputValue.trim().toLowerCase();
             var isEmpty=false;
@@ -40,7 +40,7 @@ export function InputAspect(
             if (visibleCount>0){
                 let panelIsVisble = popupAspect.isChoicesVisible();
                 if (!panelIsVisble){
-                    aspect_showChoices(); //this.aspect.showChoices();
+                    aspect_showChoices(); //multiSelectInputAspect.showChoices();
                 }
                 if (visibleCount == 1) {
                     choicesHover.hoverIn(filterListAspect.getHead())

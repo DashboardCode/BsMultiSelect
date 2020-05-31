@@ -1,4 +1,4 @@
-export function addToJQueryPrototype(pluginName, createPlugin, methodNames, $){
+export function addToJQueryPrototype(pluginName, createPlugin, $){
     const firstChar = pluginName.charAt(0);
     const firstCharLower = firstChar.toLowerCase();
     if (firstCharLower == firstChar) {
@@ -33,7 +33,7 @@ export function addToJQueryPrototype(pluginName, createPlugin, methodNames, $){
                 let methodName = options;
                 if (typeof instance[methodName] === 'undefined') {
                     let lMethodName = methodName.charAt(0).toLowerCase() + methodName.slice(1)
-                    if ( methodNames.indexOf(lMethodName)<0 || typeof instance[lMethodName] === 'undefined') {
+                    if ( typeof instance[lMethodName] === 'undefined') {
                         throw new Error(`No method named '${methodName}'`)
                     } else {
                         methodName = lMethodName;

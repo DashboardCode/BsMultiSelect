@@ -1,102 +1,58 @@
-import {FilterPanel} from './FilterPanel'
-import {MultiSelectInputAspect} from './MultiSelectInputAspect'
-import {sync} from './ToolsJs'
-
 export class MultiSelect {
     constructor(
         dataSourceAspect,
-        componentAspect,
-        picksDom,
-        filterDom, 
         choicesDom,
-        staticManager,
-        popupAspect,         
-        
-        filterListAspect,
         choices, 
-        choicesHover,
         picks,
-
-        optionAspect,
-        optionToggleAspect,
         choicesAspect,
-        picksAspect,
-        inputAspect,
-        window) {
+        manageableResetFilterListAspect,
+        multiSelectInputAspect,
+        disabledComponentAspect, appearanceAspect) {
 
         this.dataSourceAspect=dataSourceAspect;
-        this.componentAspect=componentAspect;
-
-        this.window = window;
-        this.popupAspect = popupAspect;
-        this.picksDom = picksDom;
-        this.filterDom = filterDom;
         this.choicesDom = choicesDom;
-        this.staticManager =staticManager;
 
-        this.filterListAspect = filterListAspect;
         this.choices =  choices;
-        this.choicesHover = choicesHover;
         this.picks = picks;
 
-        this.optionAspect = optionAspect;
-        this.optionToggleAspect = optionToggleAspect;
 
         this.choicesAspect = choicesAspect;
-        this.picksAspect=picksAspect;
-        this.inputAspect=inputAspect;
-    }
 
-    forceResetFilter(){
-        this.filterDom.setEmpty();
-        this.filterListAspect.processEmptyInput();
-    }
+        this.manageableResetFilterListAspect=manageableResetFilterListAspect;
 
-    resetFilter(){
-        if (!this.filterDom.isEmpty()) 
-            this.forceResetFilter();
-    }
-
-    isSelectable(choice){
-        return !choice.isOptionSelected  && !choice.isOptionDisabled;
+        this.multiSelectInputAspect = multiSelectInputAspect;
+        this.disabledComponentAspect = disabledComponentAspect;
+        this.appearanceAspect=appearanceAspect;
     }
     
-    empty(){
+    update(){
+        this.updateData();
+        this.updateAppearance();
+    }
+
+    // used in placeHolderPlugin
+    updateData(){
         // close drop down , remove filter
-        this.aspect.hideChoices(); // always hide 1st
-        this.resetFilter();
+        this.multiSelectInputAspect.hideChoices(); // always hide 1st
+        this.manageableResetFilterListAspect.resetFilter();
 
         this.choicesDom.choicesElement.innerHTML = ""; // TODO: there should better "optimization"
         
         this.choices.clear();
         this.picks.clear();
-    }
-    
-    update(){
-        this.updateAppearance();
-        this.updateData();
-    }
 
-    updateData(){
-        this.empty();
         this.choicesAspect.updateDataImpl(
-            (c,e) => this.aspect.adoptChoiceElement(c,e),
-            (o,s) => this.aspect.handleOnRemoveButton(o,s)
+            (c,e) => this.multiSelectInputAspect.adoptChoiceElement(c,e),
+            (o,s) => this.multiSelectInputAspect.handleOnRemoveButton(o,s)
         );
     }
 
     updateAppearance(){
-        this.updateDisabled();    
+        this.appearanceAspect.updateAppearance();    
     }
 
     updateDisabled(){
-        let isComponentDisabled = this.componentAspect.getDisabled();
-        if (this.isComponentDisabled!==isComponentDisabled){
-            this.isComponentDisabled=isComponentDisabled;
-            this.picks.disableRemoveAll(isComponentDisabled);
-            this.aspect.disable(isComponentDisabled);
-            this.picksDom.disable(isComponentDisabled);
-        }
+        this.disabledComponentAspect.updateDisabled();    
     }
 
     updateOptionsDisabled(){
@@ -112,6 +68,7 @@ export class MultiSelect {
         );
     }
 
+    // used in FormRestoreOnBackwardPlugin
     updateOptionsSelected(){
         this.choices.forLoop(
             choice => {
@@ -122,142 +79,6 @@ export class MultiSelect {
                     choice.updateSelected();
                 }
             }
-        );
-    }
-
-    selectAll(){
-        this.aspect.hideChoices(); // always hide 1st
-        this.choices.forLoop(
-            choice => {
-                if (this.isSelectable(choice))
-                    this.optionAspect.setOptionSelected(choice, true)
-            }
-        ); 
-        this.resetFilter();
-    }
-
-    deselectAll(){
-        this.aspect.hideChoices(); // always hide 1st
-        this.picks.removeAll();
-        this.resetFilter();
-    }
-
-    hoveredToSelected(){
-        let hoveredChoice = this.choicesHover.getHoveredChoice();
-        if (hoveredChoice){
-            var wasToggled = this.optionToggleAspect.toggleOptionSelected(hoveredChoice);
-            if (wasToggled) {
-                this.aspect.hideChoices();
-                this.resetFilter();
-            }
-        }
-    }
-
-    keyDownArrow(down) {
-        let choice = this.choicesHover.navigate(down);
-        if (choice)
-        {
-            this.choicesHover.hoverIn(choice);
-            this.aspect.showChoices();
-        }
-    }
-
-    setFocusIn(focus){
-        this.picksDom.setIsFocusIn(focus)
-        this.picksDom.toggleFocusStyling()
-    }
-
-    init() {
-        this.filterPanel = FilterPanel(
-            this.filterDom.filterInputElement,
-            () => this.setFocusIn(true),  // focus in - show dropdown
-            () => this.aspect.onFocusOut(
-                () => this.setFocusIn(false)
-            ), // focus out - hide dropdown
-            
-            () => this.keyDownArrow(false), // arrow up
-            () => this.keyDownArrow(true),  // arrow down
-            /*onTabForEmpty*/() => this.aspect.hideChoices(),  // tab on empty
-            () => {
-                let p = this.picks.removePicksTail();
-                if (p)
-                    this.popupAspect.updatePopupLocation();
-            }, // backspace - "remove last"
-
-            /*onTabToCompleate*/() => { 
-                if (this.popupAspect.isChoicesVisible()) {
-                    this.hoveredToSelected();
-                } 
-            },
-            /*onEnterToCompleate*/() => { 
-                if (this.popupAspect.isChoicesVisible()) {
-                    this.hoveredToSelected();
-                } else {
-                    if (this.filterListAspect.getCount()>0){
-                        this.aspect.showChoices();
-                    }
-                }
-            },
-           
-            /*onKeyUpEsc*/() => {
-                this.aspect.hideChoices(); // always hide 1st
-                this.resetFilter();
-            }, // esc keyup 
-
-             // tab/enter "compleate hovered"
-            /*stopEscKeyDownPropogation */() => this.popupAspect.isChoicesVisible(),
-
-            /*onInput*/(filterInputValue, resetLength) =>
-            { 
-                this.inputAspect.input(
-                    filterInputValue, 
-                    resetLength,
-                    ()=>this.aspect.eventLoopFlag.set(), 
-                    ()=>this.aspect.showChoices(),
-                    ()=>this.aspect.hideChoices()
-                ) 
-            }
-        );
-        
-        this.picksDom.pickFilterElement.appendChild(this.filterDom.filterInputElement);
-        this.picksDom.picksElement.appendChild(this.picksDom.pickFilterElement); 
-
-        this.staticManager.appendToContainer();
-
-        this.aspect =  MultiSelectInputAspect(
-            this.window,
-            ()=>this.filterDom.setFocus(), 
-            this.picksDom.picksElement, 
-            this.choicesDom.choicesElement, 
-            ()=>this.popupAspect.isChoicesVisible(),
-            (visible)=>this.popupAspect.setChoicesVisible(visible),
-            () => this.choicesHover.resetHoveredChoice(), 
-            (choice) => this.choicesHover.hoverIn(choice),
-            () => this.resetFilter(),
-            () => this.filterListAspect.getCount()==0, 
-            
-            /*onClick*/(event) => this.filterDom.setFocusIfNotTarget(event.target),
-            /*resetFocus*/() => this.setFocusIn(false),
-            /*alignToFilterInputItemLocation*/() => this.popupAspect.updatePopupLocation()
-        );
-        this.popupAspect.init();
-    }
-
-    load(){
-        this.choicesAspect.updateDataImpl(
-            (c,e) => this.aspect.adoptChoiceElement(c,e),
-            (o,s) => this.aspect.handleOnRemoveButton(o,s)
-        );
-        this.updateAppearance(); // TODO: now appearance should be done after updateDataImpl, because items should be "already in place", correct it
-    }
-
-    dispose(){
-        sync(
-            this.aspect.hideChoices,
-            this.picks.dispose,
-            this.filterPanel.dispose,
-            this.aspect.dispose,
-            this.choices.dispose
         );
     }
 }

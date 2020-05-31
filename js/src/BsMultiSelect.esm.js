@@ -12,13 +12,14 @@ import {PlaceholderPlugin} from './plugins/PlaceholderPlugin';
 import {JQueryMethodsPlugin} from './plugins/JQueryMethodsPlugin';
 import {OptionsApiPlugin} from './plugins/OptionsApiPlugin';
 import {SelectElementPlugin} from './plugins/SelectElementPlugin';
+import {SelectAllApiPlugin} from './plugins/SelectAllApiPlugin';
 
 import {createCss} from './ToolsStyling';
 import {extendIfUndefined} from './ToolsJs';
 
 const defaults = {containerClass : "dashboardcode-bsmultiselect", css: css}
 const defaultPlugins = [CssPatchPlugin, SelectElementPlugin, LabelPlugin, HiddenOptionPlugin, ValidationApiPlugin, 
-BsAppearancePlugin, FormResetPlugin, RtlPlugin, PlaceholderPlugin , OptionsApiPlugin, JQueryMethodsPlugin];
+BsAppearancePlugin, FormResetPlugin, RtlPlugin, PlaceholderPlugin , OptionsApiPlugin, SelectAllApiPlugin, JQueryMethodsPlugin];
 
 export function BsMultiSelect(element, environment, settings){
     if (!environment.trigger)

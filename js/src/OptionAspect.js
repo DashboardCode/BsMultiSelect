@@ -16,6 +16,9 @@ export function OptionAspect(dataSourceAspect){
             let isOptionSelected = dataSourceAspect.getSelected(option);
             let isOptionDisabled = dataSourceAspect.getDisabled(option); 
             return Choice(option, isOptionSelected, isOptionDisabled);
+        },
+        isSelectable(choice){
+            return !choice.isOptionSelected  && !choice.isOptionDisabled;
         }
     }
 }

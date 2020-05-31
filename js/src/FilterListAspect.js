@@ -57,7 +57,6 @@ export function FilterListAspect(choicesGetNextAspect, choicesEnumerableAspect) 
                 choice.setVisible(true);
             });
         },
-
         setFilter(text){ 
             let getFilterIn = composeFilterPredicate(text)
             filterListFacade.reset();

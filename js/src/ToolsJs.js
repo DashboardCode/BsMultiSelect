@@ -231,11 +231,7 @@ export function DoublyLinkedCollection(getPrev, setPrev, getNext, setNext){
 }
 
 export function composeSync(...functions){
-    return () => sync(...functions)
-}
-
-export function sync(...functions){
-    functions.forEach(
+    return () => functions.forEach(
         (f) => {
             if (f)
                 f();

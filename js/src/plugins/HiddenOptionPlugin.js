@@ -1,5 +1,5 @@
 export function HiddenOptionPlugin(pluginData){
-    let {configuration, options, choicesGetNextAspect, choicesEnumerableAspect, filterListAspect, choiceFactoryAspect, choicesElementAspect} = pluginData;
+    let {configuration, options, choicesGetNextAspect, optionAspect, choicesEnumerableAspect, filterListAspect, choiceFactoryAspect, choicesElementAspect} = pluginData;
     let {getIsOptionHidden} = configuration;
     if (options){
         if (!getIsOptionHidden)
@@ -73,8 +73,8 @@ export function HiddenOptionPlugin(pluginData){
 
     return {
         afterConstructor(multiSelect){
-            var origIsSelectable = multiSelect.isSelectable.bind(multiSelect);
-            multiSelect.isSelectable = (choice) => origIsSelectable(choice) && !choice.isOptionHidden;
+            var origIsSelectable = optionAspect.isSelectable;
+            optionAspect.isSelectable = (choice) => origIsSelectable(choice) && !choice.isOptionHidden;
         
             function updateHidden(choice) {
                 if (choice.isOptionHidden) {
@@ -85,8 +85,8 @@ export function HiddenOptionPlugin(pluginData){
                     let nextChoice = getNextNonHidden(choice);
                     filterListAspect.add(choice, nextChoice);
                     choicesElementAspect.buildChoiceElement(choice,
-                        (c,e)=>multiSelect.aspect.adoptChoiceElement(c,e),
-                        (o,s)=>multiSelect.aspect.handleOnRemoveButton(o,s)
+                        (c,e)=>multiSelect.multiSelectInputAspect.adoptChoiceElement(c,e),
+                        (o,s)=>multiSelect.multiSelectInputAspect.handleOnRemoveButton(o,s)
                         );
                     choice.choiceElementAttach(nextChoice?.choiceElement);
                 }
@@ -109,9 +109,9 @@ export function HiddenOptionPlugin(pluginData){
             multiSelect.UpdateOptionsHidden = () => UpdateOptionsHidden();
             multiSelect.UpdateOptionHidden = (key) => UpdateOptionHidden(key);
         
-            var origСreateChoice = multiSelect.optionAspect.createChoice;
+            var origСreateChoice = optionAspect.createChoice;
         
-            multiSelect.optionAspect.createChoice = (option) => {
+            optionAspect.createChoice = (option) => {
                 let choice = origСreateChoice(option);
                 choice.isOptionHidden = getIsOptionHidden(option);
                 return choice;

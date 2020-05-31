@@ -1,5 +1,5 @@
 /*!
-  * DashboardCode BsMultiSelect v0.5.66 (https://dashboardcode.github.io/BsMultiSelect/)
+  * DashboardCode BsMultiSelect v0.5.67 (https://dashboardcode.github.io/BsMultiSelect/)
   * Copyright 2017-2020 Roman Pokrovskij (github user rpokrovskij)
   * Licensed under APACHE 2 (https://github.com/DashboardCode/BsMultiSelect/blob/master/LICENSE)
   */
@@ -12,7 +12,7 @@
     $ = $ && Object.prototype.hasOwnProperty.call($, 'default') ? $['default'] : $;
     Popper = Popper && Object.prototype.hasOwnProperty.call(Popper, 'default') ? Popper['default'] : Popper;
 
-    function addToJQueryPrototype(pluginName, createPlugin, methodNames, $) {
+    function addToJQueryPrototype(pluginName, createPlugin, $) {
       var firstChar = pluginName.charAt(0);
       var firstCharLower = firstChar.toLowerCase();
 
@@ -51,7 +51,7 @@
             if (typeof instance[methodName] === 'undefined') {
               var lMethodName = methodName.charAt(0).toLowerCase() + methodName.slice(1);
 
-              if (methodNames.indexOf(lMethodName) < 0 || typeof instance[lMethodName] === 'undefined') {
+              if (typeof instance[lMethodName] === 'undefined') {
                 throw new Error("No method named '" + methodName + "'");
               } else {
                 methodName = lMethodName;
@@ -93,420 +93,145 @@
       return prototypable;
     }
 
-    function findDirectChildByTagName(element, tagName) {
-      var value = null;
+    var MultiSelect = /*#__PURE__*/function () {
+      function MultiSelect(dataSourceAspect, choicesDom, choices, picks, choicesAspect, manageableResetFilterListAspect, multiSelectInputAspect, disabledComponentAspect, appearanceAspect) {
+        this.dataSourceAspect = dataSourceAspect;
+        this.choicesDom = choicesDom;
+        this.choices = choices;
+        this.picks = picks;
+        this.choicesAspect = choicesAspect;
+        this.manageableResetFilterListAspect = manageableResetFilterListAspect;
+        this.multiSelectInputAspect = multiSelectInputAspect;
+        this.disabledComponentAspect = disabledComponentAspect;
+        this.appearanceAspect = appearanceAspect;
+      }
 
-      for (var i = 0; i < element.children.length; i++) {
-        var tmp = element.children[i];
+      var _proto = MultiSelect.prototype;
 
-        if (tmp.tagName == tagName) {
-          value = tmp;
-          break;
+      _proto.update = function update() {
+        this.updateData();
+        this.updateAppearance();
+      } // used in placeHolderPlugin
+      ;
+
+      _proto.updateData = function updateData() {
+        var _this = this;
+
+        // close drop down , remove filter
+        this.multiSelectInputAspect.hideChoices(); // always hide 1st
+
+        this.manageableResetFilterListAspect.resetFilter();
+        this.choicesDom.choicesElement.innerHTML = ""; // TODO: there should better "optimization"
+
+        this.choices.clear();
+        this.picks.clear();
+        this.choicesAspect.updateDataImpl(function (c, e) {
+          return _this.multiSelectInputAspect.adoptChoiceElement(c, e);
+        }, function (o, s) {
+          return _this.multiSelectInputAspect.handleOnRemoveButton(o, s);
+        });
+      };
+
+      _proto.updateAppearance = function updateAppearance() {
+        this.appearanceAspect.updateAppearance();
+      };
+
+      _proto.updateDisabled = function updateDisabled() {
+        this.disabledComponentAspect.updateDisabled();
+      };
+
+      _proto.updateOptionsDisabled = function updateOptionsDisabled() {
+        this.choices.forLoop(function (choice) {
+          var newIsDisabled = multiSelect.dataSourceAspect.getDisabled(choice.option);
+
+          if (newIsDisabled != choice.isOptionDisabled) {
+            choice.isOptionDisabled = newIsDisabled;
+            choice.updateDisabled();
+          }
+        });
+      } // used in FormRestoreOnBackwardPlugin
+      ;
+
+      _proto.updateOptionsSelected = function updateOptionsSelected() {
+        var _this2 = this;
+
+        this.choices.forLoop(function (choice) {
+          var newIsSelected = _this2.dataSourceAspect.getSelected(choice.option);
+
+          if (newIsSelected != choice.isOptionSelected) {
+            choice.isOptionSelected = newIsSelected;
+            choice.updateSelected();
+          }
+        });
+      };
+
+      return MultiSelect;
+    }();
+
+    function PluginManager(plugins, pluginData) {
+      var instances = [];
+
+      if (plugins) {
+        for (var i = 0; i < plugins.length; i++) {
+          var instance = plugins[i](pluginData);
+          if (instance) instances.push(instance);
         }
       }
 
-      return value;
-    }
-    function closestByTagName(element, tagName) {
-      return closest(element, function (e) {
-        return e.tagName === tagName;
-      }); // TODO support xhtml?  e.tagName.toUpperCase() ?
-    }
-    function closestByClassName(element, className) {
-      return closest(element, function (e) {
-        return e.classList.contains(className);
-      });
-    }
-    function closestByAttribute(element, attributeName, attribute) {
-      return closest(element, function (e) {
-        return e.getAttribute(attributeName) === attribute;
-      });
-    }
-    function containsAndSelf(node, otherNode) {
-      return node === otherNode || node.contains(otherNode);
-    }
-    function getDataGuardedWithPrefix(element, prefix, name) {
-      var tmp1 = element.getAttribute('data-' + prefix + '-' + name);
+      var disposes = [];
+      return {
+        afterConstructor: function afterConstructor(multiSelect) {
+          for (var _i = 0; _i < instances.length; _i++) {
+            var _instances$_i$afterCo, _instances$_i;
 
-      if (tmp1) {
-        return tmp1;
-      } else {
-        var tmp2 = element.getAttribute('data-' + name);
-        if (tmp2) return tmp2;
-      }
-
-      return null;
-    }
-
-    function closest(element, predicate) {
-      if (!element || !(element instanceof Element)) return null; // should be element, not document (TODO: check iframe)
-
-      if (predicate(element)) return element;
-      return closest(element.parentNode, predicate);
-    }
-
-    function siblingsAsArray(element) {
-      var value = [];
-
-      if (element.parentNode) {
-        var children = element.parentNode.children;
-        var l = element.parentNode.children.length;
-
-        if (children.length > 1) {
-          for (var i = 0; i < l; ++i) {
-            var e = children[i];
-            if (e != element) value.push(e);
+            var dispose = (_instances$_i$afterCo = (_instances$_i = instances[_i]).afterConstructor) == null ? void 0 : _instances$_i$afterCo.call(_instances$_i, multiSelect);
+            if (dispose) disposes.push(dispose);
           }
-        }
-      }
-
-      return value;
-    }
-    function getIsRtl(element) {
-      var isRtl = false;
-      var e = closestByAttribute(element, "dir", "rtl");
-      if (e) isRtl = true;
-      return isRtl;
-    }
-    function EventBinder() {
-      var list = [];
-      return {
-        bind: function bind(element, eventName, handler) {
-          element.addEventListener(eventName, handler);
-          list.push({
-            element: element,
-            eventName: eventName,
-            handler: handler
-          });
         },
-        unbind: function unbind() {
-          list.forEach(function (e) {
-            var element = e.element,
-                eventName = e.eventName,
-                handler = e.handler;
-            element.removeEventListener(eventName, handler);
-          });
-        }
-      };
-    }
-    function AttributeBackup() {
-      var list = [];
-      return {
-        set: function set(element, attributeName, attribute) {
-          var currentAtribute = element.getAttribute(attributeName);
-          list.push({
-            element: element,
-            currentAtribute: currentAtribute,
-            attribute: attribute
-          });
-          element.setAttribute(attributeName, attribute);
-        },
-        restore: function restore() {
-          list.forEach(function (e) {
-            var element = e.element,
-                attributeName = e.attributeName,
-                attribute = e.attribute;
-            if (attributeName) element.setAttribute(attributeName, attribute);else element.removeAttribute(attributeName);
-          });
-        }
-      };
-    }
-    function EventLoopFlag(window) {
-      var flag = false;
-      return {
-        get: function get() {
-          return flag;
-        },
-        set: function set() {
-          flag = true;
-          window.setTimeout(function () {
-            flag = false;
-          }, 0);
-        }
-      };
-    }
-
-    function FilterPanel(filterInputElement, onFocusIn, // show dropdown
-    onFocusOut, // hide dropdown
-    onKeyDownArrowUp, onKeyDownArrowDown, onTabForEmpty, // tab on empty
-    onBackspace, // backspace alike
-    onTabToCompleate, // "compleate alike"
-    onEnterToCompleate, onKeyUpEsc, // "esc" alike
-    stopEscKeyDownPropogation, onInput // filter
-    ) {
-      var isEmpty = function isEmpty() {
-        return filterInputElement.value ? false : true;
-      };
-
-      var onfilterInputKeyDown = function onfilterInputKeyDown(event) {
-        var keyCode = event.which;
-        var empty = isEmpty();
-
-        if ([13, 27 // '27-esc' there is "just in case", I can imagine that there are user agents that do UNDO
-        ].indexOf(keyCode) >= 0 || keyCode == 9 && !empty //  otherwice there are no keyup (true at least for '9-tab'),
-        ) {
-            event.preventDefault(); // '13-enter'  - prevention against form's default button 
-            // but doesn't help with bootsrap modal ESC or ENTER (close behaviour);
-          }
-
-        if ([38, 40].indexOf(keyCode) >= 0) event.preventDefault();
-
-        if (keyCode == 8
-        /*backspace*/
-        ) {
-            // NOTE: this will process backspace only if there are no text in the input field
-            // If user will find this inconvinient, we will need to calculate something like this
-            // let isBackspaceAtStartPoint = (this.filterInput.selectionStart == 0 && this.filterInput.selectionEnd == 0);
-            if (empty) {
-              onBackspace();
-            }
-          } // ---------------------------------------------------------------------------------
-          // NOTE: no preventDefault called in case of empty for 9-tab
-        else if (keyCode == 9
-          /*tab*/
-          ) {
-              // NOTE: no keydown for this (without preventDefaul after TAB keyup event will be targeted another element)  
-              if (empty) {
-                onTabForEmpty(); // hideChoices inside (and no filter reset since it is empty) 
-              }
-            } else if (keyCode == 27
-          /*esc*/
-          ) {
-              // NOTE: forbid the ESC to close the modal (in case the nonempty or dropdown is open)
-              if (!empty || stopEscKeyDownPropogation()) event.stopPropagation();
-            } else if (keyCode == 38) {
-            onKeyDownArrowUp();
-          } else if (keyCode == 40) {
-            onKeyDownArrowDown();
-          }
-      };
-
-      var onFilterInputKeyUp = function onFilterInputKeyUp(event) {
-        var keyCode = event.which; //var handler = keyUp[event.which/* key code */];
-        //handler();
-
-        if (keyCode == 9) {
-          onTabToCompleate();
-        } else if (keyCode == 13) {
-          onEnterToCompleate();
-        } else if (keyCode == 27) {
-          // escape
-          onKeyUpEsc(); // is it always empty (bs x can still it) 
-        }
-      }; // it can be initated by 3PP functionality
-      // sample (1) BS functionality - input x button click - clears input
-      // sample (2) BS functionality - esc keydown - clears input
-      // and there could be difference in processing: (2) should hide the menu, then reset , when (1) should just reset without hiding.
-
-
-      var onFilterInputInput = function onFilterInputInput() {
-        var filterInputValue = filterInputElement.value;
-        onInput(filterInputValue, function () {
-          filterInputElement.style.width = filterInputValue.length * 1.3 + 2 + "ch";
-        } // TODO: better width calculation
-        );
-      };
-
-      var eventBinder = EventBinder();
-      eventBinder.bind(filterInputElement, 'focusin', onFocusIn);
-      eventBinder.bind(filterInputElement, 'focusout', onFocusOut);
-      eventBinder.bind(filterInputElement, 'input', onFilterInputInput);
-      eventBinder.bind(filterInputElement, 'keydown', onfilterInputKeyDown);
-      eventBinder.bind(filterInputElement, 'keyup', onFilterInputKeyUp);
-      return {
         dispose: function dispose() {
-          eventBinder.unbind();
+          for (var _i2 = 0; _i2 < disposes.length; _i2++) {
+            disposes[_i2]();
+          }
+
+          disposes = null;
+
+          for (var _i3 = 0; _i3 < instances.length; _i3++) {
+            var _instances$_i3$dispos, _instances$_i2;
+
+            (_instances$_i3$dispos = (_instances$_i2 = instances[_i3]).dispose) == null ? void 0 : _instances$_i3$dispos.call(_instances$_i2);
+          }
+
+          instances = null;
         }
       };
     }
+    function initiateDefaults(constructors, defaults) {
+      for (var i = 0; i < constructors.length; i++) {
+        var _constructors$i$setDe, _constructors$i;
 
-    function MultiSelectInputAspect(window, setFocus, picksElement, choicesElement, isChoicesVisible, setChoicesVisible, resetHoveredChoice, hoverIn, resetFilter, isChoiceEmpty, onClick, resetFocus, alignToFilterInputItemLocation) {
-      var document = window.document;
-      var eventLoopFlag = EventLoopFlag(window);
-      var skipFocusout = false;
-
-      function getSkipFocusout() {
-        return skipFocusout;
+        (_constructors$i$setDe = (_constructors$i = constructors[i]).setDefaults) == null ? void 0 : _constructors$i$setDe.call(_constructors$i, defaults);
       }
+    }
+    function mergeDefaults(constructors, configuration, defaults, settings) {
+      for (var i = 0; i < constructors.length; i++) {
+        var _constructors$i$merge, _constructors$i2;
 
-      function resetSkipFocusout() {
-        skipFocusout = false;
+        (_constructors$i$merge = (_constructors$i2 = constructors[i]).mergeDefaults) == null ? void 0 : _constructors$i$merge.call(_constructors$i2, configuration, defaults, settings);
       }
+    }
+    function onConfiguration(constructors, configuration) {
+      for (var i = 0; i < constructors.length; i++) {
+        var _constructors$i$onCon, _constructors$i3;
 
-      function setSkipFocusout() {
-        skipFocusout = true;
+        (_constructors$i$onCon = (_constructors$i3 = constructors[i]).onConfiguration) == null ? void 0 : _constructors$i$onCon.call(_constructors$i3, configuration);
       }
+    }
+    function staticDomDefaults(constructors, staticDomFactory) {
+      for (var i = 0; i < constructors.length; i++) {
+        var _constructors$i$stati, _constructors$i4;
 
-      var skipoutMousedown = function skipoutMousedown() {
-        setSkipFocusout();
-      };
-
-      var documentMouseup = function documentMouseup(event) {
-        // if we would left without focus then "close the drop" do not remove focus border
-        if (choicesElement == event.target) setFocus(); // if click outside container - close dropdown
-        else if (!containsAndSelf(choicesElement, event.target) && !containsAndSelf(picksElement, event.target)) {
-            hideChoices();
-            resetFilter();
-            resetFocus();
-          }
-      };
-
-      var preventDefaultClickEvent = null;
-      var componentDisabledEventBinder = EventBinder(); // TODO: remove setTimeout: set on start of mouse event reset on end
-
-      function skipoutAndResetMousedown() {
-        skipoutMousedown();
-        window.setTimeout(function () {
-          return resetSkipFocusout();
-        });
+        (_constructors$i$stati = (_constructors$i4 = constructors[i]).staticDomDefaults) == null ? void 0 : _constructors$i$stati.call(_constructors$i4, staticDomFactory);
       }
-
-      picksElement.addEventListener("mousedown", skipoutAndResetMousedown);
-
-      function showChoices() {
-        if (!isChoicesVisible()) {
-          alignToFilterInputItemLocation();
-          eventLoopFlag.set();
-          setChoicesVisible(true); // add listeners that manages close dropdown on  click outside container
-
-          choicesElement.addEventListener("mousedown", skipoutMousedown);
-          document.addEventListener("mouseup", documentMouseup);
-        }
-      }
-
-      function clickToShowChoices(event) {
-        onClick(event);
-
-        if (preventDefaultClickEvent != event) {
-          if (isChoicesVisible()) {
-            hideChoices();
-          } else {
-            if (!isChoiceEmpty()) showChoices();
-          }
-        }
-
-        preventDefaultClickEvent = null;
-      }
-
-      function hideChoices() {
-        resetMouseCandidateChoice();
-        resetHoveredChoice();
-
-        if (isChoicesVisible()) {
-          setChoicesVisible(false);
-          choicesElement.removeEventListener("mousedown", skipoutMousedown);
-          document.removeEventListener("mouseup", documentMouseup);
-        }
-      }
-
-      function processUncheck(uncheckOption, event) {
-        // we can't remove item on "click" in the same loop iteration - it is unfrendly for 3PP event handlers (they will get detached element)
-        // never remove elements in the same event iteration
-        window.setTimeout(function () {
-          return uncheckOption();
-        });
-        preventDefaultClickEvent = event; // setPreventDefaultMultiSelectEvent
-      }
-
-      function handleOnRemoveButton(onRemove, setSelectedFalse) {
-        // processRemoveButtonClick removes the item
-        // what is a problem with calling 'remove' directly (not using  setTimeout('remove', 0)):
-        // consider situation "MultiSelect" on DROPDOWN (that should be closed on the click outside dropdown)
-        // therefore we aslo have document's click's handler where we decide to close or leave the DROPDOWN open.
-        // because of the event's bubling process 'remove' runs first. 
-        // that means the event's target element on which we click (the x button) will be removed from the DOM together with badge 
-        // before we could analize is it belong to our dropdown or not.
-        // important 1: we can't just the stop propogation using stopPropogate because click outside dropdown on the similar 
-        // component that use stopPropogation will not close dropdown (error, dropdown should be closed)
-        // important 2: we can't change the dropdown's event handler to leave dropdown open if event's target is null because of
-        // the situation described above: click outside dropdown on the same component.
-        // Alternatively it could be possible to use stopPropogate but together create custom click event setting new target 
-        // that belomgs to DOM (e.g. panel)
-        var processRemoveButtonClick = function processRemoveButtonClick(event) {
-          processUncheck(setSelectedFalse, event);
-          hideChoices();
-          resetFilter();
-        };
-
-        onRemove(function (event) {
-          processRemoveButtonClick(event);
-        });
-      }
-
-      var mouseCandidateEventBinder = EventBinder();
-
-      var resetMouseCandidateChoice = function resetMouseCandidateChoice() {
-        mouseCandidateEventBinder.unbind();
-      };
-
-      var mouseOverToHoveredAndReset = function mouseOverToHoveredAndReset(choice) {
-        if (!choice.isHoverIn) hoverIn(choice);
-        resetMouseCandidateChoice();
-      };
-
-      function adoptChoiceElement(choice, choiceElement) {
-        // in chrome it happens on "become visible" so we need to skip it, 
-        // for IE11 and edge it doesn't happens, but for IE11 and Edge it doesn't happens on small 
-        // mouse moves inside the item. 
-        // https://stackoverflow.com/questions/59022563/browser-events-mouseover-doesnt-happen-when-you-make-element-visible-and-mous
-        var onChoiceElementMouseover = function onChoiceElementMouseover() {
-          if (eventLoopFlag.get()) {
-            resetMouseCandidateChoice();
-            mouseCandidateEventBinder.bind(choiceElement, 'mousemove', function () {
-              return mouseOverToHoveredAndReset(choice);
-            });
-            mouseCandidateEventBinder.bind(choiceElement, 'mousedown', function () {
-              return mouseOverToHoveredAndReset(choice);
-            });
-          } else {
-            if (!choice.isHoverIn) {
-              // NOTE: mouseleave is not enough to guarantee remove hover styles in situations
-              // when style was setuped without mouse (keyboard arrows)
-              // therefore force reset manually (done inside hoverIn)
-              hoverIn(choice);
-            }
-          }
-        }; // note 1: mouseleave preferred to mouseout - which fires on each descendant
-        // note 2: since I want add aditional info panels to the dropdown put mouseleave on dropdwon would not work
-
-
-        var onChoiceElementMouseleave = function onChoiceElementMouseleave() {
-          if (!eventLoopFlag.get()) {
-            resetHoveredChoice();
-          }
-        };
-
-        var overAndLeaveEventBinder = EventBinder();
-        overAndLeaveEventBinder.bind(choiceElement, 'mouseover', onChoiceElementMouseover);
-        overAndLeaveEventBinder.bind(choiceElement, 'mouseleave', onChoiceElementMouseleave);
-        return overAndLeaveEventBinder.unbind;
-      }
-
-      return {
-        adoptChoiceElement: adoptChoiceElement,
-        dispose: function dispose() {
-          resetMouseCandidateChoice();
-          picksElement.removeEventListener("mousedown", skipoutAndResetMousedown);
-          componentDisabledEventBinder.unbind();
-        },
-        onFocusOut: function onFocusOut(action) {
-          if (!getSkipFocusout()) {
-            // skip initiated by mouse click (we manage it different way)
-            resetFilter(); // if do not do this we will return to filtered list without text filter in input
-
-            action();
-          }
-
-          resetSkipFocusout();
-        },
-        disable: function disable(isComponentDisabled) {
-          if (isComponentDisabled) componentDisabledEventBinder.unbind();else componentDisabledEventBinder.bind(picksElement, "click", clickToShowChoices);
-        },
-        eventLoopFlag: eventLoopFlag,
-        hideChoices: hideChoices,
-        showChoices: showChoices,
-        handleOnRemoveButton: handleOnRemoveButton
-      };
     }
 
     function isBoolean(value) {
@@ -796,21 +521,14 @@
       }
 
       return function () {
-        return sync.apply(void 0, functions);
+        return functions.forEach(function (f) {
+          if (f) f();
+        });
       };
     }
-    function sync() {
+    function def() {
       for (var _len3 = arguments.length, functions = new Array(_len3), _key3 = 0; _key3 < _len3; _key3++) {
         functions[_key3] = arguments[_key3];
-      }
-
-      functions.forEach(function (f) {
-        if (f) f();
-      });
-    }
-    function def() {
-      for (var _len4 = arguments.length, functions = new Array(_len4), _key4 = 0; _key4 < _len4; _key4++) {
-        functions[_key4] = arguments[_key4];
       }
 
       for (var _i = 0, _functions = functions; _i < _functions.length; _i++) {
@@ -822,8 +540,8 @@
       }
     }
     function defCall() {
-      for (var _len5 = arguments.length, functions = new Array(_len5), _key5 = 0; _key5 < _len5; _key5++) {
-        functions[_key5] = arguments[_key5];
+      for (var _len4 = arguments.length, functions = new Array(_len4), _key4 = 0; _key4 < _len4; _key4++) {
+        functions[_key4] = arguments[_key4];
       }
 
       for (var _i2 = 0, _functions2 = functions; _i2 < _functions2.length; _i2++) {
@@ -879,335 +597,137 @@
       };
     }
 
-    var MultiSelect = /*#__PURE__*/function () {
-      function MultiSelect(dataSourceAspect, componentAspect, picksDom, filterDom, choicesDom, staticManager, popupAspect, filterListAspect, choices, choicesHover, picks, optionAspect, optionToggleAspect, choicesAspect, picksAspect, inputAspect, window) {
-        this.dataSourceAspect = dataSourceAspect;
-        this.componentAspect = componentAspect;
-        this.window = window;
-        this.popupAspect = popupAspect;
-        this.picksDom = picksDom;
-        this.filterDom = filterDom;
-        this.choicesDom = choicesDom;
-        this.staticManager = staticManager;
-        this.filterListAspect = filterListAspect;
-        this.choices = choices;
-        this.choicesHover = choicesHover;
-        this.picks = picks;
-        this.optionAspect = optionAspect;
-        this.optionToggleAspect = optionToggleAspect;
-        this.choicesAspect = choicesAspect;
-        this.picksAspect = picksAspect;
-        this.inputAspect = inputAspect;
-      }
+    function findDirectChildByTagName(element, tagName) {
+      var value = null;
 
-      var _proto = MultiSelect.prototype;
+      for (var i = 0; i < element.children.length; i++) {
+        var tmp = element.children[i];
 
-      _proto.forceResetFilter = function forceResetFilter() {
-        this.filterDom.setEmpty();
-        this.filterListAspect.processEmptyInput();
-      };
-
-      _proto.resetFilter = function resetFilter() {
-        if (!this.filterDom.isEmpty()) this.forceResetFilter();
-      };
-
-      _proto.isSelectable = function isSelectable(choice) {
-        return !choice.isOptionSelected && !choice.isOptionDisabled;
-      };
-
-      _proto.empty = function empty() {
-        // close drop down , remove filter
-        this.aspect.hideChoices(); // always hide 1st
-
-        this.resetFilter();
-        this.choicesDom.choicesElement.innerHTML = ""; // TODO: there should better "optimization"
-
-        this.choices.clear();
-        this.picks.clear();
-      };
-
-      _proto.update = function update() {
-        this.updateAppearance();
-        this.updateData();
-      };
-
-      _proto.updateData = function updateData() {
-        var _this = this;
-
-        this.empty();
-        this.choicesAspect.updateDataImpl(function (c, e) {
-          return _this.aspect.adoptChoiceElement(c, e);
-        }, function (o, s) {
-          return _this.aspect.handleOnRemoveButton(o, s);
-        });
-      };
-
-      _proto.updateAppearance = function updateAppearance() {
-        this.updateDisabled();
-      };
-
-      _proto.updateDisabled = function updateDisabled() {
-        var isComponentDisabled = this.componentAspect.getDisabled();
-
-        if (this.isComponentDisabled !== isComponentDisabled) {
-          this.isComponentDisabled = isComponentDisabled;
-          this.picks.disableRemoveAll(isComponentDisabled);
-          this.aspect.disable(isComponentDisabled);
-          this.picksDom.disable(isComponentDisabled);
-        }
-      };
-
-      _proto.updateOptionsDisabled = function updateOptionsDisabled() {
-        this.choices.forLoop(function (choice) {
-          var newIsDisabled = multiSelect.dataSourceAspect.getDisabled(choice.option);
-
-          if (newIsDisabled != choice.isOptionDisabled) {
-            choice.isOptionDisabled = newIsDisabled;
-            choice.updateDisabled();
-          }
-        });
-      };
-
-      _proto.updateOptionsSelected = function updateOptionsSelected() {
-        var _this2 = this;
-
-        this.choices.forLoop(function (choice) {
-          var newIsSelected = _this2.dataSourceAspect.getSelected(choice.option);
-
-          if (newIsSelected != choice.isOptionSelected) {
-            choice.isOptionSelected = newIsSelected;
-            choice.updateSelected();
-          }
-        });
-      };
-
-      _proto.selectAll = function selectAll() {
-        var _this3 = this;
-
-        this.aspect.hideChoices(); // always hide 1st
-
-        this.choices.forLoop(function (choice) {
-          if (_this3.isSelectable(choice)) _this3.optionAspect.setOptionSelected(choice, true);
-        });
-        this.resetFilter();
-      };
-
-      _proto.deselectAll = function deselectAll() {
-        this.aspect.hideChoices(); // always hide 1st
-
-        this.picks.removeAll();
-        this.resetFilter();
-      };
-
-      _proto.hoveredToSelected = function hoveredToSelected() {
-        var hoveredChoice = this.choicesHover.getHoveredChoice();
-
-        if (hoveredChoice) {
-          var wasToggled = this.optionToggleAspect.toggleOptionSelected(hoveredChoice);
-
-          if (wasToggled) {
-            this.aspect.hideChoices();
-            this.resetFilter();
-          }
-        }
-      };
-
-      _proto.keyDownArrow = function keyDownArrow(down) {
-        var choice = this.choicesHover.navigate(down);
-
-        if (choice) {
-          this.choicesHover.hoverIn(choice);
-          this.aspect.showChoices();
-        }
-      };
-
-      _proto.setFocusIn = function setFocusIn(focus) {
-        this.picksDom.setIsFocusIn(focus);
-        this.picksDom.toggleFocusStyling();
-      };
-
-      _proto.init = function init() {
-        var _this4 = this;
-
-        this.filterPanel = FilterPanel(this.filterDom.filterInputElement, function () {
-          return _this4.setFocusIn(true);
-        }, // focus in - show dropdown
-        function () {
-          return _this4.aspect.onFocusOut(function () {
-            return _this4.setFocusIn(false);
-          });
-        }, // focus out - hide dropdown
-        function () {
-          return _this4.keyDownArrow(false);
-        }, // arrow up
-        function () {
-          return _this4.keyDownArrow(true);
-        }, // arrow down
-
-        /*onTabForEmpty*/
-        function () {
-          return _this4.aspect.hideChoices();
-        }, // tab on empty
-        function () {
-          var p = _this4.picks.removePicksTail();
-
-          if (p) _this4.popupAspect.updatePopupLocation();
-        }, // backspace - "remove last"
-
-        /*onTabToCompleate*/
-        function () {
-          if (_this4.popupAspect.isChoicesVisible()) {
-            _this4.hoveredToSelected();
-          }
-        },
-        /*onEnterToCompleate*/
-        function () {
-          if (_this4.popupAspect.isChoicesVisible()) {
-            _this4.hoveredToSelected();
-          } else {
-            if (_this4.filterListAspect.getCount() > 0) {
-              _this4.aspect.showChoices();
-            }
-          }
-        },
-        /*onKeyUpEsc*/
-        function () {
-          _this4.aspect.hideChoices(); // always hide 1st
-
-
-          _this4.resetFilter();
-        }, // esc keyup 
-        // tab/enter "compleate hovered"
-
-        /*stopEscKeyDownPropogation */
-        function () {
-          return _this4.popupAspect.isChoicesVisible();
-        },
-        /*onInput*/
-        function (filterInputValue, resetLength) {
-          _this4.inputAspect.input(filterInputValue, resetLength, function () {
-            return _this4.aspect.eventLoopFlag.set();
-          }, function () {
-            return _this4.aspect.showChoices();
-          }, function () {
-            return _this4.aspect.hideChoices();
-          });
-        });
-        this.picksDom.pickFilterElement.appendChild(this.filterDom.filterInputElement);
-        this.picksDom.picksElement.appendChild(this.picksDom.pickFilterElement);
-        this.staticManager.appendToContainer();
-        this.aspect = MultiSelectInputAspect(this.window, function () {
-          return _this4.filterDom.setFocus();
-        }, this.picksDom.picksElement, this.choicesDom.choicesElement, function () {
-          return _this4.popupAspect.isChoicesVisible();
-        }, function (visible) {
-          return _this4.popupAspect.setChoicesVisible(visible);
-        }, function () {
-          return _this4.choicesHover.resetHoveredChoice();
-        }, function (choice) {
-          return _this4.choicesHover.hoverIn(choice);
-        }, function () {
-          return _this4.resetFilter();
-        }, function () {
-          return _this4.filterListAspect.getCount() == 0;
-        },
-        /*onClick*/
-        function (event) {
-          return _this4.filterDom.setFocusIfNotTarget(event.target);
-        },
-        /*resetFocus*/
-        function () {
-          return _this4.setFocusIn(false);
-        },
-        /*alignToFilterInputItemLocation*/
-        function () {
-          return _this4.popupAspect.updatePopupLocation();
-        });
-        this.popupAspect.init();
-      };
-
-      _proto.load = function load() {
-        var _this5 = this;
-
-        this.choicesAspect.updateDataImpl(function (c, e) {
-          return _this5.aspect.adoptChoiceElement(c, e);
-        }, function (o, s) {
-          return _this5.aspect.handleOnRemoveButton(o, s);
-        });
-        this.updateAppearance(); // TODO: now appearance should be done after updateDataImpl, because items should be "already in place", correct it
-      };
-
-      _proto.dispose = function dispose() {
-        sync(this.aspect.hideChoices, this.picks.dispose, this.filterPanel.dispose, this.aspect.dispose, this.choices.dispose);
-      };
-
-      return MultiSelect;
-    }();
-
-    function PluginManager(plugins, pluginData) {
-      var instances = [];
-
-      if (plugins) {
-        for (var i = 0; i < plugins.length; i++) {
-          var instance = plugins[i](pluginData);
-          if (instance) instances.push(instance);
+        if (tmp.tagName == tagName) {
+          value = tmp;
+          break;
         }
       }
 
-      var disposes = [];
+      return value;
+    }
+    function closestByTagName(element, tagName) {
+      return closest(element, function (e) {
+        return e.tagName === tagName;
+      }); // TODO support xhtml?  e.tagName.toUpperCase() ?
+    }
+    function closestByClassName(element, className) {
+      return closest(element, function (e) {
+        return e.classList.contains(className);
+      });
+    }
+    function closestByAttribute(element, attributeName, attribute) {
+      return closest(element, function (e) {
+        return e.getAttribute(attributeName) === attribute;
+      });
+    }
+    function containsAndSelf(node, otherNode) {
+      return node === otherNode || node.contains(otherNode);
+    }
+    function getDataGuardedWithPrefix(element, prefix, name) {
+      var tmp1 = element.getAttribute('data-' + prefix + '-' + name);
+
+      if (tmp1) {
+        return tmp1;
+      } else {
+        var tmp2 = element.getAttribute('data-' + name);
+        if (tmp2) return tmp2;
+      }
+
+      return null;
+    }
+
+    function closest(element, predicate) {
+      if (!element || !(element instanceof Element)) return null; // should be element, not document (TODO: check iframe)
+
+      if (predicate(element)) return element;
+      return closest(element.parentNode, predicate);
+    }
+
+    function siblingsAsArray(element) {
+      var value = [];
+
+      if (element.parentNode) {
+        var children = element.parentNode.children;
+        var l = element.parentNode.children.length;
+
+        if (children.length > 1) {
+          for (var i = 0; i < l; ++i) {
+            var e = children[i];
+            if (e != element) value.push(e);
+          }
+        }
+      }
+
+      return value;
+    }
+    function getIsRtl(element) {
+      var isRtl = false;
+      var e = closestByAttribute(element, "dir", "rtl");
+      if (e) isRtl = true;
+      return isRtl;
+    }
+    function EventBinder() {
+      var list = [];
       return {
-        afterConstructor: function afterConstructor(multiSelect) {
-          for (var _i = 0; _i < instances.length; _i++) {
-            var _instances$_i$afterCo, _instances$_i;
-
-            var dispose = (_instances$_i$afterCo = (_instances$_i = instances[_i]).afterConstructor) == null ? void 0 : _instances$_i$afterCo.call(_instances$_i, multiSelect);
-            if (dispose) disposes.push(dispose);
-          }
+        bind: function bind(element, eventName, handler) {
+          element.addEventListener(eventName, handler);
+          list.push({
+            element: element,
+            eventName: eventName,
+            handler: handler
+          });
         },
-        dispose: function dispose() {
-          for (var _i2 = 0; _i2 < disposes.length; _i2++) {
-            disposes[_i2]();
-          }
-
-          disposes = null;
-
-          for (var _i3 = 0; _i3 < instances.length; _i3++) {
-            var _instances$_i3$dispos, _instances$_i2;
-
-            (_instances$_i3$dispos = (_instances$_i2 = instances[_i3]).dispose) == null ? void 0 : _instances$_i3$dispos.call(_instances$_i2);
-          }
-
-          instances = null;
+        unbind: function unbind() {
+          list.forEach(function (e) {
+            var element = e.element,
+                eventName = e.eventName,
+                handler = e.handler;
+            element.removeEventListener(eventName, handler);
+          });
         }
       };
     }
-    function initiateDefaults(constructors, defaults) {
-      for (var i = 0; i < constructors.length; i++) {
-        var _constructors$i$setDe, _constructors$i;
-
-        (_constructors$i$setDe = (_constructors$i = constructors[i]).setDefaults) == null ? void 0 : _constructors$i$setDe.call(_constructors$i, defaults);
-      }
+    function AttributeBackup() {
+      var list = [];
+      return {
+        set: function set(element, attributeName, attribute) {
+          var currentAtribute = element.getAttribute(attributeName);
+          list.push({
+            element: element,
+            currentAtribute: currentAtribute,
+            attribute: attribute
+          });
+          element.setAttribute(attributeName, attribute);
+        },
+        restore: function restore() {
+          list.forEach(function (e) {
+            var element = e.element,
+                attributeName = e.attributeName,
+                attribute = e.attribute;
+            if (attributeName) element.setAttribute(attributeName, attribute);else element.removeAttribute(attributeName);
+          });
+        }
+      };
     }
-    function mergeDefaults(constructors, configuration, defaults, settings) {
-      for (var i = 0; i < constructors.length; i++) {
-        var _constructors$i$merge, _constructors$i2;
-
-        (_constructors$i$merge = (_constructors$i2 = constructors[i]).mergeDefaults) == null ? void 0 : _constructors$i$merge.call(_constructors$i2, configuration, defaults, settings);
-      }
-    }
-    function onConfiguration(constructors, configuration) {
-      for (var i = 0; i < constructors.length; i++) {
-        var _constructors$i$onCon, _constructors$i3;
-
-        (_constructors$i$onCon = (_constructors$i3 = constructors[i]).onConfiguration) == null ? void 0 : _constructors$i$onCon.call(_constructors$i3, configuration);
-      }
-    }
-    function staticDomDefaults(constructors, staticDomFactory) {
-      for (var i = 0; i < constructors.length; i++) {
-        var _constructors$i$stati, _constructors$i4;
-
-        (_constructors$i$stati = (_constructors$i4 = constructors[i]).staticDomDefaults) == null ? void 0 : _constructors$i$stati.call(_constructors$i4, staticDomFactory);
-      }
+    function EventLoopFlag(window) {
+      var flag = false;
+      return {
+        get: function get() {
+          return flag;
+        },
+        set: function set() {
+          flag = true;
+          window.setTimeout(function () {
+            flag = false;
+          }, 0);
+        }
+      };
     }
 
     function addStyling(element, styling) {
@@ -1543,33 +1063,6 @@
       };
     }
 
-    function FilterDom(disposablePicksElement, createElement, css) {
-      var filterInputElement = createElement('INPUT');
-      addStyling(filterInputElement, css.filterInput);
-      filterInputElement.setAttribute("type", "search");
-      filterInputElement.setAttribute("autocomplete", "off");
-      return {
-        filterInputElement: filterInputElement,
-        isEmpty: function isEmpty() {
-          return filterInputElement.value ? false : true;
-        },
-        setEmpty: function setEmpty() {
-          filterInputElement.value = '';
-        },
-        setFocus: function setFocus() {
-          filterInputElement.focus();
-        },
-        // TODO: check why I need this comparision? 
-        setFocusIfNotTarget: function setFocusIfNotTarget(target) {
-          if (target != filterInputElement) filterInputElement.focus();
-        },
-        dispose: function dispose() {
-          if (!disposablePicksElement) {
-            if (filterInputElement.parentNode) filterInputElement.parentNode.removeChild(filterInputElement);
-          }
-        }
-      };
-    }
     function PicksDom(picksElement, disposablePicksElement, createElement, css) {
       var pickFilterElement = createElement('LI');
       addStyling(picksElement, css.picks);
@@ -1610,6 +1103,34 @@
             disableToggleStyling(false);
             focusToggleStyling(false);
             if (pickFilterElement.parentNode) pickFilterElement.parentNode.removeChild(pickFilterElement);
+          }
+        }
+      };
+    }
+
+    function FilterDom(disposablePicksElement, createElement, css) {
+      var filterInputElement = createElement('INPUT');
+      addStyling(filterInputElement, css.filterInput);
+      filterInputElement.setAttribute("type", "search");
+      filterInputElement.setAttribute("autocomplete", "off");
+      return {
+        filterInputElement: filterInputElement,
+        isEmpty: function isEmpty() {
+          return filterInputElement.value ? false : true;
+        },
+        setEmpty: function setEmpty() {
+          filterInputElement.value = '';
+        },
+        setFocus: function setFocus() {
+          filterInputElement.focus();
+        },
+        // TODO: check why I need this comparision? 
+        setFocusIfNotTarget: function setFocusIfNotTarget(target) {
+          if (target != filterInputElement) filterInputElement.focus();
+        },
+        dispose: function dispose() {
+          if (!disposablePicksElement) {
+            if (filterInputElement.parentNode) filterInputElement.parentNode.removeChild(filterInputElement);
           }
         }
       };
@@ -1933,8 +1454,8 @@
     }
     function ChoiceFactoryAspect(choicesElementAspect, choicesGetNextAspect) {
       return {
-        pushChoiceItem: function pushChoiceItem(choice, adoptChoiceElement, // aspect.adoptChoiceElement
-        handleOnRemoveButton // this.aspect.handleOnRemoveButton
+        pushChoiceItem: function pushChoiceItem(choice, adoptChoiceElement, // multiSelectInputAspect.adoptChoiceElement
+        handleOnRemoveButton // multiSelectInputAspect.handleOnRemoveButton
         ) {
           choicesElementAspect.buildChoiceElement(choice, adoptChoiceElement, handleOnRemoveButton);
           choice.choiceElementAttach();
@@ -2027,6 +1548,9 @@
           var isOptionSelected = dataSourceAspect.getSelected(option);
           var isOptionDisabled = dataSourceAspect.getDisabled(option);
           return Choice(option, isOptionSelected, isOptionDisabled);
+        },
+        isSelectable: function isSelectable(choice) {
+          return !choice.isOptionSelected && !choice.isOptionDisabled;
         }
       };
     }
@@ -2153,7 +1677,7 @@
     function PicksAspect(picksDom, pickContentGenerator, componentAspect, dataSourceAspect, optionAspect, picks) {
       return {
         createPick: function createPick(choice, handleOnRemoveButton
-        /* this.aspect.handleOnRemoveButton */
+        /* multiSelectInputAspect.handleOnRemoveButton */
         ) {
           var _picksDom$createPickE = picksDom.createPickElement(),
               pickElement = _picksDom$createPickE.pickElement,
@@ -2209,9 +1733,9 @@
 
     function InputAspect(filterListAspect, optionAspect, filterDom, popupAspect, choicesHover) {
       return {
-        input: function input(filterInputValue, resetLength, eventLoopFlag_set, //this.aspect.eventLoopFlag.set(); 
-        aspect_showChoices, //this.aspect.showChoices();
-        aspect_hideChoices // this.aspect.hideChoices();
+        input: function input(filterInputValue, resetLength, eventLoopFlag_set, //multiSelectInputAspect.eventLoopFlag.set(); 
+        aspect_showChoices, //multiSelectInputAspect.showChoices();
+        aspect_hideChoices // multiSelectInputAspect.hideChoices();
         ) {
           var text = filterInputValue.trim().toLowerCase();
           var isEmpty = false;
@@ -2242,7 +1766,7 @@
             var panelIsVisble = popupAspect.isChoicesVisible();
 
             if (!panelIsVisble) {
-              aspect_showChoices(); //this.aspect.showChoices();
+              aspect_showChoices(); //multiSelectInputAspect.showChoices();
             }
 
             if (visibleCount == 1) {
@@ -2253,6 +1777,353 @@
           } else {
             if (popupAspect.isChoicesVisible()) aspect_hideChoices();
           }
+        }
+      };
+    }
+
+    function ResetFilterListAspect(filterDom, filterListAspect) {
+      return {
+        forceResetFilter: function forceResetFilter() {
+          // over in PlaceholderPlugin
+          filterDom.setEmpty();
+          filterListAspect.processEmptyInput(); // over in PlaceholderPlugin
+        }
+      };
+    }
+    function ManageableResetFilterListAspect(filterDom, resetFilterListAspect) {
+      return {
+        resetFilter: function resetFilter() {
+          // call in OptionsApiPlugin
+          if (!filterDom.isEmpty()) // call in Placeholder
+            resetFilterListAspect.forceResetFilter(); // over in Placeholder
+        }
+      };
+    }
+    function FocusInAspect(picksDom) {
+      return {
+        setFocusIn: function setFocusIn(focus) {
+          // call in OptionsApiPlugin
+          picksDom.setIsFocusIn(focus); // unique call, call BsAppearancePlugin
+
+          picksDom.toggleFocusStyling(); // over BsAppearancePlugin
+        }
+      };
+    }
+
+    function MultiSelectInputAspect(window, setFocus, picksElement, choicesElement, isChoicesVisible, setChoicesVisible, resetHoveredChoice, hoverIn, resetFilter, isChoiceEmpty, onClick, resetFocus, alignToFilterInputItemLocation) {
+      var document = window.document;
+      var eventLoopFlag = EventLoopFlag(window);
+      var skipFocusout = false;
+
+      function getSkipFocusout() {
+        return skipFocusout;
+      }
+
+      function resetSkipFocusout() {
+        skipFocusout = false;
+      }
+
+      function setSkipFocusout() {
+        skipFocusout = true;
+      }
+
+      var skipoutMousedown = function skipoutMousedown() {
+        setSkipFocusout();
+      };
+
+      var documentMouseup = function documentMouseup(event) {
+        // if we would left without focus then "close the drop" do not remove focus border
+        if (choicesElement == event.target) setFocus(); // if click outside container - close dropdown
+        else if (!containsAndSelf(choicesElement, event.target) && !containsAndSelf(picksElement, event.target)) {
+            hideChoices();
+            resetFilter();
+            resetFocus();
+          }
+      };
+
+      var preventDefaultClickEvent = null;
+      var componentDisabledEventBinder = EventBinder(); // TODO: remove setTimeout: set on start of mouse event reset on end
+
+      function skipoutAndResetMousedown() {
+        skipoutMousedown();
+        window.setTimeout(function () {
+          return resetSkipFocusout();
+        });
+      }
+
+      picksElement.addEventListener("mousedown", skipoutAndResetMousedown);
+
+      function showChoices() {
+        if (!isChoicesVisible()) {
+          alignToFilterInputItemLocation();
+          eventLoopFlag.set();
+          setChoicesVisible(true); // add listeners that manages close dropdown on  click outside container
+
+          choicesElement.addEventListener("mousedown", skipoutMousedown);
+          document.addEventListener("mouseup", documentMouseup);
+        }
+      }
+
+      function clickToShowChoices(event) {
+        onClick(event);
+
+        if (preventDefaultClickEvent != event) {
+          if (isChoicesVisible()) {
+            hideChoices();
+          } else {
+            if (!isChoiceEmpty()) showChoices();
+          }
+        }
+
+        preventDefaultClickEvent = null;
+      }
+
+      function hideChoices() {
+        resetMouseCandidateChoice();
+        resetHoveredChoice();
+
+        if (isChoicesVisible()) {
+          setChoicesVisible(false);
+          choicesElement.removeEventListener("mousedown", skipoutMousedown);
+          document.removeEventListener("mouseup", documentMouseup);
+        }
+      }
+
+      function processUncheck(uncheckOption, event) {
+        // we can't remove item on "click" in the same loop iteration - it is unfrendly for 3PP event handlers (they will get detached element)
+        // never remove elements in the same event iteration
+        window.setTimeout(function () {
+          return uncheckOption();
+        });
+        preventDefaultClickEvent = event; // setPreventDefaultMultiSelectEvent
+      }
+
+      function handleOnRemoveButton(onRemove, setSelectedFalse) {
+        // processRemoveButtonClick removes the item
+        // what is a problem with calling 'remove' directly (not using  setTimeout('remove', 0)):
+        // consider situation "MultiSelect" on DROPDOWN (that should be closed on the click outside dropdown)
+        // therefore we aslo have document's click's handler where we decide to close or leave the DROPDOWN open.
+        // because of the event's bubling process 'remove' runs first. 
+        // that means the event's target element on which we click (the x button) will be removed from the DOM together with badge 
+        // before we could analize is it belong to our dropdown or not.
+        // important 1: we can't just the stop propogation using stopPropogate because click outside dropdown on the similar 
+        // component that use stopPropogation will not close dropdown (error, dropdown should be closed)
+        // important 2: we can't change the dropdown's event handler to leave dropdown open if event's target is null because of
+        // the situation described above: click outside dropdown on the same component.
+        // Alternatively it could be possible to use stopPropogate but together create custom click event setting new target 
+        // that belomgs to DOM (e.g. panel)
+        var processRemoveButtonClick = function processRemoveButtonClick(event) {
+          processUncheck(setSelectedFalse, event);
+          hideChoices();
+          resetFilter();
+        };
+
+        onRemove(function (event) {
+          processRemoveButtonClick(event);
+        });
+      }
+
+      var mouseCandidateEventBinder = EventBinder();
+
+      var resetMouseCandidateChoice = function resetMouseCandidateChoice() {
+        mouseCandidateEventBinder.unbind();
+      };
+
+      var mouseOverToHoveredAndReset = function mouseOverToHoveredAndReset(choice) {
+        if (!choice.isHoverIn) hoverIn(choice);
+        resetMouseCandidateChoice();
+      };
+
+      function adoptChoiceElement(choice, choiceElement) {
+        // in chrome it happens on "become visible" so we need to skip it, 
+        // for IE11 and edge it doesn't happens, but for IE11 and Edge it doesn't happens on small 
+        // mouse moves inside the item. 
+        // https://stackoverflow.com/questions/59022563/browser-events-mouseover-doesnt-happen-when-you-make-element-visible-and-mous
+        var onChoiceElementMouseover = function onChoiceElementMouseover() {
+          if (eventLoopFlag.get()) {
+            resetMouseCandidateChoice();
+            mouseCandidateEventBinder.bind(choiceElement, 'mousemove', function () {
+              return mouseOverToHoveredAndReset(choice);
+            });
+            mouseCandidateEventBinder.bind(choiceElement, 'mousedown', function () {
+              return mouseOverToHoveredAndReset(choice);
+            });
+          } else {
+            if (!choice.isHoverIn) {
+              // NOTE: mouseleave is not enough to guarantee remove hover styles in situations
+              // when style was setuped without mouse (keyboard arrows)
+              // therefore force reset manually (done inside hoverIn)
+              hoverIn(choice);
+            }
+          }
+        }; // note 1: mouseleave preferred to mouseout - which fires on each descendant
+        // note 2: since I want add aditional info panels to the dropdown put mouseleave on dropdwon would not work
+
+
+        var onChoiceElementMouseleave = function onChoiceElementMouseleave() {
+          if (!eventLoopFlag.get()) {
+            resetHoveredChoice();
+          }
+        };
+
+        var overAndLeaveEventBinder = EventBinder();
+        overAndLeaveEventBinder.bind(choiceElement, 'mouseover', onChoiceElementMouseover);
+        overAndLeaveEventBinder.bind(choiceElement, 'mouseleave', onChoiceElementMouseleave);
+        return overAndLeaveEventBinder.unbind;
+      }
+
+      return {
+        adoptChoiceElement: adoptChoiceElement,
+        dispose: function dispose() {
+          resetMouseCandidateChoice();
+          picksElement.removeEventListener("mousedown", skipoutAndResetMousedown);
+          componentDisabledEventBinder.unbind();
+        },
+        onFocusOut: function onFocusOut(action) {
+          if (!getSkipFocusout()) {
+            // skip initiated by mouse click (we manage it different way)
+            resetFilter(); // if do not do this we will return to filtered list without text filter in input
+
+            action();
+          }
+
+          resetSkipFocusout();
+        },
+        disable: function disable(isComponentDisabled) {
+          if (isComponentDisabled) componentDisabledEventBinder.unbind();else componentDisabledEventBinder.bind(picksElement, "click", clickToShowChoices);
+        },
+        eventLoopFlag: eventLoopFlag,
+        hideChoices: hideChoices,
+        showChoices: showChoices,
+        handleOnRemoveButton: handleOnRemoveButton
+      };
+    }
+
+    function FilterAspect(filterInputElement, onFocusIn, // show dropdown
+    onFocusOut, // hide dropdown
+    onKeyDownArrowUp, onKeyDownArrowDown, onTabForEmpty, // tab on empty
+    onBackspace, // backspace alike
+    onTabToCompleate, // "compleate alike"
+    onEnterToCompleate, onKeyUpEsc, // "esc" alike
+    stopEscKeyDownPropogation, onInput // filter
+    ) {
+      var isEmpty = function isEmpty() {
+        return filterInputElement.value ? false : true;
+      };
+
+      var onfilterInputKeyDown = function onfilterInputKeyDown(event) {
+        var keyCode = event.which;
+        var empty = isEmpty();
+
+        if ([13, 27 // '27-esc' there is "just in case", I can imagine that there are user agents that do UNDO
+        ].indexOf(keyCode) >= 0 || keyCode == 9 && !empty //  otherwice there are no keyup (true at least for '9-tab'),
+        ) {
+            event.preventDefault(); // '13-enter'  - prevention against form's default button 
+            // but doesn't help with bootsrap modal ESC or ENTER (close behaviour);
+          }
+
+        if ([38, 40].indexOf(keyCode) >= 0) event.preventDefault();
+
+        if (keyCode == 8
+        /*backspace*/
+        ) {
+            // NOTE: this will process backspace only if there are no text in the input field
+            // If user will find this inconvinient, we will need to calculate something like this
+            // let isBackspaceAtStartPoint = (this.filterInput.selectionStart == 0 && this.filterInput.selectionEnd == 0);
+            if (empty) {
+              onBackspace();
+            }
+          } // ---------------------------------------------------------------------------------
+          // NOTE: no preventDefault called in case of empty for 9-tab
+        else if (keyCode == 9
+          /*tab*/
+          ) {
+              // NOTE: no keydown for this (without preventDefaul after TAB keyup event will be targeted another element)  
+              if (empty) {
+                onTabForEmpty(); // hideChoices inside (and no filter reset since it is empty) 
+              }
+            } else if (keyCode == 27
+          /*esc*/
+          ) {
+              // NOTE: forbid the ESC to close the modal (in case the nonempty or dropdown is open)
+              if (!empty || stopEscKeyDownPropogation()) event.stopPropagation();
+            } else if (keyCode == 38) {
+            onKeyDownArrowUp();
+          } else if (keyCode == 40) {
+            onKeyDownArrowDown();
+          }
+      };
+
+      var onFilterInputKeyUp = function onFilterInputKeyUp(event) {
+        var keyCode = event.which; //var handler = keyUp[event.which/* key code */];
+        //handler();
+
+        if (keyCode == 9) {
+          onTabToCompleate();
+        } else if (keyCode == 13) {
+          onEnterToCompleate();
+        } else if (keyCode == 27) {
+          // escape
+          onKeyUpEsc(); // is it always empty (bs x can still it) 
+        }
+      }; // it can be initated by 3PP functionality
+      // sample (1) BS functionality - input x button click - clears input
+      // sample (2) BS functionality - esc keydown - clears input
+      // and there could be difference in processing: (2) should hide the menu, then reset , when (1) should just reset without hiding.
+
+
+      var onFilterInputInput = function onFilterInputInput() {
+        var filterInputValue = filterInputElement.value;
+        onInput(filterInputValue, function () {
+          filterInputElement.style.width = filterInputValue.length * 1.3 + 2 + "ch";
+        } // TODO: better width calculation
+        );
+      };
+
+      var eventBinder = EventBinder();
+      eventBinder.bind(filterInputElement, 'focusin', onFocusIn);
+      eventBinder.bind(filterInputElement, 'focusout', onFocusOut);
+      eventBinder.bind(filterInputElement, 'input', onFilterInputInput);
+      eventBinder.bind(filterInputElement, 'keydown', onfilterInputKeyDown);
+      eventBinder.bind(filterInputElement, 'keyup', onFilterInputKeyUp);
+      return {
+        dispose: function dispose() {
+          eventBinder.unbind();
+        }
+      };
+    }
+
+    function DisabledComponentAspect(componentAspect, picks, multiSelectInputAspect, picksDom) {
+      var isComponentDisabled;
+      return {
+        updateDisabled: function updateDisabled() {
+          var newIsComponentDisabled = componentAspect.getDisabled();
+
+          if (isComponentDisabled !== newIsComponentDisabled) {
+            isComponentDisabled = newIsComponentDisabled;
+            picks.disableRemoveAll(newIsComponentDisabled);
+            multiSelectInputAspect.disable(newIsComponentDisabled);
+            picksDom.disable(newIsComponentDisabled);
+          }
+        }
+      };
+    }
+    function AppearanceAspect(disabledComponentAspect) {
+      return {
+        updateAppearance: function updateAppearance() {
+          disabledComponentAspect.updateDisabled();
+        }
+      };
+    }
+    function LoadAspect(choicesAspect, multiSelectInputAspect, appearanceAspect) {
+      return {
+        load: function load() {
+          choicesAspect.updateDataImpl(function (c, e) {
+            return multiSelectInputAspect.adoptChoiceElement(c, e);
+          }, function (o, s) {
+            return multiSelectInputAspect.handleOnRemoveButton(o, s);
+          });
+          appearanceAspect.updateAppearance();
         }
       };
     }
@@ -2299,6 +2170,7 @@
       var filterDom = FilterDom(staticDom.disposablePicksElement, createElement, css); // TODO get picksDom  from staticDomFactory
 
       var picksDom = PicksDom(staticDom.picksElement, staticDom.disposablePicksElement, createElement, css);
+      var focusInAspect = FocusInAspect(picksDom);
       var popupAspect = PopupAspect$1(choicesDom.choicesElement, filterDom.filterInputElement, Popper);
       var collection = DoublyLinkedCollection(function (choice) {
         return choice.itemPrev;
@@ -2315,7 +2187,9 @@
         return choice.itemNext;
       });
       var choicesEnumerableAspect = ChoicesEnumerableAspect(choicesGetNextAspect);
-      var filterListAspect = FilterListAspect(choicesGetNextAspect, choicesEnumerableAspect); // TODO move to fully index collection
+      var filterListAspect = FilterListAspect(choicesGetNextAspect, choicesEnumerableAspect);
+      var resetFilterListAspect = ResetFilterListAspect(filterDom, filterListAspect);
+      var manageableResetFilterListAspect = ManageableResetFilterListAspect(filterDom, resetFilterListAspect); // TODO move to fully index collection
 
       var choices = Choices(collection, function () {
         return filterListAspect.reset();
@@ -2343,6 +2217,121 @@
       }, componentAspect, optionToggleAspect, picksAspect);
       var choiceFactoryAspect = ChoiceFactoryAspect(choicesElementAspect, choicesGetNextAspect);
       var choicesAspect = ChoicesAspect(window.document, optionAspect, dataSourceAspect, choices, choiceFactoryAspect);
+      var multiSelectInputAspect = MultiSelectInputAspect(window, function () {
+        return filterDom.setFocus();
+      }, picksDom.picksElement, choicesDom.choicesElement, function () {
+        return popupAspect.isChoicesVisible();
+      }, function (visible) {
+        return popupAspect.setChoicesVisible(visible);
+      }, function () {
+        return choicesHover.resetHoveredChoice();
+      }, function (choice) {
+        return choicesHover.hoverIn(choice);
+      }, function () {
+        return manageableResetFilterListAspect.resetFilter();
+      }, function () {
+        return filterListAspect.getCount() == 0;
+      },
+      /*onClick*/
+      function (event) {
+        return filterDom.setFocusIfNotTarget(event.target);
+      },
+      /*resetFocus*/
+      function () {
+        return focusInAspect.setFocusIn(false);
+      },
+      /*alignToFilterInputItemLocation*/
+      function () {
+        return popupAspect.updatePopupLocation();
+      });
+      var disabledComponentAspect = DisabledComponentAspect(componentAspect, picks, multiSelectInputAspect, picksDom);
+      var appearanceAspect = AppearanceAspect(disabledComponentAspect);
+      var loadAspect = LoadAspect(choicesAspect, multiSelectInputAspect, appearanceAspect);
+
+      function hoveredToSelected() {
+        var hoveredChoice = choicesHover.getHoveredChoice();
+
+        if (hoveredChoice) {
+          var wasToggled = optionToggleAspect.toggleOptionSelected(hoveredChoice);
+
+          if (wasToggled) {
+            multiSelectInputAspect.hideChoices();
+            manageableResetFilterListAspect.resetFilter();
+          }
+        }
+      }
+
+      function keyDownArrow(down) {
+        var choice = choicesHover.navigate(down);
+
+        if (choice) {
+          choicesHover.hoverIn(choice);
+          multiSelectInputAspect.showChoices();
+        }
+      }
+
+      var filterAspect = FilterAspect(filterDom.filterInputElement, function () {
+        return focusInAspect.setFocusIn(true);
+      }, // focus in - show dropdown
+      function () {
+        return multiSelectInputAspect.onFocusOut(function () {
+          return focusInAspect.setFocusIn(false);
+        });
+      }, // focus out - hide dropdown
+      function () {
+        return keyDownArrow(false);
+      }, // arrow up
+      function () {
+        return keyDownArrow(true);
+      }, // arrow down
+
+      /*onTabForEmpty*/
+      function () {
+        return multiSelectInputAspect.hideChoices();
+      }, // tab on empty
+      function () {
+        var p = picks.removePicksTail();
+        if (p) popupAspect.updatePopupLocation();
+      }, // backspace - "remove last"
+
+      /*onTabToCompleate*/
+      function () {
+        if (popupAspect.isChoicesVisible()) {
+          hoveredToSelected();
+        }
+      },
+      /*onEnterToCompleate*/
+      function () {
+        if (popupAspect.isChoicesVisible()) {
+          hoveredToSelected();
+        } else {
+          if (filterListAspect.getCount() > 0) {
+            multiSelectInputAspect.showChoices();
+          }
+        }
+      },
+      /*onKeyUpEsc*/
+      function () {
+        multiSelectInputAspect.hideChoices(); // always hide 1st
+
+        manageableResetFilterListAspect.resetFilter();
+      }, // esc keyup 
+      // tab/enter "compleate hovered"
+
+      /*stopEscKeyDownPropogation */
+      function () {
+        return popupAspect.isChoicesVisible();
+      },
+      /*onInput*/
+      function (filterInputValue, resetLength) {
+        inputAspect.input(filterInputValue, resetLength, function () {
+          return multiSelectInputAspect.eventLoopFlag.set();
+        }, function () {
+          return multiSelectInputAspect.showChoices();
+        }, function () {
+          return multiSelectInputAspect.hideChoices();
+        });
+      });
       var pluginData = {
         environment: environment,
         trigger: trigger,
@@ -2368,16 +2357,28 @@
         picksAspect: picksAspect,
         filterDom: filterDom,
         inputAspect: inputAspect,
-        common: common
-      }; // TODO: replace common with something new? 
+        resetFilterListAspect: resetFilterListAspect,
+        manageableResetFilterListAspect: manageableResetFilterListAspect,
+        multiSelectInputAspect: multiSelectInputAspect,
+        focusInAspect: focusInAspect,
+        filterAspect: filterAspect,
+        disabledComponentAspect: disabledComponentAspect,
+        appearanceAspect: appearanceAspect,
+        loadAspect: loadAspect,
+        common: common // TODO: replace common with something new? 
 
+      };
       var pluginManager = PluginManager(plugins, pluginData);
-      var multiSelect = new MultiSelect(dataSourceAspect, componentAspect, picksDom, filterDom, choicesDom, staticManager, popupAspect, filterListAspect, choices, choicesHover, picks, optionAspect, optionToggleAspect, choicesAspect, picksAspect, inputAspect, window);
+      var multiSelect = new MultiSelect(dataSourceAspect, choicesDom, choices, picks, choicesAspect, manageableResetFilterListAspect, multiSelectInputAspect, disabledComponentAspect, appearanceAspect);
       pluginManager.afterConstructor(multiSelect);
-      multiSelect.dispose = composeSync(pluginManager.dispose, multiSelect.dispose.bind(multiSelect), staticManager.dispose, popupAspect.dispose, picksDom.dispose, filterDom.dispose);
+      multiSelect.dispose = composeSync(multiSelectInputAspect.hideChoices, pluginManager.dispose, picks.dispose, multiSelectInputAspect.dispose, choices.dispose, staticManager.dispose, popupAspect.dispose, picksDom.dispose, filterDom.dispose, filterAspect.dispose);
+      multiSelect.updateDisabled = disabledComponentAspect.updateDisabled;
       onInit == null ? void 0 : onInit(multiSelect);
-      multiSelect.init();
-      multiSelect.load();
+      picksDom.pickFilterElement.appendChild(filterDom.filterInputElement);
+      picksDom.picksElement.appendChild(picksDom.pickFilterElement);
+      staticManager.appendToContainer();
+      popupAspect.init();
+      loadAspect.load();
       return multiSelect;
     }
 
@@ -2708,7 +2709,8 @@
           validationApiPluginData = pluginData.validationApiPluginData,
           picksDom = pluginData.picksDom,
           staticDom = pluginData.staticDom,
-          labelPluginData = pluginData.labelPluginData;
+          labelPluginData = pluginData.labelPluginData,
+          appearanceAspect = pluginData.appearanceAspect;
       var getValidity = configuration.getValidity,
           getSize = configuration.getSize,
           useCssPatch = configuration.useCssPatch,
@@ -2826,7 +2828,7 @@
             return wasUpdatedObservable.call();
           };
 
-          multiSelect.updateAppearance = composeSync(multiSelect.updateAppearance.bind(multiSelect), updateSize, validationObservable.call, getManualValidationObservable.call);
+          appearanceAspect.updateAppearance = composeSync(appearanceAspect.updateAppearance, updateSize, validationObservable.call, getManualValidationObservable.call);
           return (
             /* dispose */
             function () {
@@ -2950,6 +2952,7 @@
       var configuration = pluginData.configuration,
           options = pluginData.options,
           choicesGetNextAspect = pluginData.choicesGetNextAspect,
+          optionAspect = pluginData.optionAspect,
           choicesEnumerableAspect = pluginData.choicesEnumerableAspect,
           filterListAspect = pluginData.filterListAspect,
           choiceFactoryAspect = pluginData.choiceFactoryAspect,
@@ -3036,9 +3039,9 @@
 
       return {
         afterConstructor: function afterConstructor(multiSelect) {
-          var origIsSelectable = multiSelect.isSelectable.bind(multiSelect);
+          var origIsSelectable = optionAspect.isSelectable;
 
-          multiSelect.isSelectable = function (choice) {
+          optionAspect.isSelectable = function (choice) {
             return origIsSelectable(choice) && !choice.isOptionHidden;
           };
 
@@ -3051,9 +3054,9 @@
               var nextChoice = getNextNonHidden(choice);
               filterListAspect.add(choice, nextChoice);
               choicesElementAspect.buildChoiceElement(choice, function (c, e) {
-                return multiSelect.aspect.adoptChoiceElement(c, e);
+                return multiSelect.multiSelectInputAspect.adoptChoiceElement(c, e);
               }, function (o, s) {
-                return multiSelect.aspect.handleOnRemoveButton(o, s);
+                return multiSelect.multiSelectInputAspect.handleOnRemoveButton(o, s);
               });
               choice.choiceElementAttach(nextChoice == null ? void 0 : nextChoice.choiceElement);
             }
@@ -3086,9 +3089,9 @@
             return UpdateOptionHidden(key);
           };
 
-          var origСreateChoice = multiSelect.optionAspect.createChoice;
+          var origСreateChoice = optionAspect.createChoice;
 
-          multiSelect.optionAspect.createChoice = function (option) {
+          optionAspect.createChoice = function (option) {
             var choice = origСreateChoice(option);
             choice.isOptionHidden = getIsOptionHidden(option);
             return choice;
@@ -3145,7 +3148,9 @@
           filterDom = pluginData.filterDom,
           staticDom = pluginData.staticDom,
           picksAspect = pluginData.picksAspect,
-          inputAspect = pluginData.inputAspect;
+          inputAspect = pluginData.inputAspect,
+          resetFilterListAspect = pluginData.resetFilterListAspect,
+          filterListAspect = pluginData.filterListAspect;
       var placeholder = configuration.placeholder,
           css = configuration.css;
       var picksElement = picksDom.picksElement;
@@ -3184,46 +3189,47 @@
         return picks.isEmpty() && filterDom.isEmpty();
       };
 
+      function updatePlacehodlerVisibility() {
+        showPlacehodler(isEmpty());
+      }
+
+      function updateEmptyInputWidth() {
+        setEmptyInputWidth(isEmpty());
+      }
+      var origDisable = picksDom.disable;
+
+      picksDom.disable = function (isComponentDisabled) {
+        setDisabled(isComponentDisabled);
+        origDisable(isComponentDisabled);
+      };
+
+      staticManager.appendToContainer = composeSync(staticManager.appendToContainer, updateEmptyInputWidth);
+      filterListAspect.processEmptyInput = composeSync(updateEmptyInputWidth, filterListAspect.processEmptyInput);
+      resetFilterListAspect.forceResetFilter = composeSync(resetFilterListAspect.forceResetFilter, updatePlacehodlerVisibility);
+      var origInput = inputAspect.input;
+
+      inputAspect.input = function (filterInputValue, resetLength, eventLoopFlag_set, aspect_showChoices, aspect_hideChoices) {
+        updatePlacehodlerVisibility();
+        origInput(filterInputValue, resetLength, eventLoopFlag_set, aspect_showChoices, aspect_hideChoices);
+      };
+
+      var origCreatePick = picksAspect.createPick;
+
+      picksAspect.createPick = function (choice, handleOnRemoveButton) {
+        var removePick = origCreatePick(choice, handleOnRemoveButton);
+        if (picks.getCount() == 1) updatePlacehodlerVisibility();
+        return function () {
+          removePick();
+          if (picks.getCount() == 0) updatePlacehodlerVisibility();
+        };
+      };
+
       return {
         afterConstructor: function afterConstructor(multiSelect) {
-          function updatePlacehodlerVisibility() {
-            showPlacehodler(isEmpty());
-          }
-
-          function updateEmptyInputWidth() {
-            setEmptyInputWidth(isEmpty());
-          }
-          var origDisable = picksDom.disable;
-
-          picksDom.disable = function (isComponentDisabled) {
-            setDisabled(isComponentDisabled);
-            origDisable(isComponentDisabled);
-          };
-
-          staticManager.appendToContainer = composeSync(staticManager.appendToContainer, updateEmptyInputWidth);
-          var origProcessEmptyInput = multiSelect.filterListAspect.processEmptyInput;
-          multiSelect.filterListAspect.processEmptyInput = composeSync(updateEmptyInputWidth, origProcessEmptyInput);
-          var origEmpty = multiSelect.empty.bind(multiSelect);
-          multiSelect.empty = composeSync(origEmpty, updatePlacehodlerVisibility);
-          var origForceResetFilter = multiSelect.forceResetFilter.bind(multiSelect);
-          multiSelect.forceResetFilter = composeSync(origForceResetFilter, updatePlacehodlerVisibility);
-          var origInput = inputAspect.input;
-
-          inputAspect.input = function (filterInputValue, resetLength, eventLoopFlag_set, aspect_showChoices, aspect_hideChoices) {
-            updatePlacehodlerVisibility();
-            origInput(filterInputValue, resetLength, eventLoopFlag_set, aspect_showChoices, aspect_hideChoices);
-          };
-
-          var origCreatePick = picksAspect.createPick;
-
-          picksAspect.createPick = function (choice, handleOnRemoveButton) {
-            var removePick = origCreatePick(choice, handleOnRemoveButton);
-            if (multiSelect.picks.getCount() == 1) updatePlacehodlerVisibility();
-            return function () {
-              removePick();
-              if (multiSelect.picks.getCount() == 0) updatePlacehodlerVisibility();
-            };
-          };
+          // let origEmpty = multiSelect.empty.bind(multiSelect);
+          // multiSelect.empty = composeSync(origEmpty, updatePlacehodlerVisibility);
+          var origUpdateData = multiSelect.updateData.bind(multiSelect);
+          multiSelect.updateData = composeSync(origUpdateData, updatePlacehodlerVisibility);
         }
       };
     }
@@ -3256,7 +3262,8 @@
     }
 
     function OptionsApiPlugin(pluginData) {
-      var choiceFactoryAspect = pluginData.choiceFactoryAspect;
+      var choiceFactoryAspect = pluginData.choiceFactoryAspect,
+          manageableResetFilterListAspect = pluginData.manageableResetFilterListAspect;
       return {
         afterConstructor: function afterConstructor(multiSelect) {
           multiSelect.SetOptionSelected = function (key, value) {
@@ -3293,17 +3300,17 @@
             var choice = multiSelect.optionAspect.createChoice(option);
             multiSelect.choices.insert(key, choice);
             choiceFactoryAspect.insertChoiceItem(choice, function (c, e) {
-              return multiSelect.aspect.adoptChoiceElement(c, e);
+              return multiSelect.multiSelectInputAspect.adoptChoiceElement(c, e);
             }, function (o, s) {
-              return multiSelect.aspect.handleOnRemoveButton(o, s);
+              return multiSelect.multiSelectInputAspect.handleOnRemoveButton(o, s);
             });
           };
 
           multiSelect.UpdateOptionRemoved = function (key) {
             // TODO: generalize index as key 
-            multiSelect.aspect.hideChoices(); // always hide 1st, then reset filter
+            multiSelect.multiSelectInputAspect.hideChoices(); // always hide 1st, then reset filter
 
-            multiSelect.resetFilter();
+            manageableResetFilterListAspect.resetFilter();
             var choice = multiSelect.choices.remove(key);
             choice.remove == null ? void 0 : choice.remove();
             choice.dispose == null ? void 0 : choice.dispose();
@@ -3314,13 +3321,14 @@
 
     function FormRestoreOnBackwardPlugin(pluginData) {
       var staticDom = pluginData.staticDom,
-          environment = pluginData.environment;
+          environment = pluginData.environment,
+          loadAspect = pluginData.loadAspect;
       var window = environment.window;
       return {
         afterConstructor: function afterConstructor(multiSelect) {
-          var origLoad = multiSelect.load.bind(multiSelect);
+          var origLoad = loadAspect.load;
 
-          multiSelect.load = function () {
+          loadAspect.load = function () {
             origLoad(); // support browser's "step backward" and form's values restore
 
             if (staticDom.selectElement && window.document.readyState != "complete") {
@@ -3483,6 +3491,33 @@
       };
     };
 
+    function SelectAllApiPlugin(pluginData) {
+      var multiSelectInputAspect = pluginData.multiSelectInputAspect,
+          choices = pluginData.choices,
+          picks = pluginData.picks,
+          optionAspect = pluginData.optionAspect,
+          manageableResetFilterListAspect = pluginData.manageableResetFilterListAspect;
+      return {
+        afterConstructor: function afterConstructor(multiSelect) {
+          multiSelect.selectAll = function () {
+            multiSelectInputAspect.hideChoices(); // always hide 1st
+
+            choices.forLoop(function (choice) {
+              if (optionAspect.isSelectable(choice)) optionAspect.setOptionSelected(choice, true);
+            });
+            manageableResetFilterListAspect.resetFilter();
+          };
+
+          multiSelect.deselectAll = function () {
+            multiSelectInputAspect.hideChoices(); // always hide 1st
+
+            picks.removeAll();
+            manageableResetFilterListAspect.resetFilter();
+          };
+        }
+      };
+    }
+
     var transformStyles = [{
       old: 'selectedPanelDisabledBackgroundColor',
       opt: 'picks_disabled',
@@ -3612,12 +3647,11 @@
     }
 
     (function (window, $, Popper) {
-      var methodNames = ['dispose', 'deselectAll', 'selectAll', 'updateOptionsSelected', 'updateOptionsDisabled', 'updateDisabled', 'updateAppearance', 'updateData', 'update'];
       var defaults = {
         containerClass: "dashboardcode-bsmultiselect",
         css: css
       };
-      var defaultPlugins = [CssPatchPlugin, SelectElementPlugin, LabelPlugin, HiddenOptionPlugin, ValidationApiPlugin, BsAppearancePlugin, FormResetPlugin, RtlPlugin, PlaceholderPlugin, OptionsApiPlugin, JQueryMethodsPlugin, FormRestoreOnBackwardPlugin];
+      var defaultPlugins = [CssPatchPlugin, SelectElementPlugin, LabelPlugin, HiddenOptionPlugin, ValidationApiPlugin, BsAppearancePlugin, FormResetPlugin, RtlPlugin, PlaceholderPlugin, OptionsApiPlugin, SelectAllApiPlugin, JQueryMethodsPlugin, FormRestoreOnBackwardPlugin];
 
       var createBsMultiSelect = function createBsMultiSelect(element, settings, removeInstanceData) {
         var _settings2;
@@ -3656,7 +3690,7 @@
         return multiSelect;
       };
 
-      var prototypable = addToJQueryPrototype('BsMultiSelect', createBsMultiSelect, methodNames, $);
+      var prototypable = addToJQueryPrototype('BsMultiSelect', createBsMultiSelect, $);
       initiateDefaults(defaultPlugins, defaults);
       prototypable.defaults = defaults;
     })(window, $, Popper);

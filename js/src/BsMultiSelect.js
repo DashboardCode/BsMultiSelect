@@ -8,7 +8,9 @@ import {choiceContentGenerator as defChoiceContentGenerator} from './ChoiceConte
 
 import {StaticDomFactory} from './StaticDomFactory';
 
-import {PicksDom, FilterDom} from './PicksDom';
+import {PicksDom} from './PicksDom';
+import {FilterDom} from './FilterDom';
+
 import {ChoicesDom} from './ChoicesDom';
 import {PopupAspect as DefaultPopupAspect} from './PopupAspect';
 
@@ -27,7 +29,12 @@ import {ChoicesHover} from './ChoicesHover'
 import {Picks} from './Picks'
 import {PicksAspect} from './PicksAspect'
 import {InputAspect} from './InputAspect'
-
+import {ResetFilterListAspect} from './ResetFilterListAspect'
+import {ManageableResetFilterListAspect} from './ResetFilterListAspect'
+import {FocusInAspect} from './ResetFilterListAspect'
+import {MultiSelectInputAspect} from './MultiSelectInputAspect'
+import {FilterAspect} from './FilterAspect'
+import {DisabledComponentAspect, LoadAspect, AppearanceAspect} from './AppearanceAspect'
 
 export function BsMultiSelect(element, environment, configuration, onInit){
     var {Popper, window, plugins} = environment;
@@ -60,6 +67,7 @@ export function BsMultiSelect(element, environment, configuration, onInit){
     let filterDom = FilterDom(staticDom.disposablePicksElement, createElement, css)
     // TODO get picksDom  from staticDomFactory
     let picksDom  = PicksDom(staticDom.picksElement, staticDom.disposablePicksElement, createElement, css);
+    let focusInAspect = FocusInAspect(picksDom)
     let popupAspect = PopupAspect(choicesDom.choicesElement, filterDom.filterInputElement, Popper);
 
     let collection = DoublyLinkedCollection(
@@ -68,8 +76,6 @@ export function BsMultiSelect(element, environment, configuration, onInit){
         (choice)=>choice.itemNext, 
         (choice, v)=>choice.itemNext=v, 
     );
-
-    
 
     let choicesGetNextAspect = ChoicesGetNextAspect(
         ()=>collection.getHead(),
@@ -81,7 +87,8 @@ export function BsMultiSelect(element, environment, configuration, onInit){
     )
 
     let filterListAspect = FilterListAspect(choicesGetNextAspect, choicesEnumerableAspect); 
-
+    let resetFilterListAspect = ResetFilterListAspect(filterDom, filterListAspect)
+    let manageableResetFilterListAspect =  ManageableResetFilterListAspect(filterDom, resetFilterListAspect)
     // TODO move to fully index collection
     let choices = Choices(
         collection,
@@ -101,14 +108,105 @@ export function BsMultiSelect(element, environment, configuration, onInit){
     let picksAspect = PicksAspect(
         picksDom, 
         (pickElement) => pickContentGenerator(pickElement, common, css),
-        componentAspect, dataSourceAspect, optionAspect, picks
+        componentAspect, dataSourceAspect, optionAspect, picks, manageableResetFilterListAspect
     );
 
     let choiceContentGenerator = def(configuration.choiceContentGenerator, defChoiceContentGenerator);
     let choicesElementAspect = ChoicesElementAspect( choicesDom, filterDom, (choiceElement, toggle) => choiceContentGenerator(choiceElement, common, css, toggle), componentAspect, optionToggleAspect, picksAspect)
     let choiceFactoryAspect =  ChoiceFactoryAspect(choicesElementAspect, choicesGetNextAspect);
     let choicesAspect = ChoicesAspect(window.document, optionAspect, dataSourceAspect, choices, choiceFactoryAspect);
-    
+
+    let multiSelectInputAspect =  MultiSelectInputAspect(
+        window,
+        () => filterDom.setFocus(), 
+        picksDom.picksElement, 
+        choicesDom.choicesElement, 
+        () => popupAspect.isChoicesVisible(),
+        (visible) => popupAspect.setChoicesVisible(visible),
+        () => choicesHover.resetHoveredChoice(), 
+        (choice) => choicesHover.hoverIn(choice),
+        () => manageableResetFilterListAspect.resetFilter(),
+        () => filterListAspect.getCount()==0, 
+        
+        /*onClick*/(event) => filterDom.setFocusIfNotTarget(event.target),
+        /*resetFocus*/() => focusInAspect.setFocusIn(false),
+        /*alignToFilterInputItemLocation*/() => popupAspect.updatePopupLocation()
+    );
+
+    let disabledComponentAspect = DisabledComponentAspect(componentAspect, picks, multiSelectInputAspect, picksDom);
+    let appearanceAspect = AppearanceAspect(disabledComponentAspect);
+    let loadAspect = LoadAspect(choicesAspect, multiSelectInputAspect, appearanceAspect);
+
+    function hoveredToSelected(){
+        let hoveredChoice = choicesHover.getHoveredChoice();
+        if (hoveredChoice){
+            var wasToggled = optionToggleAspect.toggleOptionSelected(hoveredChoice);
+            if (wasToggled) {
+                multiSelectInputAspect.hideChoices();
+                manageableResetFilterListAspect.resetFilter();
+            }
+        }
+    }
+
+    function keyDownArrow(down) {
+        let choice = choicesHover.navigate(down);
+        if (choice)
+        {
+            choicesHover.hoverIn(choice);
+            multiSelectInputAspect.showChoices();
+        }
+    }
+
+    let filterAspect = FilterAspect(
+        filterDom.filterInputElement,
+        () => focusInAspect.setFocusIn(true),  // focus in - show dropdown
+        () => multiSelectInputAspect.onFocusOut(
+            () => focusInAspect.setFocusIn(false)
+        ), // focus out - hide dropdown
+        
+        () => keyDownArrow(false), // arrow up
+        () => keyDownArrow(true),  // arrow down
+        /*onTabForEmpty*/() => multiSelectInputAspect.hideChoices(),  // tab on empty
+        () => {
+            let p = picks.removePicksTail();
+            if (p)
+                popupAspect.updatePopupLocation();
+        }, // backspace - "remove last"
+
+        /*onTabToCompleate*/() => { 
+            if (popupAspect.isChoicesVisible()) {
+                hoveredToSelected();
+            } 
+        },
+        /*onEnterToCompleate*/() => { 
+            if (popupAspect.isChoicesVisible()) {
+                hoveredToSelected();
+            } else {
+                if (filterListAspect.getCount()>0){
+                    multiSelectInputAspect.showChoices();
+                }
+            }
+        },
+       
+        /*onKeyUpEsc*/() => {
+            multiSelectInputAspect.hideChoices(); // always hide 1st
+            manageableResetFilterListAspect.resetFilter();
+        }, // esc keyup 
+
+         // tab/enter "compleate hovered"
+        /*stopEscKeyDownPropogation */() => popupAspect.isChoicesVisible(),
+
+        /*onInput*/(filterInputValue, resetLength) =>
+        { 
+            inputAspect.input(
+                filterInputValue, 
+                resetLength,
+                ()=>multiSelectInputAspect.eventLoopFlag.set(), 
+                ()=>multiSelectInputAspect.showChoices(),
+                ()=>multiSelectInputAspect.hideChoices()
+            ) 
+        }
+    );
 
     let pluginData = {environment, trigger, configuration, dataSourceAspect, componentAspect, 
         staticDom, picksDom, choicesDom, popupAspect, staticManager, 
@@ -118,40 +216,51 @@ export function BsMultiSelect(element, environment, configuration, onInit){
         picksAspect,
         filterDom,
         inputAspect,
-        common
+        resetFilterListAspect,
+        manageableResetFilterListAspect,
+        multiSelectInputAspect,
+        focusInAspect,
+        filterAspect,
+        disabledComponentAspect,
+        appearanceAspect,
+        loadAspect,
+        common // TODO: replace common with something new? 
     } 
     
-    // TODO: replace common with something new? 
+    
     let pluginManager = PluginManager(plugins, pluginData);
-
+        
     var multiSelect = new MultiSelect(
         dataSourceAspect,
-        componentAspect,
-        picksDom,
-        filterDom,
         choicesDom,
-        staticManager,
-        popupAspect,        
-        
-        filterListAspect,
         choices, 
-        choicesHover,
         picks,
-        optionAspect,
-        optionToggleAspect,
         choicesAspect,
-        picksAspect,
-        inputAspect,
-        window
+        manageableResetFilterListAspect,
+        multiSelectInputAspect,
+        disabledComponentAspect,
+        appearanceAspect
     );
 
     pluginManager.afterConstructor(multiSelect);
 
-    multiSelect.dispose = composeSync(pluginManager.dispose, multiSelect.dispose.bind(multiSelect), staticManager.dispose, popupAspect.dispose, picksDom.dispose, filterDom.dispose );
+    multiSelect.dispose = composeSync(
+        multiSelectInputAspect.hideChoices,
+        pluginManager.dispose, 
+        picks.dispose,
+        multiSelectInputAspect.dispose,
+        choices.dispose,
+        staticManager.dispose, popupAspect.dispose, picksDom.dispose, filterDom.dispose, filterAspect.dispose );
     
+    multiSelect.updateDisabled = disabledComponentAspect.updateDisabled;
     onInit?.(multiSelect);
    
-    multiSelect.init();
-    multiSelect.load();
+    
+    picksDom.pickFilterElement.appendChild(filterDom.filterInputElement);
+    picksDom.picksElement.appendChild(picksDom.pickFilterElement); 
+    staticManager.appendToContainer();
+    popupAspect.init();
+    loadAspect.load();
+
     return multiSelect;
 }

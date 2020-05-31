@@ -19,6 +19,7 @@ import {JQueryMethodsPlugin} from './plugins/JQueryMethodsPlugin';
 import {OptionsApiPlugin} from './plugins/OptionsApiPlugin';
 import {FormRestoreOnBackwardPlugin} from './plugins/FormRestoreOnBackwardPlugin';
 import {SelectElementPlugin} from './plugins/SelectElementPlugin';
+import {SelectAllApiPlugin} from './plugins/SelectAllApiPlugin';
 
 import {adjustLegacySettings} from './BsMultiSelectDepricatedParameters'
 
@@ -27,13 +28,9 @@ import {extendIfUndefined, composeSync} from './ToolsJs';
 
 (
     (window, $, Popper) => {
-        const methodNames = [
-            'dispose', 'deselectAll', 'selectAll', 'updateOptionsSelected', 
-            'updateOptionsDisabled', 'updateDisabled', 'updateAppearance', 'updateData', 'update']
-
         const defaults = {containerClass : "dashboardcode-bsmultiselect", css: css}
         let defaultPlugins = [CssPatchPlugin, SelectElementPlugin, LabelPlugin, HiddenOptionPlugin, ValidationApiPlugin, 
-        BsAppearancePlugin, FormResetPlugin, RtlPlugin, PlaceholderPlugin , OptionsApiPlugin, 
+        BsAppearancePlugin, FormResetPlugin, RtlPlugin, PlaceholderPlugin , OptionsApiPlugin, SelectAllApiPlugin,
         JQueryMethodsPlugin, FormRestoreOnBackwardPlugin];
         let createBsMultiSelect = (element, settings, removeInstanceData) => { 
             let trigger = (e, eventName) => $(e).trigger(eventName);
@@ -66,7 +63,7 @@ import {extendIfUndefined, composeSync} from './ToolsJs';
             multiSelect.dispose = composeSync(multiSelect.dispose, removeInstanceData);
             return multiSelect;
         }
-        let prototypable = addToJQueryPrototype('BsMultiSelect', createBsMultiSelect, methodNames, $);
+        let prototypable = addToJQueryPrototype('BsMultiSelect', createBsMultiSelect, $);
 
         initiateDefaults(defaultPlugins, defaults);
         prototypable.defaults = defaults;
