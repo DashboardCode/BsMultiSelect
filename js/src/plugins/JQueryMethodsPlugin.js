@@ -1,12 +1,14 @@
 export function JQueryMethodsPlugin(pluginData){
-    let {staticDom, choicesDom, filterDom} = pluginData;
+    let {staticDom, choicesDom, filterDom, picks} = pluginData;
     return {
         buildApi(api){
-            api.GetContainer = ()=> staticDom.containerElement;
-            api.GetChoices = ()=> choicesDom.choicesElement;
-            api.GetFilterInput = ()=> filterDom.filterInputElement;
-            api.PicksCount = ()=> api.picks.getCount();
-            api.staticContent = api.popupAspect; // depricated support
+            api.getContainer = () => staticDom.containerElement;
+            api.getChoices = () => choicesDom.choicesElement;
+            api.getFilterInput = () => filterDom.filterInputElement;
+            api.getPicks = () => picksDom.picksElement;
+            
+            api.picksCount = () => picks.getCount();
+            //api.staticContent = popupAspect; // depricated, alternative accept to popupAspect.setChoicesVisible
         }
     }
 }

@@ -33,9 +33,9 @@ BsMultiSelect follows Bootstrap 4 conventions and use the same instruments (babe
 `npm install @dashboardcode/bsmultiselect`
 
 # CDN
-https://cdn.jsdelivr.net/npm/@dashboardcode/bsmultiselect@0.5.68/dist/js/BsMultiSelect.min.js
-https://cdn.jsdelivr.net/npm/@dashboardcode/bsmultiselect@0.5.68/dist/js/BsMultiSelect.esm.min.js
-https://cdn.jsdelivr.net/npm/@dashboardcode/bsmultiselect@0.5.68/dist/css/BsMultiSelect.min.css
+https://cdn.jsdelivr.net/npm/@dashboardcode/bsmultiselect@0.6.0/dist/js/BsMultiSelect.min.js
+https://cdn.jsdelivr.net/npm/@dashboardcode/bsmultiselect@0.6.0/dist/js/BsMultiSelect.esm.min.js
+https://cdn.jsdelivr.net/npm/@dashboardcode/bsmultiselect@0.6.0/dist/css/BsMultiSelect.min.css
 
 
 # Architecture
@@ -145,8 +145,8 @@ Samples:
 Or this way.
 
 ````
-          var bsMultiSelect = $('#mySelect').BsMultiSelect(); // BsMultiSelect return the object
-          bsMultiSelect.UpdateDisabled();
+          var bsMultiSelect = $('#mySelect').BsMultiSelect(); // BsMultiSelect return the api object
+          bsMultiSelect.updateDisabled(); // ! use traditional low case first letter calling the api methods
 ````         
 
 Other way to access the component's instance is using `data` :
@@ -162,9 +162,9 @@ To update specific option `UpdateOptionSelected`,`UpdateOptionDisabled`,`UpdateO
 
 ````
           var index =15;
-          bsMultiSelect.UpdateOptionSelected(index);
-          bsMultiSelect.UpdateOptionDisabled(index);
-          bsMultiSelect.UpdateOptionHidden(index);
+          bsMultiSelect.updateOptionSelected(index);
+          bsMultiSelect.updateOptionDisabled(index);
+          bsMultiSelect.updateOptionHidden(index);
 ````    
 
 ## jQuery factories

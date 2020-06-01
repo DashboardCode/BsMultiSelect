@@ -1,5 +1,5 @@
 /*!
-  * DashboardCode BsMultiSelect v0.5.68 (https://dashboardcode.github.io/BsMultiSelect/)
+  * DashboardCode BsMultiSelect v0.6.0 (https://dashboardcode.github.io/BsMultiSelect/)
   * Copyright 2017-2020 Roman Pokrovskij (github user rpokrovskij)
   * Licensed under APACHE 2 (https://github.com/DashboardCode/BsMultiSelect/blob/master/LICENSE)
   */
@@ -2321,7 +2321,6 @@
       };
       pluginManager.buildApi(api);
       api.dispose = composeSync(multiSelectInputAspect.hideChoices, pluginManager.dispose, picks.dispose, multiSelectInputAspect.dispose, choices.dispose, staticManager.dispose, popupAspect.dispose, picksDom.dispose, filterDom.dispose, filterAspect.dispose);
-      api.updateDisabled = disabledComponentAspect.updateDisabledComponent;
       api.updateData = updateDataAspect.updateData;
 
       api.update = function () {
@@ -2329,11 +2328,9 @@
         appearanceAspect.updateAppearance();
       };
 
-      api.updateAppearance = function () {
-        appearanceAspect.updateAppearance();
-      };
-
-      onInit == null ? void 0 : onInit(api);
+      api.updateAppearance = appearanceAspect.updateAppearance;
+      api.updateDisabled = disabledComponentAspect.updateDisabledComponent;
+      onInit == null ? void 0 : onInit(api, pluginData);
       picksDom.pickFilterElement.appendChild(filterDom.filterInputElement);
       picksDom.picksElement.appendChild(picksDom.pickFilterElement);
       staticManager.appendToContainer();
@@ -2778,24 +2775,20 @@
       appearanceAspect.updateAppearance = composeSync(appearanceAspect.updateAppearance, updateSize, validationObservable.call, getManualValidationObservable.call);
       return {
         buildApi: function buildApi(api) {
-          api.UpdateSize = updateSize;
+          api.updateSize = updateSize;
 
-          api.UpdateValidity = function () {
+          api.updateValidity = function () {
             return getManualValidationObservable.call();
           };
 
-          api.UpdateWasValidated = function () {
+          api.updateWasValidated = function () {
             return wasUpdatedObservable.call();
           };
-
-          return (
-            /* dispose */
-            function () {
-              wasUpdatedObservable.detachAll();
-              validationObservable.detachAll();
-              getManualValidationObservable.detachAll();
-            }
-          );
+        },
+        dispose: function dispose() {
+          wasUpdatedObservable.detachAll();
+          validationObservable.detachAll();
+          getManualValidationObservable.detachAll();
         }
       };
     }
@@ -2909,16 +2902,16 @@
 
     function HiddenOptionPlugin(pluginData) {
       var configuration = pluginData.configuration,
-          options = pluginData.options,
-          choices = pluginData.choices,
-          multiSelectInputAspect = pluginData.multiSelectInputAspect,
-          choicesGetNextAspect = pluginData.choicesGetNextAspect,
-          optionAspect = pluginData.optionAspect,
-          choicesEnumerableAspect = pluginData.choicesEnumerableAspect,
-          filterListAspect = pluginData.filterListAspect,
           dataSourceAspect = pluginData.dataSourceAspect,
+          options = pluginData.options,
+          optionAspect = pluginData.optionAspect,
+          choices = pluginData.choices,
+          choicesGetNextAspect = pluginData.choicesGetNextAspect,
+          choicesEnumerableAspect = pluginData.choicesEnumerableAspect,
           choiceFactoryAspect = pluginData.choiceFactoryAspect,
-          choicesElementAspect = pluginData.choicesElementAspect;
+          choicesElementAspect = pluginData.choicesElementAspect,
+          filterListAspect = pluginData.filterListAspect,
+          multiSelectInputAspect = pluginData.multiSelectInputAspect;
       var getIsOptionHidden = configuration.getIsOptionHidden;
 
       if (options) {
@@ -2960,26 +2953,6 @@
         }
       };
 
-      function buildHiddenChoice(choice) {
-        choice.updateSelected = function () {
-          return void 0;
-        };
-
-        choice.updateDisabled = function () {
-          return void 0;
-        };
-
-        choice.choiceElement = null;
-        choice.choiceElementAttach = null;
-        choice.setVisible = null;
-        choice.setHoverIn = null;
-        choice.remove = null;
-
-        choice.dispose = function () {
-          choice.dispose = null;
-        };
-      }
-
       var origInsertChoiceItem = choiceFactoryAspect.insertChoiceItem;
       var origPushChoiceItem = choiceFactoryAspect.pushChoiceItem;
 
@@ -2999,75 +2972,93 @@
         }
       };
 
+      var origIsSelectable = optionAspect.isSelectable;
+
+      optionAspect.isSelectable = function (choice) {
+        return origIsSelectable(choice) && !choice.isOptionHidden;
+      };
+
+      var origСreateChoice = optionAspect.createChoice;
+
+      optionAspect.createChoice = function (option) {
+        var choice = origСreateChoice(option);
+        choice.isOptionHidden = getIsOptionHidden(option);
+        return choice;
+      };
+
       return {
         buildApi: function buildApi(api) {
-          var origIsSelectable = optionAspect.isSelectable;
-
-          optionAspect.isSelectable = function (choice) {
-            return origIsSelectable(choice) && !choice.isOptionHidden;
-          };
-
-          function updateHidden(choice) {
-            if (choice.isOptionHidden) {
-              filterListAspect.remove(choice);
-              choice.remove();
-              buildHiddenChoice(choice);
-            } else {
-              var nextChoice = getNextNonHidden(choice);
-              filterListAspect.add(choice, nextChoice);
-              choicesElementAspect.buildChoiceElement(choice, function (c, e) {
-                return multiSelectInputAspect.adoptChoiceElement(c, e);
-              }, function (o, s) {
-                return multiSelectInputAspect.handleOnRemoveButton(o, s);
-              });
-              choice.choiceElementAttach(nextChoice == null ? void 0 : nextChoice.choiceElement);
-            }
-          }
-
           api.updateHidden = function (c) {
-            return updateHidden(c);
+            return updateHidden(c, filterListAspect, choicesElementAspect, multiSelectInputAspect);
           };
 
-          function UpdateOptionHidden(key) {
-            var choice = choices.get(key);
-            updateHiddenChoice(choice, function (c) {
-              return updateHidden(c);
-            }, getIsOptionHidden);
-          }
-
-          function UpdateOptionsHidden() {
-            var options = dataSourceAspect.getOptions();
-
-            for (var i = 0; i < options.length; i++) {
-              UpdateOptionHidden(i);
-            }
-          }
-
-          api.UpdateOptionsHidden = function () {
-            return UpdateOptionsHidden();
+          api.updateOptionsHidden = function () {
+            return updateOptionsHidden(dataSourceAspect, choices, getIsOptionHidden, filterListAspect, choicesElementAspect, multiSelectInputAspect);
           };
 
-          api.UpdateOptionHidden = function (key) {
-            return UpdateOptionHidden(key);
-          };
-
-          var origСreateChoice = optionAspect.createChoice;
-
-          optionAspect.createChoice = function (option) {
-            var choice = origСreateChoice(option);
-            choice.isOptionHidden = getIsOptionHidden(option);
-            return choice;
+          api.updateOptionHidden = function (key) {
+            return updateOptionHidden(key, choices, getIsOptionHidden, filterListAspect, choicesElementAspect, multiSelectInputAspect);
           };
         }
       };
     }
 
-    function updateHiddenChoice(choice, updateHidden, getIsOptionHidden) {
+    function updateHidden(choice, filterListAspect, choicesElementAspect, multiSelectInputAspect) {
+      if (choice.isOptionHidden) {
+        filterListAspect.remove(choice);
+        choice.remove();
+        buildHiddenChoice(choice);
+      } else {
+        var nextChoice = getNextNonHidden(choice);
+        filterListAspect.add(choice, nextChoice);
+        choicesElementAspect.buildChoiceElement(choice, function (c, e) {
+          return multiSelectInputAspect.adoptChoiceElement(c, e);
+        }, function (o, s) {
+          return multiSelectInputAspect.handleOnRemoveButton(o, s);
+        });
+        choice.choiceElementAttach(nextChoice == null ? void 0 : nextChoice.choiceElement);
+      }
+    }
+
+    function buildHiddenChoice(choice) {
+      choice.updateSelected = function () {
+        return void 0;
+      };
+
+      choice.updateDisabled = function () {
+        return void 0;
+      };
+
+      choice.choiceElement = null;
+      choice.choiceElementAttach = null;
+      choice.setVisible = null;
+      choice.setHoverIn = null;
+      choice.remove = null;
+
+      choice.dispose = function () {
+        choice.dispose = null;
+      };
+    }
+
+    function updateOptionHidden(key, choices, getIsOptionHidden, filterListAspect, choicesElementAspect, multiSelectInputAspect) {
+      var choice = choices.get(key);
+      updateHiddenChoice(choice, getIsOptionHidden, filterListAspect, choicesElementAspect, multiSelectInputAspect);
+    }
+
+    function updateOptionsHidden(dataSourceAspect, choices, getIsOptionHidden, filterListAspect, choicesElementAspect, multiSelectInputAspect) {
+      var options = dataSourceAspect.getOptions();
+
+      for (var i = 0; i < options.length; i++) {
+        updateOptionHidden(i, choices, getIsOptionHidden, filterListAspect, choicesElementAspect, multiSelectInputAspect);
+      }
+    }
+
+    function updateHiddenChoice(choice, getIsOptionHidden, filterListAspect, choicesElementAspect, multiSelectInputAspect) {
       var newIsOptionHidden = getIsOptionHidden(choice.option);
 
       if (newIsOptionHidden != choice.isOptionHidden) {
         choice.isOptionHidden = newIsOptionHidden;
-        updateHidden(choice);
+        updateHidden(choice, filterListAspect, choicesElementAspect, multiSelectInputAspect);
       }
     }
 
@@ -3193,26 +3184,30 @@
     function JQueryMethodsPlugin(pluginData) {
       var staticDom = pluginData.staticDom,
           choicesDom = pluginData.choicesDom,
-          filterDom = pluginData.filterDom;
+          filterDom = pluginData.filterDom,
+          picks = pluginData.picks;
       return {
         buildApi: function buildApi(api) {
-          api.GetContainer = function () {
+          api.getContainer = function () {
             return staticDom.containerElement;
           };
 
-          api.GetChoices = function () {
+          api.getChoices = function () {
             return choicesDom.choicesElement;
           };
 
-          api.GetFilterInput = function () {
+          api.getFilterInput = function () {
             return filterDom.filterInputElement;
           };
 
-          api.PicksCount = function () {
-            return api.picks.getCount();
+          api.getPicks = function () {
+            return picksDom.picksElement;
           };
 
-          api.staticContent = api.popupAspect; // depricated support
+          api.picksCount = function () {
+            return picks.getCount();
+          }; //api.staticContent = popupAspect; // depricated, alternative accept to popupAspect.setChoicesVisible
+
         }
       };
     }
@@ -3226,12 +3221,12 @@
           multiSelectInputAspect = pluginData.multiSelectInputAspect;
       return {
         buildApi: function buildApi(api) {
-          api.SetOptionSelected = function (key, value) {
+          api.setOptionSelected = function (key, value) {
             var choice = choices.get(key);
             optionAspect.setOptionSelected(choice, value);
           };
 
-          api.UpdateOptionSelected = function (key) {
+          api.updateOptionSelected = function (key) {
             var choice = choices.get(key); // TODO: generalize index as key
 
             var newIsSelected = dataSourceAspect.getSelected(choice.option);
@@ -3242,7 +3237,7 @@
             }
           };
 
-          api.UpdateOptionDisabled = function (key) {
+          api.updateOptionDisabled = function (key) {
             var choice = choices.get(key); // TODO: generalize index as key 
 
             var newIsDisabled = dataSourceAspect.getDisabled(choice.option);
@@ -3253,7 +3248,7 @@
             }
           };
 
-          api.UpdateOptionAdded = function (key) {
+          api.updateOptionAdded = function (key) {
             // TODO: generalize index as key 
             var options = dataSourceAspect.getOptions();
             var option = options[key];
@@ -3266,7 +3261,7 @@
             });
           };
 
-          api.UpdateOptionRemoved = function (key) {
+          api.updateOptionRemoved = function (key) {
             // TODO: generalize index as key 
             multiSelectInputAspect.hideChoices(); // always hide 1st, then reset filter
 

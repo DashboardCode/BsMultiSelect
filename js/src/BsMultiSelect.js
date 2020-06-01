@@ -247,19 +247,15 @@ export function BsMultiSelect(element, environment, configuration, onInit){
         choices.dispose,
         staticManager.dispose, popupAspect.dispose, picksDom.dispose, filterDom.dispose, filterAspect.dispose );
     
-    api.updateDisabled = disabledComponentAspect.updateDisabledComponent;
     api.updateData = updateDataAspect.updateData;
-
     api.update = () => {
         updateDataAspect.updateData();
         appearanceAspect.updateAppearance();
     }
+    api.updateAppearance = appearanceAspect.updateAppearance
+    api.updateDisabled = disabledComponentAspect.updateDisabledComponent;
 
-    api.updateAppearance = () => {
-        appearanceAspect.updateAppearance();    
-    }
-
-    onInit?.(api);
+    onInit?.(api, pluginData);
        
     picksDom.pickFilterElement.appendChild(filterDom.filterInputElement);
     picksDom.picksElement.appendChild(picksDom.pickFilterElement); 

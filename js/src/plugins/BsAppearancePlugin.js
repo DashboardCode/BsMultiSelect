@@ -109,16 +109,14 @@ export function BsAppearancePlugin(pluginData){
 
     return {
         buildApi(api){
-            
-            api.UpdateSize = updateSize;
-            api.UpdateValidity = ()=> getManualValidationObservable.call();
-            api.UpdateWasValidated = ()=>wasUpdatedObservable.call();
-            
-            return /* dispose */() => {
-                wasUpdatedObservable.detachAll();
-                validationObservable.detachAll();
-                getManualValidationObservable.detachAll();
-            }
+            api.updateSize = updateSize;
+            api.updateValidity = ()=> getManualValidationObservable.call();
+            api.updateWasValidated = ()=>wasUpdatedObservable.call();
+        },
+        dispose(){
+            wasUpdatedObservable.detachAll();
+            validationObservable.detachAll();
+            getManualValidationObservable.detachAll();
         }
     }
 }

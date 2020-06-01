@@ -3,12 +3,12 @@ export function OptionsApiPlugin(pluginData){
     return {
         buildApi(api){
 
-            api.SetOptionSelected = (key, value) => {
+            api.setOptionSelected = (key, value) => {
                 let choice = choices.get(key);
                 optionAspect.setOptionSelected(choice, value);
             }
         
-            api.UpdateOptionSelected = (key) => {
+            api.updateOptionSelected = (key) => {
                 let choice = choices.get(key); // TODO: generalize index as key
                 let newIsSelected = dataSourceAspect.getSelected(choice.option);
                 if (newIsSelected != choice.isOptionSelected)
@@ -18,7 +18,7 @@ export function OptionsApiPlugin(pluginData){
                 }
             }
         
-            api.UpdateOptionDisabled = (key)=>{
+            api.updateOptionDisabled = (key)=>{
                 let choice = choices.get(key); // TODO: generalize index as key 
                 let newIsDisabled = dataSourceAspect.getDisabled(choice.option);
                 if (newIsDisabled != choice.isOptionDisabled)
@@ -28,7 +28,7 @@ export function OptionsApiPlugin(pluginData){
                 }
             }
         
-            api.UpdateOptionAdded = (key)=>{  // TODO: generalize index as key 
+            api.updateOptionAdded = (key)=>{  // TODO: generalize index as key 
                 let options = dataSourceAspect.getOptions();
                 let option = options[key];
                 let choice = optionAspect.createChoice(option);
@@ -40,7 +40,7 @@ export function OptionsApiPlugin(pluginData){
                     )
             }
         
-            api.UpdateOptionRemoved = (key)=>{ // TODO: generalize index as key 
+            api.updateOptionRemoved = (key)=>{ // TODO: generalize index as key 
                 multiSelectInputAspect.hideChoices(); // always hide 1st, then reset filter
                 manageableResetFilterListAspect.resetFilter();
                 

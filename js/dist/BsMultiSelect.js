@@ -273,7 +273,6 @@ export function BsMultiSelect(element, environment, configuration, onInit) {
   };
   pluginManager.buildApi(api);
   api.dispose = composeSync(multiSelectInputAspect.hideChoices, pluginManager.dispose, picks.dispose, multiSelectInputAspect.dispose, choices.dispose, staticManager.dispose, popupAspect.dispose, picksDom.dispose, filterDom.dispose, filterAspect.dispose);
-  api.updateDisabled = disabledComponentAspect.updateDisabledComponent;
   api.updateData = updateDataAspect.updateData;
 
   api.update = function () {
@@ -281,11 +280,9 @@ export function BsMultiSelect(element, environment, configuration, onInit) {
     appearanceAspect.updateAppearance();
   };
 
-  api.updateAppearance = function () {
-    appearanceAspect.updateAppearance();
-  };
-
-  onInit == null ? void 0 : onInit(api);
+  api.updateAppearance = appearanceAspect.updateAppearance;
+  api.updateDisabled = disabledComponentAspect.updateDisabledComponent;
+  onInit == null ? void 0 : onInit(api, pluginData);
   picksDom.pickFilterElement.appendChild(filterDom.filterInputElement);
   picksDom.picksElement.appendChild(picksDom.pickFilterElement);
   staticManager.appendToContainer();
