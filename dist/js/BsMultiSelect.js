@@ -1,5 +1,5 @@
 /*!
-  * DashboardCode BsMultiSelect v0.6.1 (https://dashboardcode.github.io/BsMultiSelect/)
+  * DashboardCode BsMultiSelect v0.6.2 (https://dashboardcode.github.io/BsMultiSelect/)
   * Copyright 2017-2020 Roman Pokrovskij (github user rpokrovskij)
   * Licensed under APACHE 2 (https://github.com/DashboardCode/BsMultiSelect/blob/master/LICENSE)
   */
@@ -855,7 +855,7 @@
 
     function PickDomFactory(css, componentAspect) {
       return {
-        create: function create(pickElement, remove, choice) {
+        create: function create(pickElement, choice, remove) {
           var eventBinder = EventBinder();
           pickElement.innerHTML = '<span></span><button aria-label="Remove" tabIndex="-1" type="button"><span aria-hidden="true">&times;</span></button>';
           var pickContentElement = pickElement.querySelector('SPAN');
@@ -1692,7 +1692,7 @@
 
           var remove = handleOnRemoveButton(setSelectedFalse);
 
-          var _pickDomFactory$creat = pickDomFactory.create(pickElement, remove, choice),
+          var _pickDomFactory$creat = pickDomFactory.create(pickElement, choice, remove),
               pickDomManager = _pickDomFactory$creat.pickDomManager;
 
           var pickHandlers = pickDomManager.init();

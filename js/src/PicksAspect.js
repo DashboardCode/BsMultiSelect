@@ -7,7 +7,7 @@ export function PicksAspect(picksDom, pickDomFactory,
             let { pickElement, attach, detach } = picksDom.createPickElement(); 
             let setSelectedFalse = () => choiceAspect.setOptionSelected(choice, false)
             let remove = handleOnRemoveButton(setSelectedFalse);
-            let {pickDomManager} = pickDomFactory.create(pickElement, remove, choice); 
+            let {pickDomManager} = pickDomFactory.create(pickElement, choice, remove); 
             let pickHandlers = pickDomManager.init();
 
             var pick = {
