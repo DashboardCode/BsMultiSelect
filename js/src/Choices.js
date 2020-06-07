@@ -1,23 +1,9 @@
 export function Choices(collection, listFacade_reset, listFacade_remove, addFilterFacade, insertFilterFacade) 
 {
-
-    var push = (choice) => {
-        addFilterFacade(choice);
-        collection.push(choice);
-    }
-
-    var item = {
-        push,
+    return {
+        push: (choice) => push(choice, collection, addFilterFacade),
+        insert: (key, choice) => insert(key, choice, collection, addFilterFacade, insertFilterFacade),
         get: (key) => collection.get(key),
-        insert: (key, choice) => {
-            if (key>=collection.getLength()) {
-                push(choice);
-            }
-            else {
-                collection.add(choice, key);
-                insertFilterFacade(choice);
-            }
-        },
         remove: (key) => {
             var choice = collection.remove(key);
             listFacade_remove(choice);
@@ -25,9 +11,8 @@ export function Choices(collection, listFacade_reset, listFacade_remove, addFilt
         },
 
         //  ---- dialog AI
-        getHead: () => collection.getHead(),
-        forLoop: (f)=>collection.forLoop(f),
-        
+        getHead: ()  => collection.getHead(),
+        forLoop: (f) => collection.forLoop(f),
         
         clear:()=>{
             collection.reset();
@@ -35,5 +20,19 @@ export function Choices(collection, listFacade_reset, listFacade_remove, addFilt
         }, 
         dispose: () => collection.forLoop(choice => choice.dispose?.()) 
     }
-    return item;
+}
+
+function push(choice, collection, addFilterFacade){
+    addFilterFacade(choice);
+    collection.push(choice);
+}
+
+function insert(key, choice, collection, addFilterFacade, insertFilterFacade){
+    if (key>=collection.getLength()) {
+        push(choice, collection, addFilterFacade);
+    }
+    else {
+        collection.add(choice, key);
+        insertFilterFacade(choice);
+    }
 }

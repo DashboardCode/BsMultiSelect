@@ -28,6 +28,10 @@ import {adjustLegacySettings} from './BsMultiSelectDepricatedParameters'
 import {createCss} from './ToolsStyling';
 import {extendIfUndefined, composeSync} from './ToolsJs';
 
+import  {EventBinder} from './ToolsDom';
+import  {addStyling, toggleStyling} from './ToolsStyling';
+
+
 (
     (window, $, Popper) => {
         const defaults = {containerClass : "dashboardcode-bsmultiselect", css: css}
@@ -69,6 +73,8 @@ import {extendIfUndefined, composeSync} from './ToolsJs';
 
         initiateDefaults(defaultPlugins, defaults);
         prototypable.defaults = defaults;
+
+        prototypable.tools = {EventBinder, addStyling, toggleStyling}
     }
 )(window, $, Popper)
 

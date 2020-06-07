@@ -1,4 +1,10 @@
-export function DataSourceAspect(options, getSelected, setSelected, getDisabled){
+export function OptionsAspect(options){
+    return {
+        getOptions : () => options
+    }
+}
+
+export function OptionPropertiesAspect( getSelected, setSelected, getDisabled){
     if (!getSelected){
         getSelected = (option) => option.selected;
     }
@@ -12,7 +18,6 @@ export function DataSourceAspect(options, getSelected, setSelected, getDisabled)
     if (!getDisabled)
         getDisabled = option => (option.disabled===undefined) ? false : option.disabled;
     return {
-        getOptions : ()=> options,
         getSelected,
         setSelected,
         getDisabled

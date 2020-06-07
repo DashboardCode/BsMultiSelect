@@ -1,3 +1,6 @@
+import  {EventBinder} from '../ToolsDom';
+import  {addStyling, toggleStyling} from '../ToolsStyling';
+
 export function JQueryMethodsPlugin(pluginData){
     let {staticDom, choicesDom, filterDom, picks} = pluginData;
     return {
@@ -9,6 +12,8 @@ export function JQueryMethodsPlugin(pluginData){
             
             api.picksCount = () => picks.getCount();
             //api.staticContent = popupAspect; // depricated, alternative accept to popupAspect.setChoicesVisible
+
+            pluginData.jQueryMethodsPluginData = {EventBinder, addStyling, toggleStyling}
         }
     }
 }

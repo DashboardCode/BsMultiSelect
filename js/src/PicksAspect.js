@@ -1,30 +1,31 @@
 import {composeSync} from './ToolsJs';
 
-export function PicksAspect(picksDom, pickContentGenerator, 
-     componentAspect, dataSourceAspect, optionAspect, picks){
+export function PicksAspect(picksDom, pickDomFactory, 
+    choiceAspect, picks){
     return {
         createPick(choice, handleOnRemoveButton /* multiSelectInputAspect.handleOnRemoveButton */){
             let { pickElement, attach, detach } = picksDom.createPickElement(); 
-            let pickContent = pickContentGenerator(pickElement);
-            
+            let setSelectedFalse = () => choiceAspect.setOptionSelected(choice, false)
+            let remove = handleOnRemoveButton(setSelectedFalse);
+            let {pickDomManager} = pickDomFactory.create(pickElement, remove, choice); 
+            let pickHandlers = pickDomManager.init();
+
             var pick = {
-                disableRemove: () => pickContent.disableRemove(componentAspect.getDisabled()),
-                setData: () => pickContent.setData(choice.option),
-                disable: () => pickContent.disable(dataSourceAspect.getDisabled(choice.option) ),
-                remove: null,
+                updateRemoveDisabled: () => pickHandlers.updateRemoveDisabled(),
+                updateData: () => pickHandlers.updateData(),
+                updateDisabled: () => pickHandlers.updateDisabled(),
+                remove: setSelectedFalse,
                 dispose: () => { 
                     detach(); 
-                    pickContent.dispose(); 
-                    pick.disableRemove=null; pick.setData=null; pick.disable=null; pick.remove=null; 
+                    pickDomManager.dispose(); 
+                    pick.updateRemoveDisabled=null; pick.updateData=null; pick.updateDisabled=null; pick.remove=null; 
                     pick.dispose=null;  
                 }, 
             }
-            pick.setData();
-            pick.disableRemove();
             
             attach();
             let choiceUpdateDisabledBackup = choice.updateDisabled;
-            choice.updateDisabled = composeSync(choiceUpdateDisabledBackup, pick.disable);
+            choice.updateDisabled = composeSync(choiceUpdateDisabledBackup, pick.updateDisabled);
     
             var removeFromList = picks.addPick(pick);
             let removePick = () => {
@@ -34,10 +35,7 @@ export function PicksAspect(picksDom, pickContentGenerator,
                 choice.updateDisabled = choiceUpdateDisabledBackup; 
                 choice.updateDisabled(); // make "true disabled" without it checkbox looks disabled
             }
-            let setSelectedFalse = () => optionAspect.setOptionSelected(choice, false)
-            pick.remove = setSelectedFalse;
-        
-            handleOnRemoveButton(pickContent.onRemove, setSelectedFalse);
+            
             return removePick;
         }
     }

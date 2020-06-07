@@ -34,7 +34,7 @@ export function toggleStyling(element, styling){
             }
         } else {
             if (isOn===true){
-                removeStyling(element,backupStyling);
+                removeStyling(element, backupStyling);
                 isOn=false;
             }
         }

@@ -3,8 +3,8 @@ import {addStyling} from '../ToolsStyling'
 import {ObservableLambda, composeSync} from '../ToolsJs';
 
 export function BsAppearancePlugin(pluginData){
-    let {configuration, common, validationApiPluginData, 
-        picksDom, staticDom, labelPluginData, appearanceAspect} = pluginData;
+    let {configuration, validationApiPluginData, 
+        picksDom, staticDom, labelPluginData, appearanceAspect, componentAspect} = pluginData;
     let {getValidity, getSize, useCssPatch, css} = configuration;
     let selectElement = staticDom.selectElement;
     
@@ -36,8 +36,8 @@ export function BsAppearancePlugin(pluginData){
             getSize = () => null
     }
 
-    common.getSize=getSize;
-    common.getValidity=getValidity;
+    componentAspect.getSize=getSize;
+    componentAspect.getValidity=getValidity;
 
     var updateSize;
     if (!useCssPatch){

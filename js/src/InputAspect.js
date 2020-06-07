@@ -1,5 +1,5 @@
 export function InputAspect(
-    filterListAspect, optionAspect, filterDom, 
+    filterListAspect, choiceAspect, filterDom, 
     popupAspect, choicesHover){
 
     return {
@@ -21,7 +21,7 @@ export function InputAspect(
                     let fullMatchChoice =  filterListAspect.getHead();
                     if (fullMatchChoice.searchText == text)
                     {
-                        optionAspect.setOptionSelected(fullMatchChoice, true);
+                        choiceAspect.setOptionSelected(fullMatchChoice, true);
                         filterDom.setEmpty();
                         isEmpty=true;
                     }

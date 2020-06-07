@@ -4,7 +4,7 @@ export function StaticDomFactory(createElement, choicesElement){
     return {
         createElement,
         choicesElement,
-        staticDomGenerator(element, containerClass){
+        create(element, containerClass){
             function showError(message){
                 element.style.backgroundColor = 'red';
                 element.style.color = 'white';

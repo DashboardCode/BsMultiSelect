@@ -2,8 +2,8 @@ import {PluginManager, staticDomDefaults} from './PluginManager'
 
 import {composeSync, def} from './ToolsJs';
 
-import {pickContentGenerator as defPickContentGenerator} from './PickContentGenerator';
-import {choiceContentGenerator as defChoiceContentGenerator} from './ChoiceContentGenerator';
+import {PickDomFactory} from './PickDomFactory';
+import {ChoiceDomFactory} from './ChoiceDomFactory';
 
 import {StaticDomFactory} from './StaticDomFactory';
 
@@ -14,7 +14,7 @@ import {ChoicesDom} from './ChoicesDom';
 import {PopupAspect as DefaultPopupAspect} from './PopupAspect';
 
 import {ComponentAspect} from './ComponentAspect';
-import {DataSourceAspect} from './DataSourceAspect';
+import {OptionsAspect, OptionPropertiesAspect} from './OptionsAspect';
 
 import {DoublyLinkedCollection} from './ToolsJs'
 
@@ -22,7 +22,8 @@ import {FilterListAspect, ChoicesGetNextAspect, ChoicesEnumerableAspect } from '
 import {ChoicesElementAspect, ChoiceFactoryAspect, ChoicesAspect } from './ChoicesAspect'
 import {UpdateDataAspect } from './UpdateDataAspect'
 
-import {OptionToggleAspect, OptionAspect} from './OptionAspect.js'
+import {OptionToggleAspect} from './OptionToggleAspect'
+import {ChoiceAspect} from './ChoiceAspect.js'
 import {Choices} from './Choices'
 import {ChoicesHover} from './ChoicesHover'
 import {Picks} from './Picks'
@@ -45,17 +46,15 @@ export function BsMultiSelect(element, environment, configuration, onInit){
     let { containerClass, css, 
           options, getDisabled,  
           getSelected, setSelected, 
-          getIsOptionDisabled, common } = configuration;
+          getIsOptionDisabled} = configuration;
     
-    if (!common) 
-        common = {}
 
     let componentAspect  = ComponentAspect(getDisabled, trigger);
-    common.getDisabled = componentAspect.getDisabled;
-    
-    let dataSourceAspect = DataSourceAspect(options, getSelected, setSelected, getIsOptionDisabled); 
-    let optionAspect = OptionAspect(dataSourceAspect)
-    let optionToggleAspect = OptionToggleAspect(optionAspect)
+   
+    let optionsAspect = OptionsAspect(options); 
+    let optionPropertiesAspect = OptionPropertiesAspect(getSelected, setSelected, getIsOptionDisabled);
+    let choiceAspect = ChoiceAspect(optionPropertiesAspect)
+    let optionToggleAspect = OptionToggleAspect(choiceAspect)
 
           
     let PopupAspect = def(configuration.staticContentGenerator, DefaultPopupAspect); // TODO: rename configuration.staticContentGenerator
@@ -63,9 +62,9 @@ export function BsMultiSelect(element, environment, configuration, onInit){
     
     let choicesDom = ChoicesDom(createElement, css);
     let staticDomFactory = StaticDomFactory(createElement, choicesDom.choicesElement);
-    staticDomDefaults(plugins, staticDomFactory); // manipulates with staticDomFactory.staticDomGenerator
+    staticDomDefaults(plugins, staticDomFactory); // manipulates with staticDomFactory.create
    
-    let {staticDom, staticManager} = staticDomFactory.staticDomGenerator(element, containerClass)
+    let {staticDom, staticManager} = staticDomFactory.create(element, containerClass)
 
     let filterDom = FilterDom(staticDom.disposablePicksElement, createElement, css)
     // TODO get picksDom  from staticDomFactory
@@ -102,20 +101,22 @@ export function BsMultiSelect(element, environment, configuration, onInit){
     
     let choicesHover = ChoicesHover((down, hoveredChoice)=>filterListAspect.navigate(down, hoveredChoice));
 
-    let inputAspect = InputAspect(filterListAspect, optionAspect, filterDom, popupAspect, choicesHover);
+    let inputAspect = InputAspect(filterListAspect, choiceAspect, filterDom, popupAspect, choicesHover);
 
     let picks = Picks();
-    let pickContentGenerator = def(configuration.pickContentGenerator, defPickContentGenerator);
+    
+    let pickDomFactory = PickDomFactory(css, componentAspect);
     let picksAspect = PicksAspect(
         picksDom, 
-        (pickElement) => pickContentGenerator(pickElement, common, css),
-        componentAspect, dataSourceAspect, optionAspect, picks, manageableResetFilterListAspect
+        pickDomFactory,
+        choiceAspect, picks, manageableResetFilterListAspect
     );
 
-    let choiceContentGenerator = def(configuration.choiceContentGenerator, defChoiceContentGenerator);
-    let choicesElementAspect = ChoicesElementAspect( choicesDom, filterDom, (choiceElement, toggle) => choiceContentGenerator(choiceElement, common, css, toggle), componentAspect, optionToggleAspect, picksAspect)
+    let choiceDomFactory = ChoiceDomFactory(css);
+    
+    let choicesElementAspect = ChoicesElementAspect( choicesDom, filterDom, choiceDomFactory, componentAspect, optionToggleAspect, picksAspect)
     let choiceFactoryAspect =  ChoiceFactoryAspect(choicesElementAspect, choicesGetNextAspect);
-    let choicesAspect = ChoicesAspect(window.document, optionAspect, dataSourceAspect, choices, choiceFactoryAspect);
+    let choicesAspect = ChoicesAspect(window.document, choiceAspect, optionsAspect, choices, choiceFactoryAspect);
 
     let multiSelectInputAspect =  MultiSelectInputAspect(
         window,
@@ -141,7 +142,7 @@ export function BsMultiSelect(element, environment, configuration, onInit){
     function hoveredToSelected(){
         let hoveredChoice = choicesHover.getHoveredChoice();
         if (hoveredChoice){
-            var wasToggled = optionToggleAspect.toggleOptionSelected(hoveredChoice);
+            var wasToggled = optionToggleAspect.toggle(hoveredChoice);
             if (wasToggled) {
                 multiSelectInputAspect.hideChoices();
                 manageableResetFilterListAspect.resetFilter();
@@ -212,10 +213,12 @@ export function BsMultiSelect(element, environment, configuration, onInit){
     let updateDataAspect = UpdateDataAspect(multiSelectInputAspect, manageableResetFilterListAspect,
         choicesDom, choices, picks, choicesAspect);
 
-    let pluginData = {environment, trigger, configuration, dataSourceAspect, componentAspect, 
+    
+    let pluginData = {environment, trigger, configuration, optionsAspect, componentAspect, 
+        pickDomFactory, choiceDomFactory,
         staticDom, picksDom, choicesDom, popupAspect, staticManager, 
         choicesGetNextAspect, choicesEnumerableAspect, filterListAspect, choices, choicesHover, picks,
-        optionAspect, optionToggleAspect,
+        choiceAspect, optionPropertiesAspect, optionToggleAspect,
         choicesElementAspect, choiceFactoryAspect, choicesAspect,
         picksAspect,
         filterDom,
@@ -228,8 +231,7 @@ export function BsMultiSelect(element, environment, configuration, onInit){
         disabledComponentAspect,
         appearanceAspect,
         loadAspect,
-        updateDataAspect,
-        common // TODO: replace common with something new? 
+        updateDataAspect
     } 
     
     

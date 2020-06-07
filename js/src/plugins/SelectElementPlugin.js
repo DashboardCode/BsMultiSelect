@@ -2,7 +2,7 @@ import {closestByTagName, findDirectChildByTagName, closestByClassName} from '..
 import {composeSync} from '../ToolsJs';
 
 export function SelectElementPlugin(pluginData){
-    let {staticManager, staticDom, configuration, trigger, componentAspect, dataSourceAspect} = pluginData;
+    let {staticManager, staticDom, configuration, trigger, componentAspect, optionsAspect, optionPropertiesAspect} = pluginData;
     var backupDisplay = null;
     let selectElement = staticDom.selectElement;
     if (selectElement){ 
@@ -34,9 +34,9 @@ export function SelectElementPlugin(pluginData){
             trigger('change')
             trigger('dashboardcode.multiselect:change')
         }
-        dataSourceAspect.getOptions = () => selectElement.options;
+        optionsAspect.getOptions = () => selectElement.options;
         if (!getIsOptionDisabled)
-            dataSourceAspect.getDisabled = option => option.disabled;
+            optionPropertiesAspect.getDisabled = option => option.disabled;
 
         // if (!setSelected){
         //     setSelected = (option, value) => {option.selected = value};
@@ -60,8 +60,8 @@ export function SelectElementPlugin(pluginData){
 }
 
 SelectElementPlugin.staticDomDefaults = (staticDomFactory)=>{
-    let { choicesElement, createElement, staticDomGenerator:origStaticDomGenerator} = staticDomFactory;
-    staticDomFactory.staticDomGenerator = (element, containerClass) =>
+    let { choicesElement, createElement, create:origCreate} = staticDomFactory;
+    staticDomFactory.create = (element, containerClass) =>
     {
         let selectElement = null;
         let containerElement = null;
@@ -82,7 +82,7 @@ SelectElementPlugin.staticDomDefaults = (staticDomFactory)=>{
                         picksElement = findDirectChildByTagName(containerElement, 'UL');
                 }
             } else {
-                return origStaticDomGenerator(element, containerClass);
+                return origCreate(element, containerClass);
             } 
         }
         let disposableContainerElement = false;

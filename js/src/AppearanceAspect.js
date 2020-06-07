@@ -26,7 +26,7 @@ export function LoadAspect(choicesAspect, multiSelectInputAspect, appearanceAspe
         load(){
             choicesAspect.updateDataImpl(
                 (c,e) => multiSelectInputAspect.adoptChoiceElement(c,e),
-                (o,s) => multiSelectInputAspect.handleOnRemoveButton(o,s)
+                (s) => multiSelectInputAspect.handleOnRemoveButton(s)
             );
             appearanceAspect.updateAppearance(); 
         }

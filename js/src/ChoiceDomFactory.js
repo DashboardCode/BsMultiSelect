@@ -1,0 +1,70 @@
+import  {EventBinder} from './ToolsDom';
+import  {addStyling, toggleStyling} from './ToolsStyling';
+
+export function ChoiceDomFactory(css){
+    return {
+        create(choiceElement, choice, toggle){
+            choiceElement.innerHTML = '<div><input formnovalidate type="checkbox"><label></label></div>';
+            let choiceContentElement = choiceElement.querySelector('DIV');
+            let choiceCheckBoxElement = choiceContentElement.querySelector('INPUT');
+            let choiceLabelElement = choiceContentElement.querySelector('LABEL');
+            let eventBinder = EventBinder();
+            eventBinder.bind(choiceElement, "click",  toggle);
+            
+            return {
+                choiceDom:{
+                    choiceContentElement,
+                    choiceCheckBoxElement,
+                    choiceLabelElement
+                },
+                choiceDomManager:{
+                    init(){
+                        addStyling(choiceContentElement, css.choiceContent); 
+                        addStyling(choiceCheckBoxElement, css.choiceCheckBox); 
+                        addStyling(choiceLabelElement, css.choiceLabel); 
+            
+                        let choiceSelectedToggle = toggleStyling(choiceElement, css.choice_selected);
+                        let choiceDisabledToggle = toggleStyling(choiceElement, css.choice_disabled);
+                        let choiceHoverToggle = toggleStyling(choiceElement, css.choice_hover);
+            
+                        let choiceCheckBoxDisabledToggle = toggleStyling(choiceCheckBoxElement, css.choiceCheckBox_disabled)
+                        let choiceLabelDisabledToggle = toggleStyling(choiceLabelElement, css.choiceLabel_disabled)
+            
+                        function updateData() {
+                            choiceLabelElement.textContent = choice.option.text;
+                        }
+                        function updateSelected(){ 
+                            choiceSelectedToggle(choice.isOptionSelected);
+                            choiceCheckBoxElement.checked = choice.isOptionSelected;
+                        }
+                        function updateDisabled(){
+                            choiceDisabledToggle(choice.isOptionDisabled)
+                            choiceCheckBoxDisabledToggle(choice.isOptionDisabled)
+                            choiceLabelDisabledToggle(choice.isOptionDisabled)
+            
+                            // do not desable checkBox if option is selected! there should be possibility to unselect "disabled"
+                            choiceCheckBoxElement.disabled = choice.isOptionDisabled && !choice.isOptionSelected;
+                        }
+                        updateData();
+                        updateSelected();
+                        updateDisabled();
+
+                        return{
+                            updateData,
+                            updateSelected, 
+                            updateDisabled,
+                            updateHoverIn(){
+                                choiceHoverToggle(choice.isHoverIn);
+                            },
+                        }
+                    },
+                    dispose(){
+                        eventBinder.unbind();
+                    }
+                }
+                
+            }
+        }
+    }
+}
+

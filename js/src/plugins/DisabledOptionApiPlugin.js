@@ -1,16 +1,16 @@
 export function DisabledOptionApiPlugin(pluginData){
-    let {choices, dataSourceAspect} = pluginData;
+    let {choices, optionPropertiesAspect} = pluginData;
     return {
         buildApi(api){
-            api.updateOptionsDisabled = () => updateOptionsDisabled(choices, dataSourceAspect)
+            api.updateOptionsDisabled = () => updateOptionsDisabled(choices, optionPropertiesAspect)
         }
     };
 }
 
-function updateOptionsDisabled(choices, dataSourceAspect){
+function updateOptionsDisabled(choices, optionPropertiesAspect){
     choices.forLoop(
         choice => {
-            let newIsDisabled = dataSourceAspect.getDisabled(choice.option);
+            let newIsDisabled = optionPropertiesAspect.getDisabled(choice.option);
             if (newIsDisabled != choice.isOptionDisabled)
             {
                 choice.isOptionDisabled= newIsDisabled;

@@ -1,7 +1,7 @@
 export function ChoicesElementAspect(
     choicesDom,
     filterDom, 
-    choiceContentGenerator,
+    choiceDomFactory,
     componentAspect, 
     optionToggleAspect,
     picksAspect
@@ -15,18 +15,14 @@ export function ChoicesElementAspect(
             var {choiceElement, setVisible, attach, detach} = choicesDom.createChoiceElement();
             choice.choiceElement = choiceElement;
             choice.choiceElementAttach = attach;
-                    
-            let choiceContent = choiceContentGenerator(
+            let {choiceDomManager} = choiceDomFactory.create(
                 choiceElement, 
+                choice,
                 () => {
-                    optionToggleAspect.toggleOptionSelected(choice);
+                    optionToggleAspect.toggle(choice);
                     filterDom.setFocus();
-                }
-            );
-        
-            let updateSelectedChoiceContent = () => 
-                choiceContent.select(choice.isOptionSelected)
-        
+                });
+            let choiceHanlders = choiceDomManager.init();
             let pickTools = { updateSelectedTrue: null, updateSelectedFalse: null }
             let updateSelectedTrue = () => { 
                 var removePick = picksAspect.createPick(choice, handleOnRemoveButton);
@@ -44,7 +40,7 @@ export function ChoicesElementAspect(
             };
             
             choice.updateSelected = () => {
-                updateSelectedChoiceContent();
+                choiceHanlders.updateSelected();
                 if (choice.isOptionSelected)
                     pickTools.updateSelectedTrue();
                 else {
@@ -57,12 +53,10 @@ export function ChoicesElementAspect(
             var unbindChoiceElement = adoptChoiceElement(choice, choiceElement);
         
             choice.isFilteredIn = true;
-        
-            choiceContent.setData(choice.option);
             
             choice.setHoverIn = (v) => {
                 choice.isHoverIn =v ;
-                choiceContent.hoverIn(choice.isHoverIn);
+                choiceHanlders.updateHoverIn();
             }
         
             choice.setVisible = (v) => {
@@ -70,13 +64,11 @@ export function ChoicesElementAspect(
                 setVisible(choice.isFilteredIn)
             }
         
-            choice.updateDisabled = () => {
-                choiceContent.disable(choice.isOptionDisabled, choice.isOptionSelected); 
-            }
+            choice.updateDisabled = choiceHanlders.updateDisabled;
         
             choice.dispose = () => {
                 unbindChoiceElement();
-                choiceContent.dispose();
+                choiceDomManager.dispose();
     
                 choice.choiceElement = null;
                 choice.choiceElementAttach = null;
@@ -93,10 +85,8 @@ export function ChoicesElementAspect(
             }
         
             if (choice.isOptionSelected) {
-                updateSelectedChoiceContent();
                 updateSelectedTrue();
             }
-            choice.updateDisabled(); 
         }
     
     }
@@ -129,17 +119,17 @@ export function ChoiceFactoryAspect(choicesElementAspect, choicesGetNextAspect){
 }
 
 
-export function ChoicesAspect(document, optionAspect, dataSourceAspect, choices, choiceFactoryAspect) { 
+export function ChoicesAspect(document, choiceAspect, optionsAspect, choices, choiceFactoryAspect) { 
     return {
         updateDataImpl(
             adoptChoiceElement, // aspect.adoptChoiceElement
             handleOnRemoveButton
         ){
             var fillChoices = () => {
-                let options = dataSourceAspect.getOptions();
+                let options = optionsAspect.getOptions();
                 for(let i = 0; i<options.length; i++) {
                     let option = options[i];
-                    let choice = optionAspect.createChoice(option);
+                    let choice = choiceAspect.createChoice(option);
                     choices.push(choice);
                     choiceFactoryAspect.pushChoiceItem(
                         choice,

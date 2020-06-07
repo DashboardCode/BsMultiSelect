@@ -1,11 +1,12 @@
 import {ValidityApi} from '../ValidityApi'
-import {ObservableValue, ObservableLambda, defCall, isBoolean} from '../ToolsJs';
+import {ObservableValue, ObservableLambda, defCall, isBoolean, composeSync} from '../ToolsJs';
 import {getDataGuardedWithPrefix} from '../ToolsDom';
 
 const defValueMissingMessage = 'Please select an item in the list'
 
 export function ValidationApiPlugin(pluginData){
-    var {configuration, selectElementPluginData, staticDom, filterDom, componentAspect, dataSourceAspect, trigger} = pluginData;
+    var {configuration, selectElementPluginData, staticDom, filterDom, componentAspect, optionsAspect, trigger, updateDataAspect} = pluginData;
+    // TODO: required could be a function
     let {getIsValueMissing, valueMissingMessage, required} = configuration;
     if (!isBoolean(required))
         required = selectElementPluginData?.required; 
@@ -18,7 +19,7 @@ export function ValidationApiPlugin(pluginData){
     if (!getIsValueMissing) {
         getIsValueMissing = () => {
             let count = 0;
-            let optionsArray = dataSourceAspect.getOptions();
+            let optionsArray = optionsAspect.getOptions();
             for (var i=0; i < optionsArray.length; i++) {
                 if (optionsArray[i].selected) 
                     count++;
@@ -30,12 +31,8 @@ export function ValidationApiPlugin(pluginData){
     var isValueMissingObservable = ObservableLambda(()=>required && getIsValueMissing());
     var validationApiObservable  = ObservableValue(!isValueMissingObservable.getValue());
 
-    let origOnChange = componentAspect.onChange;
-    componentAspect.onChange = () => { 
-        isValueMissingObservable.call();
-        origOnChange(); 
-    };
-
+    componentAspect.onChange = composeSync(isValueMissingObservable.call, componentAspect.onChange);
+    updateDataAspect.updateData = composeSync(isValueMissingObservable.call, updateDataAspect.updateData);
     pluginData.validationApiPluginData = {validationApiObservable};
 
     var validationApi = ValidityApi(

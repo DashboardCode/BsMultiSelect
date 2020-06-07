@@ -14,7 +14,7 @@ export function UpdateDataAspect(multiSelectInputAspect, manageableResetFilterLi
     
             choicesAspect.updateDataImpl(
                 (c,e) => multiSelectInputAspect.adoptChoiceElement(c,e),
-                (o,s) => multiSelectInputAspect.handleOnRemoveButton(o,s)
+                (s) => multiSelectInputAspect.handleOnRemoveButton(s)
             );
         }
     }

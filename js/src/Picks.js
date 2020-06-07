@@ -17,7 +17,7 @@ export function Picks()
         isEmpty: list.isEmpty, // function
         getCount: list.getCount,
         disableRemoveAll(){
-            list.forEach(i=>i.disableRemove())
+            list.forEach(i=>i.updateRemoveDisabled())
         },
         removeAll(){
             list.forEach(i=>i.remove())
