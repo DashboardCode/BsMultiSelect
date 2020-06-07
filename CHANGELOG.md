@@ -1,5 +1,6 @@
 # CHANGELOG
 ````
+0.6.1 - PickDomFactory, ChoiceDomFactory
 0.6.0  - changes in api methods names (goes to tradional low case)
 0.5.68 - optimizations
 0.5.67 - optimizations
