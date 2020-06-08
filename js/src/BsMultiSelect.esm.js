@@ -20,6 +20,8 @@ import {FormRestoreOnBackwardPlugin} from './plugins/FormRestoreOnBackwardPlugin
 import {createCss} from './ToolsStyling';
 import {extendIfUndefined} from './ToolsJs';
 
+import {adjustLegacySettings} from './BsMultiSelectDepricatedParameters'
+
 const defaults = {containerClass : "dashboardcode-bsmultiselect", css: css}
 const defaultPlugins = [CssPatchPlugin, SelectElementPlugin, LabelPlugin, HiddenOptionPlugin, ValidationApiPlugin, 
     BsAppearancePlugin, FormResetPlugin, RtlPlugin, PlaceholderPlugin , OptionsApiPlugin, SelectAllApiPlugin,

@@ -1,5 +1,5 @@
 /*!
-  * DashboardCode BsMultiSelect v0.6.2 (https://dashboardcode.github.io/BsMultiSelect/)
+  * DashboardCode BsMultiSelect v0.6.3 (https://dashboardcode.github.io/BsMultiSelect/)
   * Copyright 2017-2020 Roman Pokrovskij (github user rpokrovskij)
   * Licensed under APACHE 2 (https://github.com/DashboardCode/BsMultiSelect/blob/master/LICENSE)
   */
@@ -1127,6 +1127,27 @@
       };
     }
 
+    /*
+    export function PopupFactory(choicesElement, filterInputElement, Popper){
+        return { 
+            create(){
+                choicesElement.style.display = 'none';
+
+                return {
+                    init(){ 
+                        //if (!!Popper.prototype && !!Popper.prototype.constructor.name) {
+                        popper = new Popper(filterInputElement, choicesElement, popperConfiguration);
+
+                        return {
+                            dispose() {
+                                popper.destroy();
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }*/
     function PopupAspect(choicesElement, filterInputElement, Popper) {
       choicesElement.style.display = 'none';
       var popper = null;
@@ -3709,7 +3730,21 @@
     (function (window, $, Popper) {
       var defaults = {
         containerClass: "dashboardcode-bsmultiselect",
-        css: css
+        css: css,
+        popperConfiguration: {
+          placement: 'bottom-start',
+          modifiers: {
+            preventOverflow: {
+              enabled: true
+            },
+            hide: {
+              enabled: false
+            },
+            flip: {
+              enabled: false
+            }
+          }
+        }
       };
       var defaultPlugins = [CssPatchPlugin, SelectElementPlugin, LabelPlugin, HiddenOptionPlugin, ValidationApiPlugin, BsAppearancePlugin, FormResetPlugin, RtlPlugin, PlaceholderPlugin, OptionsApiPlugin, SelectAllApiPlugin, JQueryMethodsPlugin, UpdateOptionsSelectedApiPlugin, FormRestoreOnBackwardPlugin, DisabledOptionApiPlugin];
 

@@ -31,10 +31,19 @@ import {extendIfUndefined, composeSync} from './ToolsJs';
 import  {EventBinder} from './ToolsDom';
 import  {addStyling, toggleStyling} from './ToolsStyling';
 
-
 (
     (window, $, Popper) => {
-        const defaults = {containerClass : "dashboardcode-bsmultiselect", css: css}
+        const defaults = {containerClass: "dashboardcode-bsmultiselect", 
+            css: css,              
+            popperConfiguration: {
+                placement: 'bottom-start',
+                modifiers: {
+                    preventOverflow: {enabled:true},
+                    hide: {enabled:false},
+                    flip: {enabled:false}
+                }
+            }
+        }
         let defaultPlugins = [CssPatchPlugin, SelectElementPlugin, LabelPlugin, HiddenOptionPlugin, ValidationApiPlugin, 
         BsAppearancePlugin, FormResetPlugin, RtlPlugin, PlaceholderPlugin , OptionsApiPlugin, SelectAllApiPlugin,
         JQueryMethodsPlugin, UpdateOptionsSelectedApiPlugin, FormRestoreOnBackwardPlugin,  DisabledOptionApiPlugin];

@@ -1,5 +1,6 @@
 # CHANGELOG
 ````
+0.6.3 - https://github.com/DashboardCode/BsMultiSelect/issues/26 resolved
 0.6.2 - changed argument order in PickDomFactory create (api)
 0.6.1 - PickDomFactory, ChoiceDomFactory
 0.6.0  - changes in api methods names (goes to tradional low case)
