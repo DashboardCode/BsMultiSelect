@@ -4,7 +4,10 @@ export function OptionsAspect(options){
     }
 }
 
-export function OptionPropertiesAspect( getSelected, setSelected, getDisabled){
+export function OptionPropertiesAspect(getText, getSelected, setSelected, getDisabled){
+    if (!getText){
+        getText = (option) => option.text;
+    }
     if (!getSelected){
         getSelected = (option) => option.selected;
     }
@@ -18,6 +21,7 @@ export function OptionPropertiesAspect( getSelected, setSelected, getDisabled){
     if (!getDisabled)
         getDisabled = option => (option.disabled===undefined) ? false : option.disabled;
     return {
+        getText,
         getSelected,
         setSelected,
         getDisabled

@@ -36,7 +36,7 @@ function createChoice(optionPropertiesAspect, option){
         // navigation and filter support
         filteredPrev: null, 
         filteredNext: null, 
-        searchText: option.text.toLowerCase().trim(), // TODO make an index abstraction
+        searchText: optionPropertiesAspect.getText(option).toLowerCase().trim(), // TODO make an index abstraction
     
         // internal state handlers, so they do not have "update semantics"
         isHoverIn: false,

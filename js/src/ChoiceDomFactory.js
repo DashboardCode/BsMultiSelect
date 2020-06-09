@@ -1,7 +1,7 @@
 import  {EventBinder} from './ToolsDom';
 import  {addStyling, toggleStyling} from './ToolsStyling';
 
-export function ChoiceDomFactory(css){
+export function ChoiceDomFactory(css, optionPropertiesAspect){
     return {
         create(choiceElement, choice, toggle){
             choiceElement.innerHTML = '<div><input formnovalidate type="checkbox"><label></label></div>';
@@ -10,7 +10,7 @@ export function ChoiceDomFactory(css){
             let choiceLabelElement = choiceContentElement.querySelector('LABEL');
             let eventBinder = EventBinder();
             eventBinder.bind(choiceElement, "click",  toggle);
-            
+            // TODO: explicit conditional styling 
             return {
                 choiceDom:{
                     choiceContentElement,
@@ -31,7 +31,7 @@ export function ChoiceDomFactory(css){
                         let choiceLabelDisabledToggle = toggleStyling(choiceLabelElement, css.choiceLabel_disabled)
             
                         function updateData() {
-                            choiceLabelElement.textContent = choice.option.text;
+                            choiceLabelElement.textContent = optionPropertiesAspect.getText(choice.option);
                         }
                         function updateSelected(){ 
                             choiceSelectedToggle(choice.isOptionSelected);

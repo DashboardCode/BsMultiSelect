@@ -1,17 +1,17 @@
 import {PluginManager, staticDomDefaults} from './PluginManager'
 
-import {composeSync, def} from './ToolsJs';
+import {composeSync} from './ToolsJs';
 
 import {PickDomFactory} from './PickDomFactory';
 import {ChoiceDomFactory} from './ChoiceDomFactory';
 
-import {StaticDomFactory} from './StaticDomFactory';
+import {StaticDomFactory, CreateElementAspect} from './StaticDomFactory';
 
 import {PicksDom} from './PicksDom';
 import {FilterDom} from './FilterDom';
 
-import {ChoicesDom} from './ChoicesDom';
-import {PopupAspect as DefaultPopupAspect} from './PopupAspect';
+import {ChoicesDomFactory} from './ChoicesDomFactory';
+import {PopupAspect} from './PopupAspect';
 
 import {ComponentAspect} from './ComponentAspect';
 import {OptionsAspect, OptionPropertiesAspect} from './OptionsAspect';
@@ -43,32 +43,36 @@ export function BsMultiSelect(element, environment, configuration, onInit){
         throw new Error("BsMultiSelect: Popper.js (https://popper.js.org) is required")
     }
 
+    let createElementAspect = CreateElementAspect(name => window.document.createElement(name));
+
     let { containerClass, css, 
-          options, getDisabled,  
-          getSelected, setSelected, 
-          getIsOptionDisabled} = configuration;
+          getDisabled,
+          options, 
+          getText, getSelected, getIsOptionDisabled,
+          setSelected
+        } = configuration;
     
-
+    let choicesDomFactory = ChoicesDomFactory(createElementAspect, css);
+    let staticDomFactory = StaticDomFactory(choicesDomFactory, createElementAspect);
     let componentAspect  = ComponentAspect(getDisabled, trigger);
-   
     let optionsAspect = OptionsAspect(options); 
-    let optionPropertiesAspect = OptionPropertiesAspect(getSelected, setSelected, getIsOptionDisabled);
-    let choiceAspect = ChoiceAspect(optionPropertiesAspect)
-    let optionToggleAspect = OptionToggleAspect(choiceAspect)
+    let optionPropertiesAspect = OptionPropertiesAspect(getText, getSelected, setSelected, getIsOptionDisabled);
+    let choiceAspect = ChoiceAspect(optionPropertiesAspect);
+    let optionToggleAspect = OptionToggleAspect(choiceAspect);
 
-          
-    let PopupAspect = def(configuration.staticContentGenerator, DefaultPopupAspect); // TODO: rename configuration.staticContentGenerator
-    let createElement =  name=>window.document.createElement(name);
-    
-    let choicesDom = ChoicesDom(createElement, css);
-    let staticDomFactory = StaticDomFactory(createElement, choicesDom.choicesElement);
-    staticDomDefaults(plugins, staticDomFactory); // manipulates with staticDomFactory.create
-   
-    let {staticDom, staticManager} = staticDomFactory.create(element, containerClass)
+    staticDomDefaults(plugins, {
+        createElementAspect,
+        choicesDomFactory,
+        staticDomFactory,
+        componentAspect, optionsAspect, optionPropertiesAspect, choiceAspect, optionToggleAspect
+    });
 
-    let filterDom = FilterDom(staticDom.disposablePicksElement, createElement, css)
+    let {choicesDom, createStaticDom} = staticDomFactory.create()
+    let {staticDom, staticManager} = createStaticDom(element, containerClass)
+
+    let filterDom = FilterDom(staticDom.disposablePicksElement, createElementAspect, css)
     // TODO get picksDom  from staticDomFactory
-    let picksDom  = PicksDom(staticDom.picksElement, staticDom.disposablePicksElement, createElement, css);
+    let picksDom  = PicksDom(staticDom.picksElement, staticDom.disposablePicksElement, createElementAspect, css);
     let focusInAspect = FocusInAspect(picksDom)
     let popupAspect = PopupAspect(choicesDom.choicesElement, filterDom.filterInputElement, Popper);
 
@@ -105,14 +109,14 @@ export function BsMultiSelect(element, environment, configuration, onInit){
 
     let picks = Picks();
     
-    let pickDomFactory = PickDomFactory(css, componentAspect);
+    let pickDomFactory = PickDomFactory(css, componentAspect, optionPropertiesAspect);
     let picksAspect = PicksAspect(
         picksDom, 
         pickDomFactory,
         choiceAspect, picks, manageableResetFilterListAspect
     );
 
-    let choiceDomFactory = ChoiceDomFactory(css);
+    let choiceDomFactory = ChoiceDomFactory(css, optionPropertiesAspect);
     
     let choicesElementAspect = ChoicesElementAspect( choicesDom, filterDom, choiceDomFactory, componentAspect, optionToggleAspect, picksAspect)
     let choiceFactoryAspect =  ChoiceFactoryAspect(choicesElementAspect, choicesGetNextAspect);

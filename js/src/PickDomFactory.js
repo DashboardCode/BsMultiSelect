@@ -1,7 +1,7 @@
 import  {EventBinder} from './ToolsDom';
 import  {addStyling, toggleStyling} from './ToolsStyling';
 
-export function PickDomFactory(css, componentAspect){
+export function PickDomFactory(css, componentAspect, optionPropertiesAspect){
     return {
         create(pickElement, choice, remove){
             let eventBinder = EventBinder();
@@ -9,6 +9,7 @@ export function PickDomFactory(css, componentAspect){
             let pickContentElement = pickElement.querySelector('SPAN');
             let pickButtonElement  = pickElement.querySelector('BUTTON');
             eventBinder.bind(pickButtonElement, "click", remove);
+            // TODO: explicit conditional styling 
             return {
                 pickDom:{
                     pickContentElement,
@@ -21,7 +22,7 @@ export function PickDomFactory(css, componentAspect){
 
                         let disableToggle = toggleStyling(pickContentElement, css.pickContent_disabled);
                         function updateData(){
-                            pickContentElement.textContent = choice.option.text; 
+                            pickContentElement.textContent = optionPropertiesAspect.getText(choice.option); 
                         }
                         function updateDisabled(){
                             disableToggle(choice.isOptionDisabled)

@@ -1,12 +1,12 @@
 import { PluginManager, staticDomDefaults } from './PluginManager';
-import { composeSync, def } from './ToolsJs';
+import { composeSync } from './ToolsJs';
 import { PickDomFactory } from './PickDomFactory';
 import { ChoiceDomFactory } from './ChoiceDomFactory';
-import { StaticDomFactory } from './StaticDomFactory';
+import { StaticDomFactory, CreateElementAspect } from './StaticDomFactory';
 import { PicksDom } from './PicksDom';
 import { FilterDom } from './FilterDom';
-import { ChoicesDom } from './ChoicesDom';
-import { PopupAspect as DefaultPopupAspect } from './PopupAspect';
+import { ChoicesDomFactory } from './ChoicesDomFactory';
+import { PopupAspect } from './PopupAspect';
 import { ComponentAspect } from './ComponentAspect';
 import { OptionsAspect, OptionPropertiesAspect } from './OptionsAspect';
 import { DoublyLinkedCollection } from './ToolsJs';
@@ -39,35 +39,46 @@ export function BsMultiSelect(element, environment, configuration, onInit) {
     throw new Error("BsMultiSelect: Popper.js (https://popper.js.org) is required");
   }
 
+  var createElementAspect = CreateElementAspect(function (name) {
+    return window.document.createElement(name);
+  });
   var containerClass = configuration.containerClass,
       css = configuration.css,
-      options = configuration.options,
       getDisabled = configuration.getDisabled,
+      options = configuration.options,
+      getText = configuration.getText,
       getSelected = configuration.getSelected,
-      setSelected = configuration.setSelected,
-      getIsOptionDisabled = configuration.getIsOptionDisabled;
+      getIsOptionDisabled = configuration.getIsOptionDisabled,
+      setSelected = configuration.setSelected;
+  var choicesDomFactory = ChoicesDomFactory(createElementAspect, css);
+  var staticDomFactory = StaticDomFactory(choicesDomFactory, createElementAspect);
   var componentAspect = ComponentAspect(getDisabled, trigger);
   var optionsAspect = OptionsAspect(options);
-  var optionPropertiesAspect = OptionPropertiesAspect(getSelected, setSelected, getIsOptionDisabled);
+  var optionPropertiesAspect = OptionPropertiesAspect(getText, getSelected, setSelected, getIsOptionDisabled);
   var choiceAspect = ChoiceAspect(optionPropertiesAspect);
   var optionToggleAspect = OptionToggleAspect(choiceAspect);
-  var PopupAspect = def(configuration.staticContentGenerator, DefaultPopupAspect); // TODO: rename configuration.staticContentGenerator
+  staticDomDefaults(plugins, {
+    createElementAspect: createElementAspect,
+    choicesDomFactory: choicesDomFactory,
+    staticDomFactory: staticDomFactory,
+    componentAspect: componentAspect,
+    optionsAspect: optionsAspect,
+    optionPropertiesAspect: optionPropertiesAspect,
+    choiceAspect: choiceAspect,
+    optionToggleAspect: optionToggleAspect
+  });
 
-  var createElement = function createElement(name) {
-    return window.document.createElement(name);
-  };
+  var _staticDomFactory$cre = staticDomFactory.create(),
+      choicesDom = _staticDomFactory$cre.choicesDom,
+      createStaticDom = _staticDomFactory$cre.createStaticDom;
 
-  var choicesDom = ChoicesDom(createElement, css);
-  var staticDomFactory = StaticDomFactory(createElement, choicesDom.choicesElement);
-  staticDomDefaults(plugins, staticDomFactory); // manipulates with staticDomFactory.create
+  var _createStaticDom = createStaticDom(element, containerClass),
+      staticDom = _createStaticDom.staticDom,
+      staticManager = _createStaticDom.staticManager;
 
-  var _staticDomFactory$cre = staticDomFactory.create(element, containerClass),
-      staticDom = _staticDomFactory$cre.staticDom,
-      staticManager = _staticDomFactory$cre.staticManager;
+  var filterDom = FilterDom(staticDom.disposablePicksElement, createElementAspect, css); // TODO get picksDom  from staticDomFactory
 
-  var filterDom = FilterDom(staticDom.disposablePicksElement, createElement, css); // TODO get picksDom  from staticDomFactory
-
-  var picksDom = PicksDom(staticDom.picksElement, staticDom.disposablePicksElement, createElement, css);
+  var picksDom = PicksDom(staticDom.picksElement, staticDom.disposablePicksElement, createElementAspect, css);
   var focusInAspect = FocusInAspect(picksDom);
   var popupAspect = PopupAspect(choicesDom.choicesElement, filterDom.filterInputElement, Popper);
   var collection = DoublyLinkedCollection(function (choice) {
@@ -103,9 +114,9 @@ export function BsMultiSelect(element, environment, configuration, onInit) {
   });
   var inputAspect = InputAspect(filterListAspect, choiceAspect, filterDom, popupAspect, choicesHover);
   var picks = Picks();
-  var pickDomFactory = PickDomFactory(css, componentAspect);
+  var pickDomFactory = PickDomFactory(css, componentAspect, optionPropertiesAspect);
   var picksAspect = PicksAspect(picksDom, pickDomFactory, choiceAspect, picks, manageableResetFilterListAspect);
-  var choiceDomFactory = ChoiceDomFactory(css);
+  var choiceDomFactory = ChoiceDomFactory(css, optionPropertiesAspect);
   var choicesElementAspect = ChoicesElementAspect(choicesDom, filterDom, choiceDomFactory, componentAspect, optionToggleAspect, picksAspect);
   var choiceFactoryAspect = ChoiceFactoryAspect(choicesElementAspect, choicesGetNextAspect);
   var choicesAspect = ChoicesAspect(window.document, choiceAspect, optionsAspect, choices, choiceFactoryAspect);

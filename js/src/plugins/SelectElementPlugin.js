@@ -59,70 +59,76 @@ export function SelectElementPlugin(pluginData){
     }
 }
 
-SelectElementPlugin.staticDomDefaults = (staticDomFactory)=>{
-    let { choicesElement, createElement, create:origCreate} = staticDomFactory;
-    staticDomFactory.create = (element, containerClass) =>
-    {
-        let selectElement = null;
-        let containerElement = null;
-        let picksElement = null;
-        if (element.tagName == 'SELECT') {
-            selectElement = element;
-            if (containerClass){
-                containerElement = closestByClassName(selectElement, containerClass)
-                if (containerElement)
-                    picksElement = findDirectChildByTagName(containerElement, 'UL');
-            }
-        } else if (element.tagName == 'DIV') {
-            selectElement = findDirectChildByTagName(element, 'SELECT');
-            if (selectElement) {
-                if (containerClass){
-                    containerElement = closestByClassName(element, containerClass);
-                    if (containerElement)
-                        picksElement = findDirectChildByTagName(containerElement, 'UL');
+SelectElementPlugin.staticDomDefaults = (pluginData)=>{
+    let {staticDomFactory, createElementAspect} = pluginData;
+    let {create: origCreate} = staticDomFactory;
+    staticDomFactory.create = ()=>{
+        let {choicesDom, createStaticDom: origCreateStaticDom} = origCreate();
+        let {choicesElement} = choicesDom;
+        return { 
+            choicesDom,
+            createStaticDom(element, containerClass){
+                let selectElement = null;
+                let containerElement = null;
+                let picksElement = null;
+                if (element.tagName == 'SELECT') {
+                    selectElement = element;
+                    if (containerClass){
+                        containerElement = closestByClassName(selectElement, containerClass)
+                        if (containerElement)
+                            picksElement = findDirectChildByTagName(containerElement, 'UL');
+                    }
+                } else if (element.tagName == 'DIV') {
+                    selectElement = findDirectChildByTagName(element, 'SELECT');
+                    if (selectElement) {
+                        if (containerClass){
+                            containerElement = closestByClassName(element, containerClass);
+                            if (containerElement)
+                                picksElement = findDirectChildByTagName(containerElement, 'UL');
+                        }
+                    } else {
+                        return origCreateStaticDom(element, containerClass);
+                    } 
                 }
-            } else {
-                return origCreate(element, containerClass);
-            } 
-        }
-        let disposableContainerElement = false;
-        if (!containerElement) {
-            containerElement = createElement('DIV');
-            containerElement.classList.add(containerClass);
-            disposableContainerElement= true;
-        }
-
-       
-        let disposablePicksElement = false;
-        if (!picksElement) {
-            picksElement = createElement('UL');
-            disposablePicksElement = true; 
-        }
-
-        return {staticDom: {
-            initialElement:element,
-            containerElement,
-            picksElement,
-            disposablePicksElement,
-            selectElement
-        }, staticManager :{
-            appendToContainer(){ 
-                if (disposableContainerElement){
-                    selectElement.parentNode.insertBefore(containerElement, selectElement.nextSibling) 
-                    containerElement.appendChild(choicesElement)
-                } else {
-                    selectElement.parentNode.insertBefore(choicesElement, selectElement.nextSibling)
+                let disposableContainerElement = false;
+                if (!containerElement) {
+                    containerElement = createElementAspect.createElement('DIV');
+                    containerElement.classList.add(containerClass);
+                    disposableContainerElement= true;
                 }
-                if (disposablePicksElement)
-                    containerElement.appendChild(picksElement)
-            },
-            dispose(){ 
-                choicesElement.parentNode.removeChild(choicesElement);
-                if (disposableContainerElement)
-                    selectElement.parentNode.removeChild(containerElement) 
-                if (disposablePicksElement)
-                    containerElement.removeChild(picksElement)
+            
+                let disposablePicksElement = false;
+                if (!picksElement) {
+                    picksElement = createElementAspect.createElement('UL');
+                    disposablePicksElement = true; 
+                }
+            
+                return {staticDom: {
+                    initialElement:element,
+                    containerElement,
+                    picksElement,
+                    disposablePicksElement,
+                    selectElement
+                }, staticManager :{
+                    appendToContainer(){ 
+                        if (disposableContainerElement){
+                            selectElement.parentNode.insertBefore(containerElement, selectElement.nextSibling) 
+                            containerElement.appendChild(choicesElement)
+                        } else {
+                            selectElement.parentNode.insertBefore(choicesElement, selectElement.nextSibling)
+                        }
+                        if (disposablePicksElement)
+                            containerElement.appendChild(picksElement)
+                    },
+                    dispose(){ 
+                        choicesElement.parentNode.removeChild(choicesElement);
+                        if (disposableContainerElement)
+                            selectElement.parentNode.removeChild(containerElement) 
+                        if (disposablePicksElement)
+                            containerElement.removeChild(picksElement)
+                    }
+                }};
             }
-        }};
+        }
     }
 }

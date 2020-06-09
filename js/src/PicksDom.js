@@ -1,7 +1,7 @@
 import {addStyling, toggleStyling} from './ToolsStyling';
 
-export function PicksDom(picksElement, disposablePicksElement, createElement, css){
-    var pickFilterElement  = createElement('LI');
+export function PicksDom(picksElement, disposablePicksElement, createElementAspect, css){
+    var pickFilterElement  = createElementAspect.createElement('LI');
     
     addStyling(picksElement,       css.picks);
     addStyling(pickFilterElement,  css.pickFilter);
@@ -16,7 +16,7 @@ export function PicksDom(picksElement, disposablePicksElement, createElement, cs
         pickFilterElement,
 
         createPickElement(){
-            var pickElement = createElement('LI');
+            var pickElement = createElementAspect.createElement('LI');
             addStyling(pickElement, css.pick);
             return {
                 pickElement, 

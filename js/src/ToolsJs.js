@@ -239,13 +239,6 @@ export function composeSync(...functions){
     )
 }
 
-export function def(...functions){
-    for (let f of functions) 
-        if (f) {
-           return f;
-        }
-}
-
 export function defCall(...functions){
     for (let f of functions) 
         if (f) {

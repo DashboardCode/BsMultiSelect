@@ -1,7 +1,7 @@
 import {addStyling} from './ToolsStyling';
 
-export function FilterDom(disposablePicksElement, createElement, css){
-    var filterInputElement = createElement('INPUT');
+export function FilterDom(disposablePicksElement, createElementAspect, css){
+    var filterInputElement = createElementAspect.createElement('INPUT');
     addStyling(filterInputElement, css.filterInput);
 
     filterInputElement.setAttribute("type","search");
