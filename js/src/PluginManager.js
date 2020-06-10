@@ -32,7 +32,7 @@ export function PluginManager(plugins, pluginData){
 
 export function initiateDefaults(constructors, defaults){
     for(let i = 0; i<constructors.length; i++){
-        constructors[i].setDefaults?.(defaults)
+        constructors[i].initiateDefaults?.(defaults)
     }
 }
 
@@ -42,9 +42,9 @@ export function mergeDefaults(constructors, configuration, defaults, settings){
     }
 }
 
-export function onConfiguration(constructors, configuration){
+export function plugOnConfiguration(constructors, configurationPluginData){
     for(let i = 0; i<constructors.length; i++){
-        constructors[i].onConfiguration?.(configuration)
+        constructors[i].plugOnConfiguration?.(configurationPluginData)
     }
 }
 

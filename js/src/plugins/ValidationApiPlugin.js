@@ -5,7 +5,8 @@ import {getDataGuardedWithPrefix} from '../ToolsDom';
 const defValueMissingMessage = 'Please select an item in the list'
 
 export function ValidationApiPlugin(pluginData){
-    var {configuration, selectElementPluginData, staticDom, filterDom, componentAspect, optionsAspect, trigger, updateDataAspect} = pluginData;
+    var {configuration, triggerAspect, onChangeAspect, optionsAspect, 
+        selectElementPluginData, staticDom, filterDom, updateDataAspect} = pluginData;
     // TODO: required could be a function
     let {getIsValueMissing, valueMissingMessage, required} = configuration;
     if (!isBoolean(required))
@@ -31,7 +32,7 @@ export function ValidationApiPlugin(pluginData){
     var isValueMissingObservable = ObservableLambda(()=>required && getIsValueMissing());
     var validationApiObservable  = ObservableValue(!isValueMissingObservable.getValue());
 
-    componentAspect.onChange = composeSync(isValueMissingObservable.call, componentAspect.onChange);
+    onChangeAspect.onChange = composeSync(isValueMissingObservable.call, onChangeAspect.onChange);
     updateDataAspect.updateData = composeSync(isValueMissingObservable.call, updateDataAspect.updateData);
     pluginData.validationApiPluginData = {validationApiObservable};
 
@@ -40,7 +41,7 @@ export function ValidationApiPlugin(pluginData){
         isValueMissingObservable, 
         valueMissingMessage,
         (isValid)=>validationApiObservable.setValue(isValid),
-        trigger
+        triggerAspect.trigger
         );
 
     return {
@@ -54,6 +55,6 @@ export function ValidationApiPlugin(pluginData){
     }
 }
 
-ValidationApiPlugin.setDefaults = (defaults)=>{
+ValidationApiPlugin.initiateDefaults = (defaults)=>{
     defaults.valueMissingMessage = '';
 }

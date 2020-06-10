@@ -2,7 +2,7 @@ export function ChoicesElementAspect(
     choicesDom,
     filterDom, 
     choiceDomFactory,
-    componentAspect, 
+    onChangeAspect, 
     optionToggleAspect,
     picksAspect
     ) {
@@ -47,7 +47,7 @@ export function ChoicesElementAspect(
                     pickTools.updateSelectedFalse();
                     pickTools.updateSelectedFalse=null;
                 }
-                componentAspect.onChange();
+                onChangeAspect.onChange();
             }
         
             var unbindChoiceElement = adoptChoiceElement(choice, choiceElement);

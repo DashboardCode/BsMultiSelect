@@ -1,4 +1,4 @@
-import { PluginManager, staticDomDefaults } from './PluginManager';
+import { PluginManager, plugOnConfiguration, staticDomDefaults } from './PluginManager';
 import { composeSync } from './ToolsJs';
 import { PickDomFactory } from './PickDomFactory';
 import { ChoiceDomFactory } from './ChoiceDomFactory';
@@ -7,7 +7,7 @@ import { PicksDom } from './PicksDom';
 import { FilterDom } from './FilterDom';
 import { ChoicesDomFactory } from './ChoicesDomFactory';
 import { PopupAspect } from './PopupAspect';
-import { ComponentAspect } from './ComponentAspect';
+import { ComponentAspect, TriggerAspect, OnChangeAspect } from './ComponentAspect';
 import { OptionsAspect, OptionPropertiesAspect } from './OptionsAspect';
 import { DoublyLinkedCollection } from './ToolsJs';
 import { FilterListAspect, ChoicesGetNextAspect, ChoicesEnumerableAspect } from './FilterListAspect';
@@ -31,42 +31,49 @@ export function BsMultiSelect(element, environment, configuration, onInit) {
       window = environment.window,
       plugins = environment.plugins;
 
-  var trigger = function trigger(eventName) {
-    return environment.trigger(element, eventName);
-  };
-
   if (typeof Popper === 'undefined') {
     throw new Error("BsMultiSelect: Popper.js (https://popper.js.org) is required");
   }
 
-  var createElementAspect = CreateElementAspect(function (name) {
-    return window.document.createElement(name);
-  });
   var containerClass = configuration.containerClass,
       css = configuration.css,
       getDisabled = configuration.getDisabled,
       options = configuration.options,
       getText = configuration.getText,
       getSelected = configuration.getSelected,
-      getIsOptionDisabled = configuration.getIsOptionDisabled,
-      setSelected = configuration.setSelected;
-  var choicesDomFactory = ChoicesDomFactory(createElementAspect, css);
-  var staticDomFactory = StaticDomFactory(choicesDomFactory, createElementAspect);
-  var componentAspect = ComponentAspect(getDisabled, trigger);
+      setSelected = configuration.setSelected,
+      getIsOptionDisabled = configuration.getIsOptionDisabled;
+  var disposeAspect = {};
+  var triggerAspect = TriggerAspect(element, environment.trigger);
+  var onChangeAspect = OnChangeAspect(triggerAspect, 'dashboardcode.multiselect:change');
+  var componentAspect = ComponentAspect(getDisabled);
   var optionsAspect = OptionsAspect(options);
   var optionPropertiesAspect = OptionPropertiesAspect(getText, getSelected, setSelected, getIsOptionDisabled);
   var choiceAspect = ChoiceAspect(optionPropertiesAspect);
   var optionToggleAspect = OptionToggleAspect(choiceAspect);
-  staticDomDefaults(plugins, {
-    createElementAspect: createElementAspect,
-    choicesDomFactory: choicesDomFactory,
-    staticDomFactory: staticDomFactory,
+  var createElementAspect = CreateElementAspect(function (name) {
+    return window.document.createElement(name);
+  });
+  var aspects = {
+    environment: environment,
+    configuration: configuration,
+    triggerAspect: triggerAspect,
+    onChangeAspect: onChangeAspect,
     componentAspect: componentAspect,
+    disposeAspect: disposeAspect,
     optionsAspect: optionsAspect,
     optionPropertiesAspect: optionPropertiesAspect,
     choiceAspect: choiceAspect,
-    optionToggleAspect: optionToggleAspect
-  });
+    optionToggleAspect: optionToggleAspect,
+    createElementAspect: createElementAspect
+  };
+  plugOnConfiguration(plugins, aspects); // apply cssPatch    
+
+  var choicesDomFactory = ChoicesDomFactory(createElementAspect, css);
+  var staticDomFactory = StaticDomFactory(choicesDomFactory, createElementAspect);
+  aspects.choicesDomFactory = choicesDomFactory;
+  aspects.staticDomFactory = staticDomFactory;
+  staticDomDefaults(plugins, aspects);
 
   var _staticDomFactory$cre = staticDomFactory.create(),
       choicesDom = _staticDomFactory$cre.choicesDom,
@@ -117,7 +124,7 @@ export function BsMultiSelect(element, environment, configuration, onInit) {
   var pickDomFactory = PickDomFactory(css, componentAspect, optionPropertiesAspect);
   var picksAspect = PicksAspect(picksDom, pickDomFactory, choiceAspect, picks, manageableResetFilterListAspect);
   var choiceDomFactory = ChoiceDomFactory(css, optionPropertiesAspect);
-  var choicesElementAspect = ChoicesElementAspect(choicesDom, filterDom, choiceDomFactory, componentAspect, optionToggleAspect, picksAspect);
+  var choicesElementAspect = ChoicesElementAspect(choicesDom, filterDom, choiceDomFactory, onChangeAspect, optionToggleAspect, picksAspect);
   var choiceFactoryAspect = ChoiceFactoryAspect(choicesElementAspect, choicesGetNextAspect);
   var choicesAspect = ChoicesAspect(window.document, choiceAspect, optionsAspect, choices, choiceFactoryAspect);
   var multiSelectInputAspect = MultiSelectInputAspect(window, function () {
@@ -236,50 +243,40 @@ export function BsMultiSelect(element, environment, configuration, onInit) {
     });
   });
   var updateDataAspect = UpdateDataAspect(multiSelectInputAspect, manageableResetFilterListAspect, choicesDom, choices, picks, choicesAspect);
-  var pluginData = {
-    environment: environment,
-    trigger: trigger,
-    configuration: configuration,
-    optionsAspect: optionsAspect,
-    componentAspect: componentAspect,
-    pickDomFactory: pickDomFactory,
-    choiceDomFactory: choiceDomFactory,
-    staticDom: staticDom,
-    picksDom: picksDom,
-    choicesDom: choicesDom,
-    popupAspect: popupAspect,
-    staticManager: staticManager,
-    choicesGetNextAspect: choicesGetNextAspect,
-    choicesEnumerableAspect: choicesEnumerableAspect,
-    filterListAspect: filterListAspect,
-    choices: choices,
-    choicesHover: choicesHover,
-    picks: picks,
-    choiceAspect: choiceAspect,
-    optionPropertiesAspect: optionPropertiesAspect,
-    optionToggleAspect: optionToggleAspect,
-    choicesElementAspect: choicesElementAspect,
-    choiceFactoryAspect: choiceFactoryAspect,
-    choicesAspect: choicesAspect,
-    picksAspect: picksAspect,
-    filterDom: filterDom,
-    inputAspect: inputAspect,
-    resetFilterListAspect: resetFilterListAspect,
-    manageableResetFilterListAspect: manageableResetFilterListAspect,
-    multiSelectInputAspect: multiSelectInputAspect,
-    focusInAspect: focusInAspect,
-    filterAspect: filterAspect,
-    disabledComponentAspect: disabledComponentAspect,
-    appearanceAspect: appearanceAspect,
-    loadAspect: loadAspect,
-    updateDataAspect: updateDataAspect
-  };
-  var pluginManager = PluginManager(plugins, pluginData);
+  aspects.pickDomFactory = pickDomFactory;
+  aspects.choiceDomFactory = choiceDomFactory;
+  aspects.staticDom = staticDom;
+  aspects.picksDom = picksDom;
+  aspects.choicesDom = choicesDom;
+  aspects.popupAspect = popupAspect;
+  aspects.staticManager = staticManager;
+  aspects.choicesGetNextAspect = choicesGetNextAspect;
+  aspects.choicesEnumerableAspect = choicesEnumerableAspect;
+  aspects.filterListAspect = filterListAspect;
+  aspects.choices = choices;
+  aspects.choicesHover = choicesHover;
+  aspects.picks = picks;
+  aspects.choicesElementAspect = choicesElementAspect;
+  aspects.choiceFactoryAspect = choiceFactoryAspect;
+  aspects.choicesAspect = choicesAspect;
+  aspects.picksAspect = picksAspect;
+  aspects.filterDom = filterDom;
+  aspects.inputAspect = inputAspect;
+  aspects.resetFilterListAspect = resetFilterListAspect;
+  aspects.manageableResetFilterListAspect = manageableResetFilterListAspect;
+  aspects.multiSelectInputAspect = multiSelectInputAspect;
+  aspects.focusInAspect = focusInAspect;
+  aspects.filterAspect = filterAspect;
+  aspects.disabledComponentAspect = disabledComponentAspect;
+  aspects.appearanceAspect = appearanceAspect;
+  aspects.loadAspect = loadAspect;
+  aspects.updateDataAspect = updateDataAspect;
+  var pluginManager = PluginManager(plugins, aspects);
   var api = {
     component: "BsMultiSelect.api"
   };
   pluginManager.buildApi(api);
-  api.dispose = composeSync(multiSelectInputAspect.hideChoices, pluginManager.dispose, picks.dispose, multiSelectInputAspect.dispose, choices.dispose, staticManager.dispose, popupAspect.dispose, picksDom.dispose, filterDom.dispose, filterAspect.dispose);
+  api.dispose = composeSync(disposeAspect.dispose, multiSelectInputAspect.hideChoices, pluginManager.dispose, picks.dispose, multiSelectInputAspect.dispose, choices.dispose, staticManager.dispose, popupAspect.dispose, picksDom.dispose, filterDom.dispose, filterAspect.dispose);
   api.updateData = updateDataAspect.updateData;
 
   api.update = function () {
@@ -289,7 +286,7 @@ export function BsMultiSelect(element, environment, configuration, onInit) {
 
   api.updateAppearance = appearanceAspect.updateAppearance;
   api.updateDisabled = disabledComponentAspect.updateDisabledComponent;
-  onInit == null ? void 0 : onInit(api, pluginData);
+  onInit == null ? void 0 : onInit(api, aspects);
   picksDom.pickFilterElement.appendChild(filterDom.filterInputElement);
   picksDom.picksElement.appendChild(picksDom.pickFilterElement);
   staticManager.appendToContainer();

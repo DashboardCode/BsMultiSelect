@@ -3,7 +3,7 @@ import Popper from 'popper.js'
 
 import {addToJQueryPrototype} from './AddToJQueryPrototype'
 import {BsMultiSelect} from './BsMultiSelect';
-import {initiateDefaults, mergeDefaults, onConfiguration} from './PluginManager';
+import {initiateDefaults, mergeDefaults} from './PluginManager';
 
 import {css} from './BsCss'
 
@@ -61,8 +61,6 @@ import  {addStyling, toggleStyling} from './ToolsStyling';
             extendIfUndefined(configuration, defaults);
         
             let onInit = buildConfiguration?.(element, configuration);
-
-            onConfiguration(defaultPlugins, configuration);
 
             let multiSelect = BsMultiSelect(element, environment, configuration, onInit);
             multiSelect.dispose = composeSync(multiSelect.dispose, removeInstanceData);

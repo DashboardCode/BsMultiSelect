@@ -1,10 +1,22 @@
-export function ComponentAspect(getDisabled, trigger){
-    if (!getDisabled)
-        getDisabled = () => false;
+export function TriggerAspect(element, trigger) {
     return {
-        getDisabled,
+        trigger: (eventName) => trigger(element, eventName)
+    }
+}
+
+export function OnChangeAspect(triggerAspect, name) {
+    return {
         onChange(){
-            trigger('dashboardcode.multiselect:change')
+            triggerAspect.trigger(name)
         }
     }
 }
+
+export function ComponentAspect(getDisabled) {
+    if (!getDisabled)
+        getDisabled = () => false;
+    return {
+        getDisabled
+    }
+}
+

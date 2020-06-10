@@ -5,7 +5,7 @@ import {cssPatch} from '../BsCss'
 export function CssPatchPlugin(){
 }
 
-CssPatchPlugin.setDefaults = (defaults)=>{
+CssPatchPlugin.initiateDefaults = (defaults)=>{
     defaults.useCssPatch = true;
     defaults.cssPatch = cssPatch;
 }
@@ -17,7 +17,8 @@ CssPatchPlugin.mergeDefaults = (configuration, defaults, settings)=>{
     configuration.cssPatch = createCss(defaults.cssPatch, cssPatch); // replace classes, merge styles
 }
 
-CssPatchPlugin.onConfiguration = (configuration) =>{
+CssPatchPlugin.plugOnConfiguration = (configurationPluginData) =>{
+    let {configuration} = configurationPluginData;
     if (configuration.useCssPatch)
         extendCss(configuration.css, configuration.cssPatch); 
 }
