@@ -8,8 +8,8 @@ export function CreateElementAspect(createElement){
 
 export function StaticDomFactory(choicesDomFactory, createElementAspect){
     return {
-        create(){
-            let choicesDom = choicesDomFactory.create();
+        create(css){
+            let choicesDom = choicesDomFactory.create(css);
             return {
                 choicesDom,
                 createStaticDom(element, containerClass){

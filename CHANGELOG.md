@@ -1,5 +1,6 @@
 # CHANGELOG
 ````
+0.6.6 - optimizations
 0.6.5 - optimizations
 0.6.4 - optimizations
 0.6.3 - https://github.com/DashboardCode/BsMultiSelect/issues/26 resolved

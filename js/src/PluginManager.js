@@ -30,26 +30,20 @@ export function PluginManager(plugins, pluginData){
     }
 }
 
-export function initiateDefaults(constructors, defaults){
+export function plugDefaultConfig(constructors, defaults){
     for(let i = 0; i<constructors.length; i++){
-        constructors[i].initiateDefaults?.(defaults)
+        constructors[i].plugDefaultConfig?.(defaults)
     }
 }
 
-export function mergeDefaults(constructors, configuration, defaults, settings){
+export function plugMergeSettings(constructors, configuration, defaults, settings){
     for(let i = 0; i<constructors.length; i++){
-        constructors[i].mergeDefaults?.(configuration, defaults, settings)
+        constructors[i].plugMergeSettings?.(configuration, defaults, settings)
     }
 }
 
-export function plugOnConfiguration(constructors, configurationPluginData){
+export function plugStaticDom(constructors, pluginData){
     for(let i = 0; i<constructors.length; i++){
-        constructors[i].plugOnConfiguration?.(configurationPluginData)
-    }
-}
-
-export function staticDomDefaults(constructors, pluginData){
-    for(let i = 0; i<constructors.length; i++){
-        constructors[i].staticDomDefaults?.(pluginData)
+        constructors[i].plugStaticDom?.(pluginData)
     }
 }

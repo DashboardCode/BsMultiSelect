@@ -1,5 +1,5 @@
 /*!
-  * DashboardCode BsMultiSelect v0.6.5 (https://dashboardcode.github.io/BsMultiSelect/)
+  * DashboardCode BsMultiSelect v0.6.6 (https://dashboardcode.github.io/BsMultiSelect/)
   * Copyright 2017-2020 Roman Pokrovskij (github user rpokrovskij)
   * Licensed under APACHE 2 (https://github.com/DashboardCode/BsMultiSelect/blob/master/LICENSE)
   */
@@ -40,32 +40,25 @@ function PluginManager(plugins, pluginData) {
     }
   };
 }
-function initiateDefaults(constructors, defaults) {
+function plugDefaultConfig(constructors, defaults) {
   for (var i = 0; i < constructors.length; i++) {
-    var _constructors$i$initi, _constructors$i;
+    var _constructors$i$plugD, _constructors$i;
 
-    (_constructors$i$initi = (_constructors$i = constructors[i]).initiateDefaults) == null ? void 0 : _constructors$i$initi.call(_constructors$i, defaults);
+    (_constructors$i$plugD = (_constructors$i = constructors[i]).plugDefaultConfig) == null ? void 0 : _constructors$i$plugD.call(_constructors$i, defaults);
   }
 }
-function mergeDefaults(constructors, configuration, defaults, settings) {
+function plugMergeSettings(constructors, configuration, defaults, settings) {
   for (var i = 0; i < constructors.length; i++) {
-    var _constructors$i$merge, _constructors$i2;
+    var _constructors$i$plugM, _constructors$i2;
 
-    (_constructors$i$merge = (_constructors$i2 = constructors[i]).mergeDefaults) == null ? void 0 : _constructors$i$merge.call(_constructors$i2, configuration, defaults, settings);
+    (_constructors$i$plugM = (_constructors$i2 = constructors[i]).plugMergeSettings) == null ? void 0 : _constructors$i$plugM.call(_constructors$i2, configuration, defaults, settings);
   }
 }
-function plugOnConfiguration(constructors, configurationPluginData) {
+function plugStaticDom(constructors, pluginData) {
   for (var i = 0; i < constructors.length; i++) {
-    var _constructors$i$plugO, _constructors$i3;
+    var _constructors$i$plugS, _constructors$i3;
 
-    (_constructors$i$plugO = (_constructors$i3 = constructors[i]).plugOnConfiguration) == null ? void 0 : _constructors$i$plugO.call(_constructors$i3, configurationPluginData);
-  }
-}
-function staticDomDefaults(constructors, pluginData) {
-  for (var i = 0; i < constructors.length; i++) {
-    var _constructors$i$stati, _constructors$i4;
-
-    (_constructors$i$stati = (_constructors$i4 = constructors[i]).staticDomDefaults) == null ? void 0 : _constructors$i$stati.call(_constructors$i4, pluginData);
+    (_constructors$i$plugS = (_constructors$i3 = constructors[i]).plugStaticDom) == null ? void 0 : _constructors$i$plugS.call(_constructors$i3, pluginData);
   }
 }
 
@@ -872,8 +865,8 @@ function CreateElementAspect(createElement) {
 }
 function StaticDomFactory(choicesDomFactory, createElementAspect) {
   return {
-    create: function create() {
-      var choicesDom = choicesDomFactory.create();
+    create: function create(css) {
+      var choicesDom = choicesDomFactory.create(css);
       return {
         choicesDom: choicesDom,
         createStaticDom: function createStaticDom(element, containerClass) {
@@ -1012,9 +1005,9 @@ function FilterDom(disposablePicksElement, createElementAspect, css) {
   };
 }
 
-function ChoicesDomFactory(createElementAspect, css) {
+function ChoicesDomFactory(createElementAspect) {
   return {
-    create: function create() {
+    create: function create(css) {
       var choicesElement = createElementAspect.createElement('UL');
       addStyling(choicesElement, css.choices);
       choicesElement.style.display = 'none';
@@ -1103,10 +1096,7 @@ function OnChangeAspect(triggerAspect, name) {
     }
   };
 }
-function ComponentAspect(getDisabled) {
-  if (!getDisabled) getDisabled = function getDisabled() {
-    return false;
-  };
+function ComponentPropertiesAspect(getDisabled) {
   return {
     getDisabled: getDisabled
   };
@@ -1135,8 +1125,7 @@ function OptionPropertiesAspect(getText, getSelected, setSelected, getDisabled) 
   if (!setSelected) {
     setSelected = function setSelected(option, value) {
       option.selected = value;
-    }; // TODO: move to sql
-    // NOTE: adding this (setAttribute) break Chrome's html form reset functionality:
+    }; // NOTE: adding this (setAttribute) break Chrome's html form reset functionality:
     // if (value) option.setAttribute('selected','');
     // else option.removeAttribute('selected');
 
@@ -1419,14 +1408,14 @@ function UpdateDataAspect(multiSelectInputAspect, manageableResetFilterListAspec
 function OptionToggleAspect(choiceAspect) {
   return {
     toggle: function toggle(choice) {
-      return _toggle(choiceAspect.setOptionSelected, choice);
+      return _toggle(choiceAspect, choice);
     }
   };
 }
 
-function _toggle(setOptionSelected, choice) {
+function _toggle(choiceAspect, choice) {
   var success = false;
-  if (choice.isOptionSelected || !choice.isOptionDisabled) success = setOptionSelected(choice, !choice.isOptionSelected);
+  if (choice.isOptionSelected || !choice.isOptionDisabled) success = choiceAspect.setOptionSelected(choice, !choice.isOptionSelected);
   return success;
 }
 
@@ -2085,7 +2074,9 @@ function BsMultiSelect(element, environment, configuration, onInit) {
   var disposeAspect = {};
   var triggerAspect = TriggerAspect(element, environment.trigger);
   var onChangeAspect = OnChangeAspect(triggerAspect, 'dashboardcode.multiselect:change');
-  var componentAspect = ComponentAspect(getDisabled);
+  var componentAspect = ComponentPropertiesAspect(getDisabled != null ? getDisabled : function () {
+    return false;
+  });
   var optionsAspect = OptionsAspect(options);
   var optionPropertiesAspect = OptionPropertiesAspect(getText, getSelected, setSelected, getIsOptionDisabled);
   var choiceAspect = ChoiceAspect(optionPropertiesAspect);
@@ -2093,6 +2084,8 @@ function BsMultiSelect(element, environment, configuration, onInit) {
   var createElementAspect = CreateElementAspect(function (name) {
     return window.document.createElement(name);
   });
+  var choicesDomFactory = ChoicesDomFactory(createElementAspect);
+  var staticDomFactory = StaticDomFactory(choicesDomFactory, createElementAspect);
   var aspects = {
     environment: environment,
     configuration: configuration,
@@ -2104,23 +2097,20 @@ function BsMultiSelect(element, environment, configuration, onInit) {
     optionPropertiesAspect: optionPropertiesAspect,
     choiceAspect: choiceAspect,
     optionToggleAspect: optionToggleAspect,
-    createElementAspect: createElementAspect
+    createElementAspect: createElementAspect,
+    choicesDomFactory: choicesDomFactory,
+    staticDomFactory: staticDomFactory
   };
-  plugOnConfiguration(plugins, aspects); // apply cssPatch    
+  plugStaticDom(plugins, aspects); // apply cssPatch to css, apply selectElement support;  
 
-  var choicesDomFactory = ChoicesDomFactory(createElementAspect, css);
-  var staticDomFactory = StaticDomFactory(choicesDomFactory, createElementAspect);
-  aspects.choicesDomFactory = choicesDomFactory;
-  aspects.staticDomFactory = staticDomFactory;
-  staticDomDefaults(plugins, aspects);
-
-  var _staticDomFactory$cre = staticDomFactory.create(),
+  var _staticDomFactory$cre = staticDomFactory.create(css),
       choicesDom = _staticDomFactory$cre.choicesDom,
       createStaticDom = _staticDomFactory$cre.createStaticDom;
 
   var _createStaticDom = createStaticDom(element, containerClass),
       staticDom = _createStaticDom.staticDom,
-      staticManager = _createStaticDom.staticManager;
+      staticManager = _createStaticDom.staticManager; // after this we can use staticDom in construtctor, this simplifies parameter passing a lot   
+
 
   var filterDom = FilterDom(staticDom.disposablePicksElement, createElementAspect, css); // TODO get picksDom  from staticDomFactory
 
@@ -2648,7 +2638,7 @@ function ValidationApiPlugin(pluginData) {
   };
 }
 
-ValidationApiPlugin.initiateDefaults = function (defaults) {
+ValidationApiPlugin.plugDefaultConfig = function (defaults) {
   defaults.valueMissingMessage = '';
 };
 
@@ -3069,19 +3059,19 @@ function getNextNonHidden(choice) {
 
 function CssPatchPlugin() {}
 
-CssPatchPlugin.initiateDefaults = function (defaults) {
+CssPatchPlugin.plugDefaultConfig = function (defaults) {
   defaults.useCssPatch = true;
   defaults.cssPatch = cssPatch;
 };
 
-CssPatchPlugin.mergeDefaults = function (configuration, defaults, settings) {
+CssPatchPlugin.plugMergeSettings = function (configuration, defaults, settings) {
   var cssPatch = settings == null ? void 0 : settings.cssPatch;
   if (isBoolean(cssPatch)) throw new Error("BsMultiSelect: 'cssPatch' was used instead of 'useCssPatch'"); // often type of error
 
   configuration.cssPatch = createCss(defaults.cssPatch, cssPatch); // replace classes, merge styles
 };
 
-CssPatchPlugin.plugOnConfiguration = function (configurationPluginData) {
+CssPatchPlugin.plugStaticDom = function (configurationPluginData) {
   var configuration = configurationPluginData.configuration;
   if (configuration.useCssPatch) extendCss(configuration.css, configuration.cssPatch);
 };
@@ -3276,7 +3266,7 @@ function OptionsApiPlugin(pluginData) {
 
 function SelectElementPlugin() {}
 
-SelectElementPlugin.staticDomDefaults = function (aspects) {
+SelectElementPlugin.plugStaticDom = function (aspects) {
   var configuration = aspects.configuration,
       staticDomFactory = aspects.staticDomFactory,
       createElementAspect = aspects.createElementAspect,
@@ -3288,8 +3278,8 @@ SelectElementPlugin.staticDomDefaults = function (aspects) {
       disposeAspect = aspects.disposeAspect;
   var origCreate = staticDomFactory.create;
 
-  staticDomFactory.create = function () {
-    var _origCreate = origCreate(),
+  staticDomFactory.create = function (css) {
+    var _origCreate = origCreate(css),
         choicesDom = _origCreate.choicesDom,
         origCreateStaticDom = _origCreate.createStaticDom;
 
@@ -3522,13 +3512,35 @@ function BsMultiSelect$1(element, environment, settings) {
   if (!environment.plugins) environment.plugins = defaultPlugins;
   var configuration = {};
   configuration.css = createCss(defaults.css, settings == null ? void 0 : settings.css);
-  mergeDefaults(defaultPlugins, configuration, defaults, settings);
+  plugMergeSettings(defaultPlugins, configuration, defaults, settings);
   extendIfUndefined(configuration, settings);
   extendIfUndefined(configuration, defaults);
   return BsMultiSelect(element, environment, configuration, settings == null ? void 0 : settings.onInit);
 }
-initiateDefaults(defaultPlugins, defaults);
+plugDefaultConfig(defaultPlugins, defaults);
 BsMultiSelect$1.defaults = defaults;
+BsMultiSelect$1.tools = {
+  EventBinder: EventBinder,
+  addStyling: addStyling,
+  toggleStyling: toggleStyling
+};
+BsMultiSelect$1.plugins = {
+  CssPatchPlugin: CssPatchPlugin,
+  SelectElementPlugin: SelectElementPlugin,
+  LabelPlugin: LabelPlugin,
+  HiddenOptionPlugin: HiddenOptionPlugin,
+  ValidationApiPlugin: ValidationApiPlugin,
+  BsAppearancePlugin: BsAppearancePlugin,
+  FormResetPlugin: FormResetPlugin,
+  RtlPlugin: RtlPlugin,
+  PlaceholderPlugin: PlaceholderPlugin,
+  OptionsApiPlugin: OptionsApiPlugin,
+  SelectAllApiPlugin: SelectAllApiPlugin,
+  JQueryMethodsPlugin: JQueryMethodsPlugin,
+  UpdateOptionsSelectedApiPlugin: UpdateOptionsSelectedApiPlugin,
+  FormRestoreOnBackwardPlugin: FormRestoreOnBackwardPlugin,
+  DisabledOptionApiPlugin: DisabledOptionApiPlugin
+};
 
 export { BsMultiSelect$1 as BsMultiSelect };
 //# sourceMappingURL=BsMultiSelect.esm.js.map

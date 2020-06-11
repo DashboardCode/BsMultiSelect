@@ -4,12 +4,12 @@ import {composeSync} from '../ToolsJs';
 export function SelectElementPlugin(){
 }
 
-SelectElementPlugin.staticDomDefaults = (aspects)=>{
+SelectElementPlugin.plugStaticDom = (aspects)=>{
     let {configuration, staticDomFactory, createElementAspect,  optionPropertiesAspect,
         componentAspect, onChangeAspect, triggerAspect, optionsAspect, disposeAspect} = aspects;
     let {create: origCreate} = staticDomFactory;
-    staticDomFactory.create = () => {
-        let {choicesDom, createStaticDom: origCreateStaticDom} = origCreate();
+    staticDomFactory.create = (css) => {
+        let {choicesDom, createStaticDom: origCreateStaticDom} = origCreate(css);
         let {choicesElement} = choicesDom;
         return { 
             choicesDom,

@@ -1,4 +1,4 @@
-import {PluginManager, plugOnConfiguration, staticDomDefaults} from './PluginManager'
+import {PluginManager, plugStaticDom} from './PluginManager'
 
 import {composeSync} from './ToolsJs';
 
@@ -13,7 +13,7 @@ import {FilterDom} from './FilterDom';
 import {ChoicesDomFactory} from './ChoicesDomFactory';
 import {PopupAspect} from './PopupAspect';
 
-import {ComponentAspect, TriggerAspect, OnChangeAspect} from './ComponentAspect';
+import {ComponentPropertiesAspect, TriggerAspect, OnChangeAspect} from './ComponentPropertiesAspect';
 import {OptionsAspect, OptionPropertiesAspect} from './OptionsAspect';
 
 import {DoublyLinkedCollection} from './ToolsJs'
@@ -36,6 +36,7 @@ import {MultiSelectInputAspect} from './MultiSelectInputAspect'
 import {FilterAspect} from './FilterAspect'
 import {DisabledComponentAspect, LoadAspect, AppearanceAspect} from './AppearanceAspect'
 
+/// environment - common for many; configuration for concreate
 export function BsMultiSelect(element, environment, configuration, onInit){
     var {Popper, window, plugins} = environment;
     
@@ -43,36 +44,38 @@ export function BsMultiSelect(element, environment, configuration, onInit){
         throw new Error("BsMultiSelect: Popper.js (https://popper.js.org) is required")
     }
 
-    let { containerClass, css, 
+    let { containerClass,
+          css, 
           getDisabled,
           options, 
           getText, getSelected, setSelected, getIsOptionDisabled,
         } = configuration;
+
     let disposeAspect = {};
     let triggerAspect = TriggerAspect(element, environment.trigger);
     let onChangeAspect = OnChangeAspect(triggerAspect, 'dashboardcode.multiselect:change');
-    let componentAspect = ComponentAspect(getDisabled);
+    let componentAspect = ComponentPropertiesAspect(getDisabled??(() => false));
     let optionsAspect   = OptionsAspect(options); 
     let optionPropertiesAspect = OptionPropertiesAspect(getText, getSelected, setSelected, getIsOptionDisabled);
     let choiceAspect        = ChoiceAspect(optionPropertiesAspect);
     let optionToggleAspect  = OptionToggleAspect(choiceAspect);
     let createElementAspect = CreateElementAspect(name => window.document.createElement(name));
+    let choicesDomFactory = ChoicesDomFactory(createElementAspect);
+    let staticDomFactory  = StaticDomFactory(choicesDomFactory, createElementAspect);
     
     let aspects = {
         environment, configuration, triggerAspect, onChangeAspect, componentAspect, disposeAspect,
-        optionsAspect, optionPropertiesAspect, choiceAspect, optionToggleAspect, createElementAspect
+        optionsAspect, optionPropertiesAspect, choiceAspect, optionToggleAspect, createElementAspect,
+        choicesDomFactory, staticDomFactory
     }
-    plugOnConfiguration(plugins, aspects); // apply cssPatch    
     
-    let choicesDomFactory = ChoicesDomFactory(createElementAspect, css);
-    let staticDomFactory  = StaticDomFactory(choicesDomFactory, createElementAspect);
-    aspects.choicesDomFactory=choicesDomFactory;
-    aspects.staticDomFactory=staticDomFactory;
-    
-    staticDomDefaults(plugins, aspects);
+    plugStaticDom(plugins, aspects); // apply cssPatch to css, apply selectElement support;  
 
-    let {choicesDom, createStaticDom} = staticDomFactory.create()
+    let {choicesDom, createStaticDom} = staticDomFactory.create(css)
+
     let {staticDom, staticManager} = createStaticDom(element, containerClass)
+
+    // after this we can use staticDom in construtctor, this simplifies parameter passing a lot   
 
     let filterDom = FilterDom(staticDom.disposablePicksElement, createElementAspect, css);
     // TODO get picksDom  from staticDomFactory

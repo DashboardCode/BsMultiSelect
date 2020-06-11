@@ -1,4 +1,4 @@
-import { PluginManager, plugOnConfiguration, staticDomDefaults } from './PluginManager';
+import { PluginManager, plugStaticDom } from './PluginManager';
 import { composeSync } from './ToolsJs';
 import { PickDomFactory } from './PickDomFactory';
 import { ChoiceDomFactory } from './ChoiceDomFactory';
@@ -7,7 +7,7 @@ import { PicksDom } from './PicksDom';
 import { FilterDom } from './FilterDom';
 import { ChoicesDomFactory } from './ChoicesDomFactory';
 import { PopupAspect } from './PopupAspect';
-import { ComponentAspect, TriggerAspect, OnChangeAspect } from './ComponentAspect';
+import { ComponentPropertiesAspect, TriggerAspect, OnChangeAspect } from './ComponentPropertiesAspect';
 import { OptionsAspect, OptionPropertiesAspect } from './OptionsAspect';
 import { DoublyLinkedCollection } from './ToolsJs';
 import { FilterListAspect, ChoicesGetNextAspect, ChoicesEnumerableAspect } from './FilterListAspect';
@@ -25,7 +25,8 @@ import { ManageableResetFilterListAspect } from './ResetFilterListAspect';
 import { FocusInAspect } from './ResetFilterListAspect';
 import { MultiSelectInputAspect } from './MultiSelectInputAspect';
 import { FilterAspect } from './FilterAspect';
-import { DisabledComponentAspect, LoadAspect, AppearanceAspect } from './AppearanceAspect';
+import { DisabledComponentAspect, LoadAspect, AppearanceAspect } from './AppearanceAspect'; /// environment - common for many; configuration for concreate
+
 export function BsMultiSelect(element, environment, configuration, onInit) {
   var Popper = environment.Popper,
       window = environment.window,
@@ -46,7 +47,9 @@ export function BsMultiSelect(element, environment, configuration, onInit) {
   var disposeAspect = {};
   var triggerAspect = TriggerAspect(element, environment.trigger);
   var onChangeAspect = OnChangeAspect(triggerAspect, 'dashboardcode.multiselect:change');
-  var componentAspect = ComponentAspect(getDisabled);
+  var componentAspect = ComponentPropertiesAspect(getDisabled != null ? getDisabled : function () {
+    return false;
+  });
   var optionsAspect = OptionsAspect(options);
   var optionPropertiesAspect = OptionPropertiesAspect(getText, getSelected, setSelected, getIsOptionDisabled);
   var choiceAspect = ChoiceAspect(optionPropertiesAspect);
@@ -54,6 +57,8 @@ export function BsMultiSelect(element, environment, configuration, onInit) {
   var createElementAspect = CreateElementAspect(function (name) {
     return window.document.createElement(name);
   });
+  var choicesDomFactory = ChoicesDomFactory(createElementAspect);
+  var staticDomFactory = StaticDomFactory(choicesDomFactory, createElementAspect);
   var aspects = {
     environment: environment,
     configuration: configuration,
@@ -65,23 +70,20 @@ export function BsMultiSelect(element, environment, configuration, onInit) {
     optionPropertiesAspect: optionPropertiesAspect,
     choiceAspect: choiceAspect,
     optionToggleAspect: optionToggleAspect,
-    createElementAspect: createElementAspect
+    createElementAspect: createElementAspect,
+    choicesDomFactory: choicesDomFactory,
+    staticDomFactory: staticDomFactory
   };
-  plugOnConfiguration(plugins, aspects); // apply cssPatch    
+  plugStaticDom(plugins, aspects); // apply cssPatch to css, apply selectElement support;  
 
-  var choicesDomFactory = ChoicesDomFactory(createElementAspect, css);
-  var staticDomFactory = StaticDomFactory(choicesDomFactory, createElementAspect);
-  aspects.choicesDomFactory = choicesDomFactory;
-  aspects.staticDomFactory = staticDomFactory;
-  staticDomDefaults(plugins, aspects);
-
-  var _staticDomFactory$cre = staticDomFactory.create(),
+  var _staticDomFactory$cre = staticDomFactory.create(css),
       choicesDom = _staticDomFactory$cre.choicesDom,
       createStaticDom = _staticDomFactory$cre.createStaticDom;
 
   var _createStaticDom = createStaticDom(element, containerClass),
       staticDom = _createStaticDom.staticDom,
-      staticManager = _createStaticDom.staticManager;
+      staticManager = _createStaticDom.staticManager; // after this we can use staticDom in construtctor, this simplifies parameter passing a lot   
+
 
   var filterDom = FilterDom(staticDom.disposablePicksElement, createElementAspect, css); // TODO get picksDom  from staticDomFactory
 

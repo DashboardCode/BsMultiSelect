@@ -1,8 +1,8 @@
 import {addStyling} from './ToolsStyling';
 
-export function ChoicesDomFactory(createElementAspect, css) { 
+export function ChoicesDomFactory(createElementAspect) { 
     return {
-        create(){
+        create(css){
             var choicesElement = createElementAspect.createElement('UL');
             addStyling(choicesElement, css.choices);
             choicesElement.style.display = 'none';

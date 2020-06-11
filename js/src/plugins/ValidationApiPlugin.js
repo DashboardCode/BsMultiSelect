@@ -55,6 +55,6 @@ export function ValidationApiPlugin(pluginData){
     }
 }
 
-ValidationApiPlugin.initiateDefaults = (defaults)=>{
+ValidationApiPlugin.plugDefaultConfig = (defaults)=>{
     defaults.valueMissingMessage = '';
 }

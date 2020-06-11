@@ -12,9 +12,7 @@ export function OnChangeAspect(triggerAspect, name) {
     }
 }
 
-export function ComponentAspect(getDisabled) {
-    if (!getDisabled)
-        getDisabled = () => false;
+export function ComponentPropertiesAspect(getDisabled) {
     return {
         getDisabled
     }

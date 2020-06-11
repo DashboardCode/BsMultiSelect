@@ -1,5 +1,5 @@
 import {BsMultiSelect as BsMultiSelectBase}  from './BsMultiSelect'
-import {initiateDefaults, mergeDefaults}  from './PluginManager';
+import {plugDefaultConfig, plugMergeSettings}  from './PluginManager';
 import {css} from './BsCss'
 import {LabelPlugin} from './plugins/LabelPlugin';
 import {RtlPlugin} from './plugins/RtlPlugin';
@@ -20,6 +20,9 @@ import {FormRestoreOnBackwardPlugin} from './plugins/FormRestoreOnBackwardPlugin
 import {createCss} from './ToolsStyling';
 import {extendIfUndefined} from './ToolsJs';
 
+import  {EventBinder} from './ToolsDom';
+import  {addStyling, toggleStyling} from './ToolsStyling';
+
 const defaults = {containerClass : "dashboardcode-bsmultiselect", css: css}
 const defaultPlugins = [CssPatchPlugin, SelectElementPlugin, LabelPlugin, HiddenOptionPlugin, ValidationApiPlugin, 
     BsAppearancePlugin, FormResetPlugin, RtlPlugin, PlaceholderPlugin , OptionsApiPlugin, SelectAllApiPlugin,
@@ -33,9 +36,9 @@ export function BsMultiSelect(element, environment, settings){
         environment.plugins = defaultPlugins;
     
     let configuration = {};
-    
+
     configuration.css = createCss(defaults.css, settings?.css);
-    mergeDefaults(defaultPlugins, configuration, defaults, settings);
+    plugMergeSettings(defaultPlugins, configuration, defaults, settings);
 
     extendIfUndefined(configuration, settings);
     extendIfUndefined(configuration, defaults);
@@ -43,5 +46,9 @@ export function BsMultiSelect(element, environment, settings){
     return BsMultiSelectBase(element, environment, configuration, settings?.onInit);
 }
 
-initiateDefaults(defaultPlugins, defaults);
+plugDefaultConfig(defaultPlugins, defaults);
 BsMultiSelect.defaults=defaults;
+BsMultiSelect.tools = {EventBinder, addStyling, toggleStyling}
+BsMultiSelect.plugins = {CssPatchPlugin, SelectElementPlugin, LabelPlugin, HiddenOptionPlugin, ValidationApiPlugin, 
+    BsAppearancePlugin, FormResetPlugin, RtlPlugin, PlaceholderPlugin , OptionsApiPlugin, SelectAllApiPlugin,
+    JQueryMethodsPlugin, UpdateOptionsSelectedApiPlugin, FormRestoreOnBackwardPlugin,  DisabledOptionApiPlugin}

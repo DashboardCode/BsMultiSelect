@@ -1,13 +1,13 @@
 export function OptionToggleAspect(choiceAspect){
     return {
-        toggle: (choice)=>toggle(choiceAspect.setOptionSelected, choice)
+        toggle: (choice)=>toggle(choiceAspect, choice)
     }
 }
 
 
-function toggle(setOptionSelected, choice){
+function toggle(choiceAspect, choice){
     var success = false;
     if (choice.isOptionSelected || !choice.isOptionDisabled)
-        success = setOptionSelected(choice, !choice.isOptionSelected);
+        success = choiceAspect.setOptionSelected(choice, !choice.isOptionSelected);
     return success;
 }

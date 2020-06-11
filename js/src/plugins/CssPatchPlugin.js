@@ -5,19 +5,19 @@ import {cssPatch} from '../BsCss'
 export function CssPatchPlugin(){
 }
 
-CssPatchPlugin.initiateDefaults = (defaults)=>{
+CssPatchPlugin.plugDefaultConfig = (defaults) => {
     defaults.useCssPatch = true;
     defaults.cssPatch = cssPatch;
 }
 
-CssPatchPlugin.mergeDefaults = (configuration, defaults, settings)=>{
+CssPatchPlugin.plugMergeSettings = (configuration, defaults, settings) => {
     let cssPatch = settings?.cssPatch;
     if (isBoolean(cssPatch))
         throw new Error("BsMultiSelect: 'cssPatch' was used instead of 'useCssPatch'") // often type of error
     configuration.cssPatch = createCss(defaults.cssPatch, cssPatch); // replace classes, merge styles
 }
 
-CssPatchPlugin.plugOnConfiguration = (configurationPluginData) =>{
+CssPatchPlugin.plugStaticDom = (configurationPluginData) => {
     let {configuration} = configurationPluginData;
     if (configuration.useCssPatch)
         extendCss(configuration.css, configuration.cssPatch); 

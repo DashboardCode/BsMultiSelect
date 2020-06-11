@@ -13,7 +13,6 @@ export function OptionPropertiesAspect(getText, getSelected, setSelected, getDis
     }
     if (!setSelected){
         setSelected = (option, value) => {option.selected = value};
-        // TODO: move to sql
         // NOTE: adding this (setAttribute) break Chrome's html form reset functionality:
         // if (value) option.setAttribute('selected','');
         // else option.removeAttribute('selected');
