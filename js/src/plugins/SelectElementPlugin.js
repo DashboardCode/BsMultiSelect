@@ -69,7 +69,7 @@ SelectElementPlugin.plugStaticDom = (aspects)=>{
                             componentAspect.getDisabled = () => selectElement.disabled;
                         }
                     }
-                    onChangeAspect.onChange = () => composeSync(() => onChangeAspect.trigger('change'), triggerAspect.onChange) 
+                    onChangeAspect.onChange = composeSync(() => triggerAspect.trigger('change'), onChangeAspect.onChange) 
                     optionsAspect.getOptions = () => selectElement.options;
                     if (!getIsOptionDisabled)
                         optionPropertiesAspect.getDisabled = option => option.disabled;

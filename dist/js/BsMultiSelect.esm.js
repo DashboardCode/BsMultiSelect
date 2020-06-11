@@ -1,5 +1,5 @@
 /*!
-  * DashboardCode BsMultiSelect v0.6.6 (https://dashboardcode.github.io/BsMultiSelect/)
+  * DashboardCode BsMultiSelect v0.6.7 (https://dashboardcode.github.io/BsMultiSelect/)
   * Copyright 2017-2020 Roman Pokrovskij (github user rpokrovskij)
   * Licensed under APACHE 2 (https://github.com/DashboardCode/BsMultiSelect/blob/master/LICENSE)
   */
@@ -3351,11 +3351,9 @@ SelectElementPlugin.plugStaticDom = function (aspects) {
             }
           }
 
-          onChangeAspect.onChange = function () {
-            return composeSync(function () {
-              return onChangeAspect.trigger('change');
-            }, triggerAspect.onChange);
-          };
+          onChangeAspect.onChange = composeSync(function () {
+            return triggerAspect.trigger('change');
+          }, onChangeAspect.onChange);
 
           optionsAspect.getOptions = function () {
             return selectElement.options;

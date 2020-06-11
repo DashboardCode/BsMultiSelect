@@ -1,5 +1,6 @@
 # CHANGELOG
 ````
+0.6.7 - trigger change event bug resolved
 0.6.6 - optimizations
 0.6.5 - optimizations
 0.6.4 - optimizations
