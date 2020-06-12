@@ -6,7 +6,7 @@ export function SelectElementPlugin(){
 
 SelectElementPlugin.plugStaticDom = (aspects)=>{
     let {configuration, staticDomFactory, createElementAspect,  optionPropertiesAspect,
-        componentAspect, onChangeAspect, triggerAspect, optionsAspect, disposeAspect} = aspects;
+         componentPropertiesAspect, onChangeAspect, triggerAspect, optionsAspect, disposeAspect} = aspects;
     let {create: origCreate} = staticDomFactory;
     staticDomFactory.create = (css) => {
         let {choicesDom, createStaticDom: origCreateStaticDom} = origCreate(css);
@@ -64,9 +64,9 @@ SelectElementPlugin.plugStaticDom = (aspects)=>{
                     if(!getDisabled) {
                         var fieldsetElement = closestByTagName(selectElement, 'FIELDSET');
                         if (fieldsetElement) {
-                            componentAspect.getDisabled = () => selectElement.disabled || fieldsetElement.disabled;
+                            componentPropertiesAspect.getDisabled = () => selectElement.disabled || fieldsetElement.disabled;
                         } else {
-                            componentAspect.getDisabled = () => selectElement.disabled;
+                            componentPropertiesAspect.getDisabled = () => selectElement.disabled;
                         }
                     }
                     onChangeAspect.onChange = composeSync(() => triggerAspect.trigger('change'), onChangeAspect.onChange) 

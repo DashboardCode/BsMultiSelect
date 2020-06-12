@@ -1,8 +1,18 @@
-export function ChoiceAspect(optionPropertiesAspect){
+export function IsChoiceSelectableAspect(){
+    return {
+        isSelectable: (choice)=>isSelectable(choice) // TODO: should be moved to new aspect
+    }
+}
+
+export function SetOptionSelectedAspect(optionPropertiesAspect){
+    return {
+        setOptionSelected: (choice, booleanValue) => setOptionSelected(optionPropertiesAspect, choice, booleanValue),
+    }
+}
+
+export function CreateChoiceAspect(optionPropertiesAspect){
     return {
         createChoice: (option)=>createChoice(optionPropertiesAspect, option),
-        setOptionSelected: (choice, booleanValue) => setOptionSelected(optionPropertiesAspect, choice, booleanValue),
-        isSelectable: (choice)=>isSelectable(choice) // TODO: should be moved to new aspect
     }
 }
 

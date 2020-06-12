@@ -1,7 +1,7 @@
 import  {EventBinder} from './ToolsDom';
 import  {addStyling, toggleStyling} from './ToolsStyling';
 
-export function PickDomFactory(css, componentAspect, optionPropertiesAspect){
+export function PickDomFactory(css, componentPropertiesAspect, optionPropertiesAspect){
     return {
         create(pickElement, choice, remove){
             let eventBinder = EventBinder();
@@ -28,7 +28,7 @@ export function PickDomFactory(css, componentAspect, optionPropertiesAspect){
                             disableToggle(choice.isOptionDisabled)
                         }
                         function updateRemoveDisabled(){
-                            pickButtonElement.disabled = componentAspect.getDisabled();
+                            pickButtonElement.disabled = componentPropertiesAspect.getDisabled();
                         }
                         updateData();
                         updateDisabled()

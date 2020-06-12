@@ -4,7 +4,7 @@ import {ObservableLambda, composeSync} from '../ToolsJs';
 
 export function BsAppearancePlugin(pluginData){
     let {configuration, validationApiPluginData, 
-        picksDom, staticDom, labelPluginData, appearanceAspect, componentAspect} = pluginData;
+        picksDom, staticDom, labelPluginData, appearanceAspect, componentPropertiesAspect} = pluginData;
     let {getValidity, getSize, useCssPatch, css} = configuration;
     let selectElement = staticDom.selectElement;
     
@@ -36,8 +36,8 @@ export function BsAppearancePlugin(pluginData){
             getSize = () => null
     }
 
-    componentAspect.getSize=getSize;
-    componentAspect.getValidity=getValidity;
+    componentPropertiesAspect.getSize=getSize;
+    componentPropertiesAspect.getValidity=getValidity;
 
     var updateSize;
     if (!useCssPatch){

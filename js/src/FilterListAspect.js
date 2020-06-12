@@ -22,7 +22,7 @@ export function ChoicesEnumerableAspect(choicesGetNextAspect){
     }
 }
 
-export function FilterListAspect(choicesGetNextAspect, choicesEnumerableAspect) {
+export function FilterListAspect(choicesEnumerableAspect) {
     let filterListFacade = ListFacade(
         (choice)=>choice.filteredPrev, 
         (choice, v)=>choice.filteredPrev=v, 
@@ -34,11 +34,10 @@ export function FilterListAspect(choicesGetNextAspect, choicesEnumerableAspect) 
             (choice) => !choice.isOptionSelected  && !choice.isOptionDisabled  && choice.searchText.indexOf(text) >= 0     
 
     return {
-        addFilterFacade(choice){ // redefined in HidenOptionPulgin
-            filterListFacade.add(choice);
-        },
-        insertFilterFacade(choice){ // redefined in HidenOptionPulgin
-            let choiceNonhiddenBefore = choicesGetNextAspect.getNext(choice);
+        // addFilterFacade(choice){ // redefined in HidenOptionPulgin
+        //     filterListFacade.add(choice);
+        // },
+        insertFilterFacade(choice, choiceNonhiddenBefore){ // redefined in HidenOptionPulgin
             filterListFacade.add(choice, choiceNonhiddenBefore);
         },
         navigate(down, choice /* hoveredChoice */){ 

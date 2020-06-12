@@ -1,5 +1,7 @@
-export function UpdateDataAspect(multiSelectInputAspect, manageableResetFilterListAspect,
-    choicesDom, choices, picks, choicesAspect
+export function UpdateDataAspect(
+    multiSelectInputAspect, 
+    manageableResetFilterListAspect,
+    choicesDom, choices, picks, fillChoicesAspect
     ){
     return {
         updateData(){
@@ -12,7 +14,7 @@ export function UpdateDataAspect(multiSelectInputAspect, manageableResetFilterLi
             choices.clear();
             picks.clear();
     
-            choicesAspect.updateDataImpl(
+            fillChoicesAspect.fillChoices(
                 (c,e) => multiSelectInputAspect.adoptChoiceElement(c,e),
                 (s) => multiSelectInputAspect.handleOnRemoveButton(s)
             );

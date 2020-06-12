@@ -1,13 +1,13 @@
 export function OptionsApiPlugin(pluginData){
-    let {choiceFactoryAspect, manageableResetFilterListAspect, choices, choiceAspect, 
-        optionPropertiesAspect,
+    let {buildAndAttachChoiceAspect, manageableResetFilterListAspect, choices, createChoiceAspect, setOptionSelectedAspect,
+        optionPropertiesAspect, choicesGetNextAspect,
         optionsAspect, multiSelectInputAspect} = pluginData;
     return {
         buildApi(api){
 
             api.setOptionSelected = (key, value) => {
                 let choice = choices.get(key);
-                choiceAspect.setOptionSelected(choice, value);
+                setOptionSelectedAspect.setOptionSelected(choice, value);
             }
         
             api.updateOptionSelected = (key) => {
@@ -33,12 +33,14 @@ export function OptionsApiPlugin(pluginData){
             api.updateOptionAdded = (key)=>{  // TODO: generalize index as key 
                 let options = optionsAspect.getOptions();
                 let option = options[key];
-                let choice = choiceAspect.createChoice(option);
+                let choice = createChoiceAspect.createChoice(option);
                 choices.insert(key, choice);
-                choiceFactoryAspect.insertChoiceItem(
+
+                buildAndAttachChoiceAspect.buildAndAttachChoice(
                         choice,
                         (c,e) => multiSelectInputAspect.adoptChoiceElement(c,e),
-                        (s) => multiSelectInputAspect.handleOnRemoveButton(s)
+                        (s) => multiSelectInputAspect.handleOnRemoveButton(s),
+                        choicesGetNextAspect.getNext(choice)?.choiceElement
                     )
             }
         

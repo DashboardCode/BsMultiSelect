@@ -1,8 +1,8 @@
-export function Choices(collection, listFacade_reset, listFacade_remove, addFilterFacade, insertFilterFacade) 
+export function Choices(collection, listFacade_reset, listFacade_remove, insertFilterFacade, choicesGetNextAspect) 
 {
     return {
-        push: (choice) => push(choice, collection, addFilterFacade),
-        insert: (key, choice) => insert(key, choice, collection, addFilterFacade, insertFilterFacade),
+        push: (choice) => push(choice, collection, insertFilterFacade),
+        insert: (key, choice) => insert(key, choice, collection, insertFilterFacade, choicesGetNextAspect),
         get: (key) => collection.get(key),
         remove: (key) => {
             var choice = collection.remove(key);
@@ -22,17 +22,18 @@ export function Choices(collection, listFacade_reset, listFacade_remove, addFilt
     }
 }
 
-function push(choice, collection, addFilterFacade){
-    addFilterFacade(choice);
+function push(choice, collection, insertFilterFacade){
+    insertFilterFacade(choice);
     collection.push(choice);
 }
 
-function insert(key, choice, collection, addFilterFacade, insertFilterFacade){
+function insert(key, choice, collection, insertFilterFacade, choicesGetNextAspect){
     if (key>=collection.getLength()) {
-        push(choice, collection, addFilterFacade);
+        push(choice, collection, insertFilterFacade);
     }
     else {
         collection.add(choice, key);
-        insertFilterFacade(choice);
+        let choiceNonhiddenBefore = choicesGetNextAspect.getNext(choice);
+        insertFilterFacade(choice, choiceNonhiddenBefore);
     }
 }

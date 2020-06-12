@@ -1,11 +1,10 @@
 import {composeSync} from './ToolsJs';
 
-export function PicksAspect(picksDom, pickDomFactory, 
-    choiceAspect, picks){
+export function BuildPickAspect(setOptionSelectedAspect, picks, picksDom, pickDomFactory){
     return {
-        createPick(choice, handleOnRemoveButton /* multiSelectInputAspect.handleOnRemoveButton */){
+        buildPick(choice, handleOnRemoveButton){
             let { pickElement, attach, detach } = picksDom.createPickElement(); 
-            let setSelectedFalse = () => choiceAspect.setOptionSelected(choice, false)
+            let setSelectedFalse = () => setOptionSelectedAspect.setOptionSelected(choice, false)
             let remove = handleOnRemoveButton(setSelectedFalse);
             let {pickDomManager} = pickDomFactory.create(pickElement, choice, remove); 
             let pickHandlers = pickDomManager.init();

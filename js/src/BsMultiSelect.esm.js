@@ -18,7 +18,7 @@ import {DisabledOptionApiPlugin} from './plugins/DisabledOptionApiPlugin'
 import {FormRestoreOnBackwardPlugin} from './plugins/FormRestoreOnBackwardPlugin'
 
 import {createCss} from './ToolsStyling';
-import {extendIfUndefined} from './ToolsJs';
+import {extendIfUndefined, composeSync} from './ToolsJs';
 
 import  {EventBinder} from './ToolsDom';
 import  {addStyling, toggleStyling} from './ToolsStyling';
@@ -48,7 +48,7 @@ export function BsMultiSelect(element, environment, settings){
 
 plugDefaultConfig(defaultPlugins, defaults);
 BsMultiSelect.defaults=defaults;
-BsMultiSelect.tools = {EventBinder, addStyling, toggleStyling}
+BsMultiSelect.tools = {EventBinder, addStyling, toggleStyling, composeSync}
 BsMultiSelect.plugins = {CssPatchPlugin, SelectElementPlugin, LabelPlugin, HiddenOptionPlugin, ValidationApiPlugin, 
     BsAppearancePlugin, FormResetPlugin, RtlPlugin, PlaceholderPlugin , OptionsApiPlugin, SelectAllApiPlugin,
     JQueryMethodsPlugin, UpdateOptionsSelectedApiPlugin, FormRestoreOnBackwardPlugin,  DisabledOptionApiPlugin}

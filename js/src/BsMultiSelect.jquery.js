@@ -81,7 +81,7 @@ import  {addStyling, toggleStyling} from './ToolsStyling';
         plugDefaultConfig(defaultPlugins, defaults);
         prototypable.defaults = defaults;
 
-        prototypable.tools = {EventBinder, addStyling, toggleStyling}
+        prototypable.tools = {EventBinder, addStyling, toggleStyling, composeSync}
         
         prototypable.plugins = {CssPatchPlugin, SelectElementPlugin, LabelPlugin, HiddenOptionPlugin, ValidationApiPlugin, 
             BsAppearancePlugin, FormResetPlugin, RtlPlugin, PlaceholderPlugin , OptionsApiPlugin, SelectAllApiPlugin,

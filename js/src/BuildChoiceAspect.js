@@ -1,13 +1,27 @@
-export function ChoicesElementAspect(
+export function BuildAndAttachChoiceAspect(buildChoiceAspect){
+    return {
+        buildAndAttachChoice(
+            choice,
+            adoptChoiceElement, // multiSelectInputAspect.adoptChoiceElement
+            handleOnRemoveButton, // multiSelectInputAspect.handleOnRemoveButton
+            before 
+            ){
+                buildChoiceAspect.buildChoice(choice, adoptChoiceElement, handleOnRemoveButton);
+                choice.choiceElementAttach(before);
+        }
+    }
+}
+
+export function BuildChoiceAspect(
     choicesDom,
     filterDom, 
     choiceDomFactory,
     onChangeAspect, 
     optionToggleAspect,
-    picksAspect
+    createPickAspect
     ) {
     return {
-        buildChoiceElement(
+        buildChoice(
                 choice,
                 adoptChoiceElement, // aspect.adoptChoiceElement
                 handleOnRemoveButton // aspect.handleOnRemoveButton
@@ -25,7 +39,7 @@ export function ChoicesElementAspect(
             let choiceHanlders = choiceDomManager.init();
             let pickTools = { updateSelectedTrue: null, updateSelectedFalse: null }
             let updateSelectedTrue = () => { 
-                var removePick = picksAspect.createPick(choice, handleOnRemoveButton);
+                var removePick = createPickAspect.buildPick(choice, handleOnRemoveButton);
                 pickTools.updateSelectedFalse = removePick;
             };
         
@@ -89,69 +103,5 @@ export function ChoicesElementAspect(
             }
         }
     
-    }
-}
-
-export function ChoiceFactoryAspect(choicesElementAspect, choicesGetNextAspect){
-    return {
-        pushChoiceItem(
-            choice,
-            adoptChoiceElement, // multiSelectInputAspect.adoptChoiceElement
-            handleOnRemoveButton // multiSelectInputAspect.handleOnRemoveButton
-            ){
-                choicesElementAspect.buildChoiceElement(
-                    choice,
-                    adoptChoiceElement,
-                    handleOnRemoveButton
-                    );
-                choice.choiceElementAttach();
-        },
-        insertChoiceItem(
-            choice,
-            adoptChoiceElement, // aspect.adoptChoiceElement
-            handleOnRemoveButton
-            ){
-                choicesElementAspect.buildChoiceElement(choice, adoptChoiceElement, handleOnRemoveButton);
-                let nextChoice = choicesGetNextAspect.getNext(choice);
-                choice.choiceElementAttach(nextChoice?.choiceElement);
-        }
-    }
-}
-
-
-export function ChoicesAspect(document, choiceAspect, optionsAspect, choices, choiceFactoryAspect) { 
-    return {
-        updateDataImpl(
-            adoptChoiceElement, // aspect.adoptChoiceElement
-            handleOnRemoveButton
-        ){
-            var fillChoices = () => {
-                let options = optionsAspect.getOptions();
-                for(let i = 0; i<options.length; i++) {
-                    let option = options[i];
-                    let choice = choiceAspect.createChoice(option);
-                    choices.push(choice);
-                    choiceFactoryAspect.pushChoiceItem(
-                        choice,
-                        adoptChoiceElement,
-                        handleOnRemoveButton
-                        );
-                } 
-            }
-    
-            // browsers can change select value as part of "autocomplete" (IE11) 
-            // or "show preserved on go back" (Chrome) after page is loaded but before "ready" event;
-            // but they never "restore" selected-disabled options.
-            // TODO: make the FROM Validation for 'selected-disabled' easy.
-            if (document.readyState != 'loading') {
-                fillChoices();
-            } else {
-                var domContentLoadedHandler = function(){
-                    fillChoices();
-                    document.removeEventListener("DOMContentLoaded", domContentLoadedHandler);
-                }
-                document.addEventListener('DOMContentLoaded', domContentLoadedHandler); // IE9+
-            }
-        }
     }
 }

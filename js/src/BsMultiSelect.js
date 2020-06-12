@@ -19,15 +19,17 @@ import {OptionsAspect, OptionPropertiesAspect} from './OptionsAspect';
 import {DoublyLinkedCollection} from './ToolsJs'
 
 import {FilterListAspect, ChoicesGetNextAspect, ChoicesEnumerableAspect } from './FilterListAspect'
-import {ChoicesElementAspect, ChoiceFactoryAspect, ChoicesAspect } from './ChoicesAspect'
+import {BuildAndAttachChoiceAspect, BuildChoiceAspect} from './BuildChoiceAspect'
+import {FillChoicesAspect} from './FillChoicesAspect'
+
 import {UpdateDataAspect } from './UpdateDataAspect'
 
 import {OptionToggleAspect} from './OptionToggleAspect'
-import {ChoiceAspect} from './ChoiceAspect.js'
+import {CreateChoiceAspect, IsChoiceSelectableAspect, SetOptionSelectedAspect} from './CreateChoiceAspect.js'
 import {Choices} from './Choices'
 import {ChoicesHover} from './ChoicesHover'
 import {Picks} from './Picks'
-import {PicksAspect} from './PicksAspect'
+import {BuildPickAspect} from './BuildPickAspect'
 import {InputAspect} from './InputAspect'
 import {ResetFilterListAspect} from './ResetFilterListAspect'
 import {ManageableResetFilterListAspect} from './ResetFilterListAspect'
@@ -54,19 +56,41 @@ export function BsMultiSelect(element, environment, configuration, onInit){
     let disposeAspect = {};
     let triggerAspect = TriggerAspect(element, environment.trigger);
     let onChangeAspect = OnChangeAspect(triggerAspect, 'dashboardcode.multiselect:change');
-    let componentAspect = ComponentPropertiesAspect(getDisabled??(() => false));
+    let componentPropertiesAspect = ComponentPropertiesAspect(getDisabled??(() => false));
     let optionsAspect   = OptionsAspect(options); 
     let optionPropertiesAspect = OptionPropertiesAspect(getText, getSelected, setSelected, getIsOptionDisabled);
-    let choiceAspect        = ChoiceAspect(optionPropertiesAspect);
-    let optionToggleAspect  = OptionToggleAspect(choiceAspect);
+    let isChoiceSelectableAspect = IsChoiceSelectableAspect();
+    let createChoiceAspect        = CreateChoiceAspect(optionPropertiesAspect);
+    let setOptionSelectedAspect = SetOptionSelectedAspect(optionPropertiesAspect);
+    let optionToggleAspect  = OptionToggleAspect(setOptionSelectedAspect);
     let createElementAspect = CreateElementAspect(name => window.document.createElement(name));
+    
     let choicesDomFactory = ChoicesDomFactory(createElementAspect);
     let staticDomFactory  = StaticDomFactory(choicesDomFactory, createElementAspect);
     
+    let collection = DoublyLinkedCollection(
+        (choice)=>choice.itemPrev, 
+        (choice, v)=>choice.itemPrev=v, 
+        (choice)=>choice.itemNext, 
+        (choice, v)=>choice.itemNext=v, 
+    );
+    let choicesGetNextAspect = ChoicesGetNextAspect(()=>collection.getHead(),(choice)=>choice.itemNext)
+    let choicesEnumerableAspect = ChoicesEnumerableAspect(choicesGetNextAspect)
+    let filterListAspect = FilterListAspect(choicesEnumerableAspect); 
+    let choicesHover = ChoicesHover((down, hoveredChoice)=>filterListAspect.navigate(down, hoveredChoice));
+    let picks = Picks();
+    let choices = Choices(
+        collection,
+        ()=>filterListAspect.reset(), 
+        (c)=>filterListAspect.remove(c),
+        (c)=>filterListAspect.insertFilterFacade(c), 
+        choicesGetNextAspect);
+
     let aspects = {
-        environment, configuration, triggerAspect, onChangeAspect, componentAspect, disposeAspect,
-        optionsAspect, optionPropertiesAspect, choiceAspect, optionToggleAspect, createElementAspect,
-        choicesDomFactory, staticDomFactory
+        environment, configuration, triggerAspect, onChangeAspect, componentPropertiesAspect, disposeAspect,
+        optionsAspect, optionPropertiesAspect, createChoiceAspect, setOptionSelectedAspect, isChoiceSelectableAspect, optionToggleAspect, createElementAspect,
+        choicesDomFactory, staticDomFactory,
+        choicesGetNextAspect, choicesEnumerableAspect, filterListAspect, choicesHover, picks, choices
     }
     
     plugStaticDom(plugins, aspects); // apply cssPatch to css, apply selectElement support;  
@@ -78,57 +102,26 @@ export function BsMultiSelect(element, environment, configuration, onInit){
     // after this we can use staticDom in construtctor, this simplifies parameter passing a lot   
 
     let filterDom = FilterDom(staticDom.disposablePicksElement, createElementAspect, css);
+    let popupAspect = PopupAspect(choicesDom.choicesElement, filterDom.filterInputElement, Popper);
+    let resetFilterListAspect = ResetFilterListAspect(filterDom, filterListAspect)
+    let manageableResetFilterListAspect =  ManageableResetFilterListAspect(filterDom, resetFilterListAspect)
+    let inputAspect = InputAspect(filterListAspect, setOptionSelectedAspect, choicesHover, filterDom, popupAspect);
+
     // TODO get picksDom  from staticDomFactory
     let picksDom  = PicksDom(staticDom.picksElement, staticDom.disposablePicksElement, createElementAspect, css);
     let focusInAspect = FocusInAspect(picksDom)
-    let popupAspect = PopupAspect(choicesDom.choicesElement, filterDom.filterInputElement, Popper);
-
-    let collection = DoublyLinkedCollection(
-        (choice)=>choice.itemPrev, 
-        (choice, v)=>choice.itemPrev=v, 
-        (choice)=>choice.itemNext, 
-        (choice, v)=>choice.itemNext=v, 
-    );
-
-    let choicesGetNextAspect = ChoicesGetNextAspect(
-        ()=>collection.getHead(),
-        (choice)=>choice.itemNext
-    )
-
-    let choicesEnumerableAspect = ChoicesEnumerableAspect(
-        choicesGetNextAspect
-    )
-
-    let filterListAspect = FilterListAspect(choicesGetNextAspect, choicesEnumerableAspect); 
-    let resetFilterListAspect = ResetFilterListAspect(filterDom, filterListAspect)
-    let manageableResetFilterListAspect =  ManageableResetFilterListAspect(filterDom, resetFilterListAspect)
-    // TODO move to fully index collection
-    let choices = Choices(
-        collection,
-        ()=>filterListAspect.reset(), 
-        (c)=>filterListAspect.remove(c),
-        (c)=>filterListAspect.addFilterFacade(c), 
-        (c)=>filterListAspect.insertFilterFacade(c));
     
-    let choicesHover = ChoicesHover((down, hoveredChoice)=>filterListAspect.navigate(down, hoveredChoice));
+    let pickDomFactory = PickDomFactory(css, componentPropertiesAspect, optionPropertiesAspect);
 
-    let inputAspect = InputAspect(filterListAspect, choiceAspect, filterDom, popupAspect, choicesHover);
-
-    let picks = Picks();
-    
-    let pickDomFactory = PickDomFactory(css, componentAspect, optionPropertiesAspect);
-    let picksAspect = PicksAspect(
-        picksDom, 
-        pickDomFactory,
-        choiceAspect, picks, manageableResetFilterListAspect
-    );
+    let createPickAspect = BuildPickAspect(setOptionSelectedAspect, picks, picksDom, pickDomFactory);
 
     let choiceDomFactory = ChoiceDomFactory(css, optionPropertiesAspect);
     
-    let choicesElementAspect = ChoicesElementAspect( choicesDom, filterDom, choiceDomFactory, onChangeAspect, optionToggleAspect, picksAspect)
-    let choiceFactoryAspect =  ChoiceFactoryAspect(choicesElementAspect, choicesGetNextAspect);
-    let choicesAspect = ChoicesAspect(window.document, choiceAspect, optionsAspect, choices, choiceFactoryAspect);
+    let buildChoiceAspect = BuildChoiceAspect( choicesDom, filterDom, choiceDomFactory, onChangeAspect, optionToggleAspect, createPickAspect)
+    let buildAndAttachChoiceAspect =  BuildAndAttachChoiceAspect(buildChoiceAspect, choicesGetNextAspect);
+    let fillChoicesAspect = FillChoicesAspect(window.document, createChoiceAspect, optionsAspect, choices, buildAndAttachChoiceAspect);
 
+    // -----------
     let multiSelectInputAspect =  MultiSelectInputAspect(
         window,
         () => filterDom.setFocus(), 
@@ -146,9 +139,9 @@ export function BsMultiSelect(element, environment, configuration, onInit){
         /*alignToFilterInputItemLocation*/() => popupAspect.updatePopupLocation()
     );
 
-    let disabledComponentAspect = DisabledComponentAspect(componentAspect, picks, multiSelectInputAspect, picksDom);
+    let disabledComponentAspect = DisabledComponentAspect(componentPropertiesAspect, picks, multiSelectInputAspect, picksDom);
     let appearanceAspect = AppearanceAspect(disabledComponentAspect);
-    let loadAspect = LoadAspect(choicesAspect, multiSelectInputAspect, appearanceAspect);
+    let loadAspect = LoadAspect(fillChoicesAspect, multiSelectInputAspect, appearanceAspect);
 
     function hoveredToSelected(){
         let hoveredChoice = choicesHover.getHoveredChoice();
@@ -222,7 +215,7 @@ export function BsMultiSelect(element, environment, configuration, onInit){
     );
 
     let updateDataAspect = UpdateDataAspect(multiSelectInputAspect, manageableResetFilterListAspect,
-        choicesDom, choices, picks, choicesAspect);
+        choicesDom, choices, picks, fillChoicesAspect);
 
     aspects.pickDomFactory=pickDomFactory;
     aspects.choiceDomFactory=choiceDomFactory;
@@ -232,17 +225,11 @@ export function BsMultiSelect(element, environment, configuration, onInit){
     aspects.popupAspect=popupAspect;
     aspects.staticManager=staticManager;
 
-    aspects.choicesGetNextAspect=choicesGetNextAspect;
-    aspects.choicesEnumerableAspect=choicesEnumerableAspect;
-    aspects.filterListAspect=filterListAspect;
-    aspects.choices=choices;
-    aspects.choicesHover=choicesHover;
-    aspects.picks=picks;
-    aspects.choicesElementAspect=choicesElementAspect;
-    aspects.choiceFactoryAspect=choiceFactoryAspect;
-    aspects.choicesAspect=choicesAspect;
+    aspects.buildChoiceAspect=buildChoiceAspect;
+    aspects.buildAndAttachChoiceAspect=buildAndAttachChoiceAspect;
+    aspects.fillChoicesAspect=fillChoicesAspect;
 
-    aspects.picksAspect=picksAspect;
+    aspects.createPickAspect=createPickAspect;
     aspects.filterDom=filterDom;
     aspects.inputAspect=inputAspect;
     aspects.resetFilterListAspect=resetFilterListAspect;
