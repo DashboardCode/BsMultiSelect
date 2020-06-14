@@ -24,14 +24,14 @@ export function BuildPickAspect(setOptionSelectedAspect, picks, picksDom, pickDo
             
             attach();
             let choiceUpdateDisabledBackup = choice.updateDisabled;
-            choice.updateDisabled = composeSync(choiceUpdateDisabledBackup, pick.updateDisabled);
+            choice.updateDisabled = composeSync(choiceUpdateDisabledBackup, pick.updateDisabled); // add pickDisabled
     
             var removeFromList = picks.addPick(pick);
             let removePick = () => {
                 removeFromList();
                 pick.dispose();
     
-                choice.updateDisabled = choiceUpdateDisabledBackup; 
+                choice.updateDisabled = choiceUpdateDisabledBackup; // remove pickDisabled
                 choice.updateDisabled(); // make "true disabled" without it checkbox looks disabled
             }
             

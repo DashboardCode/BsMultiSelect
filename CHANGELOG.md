@@ -1,5 +1,6 @@
 # CHANGELOG
 ````
+0.6.9 - optimizations
 0.6.8 - optimizations (plugin API)
 0.6.7 - trigger change event bug resolved
 0.6.6 - optimizations

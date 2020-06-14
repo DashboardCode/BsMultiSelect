@@ -56,6 +56,7 @@ function createChoice(optionPropertiesAspect, option){
         setHoverIn: null,
     
         // TODO: is it a really sense to have them there?
+        isChoiceElementAttached: false,
         choiceElement: null,
         choiceElementAttach: null,
     

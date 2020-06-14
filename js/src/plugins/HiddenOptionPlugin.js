@@ -48,14 +48,14 @@ export function HiddenOptionPlugin(pluginData){
     createChoiceAspect.createChoice = (option) => {
         let choice = origСreateChoice(option);
         choice.isOptionHidden = getIsOptionHidden(option);
+        //choice.updateHidden = () => updateHidden(choice, filterListAspect, buildChoiceAspect, multiSelectInputAspect);
         return choice;
     };
 
     return {
         buildApi(api){
-            api.updateHidden = (c) => updateHidden(c, filterListAspect, buildChoiceAspect, multiSelectInputAspect);
             api.updateOptionsHidden = () => updateOptionsHidden(optionsAspect, choices, getIsOptionHidden, filterListAspect, buildChoiceAspect, multiSelectInputAspect);
-            api.updateOptionHidden = (key) => updateOptionHidden(key, choices, getIsOptionHidden, filterListAspect, buildChoiceAspect, multiSelectInputAspect);
+            api.updateOptionHidden  = (key) => updateOptionHidden(key, choices, getIsOptionHidden, filterListAspect, buildChoiceAspect, multiSelectInputAspect);
         }
     }
 }
@@ -80,6 +80,7 @@ function buildHiddenChoice(choice){
     choice.updateSelected = () => void 0;
     choice.updateDisabled = () => void 0;
     
+    choice.isChoiceElementAttached = false;
     choice.choiceElement = null;
     choice.choiceElementAttach = null;
     choice.setVisible = null; 
@@ -116,7 +117,7 @@ function getNextNonHidden(choice) { // TODO get next visible
     let next = choice.itemNext;
     if (!next) {
         return null;
-    } else if (next.choiceElement) {
+    } else if (next.isChoiceElementAttached) {
         return next;
     }
     return getNextNonHidden(next)

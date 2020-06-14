@@ -1,5 +1,4 @@
-import {ListFacade /*, sync, composeSync*/} from './ToolsJs'
-//import {addStyling} from './ToolsStyling';
+import {ListFacade} from './ToolsJs'
 
 export function ChoicesGetNextAspect(getHead, getNext){
     return {
@@ -34,9 +33,6 @@ export function FilterListAspect(choicesEnumerableAspect) {
             (choice) => !choice.isOptionSelected  && !choice.isOptionDisabled  && choice.searchText.indexOf(text) >= 0     
 
     return {
-        // addFilterFacade(choice){ // redefined in HidenOptionPulgin
-        //     filterListFacade.add(choice);
-        // },
         insertFilterFacade(choice, choiceNonhiddenBefore){ // redefined in HidenOptionPulgin
             filterListFacade.add(choice, choiceNonhiddenBefore);
         },

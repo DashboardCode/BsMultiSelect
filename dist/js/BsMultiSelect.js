@@ -1,5 +1,5 @@
 /*!
-  * DashboardCode BsMultiSelect v0.6.8 (https://dashboardcode.github.io/BsMultiSelect/)
+  * DashboardCode BsMultiSelect v0.6.9 (https://dashboardcode.github.io/BsMultiSelect/)
   * Copyright 2017-2020 Roman Pokrovskij (github user rpokrovskij)
   * Licensed under APACHE 2 (https://github.com/DashboardCode/BsMultiSelect/blob/master/LICENSE)
   */
@@ -1282,9 +1282,6 @@
       };
 
       return _ref = {
-        // addFilterFacade(choice){ // redefined in HidenOptionPulgin
-        //     filterListFacade.add(choice);
-        // },
         insertFilterFacade: function insertFilterFacade(choice, choiceNonhiddenBefore) {
           // redefined in HidenOptionPulgin
           filterListFacade.add(choice, choiceNonhiddenBefore);
@@ -1360,6 +1357,7 @@
 
           choice.choiceElement = choiceElement;
           choice.choiceElementAttach = attach;
+          choice.isChoiceElementAttached = true;
 
           var _choiceDomFactory$cre = choiceDomFactory.create(choiceElement, choice, function () {
             optionToggleAspect.toggle(choice);
@@ -1418,6 +1416,7 @@
             choiceDomManager.dispose();
             choice.choiceElement = null;
             choice.choiceElementAttach = null;
+            choice.isChoiceElementAttached = false;
             choice.remove = null;
             choice.updateSelected = null;
             choice.updateDisabled = null; // not real data manipulation but internal state
@@ -1562,6 +1561,7 @@
         setVisible: null,
         setHoverIn: null,
         // TODO: is it a really sense to have them there?
+        isChoiceElementAttached: false,
         choiceElement: null,
         choiceElementAttach: null,
         itemPrev: null,
@@ -1729,13 +1729,15 @@
           };
           attach();
           var choiceUpdateDisabledBackup = choice.updateDisabled;
-          choice.updateDisabled = composeSync(choiceUpdateDisabledBackup, pick.updateDisabled);
+          choice.updateDisabled = composeSync(choiceUpdateDisabledBackup, pick.updateDisabled); // add pickDisabled
+
           var removeFromList = picks.addPick(pick);
 
           var removePick = function removePick() {
             removeFromList();
             pick.dispose();
-            choice.updateDisabled = choiceUpdateDisabledBackup;
+            choice.updateDisabled = choiceUpdateDisabledBackup; // remove pickDisabled
+
             choice.updateDisabled(); // make "true disabled" without it checkbox looks disabled
           };
 
@@ -3042,16 +3044,13 @@
 
       createChoiceAspect.createChoice = function (option) {
         var choice = origСreateChoice(option);
-        choice.isOptionHidden = getIsOptionHidden(option);
+        choice.isOptionHidden = getIsOptionHidden(option); //choice.updateHidden = () => updateHidden(choice, filterListAspect, buildChoiceAspect, multiSelectInputAspect);
+
         return choice;
       };
 
       return {
         buildApi: function buildApi(api) {
-          api.updateHidden = function (c) {
-            return updateHidden(c, filterListAspect, buildChoiceAspect, multiSelectInputAspect);
-          };
-
           api.updateOptionsHidden = function () {
             return updateOptionsHidden(optionsAspect, choices, getIsOptionHidden, filterListAspect, buildChoiceAspect, multiSelectInputAspect);
           };
@@ -3089,6 +3088,7 @@
         return void 0;
       };
 
+      choice.isChoiceElementAttached = false;
       choice.choiceElement = null;
       choice.choiceElementAttach = null;
       choice.setVisible = null;
@@ -3128,7 +3128,7 @@
 
       if (!next) {
         return null;
-      } else if (next.choiceElement) {
+      } else if (next.isChoiceElementAttached) {
         return next;
       }
 

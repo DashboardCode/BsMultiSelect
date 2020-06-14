@@ -29,6 +29,7 @@ export function BuildChoiceAspect(
             var {choiceElement, setVisible, attach, detach} = choicesDom.createChoiceElement();
             choice.choiceElement = choiceElement;
             choice.choiceElementAttach = attach;
+            choice.isChoiceElementAttached = true;
             let {choiceDomManager} = choiceDomFactory.create(
                 choiceElement, 
                 choice,
@@ -86,6 +87,7 @@ export function BuildChoiceAspect(
     
                 choice.choiceElement = null;
                 choice.choiceElementAttach = null;
+                choice.isChoiceElementAttached = false;
                 choice.remove = null; 
                 
                 choice.updateSelected = null;
