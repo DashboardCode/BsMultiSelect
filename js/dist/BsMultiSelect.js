@@ -150,7 +150,9 @@ export function BsMultiSelect(element, environment, configuration, onInit) {
     return choicesHover.hoverIn(choice);
   }, function () {
     return manageableResetFilterListAspect.resetFilter();
-  }, function () {
+  },
+  /*isChoicesListEmpty*/
+  function () {
     return filterListAspect.getCount() == 0;
   },
   /*onClick*/

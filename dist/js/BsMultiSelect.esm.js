@@ -1,5 +1,5 @@
 /*!
-  * DashboardCode BsMultiSelect v0.6.9 (https://dashboardcode.github.io/BsMultiSelect/)
+  * DashboardCode BsMultiSelect v0.6.10 (https://dashboardcode.github.io/BsMultiSelect/)
   * Copyright 2017-2020 Roman Pokrovskij (github user rpokrovskij)
   * Licensed under APACHE 2 (https://github.com/DashboardCode/BsMultiSelect/blob/master/LICENSE)
   */
@@ -1150,31 +1150,17 @@ function ChoicesGetNextAspect(getHead, getNext) {
 }
 function ChoicesEnumerableAspect(choicesGetNextAspect) {
   return {
-    forEach: function (_forEach) {
-      function forEach(_x) {
-        return _forEach.apply(this, arguments);
-      }
-
-      forEach.toString = function () {
-        return _forEach.toString();
-      };
-
-      return forEach;
-    }(function (f) {
+    forEach: function forEach(f) {
       var choice = choicesGetNextAspect.getHead(); // this.choices.getHead()
 
       while (choice) {
-        forEach(function (choice) {
-          f(choice);
-          choice = choicesGetNextAspect.getNext(choice);
-        });
+        f(choice);
+        choice = choicesGetNextAspect.getNext(choice);
       }
-    })
+    }
   };
 }
 function FilterListAspect(choicesEnumerableAspect) {
-  var _ref;
-
   var filterListFacade = ListFacade(function (choice) {
     return choice.filteredPrev;
   }, function (choice, v) {
@@ -1191,7 +1177,7 @@ function FilterListAspect(choicesEnumerableAspect) {
     };
   };
 
-  return _ref = {
+  return {
     insertFilterFacade: function insertFilterFacade(choice, choiceNonhiddenBefore) {
       // redefined in HidenOptionPulgin
       filterListFacade.add(choice, choiceNonhiddenBefore);
@@ -1209,7 +1195,10 @@ function FilterListAspect(choicesEnumerableAspect) {
       // redefined in PlaceholderPulgin
       filterListFacade.reset();
       choicesEnumerableAspect.forEach(function (choice) {
-        choice.filteredPrev = choice.filteredNext = null;
+        choice.filteredPrev = choice.filteredNext = null; // var v = !choice.isOptionHidden;
+        // if (v)
+        //     filterListFacade.add(choice);
+
         filterListFacade.add(choice);
         choice.setVisible(true);
       });
@@ -1219,7 +1208,9 @@ function FilterListAspect(choicesEnumerableAspect) {
       filterListFacade.reset();
       choicesEnumerableAspect.forEach(function (choice) {
         choice.filteredPrev = choice.filteredNext = null;
-        var v = getFilterIn(choice);
+        var v =
+        /*!choice.isOptionHidden &&*/
+        getFilterIn(choice);
         if (v) filterListFacade.add(choice);
         choice.setVisible(v);
       });
@@ -1239,9 +1230,7 @@ function FilterListAspect(choicesEnumerableAspect) {
     add: function add(e, next) {
       filterListFacade.add(e, next);
     }
-  }, _ref["remove"] = function remove(e) {
-    filterListFacade.remove(e);
-  }, _ref;
+  };
 }
 
 function BuildAndAttachChoiceAspect(buildChoiceAspect) {
@@ -1735,7 +1724,7 @@ function FocusInAspect(picksDom) {
   };
 }
 
-function MultiSelectInputAspect(window, setFocus, picksElement, choicesElement, isChoicesVisible, setChoicesVisible, resetHoveredChoice, hoverIn, resetFilter, isChoiceEmpty, onClick, resetFocus, alignToFilterInputItemLocation) {
+function MultiSelectInputAspect(window, setFocus, picksElement, choicesElement, isChoicesVisible, setChoicesVisible, resetHoveredChoice, hoverIn, resetFilter, isChoicesListEmpty, onClick, resetFocus, alignToFilterInputItemLocation) {
   var document = window.document;
   var eventLoopFlag = EventLoopFlag(window);
   var skipFocusout = false;
@@ -1796,7 +1785,7 @@ function MultiSelectInputAspect(window, setFocus, picksElement, choicesElement, 
       if (isChoicesVisible()) {
         hideChoices();
       } else {
-        if (!isChoiceEmpty()) showChoices();
+        if (!isChoicesListEmpty()) showChoices();
       }
     }
 
@@ -2178,7 +2167,9 @@ function BsMultiSelect(element, environment, configuration, onInit) {
     return choicesHover.hoverIn(choice);
   }, function () {
     return manageableResetFilterListAspect.resetFilter();
-  }, function () {
+  },
+  /*isChoicesListEmpty*/
+  function () {
     return filterListAspect.getCount() == 0;
   },
   /*onClick*/

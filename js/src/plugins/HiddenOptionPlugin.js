@@ -71,7 +71,7 @@ function updateHidden(choice, filterListAspect, buildChoiceAspect, multiSelectIn
         buildChoiceAspect.buildChoice(choice,
             (c,e)=>multiSelectInputAspect.adoptChoiceElement(c,e),
             (s)=>multiSelectInputAspect.handleOnRemoveButton(s)
-            );
+        );
         choice.choiceElementAttach(nextChoice?.choiceElement);
     }
 }

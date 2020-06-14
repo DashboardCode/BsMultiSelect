@@ -7,15 +7,14 @@ export function ChoicesGetNextAspect(getHead, getNext){
     }
 }
 
+   
 export function ChoicesEnumerableAspect(choicesGetNextAspect){
     return {
         forEach(f){
             let choice =  choicesGetNextAspect.getHead(); // this.choices.getHead()
             while(choice){
-                forEach( (choice)=>{
-                    f(choice);
-                    choice = choicesGetNextAspect.getNext(choice);
-                });
+                f(choice);
+                choice = choicesGetNextAspect.getNext(choice);
             }
         }
     }
@@ -48,6 +47,11 @@ export function FilterListAspect(choicesEnumerableAspect) {
             filterListFacade.reset();
             choicesEnumerableAspect.forEach( (choice)=>{
                 choice.filteredPrev = choice.filteredNext = null;
+                
+                // var v = !choice.isOptionHidden;
+                // if (v)
+                //     filterListFacade.add(choice);
+
                 filterListFacade.add(choice);
                 choice.setVisible(true);
             });
@@ -57,7 +61,7 @@ export function FilterListAspect(choicesEnumerableAspect) {
             filterListFacade.reset();
             choicesEnumerableAspect.forEach( (choice)=>{
                 choice.filteredPrev = choice.filteredNext = null;
-                var v = getFilterIn(choice);
+                var v = /*!choice.isOptionHidden &&*/ getFilterIn(choice);
                 if (v)
                     filterListFacade.add(choice);
                 choice.setVisible(v);
@@ -79,8 +83,5 @@ export function FilterListAspect(choicesEnumerableAspect) {
         add(e, next){
             filterListFacade.add(e, next);
         },
-        remove(e){
-            filterListFacade.remove(e);
-        }
     }
 }

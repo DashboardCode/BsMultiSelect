@@ -92,7 +92,7 @@ export function BsMultiSelect(element, environment, configuration, onInit){
         choicesDomFactory, staticDomFactory,
         choicesGetNextAspect, choicesEnumerableAspect, filterListAspect, choicesHover, picks, choices
     }
-    
+
     plugStaticDom(plugins, aspects); // apply cssPatch to css, apply selectElement support;  
 
     let {choicesDom, createStaticDom} = staticDomFactory.create(css)
@@ -132,7 +132,7 @@ export function BsMultiSelect(element, environment, configuration, onInit){
         () => choicesHover.resetHoveredChoice(), 
         (choice) => choicesHover.hoverIn(choice),
         () => manageableResetFilterListAspect.resetFilter(),
-        () => filterListAspect.getCount()==0, 
+        /*isChoicesListEmpty*/() => filterListAspect.getCount()==0, 
         
         /*onClick*/(event) => filterDom.setFocusIfNotTarget(event.target),
         /*resetFocus*/() => focusInAspect.setFocusIn(false),

@@ -4,6 +4,8 @@ export function HiddenOptionPlugin(pluginData){
         buildAndAttachChoiceAspect, buildChoiceAspect,
         filterListAspect, multiSelectInputAspect,
         onChangeAspect, createPickAspect
+
+        , choicesDom, filterDom, choiceDomFactory, optionToggleAspect
     } = pluginData;
 
     let {getIsOptionHidden} = configuration;
@@ -15,30 +17,32 @@ export function HiddenOptionPlugin(pluginData){
             getIsOptionHidden = (option) => option.hidden;     
     }
 
-    choicesGetNextAspect.getNext = (c) => getNextNonHidden(c); // used in filter list and inserts (to find "before")
+    // choicesGetNextAspect.getNext = (c) => getNextNonHidden(c); // used in filter list and inserts (to find "before")
 
-    choicesEnumerableAspect.forEach = (f) => { // used in filter list 
-        let choice = choicesGetNextAspect.getHead();
-        while(choice){
-            if (!choice.isOptionHidden)
-                f(choice);
-            choice = choicesGetNextAspect.getNext(choice);
-        }
-    }    
+    // choicesEnumerableAspect.forEach = (f) => { // used in filter list 
+    //     let choice = choicesGetNextAspect.getHead();
+    //     while(choice){
+    //         if (!choice.isOptionHidden)
+    //             f(choice);
+    //         choice = choicesGetNextAspect.getNext(choice);
+    //     }
+    // }    
     
-    var origInsertFilterFacade = filterListAspect.insertFilterFacade;
-    filterListAspect.insertFilterFacade = (choice, choiceNonhiddenBefore) => {
-        if ( !choice.isOptionHidden ){
-            origInsertFilterFacade(choice, choiceNonhiddenBefore);
-        }
-    }
+    // var origInsertFilterFacade = filterListAspect.insertFilterFacade;
+    // filterListAspect.insertFilterFacade = (choice, choiceNonhiddenBefore) => {
+    //     if ( !choice.isOptionHidden ){
+    //         origInsertFilterFacade(choice, choiceNonhiddenBefore);
+    //     }
+    // }
 
     let origBuildAndAttachChoice = buildAndAttachChoiceAspect.buildAndAttachChoice;
     buildAndAttachChoiceAspect.buildAndAttachChoice=(choice, adoptChoiceElement, handleOnRemoveButton, before)=>{
         if (choice.isOptionHidden){ 
-            buildHiddenChoice(choice,  (s)=>multiSelectInputAspect.handleOnRemoveButton(s),
-            onChangeAspect, 
-            createPickAspect
+            //origBuildAndAttachChoice(choice, adoptChoiceElement, handleOnRemoveButton, before);
+            // choice.isChoiceElementAttached = false;
+            let p = {choicesDom, filterDom, choiceDomFactory, optionToggleAspect, onChangeAspect, createPickAspect}
+            buildHiddenChoice(
+                choice,  adoptChoiceElement, (s)=>multiSelectInputAspect.handleOnRemoveButton(s), p
             );
         }
         else{ 
@@ -53,6 +57,7 @@ export function HiddenOptionPlugin(pluginData){
     createChoiceAspect.createChoice = (option) => {
         let choice = origСreateChoice(option);
         choice.isOptionHidden = getIsOptionHidden(option);
+        // choice.updateHidden = () => updateHidden(choice, filterListAspect, buildChoiceAspect, multiSelectInputAspect, onChangeAspect, createPickAspect);
         return choice;
     };
 
@@ -64,48 +69,45 @@ export function HiddenOptionPlugin(pluginData){
     }
 }
 
-function updateHidden(choice, filterListAspect, buildChoiceAspect, multiSelectInputAspect
-    ,onChangeAspect, createPickAspect
-    ) {
+function updateHidden(choice, filterListAspect, buildChoiceAspect, multiSelectInputAspect, onChangeAspect, createPickAspect) {
+    // if (choice.isOptionHidden)
+    //     filterListAspect.remove(choice)
+    // else
+    //     filterListAspect.add(choice) // next is obligated by I do not know it.
+
+    // not enough. choice.isOptionHidden removes the item from reset loop ()    
+    choice.setVisible(!choice.isOptionHidden)
+    /*
     if (choice.isOptionHidden) {
         filterListAspect.remove(choice);
         choice.remove(); 
-        buildHiddenChoice(choice,  (s)=>multiSelectInputAspect.handleOnRemoveButton(s), 
-        onChangeAspect, createPickAspect
-        );
+        buildHiddenChoice(choice,  (s)=>multiSelectInputAspect.handleOnRemoveButton(s), onChangeAspect, createPickAspect);
     } else {
         let nextChoice = getNextNonHidden(choice);
         filterListAspect.add(choice, nextChoice);
         buildChoiceAspect.buildChoice(choice,
             (c,e)=>multiSelectInputAspect.adoptChoiceElement(c,e),
             (s)=>multiSelectInputAspect.handleOnRemoveButton(s)
-            );
+        );
         choice.choiceElementAttach(nextChoice?.choiceElement);
-    }
+    }*/
 }
 
-// choiceDomFactory
 
-function buildHiddenChoice(
-    choice,
-    handleOnRemoveButton, // aspect.handleOnRemoveButton
-    //
-    onChangeAspect, 
-    createPickAspect
-){
-
-    //var {choiceElement, setVisible, attach, detach} = choicesDom.createChoiceElement();
-    choice.isChoiceElementAttached = false;
-    choice.choiceElement = null; //choiceElement;
-    choice.choiceElementAttach = null; //attach;
-    // let {choiceDomManager} = choiceDomFactory.create(
-    //     choiceElement, 
-    //     choice,
-    //     () => {
-    //         optionToggleAspect.toggle(choice);
-    //         filterDom.setFocus();
-    //     });
-    //let choiceHanlders = choiceDomManager.init();
+function buildHiddenChoice(choice, adoptChoiceElement, handleOnRemoveButton, p){
+    let {choicesDom, filterDom, choiceDomFactory, optionToggleAspect, onChangeAspect, createPickAspect} = p;
+    var {choiceElement, setVisible, attach, detach} = choicesDom.createChoiceElement();
+    choice.choiceElement = choiceElement;
+    choice.choiceElementAttach = attach;
+    choice.isChoiceElementAttached = true;
+    let {choiceDomManager} = choiceDomFactory.create(
+         choiceElement, 
+         choice,
+         () => {
+             optionToggleAspect.toggle(choice);
+             filterDom.setFocus();
+         });
+    let choiceHanlders = choiceDomManager.init();
     let pickTools = { updateSelectedTrue: null, updateSelectedFalse: null }
     let updateSelectedTrue = () => { 
         var removePick = createPickAspect.buildPick(choice, handleOnRemoveButton);
@@ -115,7 +117,7 @@ function buildHiddenChoice(
     pickTools.updateSelectedTrue = updateSelectedTrue;  
 
     choice.remove = () => {
-        //detach();
+        detach();
         if (pickTools.updateSelectedFalse) {
             pickTools.updateSelectedFalse();
             pickTools.updateSelectedFalse=null;
@@ -123,7 +125,7 @@ function buildHiddenChoice(
     };  
 
     choice.updateSelected = () => {
-        //choiceHanlders.updateSelected();
+        choiceHanlders.updateSelected();
         if (choice.isOptionSelected)
             pickTools.updateSelectedTrue();
         else {
@@ -133,9 +135,9 @@ function buildHiddenChoice(
         onChangeAspect.onChange();
     }   
 
-    //var unbindChoiceElement = adoptChoiceElement(choice, choiceElement);    
+    var unbindChoiceElement = adoptChoiceElement(choice, choiceElement);    
 
-    /*
+    
     choice.isFilteredIn = true; 
 
     
@@ -147,12 +149,12 @@ function buildHiddenChoice(
     choice.setVisible = (v) => {
         choice.isFilteredIn = v;
         setVisible(choice.isFilteredIn)
-    }*/
+    }
 
-    choice.updateDisabled = ()=>{};  
+    choice.updateDisabled =  choiceHanlders.updateDisabled;
 
     choice.dispose = () => {
-        //unbindChoiceElement();
+        unbindChoiceElement();
         choiceDomManager.dispose(); 
 
         choice.choiceElement = null;
@@ -174,22 +176,6 @@ function buildHiddenChoice(
         updateSelectedTrue();
     }
 }
-
-/*
-function buildHiddenChoice(choice){
-    choice.updateSelected = () => void 0;
-    choice.updateDisabled = () => void 0;
-    
-    choice.choiceElement = null;
-    choice.choiceElementAttach = null;
-    choice.setVisible = null; 
-    choice.setHoverIn = null;
-    choice.remove = null; 
-    
-    choice.dispose = () => { 
-        choice.dispose = null;
-    };
-}*/
 
 function updateOptionHidden(key, choices, getIsOptionHidden, filterListAspect, buildChoiceAspect, multiSelectInputAspect,
     onChangeAspect, createPickAspect

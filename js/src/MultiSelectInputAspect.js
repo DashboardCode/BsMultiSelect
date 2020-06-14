@@ -10,7 +10,7 @@ export function MultiSelectInputAspect (
     resetHoveredChoice, 
     hoverIn,
     resetFilter,
-    isChoiceEmpty,
+    isChoicesListEmpty,
     onClick,
     resetFocus,
     alignToFilterInputItemLocation
@@ -78,7 +78,7 @@ export function MultiSelectInputAspect (
             if (isChoicesVisible()){
                 hideChoices()
             } else {
-                if (!isChoiceEmpty())
+                if (!isChoicesListEmpty())
                     showChoices();
             }
         }
