@@ -80,34 +80,20 @@ export function List(){
     }
 }
 
-export function ListFacade(getPrev, setPrev, getNext, setNext){
+export function DoublyLinkedList(getPrev, setPrev, getNext, setNext){
     var head = null, tail = null;
     var count = 0;
-    var remove = (e) => {
-        let next = getNext(e);
-        let prev = getPrev(e);
-        if (prev) {
-            setNext(prev, next)
-        }
-        if (next) {
-             setPrev(next, prev)
-        }
-        if (tail == e) {
-            tail = prev;
-        }
-        if (head == e) {
-            head = next; 
-        }
-        count--;
-    }
     return {
         add(e, next){
             if (!tail){
                 head = tail = e;
+                setPrev(e, null);
+                setNext(e, null);
             }
             else {
                 if (!next){
                     setPrev(e, tail);
+                    setNext(e, null);
                     setNext(tail, e);
                     tail = e;
                 } 
@@ -127,7 +113,23 @@ export function ListFacade(getPrev, setPrev, getNext, setNext){
             }
             count++;
         },
-        remove, 
+        remove(e){
+            let next = getNext(e);
+            let prev = getPrev(e);
+            if (prev) {
+                setNext(prev, next)
+            }
+            if (next) {
+                 setPrev(next, prev)
+            }
+            if (tail == e) {
+                tail = prev;
+            }
+            if (head == e) {
+                head = next; 
+            }
+            count--;
+        }, 
         forEach(f){
             forEachRecursion(f, tail);
         },
@@ -145,26 +147,6 @@ export function DoublyLinkedCollection(getPrev, setPrev, getNext, setNext){
     var list = [];
     var head = null, tail = null;
     var count = 0;
-    var remove = (key) => {
-        var e = list[key];
-        list.splice(key, 1);
-        let next = getNext(e);
-        let prev = getPrev(e);
-        if (prev) {
-            setNext(prev, next)
-        }
-        if (next) {
-             setPrev(next, prev)
-        }
-        if (tail == e) {
-            tail = prev;
-        }
-        if (head == e) {
-            head = next; 
-        }
-        count--;
-        return e;
-    }
     return {
         getLength(){
             return list.length;
@@ -173,9 +155,12 @@ export function DoublyLinkedCollection(getPrev, setPrev, getNext, setNext){
             list.push(e);
             if (!tail){
                 head = tail = e;
+                setPrev(e, null);
+                setNext(e, null);
             }
             else {
                 setPrev(e, tail);
+                setNext(e, null);
                 setNext(tail, e);
                 tail = e;
             }
@@ -184,11 +169,14 @@ export function DoublyLinkedCollection(getPrev, setPrev, getNext, setNext){
         add(e, key){
             if (!tail){
                 head = tail = e;
+                setPrev(e, null);
+                setNext(e, null);
             }
             else {
                 let next = list[key];
                 if (!next) {
                     setPrev(e, tail);
+                    setNext(e, null);
                     setNext(tail, e);
                     tail = e;
                 } 
@@ -211,7 +199,26 @@ export function DoublyLinkedCollection(getPrev, setPrev, getNext, setNext){
             count++;
         },
         get: (key) => list[key],
-        remove, 
+        remove(key){
+            var e = list[key];
+            list.splice(key, 1);
+            let next = getNext(e);
+            let prev = getPrev(e);
+            if (prev) {
+                setNext(prev, next)
+            }
+            if (next) {
+                 setPrev(next, prev)
+            }
+            if (tail == e) {
+                tail = prev;
+            }
+            if (head == e) {
+                head = next; 
+            }
+            count--;
+            return e;
+        }, 
         forLoop(f){
             for(let i=0; i<list.length; i++)
             {

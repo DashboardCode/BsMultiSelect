@@ -1,5 +1,5 @@
 export function InputAspect(
-    filterListAspect, setOptionSelectedAspect, choicesHover, filterDom, popupAspect){
+    filteredChoicesList, filterListAspect, setOptionSelectedAspect, hoveredChoiceAspect, navigateAspect,  filterDom, popupAspect){
 
     return {
         input(filterInputValue, resetLength, 
@@ -15,9 +15,9 @@ export function InputAspect(
             {
                 // check if exact match, otherwise new search
                 filterListAspect.setFilter(text);
-                if (filterListAspect.getCount() == 1)
+                if (filteredChoicesList.getCount() == 1)
                 {
-                    let fullMatchChoice =  filterListAspect.getHead();
+                    let fullMatchChoice =  filteredChoicesList.getHead();
                     if (fullMatchChoice.searchText == text)
                     {
                         setOptionSelectedAspect.setOptionSelected(fullMatchChoice, true);
@@ -34,7 +34,7 @@ export function InputAspect(
             
             eventLoopFlag_set(); // means disable some mouse handlers; otherwise we will get "Hover On MouseEnter" when filter's changes should remove hover
     
-            let visibleCount = filterListAspect.getCount();
+            let visibleCount = filteredChoicesList.getCount();
     
             if (visibleCount>0){
                 let panelIsVisble = popupAspect.isChoicesVisible();
@@ -42,10 +42,10 @@ export function InputAspect(
                     aspect_showChoices(); //multiSelectInputAspect.showChoices();
                 }
                 if (visibleCount == 1) {
-                    choicesHover.hoverIn(filterListAspect.getHead())
+                    navigateAspect.hoverIn(filteredChoicesList.getHead())
                 } else {
                     if (panelIsVisble)
-                        choicesHover.resetHoveredChoice();
+                        hoveredChoiceAspect.resetHoveredChoice();
                 }   
             }else{
                 if (popupAspect.isChoicesVisible())

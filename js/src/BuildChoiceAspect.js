@@ -4,10 +4,10 @@ export function BuildAndAttachChoiceAspect(buildChoiceAspect){
             choice,
             adoptChoiceElement, // multiSelectInputAspect.adoptChoiceElement
             handleOnRemoveButton, // multiSelectInputAspect.handleOnRemoveButton
-            before 
+            getNextElement 
             ){
                 buildChoiceAspect.buildChoice(choice, adoptChoiceElement, handleOnRemoveButton);
-                choice.choiceElementAttach(before);
+                choice.choiceElementAttach(getNextElement?.());
         }
     }
 }

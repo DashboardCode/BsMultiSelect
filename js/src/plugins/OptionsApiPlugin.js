@@ -40,7 +40,7 @@ export function OptionsApiPlugin(pluginData){
                         choice,
                         (c,e) => multiSelectInputAspect.adoptChoiceElement(c,e),
                         (s) => multiSelectInputAspect.handleOnRemoveButton(s),
-                        choicesGetNextAspect.getNext(choice)?.choiceElement
+                        () => choicesGetNextAspect.getNext(choice)?.choiceElement
                     )
             }
         

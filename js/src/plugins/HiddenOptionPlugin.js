@@ -2,7 +2,7 @@ export function HiddenOptionPlugin(pluginData){
     let {configuration, optionsAspect, options, createChoiceAspect, isChoiceSelectableAspect,
         choices, choicesGetNextAspect, choicesEnumerableAspect,  
         buildAndAttachChoiceAspect, buildChoiceAspect,
-        filterListAspect, multiSelectInputAspect} = pluginData;
+        filterListAspect, filteredChoicesList, multiSelectInputAspect} = pluginData;
 
     let {getIsOptionHidden} = configuration;
     if (options) {
@@ -48,26 +48,26 @@ export function HiddenOptionPlugin(pluginData){
     createChoiceAspect.createChoice = (option) => {
         let choice = origСreateChoice(option);
         choice.isOptionHidden = getIsOptionHidden(option);
-        //choice.updateHidden = () => updateHidden(choice, filterListAspect, buildChoiceAspect, multiSelectInputAspect);
+        //choice.updateHidden = () => updateHidden(choice, filteredChoicesList, buildChoiceAspect, multiSelectInputAspect);
         return choice;
     };
 
     return {
         buildApi(api){
-            api.updateOptionsHidden = () => updateOptionsHidden(optionsAspect, choices, getIsOptionHidden, filterListAspect, buildChoiceAspect, multiSelectInputAspect);
-            api.updateOptionHidden  = (key) => updateOptionHidden(key, choices, getIsOptionHidden, filterListAspect, buildChoiceAspect, multiSelectInputAspect);
+            api.updateOptionsHidden = () => updateOptionsHidden(optionsAspect, choices, getIsOptionHidden, filteredChoicesList, buildChoiceAspect, multiSelectInputAspect);
+            api.updateOptionHidden  = (key) => updateOptionHidden(key, choices, getIsOptionHidden, filteredChoicesList, buildChoiceAspect, multiSelectInputAspect);
         }
     }
 }
 
-function updateHidden(choice, filterListAspect, buildChoiceAspect, multiSelectInputAspect) {
+function updateHidden(choice, filteredChoicesList, buildChoiceAspect, multiSelectInputAspect) {
     if (choice.isOptionHidden) {
-        filterListAspect.remove(choice);
+        filteredChoicesList.remove(choice);
         choice.remove(); 
         buildHiddenChoice(choice);
     } else {
         let nextChoice = getNextNonHidden(choice);
-        filterListAspect.add(choice, nextChoice);
+        filteredChoicesList.add(choice, nextChoice);
         buildChoiceAspect.buildChoice(choice,
             (c,e)=>multiSelectInputAspect.adoptChoiceElement(c,e),
             (s)=>multiSelectInputAspect.handleOnRemoveButton(s)
@@ -92,24 +92,24 @@ function buildHiddenChoice(choice){
     };
 }
 
-function updateOptionHidden(key, choices, getIsOptionHidden, filterListAspect, buildChoiceAspect, multiSelectInputAspect){
+function updateOptionHidden(key, choices, getIsOptionHidden, filteredChoicesList, buildChoiceAspect, multiSelectInputAspect){
     let choice = choices.get(key);
-    updateHiddenChoice(choice, getIsOptionHidden, filterListAspect, buildChoiceAspect, multiSelectInputAspect)
+    updateHiddenChoice(choice, getIsOptionHidden, filteredChoicesList, buildChoiceAspect, multiSelectInputAspect)
 }
 
-function updateOptionsHidden(optionsAspect, choices, getIsOptionHidden, filterListAspect, buildChoiceAspect, multiSelectInputAspect){
+function updateOptionsHidden(optionsAspect, choices, getIsOptionHidden, filteredChoicesList, buildChoiceAspect, multiSelectInputAspect){
     let options = optionsAspect.getOptions();
     for(let i = 0; i<options.length; i++){
-        updateOptionHidden(i, choices, getIsOptionHidden, filterListAspect, buildChoiceAspect, multiSelectInputAspect)
+        updateOptionHidden(i, choices, getIsOptionHidden, filteredChoicesList, buildChoiceAspect, multiSelectInputAspect)
     }
 }
 
-function updateHiddenChoice(choice, getIsOptionHidden, filterListAspect, buildChoiceAspect, multiSelectInputAspect){
+function updateHiddenChoice(choice, getIsOptionHidden, filteredChoicesList, buildChoiceAspect, multiSelectInputAspect){
     let newIsOptionHidden = getIsOptionHidden(choice.option);
     if (newIsOptionHidden != choice.isOptionHidden)
     {
         choice.isOptionHidden= newIsOptionHidden;
-        updateHidden(choice, filterListAspect, buildChoiceAspect, multiSelectInputAspect)
+        updateHidden(choice, filteredChoicesList, buildChoiceAspect, multiSelectInputAspect)
     }
 }
 
