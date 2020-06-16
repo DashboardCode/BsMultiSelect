@@ -195,6 +195,7 @@ export function MultiSelectInputAspect (
         },
         onFocusOut(action){
             if (!getSkipFocusout()){ // skip initiated by mouse click (we manage it different way)
+                hideChoices();
                 resetFilter(); // if do not do this we will return to filtered list without text filter in input
                 action();
             }

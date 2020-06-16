@@ -130,9 +130,6 @@ export function DoublyLinkedList(getPrev, setPrev, getNext, setNext){
             }
             count--;
         }, 
-        forEach(f){
-            forEachRecursion(f, tail);
-        },
         getHead(){ return head },
         getTail(){ return tail },
         getCount(){ return count },
@@ -146,11 +143,7 @@ export function DoublyLinkedList(getPrev, setPrev, getNext, setNext){
 export function DoublyLinkedCollection(getPrev, setPrev, getNext, setNext){
     var list = [];
     var head = null, tail = null;
-    var count = 0;
     return {
-        getLength(){
-            return list.length;
-        },
         push(e){
             list.push(e);
             if (!tail){
@@ -164,9 +157,9 @@ export function DoublyLinkedCollection(getPrev, setPrev, getNext, setNext){
                 setNext(tail, e);
                 tail = e;
             }
-            count++;
         },
         add(e, key){
+            list.splice(key, 0, e);
             if (!tail){
                 head = tail = e;
                 setPrev(e, null);
@@ -181,8 +174,6 @@ export function DoublyLinkedCollection(getPrev, setPrev, getNext, setNext){
                     tail = e;
                 } 
                 else {
-                    list.splice(key, 0, e);
-
                     if (next===head)
                         head=e;
                     let prev = getPrev(next);
@@ -196,7 +187,6 @@ export function DoublyLinkedCollection(getPrev, setPrev, getNext, setNext){
                     }
                 } 
             }
-            count++;
         },
         get: (key) => list[key],
         remove(key){
@@ -216,7 +206,6 @@ export function DoublyLinkedCollection(getPrev, setPrev, getNext, setNext){
             if (head == e) {
                 head = next; 
             }
-            count--;
             return e;
         }, 
         forLoop(f){
@@ -228,12 +217,54 @@ export function DoublyLinkedCollection(getPrev, setPrev, getNext, setNext){
         },
         getHead(){ return head },
         getTail(){ return tail },
-        getCount(){ return count },
-        isEmpty(){ return count==0 },
+        getCount(){ return list.length },
+        isEmpty(){ return list.length==0 },
         reset(){ 
             list=[];
             tail=head=null; 
-            count = 0; }
+            }
+    }
+}
+
+export function ArrayFacade(){
+    var list = [];
+    return {
+        push(e){
+            list.push(e);
+        },
+        add(e, key){
+            list.splice(key, 0, e);
+        },
+        get: (key) => list[key],
+        getNext: (key, predicate) => {
+            let count = list.length;
+            let start = key+1;
+            if (key<count) {
+                if (!predicate)
+                    return list[start];
+                for (let i = start; i < count; i++) {
+                    let c = list[i];
+                    if (predicate(c))
+                        return c;
+                }
+            }
+        },
+        remove(key){
+            var e = list[key];
+            list.splice(key, 1);
+            return e;
+        }, 
+        forLoop(f){
+            for(let i=0; i<list.length; i++)
+            {
+                let e = list[i];
+                f(e);
+            }
+        },
+        getHead(){ return list[0] },
+        getCount(){ return list.length },
+        isEmpty(){ return list.length==0 },
+        reset(){ list=[];}
     }
 }
 

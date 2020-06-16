@@ -4,7 +4,7 @@ import {toggleStyling} from '../ToolsStyling';
 
 export function PlaceholderPlugin(pluginData){
     let {configuration, staticManager, picks, picksDom, filterDom, staticDom, updateDataAspect,
-        createPickAspect, inputAspect, resetFilterListAspect, filterListAspect} = pluginData;
+        createPickAspect, inputAspect, resetFilterListAspect, filterManagerAspect} = pluginData;
     let {placeholder,  css} = configuration;
     let {picksElement} = picksDom;
     let filterInputElement = filterDom.filterInputElement;
@@ -55,7 +55,7 @@ export function PlaceholderPlugin(pluginData){
 
     staticManager.appendToContainer = composeSync(staticManager.appendToContainer, updateEmptyInputWidth);
 
-    filterListAspect.processEmptyInput = composeSync(updateEmptyInputWidth, filterListAspect.processEmptyInput);
+    filterManagerAspect.processEmptyInput = composeSync(updateEmptyInputWidth, filterManagerAspect.processEmptyInput);
 
     resetFilterListAspect.forceResetFilter = composeSync(resetFilterListAspect.forceResetFilter, updatePlacehodlerVisibility);
             

@@ -1,5 +1,6 @@
 # CHANGELOG
 ````
+0.6.12 - api changes
 0.6.11 - "option api" add and keyboard highlighting error resloved
 0.6.10 - "no hidden plugin" error resloved
 0.6.9 - optimizations

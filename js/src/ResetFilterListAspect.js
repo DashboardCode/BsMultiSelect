@@ -1,8 +1,8 @@
-export function ResetFilterListAspect(filterDom, filterListAspect){
+export function ResetFilterListAspect(filterDom, filterManagerAspect){
     return {
         forceResetFilter(){  // over in PlaceholderPlugin
             filterDom.setEmpty();
-            filterListAspect.processEmptyInput(); // over in PlaceholderPlugin
+            filterManagerAspect.processEmptyInput(); // over in PlaceholderPlugin
         }
     }
 }

@@ -1,47 +1,46 @@
-export function ChoicesGetNextAspect(getHead, getNext){
+export function NavigateManager(
+    list, getPrev, getNext
+){
     return {
-        getHead, 
-        getNext
-    }
-}
-
-   
-export function ChoicesEnumerableAspect(choicesGetNextAspect){
-    return {
-        forEach(f){
-            let choice =  choicesGetNextAspect.getHead(); // this.choices.getHead()
-            while(choice){
-                f(choice);
-                choice = choicesGetNextAspect.getNext(choice);
+        navigate(down, choice /* hoveredChoice */){ 
+            if (down) {
+                return choice?getNext(choice): list.getHead();
+            } else {
+                return choice?getPrev(choice): list.getTail();
             }
+        },
+        getCount(){
+            return list.getCount()
+        },
+        getHead(){
+            return list.getHead()
         }
     }
 }
 
-export function FilterListAspect(filteredChoicesList, choicesEnumerableAspect) {
+export function FilterManagerAspect(
+    emptyNavigateManager,
+    filteredNavigateManager,
+
+    filteredChoicesList, 
+    choicesEnumerableAspect
+    ) {
+    let showEmptyFilter=true;
     let composeFilterPredicate = (text) => 
             (choice) => !choice.isOptionSelected  && !choice.isOptionDisabled  && choice.searchText.indexOf(text) >= 0     
 
     return {
-        insertFilterFacade(choice, choiceNonhiddenBefore){ // redefined in HidenOptionPulgin
-            filteredChoicesList.add(choice, choiceNonhiddenBefore);
+        getNavigateManager(){
+            return (showEmptyFilter)?emptyNavigateManager:filteredNavigateManager;
         },
-        navigate(down, choice /* hoveredChoice */){ 
-            if (down) {
-                return choice?choice.filteredNext: filteredChoicesList.getHead();
-            } else {
-                return choice?choice.filteredPrev: filteredChoicesList.getTail();
-            }
-        },        
         processEmptyInput(){ // redefined in PlaceholderPulgin
-            filteredChoicesList.reset();
+            showEmptyFilter =true;
             choicesEnumerableAspect.forEach( (choice)=>{
-                choice.filteredPrev = choice.filteredNext = null;
-                filteredChoicesList.add(choice);
                 choice.setVisible(true);
             });
         },
         setFilter(text){ 
+            showEmptyFilter =false;
             let getFilterIn = composeFilterPredicate(text)
             filteredChoicesList.reset();
             choicesEnumerableAspect.forEach( (choice)=>{

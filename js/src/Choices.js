@@ -1,39 +1,40 @@
-export function Choices(collection, listFacade_reset, listFacade_remove, insertFilterFacade, choicesGetNextAspect) 
+export function Choices(choicesCollection,  
+    listFacade_reset, listFacade_remove, listFacade_add) 
 {
     return {
-        push: (choice) => push(choice, collection, insertFilterFacade),
-        insert: (key, choice) => insert(key, choice, collection, insertFilterFacade, choicesGetNextAspect),
-        get: (key) => collection.get(key),
+        push: (choice) => push(choice, choicesCollection, listFacade_add),
+        insert: (key, choice) => insert(key, choice, choicesCollection, listFacade_add),
+        get: (key) => choicesCollection.get(key),
+        getNext: (key, predicate) => choicesCollection.getNext(key, predicate),
         remove: (key) => {
-            var choice = collection.remove(key);
+            var choice = choicesCollection.remove(key);
             listFacade_remove(choice);
             return choice;
         },
 
         //  ---- dialog AI
-        getHead: ()  => collection.getHead(),
-        forLoop: (f) => collection.forLoop(f),
+        //getHead: ()  => choicesCollection.getHead(),
+        forLoop: (f) => choicesCollection.forLoop(f),
         
         clear:()=>{
-            collection.reset();
+            choicesCollection.reset();
             listFacade_reset();
         }, 
-        dispose: () => collection.forLoop(choice => choice.dispose?.()) 
+        dispose: () => choicesCollection.forLoop(choice => choice.dispose?.()) 
     }
 }
 
-function push(choice, collection, insertFilterFacade){
-    insertFilterFacade(choice);
-    collection.push(choice);
+function push(choice, choicesCollection, listFacade_add){
+    choicesCollection.push(choice);
+    listFacade_add(choice);
 }
 
-function insert(key, choice, collection, insertFilterFacade, choicesGetNextAspect){
-    if (key>=collection.getLength()) {
-        push(choice, collection, insertFilterFacade);
+function insert(key, choice, choicesCollection, listFacade_add){
+    if (key>=choicesCollection.getCount()) {
+        push(choice, choicesCollection, listFacade_add);
     }
     else {
-        collection.add(choice, key);
-        let choiceNonhiddenBefore = choicesGetNextAspect.getNext(choice);
-        insertFilterFacade(choice, choiceNonhiddenBefore);
+        choicesCollection.add(choice, key);
+        listFacade_add(choice, key);
     }
 }

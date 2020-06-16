@@ -12,7 +12,9 @@ import {RtlPlugin} from './plugins/RtlPlugin';
 import {FormResetPlugin} from './plugins/FormResetPlugin';
 import {ValidationApiPlugin} from './plugins/ValidationApiPlugin';
 import {BsAppearancePlugin} from './plugins/BsAppearancePlugin';
+
 import {HiddenOptionPlugin} from './plugins/HiddenOptionPlugin';
+
 import {CssPatchPlugin} from './plugins/CssPatchPlugin';
 import {PlaceholderPlugin} from './plugins/PlaceholderPlugin';
 import {JQueryMethodsPlugin} from './plugins/JQueryMethodsPlugin';

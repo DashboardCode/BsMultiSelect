@@ -1,5 +1,5 @@
 export function InputAspect(
-    filteredChoicesList, filterListAspect, setOptionSelectedAspect, hoveredChoiceAspect, navigateAspect,  filterDom, popupAspect){
+    filterManagerAspect, setOptionSelectedAspect, hoveredChoiceAspect, navigateAspect,  filterDom, popupAspect){
 
     return {
         input(filterInputValue, resetLength, 
@@ -14,10 +14,10 @@ export function InputAspect(
             else
             {
                 // check if exact match, otherwise new search
-                filterListAspect.setFilter(text);
-                if (filteredChoicesList.getCount() == 1)
+                filterManagerAspect.setFilter(text);
+                if (filterManagerAspect.getNavigateManager().getCount() == 1)
                 {
-                    let fullMatchChoice =  filteredChoicesList.getHead();
+                    let fullMatchChoice =  filterManagerAspect.getNavigateManager().getHead();
                     if (fullMatchChoice.searchText == text)
                     {
                         setOptionSelectedAspect.setOptionSelected(fullMatchChoice, true);
@@ -27,14 +27,14 @@ export function InputAspect(
                 }
             }
             if (isEmpty){
-                filterListAspect.processEmptyInput();
+                filterManagerAspect.processEmptyInput();
             }
             else
                 resetLength();  
             
             eventLoopFlag_set(); // means disable some mouse handlers; otherwise we will get "Hover On MouseEnter" when filter's changes should remove hover
     
-            let visibleCount = filteredChoicesList.getCount();
+            let visibleCount = filterManagerAspect.getNavigateManager().getCount();
     
             if (visibleCount>0){
                 let panelIsVisble = popupAspect.isChoicesVisible();
@@ -42,7 +42,7 @@ export function InputAspect(
                     aspect_showChoices(); //multiSelectInputAspect.showChoices();
                 }
                 if (visibleCount == 1) {
-                    navigateAspect.hoverIn(filteredChoicesList.getHead())
+                    navigateAspect.hoverIn(filterManagerAspect.getNavigateManager().getHead())
                 } else {
                     if (panelIsVisble)
                         hoveredChoiceAspect.resetHoveredChoice();
