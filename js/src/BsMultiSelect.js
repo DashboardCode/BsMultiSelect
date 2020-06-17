@@ -187,10 +187,12 @@ export function BsMultiSelect(element, environment, configuration, onInit){
 
     let filterAspect = FilterAspect(
         filterDom.filterInputElement,
-        () => focusInAspect.setFocusIn(true),  // focus in - show dropdown
-        () => multiSelectInlineLayoutAspect.onFocusOut(
+
+        /*focusIn*/() => focusInAspect.setFocusIn(true),  // show dropdown
+        /*focusOut*/() => multiSelectInlineLayoutAspect.onFocusOut(
             () => focusInAspect.setFocusIn(false)
-        ), // focus out - hide dropdown
+        ), // hide dropdown
+
         /*onInput*/(filterInputValue, resetLength) =>
         { 
             inputAspect.input(
@@ -231,8 +233,8 @@ export function BsMultiSelect(element, environment, configuration, onInit){
             manageableResetFilterListAspect.resetFilter();
         }, // esc keyup 
 
-         // tab/enter "compleate hovered"
-        /*stopEscKeyDownPropogation */() => popupAspect.isChoicesVisible()
+        // tab/enter "compleate hovered"
+        /*stopEscKeyDownPropogation*/() => popupAspect.isChoicesVisible()
     );
 
     let disabledComponentAspect = DisabledComponentAspect(componentPropertiesAspect, picks, multiSelectInlineLayoutAspect, picksDom);
