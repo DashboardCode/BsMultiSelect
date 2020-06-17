@@ -4,6 +4,8 @@ export function FilterAspect(
 
         onFocusIn,  // show dropdown
         onFocusOut, // hide dropdown
+        onInput, // filter
+        
         onKeyDownArrowUp, 
         onKeyDownArrowDown,
         onTabForEmpty,  // tab on empty
@@ -13,15 +15,25 @@ export function FilterAspect(
         onEnterToCompleate,
         onKeyUpEsc, // "esc" alike
 
-        stopEscKeyDownPropogation, 
+        stopEscKeyDownPropogation
         
-        onInput // filter
+        
 ){
-    var isEmpty = () => filterInputElement.value ? false:true;
+    // it can be initated by 3PP functionality
+    // sample (1) BS functionality - input x button click - clears input
+    // sample (2) BS functionality - esc keydown - clears input
+    // and there could be difference in processing: (2) should hide the menu, then reset , when (1) should just reset without hiding.
+    var onFilterInputInput = () => {
+        var filterInputValue = filterInputElement.value;
+        onInput(
+            filterInputValue, 
+            ()=> {filterInputElement.style.width = filterInputValue.length*1.3 + 2 + "ch"} // TODO: better width calculation
+        );
+    }
 
     var onfilterInputKeyDown = (event) => {
         let keyCode = event.which;
-        var empty = isEmpty();
+        var empty = filterInputElement.value ? false:true;
 
         if ([ 13,
               27  // '27-esc' there is "just in case", I can imagine that there are user agents that do UNDO
@@ -81,22 +93,13 @@ export function FilterAspect(
         }
     }
     
-    // it can be initated by 3PP functionality
-    // sample (1) BS functionality - input x button click - clears input
-    // sample (2) BS functionality - esc keydown - clears input
-    // and there could be difference in processing: (2) should hide the menu, then reset , when (1) should just reset without hiding.
-    var onFilterInputInput = () => {
-        var filterInputValue = filterInputElement.value;
-        onInput(
-            filterInputValue, 
-            ()=> {filterInputElement.style.width = filterInputValue.length*1.3 + 2 + "ch"} // TODO: better width calculation
-        );
-    }
+
     
     var eventBinder = EventBinder();
     eventBinder.bind(filterInputElement,'focusin',  onFocusIn);
     eventBinder.bind(filterInputElement,'focusout', onFocusOut);
     eventBinder.bind(filterInputElement,'input',    onFilterInputInput);
+
     eventBinder.bind(filterInputElement,'keydown',  onfilterInputKeyDown);    
     eventBinder.bind(filterInputElement,'keyup',    onFilterInputKeyUp);
 

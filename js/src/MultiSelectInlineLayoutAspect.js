@@ -1,6 +1,6 @@
 import {EventBinder, EventLoopFlag, containsAndSelf} from './ToolsDom'
 
-export function MultiSelectInputAspect (
+export function MultiSelectInlineLayoutAspect (
     window,
     setFocus, 
     picksElement,
@@ -9,11 +9,13 @@ export function MultiSelectInputAspect (
     setChoicesVisible,
     resetHoveredChoice, 
     hoverIn,
+    navigate,
     resetFilter,
     isChoicesListEmpty,
     onClick,
     resetFocus,
-    alignToFilterInputItemLocation
+    alignToFilterInputItemLocation,
+    toggleHovered
     ) 
 {
     var document = window.document;
@@ -210,6 +212,23 @@ export function MultiSelectInputAspect (
         eventLoopFlag,
         hideChoices,
         showChoices,
-        handleOnRemoveButton
+        handleOnRemoveButton,
+
+        hoveredToSelected(){
+            let wasToggled = toggleHovered();
+            if (wasToggled) {
+                hideChoices(); // !
+                resetFilter(); // !
+            }
+        },
+
+        keyDownArrow(down) {
+            let choice = navigate(down);  
+            if (choice)
+            {
+                hoverIn(choice); // !
+                showChoices(); // !
+            }
+        }
     }
 }

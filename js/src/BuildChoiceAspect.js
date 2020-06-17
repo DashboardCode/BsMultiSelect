@@ -2,8 +2,8 @@ export function BuildAndAttachChoiceAspect(buildChoiceAspect){
     return {
         buildAndAttachChoice(
             choice,
-            adoptChoiceElement, // multiSelectInputAspect.adoptChoiceElement
-            handleOnRemoveButton, // multiSelectInputAspect.handleOnRemoveButton
+            adoptChoiceElement, // multiSelectInlineLayoutAspect.adoptChoiceElement
+            handleOnRemoveButton, // multiSelectInlineLayoutAspect.handleOnRemoveButton
             getNextElement 
             ){
                 buildChoiceAspect.buildChoice(choice, adoptChoiceElement, handleOnRemoveButton);

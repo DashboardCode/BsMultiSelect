@@ -1,12 +1,12 @@
 export function UpdateDataAspect(
-    multiSelectInputAspect, 
+    multiSelectInlineLayoutAspect, 
     manageableResetFilterListAspect,
     choicesDom, choices, picks, fillChoicesAspect
     ){
     return {
         updateData(){
             // close drop down , remove filter
-            multiSelectInputAspect.hideChoices(); // always hide 1st
+            multiSelectInlineLayoutAspect.hideChoices(); // always hide 1st
             manageableResetFilterListAspect.resetFilter();
     
             choicesDom.choicesElement.innerHTML = ""; // TODO: there should better "optimization"
@@ -15,8 +15,8 @@ export function UpdateDataAspect(
             picks.clear();
     
             fillChoicesAspect.fillChoices(
-                (c,e) => multiSelectInputAspect.adoptChoiceElement(c,e),
-                (s) => multiSelectInputAspect.handleOnRemoveButton(s)
+                (c,e) => multiSelectInlineLayoutAspect.adoptChoiceElement(c,e),
+                (s) => multiSelectInlineLayoutAspect.handleOnRemoveButton(s)
             );
         }
     }

@@ -1,4 +1,4 @@
-export function DisabledComponentAspect(componentPropertiesAspect, picks, multiSelectInputAspect, picksDom){
+export function DisabledComponentAspect(componentPropertiesAspect, picks, multiSelectInlineLayoutAspect, picksDom){
     let isComponentDisabled;
     return {
         updateDisabledComponent(){
@@ -6,7 +6,7 @@ export function DisabledComponentAspect(componentPropertiesAspect, picks, multiS
             if (isComponentDisabled!==newIsComponentDisabled){
                 isComponentDisabled=newIsComponentDisabled;
                 picks.disableRemoveAll(newIsComponentDisabled);
-                multiSelectInputAspect.disable(newIsComponentDisabled);
+                multiSelectInlineLayoutAspect.disable(newIsComponentDisabled);
                 picksDom.disable(newIsComponentDisabled);
             }
         }
@@ -21,12 +21,12 @@ export function AppearanceAspect(disabledComponentAspect){
     }
 }
 
-export function LoadAspect(fillChoicesAspect, multiSelectInputAspect, appearanceAspect){
+export function LoadAspect(fillChoicesAspect, multiSelectInlineLayoutAspect, appearanceAspect){
     return {
         load(){
             fillChoicesAspect.fillChoices(
-                (c,e) => multiSelectInputAspect.adoptChoiceElement(c,e),
-                (s) => multiSelectInputAspect.handleOnRemoveButton(s)
+                (c,e) => multiSelectInlineLayoutAspect.adoptChoiceElement(c,e),
+                (s) => multiSelectInlineLayoutAspect.handleOnRemoveButton(s)
             );
             appearanceAspect.updateAppearance(); 
         }

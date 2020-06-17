@@ -1,7 +1,7 @@
 export function HiddenOptionPlugin(pluginData){
     let {configuration, optionsAspect, options, createChoiceAspect, isChoiceSelectableAspect,
         choices, buildAndAttachChoiceAspect, buildChoiceAspect,
-        countableChoicesListInsertAspect, countableChoicesList, multiSelectInputAspect} = pluginData;
+        countableChoicesListInsertAspect, countableChoicesList, multiSelectInlineLayoutAspect} = pluginData;
 
     countableChoicesListInsertAspect.countableChoicesListInsert = (choice, key) => {
         if ( !choice.isOptionHidden ){
@@ -41,13 +41,13 @@ export function HiddenOptionPlugin(pluginData){
 
     return {
         buildApi(api){                                      
-            api.updateOptionsHidden = () => updateOptionsHidden(optionsAspect, choices, countableChoicesList, getIsOptionHidden, buildChoiceAspect, multiSelectInputAspect);
-            api.updateOptionHidden  = (key) => updateOptionHidden(key, choices, countableChoicesList, getIsOptionHidden, buildChoiceAspect, multiSelectInputAspect);
+            api.updateOptionsHidden = () => updateOptionsHidden(optionsAspect, choices, countableChoicesList, getIsOptionHidden, buildChoiceAspect, multiSelectInlineLayoutAspect);
+            api.updateOptionHidden  = (key) => updateOptionHidden(key, choices, countableChoicesList, getIsOptionHidden, buildChoiceAspect, multiSelectInlineLayoutAspect);
         }
     }
 }
                       
-function updateHidden(choice, getNextNonHidden, countableChoicesList, buildChoiceAspect, multiSelectInputAspect) {
+function updateHidden(choice, getNextNonHidden, countableChoicesList, buildChoiceAspect, multiSelectInlineLayoutAspect) {
     if (choice.isOptionHidden) {
         countableChoicesList.remove(choice);
         choice.remove(); 
@@ -56,8 +56,8 @@ function updateHidden(choice, getNextNonHidden, countableChoicesList, buildChoic
         let nextChoice = getNextNonHidden();
         countableChoicesList.add(choice, nextChoice);
         buildChoiceAspect.buildChoice(choice,
-            (c,e)=>multiSelectInputAspect.adoptChoiceElement(c,e),
-            (s)=>multiSelectInputAspect.handleOnRemoveButton(s)
+            (c,e)=>multiSelectInlineLayoutAspect.adoptChoiceElement(c,e),
+            (s)=>multiSelectInlineLayoutAspect.handleOnRemoveButton(s)
         );
         choice.choiceElementAttach(nextChoice?.choiceElement);
     }
@@ -79,24 +79,24 @@ function buildHiddenChoice(choice){
     };
 }
 
-function updateOptionsHidden(optionsAspect, choices, countableChoicesList, getIsOptionHidden, buildChoiceAspect, multiSelectInputAspect){
+function updateOptionsHidden(optionsAspect, choices, countableChoicesList, getIsOptionHidden, buildChoiceAspect, multiSelectInlineLayoutAspect){
     let options = optionsAspect.getOptions();
     for(let i = 0; i<options.length; i++){
-        updateOptionHidden(i, choices, countableChoicesList, getIsOptionHidden, buildChoiceAspect, multiSelectInputAspect)
+        updateOptionHidden(i, choices, countableChoicesList, getIsOptionHidden, buildChoiceAspect, multiSelectInlineLayoutAspect)
     }
 }
 
-function updateOptionHidden(key, choices, countableChoicesList, getIsOptionHidden, buildChoiceAspect, multiSelectInputAspect){
+function updateOptionHidden(key, choices, countableChoicesList, getIsOptionHidden, buildChoiceAspect, multiSelectInlineLayoutAspect){
     let choice = choices.get(key);
     let getNextNonHidden =  () => choices.getNext(key, c => !c.isOptionHidden );
-    updateHiddenChoice(choice, getNextNonHidden, countableChoicesList, getIsOptionHidden, buildChoiceAspect, multiSelectInputAspect)
+    updateHiddenChoice(choice, getNextNonHidden, countableChoicesList, getIsOptionHidden, buildChoiceAspect, multiSelectInlineLayoutAspect)
 }
 
-function updateHiddenChoice(choice, getNextNonHidden, countableChoicesList, getIsOptionHidden, buildChoiceAspect, multiSelectInputAspect){
+function updateHiddenChoice(choice, getNextNonHidden, countableChoicesList, getIsOptionHidden, buildChoiceAspect, multiSelectInlineLayoutAspect){
     let newIsOptionHidden = getIsOptionHidden(choice.option);
     if (newIsOptionHidden != choice.isOptionHidden)
     {
         choice.isOptionHidden= newIsOptionHidden;
-        updateHidden(choice, getNextNonHidden,  countableChoicesList, buildChoiceAspect, multiSelectInputAspect)
+        updateHidden(choice, getNextNonHidden,  countableChoicesList, buildChoiceAspect, multiSelectInlineLayoutAspect)
     }
 }

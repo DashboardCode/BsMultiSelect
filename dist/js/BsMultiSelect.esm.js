@@ -1,5 +1,5 @@
 /*!
-  * DashboardCode BsMultiSelect v0.6.12 (https://dashboardcode.github.io/BsMultiSelect/)
+  * DashboardCode BsMultiSelect v0.6.13 (https://dashboardcode.github.io/BsMultiSelect/)
   * Copyright 2017-2020 Roman Pokrovskij (github user rpokrovskij)
   * Licensed under APACHE 2 (https://github.com/DashboardCode/BsMultiSelect/blob/master/LICENSE)
   */
@@ -1151,8 +1151,8 @@ function FilterManagerAspect(emptyNavigateManager, filteredNavigateManager, filt
 
 function BuildAndAttachChoiceAspect(buildChoiceAspect) {
   return {
-    buildAndAttachChoice: function buildAndAttachChoice(choice, adoptChoiceElement, // multiSelectInputAspect.adoptChoiceElement
-    handleOnRemoveButton, // multiSelectInputAspect.handleOnRemoveButton
+    buildAndAttachChoice: function buildAndAttachChoice(choice, adoptChoiceElement, // multiSelectInlineLayoutAspect.adoptChoiceElement
+    handleOnRemoveButton, // multiSelectInlineLayoutAspect.handleOnRemoveButton
     getNextElement) {
       buildChoiceAspect.buildChoice(choice, adoptChoiceElement, handleOnRemoveButton);
       choice.choiceElementAttach(getNextElement == null ? void 0 : getNextElement());
@@ -1282,11 +1282,11 @@ function FillChoicesAspect(document, createChoiceAspect, optionsAspect, choices,
   };
 }
 
-function UpdateDataAspect(multiSelectInputAspect, manageableResetFilterListAspect, choicesDom, choices, picks, fillChoicesAspect) {
+function UpdateDataAspect(multiSelectInlineLayoutAspect, manageableResetFilterListAspect, choicesDom, choices, picks, fillChoicesAspect) {
   return {
     updateData: function updateData() {
       // close drop down , remove filter
-      multiSelectInputAspect.hideChoices(); // always hide 1st
+      multiSelectInlineLayoutAspect.hideChoices(); // always hide 1st
 
       manageableResetFilterListAspect.resetFilter();
       choicesDom.choicesElement.innerHTML = ""; // TODO: there should better "optimization"
@@ -1294,9 +1294,9 @@ function UpdateDataAspect(multiSelectInputAspect, manageableResetFilterListAspec
       choices.clear();
       picks.clear();
       fillChoicesAspect.fillChoices(function (c, e) {
-        return multiSelectInputAspect.adoptChoiceElement(c, e);
+        return multiSelectInlineLayoutAspect.adoptChoiceElement(c, e);
       }, function (s) {
-        return multiSelectInputAspect.handleOnRemoveButton(s);
+        return multiSelectInlineLayoutAspect.handleOnRemoveButton(s);
       });
     }
   };
@@ -1567,9 +1567,9 @@ function BuildPickAspect(setOptionSelectedAspect, picks, picksDom, pickDomFactor
 
 function InputAspect(filterManagerAspect, setOptionSelectedAspect, hoveredChoiceAspect, navigateAspect, filterDom, popupAspect) {
   return {
-    input: function input(filterInputValue, resetLength, eventLoopFlag_set, //multiSelectInputAspect.eventLoopFlag.set(); 
-    aspect_showChoices, //multiSelectInputAspect.showChoices();
-    aspect_hideChoices // multiSelectInputAspect.hideChoices();
+    input: function input(filterInputValue, resetLength, eventLoopFlag_set, //multiSelectInlineLayoutAspect.eventLoopFlag.set(); 
+    aspect_showChoices, //multiSelectInlineLayoutAspect.showChoices();
+    aspect_hideChoices // multiSelectInlineLayoutAspect.hideChoices();
     ) {
       var text = filterInputValue.trim().toLowerCase();
       var isEmpty = false;
@@ -1600,7 +1600,7 @@ function InputAspect(filterManagerAspect, setOptionSelectedAspect, hoveredChoice
         var panelIsVisble = popupAspect.isChoicesVisible();
 
         if (!panelIsVisble) {
-          aspect_showChoices(); //multiSelectInputAspect.showChoices();
+          aspect_showChoices(); //multiSelectInlineLayoutAspect.showChoices();
         }
 
         if (visibleCount == 1) {
@@ -1644,7 +1644,7 @@ function FocusInAspect(picksDom) {
   };
 }
 
-function MultiSelectInputAspect(window, setFocus, picksElement, choicesElement, isChoicesVisible, setChoicesVisible, resetHoveredChoice, hoverIn, resetFilter, isChoicesListEmpty, onClick, resetFocus, alignToFilterInputItemLocation) {
+function MultiSelectInlineLayoutAspect(window, setFocus, picksElement, choicesElement, isChoicesVisible, setChoicesVisible, resetHoveredChoice, hoverIn, navigate, resetFilter, isChoicesListEmpty, onClick, resetFocus, alignToFilterInputItemLocation, toggleHovered) {
   var document = window.document;
   var eventLoopFlag = EventLoopFlag(window);
   var skipFocusout = false;
@@ -1833,25 +1833,51 @@ function MultiSelectInputAspect(window, setFocus, picksElement, choicesElement, 
     eventLoopFlag: eventLoopFlag,
     hideChoices: hideChoices,
     showChoices: showChoices,
-    handleOnRemoveButton: handleOnRemoveButton
+    handleOnRemoveButton: handleOnRemoveButton,
+    hoveredToSelected: function hoveredToSelected() {
+      var wasToggled = toggleHovered();
+
+      if (wasToggled) {
+        hideChoices(); // !
+
+        resetFilter(); // !
+      }
+    },
+    keyDownArrow: function keyDownArrow(down) {
+      var choice = navigate(down);
+
+      if (choice) {
+        hoverIn(choice); // !
+
+        showChoices(); // !
+      }
+    }
   };
 }
 
 function FilterAspect(filterInputElement, onFocusIn, // show dropdown
 onFocusOut, // hide dropdown
+onInput, // filter
 onKeyDownArrowUp, onKeyDownArrowDown, onTabForEmpty, // tab on empty
 onBackspace, // backspace alike
 onTabToCompleate, // "compleate alike"
 onEnterToCompleate, onKeyUpEsc, // "esc" alike
-stopEscKeyDownPropogation, onInput // filter
-) {
-  var isEmpty = function isEmpty() {
-    return filterInputElement.value ? false : true;
+stopEscKeyDownPropogation) {
+  // it can be initated by 3PP functionality
+  // sample (1) BS functionality - input x button click - clears input
+  // sample (2) BS functionality - esc keydown - clears input
+  // and there could be difference in processing: (2) should hide the menu, then reset , when (1) should just reset without hiding.
+  var onFilterInputInput = function onFilterInputInput() {
+    var filterInputValue = filterInputElement.value;
+    onInput(filterInputValue, function () {
+      filterInputElement.style.width = filterInputValue.length * 1.3 + 2 + "ch";
+    } // TODO: better width calculation
+    );
   };
 
   var onfilterInputKeyDown = function onfilterInputKeyDown(event) {
     var keyCode = event.which;
-    var empty = isEmpty();
+    var empty = filterInputElement.value ? false : true;
 
     if ([13, 27 // '27-esc' there is "just in case", I can imagine that there are user agents that do UNDO
     ].indexOf(keyCode) >= 0 || keyCode == 9 && !empty //  otherwice there are no keyup (true at least for '9-tab'),
@@ -1904,18 +1930,6 @@ stopEscKeyDownPropogation, onInput // filter
       // escape
       onKeyUpEsc(); // is it always empty (bs x can still it) 
     }
-  }; // it can be initated by 3PP functionality
-  // sample (1) BS functionality - input x button click - clears input
-  // sample (2) BS functionality - esc keydown - clears input
-  // and there could be difference in processing: (2) should hide the menu, then reset , when (1) should just reset without hiding.
-
-
-  var onFilterInputInput = function onFilterInputInput() {
-    var filterInputValue = filterInputElement.value;
-    onInput(filterInputValue, function () {
-      filterInputElement.style.width = filterInputValue.length * 1.3 + 2 + "ch";
-    } // TODO: better width calculation
-    );
   };
 
   var eventBinder = EventBinder();
@@ -1931,7 +1945,7 @@ stopEscKeyDownPropogation, onInput // filter
   };
 }
 
-function DisabledComponentAspect(componentPropertiesAspect, picks, multiSelectInputAspect, picksDom) {
+function DisabledComponentAspect(componentPropertiesAspect, picks, multiSelectInlineLayoutAspect, picksDom) {
   var isComponentDisabled;
   return {
     updateDisabledComponent: function updateDisabledComponent() {
@@ -1940,7 +1954,7 @@ function DisabledComponentAspect(componentPropertiesAspect, picks, multiSelectIn
       if (isComponentDisabled !== newIsComponentDisabled) {
         isComponentDisabled = newIsComponentDisabled;
         picks.disableRemoveAll(newIsComponentDisabled);
-        multiSelectInputAspect.disable(newIsComponentDisabled);
+        multiSelectInlineLayoutAspect.disable(newIsComponentDisabled);
         picksDom.disable(newIsComponentDisabled);
       }
     }
@@ -1953,15 +1967,24 @@ function AppearanceAspect(disabledComponentAspect) {
     }
   };
 }
-function LoadAspect(fillChoicesAspect, multiSelectInputAspect, appearanceAspect) {
+function LoadAspect(fillChoicesAspect, multiSelectInlineLayoutAspect, appearanceAspect) {
   return {
     load: function load() {
       fillChoicesAspect.fillChoices(function (c, e) {
-        return multiSelectInputAspect.adoptChoiceElement(c, e);
+        return multiSelectInlineLayoutAspect.adoptChoiceElement(c, e);
       }, function (s) {
-        return multiSelectInputAspect.handleOnRemoveButton(s);
+        return multiSelectInlineLayoutAspect.handleOnRemoveButton(s);
       });
       appearanceAspect.updateAppearance();
+    }
+  };
+}
+
+function CountableChoicesListInsertAspect(countableChoicesList) {
+  return {
+    countableChoicesListInsert: function countableChoicesListInsert(choice, key) {
+      var choiceNext = choicesCollection.getNext(key);
+      countableChoicesList.add(choice, choiceNext);
     }
   };
 }
@@ -2010,16 +2033,6 @@ function BsMultiSelect(element, environment, configuration, onInit) {
   }, function (choice, v) {
     return choice.itemNext = v;
   });
-
-  var CountableChoicesListInsertAspect = function CountableChoicesListInsertAspect(countableChoicesList) {
-    return {
-      countableChoicesListInsert: function countableChoicesListInsert(choice, key) {
-        var choiceNext = choicesCollection.getNext(key);
-        countableChoicesList.add(choice, choiceNext);
-      }
-    };
-  };
-
   var countableChoicesListInsertAspect = CountableChoicesListInsertAspect(countableChoicesList);
   var choicesEnumerableAspect = ChoicesEnumerableAspect(countableChoicesList, function (choice) {
     return choice.itemNext;
@@ -2109,7 +2122,7 @@ function BsMultiSelect(element, environment, configuration, onInit) {
   var buildAndAttachChoiceAspect = BuildAndAttachChoiceAspect(buildChoiceAspect);
   var fillChoicesAspect = FillChoicesAspect(window.document, createChoiceAspect, optionsAspect, choices, buildAndAttachChoiceAspect); // -----------
 
-  var multiSelectInputAspect = MultiSelectInputAspect(window, function () {
+  var multiSelectInlineLayoutAspect = MultiSelectInlineLayoutAspect(window, function () {
     return filterDom.setFocus();
   }, picksDom.picksElement, choicesDom.choicesElement, function () {
     return popupAspect.isChoicesVisible();
@@ -2119,6 +2132,8 @@ function BsMultiSelect(element, environment, configuration, onInit) {
     return hoveredChoiceAspect.resetHoveredChoice();
   }, function (choice) {
     return navigateAspect.hoverIn(choice);
+  }, function (down) {
+    return navigateAspect.navigate(down);
   }, function () {
     return manageableResetFilterListAspect.resetFilter();
   },
@@ -2137,51 +2152,46 @@ function BsMultiSelect(element, environment, configuration, onInit) {
   /*alignToFilterInputItemLocation*/
   function () {
     return popupAspect.updatePopupLocation();
-  });
-  var disabledComponentAspect = DisabledComponentAspect(componentPropertiesAspect, picks, multiSelectInputAspect, picksDom);
-  var appearanceAspect = AppearanceAspect(disabledComponentAspect);
-  var loadAspect = LoadAspect(fillChoicesAspect, multiSelectInputAspect, appearanceAspect);
-
-  function hoveredToSelected() {
+  },
+  /*toggleHovered*/
+  function () {
+    var wasToggled = false;
     var hoveredChoice = hoveredChoiceAspect.getHoveredChoice();
 
     if (hoveredChoice) {
-      var wasToggled = optionToggleAspect.toggle(hoveredChoice);
-
-      if (wasToggled) {
-        multiSelectInputAspect.hideChoices();
-        manageableResetFilterListAspect.resetFilter();
-      }
+      wasToggled = optionToggleAspect.toggle(hoveredChoice);
     }
-  }
 
-  function keyDownArrow(down) {
-    var choice = navigateAspect.navigate(down);
-
-    if (choice) {
-      navigateAspect.hoverIn(choice);
-      multiSelectInputAspect.showChoices();
-    }
-  }
-
+    return wasToggled;
+  });
   var filterAspect = FilterAspect(filterDom.filterInputElement, function () {
     return focusInAspect.setFocusIn(true);
   }, // focus in - show dropdown
   function () {
-    return multiSelectInputAspect.onFocusOut(function () {
+    return multiSelectInlineLayoutAspect.onFocusOut(function () {
       return focusInAspect.setFocusIn(false);
     });
   }, // focus out - hide dropdown
-  function () {
-    return keyDownArrow(false);
+
+  /*onInput*/
+  function (filterInputValue, resetLength) {
+    inputAspect.input(filterInputValue, resetLength, function () {
+      return multiSelectInlineLayoutAspect.eventLoopFlag.set();
+    }, function () {
+      return multiSelectInlineLayoutAspect.showChoices();
+    }, function () {
+      return multiSelectInlineLayoutAspect.hideChoices();
+    });
+  }, function () {
+    return multiSelectInlineLayoutAspect.keyDownArrow(false);
   }, // arrow up
   function () {
-    return keyDownArrow(true);
+    return multiSelectInlineLayoutAspect.keyDownArrow(true);
   }, // arrow down
 
   /*onTabForEmpty*/
   function () {
-    return multiSelectInputAspect.hideChoices();
+    return multiSelectInlineLayoutAspect.hideChoices();
   }, // tab on empty
   function () {
     var p = picks.removePicksTail();
@@ -2191,22 +2201,22 @@ function BsMultiSelect(element, environment, configuration, onInit) {
   /*onTabToCompleate*/
   function () {
     if (popupAspect.isChoicesVisible()) {
-      hoveredToSelected();
+      multiSelectInlineLayoutAspect.hoveredToSelected();
     }
   },
   /*onEnterToCompleate*/
   function () {
     if (popupAspect.isChoicesVisible()) {
-      hoveredToSelected();
+      multiSelectInlineLayoutAspect.hoveredToSelected();
     } else {
       if (filterManagerAspect.getNavigateManager().getCount() > 0) {
-        multiSelectInputAspect.showChoices();
+        multiSelectInlineLayoutAspect.showChoices();
       }
     }
   },
   /*onKeyUpEsc*/
   function () {
-    multiSelectInputAspect.hideChoices(); // always hide 1st
+    multiSelectInlineLayoutAspect.hideChoices(); // always hide 1st
 
     manageableResetFilterListAspect.resetFilter();
   }, // esc keyup 
@@ -2215,18 +2225,11 @@ function BsMultiSelect(element, environment, configuration, onInit) {
   /*stopEscKeyDownPropogation */
   function () {
     return popupAspect.isChoicesVisible();
-  },
-  /*onInput*/
-  function (filterInputValue, resetLength) {
-    inputAspect.input(filterInputValue, resetLength, function () {
-      return multiSelectInputAspect.eventLoopFlag.set();
-    }, function () {
-      return multiSelectInputAspect.showChoices();
-    }, function () {
-      return multiSelectInputAspect.hideChoices();
-    });
   });
-  var updateDataAspect = UpdateDataAspect(multiSelectInputAspect, manageableResetFilterListAspect, choicesDom, choices, picks, fillChoicesAspect);
+  var disabledComponentAspect = DisabledComponentAspect(componentPropertiesAspect, picks, multiSelectInlineLayoutAspect, picksDom);
+  var appearanceAspect = AppearanceAspect(disabledComponentAspect);
+  var loadAspect = LoadAspect(fillChoicesAspect, multiSelectInlineLayoutAspect, appearanceAspect);
+  var updateDataAspect = UpdateDataAspect(multiSelectInlineLayoutAspect, manageableResetFilterListAspect, choicesDom, choices, picks, fillChoicesAspect);
   aspects.pickDomFactory = pickDomFactory;
   aspects.choiceDomFactory = choiceDomFactory;
   aspects.staticDom = staticDom;
@@ -2242,7 +2245,7 @@ function BsMultiSelect(element, environment, configuration, onInit) {
   aspects.inputAspect = inputAspect;
   aspects.resetFilterListAspect = resetFilterListAspect;
   aspects.manageableResetFilterListAspect = manageableResetFilterListAspect;
-  aspects.multiSelectInputAspect = multiSelectInputAspect;
+  aspects.multiSelectInlineLayoutAspect = multiSelectInlineLayoutAspect;
   aspects.focusInAspect = focusInAspect;
   aspects.filterAspect = filterAspect;
   aspects.disabledComponentAspect = disabledComponentAspect;
@@ -2254,7 +2257,7 @@ function BsMultiSelect(element, environment, configuration, onInit) {
     component: "BsMultiSelect.api"
   };
   pluginManager.buildApi(api);
-  api.dispose = composeSync(disposeAspect.dispose, multiSelectInputAspect.hideChoices, pluginManager.dispose, picks.dispose, multiSelectInputAspect.dispose, choices.dispose, staticManager.dispose, popupAspect.dispose, picksDom.dispose, filterDom.dispose, filterAspect.dispose);
+  api.dispose = composeSync(disposeAspect.dispose, multiSelectInlineLayoutAspect.hideChoices, pluginManager.dispose, picks.dispose, multiSelectInlineLayoutAspect.dispose, choices.dispose, staticManager.dispose, popupAspect.dispose, picksDom.dispose, filterDom.dispose, filterAspect.dispose);
   api.updateData = updateDataAspect.updateData;
 
   api.update = function () {
@@ -2842,7 +2845,7 @@ function HiddenOptionPlugin(pluginData) {
       buildChoiceAspect = pluginData.buildChoiceAspect,
       countableChoicesListInsertAspect = pluginData.countableChoicesListInsertAspect,
       countableChoicesList = pluginData.countableChoicesList,
-      multiSelectInputAspect = pluginData.multiSelectInputAspect;
+      multiSelectInlineLayoutAspect = pluginData.multiSelectInlineLayoutAspect;
 
   countableChoicesListInsertAspect.countableChoicesListInsert = function (choice, key) {
     if (!choice.isOptionHidden) {
@@ -2852,18 +2855,6 @@ function HiddenOptionPlugin(pluginData) {
       countableChoicesList.add(choice, choiceNext);
     }
   };
-
-  var getIsOptionHidden = configuration.getIsOptionHidden;
-
-  if (options) {
-    if (!getIsOptionHidden) getIsOptionHidden = function getIsOptionHidden(option) {
-      return option.hidden === undefined ? false : option.hidden;
-    };
-  } else {
-    if (!getIsOptionHidden) getIsOptionHidden = function getIsOptionHidden(option) {
-      return option.hidden;
-    };
-  }
 
   var origBuildAndAttachChoice = buildAndAttachChoiceAspect.buildAndAttachChoice;
 
@@ -2881,6 +2872,18 @@ function HiddenOptionPlugin(pluginData) {
     return origIsSelectable(choice) && !choice.isOptionHidden;
   };
 
+  var getIsOptionHidden = configuration.getIsOptionHidden;
+
+  if (options) {
+    if (!getIsOptionHidden) getIsOptionHidden = function getIsOptionHidden(option) {
+      return option.hidden === undefined ? false : option.hidden;
+    };
+  } else {
+    if (!getIsOptionHidden) getIsOptionHidden = function getIsOptionHidden(option) {
+      return option.hidden;
+    };
+  }
+
   var origСreateChoice = createChoiceAspect.createChoice;
 
   createChoiceAspect.createChoice = function (option) {
@@ -2892,17 +2895,17 @@ function HiddenOptionPlugin(pluginData) {
   return {
     buildApi: function buildApi(api) {
       api.updateOptionsHidden = function () {
-        return updateOptionsHidden(optionsAspect, choices, countableChoicesList, getIsOptionHidden, buildChoiceAspect, multiSelectInputAspect);
+        return updateOptionsHidden(optionsAspect, choices, countableChoicesList, getIsOptionHidden, buildChoiceAspect, multiSelectInlineLayoutAspect);
       };
 
       api.updateOptionHidden = function (key) {
-        return updateOptionHidden(key, choices, countableChoicesList, getIsOptionHidden, buildChoiceAspect, multiSelectInputAspect);
+        return updateOptionHidden(key, choices, countableChoicesList, getIsOptionHidden, buildChoiceAspect, multiSelectInlineLayoutAspect);
       };
     }
   };
 }
 
-function updateHidden(choice, getNextNonHidden, countableChoicesList, buildChoiceAspect, multiSelectInputAspect) {
+function updateHidden(choice, getNextNonHidden, countableChoicesList, buildChoiceAspect, multiSelectInlineLayoutAspect) {
   if (choice.isOptionHidden) {
     countableChoicesList.remove(choice);
     choice.remove();
@@ -2911,9 +2914,9 @@ function updateHidden(choice, getNextNonHidden, countableChoicesList, buildChoic
     var nextChoice = getNextNonHidden();
     countableChoicesList.add(choice, nextChoice);
     buildChoiceAspect.buildChoice(choice, function (c, e) {
-      return multiSelectInputAspect.adoptChoiceElement(c, e);
+      return multiSelectInlineLayoutAspect.adoptChoiceElement(c, e);
     }, function (s) {
-      return multiSelectInputAspect.handleOnRemoveButton(s);
+      return multiSelectInlineLayoutAspect.handleOnRemoveButton(s);
     });
     choice.choiceElementAttach(nextChoice == null ? void 0 : nextChoice.choiceElement);
   }
@@ -2940,15 +2943,15 @@ function buildHiddenChoice(choice) {
   };
 }
 
-function updateOptionsHidden(optionsAspect, choices, countableChoicesList, getIsOptionHidden, buildChoiceAspect, multiSelectInputAspect) {
+function updateOptionsHidden(optionsAspect, choices, countableChoicesList, getIsOptionHidden, buildChoiceAspect, multiSelectInlineLayoutAspect) {
   var options = optionsAspect.getOptions();
 
   for (var i = 0; i < options.length; i++) {
-    updateOptionHidden(i, choices, countableChoicesList, getIsOptionHidden, buildChoiceAspect, multiSelectInputAspect);
+    updateOptionHidden(i, choices, countableChoicesList, getIsOptionHidden, buildChoiceAspect, multiSelectInlineLayoutAspect);
   }
 }
 
-function updateOptionHidden(key, choices, countableChoicesList, getIsOptionHidden, buildChoiceAspect, multiSelectInputAspect) {
+function updateOptionHidden(key, choices, countableChoicesList, getIsOptionHidden, buildChoiceAspect, multiSelectInlineLayoutAspect) {
   var choice = choices.get(key);
 
   var getNextNonHidden = function getNextNonHidden() {
@@ -2957,15 +2960,15 @@ function updateOptionHidden(key, choices, countableChoicesList, getIsOptionHidde
     });
   };
 
-  updateHiddenChoice(choice, getNextNonHidden, countableChoicesList, getIsOptionHidden, buildChoiceAspect, multiSelectInputAspect);
+  updateHiddenChoice(choice, getNextNonHidden, countableChoicesList, getIsOptionHidden, buildChoiceAspect, multiSelectInlineLayoutAspect);
 }
 
-function updateHiddenChoice(choice, getNextNonHidden, countableChoicesList, getIsOptionHidden, buildChoiceAspect, multiSelectInputAspect) {
+function updateHiddenChoice(choice, getNextNonHidden, countableChoicesList, getIsOptionHidden, buildChoiceAspect, multiSelectInlineLayoutAspect) {
   var newIsOptionHidden = getIsOptionHidden(choice.option);
 
   if (newIsOptionHidden != choice.isOptionHidden) {
     choice.isOptionHidden = newIsOptionHidden;
-    updateHidden(choice, getNextNonHidden, countableChoicesList, buildChoiceAspect, multiSelectInputAspect);
+    updateHidden(choice, getNextNonHidden, countableChoicesList, buildChoiceAspect, multiSelectInlineLayoutAspect);
   }
 }
 
@@ -3120,9 +3123,8 @@ function OptionsApiPlugin(pluginData) {
       createChoiceAspect = pluginData.createChoiceAspect,
       setOptionSelectedAspect = pluginData.setOptionSelectedAspect,
       optionPropertiesAspect = pluginData.optionPropertiesAspect,
-      choicesCollection = pluginData.choicesCollection,
       optionsAspect = pluginData.optionsAspect,
-      multiSelectInputAspect = pluginData.multiSelectInputAspect;
+      multiSelectInlineLayoutAspect = pluginData.multiSelectInlineLayoutAspect;
   return {
     buildApi: function buildApi(api) {
       api.setOptionSelected = function (key, value) {
@@ -3166,9 +3168,9 @@ function OptionsApiPlugin(pluginData) {
         };
 
         buildAndAttachChoiceAspect.buildAndAttachChoice(choice, function (c, e) {
-          return multiSelectInputAspect.adoptChoiceElement(c, e);
+          return multiSelectInlineLayoutAspect.adoptChoiceElement(c, e);
         }, function (s) {
-          return multiSelectInputAspect.handleOnRemoveButton(s);
+          return multiSelectInlineLayoutAspect.handleOnRemoveButton(s);
         }, function () {
           var _nextChoice;
 
@@ -3178,7 +3180,7 @@ function OptionsApiPlugin(pluginData) {
 
       api.updateOptionRemoved = function (key) {
         // TODO: generalize index as key 
-        multiSelectInputAspect.hideChoices(); // always hide 1st, then reset filter
+        multiSelectInlineLayoutAspect.hideChoices(); // always hide 1st, then reset filter
 
         manageableResetFilterListAspect.resetFilter();
         var choice = choices.remove(key);
@@ -3331,7 +3333,7 @@ SelectElementPlugin.plugStaticDom = function (aspects) {
 };
 
 function SelectAllApiPlugin(pluginData) {
-  var multiSelectInputAspect = pluginData.multiSelectInputAspect,
+  var multiSelectInlineLayoutAspect = pluginData.multiSelectInlineLayoutAspect,
       choices = pluginData.choices,
       picks = pluginData.picks,
       isChoiceSelectableAspect = pluginData.isChoiceSelectableAspect,
@@ -3340,7 +3342,7 @@ function SelectAllApiPlugin(pluginData) {
   return {
     buildApi: function buildApi(api) {
       api.selectAll = function () {
-        multiSelectInputAspect.hideChoices(); // always hide 1st
+        multiSelectInlineLayoutAspect.hideChoices(); // always hide 1st
 
         choices.forLoop(function (choice) {
           if (isChoiceSelectableAspect.isSelectable(choice)) setOptionSelectedAspect.setOptionSelected(choice, true);
@@ -3349,7 +3351,7 @@ function SelectAllApiPlugin(pluginData) {
       };
 
       api.deselectAll = function () {
-        multiSelectInputAspect.hideChoices(); // always hide 1st
+        multiSelectInlineLayoutAspect.hideChoices(); // always hide 1st
 
         picks.removeAll();
         manageableResetFilterListAspect.resetFilter();

@@ -3,9 +3,9 @@ export function InputAspect(
 
     return {
         input(filterInputValue, resetLength, 
-            eventLoopFlag_set, //multiSelectInputAspect.eventLoopFlag.set(); 
-            aspect_showChoices, //multiSelectInputAspect.showChoices();
-            aspect_hideChoices// multiSelectInputAspect.hideChoices();
+            eventLoopFlag_set, //multiSelectInlineLayoutAspect.eventLoopFlag.set(); 
+            aspect_showChoices, //multiSelectInlineLayoutAspect.showChoices();
+            aspect_hideChoices// multiSelectInlineLayoutAspect.hideChoices();
             ){
             let text = filterInputValue.trim().toLowerCase();
             var isEmpty=false;
@@ -39,7 +39,7 @@ export function InputAspect(
             if (visibleCount>0){
                 let panelIsVisble = popupAspect.isChoicesVisible();
                 if (!panelIsVisble){
-                    aspect_showChoices(); //multiSelectInputAspect.showChoices();
+                    aspect_showChoices(); //multiSelectInlineLayoutAspect.showChoices();
                 }
                 if (visibleCount == 1) {
                     navigateAspect.hoverIn(filterManagerAspect.getNavigateManager().getHead())

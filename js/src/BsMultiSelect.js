@@ -34,10 +34,11 @@ import {InputAspect} from './InputAspect'
 import {ResetFilterListAspect} from './ResetFilterListAspect'
 import {ManageableResetFilterListAspect} from './ResetFilterListAspect'
 import {FocusInAspect} from './ResetFilterListAspect'
-import {MultiSelectInputAspect} from './MultiSelectInputAspect'
+import {MultiSelectInlineLayoutAspect} from './MultiSelectInlineLayoutAspect'
 import {FilterAspect} from './FilterAspect'
 import {DisabledComponentAspect, LoadAspect, AppearanceAspect} from './AppearanceAspect'
 import {DoublyLinkedList, ArrayFacade} from './ToolsJs'
+import {CountableChoicesListInsertAspect} from './CountableChoicesListInsertAspect'
 
 /// environment - common for many; configuration for concreate
 export function BsMultiSelect(element, environment, configuration, onInit){
@@ -78,14 +79,6 @@ export function BsMultiSelect(element, environment, configuration, onInit){
         (choice, v)=>choice.itemNext=v
     );
     
-    let CountableChoicesListInsertAspect = (countableChoicesList)=> {
-        return {
-            countableChoicesListInsert(choice, key){
-                let choiceNext = choicesCollection.getNext(key);
-                countableChoicesList.add(choice, choiceNext)
-            }
-        }
-    }
     let countableChoicesListInsertAspect = CountableChoicesListInsertAspect(countableChoicesList);
 
     let choicesEnumerableAspect = ChoicesEnumerableAspect(countableChoicesList, (choice)=>choice.itemNext)
@@ -166,7 +159,7 @@ export function BsMultiSelect(element, environment, configuration, onInit){
     let fillChoicesAspect = FillChoicesAspect(window.document, createChoiceAspect, optionsAspect, choices, buildAndAttachChoiceAspect);
 
     // -----------
-    let multiSelectInputAspect =  MultiSelectInputAspect(
+    let multiSelectInlineLayoutAspect =  MultiSelectInlineLayoutAspect(
         window,
         () => filterDom.setFocus(), 
         picksDom.picksElement, 
@@ -175,48 +168,43 @@ export function BsMultiSelect(element, environment, configuration, onInit){
         (visible) => popupAspect.setChoicesVisible(visible),
         () => hoveredChoiceAspect.resetHoveredChoice(), 
         (choice) => navigateAspect.hoverIn(choice),
+        (down) =>  navigateAspect.navigate(down),
         () => manageableResetFilterListAspect.resetFilter(),
         /*isChoicesListEmpty*/() => filterManagerAspect.getNavigateManager().getCount()==0, 
         
         /*onClick*/(event) => filterDom.setFocusIfNotTarget(event.target),
         /*resetFocus*/() => focusInAspect.setFocusIn(false),
-        /*alignToFilterInputItemLocation*/() => popupAspect.updatePopupLocation()
-    );
-
-    let disabledComponentAspect = DisabledComponentAspect(componentPropertiesAspect, picks, multiSelectInputAspect, picksDom);
-    let appearanceAspect = AppearanceAspect(disabledComponentAspect);
-    let loadAspect = LoadAspect(fillChoicesAspect, multiSelectInputAspect, appearanceAspect);
-
-    function hoveredToSelected(){
-        let hoveredChoice = hoveredChoiceAspect.getHoveredChoice();
-        if (hoveredChoice){
-            var wasToggled = optionToggleAspect.toggle(hoveredChoice);
-            if (wasToggled) {
-                multiSelectInputAspect.hideChoices();
-                manageableResetFilterListAspect.resetFilter();
+        /*alignToFilterInputItemLocation*/() => popupAspect.updatePopupLocation(),
+        /*toggleHovered*/ () => {
+            var wasToggled = false;
+            let hoveredChoice = hoveredChoiceAspect.getHoveredChoice(); 
+            if (hoveredChoice){
+                wasToggled = optionToggleAspect.toggle(hoveredChoice); 
             }
+            return wasToggled;
         }
-    }
-
-    function keyDownArrow(down) {
-        let choice = navigateAspect.navigate(down);
-        if (choice)
-        {
-            navigateAspect.hoverIn(choice);
-            multiSelectInputAspect.showChoices();
-        }
-    }
+    );
 
     let filterAspect = FilterAspect(
         filterDom.filterInputElement,
         () => focusInAspect.setFocusIn(true),  // focus in - show dropdown
-        () => multiSelectInputAspect.onFocusOut(
+        () => multiSelectInlineLayoutAspect.onFocusOut(
             () => focusInAspect.setFocusIn(false)
         ), // focus out - hide dropdown
-        
-        () => keyDownArrow(false), // arrow up
-        () => keyDownArrow(true),  // arrow down
-        /*onTabForEmpty*/() => multiSelectInputAspect.hideChoices(),  // tab on empty
+        /*onInput*/(filterInputValue, resetLength) =>
+        { 
+            inputAspect.input(
+                filterInputValue, 
+                resetLength,
+                ()=>multiSelectInlineLayoutAspect.eventLoopFlag.set(), 
+                ()=>multiSelectInlineLayoutAspect.showChoices(),
+                ()=>multiSelectInlineLayoutAspect.hideChoices()
+            ) 
+        },
+
+        () => multiSelectInlineLayoutAspect.keyDownArrow(false), // arrow up
+        () => multiSelectInlineLayoutAspect.keyDownArrow(true),  // arrow down
+        /*onTabForEmpty*/() => multiSelectInlineLayoutAspect.hideChoices(),  // tab on empty
         () => {
             let p = picks.removePicksTail();
             if (p)
@@ -225,40 +213,33 @@ export function BsMultiSelect(element, environment, configuration, onInit){
 
         /*onTabToCompleate*/() => { 
             if (popupAspect.isChoicesVisible()) {
-                hoveredToSelected();
+                multiSelectInlineLayoutAspect.hoveredToSelected();
             } 
         },
         /*onEnterToCompleate*/() => { 
             if (popupAspect.isChoicesVisible()) {
-                hoveredToSelected();
+                multiSelectInlineLayoutAspect.hoveredToSelected();
             } else {
                 if (filterManagerAspect.getNavigateManager().getCount()>0){
-                    multiSelectInputAspect.showChoices();
+                    multiSelectInlineLayoutAspect.showChoices();
                 }
             }
         },
        
         /*onKeyUpEsc*/() => {
-            multiSelectInputAspect.hideChoices(); // always hide 1st
+            multiSelectInlineLayoutAspect.hideChoices(); // always hide 1st
             manageableResetFilterListAspect.resetFilter();
         }, // esc keyup 
 
          // tab/enter "compleate hovered"
-        /*stopEscKeyDownPropogation */() => popupAspect.isChoicesVisible(),
-
-        /*onInput*/(filterInputValue, resetLength) =>
-        { 
-            inputAspect.input(
-                filterInputValue, 
-                resetLength,
-                ()=>multiSelectInputAspect.eventLoopFlag.set(), 
-                ()=>multiSelectInputAspect.showChoices(),
-                ()=>multiSelectInputAspect.hideChoices()
-            ) 
-        }
+        /*stopEscKeyDownPropogation */() => popupAspect.isChoicesVisible()
     );
 
-    let updateDataAspect = UpdateDataAspect(multiSelectInputAspect, manageableResetFilterListAspect,
+    let disabledComponentAspect = DisabledComponentAspect(componentPropertiesAspect, picks, multiSelectInlineLayoutAspect, picksDom);
+    let appearanceAspect = AppearanceAspect(disabledComponentAspect);
+    let loadAspect = LoadAspect(fillChoicesAspect, multiSelectInlineLayoutAspect, appearanceAspect);
+
+    let updateDataAspect = UpdateDataAspect(multiSelectInlineLayoutAspect, manageableResetFilterListAspect,
         choicesDom, choices, picks, fillChoicesAspect);
 
     aspects.pickDomFactory=pickDomFactory;
@@ -279,7 +260,7 @@ export function BsMultiSelect(element, environment, configuration, onInit){
     aspects.resetFilterListAspect=resetFilterListAspect;
     aspects.manageableResetFilterListAspect=manageableResetFilterListAspect;
 
-    aspects.multiSelectInputAspect=multiSelectInputAspect;
+    aspects.multiSelectInlineLayoutAspect=multiSelectInlineLayoutAspect;
     aspects.focusInAspect=focusInAspect;
     aspects.filterAspect=filterAspect;
     aspects.disabledComponentAspect=disabledComponentAspect;
@@ -296,10 +277,10 @@ export function BsMultiSelect(element, environment, configuration, onInit){
 
     api.dispose = composeSync(
         disposeAspect.dispose,
-        multiSelectInputAspect.hideChoices,
+        multiSelectInlineLayoutAspect.hideChoices,
         pluginManager.dispose, 
         picks.dispose,
-        multiSelectInputAspect.dispose,
+        multiSelectInlineLayoutAspect.dispose,
         choices.dispose,
         staticManager.dispose, popupAspect.dispose, picksDom.dispose, filterDom.dispose, filterAspect.dispose );
     
