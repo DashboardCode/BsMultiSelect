@@ -32,7 +32,6 @@ export function HiddenOptionPlugin(pluginData){
     createChoiceAspect.createChoice = (option) => {
         let choice = origСreateChoice(option);
         choice.isOptionHidden = getIsOptionHidden(option);
-        // choice.updateHidden = () => updateHidden(choice, filteredChoicesList);
         return choice;
     };
 

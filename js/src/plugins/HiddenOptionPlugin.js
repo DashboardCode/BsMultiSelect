@@ -10,15 +10,6 @@ export function HiddenOptionPlugin(pluginData){
         }
     }
 
-    let {getIsOptionHidden} = configuration;
-    if (options) {
-        if (!getIsOptionHidden)
-            getIsOptionHidden = (option) => (option.hidden===undefined)?false:option.hidden;     
-    } else {
-        if (!getIsOptionHidden)
-            getIsOptionHidden = (option) => option.hidden;     
-    }
-
     let origBuildAndAttachChoice = buildAndAttachChoiceAspect.buildAndAttachChoice;
     buildAndAttachChoiceAspect.buildAndAttachChoice=(choice, adoptChoiceElement, handleOnRemoveButton, getNextElement)=>{
         if (choice.isOptionHidden){ 
@@ -31,6 +22,15 @@ export function HiddenOptionPlugin(pluginData){
 
     var origIsSelectable = isChoiceSelectableAspect.isSelectable;
     isChoiceSelectableAspect.isSelectable = (choice) => origIsSelectable(choice) && !choice.isOptionHidden;
+
+    let {getIsOptionHidden} = configuration;
+    if (options) {
+        if (!getIsOptionHidden)
+            getIsOptionHidden = (option) => (option.hidden===undefined)?false:option.hidden;     
+    } else {
+        if (!getIsOptionHidden)
+            getIsOptionHidden = (option) => option.hidden;     
+    }
     
     var origСreateChoice = createChoiceAspect.createChoice;
     createChoiceAspect.createChoice = (option) => {

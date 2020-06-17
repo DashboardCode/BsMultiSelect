@@ -1,35 +1,36 @@
--8. new version of hidden plugin ?
--7. Custom Dialog ?
--7b. request css-live.ru community for UIX help
+-7. publish new version of hidden plugin
+-7a. better method to manipulate plugins for jquey/bootstrap and esm
+-7b. dist modules for tools, MultiSelect, plugins, 
 
--8. provide method to manipulate plugins for jquey/bootstrap and esm
+-6. UpdateOption (for all content, selected, hidden and disabled properties)
+-6a. UpdateOptionContent ?
+-6b. move option disabled to plugin ?
 
--6. UpdateOption (for all selected, hidden and disabled)
+-5. custom layouts (slide instead of popup, filter input to choices)
+-5a. choices: ul to <div><ul></ul></div>
+-5b. optGrouops
+-5c. custom Dialog ?
+-5d. request css-live.ru community for UX help
 
--6b. UpdateOptionContent ?
+-4. check IE 11 (after restart)
 
--6c. move option disabled to plugin ?
-
--5. check IE 11 (after restart)
-
--4. refactore isOptionHidden. Hidden's should be precreated. hidden two mode: showing and ignoring picks
-
--4a. extract "fake input component", extract autosuggestion component
-
--3. create snippet for `selected disabled`. -> need updateSelectedDisabled to support browser's `step back` behaviour.
+-3. create/extract "tag input component", extract "autosuggestion component"
+-3a. async sarch
+-3b. search as API - include integration with https://fusejs.io/ ?
 
 -2. create snippet for jquery validate ( https://jqueryvalidation.org/ ) and unobtrusive-validation ( 
-landing page: https://exceptionnotfound.net/asp-net-mvc-demystified-unobtrusive-validation/
-multiple pages: https://www.ivarprudnikov.com/static-website-multiple-html-pages-using-webpack-plus-github-example/ )
+ https://exceptionnotfound.net/asp-net-mvc-demystified-unobtrusive-validation/ )
 
--7
- use min(), max() и clamp()
-https://habr.com/ru/company/ruvds/blog/501634/
+-1. more new css 
+-1a use min(), max() и clamp() https://habr.com/ru/company/ruvds/blog/501634/
+-1b grid for grid (navigation with arrow left/right)
+
+
+
 
 -9 webpack generated bundle and html https://medium.com/@jonas_duri/build-a-landing-page-with-webpack-4-6efe83deb7fe  (handlebars.js ?)
+multiple pages: https://www.ivarprudnikov.com/static-website-multiple-html-pages-using-webpack-plus-github-example/ )
 
-0. search as API
-  include integration with https://fusejs.io/ ?
 
 1. configure package.json for multiple entrypoints. what is "main:src" there?
 
