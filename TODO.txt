@@ -1,46 +1,49 @@
--7. publish new version of hidden plugin
--7a. better method to manipulate plugins for jquey/bootstrap and esm
--7b. dist modules for tools, MultiSelect, plugins, 
+1. publish new version of hidden plugin
+1a. better method to manipulate plugins for jquey/bootstrap and esm
+1b. dist modules for tools, MultiSelect, plugins, 
 
--6. UpdateOption (for all content, selected, hidden and disabled properties)
--6a. UpdateOptionContent ?
--6b. move option disabled to plugin ?
+2. UpdateOption (for all content, selected, hidden and disabled properties)
+2a. UpdateOptionContent ?
+2b. move option disabled to plugin ?
+2c. conditional styling ?
 
--5. custom layouts (slide instead of popup, filter input to choices)
--5a. choices: ul to <div><ul></ul></div>
--5b. optGrouops
--5c. custom Dialog ?
--5d. request css-live.ru community for UX help
+3. custom layouts (slide instead of popup, filter input to choices)
+3a. choices: ul to <div><ul></ul></div>
+3b. optGrouops
+3c. custom Dialog ?
+3d. request css-live.ru community for UX help
+3e. picks as count
+3f. "selected picks first"
 
--4. check IE 11 (after restart)
+4. not-removable picks 
 
--3. create/extract "tag input component", extract "autosuggestion component"
--3a. async sarch
--3b. search as API - include integration with https://fusejs.io/ ?
+5. check IE 11 (after restart)
 
--2. create snippet for jquery validate ( https://jqueryvalidation.org/ ) and unobtrusive-validation ( 
+6. create/extract "tag input component", extract "autosuggestion component"
+6a. async sarch
+6b. search as API - include integration with https://fusejs.io/ ?
+
+7. create snippet for jquery validate ( https://jqueryvalidation.org/ ) and unobtrusive-validation ( 
  https://exceptionnotfound.net/asp-net-mvc-demystified-unobtrusive-validation/ )
 
--1. more new css 
--1a use min(), max() и clamp() https://habr.com/ru/company/ruvds/blog/501634/
--1b grid for grid (navigation with arrow left/right)
+8. more new css 
+8a use min(), max() и clamp() https://habr.com/ru/company/ruvds/blog/501634/
+8b grid for grid (navigation with arrow left/right)
+8c analyze CSSX (css in js) - is it possible to use for :hover or custom "is empty" rules: https://www.smashingmagazine.com/2016/04/finally-css-javascript-meet-cssx/
+some otther instruments: styled components, css modules https://github.com/w3c/webcomponents/issues/759 ,  Constructable Stylesheets https://developers.google.com/web/updates/2019/02/constructable-stylesheets,  emotion, jss, aphrodite, radium 
+8d css houdini ? to get bootstrap theme variables
 
+== PORTS
 
-
-
--9 webpack generated bundle and html https://medium.com/@jonas_duri/build-a-landing-page-with-webpack-4-6efe83deb7fe  (handlebars.js ?)
-multiple pages: https://www.ivarprudnikov.com/static-website-multiple-html-pages-using-webpack-plus-github-example/ )
-
-
-1. configure package.json for multiple entrypoints. what is "main:src" there?
-
-{
-"main":"dist/index.js"
-"module":"lib/index.es6.js"
-"main:src": "src/index.js" / ?? could it be "polyfill free" (web standard polyfill) ?
-}
-
-and then test how weback handle it
+1. webpack generated bundle and html https://medium.com/@jonas_duri/build-a-landing-page-with-webpack-4-6efe83deb7fe  (handlebars.js ?)
+-multiple pages: https://www.ivarprudnikov.com/static-website-multiple-html-pages-using-webpack-plus-github-example/ )
+1a some webpack tricks https://habr.com/post/425215/
+1b configure package.json for multiple entrypoints. what is "main:src" there? Check how weback can handle it
+    {
+        "main":"dist/index.js"
+        "module":"lib/index.es6.js"
+        "main:src": "src/index.js" / ?? could it be "polyfill free" (web standard polyfill) ?
+    }
 
 2. Port to web component.
 Several base classes: Polymer (https://github.com/Polymer/polymer), Stencil, LitElement , https://www.polymer-project.org/
@@ -71,21 +74,13 @@ https://www.webcomponents.org/polyfills/
 Sample: https://www.webcomponents.org/element/@zooplus/zoo-web-components
 
 
----------------- ENVIRONMENT
-1. some webpack tricks
-https://habr.com/post/425215/
-
-2. Review eslint again 
+== ENVIRONMENT
+1. Review eslint again 
 https://habr.com/post/417841/
 
-3. analyze CSSX (css in js) - is it possible to use for :hover or custom "is empty" rules: https://www.smashingmagazine.com/2016/04/finally-css-javascript-meet-cssx/
-some otther instruments: styled components, css modules https://github.com/w3c/webcomponents/issues/759 ,  Constructable Stylesheets https://developers.google.com/web/updates/2019/02/constructable-stylesheets,  emotion, jss, aphrodite, radium
+2. github badges as https://github.com/jlmakes/scrollreveal
 
-4. github badges as https://github.com/jlmakes/scrollreveal
-
-8. css houdini ? to get bootstrap theme variables
-
-VS Code
+3. VS Code
 2020 https://habr.com/ru/company/ruvds/blog/501648/
 2. test VisualCode plugins https://habr.com/company/ruvds/blog/425313/
 1) describe current plugins
