@@ -1,7 +1,7 @@
 export function HiddenOptionPlugin(pluginData){
     let {configuration, optionsAspect, options, createChoiceAspect, isChoiceSelectableAspect,
-        choices, buildAndAttachChoiceAspect, buildChoiceAspect,
-        countableChoicesListInsertAspect, countableChoicesList, multiSelectInlineLayoutAspect} = pluginData;
+        choices, buildChoiceAspect, buildAndAttachChoiceAspect,
+        countableChoicesListInsertAspect, countableChoicesList} = pluginData;
 
     countableChoicesListInsertAspect.countableChoicesListInsert = (choice, key) => {
         if ( !choice.isOptionHidden ){
@@ -11,12 +11,12 @@ export function HiddenOptionPlugin(pluginData){
     }
 
     let origBuildAndAttachChoice = buildAndAttachChoiceAspect.buildAndAttachChoice;
-    buildAndAttachChoiceAspect.buildAndAttachChoice=(choice, adoptChoiceElement, handleOnRemoveButton, getNextElement)=>{
+    buildAndAttachChoiceAspect.buildAndAttachChoice=(choice, getNextElement)=>{
         if (choice.isOptionHidden){ 
             buildHiddenChoice(choice);
         }
         else{ 
-            origBuildAndAttachChoice(choice, adoptChoiceElement, handleOnRemoveButton, getNextElement);
+            origBuildAndAttachChoice(choice, getNextElement);
         }
     }
 
@@ -41,13 +41,13 @@ export function HiddenOptionPlugin(pluginData){
 
     return {
         buildApi(api){                                      
-            api.updateOptionsHidden = () => updateOptionsHidden(optionsAspect, choices, countableChoicesList, getIsOptionHidden, buildChoiceAspect, multiSelectInlineLayoutAspect);
-            api.updateOptionHidden  = (key) => updateOptionHidden(key, choices, countableChoicesList, getIsOptionHidden, buildChoiceAspect, multiSelectInlineLayoutAspect);
+            api.updateOptionsHidden = () => updateOptionsHidden(optionsAspect, choices, countableChoicesList, getIsOptionHidden, buildChoiceAspect);
+            api.updateOptionHidden  = (key) => updateOptionHidden(key, choices, countableChoicesList, getIsOptionHidden, buildChoiceAspect);
         }
     }
 }
                       
-function updateHidden(choice, getNextNonHidden, countableChoicesList, buildChoiceAspect, multiSelectInlineLayoutAspect) {
+function updateHidden(choice, getNextNonHidden, countableChoicesList, buildChoiceAspect) {
     if (choice.isOptionHidden) {
         countableChoicesList.remove(choice);
         choice.remove(); 
@@ -55,10 +55,7 @@ function updateHidden(choice, getNextNonHidden, countableChoicesList, buildChoic
     } else {
         let nextChoice = getNextNonHidden();
         countableChoicesList.add(choice, nextChoice);
-        buildChoiceAspect.buildChoice(choice,
-            (c,e)=>multiSelectInlineLayoutAspect.adoptChoiceElement(c,e),
-            (s)=>multiSelectInlineLayoutAspect.handleOnRemoveButton(s)
-        );
+        buildChoiceAspect.buildChoice(choice);
         choice.choiceElementAttach(nextChoice?.choiceElement);
     }
 }
@@ -79,24 +76,24 @@ function buildHiddenChoice(choice){
     };
 }
 
-function updateOptionsHidden(optionsAspect, choices, countableChoicesList, getIsOptionHidden, buildChoiceAspect, multiSelectInlineLayoutAspect){
+function updateOptionsHidden(optionsAspect, choices, countableChoicesList, getIsOptionHidden, buildChoiceAspect){
     let options = optionsAspect.getOptions();
     for(let i = 0; i<options.length; i++){
-        updateOptionHidden(i, choices, countableChoicesList, getIsOptionHidden, buildChoiceAspect, multiSelectInlineLayoutAspect)
+        updateOptionHidden(i, choices, countableChoicesList, getIsOptionHidden, buildChoiceAspect)
     }
 }
 
-function updateOptionHidden(key, choices, countableChoicesList, getIsOptionHidden, buildChoiceAspect, multiSelectInlineLayoutAspect){
+function updateOptionHidden(key, choices, countableChoicesList, getIsOptionHidden, buildChoiceAspect){
     let choice = choices.get(key);
     let getNextNonHidden =  () => choices.getNext(key, c => !c.isOptionHidden );
-    updateHiddenChoice(choice, getNextNonHidden, countableChoicesList, getIsOptionHidden, buildChoiceAspect, multiSelectInlineLayoutAspect)
+    updateHiddenChoice(choice, getNextNonHidden, countableChoicesList, getIsOptionHidden, buildChoiceAspect)
 }
 
-function updateHiddenChoice(choice, getNextNonHidden, countableChoicesList, getIsOptionHidden, buildChoiceAspect, multiSelectInlineLayoutAspect){
+function updateHiddenChoice(choice, getNextNonHidden, countableChoicesList, getIsOptionHidden, buildChoiceAspect){
     let newIsOptionHidden = getIsOptionHidden(choice.option);
     if (newIsOptionHidden != choice.isOptionHidden)
     {
         choice.isOptionHidden= newIsOptionHidden;
-        updateHidden(choice, getNextNonHidden,  countableChoicesList, buildChoiceAspect, multiSelectInlineLayoutAspect)
+        updateHidden(choice, getNextNonHidden,  countableChoicesList, buildChoiceAspect)
     }
 }

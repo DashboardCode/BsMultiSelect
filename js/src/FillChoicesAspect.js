@@ -1,10 +1,9 @@
 
-export function FillChoicesAspect(document, createChoiceAspect, optionsAspect, choices, buildAndAttachChoiceAspect) { 
+export function FillChoicesAspect(
+        document, createChoiceAspect, optionsAspect, choices, buildAndAttachChoice
+        ) { 
     return {
-        fillChoices(
-            adoptChoiceElement, // aspect.adoptChoiceElement
-            handleOnRemoveButton
-        ){
+        fillChoices(){
             var fillChoicesImpl = () => {
                 let options = optionsAspect.getOptions();
                 for(let i = 0; i<options.length; i++) {
@@ -12,11 +11,8 @@ export function FillChoicesAspect(document, createChoiceAspect, optionsAspect, c
                     let choice = createChoiceAspect.createChoice(option);
                     choices.push(choice);
 
-                    buildAndAttachChoiceAspect.buildAndAttachChoice(
-                        choice,
-                        adoptChoiceElement,
-                        handleOnRemoveButton
-                        );
+                    buildAndAttachChoice(choice);
+                    
                 } 
             }
     

@@ -1,12 +1,13 @@
-export function BuildAndAttachChoiceAspect(buildChoiceAspect){
+
+export function BuildAndAttachChoiceAspect(
+    buildChoiceAspect,
+    ){
     return {
         buildAndAttachChoice(
             choice,
-            adoptChoiceElement, // multiSelectInlineLayoutAspect.adoptChoiceElement
-            handleOnRemoveButton, // multiSelectInlineLayoutAspect.handleOnRemoveButton
             getNextElement 
             ){
-                buildChoiceAspect.buildChoice(choice, adoptChoiceElement, handleOnRemoveButton);
+                buildChoiceAspect.buildChoice(choice);
                 choice.choiceElementAttach(getNextElement?.());
         }
     }
@@ -18,13 +19,14 @@ export function BuildChoiceAspect(
     choiceDomFactory,
     onChangeAspect, 
     optionToggleAspect,
-    createPickAspect
+    createPickAspect,
+    adoptChoiceElement,
+    handleOnRemoveButton
+
     ) {
     return {
         buildChoice(
-                choice,
-                adoptChoiceElement, // aspect.adoptChoiceElement
-                handleOnRemoveButton // aspect.handleOnRemoveButton
+                choice
             ){
             var {choiceElement, setVisible, attach, detach} = choicesDom.createChoiceElement();
             choice.choiceElement = choiceElement;

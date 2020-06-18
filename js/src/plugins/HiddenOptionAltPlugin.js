@@ -11,8 +11,8 @@ export function HiddenOptionPlugin(pluginData){
     }
 
     let origBuildAndAttachChoice = buildAndAttachChoiceAspect.buildAndAttachChoice;
-    buildAndAttachChoiceAspect.buildAndAttachChoice=(choice, adoptChoiceElement, handleOnRemoveButton, getNextElement) => {
-        origBuildAndAttachChoice(choice, adoptChoiceElement, handleOnRemoveButton, getNextElement);
+    buildAndAttachChoiceAspect.buildAndAttachChoice=(choice,  getNextElement) => {
+        origBuildAndAttachChoice(choice, getNextElement);
         choice.setVisible(!choice.isOptionHidden)
     }
 

@@ -2,7 +2,8 @@ import {EventBinder, EventLoopFlag, containsAndSelf} from './ToolsDom'
 
 export function MultiSelectInlineLayoutAspect (
     window,
-    setFocus, 
+    setFocus,
+     
     picksElement,
     choicesElement, 
     isChoicesVisible,
@@ -11,11 +12,16 @@ export function MultiSelectInlineLayoutAspect (
     hoverIn,
     navigate,
     resetFilter,
-    isChoicesListEmpty,
+    getNavigateManager, // , 
+
     onClick,
-    resetFocus,
+    resetFocusIn,
+    setFocusIn,
     alignToFilterInputItemLocation,
-    toggleHovered
+    toggleHovered,
+    
+    filterDom,
+    processInput
     ) 
 {
     var document = window.document;
@@ -46,7 +52,7 @@ export function MultiSelectInlineLayoutAspect (
         else if ( !containsAndSelf(choicesElement, event.target) && !containsAndSelf(picksElement, event.target)) {
             hideChoices();
             resetFilter();
-            resetFocus();
+            resetFocusIn();
         }
     }
 
@@ -80,7 +86,7 @@ export function MultiSelectInlineLayoutAspect (
             if (isChoicesVisible()){
                 hideChoices()
             } else {
-                if (!isChoicesListEmpty())
+                if (getNavigateManager().getCount()>0)
                     showChoices();
             }
         }
@@ -188,6 +194,52 @@ export function MultiSelectInlineLayoutAspect (
         return overAndLeaveEventBinder.unbind;
     }
 
+    // -------------------
+
+    function afterInput(){
+        eventLoopFlag.set(); // means disable some mouse handlers; otherwise we will get "Hover On MouseEnter" when filter's changes should remove hover
+
+        let visibleCount = getNavigateManager().getCount();
+
+        if (visibleCount>0){
+            let panelIsVisble = isChoicesVisible();
+            if (!panelIsVisble){
+                showChoices(); 
+            }
+            if (visibleCount == 1) {
+                hoverIn(getNavigateManager().getHead())
+            } else {
+                if (panelIsVisble)
+                    resetHoveredChoice();
+            }   
+        }else{
+            if (isChoicesVisible())
+                hideChoices();
+        }
+    }
+    
+    filterDom.onFocusIn(setFocusIn);
+    filterDom.onFocusOut(() => { 
+            if (!getSkipFocusout()){ // skip initiated by mouse click (we manage it different way)
+                hideChoices();
+                resetFilter(); // if do not do this we will return to filtered list without text filter in input
+                resetFocusIn();
+            }
+            resetSkipFocusout();
+        }
+    );
+
+    // it can be initated by 3PP functionality
+    // sample (1) BS functionality - input x button click - clears input
+    // sample (2) BS functionality - esc keydown - clears input
+    // and there could be difference in processing: (2) should hide the menu, then reset , when (1) should just reset without hiding.
+
+    filterDom.onInput(() => {
+        processInput();
+        afterInput();
+    });
+
+    // -------------------
     return {
         adoptChoiceElement,
         dispose(){
@@ -195,21 +247,12 @@ export function MultiSelectInlineLayoutAspect (
             picksElement.removeEventListener("mousedown", skipoutAndResetMousedown);
             componentDisabledEventBinder.unbind();
         },
-        onFocusOut(action){
-            if (!getSkipFocusout()){ // skip initiated by mouse click (we manage it different way)
-                hideChoices();
-                resetFilter(); // if do not do this we will return to filtered list without text filter in input
-                action();
-            }
-            resetSkipFocusout();
-        },
-        disable(isComponentDisabled){
+        disableComponent(isComponentDisabled){
             if (isComponentDisabled)
                 componentDisabledEventBinder.unbind();
             else
                 componentDisabledEventBinder.bind(picksElement, "click",  clickToShowChoices); 
         },
-        eventLoopFlag,
         hideChoices,
         showChoices,
         handleOnRemoveButton,
@@ -230,5 +273,6 @@ export function MultiSelectInlineLayoutAspect (
                 showChoices(); // !
             }
         }
+        
     }
 }

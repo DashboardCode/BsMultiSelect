@@ -142,23 +142,33 @@ export function BsMultiSelect(element, environment, configuration, onInit){
     let popupAspect = PopupAspect(choicesDom.choicesElement, filterDom.filterInputElement, Popper);
     let resetFilterListAspect = ResetFilterListAspect(filterDom, filterManagerAspect)
     let manageableResetFilterListAspect =  ManageableResetFilterListAspect(filterDom, resetFilterListAspect)
-    let inputAspect = InputAspect(filterManagerAspect, setOptionSelectedAspect, hoveredChoiceAspect, navigateAspect, filterDom, popupAspect);
+    let inputAspect = InputAspect(
+        filterDom,
+        filterManagerAspect, 
+        /* setSelectedIfExactMatch */ 
+        (text) => {
+            let wasSetEmpty = false;
+            if ( filterManagerAspect.getNavigateManager().getCount() == 1)
+            {
+                let fullMatchChoice =  filterManagerAspect.getNavigateManager().getHead();
+                if (fullMatchChoice.searchText == text)
+                {
+                    setOptionSelectedAspect.setOptionSelected(fullMatchChoice, true);
+                    filterDom.setEmpty();
+                    wasSetEmpty = true;
+                }
+            }
+            return wasSetEmpty;
+        }
+    );    
 
     // TODO get picksDom  from staticDomFactory
     let picksDom  = PicksDom(staticDom.picksElement, staticDom.disposablePicksElement, createElementAspect, css);
     let focusInAspect = FocusInAspect(picksDom)
     
-    let pickDomFactory = PickDomFactory(css, componentPropertiesAspect, optionPropertiesAspect);
-
-    let createPickAspect = BuildPickAspect(setOptionSelectedAspect, picks, picksDom, pickDomFactory);
-
-    let choiceDomFactory = ChoiceDomFactory(css, optionPropertiesAspect);
-    
-    let buildChoiceAspect = BuildChoiceAspect( choicesDom, filterDom, choiceDomFactory, onChangeAspect, optionToggleAspect, createPickAspect)
-    let buildAndAttachChoiceAspect =  BuildAndAttachChoiceAspect(buildChoiceAspect);
-    let fillChoicesAspect = FillChoicesAspect(window.document, createChoiceAspect, optionsAspect, choices, buildAndAttachChoiceAspect);
-
     // -----------
+    // TODO not real aspect, correct it
+    // actually this should be a builder of all events (wrapper or redesign)
     let multiSelectInlineLayoutAspect =  MultiSelectInlineLayoutAspect(
         window,
         () => filterDom.setFocus(), 
@@ -170,10 +180,11 @@ export function BsMultiSelect(element, environment, configuration, onInit){
         (choice) => navigateAspect.hoverIn(choice),
         (down) =>  navigateAspect.navigate(down),
         () => manageableResetFilterListAspect.resetFilter(),
-        /*isChoicesListEmpty*/() => filterManagerAspect.getNavigateManager().getCount()==0, 
+        /*getNavigateManager*/() => filterManagerAspect.getNavigateManager(), 
         
         /*onClick*/(event) => filterDom.setFocusIfNotTarget(event.target),
         /*resetFocus*/() => focusInAspect.setFocusIn(false),
+        /*setFocus*/() => focusInAspect.setFocusIn(true),
         /*alignToFilterInputItemLocation*/() => popupAspect.updatePopupLocation(),
         /*toggleHovered*/ () => {
             var wasToggled = false;
@@ -182,28 +193,15 @@ export function BsMultiSelect(element, environment, configuration, onInit){
                 wasToggled = optionToggleAspect.toggle(hoveredChoice); 
             }
             return wasToggled;
-        }
+        },
+        // --------------------------------------------------------
+        filterDom,
+        /*onInput*/() => inputAspect.processInput()
     );
 
-    let filterAspect = FilterAspect(
-        filterDom.filterInputElement,
-
-        /*focusIn*/() => focusInAspect.setFocusIn(true),  // show dropdown
-        /*focusOut*/() => multiSelectInlineLayoutAspect.onFocusOut(
-            () => focusInAspect.setFocusIn(false)
-        ), // hide dropdown
-
-        /*onInput*/(filterInputValue, resetLength) =>
-        { 
-            inputAspect.input(
-                filterInputValue, 
-                resetLength,
-                ()=>multiSelectInlineLayoutAspect.eventLoopFlag.set(), 
-                ()=>multiSelectInlineLayoutAspect.showChoices(),
-                ()=>multiSelectInlineLayoutAspect.hideChoices()
-            ) 
-        },
-
+    // TODO: bind it declarative way
+    FilterAspect(
+        filterDom,
         () => multiSelectInlineLayoutAspect.keyDownArrow(false), // arrow up
         () => multiSelectInlineLayoutAspect.keyDownArrow(true),  // arrow down
         /*onTabForEmpty*/() => multiSelectInlineLayoutAspect.hideChoices(),  // tab on empty
@@ -237,12 +235,38 @@ export function BsMultiSelect(element, environment, configuration, onInit){
         /*stopEscKeyDownPropogation*/() => popupAspect.isChoicesVisible()
     );
 
-    let disabledComponentAspect = DisabledComponentAspect(componentPropertiesAspect, picks, multiSelectInlineLayoutAspect, picksDom);
-    let appearanceAspect = AppearanceAspect(disabledComponentAspect);
-    let loadAspect = LoadAspect(fillChoicesAspect, multiSelectInlineLayoutAspect, appearanceAspect);
+    let pickDomFactory = PickDomFactory(css, componentPropertiesAspect, optionPropertiesAspect);
+    let createPickAspect = BuildPickAspect(setOptionSelectedAspect, picks, picksDom, pickDomFactory);
+    let choiceDomFactory = ChoiceDomFactory(css, optionPropertiesAspect);
+    let buildChoiceAspect = BuildChoiceAspect( choicesDom, filterDom, choiceDomFactory, onChangeAspect, 
+        optionToggleAspect, createPickAspect,
+        (c,e) => multiSelectInlineLayoutAspect.adoptChoiceElement(c,e),
+        (s) => multiSelectInlineLayoutAspect.handleOnRemoveButton(s)
+        )
+    let buildAndAttachChoiceAspect =  BuildAndAttachChoiceAspect(buildChoiceAspect);
 
-    let updateDataAspect = UpdateDataAspect(multiSelectInlineLayoutAspect, manageableResetFilterListAspect,
-        choicesDom, choices, picks, fillChoicesAspect);
+    let disabledComponentAspect = DisabledComponentAspect(componentPropertiesAspect, picks, picksDom, 
+        (newIsComponentDisabled) => multiSelectInlineLayoutAspect.disableComponent(newIsComponentDisabled)
+    );
+    let appearanceAspect = AppearanceAspect(disabledComponentAspect);
+
+    let fillChoicesAspect = FillChoicesAspect(
+        window.document, 
+        createChoiceAspect, 
+        optionsAspect, 
+        choices, 
+        (choice) => buildAndAttachChoiceAspect.buildAndAttachChoice(choice)
+    );
+
+    let loadAspect = LoadAspect(fillChoicesAspect, appearanceAspect);
+
+    let updateDataAspect = UpdateDataAspect(
+        choicesDom, choices, picks, fillChoicesAspect,
+        /*before*/() => { 
+            multiSelectInlineLayoutAspect.hideChoices();  // always hide 1st
+            manageableResetFilterListAspect.resetFilter();
+        }
+    );
 
     aspects.pickDomFactory=pickDomFactory;
     aspects.choiceDomFactory=choiceDomFactory;
@@ -264,7 +288,6 @@ export function BsMultiSelect(element, environment, configuration, onInit){
 
     aspects.multiSelectInlineLayoutAspect=multiSelectInlineLayoutAspect;
     aspects.focusInAspect=focusInAspect;
-    aspects.filterAspect=filterAspect;
     aspects.disabledComponentAspect=disabledComponentAspect;
     aspects.appearanceAspect=appearanceAspect;
 
@@ -273,18 +296,18 @@ export function BsMultiSelect(element, environment, configuration, onInit){
 
     let pluginManager = PluginManager(plugins, aspects);
         
-    let api = {component: "BsMultiSelect.api"} 
+    let api = {component: "BsMultiSelect.api"} // key used in memory leak analyzes
    
     pluginManager.buildApi(api);
 
     api.dispose = composeSync(
-        disposeAspect.dispose,
         multiSelectInlineLayoutAspect.hideChoices,
+        disposeAspect.dispose,
         pluginManager.dispose, 
         picks.dispose,
         multiSelectInlineLayoutAspect.dispose,
         choices.dispose,
-        staticManager.dispose, popupAspect.dispose, picksDom.dispose, filterDom.dispose, filterAspect.dispose );
+        staticManager.dispose, popupAspect.dispose, picksDom.dispose, filterDom.dispose );
     
     api.updateData = updateDataAspect.updateData;
     api.update = () => {

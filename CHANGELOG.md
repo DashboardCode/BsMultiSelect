@@ -1,5 +1,6 @@
 # CHANGELOG
 ````
+0.6.14 - optimizations
 0.6.13 - new aspect
 0.6.12 - api changes
 0.6.11 - "option api" add and keyboard highlighting error resloved

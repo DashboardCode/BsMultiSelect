@@ -40,8 +40,6 @@ export function OptionsApiPlugin(pluginData){
 
                 buildAndAttachChoiceAspect.buildAndAttachChoice(
                         choice,
-                        (c,e) => multiSelectInlineLayoutAspect.adoptChoiceElement(c,e),
-                        (s) => multiSelectInlineLayoutAspect.handleOnRemoveButton(s),
                         () => nextChoice()?.choiceElement
                     )
             }
