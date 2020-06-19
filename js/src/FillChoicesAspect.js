@@ -10,9 +10,7 @@ export function FillChoicesAspect(
                     let option = options[i];
                     let choice = createChoiceAspect.createChoice(option);
                     choices.push(choice);
-
                     buildAndAttachChoice(choice);
-                    
                 } 
             }
     

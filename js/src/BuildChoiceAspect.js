@@ -19,15 +19,12 @@ export function BuildChoiceAspect(
     choiceDomFactory,
     onChangeAspect, 
     optionToggleAspect,
-    createPickAspect,
-    adoptChoiceElement,
-    handleOnRemoveButton
-
+    buildPick, //createPickAspect.buildPick(choice, handleOnRemoveButton);
+    adoptChoiceElement//,
+    //handleOnRemoveButton
     ) {
     return {
-        buildChoice(
-                choice
-            ){
+        buildChoice(choice) {
             var {choiceElement, setVisible, attach, detach} = choicesDom.createChoiceElement();
             choice.choiceElement = choiceElement;
             choice.choiceElementAttach = attach;
@@ -42,7 +39,7 @@ export function BuildChoiceAspect(
             let choiceHanlders = choiceDomManager.init();
             let pickTools = { updateSelectedTrue: null, updateSelectedFalse: null }
             let updateSelectedTrue = () => { 
-                var removePick = createPickAspect.buildPick(choice, handleOnRemoveButton);
+                var removePick = buildPick(choice);
                 pickTools.updateSelectedFalse = removePick;
             };
         
@@ -67,8 +64,6 @@ export function BuildChoiceAspect(
                 onChangeAspect.onChange();
             }
         
-            var unbindChoiceElement = adoptChoiceElement(choice, choiceElement);
-        
             choice.isFilteredIn = true;
             
             choice.setHoverIn = (v) => {
@@ -82,7 +77,8 @@ export function BuildChoiceAspect(
             }
         
             choice.updateDisabled = choiceHanlders.updateDisabled;
-        
+
+            var unbindChoiceElement = adoptChoiceElement(choice, choiceElement);
             choice.dispose = () => {
                 unbindChoiceElement();
                 choiceDomManager.dispose();

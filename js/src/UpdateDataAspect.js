@@ -1,11 +1,11 @@
 export function UpdateDataAspect(
     choicesDom, choices, picks, fillChoicesAspect,
-    before
+    beforeUpdateData
     ){
     return {
         updateData(){
             // close drop down , remove filter
-            before();
+            beforeUpdateData();
             choicesDom.choicesElement.innerHTML = ""; // TODO: there should better "optimization"
             choices.clear();
             picks.clear();
