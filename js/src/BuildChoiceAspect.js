@@ -20,8 +20,6 @@ export function BuildChoiceAspect(
     onChangeAspect, 
     optionToggleAspect,
     buildPick, //createPickAspect.buildPick(choice, handleOnRemoveButton);
-    adoptChoiceElement//,
-    //handleOnRemoveButton
     ) {
     return {
         buildChoice(choice) {
@@ -36,8 +34,10 @@ export function BuildChoiceAspect(
                     optionToggleAspect.toggle(choice);
                     filterDom.setFocus();
                 });
-            let choiceHanlders = choiceDomManager.init();
+            let choiceHandlers = choiceDomManager.init();
+            choice.choiceHandlers = choiceHandlers;
             let pickTools = { updateSelectedTrue: null, updateSelectedFalse: null }
+            
             let updateSelectedTrue = () => { 
                 var removePick = buildPick(choice);
                 pickTools.updateSelectedFalse = removePick;
@@ -54,7 +54,7 @@ export function BuildChoiceAspect(
             };
             
             choice.updateSelected = () => {
-                choiceHanlders.updateSelected();
+                choiceHandlers.updateSelected();
                 if (choice.isOptionSelected)
                     pickTools.updateSelectedTrue();
                 else {
@@ -68,19 +68,19 @@ export function BuildChoiceAspect(
             
             choice.setHoverIn = (v) => {
                 choice.isHoverIn =v ;
-                choiceHanlders.updateHoverIn();
+                choiceHandlers.updateHoverIn();
             }
         
             choice.setVisible = (v) => {
                 choice.isFilteredIn = v;
                 setVisible(choice.isFilteredIn)
             }
-        
-            choice.updateDisabled = choiceHanlders.updateDisabled;
-
-            var unbindChoiceElement = adoptChoiceElement(choice, choiceElement);
+            
+            // TODO: should be moved to plugin; currently there is an error during buildPick
+            choice.updateDisabled = choiceHandlers.updateDisabled
             choice.dispose = () => {
-                unbindChoiceElement();
+                choice.choiceHandlers = null;
+                choice.updateDisabled = null;
                 choiceDomManager.dispose();
     
                 choice.choiceElement = null;
@@ -89,7 +89,6 @@ export function BuildChoiceAspect(
                 choice.remove = null; 
                 
                 choice.updateSelected = null;
-                choice.updateDisabled = null;
         
                 // not real data manipulation but internal state
                 choice.setVisible = null; // TODO: refactor it there should be 3 types of not visibility: for hidden, for filtered out, for optgroup, for message item
@@ -98,10 +97,10 @@ export function BuildChoiceAspect(
                 choice.dispose = null;
             }
         
+            
             if (choice.isOptionSelected) {
                 updateSelectedTrue();
             }
         }
-    
     }
 }

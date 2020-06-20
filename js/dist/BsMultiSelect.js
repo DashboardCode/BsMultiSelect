@@ -10,7 +10,7 @@ import { PopupAspect } from './PopupAspect';
 import { ComponentPropertiesAspect, TriggerAspect, OnChangeAspect } from './ComponentPropertiesAspect';
 import { OptionsAspect, OptionPropertiesAspect } from './OptionsAspect';
 import { ChoicesEnumerableAspect } from './ChoicesEnumerableAspect';
-import { FilterManagerAspect, NavigateManager } from './FilterListAspect';
+import { FilterManagerAspect, NavigateManager, FilterPredicateAspect } from './FilterListAspect';
 import { BuildAndAttachChoiceAspect, BuildChoiceAspect } from './BuildChoiceAspect';
 import { FillChoicesAspect } from './FillChoicesAspect';
 import { UpdateDataAspect } from './UpdateDataAspect';
@@ -44,8 +44,7 @@ export function BsMultiSelect(element, environment, configuration, onInit) {
       options = configuration.options,
       getText = configuration.getText,
       getSelected = configuration.getSelected,
-      setSelected = configuration.setSelected,
-      getIsOptionDisabled = configuration.getIsOptionDisabled;
+      setSelected = configuration.setSelected;
   var disposeAspect = {};
   var triggerAspect = TriggerAspect(element, environment.trigger);
   var onChangeAspect = OnChangeAspect(triggerAspect, 'dashboardcode.multiselect:change');
@@ -53,7 +52,7 @@ export function BsMultiSelect(element, environment, configuration, onInit) {
     return false;
   });
   var optionsAspect = OptionsAspect(options);
-  var optionPropertiesAspect = OptionPropertiesAspect(getText, getSelected, setSelected, getIsOptionDisabled);
+  var optionPropertiesAspect = OptionPropertiesAspect(getText, getSelected, setSelected);
   var isChoiceSelectableAspect = IsChoiceSelectableAspect();
   var createChoiceAspect = CreateChoiceAspect(optionPropertiesAspect);
   var setOptionSelectedAspect = SetOptionSelectedAspect(optionPropertiesAspect);
@@ -96,7 +95,8 @@ export function BsMultiSelect(element, environment, configuration, onInit) {
   }, function (choice) {
     return choice.filteredNext;
   });
-  var filterManagerAspect = FilterManagerAspect(emptyNavigateManager, filteredNavigateManager, filteredChoicesList, choicesEnumerableAspect);
+  var filterPredicateAspect = FilterPredicateAspect();
+  var filterManagerAspect = FilterManagerAspect(emptyNavigateManager, filteredNavigateManager, filteredChoicesList, choicesEnumerableAspect, filterPredicateAspect);
   var hoveredChoiceAspect = HoveredChoiceAspect();
   var navigateAspect = NavigateAspect(hoveredChoiceAspect, function (down, hoveredChoice) {
     return filterManagerAspect.getNavigateManager().navigate(down, hoveredChoice);
@@ -127,6 +127,7 @@ export function BsMultiSelect(element, environment, configuration, onInit) {
     createElementAspect: createElementAspect,
     choicesDomFactory: choicesDomFactory,
     staticDomFactory: staticDomFactory,
+    filterPredicateAspect: filterPredicateAspect,
     choicesCollection: choicesCollection,
     choicesEnumerableAspect: choicesEnumerableAspect,
     filteredChoicesList: filteredChoicesList,
@@ -237,9 +238,15 @@ export function BsMultiSelect(element, environment, configuration, onInit) {
     return createPickAspect.buildPick(choice, function (s) {
       return multiSelectInlineLayout.handleOnRemoveButton(s);
     });
-  }, function (c, e) {
-    return multiSelectInlineLayout.adoptChoiceElement(c, e);
   });
+  var origBuildChoice = buildChoiceAspect.buildChoice;
+
+  buildChoiceAspect.buildChoice = function (choice) {
+    origBuildChoice(choice);
+    var unbindChoiceElement = multiSelectInlineLayout.adoptChoiceElement(choice);
+    choice.dispose = composeSync(unbindChoiceElement, choice.dispose);
+  };
+
   var buildAndAttachChoiceAspect = BuildAndAttachChoiceAspect(buildChoiceAspect); // TODO move to layout
 
   var disabledComponentAspect = DisabledComponentAspect(componentPropertiesAspect, picks, picksDom, function (newIsComponentDisabled) {
@@ -268,6 +275,7 @@ export function BsMultiSelect(element, environment, configuration, onInit) {
   }); // TODO: similar for other events, starting from multiSelectInlineLayout.adoptChoiceElement
 
   var filterInputElementEvents = multiSelectInlineLayout.getFilterInputElementEvents();
+  aspects.multiSelectInlineLayout = multiSelectInlineLayout;
   aspects.hideChoicesResetFilterAspect = hideChoicesResetFilterAspect;
   aspects.pickDomFactory = pickDomFactory;
   aspects.choiceDomFactory = choiceDomFactory;

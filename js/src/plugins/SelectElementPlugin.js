@@ -59,7 +59,7 @@ SelectElementPlugin.plugStaticDom = (aspects)=>{
                     if(selectElement.required===true)
                         selectElement.required = false;
 
-                    let {getDisabled, getIsOptionDisabled} = configuration;
+                    let {getDisabled} = configuration;
 
                     if(!getDisabled) {
                         var fieldsetElement = closestByTagName(selectElement, 'FIELDSET');
@@ -71,15 +71,13 @@ SelectElementPlugin.plugStaticDom = (aspects)=>{
                     }
                     onChangeAspect.onChange = composeSync(() => triggerAspect.trigger('change'), onChangeAspect.onChange) 
                     optionsAspect.getOptions = () => selectElement.options;
-                    if (!getIsOptionDisabled)
-                        optionPropertiesAspect.getDisabled = option => option.disabled;
                     
-                            // if (!setSelected){
-                            //     setSelected = (option, value) => {option.selected = value};
-                            //     // NOTE: adding this (setAttribute) break Chrome's html form reset functionality:
-                            //     // if (value) option.setAttribute('selected','');
-                            //     // else option.removeAttribute('selected');
-                            // }
+                    // if (!setSelected){
+                    //     setSelected = (option, value) => {option.selected = value};
+                    //     // NOTE: adding this (setAttribute) break Chrome's html form reset functionality:
+                    //     // if (value) option.setAttribute('selected','');
+                    //     // else option.removeAttribute('selected');
+                    // }
                     
                     disposeAspect.dispose = composeSync(disposeAspect.dispose, () => {
                         selectElement.required = backupedRequired;

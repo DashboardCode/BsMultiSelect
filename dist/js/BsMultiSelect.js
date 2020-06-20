@@ -1,5 +1,5 @@
 /*!
-  * DashboardCode BsMultiSelect v0.6.15 (https://dashboardcode.github.io/BsMultiSelect/)
+  * DashboardCode BsMultiSelect v0.6.16 (https://dashboardcode.github.io/BsMultiSelect/)
   * Copyright 2017-2020 Roman Pokrovskij (github user rpokrovskij)
   * Licensed under APACHE 2 (https://github.com/DashboardCode/BsMultiSelect/blob/master/LICENSE)
   */
@@ -357,7 +357,7 @@
         forLoop: function forLoop(f) {
           for (var i = 0; i < list.length; i++) {
             var e = list[i];
-            f(e);
+            f(e, i);
           }
         },
         getHead: function getHead() {
@@ -1164,7 +1164,7 @@
         }
       };
     }
-    function OptionPropertiesAspect(getText, getSelected, setSelected, getDisabled) {
+    function OptionPropertiesAspect(getText, getSelected, setSelected) {
       if (!getText) {
         getText = function getText(option) {
           return option.text;
@@ -1186,14 +1186,10 @@
 
       }
 
-      if (!getDisabled) getDisabled = function getDisabled(option) {
-        return option.disabled === undefined ? false : option.disabled;
-      };
       return {
         getText: getText,
         getSelected: getSelected,
-        setSelected: setSelected,
-        getDisabled: getDisabled
+        setSelected: setSelected
       };
     }
 
@@ -1229,15 +1225,15 @@
         }
       };
     }
-    function FilterManagerAspect(emptyNavigateManager, filteredNavigateManager, filteredChoicesList, choicesEnumerableAspect) {
-      var showEmptyFilter = true;
-
-      var composeFilterPredicate = function composeFilterPredicate(text) {
-        return function (choice) {
-          return !choice.isOptionSelected && !choice.isOptionDisabled && choice.searchText.indexOf(text) >= 0;
-        };
+    function FilterPredicateAspect() {
+      return {
+        filterPredicate: function filterPredicate(choice, text) {
+          return !choice.isOptionSelected && choice.searchText.indexOf(text) >= 0;
+        }
       };
-
+    }
+    function FilterManagerAspect(emptyNavigateManager, filteredNavigateManager, filteredChoicesList, choicesEnumerableAspect, filterPredicateAspect) {
+      var showEmptyFilter = true;
       return {
         getNavigateManager: function getNavigateManager() {
           return showEmptyFilter ? emptyNavigateManager : filteredNavigateManager;
@@ -1251,11 +1247,10 @@
         },
         setFilter: function setFilter(text) {
           showEmptyFilter = false;
-          var getFilterIn = composeFilterPredicate(text);
           filteredChoicesList.reset();
           choicesEnumerableAspect.forEach(function (choice) {
             choice.filteredPrev = choice.filteredNext = null;
-            var v = getFilterIn(choice);
+            var v = filterPredicateAspect.filterPredicate(choice, text);
             if (v) filteredChoicesList.add(choice);
             choice.setVisible(v);
           });
@@ -1271,10 +1266,8 @@
         }
       };
     }
-    function BuildChoiceAspect(choicesDom, filterDom, choiceDomFactory, onChangeAspect, optionToggleAspect, buildPick, //createPickAspect.buildPick(choice, handleOnRemoveButton);
-    adoptChoiceElement //,
-    //handleOnRemoveButton
-    ) {
+    function BuildChoiceAspect(choicesDom, filterDom, choiceDomFactory, onChangeAspect, optionToggleAspect, buildPick) //createPickAspect.buildPick(choice, handleOnRemoveButton);
+    {
       return {
         buildChoice: function buildChoice(choice) {
           var _choicesDom$createCho = choicesDom.createChoiceElement(),
@@ -1293,7 +1286,8 @@
           }),
               choiceDomManager = _choiceDomFactory$cre.choiceDomManager;
 
-          var choiceHanlders = choiceDomManager.init();
+          var choiceHandlers = choiceDomManager.init();
+          choice.choiceHandlers = choiceHandlers;
           var pickTools = {
             updateSelectedTrue: null,
             updateSelectedFalse: null
@@ -1316,7 +1310,7 @@
           };
 
           choice.updateSelected = function () {
-            choiceHanlders.updateSelected();
+            choiceHandlers.updateSelected();
             if (choice.isOptionSelected) pickTools.updateSelectedTrue();else {
               pickTools.updateSelectedFalse();
               pickTools.updateSelectedFalse = null;
@@ -1328,26 +1322,26 @@
 
           choice.setHoverIn = function (v) {
             choice.isHoverIn = v;
-            choiceHanlders.updateHoverIn();
+            choiceHandlers.updateHoverIn();
           };
 
           choice.setVisible = function (v) {
             choice.isFilteredIn = v;
             setVisible(choice.isFilteredIn);
-          };
+          }; // TODO: should be moved to plugin; currently there is an error during buildPick
 
-          choice.updateDisabled = choiceHanlders.updateDisabled;
-          var unbindChoiceElement = adoptChoiceElement(choice, choiceElement);
+
+          choice.updateDisabled = choiceHandlers.updateDisabled;
 
           choice.dispose = function () {
-            unbindChoiceElement();
+            choice.choiceHandlers = null;
+            choice.updateDisabled = null;
             choiceDomManager.dispose();
             choice.choiceElement = null;
             choice.choiceElementAttach = null;
             choice.isChoiceElementAttached = false;
             choice.remove = null;
-            choice.updateSelected = null;
-            choice.updateDisabled = null; // not real data manipulation but internal state
+            choice.updateSelected = null; // not real data manipulation but internal state
 
             choice.setVisible = null; // TODO: refactor it there should be 3 types of not visibility: for hidden, for filtered out, for optgroup, for message item
 
@@ -1411,23 +1405,16 @@
     function OptionToggleAspect(setOptionSelectedAspect) {
       return {
         toggle: function toggle(choice) {
-          return _toggle(setOptionSelectedAspect, choice);
+          return setOptionSelectedAspect.setOptionSelected(choice, !choice.isOptionSelected);
         }
       };
-    }
-
-    function _toggle(setOptionSelectedAspect, choice) {
-      var success = false;
-      if (choice.isOptionSelected || !choice.isOptionDisabled) success = setOptionSelectedAspect.setOptionSelected(choice, !choice.isOptionSelected);
-      return success;
     }
 
     function IsChoiceSelectableAspect() {
       return {
         isSelectable: function isSelectable(choice) {
-          return _isSelectable(choice);
-        } // TODO: should be moved to new aspect
-
+          return !choice.isOptionSelected;
+        }
       };
     }
     function SetOptionSelectedAspect(optionPropertiesAspect) {
@@ -1458,18 +1445,11 @@
       return success;
     }
 
-    function _isSelectable(choice) {
-      return !choice.isOptionSelected && !choice.isOptionDisabled;
-    }
-
     function _createChoice(optionPropertiesAspect, option) {
       var isOptionSelected = optionPropertiesAspect.getSelected(option);
-      var isOptionDisabled = optionPropertiesAspect.getDisabled(option);
       return {
         option: option,
         isOptionSelected: isOptionSelected,
-        isOptionDisabled: isOptionDisabled,
-        updateDisabled: null,
         updateSelected: null,
         // navigation and filter support
         filteredPrev: null,
@@ -1847,11 +1827,12 @@
         resetMouseCandidateChoice();
       };
 
-      function adoptChoiceElement(choice, choiceElement) {
-        // in chrome it happens on "become visible" so we need to skip it, 
+      function adoptChoiceElement(choice) {
+        var choiceElement = choice.choiceElement; // in chrome it happens on "become visible" so we need to skip it, 
         // for IE11 and edge it doesn't happens, but for IE11 and Edge it doesn't happens on small 
         // mouse moves inside the item. 
         // https://stackoverflow.com/questions/59022563/browser-events-mouseover-doesnt-happen-when-you-make-element-visible-and-mous
+
         var onChoiceElementMouseover = function onChoiceElementMouseover() {
           if (eventLoopFlag.get()) {
             resetMouseCandidateChoice();
@@ -2100,8 +2081,7 @@
           options = configuration.options,
           getText = configuration.getText,
           getSelected = configuration.getSelected,
-          setSelected = configuration.setSelected,
-          getIsOptionDisabled = configuration.getIsOptionDisabled;
+          setSelected = configuration.setSelected;
       var disposeAspect = {};
       var triggerAspect = TriggerAspect(element, environment.trigger);
       var onChangeAspect = OnChangeAspect(triggerAspect, 'dashboardcode.multiselect:change');
@@ -2109,7 +2089,7 @@
         return false;
       });
       var optionsAspect = OptionsAspect(options);
-      var optionPropertiesAspect = OptionPropertiesAspect(getText, getSelected, setSelected, getIsOptionDisabled);
+      var optionPropertiesAspect = OptionPropertiesAspect(getText, getSelected, setSelected);
       var isChoiceSelectableAspect = IsChoiceSelectableAspect();
       var createChoiceAspect = CreateChoiceAspect(optionPropertiesAspect);
       var setOptionSelectedAspect = SetOptionSelectedAspect(optionPropertiesAspect);
@@ -2152,7 +2132,8 @@
       }, function (choice) {
         return choice.filteredNext;
       });
-      var filterManagerAspect = FilterManagerAspect(emptyNavigateManager, filteredNavigateManager, filteredChoicesList, choicesEnumerableAspect);
+      var filterPredicateAspect = FilterPredicateAspect();
+      var filterManagerAspect = FilterManagerAspect(emptyNavigateManager, filteredNavigateManager, filteredChoicesList, choicesEnumerableAspect, filterPredicateAspect);
       var hoveredChoiceAspect = HoveredChoiceAspect();
       var navigateAspect = NavigateAspect(hoveredChoiceAspect, function (down, hoveredChoice) {
         return filterManagerAspect.getNavigateManager().navigate(down, hoveredChoice);
@@ -2183,6 +2164,7 @@
         createElementAspect: createElementAspect,
         choicesDomFactory: choicesDomFactory,
         staticDomFactory: staticDomFactory,
+        filterPredicateAspect: filterPredicateAspect,
         choicesCollection: choicesCollection,
         choicesEnumerableAspect: choicesEnumerableAspect,
         filteredChoicesList: filteredChoicesList,
@@ -2293,9 +2275,15 @@
         return createPickAspect.buildPick(choice, function (s) {
           return multiSelectInlineLayout.handleOnRemoveButton(s);
         });
-      }, function (c, e) {
-        return multiSelectInlineLayout.adoptChoiceElement(c, e);
       });
+      var origBuildChoice = buildChoiceAspect.buildChoice;
+
+      buildChoiceAspect.buildChoice = function (choice) {
+        origBuildChoice(choice);
+        var unbindChoiceElement = multiSelectInlineLayout.adoptChoiceElement(choice);
+        choice.dispose = composeSync(unbindChoiceElement, choice.dispose);
+      };
+
       var buildAndAttachChoiceAspect = BuildAndAttachChoiceAspect(buildChoiceAspect); // TODO move to layout
 
       var disabledComponentAspect = DisabledComponentAspect(componentPropertiesAspect, picks, picksDom, function (newIsComponentDisabled) {
@@ -2324,6 +2312,7 @@
       }); // TODO: similar for other events, starting from multiSelectInlineLayout.adoptChoiceElement
 
       var filterInputElementEvents = multiSelectInlineLayout.getFilterInputElementEvents();
+      aspects.multiSelectInlineLayout = multiSelectInlineLayout;
       aspects.hideChoicesResetFilterAspect = hideChoicesResetFilterAspect;
       aspects.pickDomFactory = pickDomFactory;
       aspects.choiceDomFactory = choiceDomFactory;
@@ -2934,11 +2923,10 @@
 
     function HiddenOptionPlugin(pluginData) {
       var configuration = pluginData.configuration,
-          optionsAspect = pluginData.optionsAspect,
           options = pluginData.options,
           createChoiceAspect = pluginData.createChoiceAspect,
           isChoiceSelectableAspect = pluginData.isChoiceSelectableAspect,
-          choices = pluginData.choices,
+          choicesCollection = pluginData.choicesCollection,
           buildChoiceAspect = pluginData.buildChoiceAspect,
           buildAndAttachChoiceAspect = pluginData.buildAndAttachChoiceAspect,
           countableChoicesListInsertAspect = pluginData.countableChoicesListInsertAspect,
@@ -2946,7 +2934,7 @@
 
       countableChoicesListInsertAspect.countableChoicesListInsert = function (choice, key) {
         if (!choice.isOptionHidden) {
-          var choiceNext = choices.getNext(key, function (c) {
+          var choiceNext = choicesCollection.getNext(key, function (c) {
             return !c.isOptionHidden;
           });
           countableChoicesList.add(choice, choiceNext);
@@ -2991,36 +2979,27 @@
 
       return {
         buildApi: function buildApi(api) {
+          var getNextNonHidden = function getNextNonHidden(key) {
+            return choicesCollection.getNext(key, function (c) {
+              return !c.isOptionHidden;
+            });
+          };
+
           api.updateOptionsHidden = function () {
-            return updateOptionsHidden(optionsAspect, choices, countableChoicesList, getIsOptionHidden, buildChoiceAspect);
+            return choicesCollection.forLoop(function (choice, key) {
+              return updateChoiceHidden(choice, key, getNextNonHidden, countableChoicesList, getIsOptionHidden, buildChoiceAspect);
+            });
           };
 
           api.updateOptionHidden = function (key) {
-            return updateOptionHidden(key, choices, countableChoicesList, getIsOptionHidden, buildChoiceAspect);
+            return updateChoiceHidden(choicesCollection.get(key), key, getNextNonHidden, countableChoicesList, getIsOptionHidden, buildChoiceAspect);
           };
         }
       };
     }
 
-    function updateHidden(choice, getNextNonHidden, countableChoicesList, buildChoiceAspect) {
-      if (choice.isOptionHidden) {
-        countableChoicesList.remove(choice);
-        choice.remove();
-        buildHiddenChoice(choice);
-      } else {
-        var nextChoice = getNextNonHidden();
-        countableChoicesList.add(choice, nextChoice);
-        buildChoiceAspect.buildChoice(choice);
-        choice.choiceElementAttach(nextChoice == null ? void 0 : nextChoice.choiceElement);
-      }
-    }
-
     function buildHiddenChoice(choice) {
       choice.updateSelected = function () {
-        return void 0;
-      };
-
-      choice.updateDisabled = function () {
         return void 0;
       };
 
@@ -3036,32 +3015,22 @@
       };
     }
 
-    function updateOptionsHidden(optionsAspect, choices, countableChoicesList, getIsOptionHidden, buildChoiceAspect) {
-      var options = optionsAspect.getOptions();
-
-      for (var i = 0; i < options.length; i++) {
-        updateOptionHidden(i, choices, countableChoicesList, getIsOptionHidden, buildChoiceAspect);
-      }
-    }
-
-    function updateOptionHidden(key, choices, countableChoicesList, getIsOptionHidden, buildChoiceAspect) {
-      var choice = choices.get(key);
-
-      var getNextNonHidden = function getNextNonHidden() {
-        return choices.getNext(key, function (c) {
-          return !c.isOptionHidden;
-        });
-      };
-
-      updateHiddenChoice(choice, getNextNonHidden, countableChoicesList, getIsOptionHidden, buildChoiceAspect);
-    }
-
-    function updateHiddenChoice(choice, getNextNonHidden, countableChoicesList, getIsOptionHidden, buildChoiceAspect) {
+    function updateChoiceHidden(choice, key, getNextNonHidden, countableChoicesList, getIsOptionHidden, buildChoiceAspect) {
       var newIsOptionHidden = getIsOptionHidden(choice.option);
 
       if (newIsOptionHidden != choice.isOptionHidden) {
         choice.isOptionHidden = newIsOptionHidden;
-        updateHidden(choice, getNextNonHidden, countableChoicesList, buildChoiceAspect);
+
+        if (choice.isOptionHidden) {
+          countableChoicesList.remove(choice);
+          choice.remove();
+          buildHiddenChoice(choice);
+        } else {
+          var nextChoice = getNextNonHidden(key);
+          countableChoicesList.add(choice, nextChoice);
+          buildChoiceAspect.buildChoice(choice);
+          choice.choiceElementAttach(nextChoice == null ? void 0 : nextChoice.choiceElement);
+        }
       }
     }
 
@@ -3227,17 +3196,6 @@
             }
           };
 
-          api.updateOptionDisabled = function (key) {
-            var choice = choices.get(key); // TODO: generalize index as key 
-
-            var newIsDisabled = optionPropertiesAspect.getDisabled(choice.option);
-
-            if (newIsDisabled != choice.isOptionDisabled) {
-              choice.isOptionDisabled = newIsDisabled;
-              choice.updateDisabled();
-            }
-          };
-
           api.updateOptionAdded = function (key) {
             // TODO: generalize index as key 
             var options = optionsAspect.getOptions();
@@ -3363,8 +3321,7 @@
                 required: backupedRequired
               };
               if (selectElement.required === true) selectElement.required = false;
-              var getDisabled = configuration.getDisabled,
-                  getIsOptionDisabled = configuration.getIsOptionDisabled;
+              var getDisabled = configuration.getDisabled;
 
               if (!getDisabled) {
                 var fieldsetElement = closestByTagName(selectElement, 'FIELDSET');
@@ -3386,16 +3343,13 @@
 
               optionsAspect.getOptions = function () {
                 return selectElement.options;
-              };
-
-              if (!getIsOptionDisabled) optionPropertiesAspect.getDisabled = function (option) {
-                return option.disabled;
               }; // if (!setSelected){
               //     setSelected = (option, value) => {option.selected = value};
               //     // NOTE: adding this (setAttribute) break Chrome's html form reset functionality:
               //     // if (value) option.setAttribute('selected','');
               //     // else option.removeAttribute('selected');
               // }
+
 
               disposeAspect.dispose = composeSync(disposeAspect.dispose, function () {
                 selectElement.required = backupedRequired;
@@ -3479,27 +3433,87 @@
       };
     }
 
-    function DisabledOptionApiPlugin(pluginData) {
-      var choices = pluginData.choices,
-          optionPropertiesAspect = pluginData.optionPropertiesAspect;
+    function DisabledOptionPlugin(pluginData) {
+      var configuration = pluginData.configuration,
+          isChoiceSelectableAspect = pluginData.isChoiceSelectableAspect,
+          createChoiceAspect = pluginData.createChoiceAspect,
+          filterPredicateAspect = pluginData.filterPredicateAspect,
+          choicesCollection = pluginData.choicesCollection,
+          optionToggleAspect = pluginData.optionToggleAspect,
+          multiSelectInlineLayout = pluginData.multiSelectInlineLayout;
+      var getIsOptionDisabled = configuration.getIsOptionDisabled;
+
+      if (options) {
+        if (!getIsOptionDisabled) getIsOptionDisabled = function getIsOptionDisabled(option) {
+          return option.disabled === undefined ? false : option.disabled;
+        };
+      } else {
+        // selectElement
+        if (!getIsOptionDisabled) getIsOptionDisabled = function getIsOptionDisabled(option) {
+          return option.disabled;
+        };
+      }
+
+      var origСreateChoice = createChoiceAspect.createChoice;
+
+      createChoiceAspect.createChoice = function (option) {
+        var choice = origСreateChoice(option);
+        choice.isOptionDisabled = getIsOptionDisabled(option); // todo: remove usage choice.isOptionDisabled
+
+        choice.updateDisabled = null; // todo: remove usage choice.updateDisabled
+
+        return choice;
+      };
+
+      var origToggle = optionToggleAspect.toggle;
+
+      optionToggleAspect.toggle = function (choice) {
+        var success = false;
+        if (choice.isOptionSelected || !choice.isOptionDisabled) success = origToggle(choice, !choice.isOptionSelected);
+        return success;
+      };
+
+      var origIsSelectable = isChoiceSelectableAspect.isSelectable;
+
+      isChoiceSelectableAspect.isSelectable = function (choice) {
+        return origIsSelectable(choice) && !choice.isOptionDisabled;
+      };
+
+      var origFilterPredicate = filterPredicateAspect.filterPredicate;
+
+      filterPredicateAspect.filterPredicate = function (choice, text) {
+        return origFilterPredicate(choice, text) && !choice.isOptionDisabled;
+      }; // let origAdoptChoiceElement = multiSelectInlineLayout.adoptChoiceElement;
+      // multiSelectInlineLayout.adoptChoiceElement = (choice) => {
+      //     let unbindChoiceElement = origAdoptChoiceElement(choice);
+      //     let newUnbindChoiceElement = composeSync(unbindChoiceElement, ()=>{choice.updateDisabled=null;} )
+      //     choice.updateDisabled = choice.choiceHandlers.updateDisabled
+      //     return newUnbindChoiceElement;
+      // };
+
+
       return {
         buildApi: function buildApi(api) {
           api.updateOptionsDisabled = function () {
-            return updateOptionsDisabled(choices, optionPropertiesAspect);
+            return choicesCollection.forLoop(function (choice) {
+              return updateChoiceDisabled(choice, getIsOptionDisabled);
+            });
+          };
+
+          api.updateOptionDisabled = function (key) {
+            return updateChoiceDisabled(choicesCollection.get(key), getIsOptionDisabled);
           };
         }
       };
     }
 
-    function updateOptionsDisabled(choices, optionPropertiesAspect) {
-      choices.forLoop(function (choice) {
-        var newIsDisabled = optionPropertiesAspect.getDisabled(choice.option);
+    function updateChoiceDisabled(choice, getIsOptionDisabled) {
+      var newIsDisabled = getIsOptionDisabled(choice.option);
 
-        if (newIsDisabled != choice.isOptionDisabled) {
-          choice.isOptionDisabled = newIsDisabled;
-          choice.updateDisabled();
-        }
-      });
+      if (newIsDisabled != choice.isOptionDisabled) {
+        choice.isOptionDisabled = newIsDisabled;
+        choice.updateDisabled == null ? void 0 : choice.updateDisabled(); // some hidden oesn't have element (and need to be updated)
+      }
     }
 
     var transformStyles = [{
@@ -3635,7 +3649,7 @@
         containerClass: "dashboardcode-bsmultiselect",
         css: css
       };
-      var defaultPlugins = [CssPatchPlugin, SelectElementPlugin, LabelPlugin, HiddenOptionPlugin, ValidationApiPlugin, BsAppearancePlugin, FormResetPlugin, RtlPlugin, PlaceholderPlugin, OptionsApiPlugin, SelectAllApiPlugin, JQueryMethodsPlugin, UpdateOptionsSelectedApiPlugin, FormRestoreOnBackwardPlugin, DisabledOptionApiPlugin];
+      var defaultPlugins = [CssPatchPlugin, SelectElementPlugin, LabelPlugin, HiddenOptionPlugin, ValidationApiPlugin, BsAppearancePlugin, FormResetPlugin, RtlPlugin, PlaceholderPlugin, OptionsApiPlugin, SelectAllApiPlugin, JQueryMethodsPlugin, UpdateOptionsSelectedApiPlugin, FormRestoreOnBackwardPlugin, DisabledOptionPlugin];
 
       var createBsMultiSelect = function createBsMultiSelect(element, settings, removeInstanceData) {
         var _settings2;
@@ -3710,7 +3724,7 @@
         JQueryMethodsPlugin: JQueryMethodsPlugin,
         UpdateOptionsSelectedApiPlugin: UpdateOptionsSelectedApiPlugin,
         FormRestoreOnBackwardPlugin: FormRestoreOnBackwardPlugin,
-        DisabledOptionApiPlugin: DisabledOptionApiPlugin
+        DisabledOptionPlugin: DisabledOptionPlugin
       };
     })(window, $, Popper);
 

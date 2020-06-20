@@ -17,7 +17,7 @@ import {ComponentPropertiesAspect, TriggerAspect, OnChangeAspect} from './Compon
 import {OptionsAspect, OptionPropertiesAspect} from './OptionsAspect';
 
 import {ChoicesEnumerableAspect } from './ChoicesEnumerableAspect'
-import {FilterManagerAspect, NavigateManager } from './FilterListAspect'
+import {FilterManagerAspect, NavigateManager, FilterPredicateAspect } from './FilterListAspect'
 import {BuildAndAttachChoiceAspect, BuildChoiceAspect} from './BuildChoiceAspect'
 import {FillChoicesAspect} from './FillChoicesAspect'
 
@@ -52,7 +52,7 @@ export function BsMultiSelect(element, environment, configuration, onInit){
           css, 
           getDisabled,
           options, 
-          getText, getSelected, setSelected, getIsOptionDisabled,
+          getText, getSelected, setSelected,
         } = configuration;
 
     let disposeAspect = {};
@@ -60,7 +60,7 @@ export function BsMultiSelect(element, environment, configuration, onInit){
     let onChangeAspect = OnChangeAspect(triggerAspect, 'dashboardcode.multiselect:change');
     let componentPropertiesAspect = ComponentPropertiesAspect(getDisabled??(() => false));
     let optionsAspect   = OptionsAspect(options); 
-    let optionPropertiesAspect = OptionPropertiesAspect(getText, getSelected, setSelected, getIsOptionDisabled);
+    let optionPropertiesAspect = OptionPropertiesAspect(getText, getSelected, setSelected);
     let isChoiceSelectableAspect = IsChoiceSelectableAspect();
     let createChoiceAspect        = CreateChoiceAspect(optionPropertiesAspect);
     let setOptionSelectedAspect = SetOptionSelectedAspect(optionPropertiesAspect);
@@ -102,12 +102,14 @@ export function BsMultiSelect(element, environment, configuration, onInit){
         (choice)=>choice.filteredPrev,
         (choice)=>choice.filteredNext ); 
 
+    let filterPredicateAspect = FilterPredicateAspect()
     let filterManagerAspect = FilterManagerAspect(
         emptyNavigateManager,
         filteredNavigateManager,
         
         filteredChoicesList, 
-        choicesEnumerableAspect
+        choicesEnumerableAspect,
+        filterPredicateAspect
     );
 
     let hoveredChoiceAspect = HoveredChoiceAspect()
@@ -125,7 +127,7 @@ export function BsMultiSelect(element, environment, configuration, onInit){
         countableChoicesList, countableChoicesListInsertAspect,
         optionsAspect, optionPropertiesAspect, createChoiceAspect, setOptionSelectedAspect, isChoiceSelectableAspect, optionToggleAspect, createElementAspect,
         choicesDomFactory, staticDomFactory,
-
+        filterPredicateAspect, 
         choicesCollection, choicesEnumerableAspect, 
         filteredChoicesList, filterManagerAspect, hoveredChoiceAspect, navigateAspect, picks, choices
     }
@@ -207,8 +209,15 @@ export function BsMultiSelect(element, environment, configuration, onInit){
         onChangeAspect, optionToggleAspect, 
         // TODO move to layout
         /**/(choice)=>createPickAspect.buildPick(choice, (s) => multiSelectInlineLayout.handleOnRemoveButton(s)),
-        (c,e) => multiSelectInlineLayout.adoptChoiceElement(c,e)
     );
+    
+    let origBuildChoice = buildChoiceAspect.buildChoice;
+    buildChoiceAspect.buildChoice = (choice) => {
+        origBuildChoice(choice);
+        let unbindChoiceElement = multiSelectInlineLayout.adoptChoiceElement(choice);
+        choice.dispose = composeSync(unbindChoiceElement, choice.dispose )
+    }
+
     let buildAndAttachChoiceAspect =  BuildAndAttachChoiceAspect(buildChoiceAspect);
 
     // TODO move to layout
@@ -244,6 +253,7 @@ export function BsMultiSelect(element, environment, configuration, onInit){
     // TODO: similar for other events, starting from multiSelectInlineLayout.adoptChoiceElement
     let filterInputElementEvents = multiSelectInlineLayout.getFilterInputElementEvents();
     
+    aspects.multiSelectInlineLayout = multiSelectInlineLayout;
     aspects.hideChoicesResetFilterAspect =hideChoicesResetFilterAspect;
     aspects.pickDomFactory=pickDomFactory;
     aspects.choiceDomFactory=choiceDomFactory;

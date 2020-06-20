@@ -18,16 +18,21 @@ export function NavigateManager(
     }
 }
 
+export function FilterPredicateAspect(){
+    return {
+        filterPredicate: (choice, text) => 
+            !choice.isOptionSelected  && choice.searchText.indexOf(text) >= 0    
+    }
+}
+
 export function FilterManagerAspect(
     emptyNavigateManager,
     filteredNavigateManager,
-
     filteredChoicesList, 
-    choicesEnumerableAspect
+    choicesEnumerableAspect,
+    filterPredicateAspect
     ) {
     let showEmptyFilter=true;
-    let composeFilterPredicate = (text) => 
-            (choice) => !choice.isOptionSelected  && !choice.isOptionDisabled  && choice.searchText.indexOf(text) >= 0     
 
     return {
         getNavigateManager(){
@@ -41,11 +46,10 @@ export function FilterManagerAspect(
         },
         setFilter(text){ 
             showEmptyFilter =false;
-            let getFilterIn = composeFilterPredicate(text)
             filteredChoicesList.reset();
             choicesEnumerableAspect.forEach( (choice)=>{
                 choice.filteredPrev = choice.filteredNext = null;
-                var v = getFilterIn(choice);
+                var v = filterPredicateAspect.filterPredicate(choice, text)
                 if (v)
                     filteredChoicesList.add(choice);
                 choice.setVisible(v);

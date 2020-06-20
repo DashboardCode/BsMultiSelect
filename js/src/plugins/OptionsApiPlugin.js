@@ -20,16 +20,6 @@ export function OptionsApiPlugin(pluginData){
                 }
             }
         
-            api.updateOptionDisabled = (key)=>{
-                let choice = choices.get(key); // TODO: generalize index as key 
-                let newIsDisabled = optionPropertiesAspect.getDisabled(choice.option);
-                if (newIsDisabled != choice.isOptionDisabled)
-                {
-                    choice.isOptionDisabled= newIsDisabled;
-                    choice.updateDisabled();
-                }
-            }
-        
             api.updateOptionAdded = (key) => {  // TODO: generalize index as key 
                 let options = optionsAspect.getOptions();
                 let option = options[key];

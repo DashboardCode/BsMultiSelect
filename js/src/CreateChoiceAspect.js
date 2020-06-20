@@ -1,6 +1,6 @@
 export function IsChoiceSelectableAspect(){
     return {
-        isSelectable: (choice)=>isSelectable(choice) // TODO: should be moved to new aspect
+        isSelectable: (choice)=>!choice.isOptionSelected
     }
 }
 
@@ -27,20 +27,12 @@ function setOptionSelected(optionPropertiesAspect, choice, booleanValue){
     return success;
 }
 
-function isSelectable(choice){
-    return !choice.isOptionSelected  && !choice.isOptionDisabled;
-}
-
 function createChoice(optionPropertiesAspect, option){
     let isOptionSelected = optionPropertiesAspect.getSelected(option);
-    let isOptionDisabled = optionPropertiesAspect.getDisabled(option); 
     return {
         option: option,
-        
         isOptionSelected: isOptionSelected,
-        isOptionDisabled: isOptionDisabled,
-        
-        updateDisabled: null,
+
         updateSelected: null,
     
         // navigation and filter support

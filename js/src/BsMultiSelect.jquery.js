@@ -23,7 +23,7 @@ import {FormRestoreOnBackwardPlugin} from './plugins/FormRestoreOnBackwardPlugin
 import {SelectElementPlugin} from './plugins/SelectElementPlugin';
 import {SelectAllApiPlugin} from './plugins/SelectAllApiPlugin';
 import {UpdateOptionsSelectedApiPlugin} from './plugins/UpdateOptionsSelectedApiPlugin'
-import {DisabledOptionApiPlugin} from './plugins/DisabledOptionApiPlugin'
+import {DisabledOptionPlugin} from './plugins/DisabledOptionPlugin'
 
 import {adjustLegacySettings} from './BsMultiSelectDepricatedParameters'
 
@@ -39,7 +39,7 @@ import  {addStyling, toggleStyling} from './ToolsStyling';
 
         let defaultPlugins = [CssPatchPlugin, SelectElementPlugin, LabelPlugin, HiddenOptionPlugin, ValidationApiPlugin, 
         BsAppearancePlugin, FormResetPlugin, RtlPlugin, PlaceholderPlugin , OptionsApiPlugin, SelectAllApiPlugin,
-        JQueryMethodsPlugin, UpdateOptionsSelectedApiPlugin, FormRestoreOnBackwardPlugin,  DisabledOptionApiPlugin];
+        JQueryMethodsPlugin, UpdateOptionsSelectedApiPlugin, FormRestoreOnBackwardPlugin,  DisabledOptionPlugin];
 
         let createBsMultiSelect = (element, settings, removeInstanceData) => { 
             let trigger = (e, eventName) => $(e).trigger(eventName);
@@ -87,7 +87,7 @@ import  {addStyling, toggleStyling} from './ToolsStyling';
         
         prototypable.plugins = {CssPatchPlugin, SelectElementPlugin, LabelPlugin, HiddenOptionPlugin, ValidationApiPlugin, 
             BsAppearancePlugin, FormResetPlugin, RtlPlugin, PlaceholderPlugin , OptionsApiPlugin, SelectAllApiPlugin,
-            JQueryMethodsPlugin, UpdateOptionsSelectedApiPlugin, FormRestoreOnBackwardPlugin,  DisabledOptionApiPlugin}
+            JQueryMethodsPlugin, UpdateOptionsSelectedApiPlugin, FormRestoreOnBackwardPlugin,  DisabledOptionPlugin}
                     
     }
 )(window, $, Popper)

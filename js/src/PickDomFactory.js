@@ -19,8 +19,8 @@ export function PickDomFactory(css, componentPropertiesAspect, optionPropertiesA
                     init(){
                         addStyling(pickContentElement, css.pickContent);
                         addStyling(pickButtonElement, css.pickButton);
-
                         let disableToggle = toggleStyling(pickContentElement, css.pickContent_disabled);
+
                         function updateData(){
                             pickContentElement.textContent = optionPropertiesAspect.getText(choice.option); 
                         }

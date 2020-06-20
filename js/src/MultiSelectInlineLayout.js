@@ -157,8 +157,8 @@ export function MultiSelectInlineLayout (
         resetMouseCandidateChoice();
     };
 
-    function adoptChoiceElement(choice, choiceElement){
-
+    function adoptChoiceElement(choice){
+        let choiceElement = choice.choiceElement;
         // in chrome it happens on "become visible" so we need to skip it, 
         // for IE11 and edge it doesn't happens, but for IE11 and Edge it doesn't happens on small 
         // mouse moves inside the item. 

@@ -20,10 +20,6 @@
 .dashboardcode-bsmultiselect ul.form-control.disabled {
   background-color: #e9ecef;
 }
-.dashboardcode-bsmultiselect ul.form-control::-webkit-input-placeholder {
-  color: #6c757d;
-  opacity: 1;
-}
 .dashboardcode-bsmultiselect ul.form-control::-moz-placeholder {
   color: #6c757d;
   opacity: 1;
