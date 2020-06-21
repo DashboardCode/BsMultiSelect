@@ -1,5 +1,5 @@
 export function HiddenOptionPlugin(pluginData){
-    let {configuration, options, createChoiceAspect, isChoiceSelectableAspect,
+    let {configuration, createChoiceAspect, isChoiceSelectableAspect,
         choicesCollection, buildChoiceAspect, buildAndAttachChoiceAspect,
         countableChoicesListInsertAspect, countableChoicesList} = pluginData;
 
@@ -23,7 +23,7 @@ export function HiddenOptionPlugin(pluginData){
     var origIsSelectable = isChoiceSelectableAspect.isSelectable;
     isChoiceSelectableAspect.isSelectable = (choice) => origIsSelectable(choice) && !choice.isOptionHidden;
 
-    let {getIsOptionHidden} = configuration;
+    let {getIsOptionHidden, options} = configuration;
     if (options) {
         if (!getIsOptionHidden)
             getIsOptionHidden = (option) => (option.hidden===undefined)?false:option.hidden;     

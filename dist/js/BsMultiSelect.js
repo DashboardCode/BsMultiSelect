@@ -1,5 +1,5 @@
 /*!
-  * DashboardCode BsMultiSelect v0.6.17 (https://dashboardcode.github.io/BsMultiSelect/)
+  * DashboardCode BsMultiSelect v0.6.18 (https://dashboardcode.github.io/BsMultiSelect/)
   * Copyright 2017-2020 Roman Pokrovskij (github user rpokrovskij)
   * Licensed under APACHE 2 (https://github.com/DashboardCode/BsMultiSelect/blob/master/LICENSE)
   */
@@ -2850,7 +2850,6 @@
 
     function HiddenOptionPlugin(pluginData) {
       var configuration = pluginData.configuration,
-          options = pluginData.options,
           createChoiceAspect = pluginData.createChoiceAspect,
           isChoiceSelectableAspect = pluginData.isChoiceSelectableAspect,
           choicesCollection = pluginData.choicesCollection,
@@ -2884,7 +2883,8 @@
         return origIsSelectable(choice) && !choice.isOptionHidden;
       };
 
-      var getIsOptionHidden = configuration.getIsOptionHidden;
+      var getIsOptionHidden = configuration.getIsOptionHidden,
+          options = configuration.options;
 
       if (options) {
         if (!getIsOptionHidden) getIsOptionHidden = function getIsOptionHidden(option) {
@@ -3370,7 +3370,8 @@
           choicesCollection = pluginData.choicesCollection,
           optionToggleAspect = pluginData.optionToggleAspect,
           buildPickAspect = pluginData.buildPickAspect;
-      var getIsOptionDisabled = configuration.getIsOptionDisabled;
+      var getIsOptionDisabled = configuration.getIsOptionDisabled,
+          options = configuration.options;
 
       if (options) {
         if (!getIsOptionDisabled) getIsOptionDisabled = function getIsOptionDisabled(option) {

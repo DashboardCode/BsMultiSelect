@@ -3,8 +3,8 @@ import {composeSync} from '../ToolsJs';
 export function DisabledOptionPlugin(pluginData){
     let {configuration, isChoiceSelectableAspect, createChoiceAspect,  buildChoiceAspect,
         filterPredicateAspect, choicesCollection, optionToggleAspect, buildPickAspect } = pluginData;
-
-    let {getIsOptionDisabled} = configuration;
+    
+    let {getIsOptionDisabled, options} = configuration;
     if (options) {
         if (!getIsOptionDisabled)
             getIsOptionDisabled = (option) => (option.disabled===undefined) ? false : option.disabled;     
