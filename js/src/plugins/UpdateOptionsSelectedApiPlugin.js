@@ -1,10 +1,10 @@
 export function UpdateOptionsSelectedApiPlugin(pluginData){
-    let {choices, optionPropertiesAspect} = pluginData;
+    let {choicesCollection, optionPropertiesAspect} = pluginData;
     return {
         buildApi(api){
             // used in FormRestoreOnBackwardPlugin
             api.updateOptionsSelected = () => {
-                choices.forLoop(
+                choicesCollection.forLoop(
                     choice => {
                         let newIsSelected = optionPropertiesAspect.getSelected(choice.option);
                         if (newIsSelected != choice.isOptionSelected)

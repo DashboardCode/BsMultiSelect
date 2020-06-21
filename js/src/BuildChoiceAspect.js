@@ -1,4 +1,3 @@
-
 export function BuildAndAttachChoiceAspect(
     buildChoiceAspect,
     ){
@@ -18,8 +17,7 @@ export function BuildChoiceAspect(
     filterDom, 
     choiceDomFactory,
     onChangeAspect, 
-    optionToggleAspect,
-    buildPick, //createPickAspect.buildPick(choice, handleOnRemoveButton);
+    optionToggleAspect
     ) {
     return {
         buildChoice(choice) {
@@ -34,33 +32,15 @@ export function BuildChoiceAspect(
                     optionToggleAspect.toggle(choice);
                     filterDom.setFocus();
                 });
-            let choiceHandlers = choiceDomManager.init();
-            choice.choiceHandlers = choiceHandlers;
-            let pickTools = { updateSelectedTrue: null, updateSelectedFalse: null }
-            
-            let updateSelectedTrue = () => { 
-                var removePick = buildPick(choice);
-                pickTools.updateSelectedFalse = removePick;
-            };
-        
-            pickTools.updateSelectedTrue = updateSelectedTrue;
+            let choiceDomManagerHandlers = choiceDomManager.init();
+            choice.choiceDomManagerHandlers = choiceDomManagerHandlers;
             
             choice.remove = () => {
                 detach();
-                if (pickTools.updateSelectedFalse) {
-                    pickTools.updateSelectedFalse();
-                    pickTools.updateSelectedFalse=null;
-                }
             };
             
             choice.updateSelected = () => {
-                choiceHandlers.updateSelected();
-                if (choice.isOptionSelected)
-                    pickTools.updateSelectedTrue();
-                else {
-                    pickTools.updateSelectedFalse();
-                    pickTools.updateSelectedFalse=null;
-                }
+                choiceDomManagerHandlers.updateSelected();
                 onChangeAspect.onChange();
             }
         
@@ -68,19 +48,16 @@ export function BuildChoiceAspect(
             
             choice.setHoverIn = (v) => {
                 choice.isHoverIn =v ;
-                choiceHandlers.updateHoverIn();
+                choiceDomManagerHandlers.updateHoverIn();
             }
         
             choice.setVisible = (v) => {
                 choice.isFilteredIn = v;
                 setVisible(choice.isFilteredIn)
             }
-            
-            // TODO: should be moved to plugin; currently there is an error during buildPick
-            choice.updateDisabled = choiceHandlers.updateDisabled
+             
             choice.dispose = () => {
-                choice.choiceHandlers = null;
-                choice.updateDisabled = null;
+                choice.choiceDomManagerHandlers = null;
                 choiceDomManager.dispose();
     
                 choice.choiceElement = null;
@@ -95,11 +72,6 @@ export function BuildChoiceAspect(
                 choice.setHoverIn = null;
         
                 choice.dispose = null;
-            }
-        
-            
-            if (choice.isOptionSelected) {
-                updateSelectedTrue();
             }
         }
     }

@@ -1,30 +1,28 @@
+import {composeSync} from './ToolsJs';
 import {EventBinder, EventLoopFlag, containsAndSelf} from './ToolsDom'
 
 export function MultiSelectInlineLayout (
-    window,
-    setFocus,
-     
-    picksElement,
-    choicesElement, 
-    isChoicesVisible,
-    setChoicesVisible,
-    resetHoveredChoice, 
-    hoverIn,
-    navigate,
-    resetFilter,
-    getNavigateManager, // , 
-
-    onClick,
-    resetFocusIn,
-    setFocusIn,
-    alignToFilterInputItemLocation,
-    toggleHovered,
-    
-    filterDom,
-    processInput,
-    removePicksTail
+    aspects
     ) 
 {
+    let {environment,filterDom,picksDom,choicesDom, 
+        popupAspect, hoveredChoiceAspect, navigateAspect,filterManagerAspect,
+        focusInAspect, optionToggleAspect,
+        inputAspect, picks,buildChoiceAspect,buildPickAspect,
+        setDisabledComponentAspect, resetLayoutAspect} = aspects;
+
+    let picksElement = picksDom.picksElement;
+    let choicesElement = choicesDom.choicesElement;
+    function toggleHovered (){
+        var wasToggled = false;
+        let hoveredChoice = hoveredChoiceAspect.getHoveredChoice(); 
+        if (hoveredChoice){
+            wasToggled = optionToggleAspect.toggle(hoveredChoice); 
+        }
+        return wasToggled;
+    }
+
+    var window = environment.window;
     var document = window.document;
     var eventLoopFlag = EventLoopFlag(window); 
     var skipFocusout = false;
@@ -47,22 +45,21 @@ export function MultiSelectInlineLayout (
     var documentMouseup = function(event) {
         // if we would left without focus then "close the drop" do not remove focus border
         if (choicesElement == event.target) 
-            setFocus()
+            filterDom.setFocus()
 
         // if click outside container - close dropdown
         else if ( !containsAndSelf(choicesElement, event.target) && !containsAndSelf(picksElement, event.target)) {
-            hideChoices();
-            resetFilter();
-            resetFocusIn();
+            resetLayoutAspect.resetLayout();
+            focusInAspect.setFocusIn(false);
         }
     }
 
     function showChoices() {
-        if ( !isChoicesVisible() )
+        if ( !popupAspect.isChoicesVisible() )
         {
-            alignToFilterInputItemLocation();
+            popupAspect.updatePopupLocation();
             eventLoopFlag.set();
-            setChoicesVisible(true);
+            popupAspect.setChoicesVisible(true);
             
             // add listeners that manages close dropdown on  click outside container
             choicesElement.addEventListener("mousedown", skipoutMousedown);
@@ -72,10 +69,10 @@ export function MultiSelectInlineLayout (
 
     function hideChoices() {
         resetMouseCandidateChoice();
-        resetHoveredChoice();
-        if (isChoicesVisible())
+        hoveredChoiceAspect.resetHoveredChoice();
+        if (popupAspect.isChoicesVisible())
         {
-            setChoicesVisible(false);
+            popupAspect.setChoicesVisible(false);
             
             choicesElement.removeEventListener("mousedown", skipoutMousedown);
             document.removeEventListener("mouseup", documentMouseup);
@@ -95,12 +92,12 @@ export function MultiSelectInlineLayout (
     picksElement.addEventListener("mousedown", skipoutAndResetMousedown);
 
     function clickToShowChoices(event){
-        onClick(event);
+        filterDom.setFocusIfNotTarget(event.target);
         if (preventDefaultClickEvent != event) {
-            if (isChoicesVisible()){
+            if (popupAspect.isChoicesVisible()){
                 hideChoices()
             } else {
-                if (getNavigateManager().getCount()>0)
+                if (filterManagerAspect.getNavigateManager().getCount()>0)
                     showChoices();
             }
         }
@@ -136,14 +133,13 @@ export function MultiSelectInlineLayout (
     //     onRemove(event => {
     //         processUncheck(setSelectedFalse, event);
     //         hideChoices();
-    //         resetFilter(); 
+    //         resetFilterAspect.resetFilter(); 
     //     });
     // }
     
     function handleOnRemoveButton(setSelectedFalse){ return (event) => {
         processUncheck(setSelectedFalse, event);
-        hideChoices();
-        resetFilter(); 
+        resetLayoutAspect.resetLayout(); 
     }}
     
     let mouseCandidateEventBinder = EventBinder();
@@ -153,10 +149,10 @@ export function MultiSelectInlineLayout (
 
     var mouseOverToHoveredAndReset = (choice) => {
         if (!choice.isHoverIn)
-            hoverIn(choice);
+            navigateAspect.hoverIn(choice);
         resetMouseCandidateChoice();
     };
-
+ 
     function adoptChoiceElement(choice){
         let choiceElement = choice.choiceElement;
         // in chrome it happens on "become visible" so we need to skip it, 
@@ -179,7 +175,7 @@ export function MultiSelectInlineLayout (
                     // NOTE: mouseleave is not enough to guarantee remove hover styles in situations
                     // when style was setuped without mouse (keyboard arrows)
                     // therefore force reset manually (done inside hoverIn)
-                    hoverIn(choice);
+                    navigateAspect.hoverIn(choice);
                 }                
             }
         }
@@ -188,7 +184,7 @@ export function MultiSelectInlineLayout (
         // note 2: since I want add aditional info panels to the dropdown put mouseleave on dropdwon would not work
         var onChoiceElementMouseleave = () => {
             if (!eventLoopFlag.get()) {
-                resetHoveredChoice();
+                hoveredChoiceAspect.resetHoveredChoice();
             }
         }
         var overAndLeaveEventBinder = EventBinder();
@@ -199,12 +195,11 @@ export function MultiSelectInlineLayout (
     }
 
     
-    filterDom.onFocusIn(setFocusIn);
+    filterDom.onFocusIn(()=>focusInAspect.setFocusIn(true));
     filterDom.onFocusOut(() => { 
             if (!getSkipFocusout()){ // skip initiated by mouse click (we manage it different way)
-                hideChoices();
-                resetFilter(); // if do not do this we will return to filtered list without text filter in input
-                resetFocusIn();
+                resetLayoutAspect.resetLayout(); // if do not do this we will return to filtered list without text filter in input
+                focusInAspect.setFocusIn(false);
             }
             resetSkipFocusout();
         }
@@ -218,35 +213,35 @@ export function MultiSelectInlineLayout (
     function afterInput(){
         eventLoopFlag.set(); // means disable some mouse handlers; otherwise we will get "Hover On MouseEnter" when filter's changes should remove hover
 
-        let visibleCount = getNavigateManager().getCount();
+        let visibleCount = filterManagerAspect.getNavigateManager().getCount();
 
         if (visibleCount>0){
-            let panelIsVisble = isChoicesVisible();
+            let panelIsVisble = popupAspect.isChoicesVisible();
             if (!panelIsVisble){
                 showChoices(); 
             }
             if (visibleCount == 1) {
-                hoverIn(getNavigateManager().getHead())
+                navigateAspect.hoverIn(filterManagerAspect.getNavigateManager().getHead())
             } else {
                 if (panelIsVisble)
-                    resetHoveredChoice();
+                    hoveredChoiceAspect.resetHoveredChoice();
             }   
         }else{
-            if (isChoicesVisible())
+            if (popupAspect.isChoicesVisible())
                 hideChoices();
         }
     }
 
     filterDom.onInput(() => {
-        processInput();
+        inputAspect.processInput();
         afterInput();
     });
 
     function keyDownArrow(down) {
-        let choice = navigate(down);  
+        let choice = navigateAspect.navigate(down);  
         if (choice)
         {
-            hoverIn(choice); // !
+            navigateAspect.hoverIn(choice); // !
             showChoices(); // !
         }
     }
@@ -254,111 +249,139 @@ export function MultiSelectInlineLayout (
     function hoveredToSelected(){
         let wasToggled = toggleHovered();
         if (wasToggled) {
-            hideChoices(); // !
-            resetFilter(); // !
+            resetLayoutAspect.resetLayout();
         }
     }
 
     // TODO: bind it more declarative way? (compact code)
-    function getFilterInputElementEvents(
-    ){
-        var onKeyDown = (event) => {
-            let keyCode = event.which;
-            var empty = filterDom.isEmpty();
-    
+    var onKeyDown = (event) => {
+        let keyCode = event.which;
+        var empty = filterDom.isEmpty();
             if ([ 13,
-                  27  // '27-esc' there is "just in case", I can imagine that there are user agents that do UNDO
-                ].indexOf(keyCode)>=0 
-                || (keyCode == 9 && !empty) //  otherwice there are no keyup (true at least for '9-tab'),
-                ) {
-                    event.preventDefault(); 
-                
-                // '13-enter'  - prevention against form's default button 
-                // but doesn't help with bootsrap modal ESC or ENTER (close behaviour);
-            }
-    
-            if ([ 38, 40 ].indexOf(keyCode) >= 0 )
+              27  // '27-esc' there is "just in case", I can imagine that there are user agents that do UNDO
+            ].indexOf(keyCode)>=0 
+            || (keyCode == 9 && !empty) //  otherwice there are no keyup (true at least for '9-tab'),
+            ) {
                 event.preventDefault(); 
-    
-            if (keyCode == 8 /*backspace*/) {
-                // NOTE: this will process backspace only if there are no text in the input field
-                // If user will find this inconvinient, we will need to calculate something like this
-                // let isBackspaceAtStartPoint = (this.filterInput.selectionStart == 0 && this.filterInput.selectionEnd == 0);
-                if (empty) {
-                    let p = removePicksTail();
-                    if (p)
-                        alignToFilterInputItemLocation();
-                }
-            }
-            // ---------------------------------------------------------------------------------
-            // NOTE: no preventDefault called in case of empty for 9-tab
-            else if (keyCode == 9  /*tab*/) { // NOTE: no keydown for this (without preventDefaul after TAB keyup event will be targeted another element)  
-                if (empty) { 
-                    hideChoices();  // hideChoices inside (and no filter reset since it is empty) 
-                }
-            }
-            else if (keyCode == 27 /*esc*/ ) { // NOTE: forbid the ESC to close the modal (in case the nonempty or dropdown is open)
             
-                if (!empty  || isChoicesVisible())
-                    event.stopPropagation()
-            }
-            else if (keyCode == 38) {
-                keyDownArrow(false); // up
-            }
-            else if (keyCode == 40) {
-                keyDownArrow(true); // down
+            // '13-enter'  - prevention against form's default button 
+            // but doesn't help with bootsrap modal ESC or ENTER (close behaviour);
+        }
+            if ([ 38, 40 ].indexOf(keyCode) >= 0 )
+            event.preventDefault(); 
+            if (keyCode == 8 /*backspace*/) {
+            // NOTE: this will process backspace only if there are no text in the input field
+            // If user will find this inconvinient, we will need to calculate something like this
+            // let isBackspaceAtStartPoint = (this.filterInput.selectionStart == 0 && this.filterInput.selectionEnd == 0);
+            if (empty) {
+                let p = picks.removePicksTail();
+                if (p)
+                    popupAspect.updatePopupLocation();
             }
         }
-    
-        var onKeyUp = (event) => {
-            let keyCode = event.which;
-            //var handler = keyUp[event.which/* key code */];
-            //handler();    
-    
-            if (keyCode == 9) {
-                if (isChoicesVisible()) {
-                    hoveredToSelected();
-                } 
+        // ---------------------------------------------------------------------------------
+        // NOTE: no preventDefault called in case of empty for 9-tab
+        else if (keyCode == 9  /*tab*/) { // NOTE: no keydown for this (without preventDefaul after TAB keyup event will be targeted another element)  
+            if (empty) { 
+                hideChoices();  // hideChoices inside (and no filter reset since it is empty) 
             }
-            else if (keyCode == 13 ) {
-                if (isChoicesVisible()) {
-                    hoveredToSelected();
-                } else {
-                    if (getNavigateManager().getCount()>0){
-                        showChoices();
-                    }
+        }
+        else if (keyCode == 27 /*esc*/ ) { // NOTE: forbid the ESC to close the modal (in case the nonempty or dropdown is open)
+        
+            if (!empty  || popupAspect.isChoicesVisible())
+                event.stopPropagation()
+        }
+        else if (keyCode == 38) {
+            keyDownArrow(false); // up
+        }
+        else if (keyCode == 40) {
+            keyDownArrow(true); // down
+        }
+    }
+    var onKeyUp = (event) => {
+        let keyCode = event.which;
+        //var handler = keyUp[event.which/* key code */];
+        //handler();    
+            if (keyCode == 9) {
+            if (popupAspect.isChoicesVisible()) {
+                hoveredToSelected();
+            } 
+        }
+        else if (keyCode == 13 ) {
+            if (popupAspect.isChoicesVisible()) {
+                hoveredToSelected();
+            } else {
+                if (filterManagerAspect.getNavigateManager().getCount()>0){
+                    showChoices();
                 }
             }
-            else if (keyCode == 27) { // escape
-                // is it always empty (bs x can still it) 
-                hideChoices(); // always hide 1st
-                resetFilter();
-            }
         }
-        return {
-            onKeyDown,
-            onKeyUp
+        else if (keyCode == 27) { // escape
+            // is it always empty (bs x can still it) 
+            resetLayoutAspect.resetLayout();
+        }
+    }
+
+    filterDom.onKeyDown(onKeyDown);    
+    filterDom.onKeyUp(onKeyUp);
+
+    let origSetDisabledComponent = setDisabledComponentAspect.setDisabledComponent; 
+    setDisabledComponentAspect.setDisabledComponent = (isComponentDisabled) => {
+        origSetDisabledComponent(isComponentDisabled);
+        if (isComponentDisabled)
+            componentDisabledEventBinder.unbind();
+        else
+            componentDisabledEventBinder.bind(picksElement, "click",  clickToShowChoices); 
+    }
+
+    resetLayoutAspect.resetLayout = composeSync(
+        hideChoices,
+        resetLayoutAspect.resetLayout // resetFilter by default
+    );
+
+    let origBuildChoice = buildChoiceAspect.buildChoice;
+    buildChoiceAspect.buildChoice = (choice) => {
+        origBuildChoice(choice);
+
+        let pickTools = { updateSelectedTrue: null, updateSelectedFalse: null }
+        pickTools.updateSelectedTrue = () => { 
+            var pick = buildPickAspect.buildPick(choice, handleOnRemoveButton);
+            (s) => handleOnRemoveButton(s)
+            pickTools.updateSelectedFalse = ()=>pick.dispose();
+        };
+
+        choice.remove = composeSync(choice.remove, ()=>{
+            if (pickTools.updateSelectedFalse) {
+                pickTools.updateSelectedFalse();
+                pickTools.updateSelectedFalse=null;
+            }
+        })
+
+        choice.updateSelected = composeSync(
+            ()=>{
+                if (choice.isOptionSelected)
+                    pickTools.updateSelectedTrue();
+                else {
+                    pickTools.updateSelectedFalse();
+                    pickTools.updateSelectedFalse=null;
+                }
+            },
+            choice.updateSelected
+        )
+        
+        let unbindChoiceElement = adoptChoiceElement(choice);
+        choice.dispose = composeSync(unbindChoiceElement, choice.dispose)
+
+        if (choice.isOptionSelected) {
+            pickTools.updateSelectedTrue();
         }
     }
 
     return {
-        adoptChoiceElement,
         dispose(){
             resetMouseCandidateChoice();
             picksElement.removeEventListener("mousedown", skipoutAndResetMousedown);
             componentDisabledEventBinder.unbind();
-        },
-        disableComponent(isComponentDisabled){
-            if (isComponentDisabled)
-                componentDisabledEventBinder.unbind();
-            else
-                componentDisabledEventBinder.bind(picksElement, "click",  clickToShowChoices); 
-        },
-        handleOnRemoveButton,
-        getFilterInputElementEvents,
-        hideChoicesResetFilter(){
-            hideChoices();  // always hide 1st
-            resetFilter();
         }
     }
 }

@@ -4,19 +4,12 @@ export function Choices(choicesCollection,
     return {
         push: (choice) => push(choice, choicesCollection, listFacade_add),
         insert: (key, choice) => insert(key, choice, choicesCollection, listFacade_add),
-        get: (key) => choicesCollection.get(key),
-        getNext: (key, predicate) => choicesCollection.getNext(key, predicate),
         remove: (key) => {
             var choice = choicesCollection.remove(key);
             listFacade_remove(choice);
             return choice;
         },
-
-        //  ---- dialog AI
-        //getHead: ()  => choicesCollection.getHead(),
-        forLoop: (f) => choicesCollection.forLoop(f),
-        
-        clear:()=>{
+        clear: () => {
             choicesCollection.reset();
             listFacade_reset();
         }, 

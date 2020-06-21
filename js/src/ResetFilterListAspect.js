@@ -7,7 +7,7 @@ export function ResetFilterListAspect(filterDom, filterManagerAspect){
     }
 }
 
-export function ManageableResetFilterListAspect(filterDom, resetFilterListAspect){
+export function ResetFilterAspect(filterDom, resetFilterListAspect){
     return {
         resetFilter(){ // call in OptionsApiPlugin
             if (!filterDom.isEmpty())  // call in Placeholder

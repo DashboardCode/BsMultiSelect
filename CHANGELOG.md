@@ -1,5 +1,6 @@
 # CHANGELOG
 ````
+0.6.17 - layout api optimizations
 0.6.16 - disabled option moved to plugin
 0.6.15 - layout api optimizations
 0.6.14 - optimizations

@@ -1,5 +1,5 @@
 export function HiddenOptionPlugin(pluginData){
-    let {configuration, optionsAspect, options, createChoiceAspect, isChoiceSelectableAspect,
+    let {configuration, options, createChoiceAspect, isChoiceSelectableAspect,
         choices: choicesCollection, buildAndAttachChoiceAspect, countableChoicesListInsertAspect, countableChoicesList
     } = pluginData;
 

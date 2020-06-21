@@ -1,5 +1,14 @@
-export function DisabledComponentAspect(componentPropertiesAspect, picks, picksDom,
-    disableComponent 
+
+export function SetDisabledComponentAspect(picks, picksDom){
+    return {
+        setDisabledComponent(isComponentDisabled){
+            picks.disableRemoveAll(isComponentDisabled);
+            picksDom.disable(isComponentDisabled);
+        }
+    }
+}
+
+export function UpdateDisabledComponentAspect(componentPropertiesAspect, setDisabledComponentAspect
     ){
     let isComponentDisabled;
     return {
@@ -7,18 +16,22 @@ export function DisabledComponentAspect(componentPropertiesAspect, picks, picksD
             let newIsComponentDisabled = componentPropertiesAspect.getDisabled();
             if (isComponentDisabled!==newIsComponentDisabled){
                 isComponentDisabled=newIsComponentDisabled;
-                picks.disableRemoveAll(newIsComponentDisabled);
-                disableComponent(newIsComponentDisabled);
-                picksDom.disable(newIsComponentDisabled);
+                setDisabledComponentAspect.setDisabledComponent(newIsComponentDisabled);
             }
         }
     }
 }
 
-export function AppearanceAspect(disabledComponentAspect){
+export function ResetLayoutAspect(resetLayout){
+    return {
+        resetLayout
+    }
+}
+
+export function AppearanceAspect(updateDisabledComponentAspect){
     return {
         updateAppearance(){
-            disabledComponentAspect.updateDisabledComponent();
+            updateDisabledComponentAspect.updateDisabledComponent();
         }
     }
 }

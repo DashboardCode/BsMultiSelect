@@ -4,7 +4,7 @@ import {toggleStyling} from '../ToolsStyling';
 
 export function PlaceholderPlugin(pluginData){
     let {configuration, staticManager, picks, picksDom, filterDom, staticDom, updateDataAspect,
-        createPickAspect, resetFilterListAspect, filterManagerAspect} = pluginData;
+        buildPickAspect, resetFilterListAspect, filterManagerAspect} = pluginData;
     let {placeholder,  css} = configuration;
     let {picksElement} = picksDom;
     let filterInputElement = filterDom.filterInputElement;
@@ -58,17 +58,17 @@ export function PlaceholderPlugin(pluginData){
     filterManagerAspect.processEmptyInput = composeSync(updateEmptyInputWidth, filterManagerAspect.processEmptyInput);
     resetFilterListAspect.forceResetFilter = composeSync(resetFilterListAspect.forceResetFilter, updatePlacehodlerVisibility);
             
-    let origBuildPick = createPickAspect.buildPick;
-    createPickAspect.buildPick = (choice, handleOnRemoveButton)=>{ 
-        let removePick = origBuildPick(choice, handleOnRemoveButton);
+    let origBuildPick = buildPickAspect.buildPick;
+    buildPickAspect.buildPick = (choice, handleOnRemoveButton)=>{ 
+        let pick = origBuildPick(choice, handleOnRemoveButton);
         if (picks.getCount()==1) 
             updatePlacehodlerVisibility()
-        return ()=>
+        pick.dispose = composeSync(pick.dispose, ()=>
             { 
-                removePick();
                 if (picks.getCount()==0) 
                     updatePlacehodlerVisibility()
-            }
+            })
+        return pick;
     };
 
     updateDataAspect.updateData = composeSync(updateDataAspect.updateData, updatePlacehodlerVisibility);

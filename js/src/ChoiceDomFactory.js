@@ -26,7 +26,7 @@ export function ChoiceDomFactory(css, optionPropertiesAspect){
                         let choiceSelectedToggle = toggleStyling(choiceElement, css.choice_selected);
                         let choiceDisabledToggle = toggleStyling(choiceElement, css.choice_disabled);
                         let choiceHoverToggle = toggleStyling(choiceElement, css.choice_hover);
-            
+             
                         let choiceCheckBoxDisabledToggle = toggleStyling(choiceCheckBoxElement, css.choiceCheckBox_disabled)
                         let choiceLabelDisabledToggle = toggleStyling(choiceLabelElement, css.choiceLabel_disabled)
             

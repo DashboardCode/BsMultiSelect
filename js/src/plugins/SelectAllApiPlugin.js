@@ -1,10 +1,10 @@
 export function SelectAllApiPlugin(pluginData){
-    let {hideChoicesResetFilterAspect, choices, picks, isChoiceSelectableAspect, setOptionSelectedAspect} = pluginData;
+    let {resetLayoutAspect, choicesCollection, picks, isChoiceSelectableAspect, setOptionSelectedAspect} = pluginData;
     return {
         buildApi(api){
             api.selectAll= ()=>{
-                hideChoicesResetFilterAspect.hideChoicesResetFilter(); // always hide 1st
-                choices.forLoop(
+                resetLayoutAspect.resetLayout(); // always hide 1st
+                choicesCollection.forLoop(
                     choice => {
                         if (isChoiceSelectableAspect.isSelectable(choice))
                             setOptionSelectedAspect.setOptionSelected(choice, true)
@@ -13,10 +13,8 @@ export function SelectAllApiPlugin(pluginData){
             }
         
             api.deselectAll= ()=>{
-                hideChoicesResetFilterAspect.hideChoicesResetFilter(); // always hide 1st
-
+                resetLayoutAspect.resetLayout(); // always hide 1st
                 picks.removeAll();
-                
             }
         }
     }

@@ -2,7 +2,7 @@ import  {EventBinder} from './ToolsDom';
 import  {addStyling, toggleStyling} from './ToolsStyling';
 
 export function PickDomFactory(css, componentPropertiesAspect, optionPropertiesAspect){
-    return {
+    return { 
         create(pickElement, choice, remove){
             let eventBinder = EventBinder();
             pickElement.innerHTML = '<span></span><button aria-label="Remove" tabIndex="-1" type="button"><span aria-hidden="true">&times;</span></button>'

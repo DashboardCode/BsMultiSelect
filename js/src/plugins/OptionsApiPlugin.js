@@ -1,17 +1,17 @@
 export function OptionsApiPlugin(pluginData){
-    let {buildAndAttachChoiceAspect, choices, createChoiceAspect, setOptionSelectedAspect,
+    let {buildAndAttachChoiceAspect, choices, choicesCollection, createChoiceAspect, setOptionSelectedAspect,
         optionPropertiesAspect, 
-        optionsAspect, hideChoicesResetFilterAspect} = pluginData;
+        optionsAspect, resetLayoutAspect} = pluginData;
     return {
         buildApi(api){
 
             api.setOptionSelected = (key, value) => {
-                let choice = choices.get(key);
+                let choice = choicesCollection.get(key);
                 setOptionSelectedAspect.setOptionSelected(choice, value);
             }
         
             api.updateOptionSelected = (key) => {
-                let choice = choices.get(key); // TODO: generalize index as key
+                let choice = choicesCollection.get(key); // TODO: generalize index as key
                 let newIsSelected = optionPropertiesAspect.getSelected(choice.option);
                 if (newIsSelected != choice.isOptionSelected)
                 {
@@ -26,7 +26,7 @@ export function OptionsApiPlugin(pluginData){
                 
                 let choice = createChoiceAspect.createChoice(option);
                 choices.insert(key, choice);
-                let nextChoice = ()=> choices.getNext(key, c => c.choiceElement);
+                let nextChoice = ()=> choicesCollection.getNext(key, c => c.choiceElement);
 
                 buildAndAttachChoiceAspect.buildAndAttachChoice(
                         choice,
@@ -35,7 +35,7 @@ export function OptionsApiPlugin(pluginData){
             }
         
             api.updateOptionRemoved = (key) => { // TODO: generalize index as key 
-                hideChoicesResetFilterAspect.hideChoicesResetFilter(); // always hide 1st, then reset filter
+                resetLayoutAspect.resetLayout(); // always hide 1st, then reset filter
                 
                 var choice = choices.remove(key);
                 choice.remove?.();

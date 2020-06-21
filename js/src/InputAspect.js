@@ -15,13 +15,33 @@ export function InputAspect(
             {
                 filterManagerAspect.setFilter(text);
                 // check if exact match inside
-                isEmpty=setSelectedIfExactMatch(text);
+                isEmpty=setSelectedIfExactMatch.setSelectedIfExactMatch(text);
             }
             if (isEmpty){
                 filterManagerAspect.processEmptyInput();
             }
             else
                 filterDom.setWidth(filterInputValue);  
+        }
+    }
+}
+
+export function SetSelectedIfExactMatch(filterDom,
+    filterManagerAspect){
+    return {
+        setSelectedIfExactMatch(text){
+            let wasSetEmpty = false;
+            if ( filterManagerAspect.getNavigateManager().getCount() == 1)
+            {
+                let fullMatchChoice =  filterManagerAspect.getNavigateManager().getHead();
+                if (fullMatchChoice.searchText == text)
+                {
+                    setOptionSelectedAspect.setOptionSelected(fullMatchChoice, true);
+                    filterDom.setEmpty();
+                    wasSetEmpty = true;
+                }
+            }
+            return wasSetEmpty;
         }
     }
 }
