@@ -6,6 +6,7 @@
 
 1. should got focus on "mouse down" (now on mouse up) as standart input
 1b. click on label when pulldown is opened should close the menu (complex, requres "remember the state on mouse down" because dropdown will be closed on mousedown as control loose focus, and return on mouse up - the standard behaviour for input also ) 
+1c. mouse move not working on whole choice item
 
 2. publish new version of hidden plugin
 1a. better method to manipulate plugins for jquey/bootstrap and esm
