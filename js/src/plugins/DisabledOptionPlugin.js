@@ -49,7 +49,8 @@ export function DisabledOptionPlugin(pluginData){
     
     let origBuildPick = buildPickAspect.buildPick;
     buildPickAspect.buildPick = (choice, handleOnRemoveButton) => {
-        let pick = origBuildPick(choice, handleOnRemoveButton);
+        origBuildPick(choice, handleOnRemoveButton);
+        let pick =choice.pick;
         pick.updateDisabled = () => pick.pickDomManagerHandlers.updateDisabled();
         pick.dispose = composeSync(pick.dispose, ()=>{pick.updateDisabled=null});
 
@@ -61,7 +62,6 @@ export function DisabledOptionPlugin(pluginData){
                 choice.updateDisabled(); // make "true disabled" without it checkbox looks disabled
             }
         )
-        return pick;
     }
 
 

@@ -60,7 +60,8 @@ export function PlaceholderPlugin(pluginData){
             
     let origBuildPick = buildPickAspect.buildPick;
     buildPickAspect.buildPick = (choice, handleOnRemoveButton)=>{ 
-        let pick = origBuildPick(choice, handleOnRemoveButton);
+        origBuildPick(choice, handleOnRemoveButton);
+        let pick = choice.pick;
         if (picks.getCount()==1) 
             updatePlacehodlerVisibility()
         pick.dispose = composeSync(pick.dispose, ()=>
@@ -68,7 +69,6 @@ export function PlaceholderPlugin(pluginData){
                 if (picks.getCount()==0) 
                     updatePlacehodlerVisibility()
             })
-        return pick;
     };
 
     updateDataAspect.updateData = composeSync(updateDataAspect.updateData, updatePlacehodlerVisibility);

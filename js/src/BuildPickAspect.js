@@ -4,23 +4,21 @@ export function BuildPickAspect(setOptionSelectedAspect, picks, picksDom, pickDo
     return {
         buildPick(choice, handleOnRemoveButton){
             let { pickElement, attach, detach } = picksDom.createPickElement(); 
-            let setSelectedFalse = () => setOptionSelectedAspect.setOptionSelected(choice, false)
-            let remove = handleOnRemoveButton(setSelectedFalse);
-            let {pickDomManager} = pickDomFactory.create(pickElement, choice, remove); 
+            let setSelectedFalse = () => setOptionSelectedAspect.setOptionSelected(choice, false);
+            let removeOnButton = handleOnRemoveButton(setSelectedFalse);
+            let {pickDomManager} = pickDomFactory.create(pickElement, choice, removeOnButton); 
             let pickDomManagerHandlers = pickDomManager.init();
 
             var pick = {
                 pickDomManagerHandlers,
-                updateRemoveDisabled: () => pickDomManagerHandlers.updateRemoveDisabled(),
-                updateData: () => pickDomManagerHandlers.updateData(),
                 remove: setSelectedFalse,
                 dispose: () => { 
                     detach(); 
                     pickDomManager.dispose(); 
-                    pick.updateRemoveDisabled=null; pick.updateData=null; 
+                    pickDomManagerHandlers = null;
                     pick.remove=null; 
                     pick.dispose=null;  
-                    pickDomManagerHandlers = null;
+                    pick=null;
                 }
             }
             
@@ -28,7 +26,7 @@ export function BuildPickAspect(setOptionSelectedAspect, picks, picksDom, pickDo
     
             let removeFromList = picks.addPick(pick);
             pick.dispose = composeSync(removeFromList, pick.dispose);
-            return pick;
+            choice.pick = pick;
         }
     }
 }

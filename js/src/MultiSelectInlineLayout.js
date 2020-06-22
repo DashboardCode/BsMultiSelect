@@ -345,9 +345,10 @@ export function MultiSelectInlineLayout (
 
         let pickTools = { updateSelectedTrue: null, updateSelectedFalse: null }
         pickTools.updateSelectedTrue = () => { 
-            var pick = buildPickAspect.buildPick(choice, handleOnRemoveButton);
-            (s) => handleOnRemoveButton(s)
-            pickTools.updateSelectedFalse = ()=>pick.dispose();
+            buildPickAspect.buildPick(choice, handleOnRemoveButton);
+            let pick = choice.pick;
+            
+            pickTools.updateSelectedFalse = () => pick.dispose();
         };
 
         choice.remove = composeSync(choice.remove, ()=>{

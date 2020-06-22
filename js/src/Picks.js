@@ -17,17 +17,17 @@ export function Picks()
         isEmpty: list.isEmpty, // function
         getCount: list.getCount,
         disableRemoveAll(){
-            list.forEach(i=>i.updateRemoveDisabled())
+            list.forEach(pick=>pick.pickDomManagerHandlers.updateRemoveDisabled())
         },
         removeAll(){
-            list.forEach(i=>i.remove())
+            list.forEach(pick=>pick.remove())
         },
         clear() {
-            list.forEach(i=>i.dispose());
+            list.forEach(pick=>pick.dispose());
             list.reset();
         },
         dispose(){
-            list.forEach(i=>i.dispose());
+            list.forEach(pick=>pick.dispose());
             
         }
     }

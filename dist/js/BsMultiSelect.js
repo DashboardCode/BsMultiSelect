@@ -1,5 +1,5 @@
 /*!
-  * DashboardCode BsMultiSelect v0.6.18 (https://dashboardcode.github.io/BsMultiSelect/)
+  * DashboardCode BsMultiSelect v0.6.19 (https://dashboardcode.github.io/BsMultiSelect/)
   * Copyright 2017-2020 Roman Pokrovskij (github user rpokrovskij)
   * Licensed under APACHE 2 (https://github.com/DashboardCode/BsMultiSelect/blob/master/LICENSE)
   */
@@ -1530,24 +1530,24 @@
         // function
         getCount: list.getCount,
         disableRemoveAll: function disableRemoveAll() {
-          list.forEach(function (i) {
-            return i.updateRemoveDisabled();
+          list.forEach(function (pick) {
+            return pick.pickDomManagerHandlers.updateRemoveDisabled();
           });
         },
         removeAll: function removeAll() {
-          list.forEach(function (i) {
-            return i.remove();
+          list.forEach(function (pick) {
+            return pick.remove();
           });
         },
         clear: function clear() {
-          list.forEach(function (i) {
-            return i.dispose();
+          list.forEach(function (pick) {
+            return pick.dispose();
           });
           list.reset();
         },
         dispose: function dispose() {
-          list.forEach(function (i) {
-            return i.dispose();
+          list.forEach(function (pick) {
+            return pick.dispose();
           });
         }
       };
@@ -1565,35 +1565,28 @@
             return setOptionSelectedAspect.setOptionSelected(choice, false);
           };
 
-          var remove = handleOnRemoveButton(setSelectedFalse);
+          var removeOnButton = handleOnRemoveButton(setSelectedFalse);
 
-          var _pickDomFactory$creat = pickDomFactory.create(pickElement, choice, remove),
+          var _pickDomFactory$creat = pickDomFactory.create(pickElement, choice, removeOnButton),
               pickDomManager = _pickDomFactory$creat.pickDomManager;
 
           var pickDomManagerHandlers = pickDomManager.init();
           var pick = {
             pickDomManagerHandlers: pickDomManagerHandlers,
-            updateRemoveDisabled: function updateRemoveDisabled() {
-              return pickDomManagerHandlers.updateRemoveDisabled();
-            },
-            updateData: function updateData() {
-              return pickDomManagerHandlers.updateData();
-            },
             remove: setSelectedFalse,
             dispose: function dispose() {
               detach();
               pickDomManager.dispose();
-              pick.updateRemoveDisabled = null;
-              pick.updateData = null;
+              pickDomManagerHandlers = null;
               pick.remove = null;
               pick.dispose = null;
-              pickDomManagerHandlers = null;
+              pick = null;
             }
           };
           attach();
           var removeFromList = picks.addPick(pick);
           pick.dispose = composeSync(removeFromList, pick.dispose);
-          return pick;
+          choice.pick = pick;
         }
       };
     }
@@ -2011,7 +2004,8 @@
         };
 
         pickTools.updateSelectedTrue = function () {
-          var pick = buildPickAspect.buildPick(choice, handleOnRemoveButton);
+          buildPickAspect.buildPick(choice, handleOnRemoveButton);
+          var pick = choice.pick;
 
           pickTools.updateSelectedFalse = function () {
             return pick.dispose();
@@ -3049,12 +3043,12 @@
       var origBuildPick = buildPickAspect.buildPick;
 
       buildPickAspect.buildPick = function (choice, handleOnRemoveButton) {
-        var pick = origBuildPick(choice, handleOnRemoveButton);
+        origBuildPick(choice, handleOnRemoveButton);
+        var pick = choice.pick;
         if (picks.getCount() == 1) updatePlacehodlerVisibility();
         pick.dispose = composeSync(pick.dispose, function () {
           if (picks.getCount() == 0) updatePlacehodlerVisibility();
         });
-        return pick;
       };
 
       updateDataAspect.updateData = composeSync(updateDataAspect.updateData, updatePlacehodlerVisibility);
@@ -3428,7 +3422,8 @@
       var origBuildPick = buildPickAspect.buildPick;
 
       buildPickAspect.buildPick = function (choice, handleOnRemoveButton) {
-        var pick = origBuildPick(choice, handleOnRemoveButton);
+        origBuildPick(choice, handleOnRemoveButton);
+        var pick = choice.pick;
 
         pick.updateDisabled = function () {
           return pick.pickDomManagerHandlers.updateDisabled();
@@ -3445,7 +3440,6 @@
 
           choice.updateDisabled(); // make "true disabled" without it checkbox looks disabled
         });
-        return pick;
       };
 
       return {
