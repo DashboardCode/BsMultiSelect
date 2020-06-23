@@ -2,14 +2,14 @@ import {List} from './ToolsJs'
 
 export function Picks() 
 {
-    var list = List();
+    let list = List();
     return {
         addPick(pick) {
-            var removeFromList = list.add(pick);
+            let removeFromList = list.add(pick);
             return removeFromList;
         },
         removePicksTail(){  
-            var pick = list.getTail();
+            let pick = list.getTail();
             if (pick) 
                 pick.remove(); // always remove in this case
             return pick;

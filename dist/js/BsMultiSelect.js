@@ -1,5 +1,5 @@
 /*!
-  * DashboardCode BsMultiSelect v0.6.19 (https://dashboardcode.github.io/BsMultiSelect/)
+  * DashboardCode BsMultiSelect v0.6.20 (https://dashboardcode.github.io/BsMultiSelect/)
   * Copyright 2017-2020 Roman Pokrovskij (github user rpokrovskij)
   * Licensed under APACHE 2 (https://github.com/DashboardCode/BsMultiSelect/blob/master/LICENSE)
   */
@@ -1266,7 +1266,7 @@
         }
       };
     }
-    function BuildChoiceAspect(choicesDom, filterDom, choiceDomFactory, onChangeAspect, optionToggleAspect) {
+    function BuildChoiceAspect(choicesDom, choiceDomFactory, optionToggleAspect, filterDom, onChangeAspect) {
       return {
         buildChoice: function buildChoice(choice) {
           var _choicesDom$createCho = choicesDom.createChoiceElement(),
@@ -1553,40 +1553,41 @@
       };
     }
 
-    function BuildPickAspect(setOptionSelectedAspect, picks, picksDom, pickDomFactory) {
+    function BuildPickAspect(picksDom, pickDomFactory, setOptionSelectedAspect, picks) {
       return {
-        buildPick: function buildPick(choice, handleOnRemoveButton) {
+        buildPick: function buildPick(wrap, handleOnRemoveButton) {
           var _picksDom$createPickE = picksDom.createPickElement(),
               pickElement = _picksDom$createPickE.pickElement,
               attach = _picksDom$createPickE.attach,
               detach = _picksDom$createPickE.detach;
 
           var setSelectedFalse = function setSelectedFalse() {
-            return setOptionSelectedAspect.setOptionSelected(choice, false);
+            return setOptionSelectedAspect.setOptionSelected(wrap, false);
           };
 
           var removeOnButton = handleOnRemoveButton(setSelectedFalse);
 
-          var _pickDomFactory$creat = pickDomFactory.create(pickElement, choice, removeOnButton),
+          var _pickDomFactory$creat = pickDomFactory.create(pickElement, wrap, removeOnButton),
               pickDomManager = _pickDomFactory$creat.pickDomManager;
 
           var pickDomManagerHandlers = pickDomManager.init();
           var pick = {
             pickDomManagerHandlers: pickDomManagerHandlers,
             remove: setSelectedFalse,
+            pickElementAttach: attach,
             dispose: function dispose() {
               detach();
               pickDomManager.dispose();
               pickDomManagerHandlers = null;
               pick.remove = null;
               pick.dispose = null;
+              pick.pickElementAttach = null;
               pick = null;
             }
           };
-          attach();
-          var removeFromList = picks.addPick(pick);
-          pick.dispose = composeSync(removeFromList, pick.dispose);
-          choice.pick = pick;
+          wrap.pick = pick; //wrap.pick.pickElementAttach();
+          //let removeFromList = picks.addPick(pick);
+          //pick.dispose = composeSync(removeFromList, pick.dispose);
         }
       };
     }
@@ -2006,6 +2007,9 @@
         pickTools.updateSelectedTrue = function () {
           buildPickAspect.buildPick(choice, handleOnRemoveButton);
           var pick = choice.pick;
+          pick.pickElementAttach();
+          var removeFromList = picks.addPick(pick);
+          pick.dispose = composeSync(removeFromList, pick.dispose);
 
           pickTools.updateSelectedFalse = function () {
             return pick.dispose();
@@ -2223,9 +2227,9 @@
       var picksDom = PicksDom(staticDom.picksElement, staticDom.disposablePicksElement, createElementAspect, css);
       var focusInAspect = FocusInAspect(picksDom);
       var pickDomFactory = PickDomFactory(css, componentPropertiesAspect, optionPropertiesAspect);
-      var buildPickAspect = BuildPickAspect(setOptionSelectedAspect, picks, picksDom, pickDomFactory);
+      var buildPickAspect = BuildPickAspect(picksDom, pickDomFactory, setOptionSelectedAspect);
       var choiceDomFactory = ChoiceDomFactory(css, optionPropertiesAspect);
-      var buildChoiceAspect = BuildChoiceAspect(choicesDom, filterDom, choiceDomFactory, onChangeAspect, optionToggleAspect);
+      var buildChoiceAspect = BuildChoiceAspect(choicesDom, choiceDomFactory, optionToggleAspect, filterDom, onChangeAspect);
       var buildAndAttachChoiceAspect = BuildAndAttachChoiceAspect(buildChoiceAspect);
       var resetLayoutAspect = ResetLayoutAspect(function () {
         return resetFilterAspect.resetFilter();
@@ -2982,7 +2986,6 @@
           filterDom = pluginData.filterDom,
           staticDom = pluginData.staticDom,
           updateDataAspect = pluginData.updateDataAspect,
-          buildPickAspect = pluginData.buildPickAspect,
           resetFilterListAspect = pluginData.resetFilterListAspect,
           filterManagerAspect = pluginData.filterManagerAspect;
       var placeholder = configuration.placeholder,
@@ -3040,15 +3043,15 @@
       staticManager.appendToContainer = composeSync(staticManager.appendToContainer, updateEmptyInputWidth);
       filterManagerAspect.processEmptyInput = composeSync(updateEmptyInputWidth, filterManagerAspect.processEmptyInput);
       resetFilterListAspect.forceResetFilter = composeSync(resetFilterListAspect.forceResetFilter, updatePlacehodlerVisibility);
-      var origBuildPick = buildPickAspect.buildPick;
+      var origAddPick = picks.addPick;
 
-      buildPickAspect.buildPick = function (choice, handleOnRemoveButton) {
-        origBuildPick(choice, handleOnRemoveButton);
-        var pick = choice.pick;
+      picks.addPick = function (pick) {
+        var removeFromList = origAddPick(pick);
         if (picks.getCount() == 1) updatePlacehodlerVisibility();
         pick.dispose = composeSync(pick.dispose, function () {
           if (picks.getCount() == 0) updatePlacehodlerVisibility();
         });
+        return removeFromList;
       };
 
       updateDataAspect.updateData = composeSync(updateDataAspect.updateData, updatePlacehodlerVisibility);

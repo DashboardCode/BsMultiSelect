@@ -158,9 +158,9 @@ export function BsMultiSelect(element, environment, configuration, onInit) {
   var picksDom = PicksDom(staticDom.picksElement, staticDom.disposablePicksElement, createElementAspect, css);
   var focusInAspect = FocusInAspect(picksDom);
   var pickDomFactory = PickDomFactory(css, componentPropertiesAspect, optionPropertiesAspect);
-  var buildPickAspect = BuildPickAspect(setOptionSelectedAspect, picks, picksDom, pickDomFactory);
+  var buildPickAspect = BuildPickAspect(picksDom, pickDomFactory, setOptionSelectedAspect, picks);
   var choiceDomFactory = ChoiceDomFactory(css, optionPropertiesAspect);
-  var buildChoiceAspect = BuildChoiceAspect(choicesDom, filterDom, choiceDomFactory, onChangeAspect, optionToggleAspect);
+  var buildChoiceAspect = BuildChoiceAspect(choicesDom, choiceDomFactory, optionToggleAspect, filterDom, onChangeAspect);
   var buildAndAttachChoiceAspect = BuildAndAttachChoiceAspect(buildChoiceAspect);
   var resetLayoutAspect = ResetLayoutAspect(function () {
     return resetFilterAspect.resetFilter();

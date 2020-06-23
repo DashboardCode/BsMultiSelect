@@ -14,10 +14,10 @@ export function BuildAndAttachChoiceAspect(
 
 export function BuildChoiceAspect(
     choicesDom,
-    filterDom, 
     choiceDomFactory,
-    onChangeAspect, 
-    optionToggleAspect
+    optionToggleAspect,
+    filterDom, 
+    onChangeAspect
     ) {
     return {
         buildChoice(choice) {

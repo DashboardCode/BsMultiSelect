@@ -1,32 +1,36 @@
 import {composeSync} from './ToolsJs';
- 
-export function BuildPickAspect(setOptionSelectedAspect, picks, picksDom, pickDomFactory){
+
+export function BuildPickAspect(
+        picksDom, 
+        pickDomFactory,
+        setOptionSelectedAspect, picks){
     return {
-        buildPick(choice, handleOnRemoveButton){
+        buildPick(wrap, handleOnRemoveButton){
             let { pickElement, attach, detach } = picksDom.createPickElement(); 
-            let setSelectedFalse = () => setOptionSelectedAspect.setOptionSelected(choice, false);
+            let setSelectedFalse = () => setOptionSelectedAspect.setOptionSelected(wrap, false);
             let removeOnButton = handleOnRemoveButton(setSelectedFalse);
-            let {pickDomManager} = pickDomFactory.create(pickElement, choice, removeOnButton); 
+            let {pickDomManager} = pickDomFactory.create(pickElement, wrap, removeOnButton); 
             let pickDomManagerHandlers = pickDomManager.init();
 
-            var pick = {
+            let pick = {
                 pickDomManagerHandlers,
                 remove: setSelectedFalse,
+                pickElementAttach: attach,
                 dispose: () => { 
                     detach(); 
                     pickDomManager.dispose(); 
                     pickDomManagerHandlers = null;
                     pick.remove=null; 
                     pick.dispose=null;  
+                    pick.pickElementAttach=null;
                     pick=null;
                 }
             }
-            
-            attach();
-    
-            let removeFromList = picks.addPick(pick);
-            pick.dispose = composeSync(removeFromList, pick.dispose);
-            choice.pick = pick;
+            wrap.pick = pick;
+            //wrap.pick.pickElementAttach();
+
+            //let removeFromList = picks.addPick(pick);
+            //pick.dispose = composeSync(removeFromList, pick.dispose);
         }
     }
 }
