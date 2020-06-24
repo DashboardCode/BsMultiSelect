@@ -26,7 +26,7 @@ import {UpdateDataAspect } from './UpdateDataAspect'
 import {OptionToggleAspect} from './OptionToggleAspect'
 import {CreateChoiceAspect, IsChoiceSelectableAspect, SetOptionSelectedAspect} from './CreateChoiceAspect.js'
 import {NavigateAspect, HoveredChoiceAspect} from './NavigateAspect'
-import {Choices} from './Choices'
+import {Wraps} from './Wraps'
 
 import {Picks} from './Picks'
 import {BuildPickAspect} from './BuildPickAspect'
@@ -69,7 +69,7 @@ export function BsMultiSelect(element, environment, configuration, onInit){
     let choicesDomFactory = ChoicesDomFactory(createElementAspect);
     let staticDomFactory  = StaticDomFactory(choicesDomFactory, createElementAspect);
     
-    let choicesCollection = ArrayFacade();
+    let wrapsCollection = ArrayFacade();
     
     let countableChoicesList = DoublyLinkedList(
         (choice)=>choice.itemPrev, 
@@ -78,7 +78,7 @@ export function BsMultiSelect(element, environment, configuration, onInit){
         (choice, v)=>choice.itemNext=v
     );
     
-    let countableChoicesListInsertAspect = CountableChoicesListInsertAspect(countableChoicesList);
+    let countableChoicesListInsertAspect = CountableChoicesListInsertAspect(countableChoicesList, wrapsCollection);
 
     let choicesEnumerableAspect = ChoicesEnumerableAspect(countableChoicesList, (choice)=>choice.itemNext)
     
@@ -114,8 +114,8 @@ export function BsMultiSelect(element, environment, configuration, onInit){
     let navigateAspect = NavigateAspect(hoveredChoiceAspect, 
         (down, hoveredChoice)=>filterManagerAspect.getNavigateManager().navigate(down, hoveredChoice));
     let picks = Picks();
-    let choices = Choices(
-        choicesCollection,
+    let wraps = Wraps(
+        wrapsCollection,
         ()=>countableChoicesList.reset(), 
         (c)=>countableChoicesList.remove(c),
         (c, key)=>countableChoicesListInsertAspect.countableChoicesListInsert(c, key));
@@ -126,8 +126,8 @@ export function BsMultiSelect(element, environment, configuration, onInit){
         optionsAspect, optionPropertiesAspect, createChoiceAspect, setOptionSelectedAspect, isChoiceSelectableAspect, optionToggleAspect, createElementAspect,
         choicesDomFactory, staticDomFactory,
         filterPredicateAspect, 
-        choicesCollection, choicesEnumerableAspect, 
-        filteredChoicesList, filterManagerAspect, hoveredChoiceAspect, navigateAspect, picks, choices
+        wrapsCollection, choicesEnumerableAspect, 
+        filteredChoicesList, filterManagerAspect, hoveredChoiceAspect, navigateAspect, picks, wraps
     }
 
     plugStaticDom(plugins, aspects); // apply cssPatch to css, apply selectElement support;  
@@ -150,7 +150,7 @@ export function BsMultiSelect(element, environment, configuration, onInit){
     let focusInAspect = FocusInAspect(picksDom)
 
     let pickDomFactory = PickDomFactory(css, componentPropertiesAspect, optionPropertiesAspect);
-    let buildPickAspect = BuildPickAspect(picksDom, pickDomFactory, setOptionSelectedAspect, picks);
+    let buildPickAspect = BuildPickAspect(picksDom, pickDomFactory, setOptionSelectedAspect);
     let choiceDomFactory = ChoiceDomFactory(css, optionPropertiesAspect);
 
     let buildChoiceAspect = BuildChoiceAspect( 
@@ -165,9 +165,9 @@ export function BsMultiSelect(element, environment, configuration, onInit){
     let appearanceAspect = AppearanceAspect(updateDisabledComponentAspect);
 
     let fillChoicesAspect = FillChoicesAspect(
-        window.document, createChoiceAspect, optionsAspect, choices, buildAndAttachChoiceAspect );
+        window.document, createChoiceAspect, optionsAspect, wraps, buildAndAttachChoiceAspect );
     let loadAspect = LoadAspect(fillChoicesAspect, appearanceAspect);
-    let updateDataAspect = UpdateDataAspect(choicesDom, choices, picks, fillChoicesAspect, resetLayoutAspect);
+    let updateDataAspect = UpdateDataAspect(choicesDom, wraps, picks, fillChoicesAspect, resetLayoutAspect);
 
     extendIfUndefined(aspects, {
         staticDom, picksDom, choicesDom,filterDom, resetLayoutAspect, pickDomFactory, choiceDomFactory,
@@ -191,7 +191,7 @@ export function BsMultiSelect(element, environment, configuration, onInit){
         pluginManager.dispose, 
         picks.dispose,
         multiSelectInlineLayout.dispose, // TODO move to layout
-        choices.dispose,
+        wraps.dispose,
         staticManager.dispose, popupAspect.dispose, picksDom.dispose, filterDom.dispose );
     
     api.updateAppearance = appearanceAspect.updateAppearance;

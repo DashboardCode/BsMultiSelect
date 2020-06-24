@@ -21,6 +21,7 @@ export function BuildChoiceAspect(
     ) {
     return {
         buildChoice(choice) {
+            
             var {choiceElement, setVisible, attach, detach} = choicesDom.createChoiceElement();
             choice.choiceElement = choiceElement;
             choice.choiceElementAttach = attach;

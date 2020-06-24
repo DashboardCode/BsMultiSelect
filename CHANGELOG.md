@@ -1,5 +1,6 @@
 # CHANGELOG
 ````
+0.6.21 - bug if "disabled option" plugin  removed
 0.6.20 - optimizations
 0.6.19 - optimizations
 0.6.18 - bug in disabled option plugin (for js initiated)

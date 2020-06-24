@@ -1,5 +1,5 @@
 /*!
-  * DashboardCode BsMultiSelect v0.6.20 (https://dashboardcode.github.io/BsMultiSelect/)
+  * DashboardCode BsMultiSelect v0.6.21 (https://dashboardcode.github.io/BsMultiSelect/)
   * Copyright 2017-2020 Roman Pokrovskij (github user rpokrovskij)
   * Licensed under APACHE 2 (https://github.com/DashboardCode/BsMultiSelect/blob/master/LICENSE)
   */
@@ -1327,7 +1327,7 @@
       };
     }
 
-    function FillChoicesAspect(document, createChoiceAspect, optionsAspect, choices, buildAndAttachChoiceAspect) {
+    function FillChoicesAspect(document, createChoiceAspect, optionsAspect, wraps, buildAndAttachChoiceAspect) {
       return {
         fillChoices: function fillChoices() {
           var fillChoicesImpl = function fillChoicesImpl() {
@@ -1336,7 +1336,7 @@
             for (var i = 0; i < options.length; i++) {
               var option = options[i];
               var choice = createChoiceAspect.createChoice(option);
-              choices.push(choice);
+              wraps.push(choice);
               buildAndAttachChoiceAspect.buildAndAttachChoice(choice);
             }
           }; // browsers can change select value as part of "autocomplete" (IE11) 
@@ -1359,14 +1359,14 @@
       };
     }
 
-    function UpdateDataAspect(choicesDom, choices, picks, fillChoicesAspect, resetLayoutAspect) {
+    function UpdateDataAspect(choicesDom, wraps, picks, fillChoicesAspect, resetLayoutAspect) {
       return {
         updateData: function updateData() {
           // close drop down , remove filter
           resetLayoutAspect.resetLayout();
           choicesDom.choicesElement.innerHTML = ""; // TODO: there should better "optimization"
 
-          choices.clear();
+          wraps.clear();
           picks.clear();
           fillChoicesAspect.fillChoices();
         }
@@ -1474,42 +1474,42 @@
       };
     }
 
-    function Choices(choicesCollection, listFacade_reset, listFacade_remove, listFacade_add) {
+    function Wraps(wrapsCollection, listFacade_reset, listFacade_remove, listFacade_add) {
       return {
-        push: function push(choice) {
-          return _push(choice, choicesCollection, listFacade_add);
+        push: function push(wrap) {
+          return _push(wrap, wrapsCollection, listFacade_add);
         },
-        insert: function insert(key, choice) {
-          return _insert(key, choice, choicesCollection, listFacade_add);
+        insert: function insert(key, wrap) {
+          return _insert(key, wrap, wrapsCollection, listFacade_add);
         },
         remove: function remove(key) {
-          var choice = choicesCollection.remove(key);
-          listFacade_remove(choice);
-          return choice;
+          var wrap = wrapsCollection.remove(key);
+          listFacade_remove(wrap);
+          return wrap;
         },
         clear: function clear() {
-          choicesCollection.reset();
+          wrapsCollection.reset();
           listFacade_reset();
         },
         dispose: function dispose() {
-          return choicesCollection.forLoop(function (choice) {
-            return choice.dispose == null ? void 0 : choice.dispose();
+          return wrapsCollection.forLoop(function (wrap) {
+            return wrap.dispose == null ? void 0 : wrap.dispose();
           });
         }
       };
     }
 
-    function _push(choice, choicesCollection, listFacade_add) {
-      choicesCollection.push(choice);
-      listFacade_add(choice);
+    function _push(wrap, wrapsCollection, listFacade_add) {
+      wrapsCollection.push(wrap);
+      listFacade_add(wrap);
     }
 
-    function _insert(key, choice, choicesCollection, listFacade_add) {
-      if (key >= choicesCollection.getCount()) {
-        _push(choice, choicesCollection, listFacade_add);
+    function _insert(key, wrap, wrapsCollection, listFacade_add) {
+      if (key >= wrapsCollection.getCount()) {
+        _push(wrap, wrapsCollection, listFacade_add);
       } else {
-        choicesCollection.add(choice, key);
-        listFacade_add(choice, key);
+        wrapsCollection.add(wrap, key);
+        listFacade_add(wrap, key);
       }
     }
 
@@ -1553,7 +1553,7 @@
       };
     }
 
-    function BuildPickAspect(picksDom, pickDomFactory, setOptionSelectedAspect, picks) {
+    function BuildPickAspect(picksDom, pickDomFactory, setOptionSelectedAspect) {
       return {
         buildPick: function buildPick(wrap, handleOnRemoveButton) {
           var _picksDom$createPickE = picksDom.createPickElement(),
@@ -1585,9 +1585,7 @@
               pick = null;
             }
           };
-          wrap.pick = pick; //wrap.pick.pickElementAttach();
-          //let removeFromList = picks.addPick(pick);
-          //pick.dispose = composeSync(removeFromList, pick.dispose);
+          wrap.pick = pick;
         }
       };
     }
@@ -2087,10 +2085,10 @@
       };
     }
 
-    function CountableChoicesListInsertAspect(countableChoicesList) {
+    function CountableChoicesListInsertAspect(countableChoicesList, wrapsCollection) {
       return {
         countableChoicesListInsert: function countableChoicesListInsert(choice, key) {
-          var choiceNext = choicesCollection.getNext(key);
+          var choiceNext = wrapsCollection.getNext(key);
           countableChoicesList.add(choice, choiceNext);
         }
       };
@@ -2131,7 +2129,7 @@
       });
       var choicesDomFactory = ChoicesDomFactory(createElementAspect);
       var staticDomFactory = StaticDomFactory(choicesDomFactory, createElementAspect);
-      var choicesCollection = ArrayFacade();
+      var wrapsCollection = ArrayFacade();
       var countableChoicesList = DoublyLinkedList(function (choice) {
         return choice.itemPrev;
       }, function (choice, v) {
@@ -2141,7 +2139,7 @@
       }, function (choice, v) {
         return choice.itemNext = v;
       });
-      var countableChoicesListInsertAspect = CountableChoicesListInsertAspect(countableChoicesList);
+      var countableChoicesListInsertAspect = CountableChoicesListInsertAspect(countableChoicesList, wrapsCollection);
       var choicesEnumerableAspect = ChoicesEnumerableAspect(countableChoicesList, function (choice) {
         return choice.itemNext;
       });
@@ -2171,7 +2169,7 @@
         return filterManagerAspect.getNavigateManager().navigate(down, hoveredChoice);
       });
       var picks = Picks();
-      var choices = Choices(choicesCollection, function () {
+      var wraps = Wraps(wrapsCollection, function () {
         return countableChoicesList.reset();
       }, function (c) {
         return countableChoicesList.remove(c);
@@ -2197,14 +2195,14 @@
         choicesDomFactory: choicesDomFactory,
         staticDomFactory: staticDomFactory,
         filterPredicateAspect: filterPredicateAspect,
-        choicesCollection: choicesCollection,
+        wrapsCollection: wrapsCollection,
         choicesEnumerableAspect: choicesEnumerableAspect,
         filteredChoicesList: filteredChoicesList,
         filterManagerAspect: filterManagerAspect,
         hoveredChoiceAspect: hoveredChoiceAspect,
         navigateAspect: navigateAspect,
         picks: picks,
-        choices: choices
+        wraps: wraps
       };
       plugStaticDom(plugins, aspects); // apply cssPatch to css, apply selectElement support;  
 
@@ -2237,9 +2235,9 @@
       var setDisabledComponentAspect = SetDisabledComponentAspect(picks, picksDom);
       var updateDisabledComponentAspect = UpdateDisabledComponentAspect(componentPropertiesAspect, setDisabledComponentAspect);
       var appearanceAspect = AppearanceAspect(updateDisabledComponentAspect);
-      var fillChoicesAspect = FillChoicesAspect(window.document, createChoiceAspect, optionsAspect, choices, buildAndAttachChoiceAspect);
+      var fillChoicesAspect = FillChoicesAspect(window.document, createChoiceAspect, optionsAspect, wraps, buildAndAttachChoiceAspect);
       var loadAspect = LoadAspect(fillChoicesAspect, appearanceAspect);
-      var updateDataAspect = UpdateDataAspect(choicesDom, choices, picks, fillChoicesAspect, resetLayoutAspect);
+      var updateDataAspect = UpdateDataAspect(choicesDom, wraps, picks, fillChoicesAspect, resetLayoutAspect);
       extendIfUndefined(aspects, (_extendIfUndefined = {
         staticDom: staticDom,
         picksDom: picksDom,
@@ -2268,7 +2266,7 @@
       pluginManager.buildApi(api); // after this we can pass aspects methods call without wrapping - there should be no more overridings. TODO freeze aspects?
 
       api.dispose = composeSync(resetLayoutAspect.resetLayout, disposeAspect.dispose, pluginManager.dispose, picks.dispose, multiSelectInlineLayout.dispose, // TODO move to layout
-      choices.dispose, staticManager.dispose, popupAspect.dispose, picksDom.dispose, filterDom.dispose);
+      wraps.dispose, staticManager.dispose, popupAspect.dispose, picksDom.dispose, filterDom.dispose);
       api.updateAppearance = appearanceAspect.updateAppearance;
       api.updateData = updateDataAspect.updateData;
 
@@ -2850,7 +2848,7 @@
       var configuration = pluginData.configuration,
           createChoiceAspect = pluginData.createChoiceAspect,
           isChoiceSelectableAspect = pluginData.isChoiceSelectableAspect,
-          choicesCollection = pluginData.choicesCollection,
+          wrapsCollection = pluginData.wrapsCollection,
           buildChoiceAspect = pluginData.buildChoiceAspect,
           buildAndAttachChoiceAspect = pluginData.buildAndAttachChoiceAspect,
           countableChoicesListInsertAspect = pluginData.countableChoicesListInsertAspect,
@@ -2858,7 +2856,7 @@
 
       countableChoicesListInsertAspect.countableChoicesListInsert = function (choice, key) {
         if (!choice.isOptionHidden) {
-          var choiceNext = choicesCollection.getNext(key, function (c) {
+          var choiceNext = wrapsCollection.getNext(key, function (c) {
             return !c.isOptionHidden;
           });
           countableChoicesList.add(choice, choiceNext);
@@ -2905,19 +2903,19 @@
       return {
         buildApi: function buildApi(api) {
           var getNextNonHidden = function getNextNonHidden(key) {
-            return choicesCollection.getNext(key, function (c) {
+            return wrapsCollection.getNext(key, function (c) {
               return !c.isOptionHidden;
             });
           };
 
           api.updateOptionsHidden = function () {
-            return choicesCollection.forLoop(function (choice, key) {
+            return wrapsCollection.forLoop(function (choice, key) {
               return updateChoiceHidden(choice, key, getNextNonHidden, countableChoicesList, getIsOptionHidden, buildChoiceAspect);
             });
           };
 
           api.updateOptionHidden = function (key) {
-            return updateChoiceHidden(choicesCollection.get(key), key, getNextNonHidden, countableChoicesList, getIsOptionHidden, buildChoiceAspect);
+            return updateChoiceHidden(wrapsCollection.get(key), key, getNextNonHidden, countableChoicesList, getIsOptionHidden, buildChoiceAspect);
           };
         }
       };
@@ -3096,8 +3094,8 @@
 
     function OptionsApiPlugin(pluginData) {
       var buildAndAttachChoiceAspect = pluginData.buildAndAttachChoiceAspect,
-          choices = pluginData.choices,
-          choicesCollection = pluginData.choicesCollection,
+          wraps = pluginData.wraps,
+          wrapsCollection = pluginData.wrapsCollection,
           createChoiceAspect = pluginData.createChoiceAspect,
           setOptionSelectedAspect = pluginData.setOptionSelectedAspect,
           optionPropertiesAspect = pluginData.optionPropertiesAspect,
@@ -3106,12 +3104,12 @@
       return {
         buildApi: function buildApi(api) {
           api.setOptionSelected = function (key, value) {
-            var choice = choicesCollection.get(key);
+            var choice = wrapsCollection.get(key);
             setOptionSelectedAspect.setOptionSelected(choice, value);
           };
 
           api.updateOptionSelected = function (key) {
-            var choice = choicesCollection.get(key); // TODO: generalize index as key
+            var choice = wrapsCollection.get(key); // TODO: generalize index as key
 
             var newIsSelected = optionPropertiesAspect.getSelected(choice.option);
 
@@ -3126,10 +3124,10 @@
             var options = optionsAspect.getOptions();
             var option = options[key];
             var choice = createChoiceAspect.createChoice(option);
-            choices.insert(key, choice);
+            wraps.insert(key, choice);
 
             var nextChoice = function nextChoice() {
-              return choicesCollection.getNext(key, function (c) {
+              return wrapsCollection.getNext(key, function (c) {
                 return c.choiceElement;
               });
             };
@@ -3145,7 +3143,7 @@
             // TODO: generalize index as key 
             resetLayoutAspect.resetLayout(); // always hide 1st, then reset filter
 
-            var choice = choices.remove(key);
+            var choice = wraps.remove(key);
             choice.remove == null ? void 0 : choice.remove();
             choice.dispose == null ? void 0 : choice.dispose();
           };
@@ -3315,7 +3313,7 @@
 
     function SelectAllApiPlugin(pluginData) {
       var resetLayoutAspect = pluginData.resetLayoutAspect,
-          choicesCollection = pluginData.choicesCollection,
+          wrapsCollection = pluginData.wrapsCollection,
           picks = pluginData.picks,
           isChoiceSelectableAspect = pluginData.isChoiceSelectableAspect,
           setOptionSelectedAspect = pluginData.setOptionSelectedAspect;
@@ -3324,7 +3322,7 @@
           api.selectAll = function () {
             resetLayoutAspect.resetLayout(); // always hide 1st
 
-            choicesCollection.forLoop(function (choice) {
+            wrapsCollection.forLoop(function (choice) {
               if (isChoiceSelectableAspect.isSelectable(choice)) setOptionSelectedAspect.setOptionSelected(choice, true);
             });
           };
@@ -3339,13 +3337,13 @@
     }
 
     function UpdateOptionsSelectedApiPlugin(pluginData) {
-      var choicesCollection = pluginData.choicesCollection,
+      var wrapsCollection = pluginData.wrapsCollection,
           optionPropertiesAspect = pluginData.optionPropertiesAspect;
       return {
         buildApi: function buildApi(api) {
           // used in FormRestoreOnBackwardPlugin
           api.updateOptionsSelected = function () {
-            choicesCollection.forLoop(function (choice) {
+            wrapsCollection.forLoop(function (choice) {
               var newIsSelected = optionPropertiesAspect.getSelected(choice.option);
 
               if (newIsSelected != choice.isOptionSelected) {
@@ -3364,7 +3362,7 @@
           createChoiceAspect = pluginData.createChoiceAspect,
           buildChoiceAspect = pluginData.buildChoiceAspect,
           filterPredicateAspect = pluginData.filterPredicateAspect,
-          choicesCollection = pluginData.choicesCollection,
+          wrapsCollection = pluginData.wrapsCollection,
           optionToggleAspect = pluginData.optionToggleAspect,
           buildPickAspect = pluginData.buildPickAspect;
       var getIsOptionDisabled = configuration.getIsOptionDisabled,
@@ -3448,13 +3446,13 @@
       return {
         buildApi: function buildApi(api) {
           api.updateOptionsDisabled = function () {
-            return choicesCollection.forLoop(function (choice) {
+            return wrapsCollection.forLoop(function (choice) {
               return updateChoiceDisabled(choice, getIsOptionDisabled);
             });
           };
 
           api.updateOptionDisabled = function (key) {
-            return updateChoiceDisabled(choicesCollection.get(key), getIsOptionDisabled);
+            return updateChoiceDisabled(wrapsCollection.get(key), getIsOptionDisabled);
           };
         }
       };

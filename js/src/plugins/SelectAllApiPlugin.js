@@ -1,10 +1,10 @@
 export function SelectAllApiPlugin(pluginData){
-    let {resetLayoutAspect, choicesCollection, picks, isChoiceSelectableAspect, setOptionSelectedAspect} = pluginData;
+    let {resetLayoutAspect, wrapsCollection, picks, isChoiceSelectableAspect, setOptionSelectedAspect} = pluginData;
     return {
         buildApi(api){
             api.selectAll= ()=>{
                 resetLayoutAspect.resetLayout(); // always hide 1st
-                choicesCollection.forLoop(
+                wrapsCollection.forLoop(
                     choice => {
                         if (isChoiceSelectableAspect.isSelectable(choice))
                             setOptionSelectedAspect.setOptionSelected(choice, true)

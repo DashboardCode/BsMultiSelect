@@ -1,6 +1,6 @@
 
 export function FillChoicesAspect(
-        document, createChoiceAspect, optionsAspect, choices, buildAndAttachChoiceAspect
+        document, createChoiceAspect, optionsAspect, wraps, buildAndAttachChoiceAspect
         ) { 
     return {
         fillChoices(){
@@ -9,7 +9,7 @@ export function FillChoicesAspect(
                 for(let i = 0; i<options.length; i++) {
                     let option = options[i];
                     let choice = createChoiceAspect.createChoice(option);
-                    choices.push(choice);
+                    wraps.push(choice);
                     buildAndAttachChoiceAspect.buildAndAttachChoice(choice);
                 } 
             }

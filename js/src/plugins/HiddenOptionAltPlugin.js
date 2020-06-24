@@ -1,11 +1,11 @@
 export function HiddenOptionPlugin(pluginData){
     let {configuration, createChoiceAspect, isChoiceSelectableAspect,
-        choices: choicesCollection, buildAndAttachChoiceAspect, countableChoicesListInsertAspect, countableChoicesList
+        wrapsCollection, buildAndAttachChoiceAspect, countableChoicesListInsertAspect, countableChoicesList
     } = pluginData;
 
     countableChoicesListInsertAspect.countableChoicesListInsert = (choice, key) => {
         if ( !choice.isOptionHidden ){
-            let choiceNext = choicesCollection.getNext(key, c=>!c.isOptionHidden );
+            let choiceNext = wrapsCollection.getNext(key, c=>!c.isOptionHidden );
             countableChoicesList.add(choice, choiceNext)
         }
     }
@@ -37,12 +37,12 @@ export function HiddenOptionPlugin(pluginData){
 
     return {
         buildApi(api){
-            let getNextNonHidden = (key) => choicesCollection.getNext(key, c => !c.isOptionHidden );
+            let getNextNonHidden = (key) => wrapsCollection.getNext(key, c => !c.isOptionHidden );
             api.updateOptionsHidden =  () => 
-                choicesCollection.forLoop( (choice, key) => 
+            wrapsCollection.forLoop( (choice, key) => 
                     updateChoiceHidden(choice, key, getNextNonHidden, countableChoicesList, getIsOptionHidden)
                 );
-            api.updateOptionHidden = (key) => updateChoiceHidden(choicesCollection.get(key), key, getNextNonHidden, countableChoicesList, getIsOptionHidden);
+            api.updateOptionHidden = (key) => updateChoiceHidden(wrapsCollection.get(key), key, getNextNonHidden, countableChoicesList, getIsOptionHidden);
         }
     }
 }

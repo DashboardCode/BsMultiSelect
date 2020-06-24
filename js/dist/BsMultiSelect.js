@@ -17,7 +17,7 @@ import { UpdateDataAspect } from './UpdateDataAspect';
 import { OptionToggleAspect } from './OptionToggleAspect';
 import { CreateChoiceAspect, IsChoiceSelectableAspect, SetOptionSelectedAspect } from './CreateChoiceAspect.js';
 import { NavigateAspect, HoveredChoiceAspect } from './NavigateAspect';
-import { Choices } from './Choices';
+import { Wraps } from './Wraps';
 import { Picks } from './Picks';
 import { BuildPickAspect } from './BuildPickAspect';
 import { InputAspect, SetSelectedIfExactMatch } from './InputAspect';
@@ -62,7 +62,7 @@ export function BsMultiSelect(element, environment, configuration, onInit) {
   });
   var choicesDomFactory = ChoicesDomFactory(createElementAspect);
   var staticDomFactory = StaticDomFactory(choicesDomFactory, createElementAspect);
-  var choicesCollection = ArrayFacade();
+  var wrapsCollection = ArrayFacade();
   var countableChoicesList = DoublyLinkedList(function (choice) {
     return choice.itemPrev;
   }, function (choice, v) {
@@ -72,7 +72,7 @@ export function BsMultiSelect(element, environment, configuration, onInit) {
   }, function (choice, v) {
     return choice.itemNext = v;
   });
-  var countableChoicesListInsertAspect = CountableChoicesListInsertAspect(countableChoicesList);
+  var countableChoicesListInsertAspect = CountableChoicesListInsertAspect(countableChoicesList, wrapsCollection);
   var choicesEnumerableAspect = ChoicesEnumerableAspect(countableChoicesList, function (choice) {
     return choice.itemNext;
   });
@@ -102,7 +102,7 @@ export function BsMultiSelect(element, environment, configuration, onInit) {
     return filterManagerAspect.getNavigateManager().navigate(down, hoveredChoice);
   });
   var picks = Picks();
-  var choices = Choices(choicesCollection, function () {
+  var wraps = Wraps(wrapsCollection, function () {
     return countableChoicesList.reset();
   }, function (c) {
     return countableChoicesList.remove(c);
@@ -128,14 +128,14 @@ export function BsMultiSelect(element, environment, configuration, onInit) {
     choicesDomFactory: choicesDomFactory,
     staticDomFactory: staticDomFactory,
     filterPredicateAspect: filterPredicateAspect,
-    choicesCollection: choicesCollection,
+    wrapsCollection: wrapsCollection,
     choicesEnumerableAspect: choicesEnumerableAspect,
     filteredChoicesList: filteredChoicesList,
     filterManagerAspect: filterManagerAspect,
     hoveredChoiceAspect: hoveredChoiceAspect,
     navigateAspect: navigateAspect,
     picks: picks,
-    choices: choices
+    wraps: wraps
   };
   plugStaticDom(plugins, aspects); // apply cssPatch to css, apply selectElement support;  
 
@@ -158,7 +158,7 @@ export function BsMultiSelect(element, environment, configuration, onInit) {
   var picksDom = PicksDom(staticDom.picksElement, staticDom.disposablePicksElement, createElementAspect, css);
   var focusInAspect = FocusInAspect(picksDom);
   var pickDomFactory = PickDomFactory(css, componentPropertiesAspect, optionPropertiesAspect);
-  var buildPickAspect = BuildPickAspect(picksDom, pickDomFactory, setOptionSelectedAspect, picks);
+  var buildPickAspect = BuildPickAspect(picksDom, pickDomFactory, setOptionSelectedAspect);
   var choiceDomFactory = ChoiceDomFactory(css, optionPropertiesAspect);
   var buildChoiceAspect = BuildChoiceAspect(choicesDom, choiceDomFactory, optionToggleAspect, filterDom, onChangeAspect);
   var buildAndAttachChoiceAspect = BuildAndAttachChoiceAspect(buildChoiceAspect);
@@ -168,9 +168,9 @@ export function BsMultiSelect(element, environment, configuration, onInit) {
   var setDisabledComponentAspect = SetDisabledComponentAspect(picks, picksDom);
   var updateDisabledComponentAspect = UpdateDisabledComponentAspect(componentPropertiesAspect, setDisabledComponentAspect);
   var appearanceAspect = AppearanceAspect(updateDisabledComponentAspect);
-  var fillChoicesAspect = FillChoicesAspect(window.document, createChoiceAspect, optionsAspect, choices, buildAndAttachChoiceAspect);
+  var fillChoicesAspect = FillChoicesAspect(window.document, createChoiceAspect, optionsAspect, wraps, buildAndAttachChoiceAspect);
   var loadAspect = LoadAspect(fillChoicesAspect, appearanceAspect);
-  var updateDataAspect = UpdateDataAspect(choicesDom, choices, picks, fillChoicesAspect, resetLayoutAspect);
+  var updateDataAspect = UpdateDataAspect(choicesDom, wraps, picks, fillChoicesAspect, resetLayoutAspect);
   extendIfUndefined(aspects, (_extendIfUndefined = {
     staticDom: staticDom,
     picksDom: picksDom,
@@ -199,7 +199,7 @@ export function BsMultiSelect(element, environment, configuration, onInit) {
   pluginManager.buildApi(api); // after this we can pass aspects methods call without wrapping - there should be no more overridings. TODO freeze aspects?
 
   api.dispose = composeSync(resetLayoutAspect.resetLayout, disposeAspect.dispose, pluginManager.dispose, picks.dispose, multiSelectInlineLayout.dispose, // TODO move to layout
-  choices.dispose, staticManager.dispose, popupAspect.dispose, picksDom.dispose, filterDom.dispose);
+  wraps.dispose, staticManager.dispose, popupAspect.dispose, picksDom.dispose, filterDom.dispose);
   api.updateAppearance = appearanceAspect.updateAppearance;
   api.updateData = updateDataAspect.updateData;
 

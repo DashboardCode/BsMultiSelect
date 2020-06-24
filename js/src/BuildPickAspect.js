@@ -1,9 +1,7 @@
-import {composeSync} from './ToolsJs';
-
 export function BuildPickAspect(
         picksDom, 
         pickDomFactory,
-        setOptionSelectedAspect, picks){
+        setOptionSelectedAspect){
     return {
         buildPick(wrap, handleOnRemoveButton){
             let { pickElement, attach, detach } = picksDom.createPickElement(); 
@@ -27,10 +25,6 @@ export function BuildPickAspect(
                 }
             }
             wrap.pick = pick;
-            //wrap.pick.pickElementAttach();
-
-            //let removeFromList = picks.addPick(pick);
-            //pick.dispose = composeSync(removeFromList, pick.dispose);
         }
     }
 }

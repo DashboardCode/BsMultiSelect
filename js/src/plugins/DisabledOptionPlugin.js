@@ -2,7 +2,7 @@ import {composeSync} from '../ToolsJs';
 
 export function DisabledOptionPlugin(pluginData){
     let {configuration, isChoiceSelectableAspect, createChoiceAspect,  buildChoiceAspect,
-        filterPredicateAspect, choicesCollection, optionToggleAspect, buildPickAspect } = pluginData;
+        filterPredicateAspect, wrapsCollection, optionToggleAspect, buildPickAspect } = pluginData;
     
     let {getIsOptionDisabled, options} = configuration;
     if (options) {
@@ -67,8 +67,8 @@ export function DisabledOptionPlugin(pluginData){
 
     return {
         buildApi(api){
-            api.updateOptionsDisabled = () => choicesCollection.forLoop( choice => updateChoiceDisabled(choice, getIsOptionDisabled))
-            api.updateOptionDisabled = (key) => updateChoiceDisabled(choicesCollection.get(key), getIsOptionDisabled)
+            api.updateOptionsDisabled = () => wrapsCollection.forLoop( choice => updateChoiceDisabled(choice, getIsOptionDisabled))
+            api.updateOptionDisabled = (key) => updateChoiceDisabled(wrapsCollection.get(key), getIsOptionDisabled)
         }
     };
 }

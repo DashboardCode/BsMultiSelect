@@ -1,12 +1,12 @@
 export function UpdateDataAspect(
-    choicesDom, choices, picks, fillChoicesAspect,resetLayoutAspect
+    choicesDom, wraps, picks, fillChoicesAspect,resetLayoutAspect
     ){
     return {
         updateData(){
             // close drop down , remove filter
             resetLayoutAspect.resetLayout();
             choicesDom.choicesElement.innerHTML = ""; // TODO: there should better "optimization"
-            choices.clear();
+            wraps.clear();
             picks.clear();
             fillChoicesAspect.fillChoices();
         }
