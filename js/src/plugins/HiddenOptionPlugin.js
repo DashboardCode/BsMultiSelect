@@ -3,25 +3,25 @@ export function HiddenOptionPlugin(pluginData){
         wrapsCollection, buildChoiceAspect, buildAndAttachChoiceAspect,
         countableChoicesListInsertAspect, countableChoicesList} = pluginData;
 
-    countableChoicesListInsertAspect.countableChoicesListInsert = (choice, key) => {
-        if ( !choice.isOptionHidden ){
+    countableChoicesListInsertAspect.countableChoicesListInsert = (wrap, key) => {
+        if ( !wrap.isOptionHidden ){
             let choiceNext = wrapsCollection.getNext(key, c=>!c.isOptionHidden );
-            countableChoicesList.add(choice, choiceNext)
+            countableChoicesList.add(wrap, choiceNext)
         }
     }
 
     let origBuildAndAttachChoice = buildAndAttachChoiceAspect.buildAndAttachChoice;
-    buildAndAttachChoiceAspect.buildAndAttachChoice=(choice, getNextElement)=>{
-        if (choice.isOptionHidden){ 
-            buildHiddenChoice(choice);
+    buildAndAttachChoiceAspect.buildAndAttachChoice=(wrap, getNextElement)=>{
+        if (wrap.isOptionHidden){ 
+            buildHiddenChoice(wrap);
         }
         else{ 
-            origBuildAndAttachChoice(choice, getNextElement);
+            origBuildAndAttachChoice(wrap, getNextElement);
         }
     }
 
     var origIsSelectable = isChoiceSelectableAspect.isSelectable;
-    isChoiceSelectableAspect.isSelectable = (choice) => origIsSelectable(choice) && !choice.isOptionHidden;
+    isChoiceSelectableAspect.isSelectable = (wrap) => origIsSelectable(wrap) && !wrap.isOptionHidden;
 
     let {getIsOptionHidden, options} = configuration;
     if (options) {
@@ -34,9 +34,9 @@ export function HiddenOptionPlugin(pluginData){
     
     var origСreateChoice = createChoiceAspect.createChoice;
     createChoiceAspect.createChoice = (option) => {
-        let choice = origСreateChoice(option);
-        choice.isOptionHidden = getIsOptionHidden(option);
-        return choice;
+        let wrap = origСreateChoice(option);
+        wrap.isOptionHidden = getIsOptionHidden(option);
+        return wrap;
     };
 
     return {
@@ -44,44 +44,55 @@ export function HiddenOptionPlugin(pluginData){
             let getNextNonHidden =  (key) => wrapsCollection.getNext(key, c => !c.isOptionHidden );
 
             api.updateOptionsHidden = () => 
-                wrapsCollection.forLoop( (choice, key) => 
-                        updateChoiceHidden(choice, key, getNextNonHidden, countableChoicesList, getIsOptionHidden, buildChoiceAspect)
+                wrapsCollection.forLoop( (wrap, key) => 
+                        updateChoiceHidden(wrap, key, getNextNonHidden, countableChoicesList, getIsOptionHidden, buildChoiceAspect)
                     );
+
             api.updateOptionHidden  = (key) => 
                 updateChoiceHidden(wrapsCollection.get(key), key, getNextNonHidden, countableChoicesList, getIsOptionHidden, buildChoiceAspect);
+            // TODO create updateHidden ? 
+            // it is too complex since we need to find the next non hidden, when this depends on key 
+            // there should be the backreference "wrap -> index" invited before
+            // api.updateOptionHidden  = (key) => wrapsCollection.get(key).updateHidden();
         }
     }
 }
 
-function buildHiddenChoice(choice){
-    choice.updateSelected = () => void 0;
+function buildHiddenChoice(wrap){
+    wrap.updateSelected = () => void 0;
     
-    choice.isChoiceElementAttached = false;
-    choice.choiceElement = null;
-    choice.choiceElementAttach = null;
-    choice.setVisible = null; 
-    choice.setHoverIn = null;
-    choice.remove = null; 
+    wrap.choice.isChoiceElementAttached = false;
+    wrap.choice.choiceElement = null;
+    wrap.choice.choiceElementAttach = null;
+    wrap.choice.setVisible = null; 
+    wrap.choice.setHoverIn = null;
+    wrap.choice.remove = null; 
     
-    choice.dispose = () => { 
-        choice.dispose = null;
+    wrap.choice.dispose = () => { 
+        wrap.choice.dispose = null;
     };
+
+    wrap.dispose = () => { 
+        wrap.choice.dispose();
+        wrap.dispose = null;
+    };
+
 }
 
-function updateChoiceHidden(choice, key, getNextNonHidden, countableChoicesList, getIsOptionHidden, buildChoiceAspect){
-    let newIsOptionHidden = getIsOptionHidden(choice.option);
-    if (newIsOptionHidden != choice.isOptionHidden)
+function updateChoiceHidden(wrap, key, getNextNonHidden, countableChoicesList, getIsOptionHidden, buildChoiceAspect){
+    let newIsOptionHidden = getIsOptionHidden(wrap.option);
+    if (newIsOptionHidden != wrap.isOptionHidden)
     {
-        choice.isOptionHidden= newIsOptionHidden;
-        if (choice.isOptionHidden) {
-            countableChoicesList.remove(choice);
-            choice.remove(); 
-            buildHiddenChoice(choice);
+        wrap.isOptionHidden= newIsOptionHidden;
+        if (wrap.isOptionHidden) {
+            countableChoicesList.remove(wrap);
+            wrap.choice.remove(); 
+            buildHiddenChoice(wrap);
         } else {
             let nextChoice = getNextNonHidden(key);
-            countableChoicesList.add(choice, nextChoice);
-            buildChoiceAspect.buildChoice(choice);
-            choice.choiceElementAttach(nextChoice?.choiceElement);
+            countableChoicesList.add(wrap, nextChoice);
+            buildChoiceAspect.buildChoice(wrap);
+            wrap.choice.choiceElementAttach(nextChoice?.choice.choiceElement);
         }
     }
 }

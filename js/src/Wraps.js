@@ -13,7 +13,7 @@ export function Wraps(wrapsCollection,
             wrapsCollection.reset();
             listFacade_reset();
         }, 
-        dispose: () => wrapsCollection.forLoop(wrap => wrap.dispose?.()) 
+        dispose: () => wrapsCollection.forLoop(wrap => wrap.dispose()) 
     }
 }
 

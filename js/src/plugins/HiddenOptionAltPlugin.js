@@ -3,21 +3,21 @@ export function HiddenOptionPlugin(pluginData){
         wrapsCollection, buildAndAttachChoiceAspect, countableChoicesListInsertAspect, countableChoicesList
     } = pluginData;
 
-    countableChoicesListInsertAspect.countableChoicesListInsert = (choice, key) => {
-        if ( !choice.isOptionHidden ){
+    countableChoicesListInsertAspect.countableChoicesListInsert = (wrap, key) => {
+        if ( !wrap.isOptionHidden ){
             let choiceNext = wrapsCollection.getNext(key, c=>!c.isOptionHidden );
-            countableChoicesList.add(choice, choiceNext)
+            countableChoicesList.add(wrap, choiceNext)
         }
     }
 
     let origBuildAndAttachChoice = buildAndAttachChoiceAspect.buildAndAttachChoice;
-    buildAndAttachChoiceAspect.buildAndAttachChoice=(choice,  getNextElement) => {
-        origBuildAndAttachChoice(choice, getNextElement);
-        choice.setVisible(!choice.isOptionHidden)
+    buildAndAttachChoiceAspect.buildAndAttachChoice=(wrap,  getNextElement) => {
+        origBuildAndAttachChoice(wrap, getNextElement);
+        wrap.choice.setVisible(!wrap.isOptionHidden)
     }
 
     var origIsSelectable = isChoiceSelectableAspect.isSelectable;
-    isChoiceSelectableAspect.isSelectable = (choice) => origIsSelectable(choice) && !choice.isOptionHidden;
+    isChoiceSelectableAspect.isSelectable = (wrap) => origIsSelectable(wrap) && !wrap.isOptionHidden;
     
     let {getIsOptionHidden, options} = configuration;
     if (options) {
@@ -30,34 +30,34 @@ export function HiddenOptionPlugin(pluginData){
 
     var origСreateChoice = createChoiceAspect.createChoice;
     createChoiceAspect.createChoice = (option) => {
-        let choice = origСreateChoice(option);
-        choice.isOptionHidden = getIsOptionHidden(option);
-        return choice;
+        let wrap = origСreateChoice(option);
+        wrap.isOptionHidden = getIsOptionHidden(option);
+        return wrap;
     };
 
     return {
         buildApi(api){
             let getNextNonHidden = (key) => wrapsCollection.getNext(key, c => !c.isOptionHidden );
             api.updateOptionsHidden =  () => 
-            wrapsCollection.forLoop( (choice, key) => 
-                    updateChoiceHidden(choice, key, getNextNonHidden, countableChoicesList, getIsOptionHidden)
+            wrapsCollection.forLoop( (wrap, key) => 
+                    updateChoiceHidden(wrap, key, getNextNonHidden, countableChoicesList, getIsOptionHidden)
                 );
             api.updateOptionHidden = (key) => updateChoiceHidden(wrapsCollection.get(key), key, getNextNonHidden, countableChoicesList, getIsOptionHidden);
         }
     }
 }
 
-function updateChoiceHidden(choice, key, getNextNonHidden, countableChoicesList, getIsOptionHidden){
-    let newIsOptionHidden = getIsOptionHidden(choice.option);
-    if (newIsOptionHidden != choice.isOptionHidden)
+function updateChoiceHidden(wrap, key, getNextNonHidden, countableChoicesList, getIsOptionHidden){
+    let newIsOptionHidden = getIsOptionHidden(wrap.option);
+    if (newIsOptionHidden != wrap.isOptionHidden)
     {
-        choice.isOptionHidden= newIsOptionHidden;
-        if (choice.isOptionHidden)
-            countableChoicesList.remove(choice)
+        wrap.isOptionHidden= newIsOptionHidden;
+        if (wrap.isOptionHidden)
+            countableChoicesList.remove(wrap)
         else{
             let nextChoice = getNextNonHidden(key); // TODO: should not rely on element but do
-            countableChoicesList.add(choice, nextChoice); 
+            countableChoicesList.add(wrap, nextChoice); 
         }
-        choice.setVisible(!choice.isOptionHidden)
+        wrap.choice.setVisible(!wrap.isOptionHidden)
     }
 }

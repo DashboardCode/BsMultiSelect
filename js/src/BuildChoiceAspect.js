@@ -3,11 +3,11 @@ export function BuildAndAttachChoiceAspect(
     ){
     return {
         buildAndAttachChoice(
-            choice,
+            wrap,
             getNextElement 
             ){
-                buildChoiceAspect.buildChoice(choice);
-                choice.choiceElementAttach(getNextElement?.());
+                buildChoiceAspect.buildChoice(wrap);
+                wrap.choice.choiceElementAttach(getNextElement?.());
         }
     }
 }
@@ -20,59 +20,63 @@ export function BuildChoiceAspect(
     onChangeAspect
     ) {
     return {
-        buildChoice(choice) {
+        buildChoice(wrap) {
             
             var {choiceElement, setVisible, attach, detach} = choicesDom.createChoiceElement();
-            choice.choiceElement = choiceElement;
-            choice.choiceElementAttach = attach;
-            choice.isChoiceElementAttached = true;
+            wrap.choice.choiceElement = choiceElement;
+            wrap.choice.choiceElementAttach = attach;
+            wrap.choice.isChoiceElementAttached = true;
             let {choiceDomManager} = choiceDomFactory.create(
                 choiceElement, 
-                choice,
+                wrap,
                 () => {
-                    optionToggleAspect.toggle(choice);
+                    optionToggleAspect.toggle(wrap);
                     filterDom.setFocus();
                 });
             let choiceDomManagerHandlers = choiceDomManager.init();
-            choice.choiceDomManagerHandlers = choiceDomManagerHandlers;
+            wrap.choice.choiceDomManagerHandlers = choiceDomManagerHandlers;
             
-            choice.remove = () => {
+            wrap.choice.remove = () => {
                 detach();
             };
             
-            choice.updateSelected = () => {
-                choiceDomManagerHandlers.updateSelected();
-                onChangeAspect.onChange();
-            }
-        
-            choice.isFilteredIn = true;
+            wrap.choice.isFilteredIn = true;
             
-            choice.setHoverIn = (v) => {
-                choice.isHoverIn =v ;
+            wrap.choice.setHoverIn = (v) => {
+                wrap.choice.isHoverIn =v ;
                 choiceDomManagerHandlers.updateHoverIn();
             }
         
-            choice.setVisible = (v) => {
-                choice.isFilteredIn = v;
-                setVisible(choice.isFilteredIn)
+            wrap.choice.setVisible = (v) => {
+                wrap.choice.isFilteredIn = v;
+                setVisible(wrap.choice.isFilteredIn)
             }
-             
-            choice.dispose = () => {
-                choice.choiceDomManagerHandlers = null;
+            
+            wrap.choice.dispose = () => {
+                wrap.choice.choiceDomManagerHandlers = null;
                 choiceDomManager.dispose();
     
-                choice.choiceElement = null;
-                choice.choiceElementAttach = null;
-                choice.isChoiceElementAttached = false;
-                choice.remove = null; 
-                
-                choice.updateSelected = null;
+                wrap.choice.choiceElement = null;
+                wrap.choice.choiceElementAttach = null;
+                wrap.choice.isChoiceElementAttached = false;
+                wrap.choice.remove = null; 
         
                 // not real data manipulation but internal state
-                choice.setVisible = null; // TODO: refactor it there should be 3 types of not visibility: for hidden, for filtered out, for optgroup, for message item
-                choice.setHoverIn = null;
+                wrap.choice.setVisible = null; // TODO: refactor it there should be 3 types of not visibility: for hidden, for filtered out, for optgroup, for message item
+                wrap.choice.setHoverIn = null;
         
-                choice.dispose = null;
+                wrap.choice.dispose = null;
+            }
+
+            wrap.updateSelected = () => {
+                choiceDomManagerHandlers.updateSelected();
+                onChangeAspect.onChange();
+            }
+
+            wrap.dispose = () => {
+                wrap.updateSelected = null;
+                wrap.choice.dispose();
+                wrap.dispose = null;
             }
         }
     }

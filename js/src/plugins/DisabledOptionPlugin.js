@@ -15,69 +15,68 @@ export function DisabledOptionPlugin(pluginData){
 
     let origСreateChoice = createChoiceAspect.createChoice;
     createChoiceAspect.createChoice = (option) => {
-        let choice = origСreateChoice(option);
-        choice.isOptionDisabled = getIsOptionDisabled(option); // todo: remove usage choice.isOptionDisabled
-        choice.updateDisabled = null; // todo: remove usage choice.updateDisabled
-        return choice;
+        let wrap = origСreateChoice(option);
+        wrap.isOptionDisabled = getIsOptionDisabled(option); // todo: remove usage wrap.isOptionDisabled
+        wrap.updateDisabled = null; 
+        return wrap;
     };
 
     let origToggle = optionToggleAspect.toggle;
-    optionToggleAspect.toggle = (choice) => {
+    optionToggleAspect.toggle = (wrap) => {
         let success = false;
-        if (choice.isOptionSelected || !choice.isOptionDisabled)
-            success = origToggle(choice, !choice.isOptionSelected);
+        if (wrap.isOptionSelected || !wrap.isOptionDisabled)
+            success = origToggle(wrap, !wrap.isOptionSelected);
         return success;
     };
 
     let origIsSelectable = isChoiceSelectableAspect.isSelectable
-    isChoiceSelectableAspect.isSelectable = (choice) => {
-        return  origIsSelectable(choice) && !choice.isOptionDisabled ;
+    isChoiceSelectableAspect.isSelectable = (wrap) => {
+        return  origIsSelectable(wrap) && !wrap.isOptionDisabled ;
     };
 
     let origFilterPredicate = filterPredicateAspect.filterPredicate;
-    filterPredicateAspect.filterPredicate = (choice, text) => {
-        return  origFilterPredicate(choice, text) && !choice.isOptionDisabled ;
+    filterPredicateAspect.filterPredicate = (wrap, text) => {
+        return  origFilterPredicate(wrap, text) && !wrap.isOptionDisabled ;
     };
 
     let origBuildChoice = buildChoiceAspect.buildChoice;
-    buildChoiceAspect.buildChoice = (choice) => {
-        origBuildChoice(choice);
-        choice.updateDisabled = choice.choiceDomManagerHandlers.updateDisabled
-        choice.dispose = composeSync(()=>{choice.updateDisabled=null;}, choice.dispose);
+    buildChoiceAspect.buildChoice = (wrap) => {
+        origBuildChoice(wrap);
+        wrap.updateDisabled = wrap.choice.choiceDomManagerHandlers.updateDisabled
+        wrap.choice.dispose = composeSync(()=>{wrap.updateDisabled=null;}, wrap.choice.dispose);
     }
 
     
     let origBuildPick = buildPickAspect.buildPick;
-    buildPickAspect.buildPick = (choice, handleOnRemoveButton) => {
-        origBuildPick(choice, handleOnRemoveButton);
-        let pick =choice.pick;
+    buildPickAspect.buildPick = (wrap, removeOnButton) => {
+        origBuildPick(wrap, removeOnButton);
+        let pick =wrap.pick;
         pick.updateDisabled = () => pick.pickDomManagerHandlers.updateDisabled();
         pick.dispose = composeSync(pick.dispose, ()=>{pick.updateDisabled=null});
 
-        let choiceUpdateDisabledBackup = choice.updateDisabled;
-        choice.updateDisabled = composeSync(choiceUpdateDisabledBackup, pick.updateDisabled); // add pickDisabled
+        let choiceUpdateDisabledBackup = wrap.updateDisabled;
+        wrap.updateDisabled = composeSync(choiceUpdateDisabledBackup, pick.updateDisabled); // add pickDisabled
         pick.dispose = composeSync(pick.dispose, 
             ()=>{
-                choice.updateDisabled = choiceUpdateDisabledBackup; // remove pickDisabled
-                choice.updateDisabled(); // make "true disabled" without it checkbox looks disabled
+                wrap.updateDisabled = choiceUpdateDisabledBackup; // remove pickDisabled
+                wrap.updateDisabled(); // make "true disabled" without it checkbox looks disabled
             }
         )
     }
 
-
     return {
         buildApi(api){
-            api.updateOptionsDisabled = () => wrapsCollection.forLoop( choice => updateChoiceDisabled(choice, getIsOptionDisabled))
+            api.updateOptionsDisabled = () => wrapsCollection.forLoop( wrap => updateChoiceDisabled(wrap, getIsOptionDisabled))
             api.updateOptionDisabled = (key) => updateChoiceDisabled(wrapsCollection.get(key), getIsOptionDisabled)
         }
     };
 }
 
-function updateChoiceDisabled(choice, getIsOptionDisabled){
-    let newIsDisabled = getIsOptionDisabled(choice.option);
-    if (newIsDisabled != choice.isOptionDisabled)
+function updateChoiceDisabled(wrap, getIsOptionDisabled){
+    let newIsDisabled = getIsOptionDisabled(wrap.option);
+    if (newIsDisabled != wrap.isOptionDisabled)
     {
-        choice.isOptionDisabled= newIsDisabled;
-        choice.updateDisabled?.(); // some hidden oesn't have element (and need to be updated)
+        wrap.isOptionDisabled= newIsDisabled;
+        wrap.updateDisabled?.(); // some hidden oesn't have element (and need to be updated)
     }
 }

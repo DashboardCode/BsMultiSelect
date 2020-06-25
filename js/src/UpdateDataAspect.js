@@ -1,5 +1,5 @@
 export function UpdateDataAspect(
-    choicesDom, wraps, picks, fillChoicesAspect,resetLayoutAspect
+    choicesDom, wraps, picksList, fillChoicesAspect,resetLayoutAspect
     ){
     return {
         updateData(){
@@ -7,7 +7,8 @@ export function UpdateDataAspect(
             resetLayoutAspect.resetLayout();
             choicesDom.choicesElement.innerHTML = ""; // TODO: there should better "optimization"
             wraps.clear();
-            picks.clear();
+            picksList.forEach(pick=>pick.dispose());
+            picksList.reset();
             fillChoicesAspect.fillChoices();
         }
     }

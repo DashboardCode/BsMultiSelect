@@ -8,7 +8,8 @@ export function MultiSelectInlineLayout (
     let {environment,filterDom,picksDom,choicesDom, 
         popupAspect, hoveredChoiceAspect, navigateAspect,filterManagerAspect,
         focusInAspect, optionToggleAspect,
-        inputAspect, picks,buildChoiceAspect,buildPickAspect,
+        setOptionSelectedAspect,
+        inputAspect, picksList, buildChoiceAspect,buildPickAspect,
         setDisabledComponentAspect, resetLayoutAspect} = aspects;
 
     let picksElement = picksDom.picksElement;
@@ -147,14 +148,14 @@ export function MultiSelectInlineLayout (
         mouseCandidateEventBinder.unbind();
     };
 
-    var mouseOverToHoveredAndReset = (choice) => {
-        if (!choice.isHoverIn)
-            navigateAspect.hoverIn(choice);
+    var mouseOverToHoveredAndReset = (wrap) => {
+        if (!wrap.choice.isHoverIn)
+            navigateAspect.hoverIn(wrap);
         resetMouseCandidateChoice();
     };
  
-    function adoptChoiceElement(choice){
-        let choiceElement = choice.choiceElement;
+    function adoptChoiceElement(wrap){
+        let choiceElement = wrap.choice.choiceElement;
         // in chrome it happens on "become visible" so we need to skip it, 
         // for IE11 and edge it doesn't happens, but for IE11 and Edge it doesn't happens on small 
         // mouse moves inside the item. 
@@ -165,17 +166,17 @@ export function MultiSelectInlineLayout (
             if (eventLoopFlag.get())
             {
                 resetMouseCandidateChoice();
-                mouseCandidateEventBinder.bind(choiceElement, 'mousemove', ()=>mouseOverToHoveredAndReset(choice));
-                mouseCandidateEventBinder.bind(choiceElement, 'mousedown', ()=>mouseOverToHoveredAndReset(choice));
+                mouseCandidateEventBinder.bind(choiceElement, 'mousemove', ()=>mouseOverToHoveredAndReset(wrap));
+                mouseCandidateEventBinder.bind(choiceElement, 'mousedown', ()=>mouseOverToHoveredAndReset(wrap));
             }
             else
             {
-                if (!choice.isHoverIn)
+                if (!wrap.choice.isHoverIn)
                 {
                     // NOTE: mouseleave is not enough to guarantee remove hover styles in situations
                     // when style was setuped without mouse (keyboard arrows)
                     // therefore force reset manually (done inside hoverIn)
-                    navigateAspect.hoverIn(choice);
+                    navigateAspect.hoverIn(wrap);
                 }                
             }
         }
@@ -233,15 +234,20 @@ export function MultiSelectInlineLayout (
     }
 
     filterDom.onInput(() => {
-        inputAspect.processInput();
+        let {filterInputValue, isEmpty} = inputAspect.processInput();
+        if (isEmpty)
+            filterManagerAspect.processEmptyInput();
+        else
+            filterDom.setWidth(filterInputValue);  
+
         afterInput();
     });
 
     function keyDownArrow(down) {
-        let choice = navigateAspect.navigate(down);  
-        if (choice)
+        let wrap = navigateAspect.navigate(down);  
+        if (wrap)
         {
-            navigateAspect.hoverIn(choice); // !
+            navigateAspect.hoverIn(wrap); // !
             showChoices(); // !
         }
     }
@@ -274,9 +280,11 @@ export function MultiSelectInlineLayout (
             // If user will find this inconvinient, we will need to calculate something like this
             // let isBackspaceAtStartPoint = (this.filterInput.selectionStart == 0 && this.filterInput.selectionEnd == 0);
             if (empty) {
-                let p = picks.removePicksTail();
-                if (p)
+                let pick = picksList.getTail();
+                if (pick){ 
+                    pick?.setSelectedFalse(); 
                     popupAspect.updatePopupLocation();
+                }
             }
         }
         // ---------------------------------------------------------------------------------
@@ -302,7 +310,7 @@ export function MultiSelectInlineLayout (
         let keyCode = event.which;
         //var handler = keyUp[event.which/* key code */];
         //handler();    
-            if (keyCode == 9) {
+        if (keyCode == 9) {
             if (popupAspect.isChoicesVisible()) {
                 hoveredToSelected();
             } 
@@ -340,42 +348,45 @@ export function MultiSelectInlineLayout (
     );
 
     let origBuildChoice = buildChoiceAspect.buildChoice;
-    buildChoiceAspect.buildChoice = (choice) => {
-        origBuildChoice(choice);
+    buildChoiceAspect.buildChoice = (wrap) => {
+        origBuildChoice(wrap);
 
         let pickTools = { updateSelectedTrue: null, updateSelectedFalse: null }
         pickTools.updateSelectedTrue = () => { 
-            buildPickAspect.buildPick(choice, handleOnRemoveButton);
-            let pick = choice.pick;
+            let setSelectedFalse = () => setOptionSelectedAspect.setOptionSelected(wrap, false);
+            let removeOnButton = handleOnRemoveButton(setSelectedFalse);
+            buildPickAspect.buildPick(wrap, removeOnButton);
+            let pick = wrap.pick;
             pick.pickElementAttach();
-            let removeFromList = picks.addPick(pick);
+            let removeFromList = picksList.add(pick);
+            pick.setSelectedFalse = setSelectedFalse; 
             pick.dispose = composeSync(removeFromList, pick.dispose);
             pickTools.updateSelectedFalse = () => pick.dispose();
         };
 
-        choice.remove = composeSync(choice.remove, ()=>{
+        wrap.choice.remove = composeSync(wrap.choice.remove, ()=>{
             if (pickTools.updateSelectedFalse) {
                 pickTools.updateSelectedFalse();
                 pickTools.updateSelectedFalse=null;
             }
         })
 
-        choice.updateSelected = composeSync(
+        wrap.updateSelected = composeSync(
             ()=>{
-                if (choice.isOptionSelected)
+                if (wrap.isOptionSelected)
                     pickTools.updateSelectedTrue();
                 else {
                     pickTools.updateSelectedFalse();
                     pickTools.updateSelectedFalse=null;
                 }
             },
-            choice.updateSelected
+            wrap.updateSelected
         )
         
-        let unbindChoiceElement = adoptChoiceElement(choice);
-        choice.dispose = composeSync(unbindChoiceElement, choice.dispose)
+        let unbindChoiceElement = adoptChoiceElement(wrap);
+        wrap.choice.dispose = composeSync(unbindChoiceElement, wrap.choice.dispose)
 
-        if (choice.isOptionSelected) {
+        if (wrap.isOptionSelected) {
             pickTools.updateSelectedTrue();
         }
     }

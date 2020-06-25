@@ -4,7 +4,7 @@ export function FormRestoreOnBackwardPlugin(pluginData){
     return {
         buildApi(api){
             if (!api.updateOptionsSelected)
-                throw new Error("BsMultisilect: FormRestoreOnBackwardPlugin requires UpdateOptionsSelectedApiPlugin defined first");
+                throw new Error("BsMultisilect: FormRestoreOnBackwardPlugin requires SelectedOptionPlugin defined first");
             let origLoad = loadAspect.load;
             loadAspect.load = ()=>{
                 origLoad();

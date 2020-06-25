@@ -3,7 +3,7 @@ import  {addStyling, toggleStyling} from './ToolsStyling';
 
 export function ChoiceDomFactory(css, optionPropertiesAspect){
     return {
-        create(choiceElement, choice, toggle){
+        create(choiceElement, wrap, toggle){
             choiceElement.innerHTML = '<div><input formnovalidate type="checkbox"><label></label></div>';
             let choiceContentElement = choiceElement.querySelector('DIV');
             let choiceCheckBoxElement = choiceContentElement.querySelector('INPUT');
@@ -31,19 +31,19 @@ export function ChoiceDomFactory(css, optionPropertiesAspect){
                         let choiceLabelDisabledToggle = toggleStyling(choiceLabelElement, css.choiceLabel_disabled)
             
                         function updateData() {
-                            choiceLabelElement.textContent = optionPropertiesAspect.getText(choice.option);
+                            choiceLabelElement.textContent = optionPropertiesAspect.getText(wrap.option);
                         }
                         function updateSelected(){ 
-                            choiceSelectedToggle(choice.isOptionSelected);
-                            choiceCheckBoxElement.checked = choice.isOptionSelected;
+                            choiceSelectedToggle(wrap.isOptionSelected);
+                            choiceCheckBoxElement.checked = wrap.isOptionSelected;
                         }
                         function updateDisabled(){
-                            choiceDisabledToggle(choice.isOptionDisabled)
-                            choiceCheckBoxDisabledToggle(choice.isOptionDisabled)
-                            choiceLabelDisabledToggle(choice.isOptionDisabled)
+                            choiceDisabledToggle(wrap.isOptionDisabled)
+                            choiceCheckBoxDisabledToggle(wrap.isOptionDisabled)
+                            choiceLabelDisabledToggle(wrap.isOptionDisabled)
             
                             // do not desable checkBox if option is selected! there should be possibility to unselect "disabled"
-                            choiceCheckBoxElement.disabled = choice.isOptionDisabled && !choice.isOptionSelected;
+                            choiceCheckBoxElement.disabled = wrap.isOptionDisabled && !wrap.isOptionSelected;
                         }
                         updateData();
                         updateSelected();
@@ -54,7 +54,7 @@ export function ChoiceDomFactory(css, optionPropertiesAspect){
                             updateSelected, 
                             updateDisabled,
                             updateHoverIn(){
-                                choiceHoverToggle(choice.isHoverIn);
+                                choiceHoverToggle(wrap.choice.isHoverIn);
                             },
                         }
                     },

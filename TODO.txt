@@ -1,5 +1,6 @@
  
 0. UpdateOption (for all content, selected, hidden and disabled properties)
+0aaa. move selected to plugin
 0aa. pick.dispose become to complex - simplify
 0a. simplify BuildChoiceAspect and BuildPickAspect (both should accept one choice parameter? BuildPick should not return pick - should use choice)
 0b. UpdateOptionContent ?

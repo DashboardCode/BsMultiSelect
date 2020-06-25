@@ -1,8 +1,8 @@
 
-export function SetDisabledComponentAspect(picks, picksDom){
+export function SetDisabledComponentAspect(picksList, picksDom){
     return {
         setDisabledComponent(isComponentDisabled){
-            picks.disableRemoveAll(isComponentDisabled);
+            picksList.forEach(pick=>pick.pickDomManagerHandlers.updateRemoveDisabled())
             picksDom.disable(isComponentDisabled);
         }
     }

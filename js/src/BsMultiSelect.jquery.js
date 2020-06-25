@@ -21,8 +21,7 @@ import {JQueryMethodsPlugin} from './plugins/JQueryMethodsPlugin';
 import {OptionsApiPlugin} from './plugins/OptionsApiPlugin';
 import {FormRestoreOnBackwardPlugin} from './plugins/FormRestoreOnBackwardPlugin';
 import {SelectElementPlugin} from './plugins/SelectElementPlugin';
-import {SelectAllApiPlugin} from './plugins/SelectAllApiPlugin';
-import {UpdateOptionsSelectedApiPlugin} from './plugins/UpdateOptionsSelectedApiPlugin'
+import {SelectedOptionPlugin} from './plugins/SelectedOptionPlugin'
 import {DisabledOptionPlugin} from './plugins/DisabledOptionPlugin'
 
 import {adjustLegacySettings} from './BsMultiSelectDepricatedParameters'
@@ -38,8 +37,8 @@ import  {addStyling, toggleStyling} from './ToolsStyling';
         const defaults = {containerClass: "dashboardcode-bsmultiselect", css: css}
 
         let defaultPlugins = [CssPatchPlugin, SelectElementPlugin, LabelPlugin, HiddenOptionPlugin, ValidationApiPlugin, 
-        BsAppearancePlugin, FormResetPlugin, RtlPlugin, PlaceholderPlugin , OptionsApiPlugin, SelectAllApiPlugin,
-        JQueryMethodsPlugin, UpdateOptionsSelectedApiPlugin, FormRestoreOnBackwardPlugin,  DisabledOptionPlugin];
+        BsAppearancePlugin, FormResetPlugin, RtlPlugin, PlaceholderPlugin , OptionsApiPlugin, 
+        JQueryMethodsPlugin, SelectedOptionPlugin, FormRestoreOnBackwardPlugin,  DisabledOptionPlugin];
 
         let createBsMultiSelect = (element, settings, removeInstanceData) => { 
             let trigger = (e, eventName) => $(e).trigger(eventName);
@@ -86,8 +85,8 @@ import  {addStyling, toggleStyling} from './ToolsStyling';
         prototypable.tools = {EventBinder, addStyling, toggleStyling, composeSync}
         
         prototypable.plugins = {CssPatchPlugin, SelectElementPlugin, LabelPlugin, HiddenOptionPlugin, ValidationApiPlugin, 
-            BsAppearancePlugin, FormResetPlugin, RtlPlugin, PlaceholderPlugin , OptionsApiPlugin, SelectAllApiPlugin,
-            JQueryMethodsPlugin, UpdateOptionsSelectedApiPlugin, FormRestoreOnBackwardPlugin,  DisabledOptionPlugin}
+            BsAppearancePlugin, FormResetPlugin, RtlPlugin, PlaceholderPlugin , OptionsApiPlugin, 
+            JQueryMethodsPlugin, SelectedOptionPlugin, FormRestoreOnBackwardPlugin,  DisabledOptionPlugin}
                     
     }
 )(window, $, Popper)

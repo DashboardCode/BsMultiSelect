@@ -1,7 +1,6 @@
 import {PluginManager, plugStaticDom} from './PluginManager'
 
-import {composeSync, extendIfUndefined} from './ToolsJs';
-
+import {composeSync, List, extendIfUndefined} from './ToolsJs';
 import {PickDomFactory} from './PickDomFactory';
 import {ChoiceDomFactory} from './ChoiceDomFactory';
 
@@ -17,7 +16,7 @@ import {ComponentPropertiesAspect, TriggerAspect, OnChangeAspect} from './Compon
 import {OptionsAspect, OptionPropertiesAspect} from './OptionsAspect';
 
 import {ChoicesEnumerableAspect } from './ChoicesEnumerableAspect'
-import {FilterManagerAspect, NavigateManager, FilterPredicateAspect } from './FilterListAspect'
+import {FilterManagerAspect, NavigateManager, FilterPredicateAspect } from './FilterManagerAspect'
 import {BuildAndAttachChoiceAspect, BuildChoiceAspect} from './BuildChoiceAspect'
 import {FillChoicesAspect} from './FillChoicesAspect'
 
@@ -28,9 +27,8 @@ import {CreateChoiceAspect, IsChoiceSelectableAspect, SetOptionSelectedAspect} f
 import {NavigateAspect, HoveredChoiceAspect} from './NavigateAspect'
 import {Wraps} from './Wraps'
 
-import {Picks} from './Picks'
 import {BuildPickAspect} from './BuildPickAspect'
-import {InputAspect, SetSelectedIfExactMatch} from './InputAspect'
+import {InputAspect /*, SetSelectedIfExactMatchAspect*/} from './InputAspect'
 import {ResetFilterAspect, FocusInAspect, ResetFilterListAspect} from './ResetFilterListAspect'
 
 import {MultiSelectInlineLayout} from './MultiSelectInlineLayout'
@@ -72,33 +70,33 @@ export function BsMultiSelect(element, environment, configuration, onInit){
     let wrapsCollection = ArrayFacade();
     
     let countableChoicesList = DoublyLinkedList(
-        (choice)=>choice.itemPrev, 
-        (choice, v)=>choice.itemPrev=v, 
-        (choice)=>choice.itemNext, 
-        (choice, v)=>choice.itemNext=v
+        (wrap)=>wrap.choice.itemPrev, 
+        (warp, v)=>warp.choice.itemPrev=v, 
+        (wrap)=>wrap.choice.itemNext, 
+        (wrap, v)=>wrap.choice.itemNext=v
     );
     
     let countableChoicesListInsertAspect = CountableChoicesListInsertAspect(countableChoicesList, wrapsCollection);
 
-    let choicesEnumerableAspect = ChoicesEnumerableAspect(countableChoicesList, (choice)=>choice.itemNext)
+    let choicesEnumerableAspect = ChoicesEnumerableAspect(countableChoicesList, wrap=>wrap.choice.itemNext)
     
     let filteredChoicesList = DoublyLinkedList(
-        (choice)=>choice.filteredPrev, 
-        (choice, v)=>choice.filteredPrev=v, 
-        (choice)=>choice.filteredNext, 
-        (choice, v)=>choice.filteredNext=v
+        (wrap)=>wrap.choice.filteredPrev, 
+        (wrap, v)=>wrap.choice.filteredPrev=v, 
+        (wrap)=>wrap.choice.filteredNext, 
+        (wrap, v)=>wrap.choice.filteredNext=v
     );
     
     let emptyNavigateManager = NavigateManager(
         countableChoicesList,
-        (choice)=>choice.itemPrev,
-        (choice)=>choice.itemNext 
+        (wrap)=>wrap.choice.itemPrev,
+        (wrap)=>wrap.choice.itemNext 
         
     ); 
     let filteredNavigateManager = NavigateManager(
         filteredChoicesList, 
-        (choice)=>choice.filteredPrev,
-        (choice)=>choice.filteredNext ); 
+        (wrap)=>wrap.choice.filteredPrev,
+        (wrap)=>wrap.choice.filteredNext ); 
 
     let filterPredicateAspect = FilterPredicateAspect()
     let filterManagerAspect = FilterManagerAspect(
@@ -113,12 +111,12 @@ export function BsMultiSelect(element, environment, configuration, onInit){
     let hoveredChoiceAspect = HoveredChoiceAspect()
     let navigateAspect = NavigateAspect(hoveredChoiceAspect, 
         (down, hoveredChoice)=>filterManagerAspect.getNavigateManager().navigate(down, hoveredChoice));
-    let picks = Picks();
+    let picksList = List();
     let wraps = Wraps(
         wrapsCollection,
         ()=>countableChoicesList.reset(), 
-        (c)=>countableChoicesList.remove(c),
-        (c, key)=>countableChoicesListInsertAspect.countableChoicesListInsert(c, key));
+        (w)=>countableChoicesList.remove(w),
+        (w, key)=>countableChoicesListInsertAspect.countableChoicesListInsert(w, key));
 
     let aspects = {
         environment, configuration, triggerAspect, onChangeAspect, componentPropertiesAspect, disposeAspect,
@@ -127,7 +125,7 @@ export function BsMultiSelect(element, environment, configuration, onInit){
         choicesDomFactory, staticDomFactory,
         filterPredicateAspect, 
         wrapsCollection, choicesEnumerableAspect, 
-        filteredChoicesList, filterManagerAspect, hoveredChoiceAspect, navigateAspect, picks, wraps
+        filteredChoicesList, filterManagerAspect, hoveredChoiceAspect, navigateAspect, picksList, wraps
     }
 
     plugStaticDom(plugins, aspects); // apply cssPatch to css, apply selectElement support;  
@@ -142,15 +140,15 @@ export function BsMultiSelect(element, environment, configuration, onInit){
     let popupAspect = PopupAspect(choicesDom.choicesElement, filterDom.filterInputElement, Popper);
     let resetFilterListAspect = ResetFilterListAspect(filterDom, filterManagerAspect)
     let resetFilterAspect =  ResetFilterAspect(filterDom, resetFilterListAspect)
-    let setSelectedIfExactMatch = SetSelectedIfExactMatch(filterDom,filterManagerAspect)
-    let inputAspect = InputAspect( filterDom,filterManagerAspect, setSelectedIfExactMatch);    
+    //let setSelectedIfExactMatchAspect = SetSelectedIfExactMatchAspect(filterDom,filterManagerAspect)
+    let inputAspect = InputAspect( filterDom,filterManagerAspect);    
 
     // TODO get picksDom  from staticDomFactory
     let picksDom  = PicksDom(staticDom.picksElement, staticDom.disposablePicksElement, createElementAspect, css);
     let focusInAspect = FocusInAspect(picksDom)
 
     let pickDomFactory = PickDomFactory(css, componentPropertiesAspect, optionPropertiesAspect);
-    let buildPickAspect = BuildPickAspect(picksDom, pickDomFactory, setOptionSelectedAspect);
+    let buildPickAspect = BuildPickAspect(picksDom, pickDomFactory);
     let choiceDomFactory = ChoiceDomFactory(css, optionPropertiesAspect);
 
     let buildChoiceAspect = BuildChoiceAspect( 
@@ -160,20 +158,20 @@ export function BsMultiSelect(element, environment, configuration, onInit){
     let buildAndAttachChoiceAspect =  BuildAndAttachChoiceAspect(buildChoiceAspect);
     let resetLayoutAspect = ResetLayoutAspect(() => resetFilterAspect.resetFilter());
 
-    let setDisabledComponentAspect = SetDisabledComponentAspect(picks, picksDom);
+    let setDisabledComponentAspect = SetDisabledComponentAspect(picksList, picksDom);
     let updateDisabledComponentAspect = UpdateDisabledComponentAspect(componentPropertiesAspect,setDisabledComponentAspect );
     let appearanceAspect = AppearanceAspect(updateDisabledComponentAspect);
 
     let fillChoicesAspect = FillChoicesAspect(
         window.document, createChoiceAspect, optionsAspect, wraps, buildAndAttachChoiceAspect );
     let loadAspect = LoadAspect(fillChoicesAspect, appearanceAspect);
-    let updateDataAspect = UpdateDataAspect(choicesDom, wraps, picks, fillChoicesAspect, resetLayoutAspect);
+    let updateDataAspect = UpdateDataAspect(choicesDom, wraps, picksList, fillChoicesAspect, resetLayoutAspect);
 
     extendIfUndefined(aspects, {
         staticDom, picksDom, choicesDom,filterDom, resetLayoutAspect, pickDomFactory, choiceDomFactory,
         popupAspect, staticManager, buildChoiceAspect, 
         buildAndAttachChoiceAspect , fillChoicesAspect, 
-        buildPickAspect, setSelectedIfExactMatch, inputAspect, resetFilterListAspect, resetFilterAspect, 
+        buildPickAspect, /*setSelectedIfExactMatchAspect,*/ inputAspect, resetFilterListAspect, resetFilterAspect, 
         resetLayoutAspect, focusInAspect, 
         updateDisabledComponentAspect, setDisabledComponentAspect, appearanceAspect, loadAspect,
         updateDataAspect} )
@@ -189,7 +187,7 @@ export function BsMultiSelect(element, environment, configuration, onInit){
         resetLayoutAspect.resetLayout,
         disposeAspect.dispose,
         pluginManager.dispose, 
-        picks.dispose,
+        ()=>{picksList.forEach(pick=>pick.dispose());},
         multiSelectInlineLayout.dispose, // TODO move to layout
         wraps.dispose,
         staticManager.dispose, popupAspect.dispose, picksDom.dispose, filterDom.dispose );

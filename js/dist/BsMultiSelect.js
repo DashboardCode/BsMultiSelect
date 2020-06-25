@@ -1,5 +1,5 @@
 import { PluginManager, plugStaticDom } from './PluginManager';
-import { composeSync, extendIfUndefined } from './ToolsJs';
+import { composeSync, List, extendIfUndefined } from './ToolsJs';
 import { PickDomFactory } from './PickDomFactory';
 import { ChoiceDomFactory } from './ChoiceDomFactory';
 import { StaticDomFactory, CreateElementAspect } from './StaticDomFactory';
@@ -10,7 +10,7 @@ import { PopupAspect } from './PopupAspect';
 import { ComponentPropertiesAspect, TriggerAspect, OnChangeAspect } from './ComponentPropertiesAspect';
 import { OptionsAspect, OptionPropertiesAspect } from './OptionsAspect';
 import { ChoicesEnumerableAspect } from './ChoicesEnumerableAspect';
-import { FilterManagerAspect, NavigateManager, FilterPredicateAspect } from './FilterListAspect';
+import { FilterManagerAspect, NavigateManager, FilterPredicateAspect } from './FilterManagerAspect';
 import { BuildAndAttachChoiceAspect, BuildChoiceAspect } from './BuildChoiceAspect';
 import { FillChoicesAspect } from './FillChoicesAspect';
 import { UpdateDataAspect } from './UpdateDataAspect';
@@ -18,9 +18,10 @@ import { OptionToggleAspect } from './OptionToggleAspect';
 import { CreateChoiceAspect, IsChoiceSelectableAspect, SetOptionSelectedAspect } from './CreateChoiceAspect.js';
 import { NavigateAspect, HoveredChoiceAspect } from './NavigateAspect';
 import { Wraps } from './Wraps';
-import { Picks } from './Picks';
 import { BuildPickAspect } from './BuildPickAspect';
-import { InputAspect, SetSelectedIfExactMatch } from './InputAspect';
+import { InputAspect
+/*, SetSelectedIfExactMatchAspect*/
+} from './InputAspect';
 import { ResetFilterAspect, FocusInAspect, ResetFilterListAspect } from './ResetFilterListAspect';
 import { MultiSelectInlineLayout } from './MultiSelectInlineLayout';
 import { SetDisabledComponentAspect, UpdateDisabledComponentAspect, LoadAspect, AppearanceAspect, ResetLayoutAspect } from './AppearanceAspect';
@@ -63,37 +64,37 @@ export function BsMultiSelect(element, environment, configuration, onInit) {
   var choicesDomFactory = ChoicesDomFactory(createElementAspect);
   var staticDomFactory = StaticDomFactory(choicesDomFactory, createElementAspect);
   var wrapsCollection = ArrayFacade();
-  var countableChoicesList = DoublyLinkedList(function (choice) {
-    return choice.itemPrev;
-  }, function (choice, v) {
-    return choice.itemPrev = v;
-  }, function (choice) {
-    return choice.itemNext;
-  }, function (choice, v) {
-    return choice.itemNext = v;
+  var countableChoicesList = DoublyLinkedList(function (wrap) {
+    return wrap.choice.itemPrev;
+  }, function (warp, v) {
+    return warp.choice.itemPrev = v;
+  }, function (wrap) {
+    return wrap.choice.itemNext;
+  }, function (wrap, v) {
+    return wrap.choice.itemNext = v;
   });
   var countableChoicesListInsertAspect = CountableChoicesListInsertAspect(countableChoicesList, wrapsCollection);
-  var choicesEnumerableAspect = ChoicesEnumerableAspect(countableChoicesList, function (choice) {
-    return choice.itemNext;
+  var choicesEnumerableAspect = ChoicesEnumerableAspect(countableChoicesList, function (wrap) {
+    return wrap.choice.itemNext;
   });
-  var filteredChoicesList = DoublyLinkedList(function (choice) {
-    return choice.filteredPrev;
-  }, function (choice, v) {
-    return choice.filteredPrev = v;
-  }, function (choice) {
-    return choice.filteredNext;
-  }, function (choice, v) {
-    return choice.filteredNext = v;
+  var filteredChoicesList = DoublyLinkedList(function (wrap) {
+    return wrap.choice.filteredPrev;
+  }, function (wrap, v) {
+    return wrap.choice.filteredPrev = v;
+  }, function (wrap) {
+    return wrap.choice.filteredNext;
+  }, function (wrap, v) {
+    return wrap.choice.filteredNext = v;
   });
-  var emptyNavigateManager = NavigateManager(countableChoicesList, function (choice) {
-    return choice.itemPrev;
-  }, function (choice) {
-    return choice.itemNext;
+  var emptyNavigateManager = NavigateManager(countableChoicesList, function (wrap) {
+    return wrap.choice.itemPrev;
+  }, function (wrap) {
+    return wrap.choice.itemNext;
   });
-  var filteredNavigateManager = NavigateManager(filteredChoicesList, function (choice) {
-    return choice.filteredPrev;
-  }, function (choice) {
-    return choice.filteredNext;
+  var filteredNavigateManager = NavigateManager(filteredChoicesList, function (wrap) {
+    return wrap.choice.filteredPrev;
+  }, function (wrap) {
+    return wrap.choice.filteredNext;
   });
   var filterPredicateAspect = FilterPredicateAspect();
   var filterManagerAspect = FilterManagerAspect(emptyNavigateManager, filteredNavigateManager, filteredChoicesList, choicesEnumerableAspect, filterPredicateAspect);
@@ -101,13 +102,13 @@ export function BsMultiSelect(element, environment, configuration, onInit) {
   var navigateAspect = NavigateAspect(hoveredChoiceAspect, function (down, hoveredChoice) {
     return filterManagerAspect.getNavigateManager().navigate(down, hoveredChoice);
   });
-  var picks = Picks();
+  var picksList = List();
   var wraps = Wraps(wrapsCollection, function () {
     return countableChoicesList.reset();
-  }, function (c) {
-    return countableChoicesList.remove(c);
-  }, function (c, key) {
-    return countableChoicesListInsertAspect.countableChoicesListInsert(c, key);
+  }, function (w) {
+    return countableChoicesList.remove(w);
+  }, function (w, key) {
+    return countableChoicesListInsertAspect.countableChoicesListInsert(w, key);
   });
   var aspects = {
     environment: environment,
@@ -134,7 +135,7 @@ export function BsMultiSelect(element, environment, configuration, onInit) {
     filterManagerAspect: filterManagerAspect,
     hoveredChoiceAspect: hoveredChoiceAspect,
     navigateAspect: navigateAspect,
-    picks: picks,
+    picksList: picksList,
     wraps: wraps
   };
   plugStaticDom(plugins, aspects); // apply cssPatch to css, apply selectElement support;  
@@ -151,26 +152,26 @@ export function BsMultiSelect(element, environment, configuration, onInit) {
   var filterDom = FilterDom(staticDom.disposablePicksElement, createElementAspect, css);
   var popupAspect = PopupAspect(choicesDom.choicesElement, filterDom.filterInputElement, Popper);
   var resetFilterListAspect = ResetFilterListAspect(filterDom, filterManagerAspect);
-  var resetFilterAspect = ResetFilterAspect(filterDom, resetFilterListAspect);
-  var setSelectedIfExactMatch = SetSelectedIfExactMatch(filterDom, filterManagerAspect);
-  var inputAspect = InputAspect(filterDom, filterManagerAspect, setSelectedIfExactMatch); // TODO get picksDom  from staticDomFactory
+  var resetFilterAspect = ResetFilterAspect(filterDom, resetFilterListAspect); //let setSelectedIfExactMatchAspect = SetSelectedIfExactMatchAspect(filterDom,filterManagerAspect)
+
+  var inputAspect = InputAspect(filterDom, filterManagerAspect); // TODO get picksDom  from staticDomFactory
 
   var picksDom = PicksDom(staticDom.picksElement, staticDom.disposablePicksElement, createElementAspect, css);
   var focusInAspect = FocusInAspect(picksDom);
   var pickDomFactory = PickDomFactory(css, componentPropertiesAspect, optionPropertiesAspect);
-  var buildPickAspect = BuildPickAspect(picksDom, pickDomFactory, setOptionSelectedAspect);
+  var buildPickAspect = BuildPickAspect(picksDom, pickDomFactory);
   var choiceDomFactory = ChoiceDomFactory(css, optionPropertiesAspect);
   var buildChoiceAspect = BuildChoiceAspect(choicesDom, choiceDomFactory, optionToggleAspect, filterDom, onChangeAspect);
   var buildAndAttachChoiceAspect = BuildAndAttachChoiceAspect(buildChoiceAspect);
   var resetLayoutAspect = ResetLayoutAspect(function () {
     return resetFilterAspect.resetFilter();
   });
-  var setDisabledComponentAspect = SetDisabledComponentAspect(picks, picksDom);
+  var setDisabledComponentAspect = SetDisabledComponentAspect(picksList, picksDom);
   var updateDisabledComponentAspect = UpdateDisabledComponentAspect(componentPropertiesAspect, setDisabledComponentAspect);
   var appearanceAspect = AppearanceAspect(updateDisabledComponentAspect);
   var fillChoicesAspect = FillChoicesAspect(window.document, createChoiceAspect, optionsAspect, wraps, buildAndAttachChoiceAspect);
   var loadAspect = LoadAspect(fillChoicesAspect, appearanceAspect);
-  var updateDataAspect = UpdateDataAspect(choicesDom, wraps, picks, fillChoicesAspect, resetLayoutAspect);
+  var updateDataAspect = UpdateDataAspect(choicesDom, wraps, picksList, fillChoicesAspect, resetLayoutAspect);
   extendIfUndefined(aspects, (_extendIfUndefined = {
     staticDom: staticDom,
     picksDom: picksDom,
@@ -185,7 +186,8 @@ export function BsMultiSelect(element, environment, configuration, onInit) {
     buildAndAttachChoiceAspect: buildAndAttachChoiceAspect,
     fillChoicesAspect: fillChoicesAspect,
     buildPickAspect: buildPickAspect,
-    setSelectedIfExactMatch: setSelectedIfExactMatch,
+
+    /*setSelectedIfExactMatchAspect,*/
     inputAspect: inputAspect,
     resetFilterListAspect: resetFilterListAspect,
     resetFilterAspect: resetFilterAspect
@@ -198,7 +200,11 @@ export function BsMultiSelect(element, environment, configuration, onInit) {
 
   pluginManager.buildApi(api); // after this we can pass aspects methods call without wrapping - there should be no more overridings. TODO freeze aspects?
 
-  api.dispose = composeSync(resetLayoutAspect.resetLayout, disposeAspect.dispose, pluginManager.dispose, picks.dispose, multiSelectInlineLayout.dispose, // TODO move to layout
+  api.dispose = composeSync(resetLayoutAspect.resetLayout, disposeAspect.dispose, pluginManager.dispose, function () {
+    picksList.forEach(function (pick) {
+      return pick.dispose();
+    });
+  }, multiSelectInlineLayout.dispose, // TODO move to layout
   wraps.dispose, staticManager.dispose, popupAspect.dispose, picksDom.dispose, filterDom.dispose);
   api.updateAppearance = appearanceAspect.updateAppearance;
   api.updateData = updateDataAspect.updateData;

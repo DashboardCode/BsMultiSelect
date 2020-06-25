@@ -12,8 +12,8 @@ import {PlaceholderPlugin} from './plugins/PlaceholderPlugin';
 import {JQueryMethodsPlugin} from './plugins/JQueryMethodsPlugin';
 import {OptionsApiPlugin} from './plugins/OptionsApiPlugin';
 import {SelectElementPlugin} from './plugins/SelectElementPlugin';
-import {SelectAllApiPlugin} from './plugins/SelectAllApiPlugin';
-import {UpdateOptionsSelectedApiPlugin} from './plugins/UpdateOptionsSelectedApiPlugin'
+
+import {SelectedOptionPlugin} from './plugins/SelectedOptionPlugin'
 import {DisabledOptionPlugin} from './plugins/DisabledOptionPlugin'
 import {FormRestoreOnBackwardPlugin} from './plugins/FormRestoreOnBackwardPlugin'
 
@@ -25,8 +25,9 @@ import  {addStyling, toggleStyling} from './ToolsStyling';
 
 const defaults = {containerClass : "dashboardcode-bsmultiselect", css: css}
 const defaultPlugins = [CssPatchPlugin, SelectElementPlugin, LabelPlugin, HiddenOptionPlugin, ValidationApiPlugin, 
-    BsAppearancePlugin, FormResetPlugin, RtlPlugin, PlaceholderPlugin , OptionsApiPlugin, SelectAllApiPlugin,
-JQueryMethodsPlugin, UpdateOptionsSelectedApiPlugin, FormRestoreOnBackwardPlugin,  DisabledOptionPlugin];
+    BsAppearancePlugin, FormResetPlugin, RtlPlugin, PlaceholderPlugin , OptionsApiPlugin,
+    
+JQueryMethodsPlugin, SelectedOptionPlugin, FormRestoreOnBackwardPlugin,  DisabledOptionPlugin];
 
 export function BsMultiSelect(element, environment, settings){
     if (!environment.trigger)
@@ -50,5 +51,4 @@ plugDefaultConfig(defaultPlugins, defaults);
 BsMultiSelect.defaults=defaults;
 BsMultiSelect.tools = {EventBinder, addStyling, toggleStyling, composeSync}
 BsMultiSelect.plugins = {CssPatchPlugin, SelectElementPlugin, LabelPlugin, HiddenOptionPlugin, ValidationApiPlugin, 
-    BsAppearancePlugin, FormResetPlugin, RtlPlugin, PlaceholderPlugin , OptionsApiPlugin, SelectAllApiPlugin,
-JQueryMethodsPlugin, UpdateOptionsSelectedApiPlugin, FormRestoreOnBackwardPlugin,  DisabledOptionPlugin}
+    BsAppearancePlugin, FormResetPlugin, RtlPlugin, PlaceholderPlugin , OptionsApiPlugin, JQueryMethodsPlugin, SelectedOptionPlugin, FormRestoreOnBackwardPlugin,  DisabledOptionPlugin}

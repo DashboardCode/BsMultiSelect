@@ -8,9 +8,9 @@ export function FillChoicesAspect(
                 let options = optionsAspect.getOptions();
                 for(let i = 0; i<options.length; i++) {
                     let option = options[i];
-                    let choice = createChoiceAspect.createChoice(option);
-                    wraps.push(choice);
-                    buildAndAttachChoiceAspect.buildAndAttachChoice(choice);
+                    let wrap = createChoiceAspect.createChoice(option);
+                    wraps.push(wrap);
+                    buildAndAttachChoiceAspect.buildAndAttachChoice(wrap);
                 } 
             }
     

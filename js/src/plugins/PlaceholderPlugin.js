@@ -3,7 +3,7 @@ import {getDataGuardedWithPrefix} from '../ToolsDom';
 import {toggleStyling} from '../ToolsStyling';
 
 export function PlaceholderPlugin(pluginData){
-    let {configuration, staticManager, picks, picksDom, filterDom, staticDom, updateDataAspect,
+    let {configuration, staticManager, picksList, picksDom, filterDom, staticDom, updateDataAspect,
         resetFilterListAspect, filterManagerAspect} = pluginData;
     let {placeholder,  css} = configuration;
     let {picksElement} = picksDom;
@@ -38,7 +38,7 @@ export function PlaceholderPlugin(pluginData){
     function setDisabled(isComponentDisabled){ 
         filterInputElement.disabled = isComponentDisabled;
     };
-    let isEmpty = () => picks.isEmpty() && filterDom.isEmpty()
+    let isEmpty = () => picksList.isEmpty() && filterDom.isEmpty()
 
     function updatePlacehodlerVisibility(){
         showPlacehodler(isEmpty());
@@ -58,14 +58,14 @@ export function PlaceholderPlugin(pluginData){
     filterManagerAspect.processEmptyInput = composeSync(updateEmptyInputWidth, filterManagerAspect.processEmptyInput);
     resetFilterListAspect.forceResetFilter = composeSync(resetFilterListAspect.forceResetFilter, updatePlacehodlerVisibility);
             
-    let origAddPick = picks.addPick;
-    picks.addPick = (pick) => { 
-        let removeFromList= origAddPick(pick);
-        if (picks.getCount()==1) 
+    let origAdd = picksList.add;
+    picksList.add = (pick) => { 
+        let removeFromList= origAdd(pick);
+        if (picksList.getCount()==1) 
             updatePlacehodlerVisibility()
         pick.dispose = composeSync(pick.dispose, ()=>
             { 
-                if (picks.getCount()==0) 
+                if (picksList.getCount()==0) 
                     updatePlacehodlerVisibility()
             })
         return removeFromList;
