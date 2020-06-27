@@ -19,9 +19,7 @@ import { CreateChoiceAspect, IsChoiceSelectableAspect, SetOptionSelectedAspect }
 import { NavigateAspect, HoveredChoiceAspect } from './NavigateAspect';
 import { Wraps } from './Wraps';
 import { BuildPickAspect } from './BuildPickAspect';
-import { InputAspect
-/*, SetSelectedIfExactMatchAspect*/
-} from './InputAspect';
+import { InputAspect } from './InputAspect';
 import { ResetFilterAspect, FocusInAspect, ResetFilterListAspect } from './ResetFilterListAspect';
 import { MultiSelectInlineLayout } from './MultiSelectInlineLayout';
 import { SetDisabledComponentAspect, UpdateDisabledComponentAspect, LoadAspect, AppearanceAspect, ResetLayoutAspect } from './AppearanceAspect';
@@ -152,8 +150,7 @@ export function BsMultiSelect(element, environment, configuration, onInit) {
   var filterDom = FilterDom(staticDom.disposablePicksElement, createElementAspect, css);
   var popupAspect = PopupAspect(choicesDom.choicesElement, filterDom.filterInputElement, Popper);
   var resetFilterListAspect = ResetFilterListAspect(filterDom, filterManagerAspect);
-  var resetFilterAspect = ResetFilterAspect(filterDom, resetFilterListAspect); //let setSelectedIfExactMatchAspect = SetSelectedIfExactMatchAspect(filterDom,filterManagerAspect)
-
+  var resetFilterAspect = ResetFilterAspect(filterDom, resetFilterListAspect);
   var inputAspect = InputAspect(filterDom, filterManagerAspect); // TODO get picksDom  from staticDomFactory
 
   var picksDom = PicksDom(staticDom.picksElement, staticDom.disposablePicksElement, createElementAspect, css);
@@ -186,8 +183,6 @@ export function BsMultiSelect(element, environment, configuration, onInit) {
     buildAndAttachChoiceAspect: buildAndAttachChoiceAspect,
     fillChoicesAspect: fillChoicesAspect,
     buildPickAspect: buildPickAspect,
-
-    /*setSelectedIfExactMatchAspect,*/
     inputAspect: inputAspect,
     resetFilterListAspect: resetFilterListAspect,
     resetFilterAspect: resetFilterAspect

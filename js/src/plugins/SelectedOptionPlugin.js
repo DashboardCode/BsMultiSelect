@@ -2,6 +2,9 @@
 // plugin should overdrive them : call setOptionSelected and etc
 // therefore there should new component API methods
 // addOptionPick(key) -> call addPick(pick) which returns removePick() 
+// SetOptionSelectedAspect, OptionToggleAspect should be moved there 
+// OptionToggleAspect overrided in DisabledOptionPlugin
+
 export function SelectedOptionPlugin(pluginData){
     let {wrapsCollection, optionPropertiesAspect,
         resetLayoutAspect, picksList, isChoiceSelectableAspect, setOptionSelectedAspect,
@@ -16,6 +19,7 @@ export function SelectedOptionPlugin(pluginData){
         {
             if ( filterManagerAspect.getNavigateManager().getCount() == 1)
             {
+                // todo: move exact match to filterManager
                 let fullMatchWrap =  filterManagerAspect.getNavigateManager().getHead();
                 let text = filterManagerAspect.getFilter();
                 if (fullMatchWrap.choice.searchText == text)

@@ -2,35 +2,35 @@ import $ from 'jquery'
 import Popper from 'popper.js'
 
 import {addToJQueryPrototype} from './AddToJQueryPrototype'
-import {BsMultiSelect} from './BsMultiSelect';
-import {plugDefaultConfig, plugMergeSettings} from './PluginManager';
+import {BsMultiSelect} from './BsMultiSelect'
+import {plugDefaultConfig, plugMergeSettings} from './PluginManager'
 
 import {css} from './BsCss'
 
-import {LabelPlugin} from './plugins/LabelPlugin';
-import {RtlPlugin} from './plugins/RtlPlugin';
-import {FormResetPlugin} from './plugins/FormResetPlugin';
-import {ValidationApiPlugin} from './plugins/ValidationApiPlugin';
-import {BsAppearancePlugin} from './plugins/BsAppearancePlugin';
+import {LabelPlugin} from './plugins/LabelPlugin'
+import {RtlPlugin} from './plugins/RtlPlugin'
+import {FormResetPlugin} from './plugins/FormResetPlugin'
+import {ValidationApiPlugin} from './plugins/ValidationApiPlugin'
+import {BsAppearancePlugin} from './plugins/BsAppearancePlugin'
 
-import {HiddenOptionPlugin} from './plugins/HiddenOptionPlugin';
+import {HiddenOptionPlugin} from './plugins/HiddenOptionPlugin'
 
-import {CssPatchPlugin} from './plugins/CssPatchPlugin';
-import {PlaceholderPlugin} from './plugins/PlaceholderPlugin';
-import {JQueryMethodsPlugin} from './plugins/JQueryMethodsPlugin';
-import {OptionsApiPlugin} from './plugins/OptionsApiPlugin';
-import {FormRestoreOnBackwardPlugin} from './plugins/FormRestoreOnBackwardPlugin';
-import {SelectElementPlugin} from './plugins/SelectElementPlugin';
+import {CssPatchPlugin} from './plugins/CssPatchPlugin'
+import {PlaceholderPlugin} from './plugins/PlaceholderPlugin'
+import {JQueryMethodsPlugin} from './plugins/JQueryMethodsPlugin'
+import {OptionsApiPlugin} from './plugins/OptionsApiPlugin'
+import {FormRestoreOnBackwardPlugin} from './plugins/FormRestoreOnBackwardPlugin'
+import {SelectElementPlugin} from './plugins/SelectElementPlugin'
 import {SelectedOptionPlugin} from './plugins/SelectedOptionPlugin'
 import {DisabledOptionPlugin} from './plugins/DisabledOptionPlugin'
 
 import {adjustLegacySettings} from './BsMultiSelectDepricatedParameters'
 
-import {createCss} from './ToolsStyling';
-import {extendIfUndefined, composeSync} from './ToolsJs';
+import {createCss} from './ToolsStyling'
+import {extendIfUndefined, composeSync} from './ToolsJs'
 
-import  {EventBinder} from './ToolsDom';
-import  {addStyling, toggleStyling} from './ToolsStyling';
+import  {EventBinder} from './ToolsDom'
+import  {addStyling, toggleStyling} from './ToolsStyling'
 
 (
     (window, $, Popper) => {
@@ -38,7 +38,7 @@ import  {addStyling, toggleStyling} from './ToolsStyling';
 
         let defaultPlugins = [CssPatchPlugin, SelectElementPlugin, LabelPlugin, HiddenOptionPlugin, ValidationApiPlugin, 
         BsAppearancePlugin, FormResetPlugin, RtlPlugin, PlaceholderPlugin , OptionsApiPlugin, 
-        JQueryMethodsPlugin, SelectedOptionPlugin, FormRestoreOnBackwardPlugin,  DisabledOptionPlugin];
+        JQueryMethodsPlugin, SelectedOptionPlugin, FormRestoreOnBackwardPlugin, DisabledOptionPlugin];
 
         let createBsMultiSelect = (element, settings, removeInstanceData) => { 
             let trigger = (e, eventName) => $(e).trigger(eventName);

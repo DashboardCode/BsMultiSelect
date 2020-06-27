@@ -14,14 +14,6 @@ export function MultiSelectInlineLayout (
 
     let picksElement = picksDom.picksElement;
     let choicesElement = choicesDom.choicesElement;
-    function toggleHovered (){
-        var wasToggled = false;
-        let hoveredChoice = hoveredChoiceAspect.getHoveredChoice(); 
-        if (hoveredChoice){
-            wasToggled = optionToggleAspect.toggle(hoveredChoice); 
-        }
-        return wasToggled;
-    }
 
     var window = environment.window;
     var document = window.document;
@@ -253,9 +245,12 @@ export function MultiSelectInlineLayout (
     }
 
     function hoveredToSelected(){
-        let wasToggled = toggleHovered();
-        if (wasToggled) {
-            resetLayoutAspect.resetLayout();
+        let hoveredWrap = hoveredChoiceAspect.getHoveredChoice(); 
+        if (hoveredWrap){
+            let wasToggled = optionToggleAspect.toggle(hoveredWrap); 
+            if (wasToggled) {
+                resetLayoutAspect.resetLayout();
+            }
         }
     }
 

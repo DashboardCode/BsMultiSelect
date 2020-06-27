@@ -16,7 +16,7 @@ export function DisabledOptionPlugin(pluginData){
     let origСreateChoice = createChoiceAspect.createChoice;
     createChoiceAspect.createChoice = (option) => {
         let wrap = origСreateChoice(option);
-        wrap.isOptionDisabled = getIsOptionDisabled(option); // todo: remove usage wrap.isOptionDisabled
+        wrap.isOptionDisabled = getIsOptionDisabled(option); // TODO: remove usage wrap.isOptionDisabled
         wrap.updateDisabled = null; 
         return wrap;
     };
@@ -24,8 +24,8 @@ export function DisabledOptionPlugin(pluginData){
     let origToggle = optionToggleAspect.toggle;
     optionToggleAspect.toggle = (wrap) => {
         let success = false;
-        if (wrap.isOptionSelected || !wrap.isOptionDisabled)
-            success = origToggle(wrap, !wrap.isOptionSelected);
+        if (wrap.isOptionSelected || !wrap.isOptionDisabled) // dependency on SelectedOptionPlugin
+            success = origToggle(wrap);
         return success;
     };
 

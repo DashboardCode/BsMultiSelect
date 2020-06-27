@@ -28,7 +28,7 @@ import {NavigateAspect, HoveredChoiceAspect} from './NavigateAspect'
 import {Wraps} from './Wraps'
 
 import {BuildPickAspect} from './BuildPickAspect'
-import {InputAspect /*, SetSelectedIfExactMatchAspect*/} from './InputAspect'
+import {InputAspect} from './InputAspect'
 import {ResetFilterAspect, FocusInAspect, ResetFilterListAspect} from './ResetFilterListAspect'
 
 import {MultiSelectInlineLayout} from './MultiSelectInlineLayout'
@@ -121,10 +121,10 @@ export function BsMultiSelect(element, environment, configuration, onInit){
     let aspects = {
         environment, configuration, triggerAspect, onChangeAspect, componentPropertiesAspect, disposeAspect,
         countableChoicesList, countableChoicesListInsertAspect,
-        optionsAspect, optionPropertiesAspect, createChoiceAspect, setOptionSelectedAspect, isChoiceSelectableAspect, optionToggleAspect, createElementAspect,
+        optionsAspect, optionPropertiesAspect, createChoiceAspect, setOptionSelectedAspect, isChoiceSelectableAspect, 
+        optionToggleAspect, createElementAspect,
         choicesDomFactory, staticDomFactory,
-        filterPredicateAspect, 
-        wrapsCollection, choicesEnumerableAspect, 
+        filterPredicateAspect, wrapsCollection, choicesEnumerableAspect, 
         filteredChoicesList, filterManagerAspect, hoveredChoiceAspect, navigateAspect, picksList, wraps
     }
 
@@ -140,7 +140,6 @@ export function BsMultiSelect(element, environment, configuration, onInit){
     let popupAspect = PopupAspect(choicesDom.choicesElement, filterDom.filterInputElement, Popper);
     let resetFilterListAspect = ResetFilterListAspect(filterDom, filterManagerAspect)
     let resetFilterAspect =  ResetFilterAspect(filterDom, resetFilterListAspect)
-    //let setSelectedIfExactMatchAspect = SetSelectedIfExactMatchAspect(filterDom,filterManagerAspect)
     let inputAspect = InputAspect( filterDom,filterManagerAspect);    
 
     // TODO get picksDom  from staticDomFactory
@@ -171,7 +170,7 @@ export function BsMultiSelect(element, environment, configuration, onInit){
         staticDom, picksDom, choicesDom,filterDom, resetLayoutAspect, pickDomFactory, choiceDomFactory,
         popupAspect, staticManager, buildChoiceAspect, 
         buildAndAttachChoiceAspect , fillChoicesAspect, 
-        buildPickAspect, /*setSelectedIfExactMatchAspect,*/ inputAspect, resetFilterListAspect, resetFilterAspect, 
+        buildPickAspect, inputAspect, resetFilterListAspect, resetFilterAspect, 
         resetLayoutAspect, focusInAspect, 
         updateDisabledComponentAspect, setDisabledComponentAspect, appearanceAspect, loadAspect,
         updateDataAspect} )

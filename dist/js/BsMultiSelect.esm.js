@@ -1,5 +1,5 @@
 /*!
-  * DashboardCode BsMultiSelect v0.6.22 (https://dashboardcode.github.io/BsMultiSelect/)
+  * DashboardCode BsMultiSelect v0.6.23 (https://dashboardcode.github.io/BsMultiSelect/)
   * Copyright 2017-2020 Roman Pokrovskij (github user rpokrovskij)
   * Licensed under APACHE 2 (https://github.com/DashboardCode/BsMultiSelect/blob/master/LICENSE)
   */
@@ -1535,18 +1535,6 @@ function MultiSelectInlineLayout(aspects) {
       resetLayoutAspect = aspects.resetLayoutAspect;
   var picksElement = picksDom.picksElement;
   var choicesElement = choicesDom.choicesElement;
-
-  function toggleHovered() {
-    var wasToggled = false;
-    var hoveredChoice = hoveredChoiceAspect.getHoveredChoice();
-
-    if (hoveredChoice) {
-      wasToggled = optionToggleAspect.toggle(hoveredChoice);
-    }
-
-    return wasToggled;
-  }
-
   var window = environment.window;
   var document = window.document;
   var eventLoopFlag = EventLoopFlag(window);
@@ -1770,10 +1758,14 @@ function MultiSelectInlineLayout(aspects) {
   }
 
   function hoveredToSelected() {
-    var wasToggled = toggleHovered();
+    var hoveredWrap = hoveredChoiceAspect.getHoveredChoice();
 
-    if (wasToggled) {
-      resetLayoutAspect.resetLayout();
+    if (hoveredWrap) {
+      var wasToggled = optionToggleAspect.toggle(hoveredWrap);
+
+      if (wasToggled) {
+        resetLayoutAspect.resetLayout();
+      }
     }
   } // TODO: bind it more declarative way? (compact code)
 
@@ -2093,8 +2085,7 @@ function BsMultiSelect(element, environment, configuration, onInit) {
   var filterDom = FilterDom(staticDom.disposablePicksElement, createElementAspect, css);
   var popupAspect = PopupAspect(choicesDom.choicesElement, filterDom.filterInputElement, Popper);
   var resetFilterListAspect = ResetFilterListAspect(filterDom, filterManagerAspect);
-  var resetFilterAspect = ResetFilterAspect(filterDom, resetFilterListAspect); //let setSelectedIfExactMatchAspect = SetSelectedIfExactMatchAspect(filterDom,filterManagerAspect)
-
+  var resetFilterAspect = ResetFilterAspect(filterDom, resetFilterListAspect);
   var inputAspect = InputAspect(filterDom, filterManagerAspect); // TODO get picksDom  from staticDomFactory
 
   var picksDom = PicksDom(staticDom.picksElement, staticDom.disposablePicksElement, createElementAspect, css);
@@ -2127,8 +2118,6 @@ function BsMultiSelect(element, environment, configuration, onInit) {
     buildAndAttachChoiceAspect: buildAndAttachChoiceAspect,
     fillChoicesAspect: fillChoicesAspect,
     buildPickAspect: buildPickAspect,
-
-    /*setSelectedIfExactMatchAspect,*/
     inputAspect: inputAspect,
     resetFilterListAspect: resetFilterListAspect,
     resetFilterAspect: resetFilterAspect
@@ -3163,6 +3152,8 @@ SelectElementPlugin.plugStaticDom = function (aspects) {
 // plugin should overdrive them : call setOptionSelected and etc
 // therefore there should new component API methods
 // addOptionPick(key) -> call addPick(pick) which returns removePick() 
+// SetOptionSelectedAspect, OptionToggleAspect should be moved there 
+// OptionToggleAspect overrided in DisabledOptionPlugin
 function SelectedOptionPlugin(pluginData) {
   var wrapsCollection = pluginData.wrapsCollection,
       optionPropertiesAspect = pluginData.optionPropertiesAspect,
@@ -3181,6 +3172,7 @@ function SelectedOptionPlugin(pluginData) {
 
     if (!origResult.isEmpty) {
       if (filterManagerAspect.getNavigateManager().getCount() == 1) {
+        // todo: move exact match to filterManager
         var fullMatchWrap = filterManagerAspect.getNavigateManager().getHead();
         var text = filterManagerAspect.getFilter();
 
@@ -3271,7 +3263,7 @@ function DisabledOptionPlugin(pluginData) {
 
   createChoiceAspect.createChoice = function (option) {
     var wrap = origСreateChoice(option);
-    wrap.isOptionDisabled = getIsOptionDisabled(option); // todo: remove usage wrap.isOptionDisabled
+    wrap.isOptionDisabled = getIsOptionDisabled(option); // TODO: remove usage wrap.isOptionDisabled
 
     wrap.updateDisabled = null;
     return wrap;
@@ -3281,7 +3273,8 @@ function DisabledOptionPlugin(pluginData) {
 
   optionToggleAspect.toggle = function (wrap) {
     var success = false;
-    if (wrap.isOptionSelected || !wrap.isOptionDisabled) success = origToggle(wrap, !wrap.isOptionSelected);
+    if (wrap.isOptionSelected || !wrap.isOptionDisabled) // dependency on SelectedOptionPlugin
+      success = origToggle(wrap);
     return success;
   };
 
