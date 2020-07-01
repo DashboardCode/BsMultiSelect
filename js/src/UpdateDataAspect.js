@@ -7,7 +7,7 @@ export function UpdateDataAspect(
             resetLayoutAspect.resetLayout();
             choicesDom.choicesElement.innerHTML = ""; // TODO: there should better "optimization"
             wraps.clear();
-            picksList.forEach(pick=>pick.dispose());
+            picksList.forEach(wrap=>wrap.pick.dispose());
             picksList.reset();
             fillChoicesAspect.fillChoices();
         }

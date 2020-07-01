@@ -1,5 +1,5 @@
 export function OptionsApiPlugin(pluginData){
-    let {buildAndAttachChoiceAspect, wraps, wrapsCollection, createChoiceAspect, 
+    let {buildAndAttachChoiceAspect, wraps, wrapsCollection, createWrapAspect, createChoiceBaseAspect,
         optionsAspect, resetLayoutAspect} = pluginData;
     return {
         buildApi(api){
@@ -8,7 +8,8 @@ export function OptionsApiPlugin(pluginData){
                 let options = optionsAspect.getOptions();
                 let option = options[key];
                 
-                let wrap = createChoiceAspect.createChoice(option);
+                let wrap = createWrapAspect.createWrap(option);
+                wrap.choice= createChoiceBaseAspect.createChoiceBase(option);
                 wraps.insert(key, wrap);
                 let nextChoice = ()=> wrapsCollection.getNext(key, c => c.choice.choiceElement);
 

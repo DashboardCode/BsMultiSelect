@@ -16,6 +16,7 @@ import {SelectElementPlugin} from './plugins/SelectElementPlugin'
 import {SelectedOptionPlugin} from './plugins/SelectedOptionPlugin'
 import {DisabledOptionPlugin} from './plugins/DisabledOptionPlugin'
 import {FormRestoreOnBackwardPlugin} from './plugins/FormRestoreOnBackwardPlugin'
+import {PicksApiPlugin} from './plugins/PicksApiPlugin'
 
 import {createCss} from './ToolsStyling'
 import {extendIfUndefined, composeSync} from './ToolsJs'
@@ -26,7 +27,7 @@ import  {addStyling, toggleStyling} from './ToolsStyling'
 const defaults = {containerClass : "dashboardcode-bsmultiselect", css: css}
 const defaultPlugins = [CssPatchPlugin, SelectElementPlugin, LabelPlugin, HiddenOptionPlugin, ValidationApiPlugin, 
     BsAppearancePlugin, FormResetPlugin, RtlPlugin, PlaceholderPlugin , OptionsApiPlugin,
-    JQueryMethodsPlugin, SelectedOptionPlugin, FormRestoreOnBackwardPlugin,  DisabledOptionPlugin];
+    JQueryMethodsPlugin, SelectedOptionPlugin, FormRestoreOnBackwardPlugin,  DisabledOptionPlugin, PicksApiPlugin];
 
 export function BsMultiSelect(element, environment, settings){
     if (!environment.trigger)
@@ -50,4 +51,4 @@ plugDefaultConfig(defaultPlugins, defaults);
 BsMultiSelect.defaults=defaults;
 BsMultiSelect.tools = {EventBinder, addStyling, toggleStyling, composeSync}
 BsMultiSelect.plugins = {CssPatchPlugin, SelectElementPlugin, LabelPlugin, HiddenOptionPlugin, ValidationApiPlugin, 
-    BsAppearancePlugin, FormResetPlugin, RtlPlugin, PlaceholderPlugin , OptionsApiPlugin, JQueryMethodsPlugin, SelectedOptionPlugin, FormRestoreOnBackwardPlugin,  DisabledOptionPlugin}
+    BsAppearancePlugin, FormResetPlugin, RtlPlugin, PlaceholderPlugin , OptionsApiPlugin, JQueryMethodsPlugin, SelectedOptionPlugin, FormRestoreOnBackwardPlugin,  DisabledOptionPlugin, PicksApiPlugin}

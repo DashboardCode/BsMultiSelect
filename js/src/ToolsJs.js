@@ -39,8 +39,9 @@ export function shallowClearClone(source, ...sources) { // override previous, no
 function forEachRecursion(f, i){
     if (!i)
         return;
-    f(i.value); 
-    forEachRecursion(f, i.prev);
+    let goOn = f(i.value); 
+    if (!(goOn===false))
+        forEachRecursion(f, i.prev);
 }
 
 export function List(){

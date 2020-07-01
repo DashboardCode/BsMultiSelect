@@ -1,5 +1,5 @@
 export function HiddenOptionPlugin(pluginData){
-    let {configuration, createChoiceAspect, isChoiceSelectableAspect,
+    let {configuration, createWrapAspect, isChoiceSelectableAspect,
         wrapsCollection, buildAndAttachChoiceAspect, countableChoicesListInsertAspect, countableChoicesList
     } = pluginData;
 
@@ -25,12 +25,14 @@ export function HiddenOptionPlugin(pluginData){
             getIsOptionHidden = (option) => (option.hidden===undefined)?false:option.hidden;     
     } else {
         if (!getIsOptionHidden)
-            getIsOptionHidden = (option) => option.hidden;     
+            getIsOptionHidden = (option) => {
+                return option.hidden;     
+            } 
     }
 
-    var origСreateChoice = createChoiceAspect.createChoice;
-    createChoiceAspect.createChoice = (option) => {
-        let wrap = origСreateChoice(option);
+    var origCreateWrap = createWrapAspect.createWrap;
+    createWrapAspect.createWrap = (option) => {
+        let wrap = origCreateWrap(option);
         wrap.isOptionHidden = getIsOptionHidden(option);
         return wrap;
     };

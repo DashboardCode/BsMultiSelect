@@ -59,11 +59,11 @@ export function PlaceholderPlugin(pluginData){
     resetFilterListAspect.forceResetFilter = composeSync(resetFilterListAspect.forceResetFilter, updatePlacehodlerVisibility);
             
     let origAdd = picksList.add;
-    picksList.add = (pick) => { 
-        let removeFromList= origAdd(pick);
+    picksList.add = (wrap) => { 
+        let removeFromList= origAdd(wrap);
         if (picksList.getCount()==1) 
             updatePlacehodlerVisibility()
-        pick.dispose = composeSync(pick.dispose, ()=>
+        wrap.pick.dispose = composeSync(wrap.pick.dispose, ()=>
             { 
                 if (picksList.getCount()==0) 
                     updatePlacehodlerVisibility()

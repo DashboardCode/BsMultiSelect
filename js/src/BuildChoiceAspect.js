@@ -15,24 +15,15 @@ export function BuildAndAttachChoiceAspect(
 export function BuildChoiceAspect(
     choicesDom,
     choiceDomFactory,
-    optionToggleAspect,
-    filterDom, 
-    onChangeAspect
+    choiceClickAspect
     ) {
     return {
         buildChoice(wrap) {
-            
             var {choiceElement, setVisible, attach, detach} = choicesDom.createChoiceElement();
             wrap.choice.choiceElement = choiceElement;
             wrap.choice.choiceElementAttach = attach;
             wrap.choice.isChoiceElementAttached = true;
-            let {choiceDomManager} = choiceDomFactory.create(
-                choiceElement, 
-                wrap,
-                () => {
-                    optionToggleAspect.toggle(wrap);
-                    filterDom.setFocus();
-                });
+            let {choiceDomManager} = choiceDomFactory.create(choiceElement, wrap,() => choiceClickAspect.choiceClick(wrap));
             let choiceDomManagerHandlers = choiceDomManager.init();
             wrap.choice.choiceDomManagerHandlers = choiceDomManagerHandlers;
             
@@ -68,13 +59,7 @@ export function BuildChoiceAspect(
                 wrap.choice.dispose = null;
             }
 
-            wrap.updateSelected = () => {
-                choiceDomManagerHandlers.updateSelected();
-                onChangeAspect.onChange();
-            }
-
             wrap.dispose = () => {
-                wrap.updateSelected = null;
                 wrap.choice.dispose();
                 wrap.dispose = null;
             }

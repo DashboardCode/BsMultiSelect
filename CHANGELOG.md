@@ -1,5 +1,7 @@
 # CHANGELOG
 ````
+0.6.25 - PicksApiPlugin: optimizations
+0.6.24 - PicksApiPlugin: forEachPeak, getTailPeak methods
 0.6.23 - optimizations
 0.6.22 - "full match" problem resolved
 0.6.21 - bug if "disabled option" plugin  removed

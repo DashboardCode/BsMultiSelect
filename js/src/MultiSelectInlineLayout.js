@@ -8,9 +8,11 @@ export function MultiSelectInlineLayout (
     let {environment,filterDom,picksDom,choicesDom, 
         popupAspect, hoveredChoiceAspect, navigateAspect,filterManagerAspect,
         focusInAspect, optionToggleAspect,
-        setOptionSelectedAspect,
-        inputAspect, picksList, buildChoiceAspect,buildPickAspect,
-        setDisabledComponentAspect, resetLayoutAspect} = aspects;
+        wrapPickAspect,
+        inputAspect, picksList, buildChoiceAspect, 
+        setDisabledComponentAspect, resetLayoutAspect,
+        addPickAspect
+    } = aspects;
 
     let picksElement = picksDom.picksElement;
     let choicesElement = choicesDom.choicesElement;
@@ -102,7 +104,6 @@ export function MultiSelectInlineLayout (
     function processUncheck(uncheckOption, event){
         // we can't remove item on "click" in the same loop iteration - it is unfrendly for 3PP event handlers (they will get detached element)
         // never remove elements in the same event iteration
-
         window.setTimeout(()=>uncheckOption())
         preventDefaultClickEvent = event; // setPreventDefaultMultiSelectEvent
     }
@@ -275,9 +276,9 @@ export function MultiSelectInlineLayout (
             // If user will find this inconvinient, we will need to calculate something like this
             // let isBackspaceAtStartPoint = (this.filterInput.selectionStart == 0 && this.filterInput.selectionEnd == 0);
             if (empty) {
-                let pick = picksList.getTail();
-                if (pick){ 
-                    pick?.setSelectedFalse(); 
+                let wrap = picksList.getTail();
+                if (wrap){ 
+                    wrap.pick?.setSelectedFalse(); 
                     popupAspect.updatePopupLocation();
                 }
             }
@@ -342,48 +343,27 @@ export function MultiSelectInlineLayout (
         resetLayoutAspect.resetLayout // resetFilter by default
     );
 
+    let origWrapPick = wrapPickAspect.wrapPick;
+    wrapPickAspect.wrapPick = (wrap) => {
+        let pickTools =origWrapPick(wrap);
+        pickTools.removeOnButton = handleOnRemoveButton(pickTools.removeOnButton);
+        return pickTools;
+    } 
+
     let origBuildChoice = buildChoiceAspect.buildChoice;
     buildChoiceAspect.buildChoice = (wrap) => {
         origBuildChoice(wrap);
-
-        let pickTools = { updateSelectedTrue: null, updateSelectedFalse: null }
-        pickTools.updateSelectedTrue = () => { 
-            let setSelectedFalse = () => setOptionSelectedAspect.setOptionSelected(wrap, false);
-            let removeOnButton = handleOnRemoveButton(setSelectedFalse);
-            buildPickAspect.buildPick(wrap, removeOnButton);
-            let pick = wrap.pick;
-            pick.pickElementAttach();
-            let removeFromList = picksList.add(pick);
-            pick.setSelectedFalse = setSelectedFalse; 
-            pick.dispose = composeSync(removeFromList, pick.dispose);
-            pickTools.updateSelectedFalse = () => pick.dispose();
-        };
-
+        let pickTools = wrapPickAspect.wrapPick(wrap);
         wrap.choice.remove = composeSync(wrap.choice.remove, ()=>{
-            if (pickTools.updateSelectedFalse) {
-                pickTools.updateSelectedFalse();
-                pickTools.updateSelectedFalse=null;
+            if (pickTools.removePick) {
+                pickTools.removePick();
+                pickTools.removePick=null;
             }
         })
-
-        wrap.updateSelected = composeSync(
-            ()=>{
-                if (wrap.isOptionSelected)
-                    pickTools.updateSelectedTrue();
-                else {
-                    pickTools.updateSelectedFalse();
-                    pickTools.updateSelectedFalse=null;
-                }
-            },
-            wrap.updateSelected
-        )
         
         let unbindChoiceElement = adoptChoiceElement(wrap);
         wrap.choice.dispose = composeSync(unbindChoiceElement, wrap.choice.dispose)
-
-        if (wrap.isOptionSelected) {
-            pickTools.updateSelectedTrue();
-        }
+        addPickAspect.addPick(wrap, pickTools);
     }
 
     return {

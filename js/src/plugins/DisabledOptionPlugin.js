@@ -1,7 +1,7 @@
 import {composeSync} from '../ToolsJs';
 
 export function DisabledOptionPlugin(pluginData){
-    let {configuration, isChoiceSelectableAspect, createChoiceAspect,  buildChoiceAspect,
+    let {configuration, isChoiceSelectableAspect, createWrapAspect,  buildChoiceAspect,
         filterPredicateAspect, wrapsCollection, optionToggleAspect, buildPickAspect } = pluginData;
     
     let {getIsOptionDisabled, options} = configuration;
@@ -13,9 +13,9 @@ export function DisabledOptionPlugin(pluginData){
             getIsOptionDisabled = (option) => option.disabled;     
     }
 
-    let origСreateChoice = createChoiceAspect.createChoice;
-    createChoiceAspect.createChoice = (option) => {
-        let wrap = origСreateChoice(option);
+    let origСreateWrap = createWrapAspect.createWrap;
+    createWrapAspect.createWrap = (option) => {
+        let wrap = origСreateWrap(option);
         wrap.isOptionDisabled = getIsOptionDisabled(option); // TODO: remove usage wrap.isOptionDisabled
         wrap.updateDisabled = null; 
         return wrap;
