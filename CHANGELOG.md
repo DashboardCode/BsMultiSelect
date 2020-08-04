@@ -1,5 +1,6 @@
 # CHANGELOG
 ````
+0.6.26 - SelectedOptionPlugin
 0.6.25 - PicksApiPlugin: optimizations
 0.6.24 - PicksApiPlugin: forEachPeak, getTailPeak methods
 0.6.23 - optimizations
