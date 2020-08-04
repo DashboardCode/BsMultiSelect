@@ -21,7 +21,7 @@ export function NavigateManager(
 export function FilterPredicateAspect(){
     return {
         filterPredicate: (wrap, text) => 
-            !wrap.isOptionSelected  && wrap.choice.searchText.indexOf(text) >= 0    
+            wrap.choice.searchText.indexOf(text) >= 0    
     }
 }
 

@@ -62,7 +62,6 @@ export function ChoiceDomFactory(css, optionPropertiesAspect){
                         eventBinder.unbind();
                     }
                 }
-                
             }
         }
     }

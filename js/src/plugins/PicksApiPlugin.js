@@ -1,5 +1,5 @@
 export function PicksApiPlugin(pluginData){
-    let {picksList, createWrapAspect, wrapPickAspect, addPickAspect} = pluginData;
+    let {picksList, createWrapAspect, createPickHandlersAspect, addPickAspect} = pluginData;
     return {
         buildApi(api){
             api.forEachPeak = (f) => 
@@ -14,8 +14,8 @@ export function PicksApiPlugin(pluginData){
                 // TODO should be moved to specific plugins
                 wrap.updateDisabled = ()=>{};
                 wrap.updateHidden = ()=>{};
-                let pickTools = wrapPickAspect.wrapPick(wrap);
-                addPickAspect.addPick(wrap, pickTools);
+                let pickHandlers = createPickHandlersAspect.createPickHandlers(wrap);
+                addPickAspect.addPick(wrap, pickHandlers);
             }
         }
     }

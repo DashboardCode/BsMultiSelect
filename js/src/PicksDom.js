@@ -6,7 +6,6 @@ export function PicksDom(picksElement, disposablePicksElement, createElementAspe
     addStyling(picksElement,       css.picks);
     addStyling(pickFilterElement,  css.pickFilter);
 
-
     let disableToggleStyling = toggleStyling(picksElement, css.picks_disabled);
     let focusToggleStyling   = toggleStyling(picksElement, css.picks_focus);
     let isFocusIn = false;
@@ -20,7 +19,7 @@ export function PicksDom(picksElement, disposablePicksElement, createElementAspe
             addStyling(pickElement, css.pick);
             return {
                 pickElement, 
-                attach: () => picksElement.insertBefore(pickElement, pickFilterElement),
+                attach: (beforeElement) => picksElement.insertBefore(pickElement, beforeElement??pickFilterElement),
                 detach: () => picksElement.removeChild(pickElement)
             };
         },

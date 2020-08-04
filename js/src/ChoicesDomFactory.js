@@ -1,11 +1,11 @@
 import {addStyling} from './ToolsStyling';
 
-export function ChoicesDomFactory(createElementAspect) { 
+export function ChoicesDomFactory(createElementAspect) {
     return {
         create(css){
-            var choicesElement = createElementAspect.createElement('UL');
-            addStyling(choicesElement, css.choices);
+            var choicesElement = createElementAspect.createElement('UL'); 
             choicesElement.style.display = 'none';
+            addStyling(choicesElement, css.choices);
             return {
                 choicesElement,
                 createChoiceElement() {
@@ -14,7 +14,7 @@ export function ChoicesDomFactory(createElementAspect) {
                     return {
                         choiceElement, 
                         setVisible: (isVisible) => choiceElement.style.display = isVisible ? 'block': 'none',
-                        attach: (element) => choicesElement.insertBefore(choiceElement, element),
+                        attach: (beforeElement) => choicesElement.insertBefore(choiceElement, beforeElement),
                         detach: () => choicesElement.removeChild(choiceElement)
                     };
                 }

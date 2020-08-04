@@ -13,6 +13,12 @@ export function DisabledOptionPlugin(pluginData){
             getIsOptionDisabled = (option) => option.disabled;     
     }
 
+    // TODO check this instead of wrap.updateDisabled
+    // function updateDisabled(wrap){
+    //     wrap?.choice?.choiceDomManagerHandlers?.updateDisabled?.();
+    //     wrap?.pick?.pickDomManagerHandlers?.updateDisabled?.();
+    // }
+
     let origСreateWrap = createWrapAspect.createWrap;
     createWrapAspect.createWrap = (option) => {
         let wrap = origСreateWrap(option);
@@ -24,8 +30,15 @@ export function DisabledOptionPlugin(pluginData){
     let origToggle = optionToggleAspect.toggle;
     optionToggleAspect.toggle = (wrap) => {
         let success = false;
-        if (wrap.isOptionSelected || !wrap.isOptionDisabled) // dependency on SelectedOptionPlugin
-            success = origToggle(wrap);
+        if (wrap.isOptionSelected!==undefined){
+            if (wrap.isOptionSelected || !wrap.isOptionDisabled) // TODO: declare dependency on SelectedOptionPlugin
+                success = origToggle(wrap);
+        }
+        else{
+            if (!wrap.isOptionDisabled) {
+                success = origToggle(wrap);
+            }
+        }
         return success;
     };
 
@@ -36,7 +49,7 @@ export function DisabledOptionPlugin(pluginData){
 
     let origFilterPredicate = filterPredicateAspect.filterPredicate;
     filterPredicateAspect.filterPredicate = (wrap, text) => {
-        return  origFilterPredicate(wrap, text) && !wrap.isOptionDisabled ;
+        return  !wrap.isOptionDisabled && origFilterPredicate(wrap, text) ;
     };
 
     let origBuildChoice = buildChoiceAspect.buildChoice;
@@ -59,7 +72,7 @@ export function DisabledOptionPlugin(pluginData){
         pick.dispose = composeSync(pick.dispose, 
             ()=>{
                 wrap.updateDisabled = choiceUpdateDisabledBackup; // remove pickDisabled
-                wrap.updateDisabled(); // make "true disabled" without it checkbox looks disabled
+                wrap.updateDisabled(); // make "true disabled" without it checkbox only looks disabled
             }
         )
     }

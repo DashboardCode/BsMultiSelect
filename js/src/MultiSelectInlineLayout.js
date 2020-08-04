@@ -8,7 +8,7 @@ export function MultiSelectInlineLayout (
     let {environment,filterDom,picksDom,choicesDom, 
         popupAspect, hoveredChoiceAspect, navigateAspect,filterManagerAspect,
         focusInAspect, optionToggleAspect,
-        wrapPickAspect,
+        createPickHandlersAspect,
         inputAspect, picksList, buildChoiceAspect, 
         setDisabledComponentAspect, resetLayoutAspect,
         addPickAspect
@@ -343,27 +343,27 @@ export function MultiSelectInlineLayout (
         resetLayoutAspect.resetLayout // resetFilter by default
     );
 
-    let origWrapPick = wrapPickAspect.wrapPick;
-    wrapPickAspect.wrapPick = (wrap) => {
-        let pickTools =origWrapPick(wrap);
-        pickTools.removeOnButton = handleOnRemoveButton(pickTools.removeOnButton);
-        return pickTools;
+    let origCreatePickHandlers = createPickHandlersAspect.createPickHandlers;
+    createPickHandlersAspect.createPickHandlers = (wrap) => {
+        let pickHandlers = origCreatePickHandlers(wrap);
+        pickHandlers.removeOnButton = handleOnRemoveButton(pickHandlers.removeOnButton);
+        return pickHandlers;
     } 
 
     let origBuildChoice = buildChoiceAspect.buildChoice;
     buildChoiceAspect.buildChoice = (wrap) => {
         origBuildChoice(wrap);
-        let pickTools = wrapPickAspect.wrapPick(wrap);
+        let pickHandlers = createPickHandlersAspect.createPickHandlers(wrap);
         wrap.choice.remove = composeSync(wrap.choice.remove, ()=>{
-            if (pickTools.removePick) {
-                pickTools.removePick();
-                pickTools.removePick=null;
+            if (pickHandlers.removePick) {
+                pickHandlers.removePick();
+                pickHandlers.removePick=null;
             }
         })
         
         let unbindChoiceElement = adoptChoiceElement(wrap);
         wrap.choice.dispose = composeSync(unbindChoiceElement, wrap.choice.dispose)
-        addPickAspect.addPick(wrap, pickTools);
+        addPickAspect.addPick(wrap, pickHandlers);
     }
 
     return {

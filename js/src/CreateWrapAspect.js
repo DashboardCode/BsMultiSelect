@@ -1,42 +1,30 @@
 import {composeSync} from './ToolsJs';
 
-export function IsChoiceSelectableAspect(){
+export function IsChoiceSelectableAspect(){ // TODO rename to IsSelectableByUserAspect ?
     return {
         isSelectable: (wrap)=>true 
     }
 }
 
-
-export function SetOptionSelectedAspect(optionPropertiesAspect){
+// todo: remove?
+export function ChoiceClickAspect(optionToggleAspect, filterDom){
     return {
-        setOptionSelected: (wrap, booleanValue) => {
-            let success = false;
-            var confirmed = optionPropertiesAspect.setSelected(wrap.option, booleanValue);
-            if (!(confirmed===false)) {
-                wrap.isOptionSelected = booleanValue;
-                wrap.updateSelected();
-                success = true;
-            }
-            return success;
-        }
-    }
-}
 
-export function ChoiceClickAspect(wrapPickAspect, addPickAspect, filterDom){
-    return {
         choiceClick: (wrap) => {
-            let pickTools = wrapPickAspect.wrapPick(wrap);
-            addPickAspect.addPick(wrap, pickTools);
-            //optionToggleAspect.toggle(wrap);
+            //let pickHandlers = createPickHandlersAspect.createPickHandlers(wrap);
+            //addPickAspect.addPick(wrap, pickHandlers);
+            optionToggleAspect.toggle(wrap); // TODO: return to it?
             filterDom.setFocus();
         }
     }
 }
 
-export function OptionToggleAspect(setOptionSelectedAspect){
+export function OptionToggleAspect(createPickHandlersAspect, addPickAspect /*, setOptionSelectedAspect*/){
     return {
         toggle: (wrap) => {
-            return setOptionSelectedAspect.setOptionSelected(wrap, !wrap.isOptionSelected)
+            let pickHandlers = createPickHandlersAspect.createPickHandlers(wrap);
+            addPickAspect.addPick(wrap, pickHandlers);
+            //return setOptionSelectedAspect.setOptionSelected(wrap, !wrap.isOptionSelected)
         }
     }
 }
@@ -57,9 +45,9 @@ export function RemovePickAspect(){
     }
 }
 
-export function WrapPickAspect(picksList, removePickAspect, buildPickAspect){
+export function CreatePickHandlersAspect(picksList, removePickAspect, buildPickAspect){
     return{
-        wrapPick(wrap){
+        createPickHandlers(wrap){
             let setSelectedFalse = () => removePickAspect.removePick(wrap)
             
             let pickTools = { 

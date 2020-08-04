@@ -5,7 +5,7 @@ export function SelectElementPlugin(){
 }
 
 SelectElementPlugin.plugStaticDom = (aspects)=>{
-    let {configuration, staticDomFactory, createElementAspect,  optionPropertiesAspect,
+    let {configuration, staticDomFactory, createElementAspect,
          componentPropertiesAspect, onChangeAspect, triggerAspect, optionsAspect, disposeAspect} = aspects;
     let {create: origCreate} = staticDomFactory;
     staticDomFactory.create = (css) => {

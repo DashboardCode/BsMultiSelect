@@ -22,7 +22,7 @@ import {FillChoicesAspect} from './FillChoicesAspect'
 
 import {UpdateDataAspect } from './UpdateDataAspect'
 
-import {CreateWrapAspect, CreateChoiceBaseAspect, OptionToggleAspect, WrapPickAspect, RemovePickAspect, AddPickAspect, ChoiceClickAspect, IsChoiceSelectableAspect, SetOptionSelectedAspect} from './CreateWrapAspect.js'
+import {CreateWrapAspect, CreateChoiceBaseAspect, OptionToggleAspect, CreatePickHandlersAspect, RemovePickAspect, AddPickAspect, ChoiceClickAspect, IsChoiceSelectableAspect, SetOptionSelectedAspect} from './CreateWrapAspect.js'
 import {NavigateAspect, HoveredChoiceAspect} from './NavigateAspect'
 import {Wraps} from './Wraps'
 
@@ -48,7 +48,7 @@ export function BsMultiSelect(element, environment, configuration, onInit){
           css, 
           getDisabled,
           options, 
-          getText, getSelected, setSelected,
+          getText
         } = configuration;
 
     let disposeAspect = {};
@@ -56,12 +56,12 @@ export function BsMultiSelect(element, environment, configuration, onInit){
     let onChangeAspect = OnChangeAspect(triggerAspect, 'dashboardcode.multiselect:change');
     let componentPropertiesAspect = ComponentPropertiesAspect(getDisabled??(() => false));
     let optionsAspect   = OptionsAspect(options); 
-    let optionPropertiesAspect = OptionPropertiesAspect(getText, getSelected, setSelected);
+    let optionPropertiesAspect = OptionPropertiesAspect(getText);
     let isChoiceSelectableAspect = IsChoiceSelectableAspect();
     let createWrapAspect        = CreateWrapAspect();
     let createChoiceBaseAspect   = CreateChoiceBaseAspect(optionPropertiesAspect);
-    let setOptionSelectedAspect = SetOptionSelectedAspect(optionPropertiesAspect);
-    let optionToggleAspect  = OptionToggleAspect(setOptionSelectedAspect);
+    //let setOptionSelectedAspect = SetOptionSelectedAspect(optionPropertiesAspect);
+    
     let addPickAspect = AddPickAspect();
     let removePickAspect = RemovePickAspect();
     let createElementAspect = CreateElementAspect(name => window.document.createElement(name));
@@ -124,8 +124,8 @@ export function BsMultiSelect(element, environment, configuration, onInit){
         environment, configuration, triggerAspect, onChangeAspect, componentPropertiesAspect, disposeAspect,
         countableChoicesList, countableChoicesListInsertAspect,
         optionsAspect, optionPropertiesAspect, 
-        createWrapAspect, createChoiceBaseAspect, setOptionSelectedAspect, isChoiceSelectableAspect, 
-        optionToggleAspect, createElementAspect,
+        createWrapAspect, createChoiceBaseAspect, isChoiceSelectableAspect, 
+        createElementAspect,
         choicesDomFactory, staticDomFactory,
         filterPredicateAspect, wrapsCollection, choicesEnumerableAspect, 
         filteredChoicesList, filterManagerAspect, hoveredChoiceAspect, navigateAspect, picksList, wraps,
@@ -152,9 +152,12 @@ export function BsMultiSelect(element, environment, configuration, onInit){
 
     let pickDomFactory = PickDomFactory(css, componentPropertiesAspect, optionPropertiesAspect);
     let buildPickAspect = BuildPickAspect(picksDom, pickDomFactory);
-    let wrapPickAspect = WrapPickAspect(picksList, removePickAspect, buildPickAspect);
+    let createPickHandlersAspect = CreatePickHandlersAspect(picksList, removePickAspect, buildPickAspect);
+    
     let choiceDomFactory = ChoiceDomFactory(css, optionPropertiesAspect);
-    let choiceClickAspect = ChoiceClickAspect(wrapPickAspect, addPickAspect, filterDom);
+    let optionToggleAspect  = OptionToggleAspect(createPickHandlersAspect, addPickAspect);
+
+    let choiceClickAspect = ChoiceClickAspect(optionToggleAspect, filterDom);
     let buildChoiceAspect = BuildChoiceAspect( choicesDom, choiceDomFactory, choiceClickAspect);
     let buildAndAttachChoiceAspect =  BuildAndAttachChoiceAspect(buildChoiceAspect);
     let resetLayoutAspect = ResetLayoutAspect(() => resetFilterAspect.resetFilter());
@@ -170,9 +173,9 @@ export function BsMultiSelect(element, environment, configuration, onInit){
 
     extendIfUndefined(aspects, {
         staticDom, picksDom, choicesDom,filterDom, resetLayoutAspect, pickDomFactory, choiceDomFactory,
-        popupAspect, staticManager, buildChoiceAspect,  choiceClickAspect, 
+        popupAspect, staticManager, buildChoiceAspect, optionToggleAspect,  choiceClickAspect, 
         buildAndAttachChoiceAspect , fillChoicesAspect, 
-        buildPickAspect, wrapPickAspect, inputAspect, resetFilterListAspect, resetFilterAspect, 
+        buildPickAspect, createPickHandlersAspect, inputAspect, resetFilterListAspect, resetFilterAspect, 
         resetLayoutAspect, focusInAspect, 
         updateDisabledComponentAspect, setDisabledComponentAspect, appearanceAspect, loadAspect,
         updateDataAspect} )
