@@ -14,7 +14,7 @@ import { FilterManagerAspect, NavigateManager, FilterPredicateAspect } from './F
 import { BuildAndAttachChoiceAspect, BuildChoiceAspect } from './BuildChoiceAspect';
 import { FillChoicesAspect } from './FillChoicesAspect';
 import { UpdateDataAspect } from './UpdateDataAspect';
-import { CreateWrapAspect, CreateChoiceBaseAspect, OptionToggleAspect, WrapPickAspect, RemovePickAspect, AddPickAspect, ChoiceClickAspect, IsChoiceSelectableAspect, SetOptionSelectedAspect } from './CreateWrapAspect.js';
+import { CreateWrapAspect, CreateChoiceBaseAspect, OptionToggleAspect, CreatePickHandlersAspect, RemovePickAspect, AddPickAspect, ChoiceClickAspect, IsChoiceSelectableAspect, SetOptionSelectedAspect } from './CreateWrapAspect.js';
 import { NavigateAspect, HoveredChoiceAspect } from './NavigateAspect';
 import { Wraps } from './Wraps';
 import { BuildPickAspect } from './BuildPickAspect';
@@ -40,9 +40,7 @@ export function BsMultiSelect(element, environment, configuration, onInit) {
       css = configuration.css,
       getDisabled = configuration.getDisabled,
       options = configuration.options,
-      getText = configuration.getText,
-      getSelected = configuration.getSelected,
-      setSelected = configuration.setSelected;
+      getText = configuration.getText;
   var disposeAspect = {};
   var triggerAspect = TriggerAspect(element, environment.trigger);
   var onChangeAspect = OnChangeAspect(triggerAspect, 'dashboardcode.multiselect:change');
@@ -50,12 +48,11 @@ export function BsMultiSelect(element, environment, configuration, onInit) {
     return false;
   });
   var optionsAspect = OptionsAspect(options);
-  var optionPropertiesAspect = OptionPropertiesAspect(getText, getSelected, setSelected);
+  var optionPropertiesAspect = OptionPropertiesAspect(getText);
   var isChoiceSelectableAspect = IsChoiceSelectableAspect();
   var createWrapAspect = CreateWrapAspect();
-  var createChoiceBaseAspect = CreateChoiceBaseAspect(optionPropertiesAspect);
-  var setOptionSelectedAspect = SetOptionSelectedAspect(optionPropertiesAspect);
-  var optionToggleAspect = OptionToggleAspect(setOptionSelectedAspect);
+  var createChoiceBaseAspect = CreateChoiceBaseAspect(optionPropertiesAspect); //let setOptionSelectedAspect = SetOptionSelectedAspect(optionPropertiesAspect);
+
   var addPickAspect = AddPickAspect();
   var removePickAspect = RemovePickAspect();
   var createElementAspect = CreateElementAspect(function (name) {
@@ -123,9 +120,7 @@ export function BsMultiSelect(element, environment, configuration, onInit) {
     optionPropertiesAspect: optionPropertiesAspect,
     createWrapAspect: createWrapAspect,
     createChoiceBaseAspect: createChoiceBaseAspect,
-    setOptionSelectedAspect: setOptionSelectedAspect,
     isChoiceSelectableAspect: isChoiceSelectableAspect,
-    optionToggleAspect: optionToggleAspect,
     createElementAspect: createElementAspect,
     choicesDomFactory: choicesDomFactory,
     staticDomFactory: staticDomFactory,
@@ -162,9 +157,10 @@ export function BsMultiSelect(element, environment, configuration, onInit) {
   var focusInAspect = FocusInAspect(picksDom);
   var pickDomFactory = PickDomFactory(css, componentPropertiesAspect, optionPropertiesAspect);
   var buildPickAspect = BuildPickAspect(picksDom, pickDomFactory);
-  var wrapPickAspect = WrapPickAspect(picksList, removePickAspect, buildPickAspect);
+  var createPickHandlersAspect = CreatePickHandlersAspect(picksList, removePickAspect, buildPickAspect);
   var choiceDomFactory = ChoiceDomFactory(css, optionPropertiesAspect);
-  var choiceClickAspect = ChoiceClickAspect(wrapPickAspect, addPickAspect, filterDom);
+  var optionToggleAspect = OptionToggleAspect(createPickHandlersAspect, addPickAspect);
+  var choiceClickAspect = ChoiceClickAspect(optionToggleAspect, filterDom);
   var buildChoiceAspect = BuildChoiceAspect(choicesDom, choiceDomFactory, choiceClickAspect);
   var buildAndAttachChoiceAspect = BuildAndAttachChoiceAspect(buildChoiceAspect);
   var resetLayoutAspect = ResetLayoutAspect(function () {
@@ -187,11 +183,12 @@ export function BsMultiSelect(element, environment, configuration, onInit) {
     popupAspect: popupAspect,
     staticManager: staticManager,
     buildChoiceAspect: buildChoiceAspect,
+    optionToggleAspect: optionToggleAspect,
     choiceClickAspect: choiceClickAspect,
     buildAndAttachChoiceAspect: buildAndAttachChoiceAspect,
     fillChoicesAspect: fillChoicesAspect,
     buildPickAspect: buildPickAspect,
-    wrapPickAspect: wrapPickAspect,
+    createPickHandlersAspect: createPickHandlersAspect,
     inputAspect: inputAspect,
     resetFilterListAspect: resetFilterListAspect,
     resetFilterAspect: resetFilterAspect

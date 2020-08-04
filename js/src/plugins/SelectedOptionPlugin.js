@@ -9,19 +9,20 @@ import {composeSync} from '../ToolsJs';
 
 // wrap.isOptionSelected ,  wrap.updateSelected
 export function SelectedOptionPlugin(pluginData){
-    let {wrapsCollection, 
+    let {configuration, wrapsCollection, 
         createWrapAspect, buildChoiceAspect, removePickAspect,
         resetLayoutAspect, picksList, isChoiceSelectableAspect, optionToggleAspect,
         inputAspect, filterDom, filterManagerAspect, createPickHandlersAspect, addPickAspect, 
         onChangeAspect, filterPredicateAspect
         } = pluginData;
-
     let {getSelected : getIsOptionSelected, setSelected : setIsOptionSelected, options} = configuration;
-
+    
     if (options) {
-        if (!getIsOptionSelected || !setIsOptionSelected)
+        if (!setIsOptionSelected){
             return false;
-            //getSelected = (option) => (option.selected===undefined) ? false : option.selected;     
+        }
+        if (!getIsOptionSelected)
+            getIsOptionSelected = (option) => (option.selected===undefined) ? false : option.selected;     
     } else { // selectElement
         if (!getIsOptionSelected){
             getIsOptionSelected = (option) => option.selected;
@@ -148,7 +149,6 @@ export function SelectedOptionPlugin(pluginData){
 
     return {
         buildApi(api){
-
             api.selectAll= ()=>{
                 resetLayoutAspect.resetLayout(); // always hide 1st
                 wrapsCollection.forLoop(
