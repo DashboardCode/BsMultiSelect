@@ -1,5 +1,6 @@
 # CHANGELOG
 ````
+0.6.27 - restore compatability with old code (when data is js) 
 0.6.26 - SelectedOptionPlugin
 0.6.25 - PicksApiPlugin: optimizations
 0.6.24 - PicksApiPlugin: forEachPeak, getTailPeak methods

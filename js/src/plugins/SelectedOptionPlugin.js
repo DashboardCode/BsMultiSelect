@@ -19,10 +19,10 @@ export function SelectedOptionPlugin(pluginData){
     
     if (options) {
         if (!setIsOptionSelected){
-            return false;
+            setIsOptionSelected = (option, value) => {option.selected = value};
         }
         if (!getIsOptionSelected)
-            getIsOptionSelected = (option) => (option.selected===undefined) ? false : option.selected;     
+            getIsOptionSelected = (option) => option.selected;     
     } else { // selectElement
         if (!getIsOptionSelected){
             getIsOptionSelected = (option) => option.selected;

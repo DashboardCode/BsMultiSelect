@@ -33,9 +33,9 @@ BsMultiSelect follows Bootstrap 4 conventions and use the same instruments (babe
 `npm install @dashboardcode/bsmultiselect`
 
 # CDN
-https://cdn.jsdelivr.net/npm/@dashboardcode/bsmultiselect@0.6.26/dist/js/BsMultiSelect.min.js
-https://cdn.jsdelivr.net/npm/@dashboardcode/bsmultiselect@0.6.26/dist/js/BsMultiSelect.esm.min.js
-https://cdn.jsdelivr.net/npm/@dashboardcode/bsmultiselect@0.6.26/dist/css/BsMultiSelect.min.css
+https://cdn.jsdelivr.net/npm/@dashboardcode/bsmultiselect@0.6.27/dist/js/BsMultiSelect.min.js
+https://cdn.jsdelivr.net/npm/@dashboardcode/bsmultiselect@0.6.27/dist/js/BsMultiSelect.esm.min.js
+https://cdn.jsdelivr.net/npm/@dashboardcode/bsmultiselect@0.6.27/dist/css/BsMultiSelect.min.css
 
 
 # Architecture

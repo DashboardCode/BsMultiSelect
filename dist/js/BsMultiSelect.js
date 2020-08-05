@@ -1,5 +1,5 @@
 /*!
-  * DashboardCode BsMultiSelect v0.6.26 (https://dashboardcode.github.io/BsMultiSelect/)
+  * DashboardCode BsMultiSelect v0.6.27 (https://dashboardcode.github.io/BsMultiSelect/)
   * Copyright 2017-2020 Roman Pokrovskij (github user rpokrovskij)
   * Licensed under APACHE 2 (https://github.com/DashboardCode/BsMultiSelect/blob/master/LICENSE)
   */
@@ -3303,11 +3303,13 @@
 
       if (options) {
         if (!setIsOptionSelected) {
-          return false;
+          setIsOptionSelected = function setIsOptionSelected(option, value) {
+            option.selected = value;
+          };
         }
 
         if (!getIsOptionSelected) getIsOptionSelected = function getIsOptionSelected(option) {
-          return option.selected === undefined ? false : option.selected;
+          return option.selected;
         };
       } else {
         // selectElement
