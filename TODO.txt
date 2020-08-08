@@ -80,6 +80,8 @@ https://www.webcomponents.org/polyfills/
 3. port web component to other framework
 Sample: https://www.webcomponents.org/element/@zooplus/zoo-web-components
 
+List of CSS framework
+https://habr.com/ru/post/512586/
 
 == ENVIRONMENT
 1. Review eslint again 
