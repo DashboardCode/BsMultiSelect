@@ -50,7 +50,7 @@ export function BsMultiSelect(element, environment, configuration, onInit){
           options, 
           getText
         } = configuration;
-
+    
     let disposeAspect = {};
     let triggerAspect = TriggerAspect(element, environment.trigger);
     let onChangeAspect = OnChangeAspect(triggerAspect, 'dashboardcode.multiselect:change');

@@ -9,8 +9,10 @@
     (global = typeof globalThis !== 'undefined' ? globalThis : global || self, factory(global.jQuery, global.Popper));
 }(this, (function ($, Popper) { 'use strict';
 
-    $ = $ && Object.prototype.hasOwnProperty.call($, 'default') ? $['default'] : $;
-    Popper = Popper && Object.prototype.hasOwnProperty.call(Popper, 'default') ? Popper['default'] : Popper;
+    function _interopDefaultLegacy (e) { return e && typeof e === 'object' && 'default' in e ? e : { 'default': e }; }
+
+    var $__default = /*#__PURE__*/_interopDefaultLegacy($);
+    var Popper__default = /*#__PURE__*/_interopDefaultLegacy(Popper);
 
     function addToJQueryPrototype(pluginName, createPlugin, $) {
       var firstChar = pluginName.charAt(0);
@@ -3871,7 +3873,7 @@
         DisabledOptionPlugin: DisabledOptionPlugin,
         PicksApiPlugin: PicksApiPlugin
       };
-    })(window, $, Popper);
+    })(window, $__default['default'], Popper__default['default']);
 
 })));
 //# sourceMappingURL=BsMultiSelect.js.map
