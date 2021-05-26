@@ -10,8 +10,7 @@ export function MultiSelectInlineLayout (
         focusInAspect, optionToggleAspect,
         createPickHandlersAspect,
         inputAspect, picksList, buildChoiceAspect, 
-        setDisabledComponentAspect, resetLayoutAspect,
-        addPickAspect
+        setDisabledComponentAspect, resetLayoutAspect
     } = aspects;
 
     let picksElement = picksDom.picksElement;
@@ -67,6 +66,7 @@ export function MultiSelectInlineLayout (
         hoveredChoiceAspect.resetHoveredChoice();
         if (popupAspect.isChoicesVisible())
         {
+            // COOMENT OUT DEBUGGING popup layout
             popupAspect.setChoicesVisible(false);
             
             choicesElement.removeEventListener("mousedown", skipoutMousedown);
@@ -90,7 +90,7 @@ export function MultiSelectInlineLayout (
         filterDom.setFocusIfNotTarget(event.target);
         if (preventDefaultClickEvent != event) {
             if (popupAspect.isChoicesVisible()){
-                hideChoices()
+                hideChoices() 
             } else {
                 if (filterManagerAspect.getNavigateManager().getCount()>0)
                     showChoices();
@@ -259,7 +259,7 @@ export function MultiSelectInlineLayout (
     var onKeyDown = (event) => {
         let keyCode = event.which;
         var empty = filterDom.isEmpty();
-            if ([ 13,
+        if ([ 13,
               27  // '27-esc' there is "just in case", I can imagine that there are user agents that do UNDO
             ].indexOf(keyCode)>=0 
             || (keyCode == 9 && !empty) //  otherwice there are no keyup (true at least for '9-tab'),
@@ -269,16 +269,16 @@ export function MultiSelectInlineLayout (
             // '13-enter'  - prevention against form's default button 
             // but doesn't help with bootsrap modal ESC or ENTER (close behaviour);
         }
-            if ([ 38, 40 ].indexOf(keyCode) >= 0 )
+        if ([ 38, 40 ].indexOf(keyCode) >= 0 )
             event.preventDefault(); 
-            if (keyCode == 8 /*backspace*/) {
+        if (keyCode == 8 /*backspace*/) {
             // NOTE: this will process backspace only if there are no text in the input field
             // If user will find this inconvinient, we will need to calculate something like this
             // let isBackspaceAtStartPoint = (this.filterInput.selectionStart == 0 && this.filterInput.selectionEnd == 0);
             if (empty) {
-                let wrap = picksList.getTail();
-                if (wrap){ 
-                    wrap.pick?.setSelectedFalse(); 
+                let pick = picksList.getTail();
+                if (pick){ 
+                    pick.setSelectedFalse(); 
                     popupAspect.updatePopupLocation();
                 }
             }
@@ -354,16 +354,16 @@ export function MultiSelectInlineLayout (
     buildChoiceAspect.buildChoice = (wrap) => {
         origBuildChoice(wrap);
         let pickHandlers = createPickHandlersAspect.createPickHandlers(wrap);
-        wrap.choice.remove = composeSync(wrap.choice.remove, ()=>{
-            if (pickHandlers.removePick) {
-                pickHandlers.removePick();
-                pickHandlers.removePick=null;
+
+        wrap.choice.remove = composeSync(wrap.choice.remove, () => {
+            if (pickHandlers.removeAndDispose) {
+                pickHandlers.removeAndDispose();
+                pickHandlers.removeAndDispose=null;
             }
         })
         
         let unbindChoiceElement = adoptChoiceElement(wrap);
-        wrap.choice.dispose = composeSync(unbindChoiceElement, wrap.choice.dispose)
-        addPickAspect.addPick(wrap, pickHandlers);
+        wrap.choice.dispose = composeSync(unbindChoiceElement, wrap.choice.dispose);
     }
 
     return {

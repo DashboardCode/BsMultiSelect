@@ -1,4 +1,22 @@
-export const css = {
+import {closestByClassName} from '../ToolsDom'
+
+export function Bs4Plugin(){
+}
+
+Bs4Plugin.plugDefaultConfig = (defaults) => {
+    defaults.css = css;
+    setDefaults(defaults);
+}
+
+function setDefaults(defaults){
+    defaults.useCssPatch = true;
+    defaults.cssPatch = cssPatch;
+    defaults.pickButtonHTML = '<button aria-label="Remove" tabIndex="-1" type="button"><span aria-hidden="true">&times;</span></button>'
+    defaults.composeGetSize = composeGetSize;
+    defaults.getDefaultLabel = getDefaultLabel;
+}
+
+const css = {
     choices: 'dropdown-menu', // bs4, in bsmultiselect.scss as ul.dropdown-menu
     choice_hover:  'hover',  //  not bs4, in scss as 'ul.dropdown-menu li.hover'
     choice_selected: '', 
@@ -27,7 +45,7 @@ export const css = {
     choiceLabel_disabled: ''  
 }
 
-export const cssPatch = {
+const cssPatch = {
     choices: {listStyleType:'none'},
     picks: {listStyleType:'none', display:'flex', flexWrap:'wrap',  height: 'auto', marginBottom: '0'},
     choice: 'px-md-2 px-1',  
@@ -62,3 +80,38 @@ export const cssPatch = {
     choiceCheckBox: {color: 'inherit'},
     choiceLabel_disabled: {opacity: '.65'}  // more flexible than {color: '#6c757d'}; note: avoid opacity on pickElement's border; TODO write to BS4 
 };
+
+
+function composeGetSize(selectElement){
+    let inputGroupElement = closestByClassName(selectElement, 'input-group');
+    let getSize = null;
+    if (inputGroupElement){
+        getSize = function(){
+            var value = null;
+            if (inputGroupElement.classList.contains('input-group-lg'))
+                value = 'lg';
+            else if (inputGroupElement.classList.contains('input-group-sm'))
+                value = 'sm';
+            return value;
+        }
+    }
+    else{ 
+        getSize = function(){
+            var value = null;
+            if (selectElement.classList.contains('custom-select-lg') || selectElement.classList.contains('form-control-lg'))
+                value = 'lg';
+            else if (selectElement.classList.contains('custom-select-sm') || selectElement.classList.contains('form-control-sm'))
+                value = 'sm'; 
+            return value;
+        }
+    }
+    return getSize;
+}
+
+function getDefaultLabel(selectElement){
+    let value = null;
+    let formGroup = closestByClassName(selectElement,'form-group');
+    if (formGroup) 
+        value = formGroup.querySelector(`label[for="${selectElement.id}"]`);
+    return value;
+}

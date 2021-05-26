@@ -9,67 +9,90 @@ export function IsChoiceSelectableAspect(){ // TODO rename to IsSelectableByUser
 // todo: remove?
 export function ChoiceClickAspect(optionToggleAspect, filterDom){
     return {
-
         choiceClick: (wrap) => {
-            //let pickHandlers = createPickHandlersAspect.createPickHandlers(wrap);
-            //addPickAspect.addPick(wrap, pickHandlers);
-            optionToggleAspect.toggle(wrap); // TODO: return to it?
+            optionToggleAspect.toggle(wrap);
             filterDom.setFocus();
         }
     }
 }
+
+// // fullMatchAspect trySetWrapSelected(fullMatchWrap.option, composeUpdateSelected(fullMatchWrap, true), true);
 
 export function OptionToggleAspect(createPickHandlersAspect, addPickAspect /*, setOptionSelectedAspect*/){
     return {
         toggle: (wrap) => {
             let pickHandlers = createPickHandlersAspect.createPickHandlers(wrap);
             addPickAspect.addPick(wrap, pickHandlers);
-            //return setOptionSelectedAspect.setOptionSelected(wrap, !wrap.isOptionSelected)
+            return true; // TODO: process setOptionSelectedAspect
         }
     }
 }
 
 export function AddPickAspect(){
     return {
-        addPick(wrap, pickTools){
-            pickTools.addPick();
+        addPick(wrap, pickHandlers){
+            return pickHandlers.producePick();
+        }
+    }
+}
+
+export function FullMatchAspect(createPickHandlersAspect, addPickAspect){
+    return {
+        fullMatch(wrap){
+            let pickHandlers = createPickHandlersAspect.createPickHandlers(wrap);
+            addPickAspect.addPick(wrap, pickHandlers);
+            return true; // TODO: process setOptionSelectedAspect
         }
     }
 }
 
 export function RemovePickAspect(){
     return {
-        removePick(wrap){
-            wrap.pick.dispose();
+        removePick(wrap, pick){
+            pick.dispose(); // overrided in SelectedOptionPlugin with trySetWrapSelected(wrap, false);
         }
     }
 }
 
-export function CreatePickHandlersAspect(picksList, removePickAspect, buildPickAspect){
+export function ProducePickAspect(picksList, removePickAspect, buildPickAspect){
+    return {
+        producePick(wrap, pickHandlers){
+            let pick = buildPickAspect.buildPick(wrap, (event)=>pickHandlers.removeOnButton(event));
+                
+            let fixSelectedFalse = () => removePickAspect.removePick(wrap, pick)
+
+            pickHandlers.removeOnButton = fixSelectedFalse;
+            
+            pick.pickElementAttach();
+            let {remove: removeFromPicksList} = picksList.add(pick);
+            pick.setSelectedFalse = fixSelectedFalse;
+            pick.wrap = wrap; 
+            pick.dispose = composeSync(
+                removeFromPicksList,
+                ()=>{
+                    pick.setSelectedFalse=null;
+                    pick.wrap = null;
+                }, 
+                pick.dispose);
+            pickHandlers.removeAndDispose = () => pick.dispose();
+            return pick;
+        }
+    }
+}
+
+// redefined in MultiSelectInlineLayout to redefine handlers removeOnButton
+// redefined in SelectedOptionPlugin to compose wrap.updateSelected
+export function CreatePickHandlersAspect(producePickAspect){
     return{
         createPickHandlers(wrap){
-            let setSelectedFalse = () => removePickAspect.removePick(wrap)
-            
-            let pickTools = { 
-                addPick: null, 
-                removePick: null,  
-                removeOnButton: setSelectedFalse 
+            let pickHandlers = { 
+                producePick: null,  // not redefined directly, but redefined in addPickAspect
+                removeAndDispose: null,  // not redefined, 
+                removeOnButton: null // redefined in MultiSelectInlineLayout
             }
             
-            pickTools.addPick = () => { 
-                buildPickAspect.buildPick(wrap, (event)=>pickTools.removeOnButton(event));
-                let pick = wrap.pick;
-                pick.pickElementAttach();
-                let removeFromList = picksList.add(wrap);
-                pick.setSelectedFalse = setSelectedFalse; 
-                pick.dispose = composeSync(
-                    removeFromList,
-                    ()=>{
-                        pick.setSelectedFalse=null;
-                    }, pick.dispose);
-                pickTools.removePick = () => pick.dispose();
-            };
-            return pickTools;
+            pickHandlers.producePick = () => producePickAspect.producePick(wrap, pickHandlers);
+            return pickHandlers;
         }
     }
 }

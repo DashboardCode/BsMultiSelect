@@ -1,11 +1,15 @@
 'use strict'
 
 const path    = require('path')
-const babel   = require('rollup-plugin-babel')
+const { babel } = require('@rollup/plugin-babel')
+const { nodeResolve } = require('@rollup/plugin-node-resolve')
+const banner = require('./banner.js')
 
 const pkg     = require(path.resolve(__dirname, '../package.json'))
 const year    = new Date().getFullYear()
 const isEsm   = process.env.ESM === 'true'
+const isBundle = process.env.BUNDLE  === 'true'
+const isBS4 = process.env.BS4  === 'true'
 
 // let presets = [
 //   [
@@ -25,6 +29,8 @@ const isEsm   = process.env.ESM === 'true'
 let bundleName = process.env.ALT;
 if (!bundleName) 
    bundleName ='BsMultiSelect';
+if (isBS4)
+   bundleName +=".bs4";
 
 let fileDest  = `${bundleName}${isEsm ? '.esm' : ''}.js`;
 let external  = ['jquery', 'popper.js'];

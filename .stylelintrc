@@ -4,6 +4,9 @@
     "stylelint-order"
   ],
   "rules": {
+    "no-invalid-position-at-import-rule": null,
+    "selector-descendant-combinator-no-non-space":null,
+    "declaration-colon-space-after":null,
     "at-rule-empty-line-before": null,
     "at-rule-name-space-after": "always",
     "at-rule-no-vendor-prefix": true,

@@ -1,11 +1,12 @@
 export function InputAspect(
     filterDom,
-    filterManagerAspect
+    filterManagerAspect,
+    fullMatchAspect
     ){
 
     return {
         // overrided in SelectedOptionPlugin
-        processInput(){
+        processInput(){ 
             let filterInputValue = filterDom.getValue();
             let text = filterInputValue.trim();
             var isEmpty=false;
@@ -15,7 +16,26 @@ export function InputAspect(
             {
                 filterManagerAspect.setFilter(text.toLowerCase());
             }
-            // improve it 
+            
+            if (!isEmpty)
+            {
+                if ( filterManagerAspect.getNavigateManager().getCount() == 1)
+                {
+                    // todo: move exact match to filterManager
+                    let fullMatchWrap =  filterManagerAspect.getNavigateManager().getHead();
+                    let text = filterManagerAspect.getFilter();
+                    if (fullMatchWrap.choice.searchText == text)
+                    {
+                        //console.log("fullMatchAspect.fullMatch");
+                        let success = fullMatchAspect.fullMatch(fullMatchWrap); 
+                        if (success) {
+                            filterDom.setEmpty();
+                            isEmpty = true;
+                        }
+                    }
+                }
+            }
+
             return {filterInputValue, isEmpty};
         }
     }

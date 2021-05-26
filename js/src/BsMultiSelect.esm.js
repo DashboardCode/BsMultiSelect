@@ -1,6 +1,6 @@
 import {BsMultiSelect as BsMultiSelectBase}  from './BsMultiSelect'
 import {plugDefaultConfig, plugMergeSettings}  from './PluginManager'
-import {css} from './BsCss'
+import {Bs5Plugin} from './plugins/Bs5Plugin'
 import {LabelPlugin} from './plugins/LabelPlugin'
 import {RtlPlugin} from './plugins/RtlPlugin'
 import {FormResetPlugin} from './plugins/FormResetPlugin'
@@ -24,12 +24,12 @@ import {extendIfUndefined, composeSync} from './ToolsJs'
 import  {EventBinder} from './ToolsDom'
 import  {addStyling, toggleStyling} from './ToolsStyling'
 
-const defaults = {containerClass : "dashboardcode-bsmultiselect", css: css}
-const defaultPlugins = [CssPatchPlugin, SelectElementPlugin, LabelPlugin, HiddenOptionPlugin, ValidationApiPlugin, 
+const defaults = {containerClass : "dashboardcode-bsmultiselect"}
+const defaultPlugins = [Bs5Plugin, CssPatchPlugin, SelectElementPlugin, LabelPlugin, HiddenOptionPlugin, ValidationApiPlugin, 
     BsAppearancePlugin, FormResetPlugin, RtlPlugin, PlaceholderPlugin , OptionsApiPlugin,
     JQueryMethodsPlugin, SelectedOptionPlugin, FormRestoreOnBackwardPlugin,  DisabledOptionPlugin, PicksApiPlugin];
 
-export function BsMultiSelect(element, environment, settings){
+function BsMultiSelect(element, environment, settings){
     if (!environment.trigger)
         environment.trigger = (e, name) => e.dispatchEvent(new environment.window.Event(name))
 
@@ -50,5 +50,12 @@ export function BsMultiSelect(element, environment, settings){
 plugDefaultConfig(defaultPlugins, defaults);
 BsMultiSelect.defaults=defaults;
 BsMultiSelect.tools = {EventBinder, addStyling, toggleStyling, composeSync}
-BsMultiSelect.plugins = {CssPatchPlugin, SelectElementPlugin, LabelPlugin, HiddenOptionPlugin, ValidationApiPlugin, 
+BsMultiSelect.plugins = {Bs5Plugin, CssPatchPlugin, SelectElementPlugin, LabelPlugin, HiddenOptionPlugin, ValidationApiPlugin, 
     BsAppearancePlugin, FormResetPlugin, RtlPlugin, PlaceholderPlugin , OptionsApiPlugin, JQueryMethodsPlugin, SelectedOptionPlugin, FormRestoreOnBackwardPlugin,  DisabledOptionPlugin, PicksApiPlugin}
+
+export  {
+    BsMultiSelect, 
+    addStyling, toggleStyling, composeSync,
+    Bs5Plugin, CssPatchPlugin, SelectElementPlugin, LabelPlugin, HiddenOptionPlugin, ValidationApiPlugin, 
+    BsAppearancePlugin, FormResetPlugin, RtlPlugin, PlaceholderPlugin , OptionsApiPlugin,
+    JQueryMethodsPlugin, SelectedOptionPlugin, FormRestoreOnBackwardPlugin,  DisabledOptionPlugin, PicksApiPlugin}

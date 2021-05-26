@@ -1,11 +1,12 @@
 import  {EventBinder} from './ToolsDom';
 import  {addStyling, toggleStyling} from './ToolsStyling';
 
-export function PickDomFactory(css, componentPropertiesAspect, optionPropertiesAspect){
+export function PickDomFactory(css, componentPropertiesAspect, optionPropertiesAspect, pickButtonAspect){
     return { 
         create(pickElement, wrap, remove){
             let eventBinder = EventBinder();
-            pickElement.innerHTML = '<span></span><button aria-label="Remove" tabIndex="-1" type="button"><span aria-hidden="true">&times;</span></button>'
+            let buttonHTML = pickButtonAspect.getButtonHTML();
+            pickElement.innerHTML = '<span></span>'+buttonHTML;
             let pickContentElement = pickElement.querySelector('SPAN');
             let pickButtonElement  = pickElement.querySelector('BUTTON');
             eventBinder.bind(pickButtonElement, "click", remove);

@@ -28,32 +28,26 @@
   color: #6c757d;
   opacity: 1;
 }
-.dashboardcode-bsmultiselect ul.form-control::-ms-input-placeholder {
-  color: #6c757d;
-  opacity: 1;
-}
 .dashboardcode-bsmultiselect ul.form-control::placeholder {
   color: #6c757d;
   opacity: 1;
 }
 .dashboardcode-bsmultiselect ul.form-control > li.badge {
   padding-left: 0;
-  line-height: 1.5em;
 }
-.dashboardcode-bsmultiselect ul.form-control > li.badge button.close {
+.dashboardcode-bsmultiselect ul.form-control > li.badge button.btn-close {
   float: none;
-  font-size: 1.5em;
-  line-height: 0.9em;
+  font-size: 0.8em;
 }
 .dashboardcode-bsmultiselect ul.form-control > li.badge span.disabled {
   opacity: 0.65;
 }
 .dashboardcode-bsmultiselect ul.form-control.focus {
-  color: #495057;
+  color: #212529;
   background-color: #fff;
-  border-color: #80bdff;
+  border-color: #86b7fe;
   outline: 0;
-  box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+  box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
 }
 .dashboardcode-bsmultiselect ul.form-control.form-control-sm {
   min-height: calc(1.5em + 0.5rem + 2px);
@@ -68,18 +62,18 @@
   font-size: 1.25rem;
 }
 .was-validated .dashboardcode-bsmultiselect ul.form-control:valid, .dashboardcode-bsmultiselect ul.form-control.is-valid {
-  border-color: #28a745;
+  border-color: #198754;
 }
 .was-validated .dashboardcode-bsmultiselect ul.form-control:valid.focus, .dashboardcode-bsmultiselect ul.form-control.is-valid.focus {
-  border-color: #28a745;
-  box-shadow: 0 0 0 0.2rem rgba(40, 167, 69, 0.25);
+  border-color: #198754;
+  box-shadow: 0 0 0 0.25rem rgba(25, 135, 84, 0.25);
 }
 .was-validated .dashboardcode-bsmultiselect ul.form-control:invalid, .dashboardcode-bsmultiselect ul.form-control.is-invalid {
   border-color: #dc3545;
 }
 .was-validated .dashboardcode-bsmultiselect ul.form-control:invalid.focus, .dashboardcode-bsmultiselect ul.form-control.is-invalid.focus {
   border-color: #dc3545;
-  box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25);
+  box-shadow: 0 0 0 0.25rem rgba(220, 53, 69, 0.25);
 }
 .dashboardcode-bsmultiselect ul.dropdown-menu {
   list-style-type: none;
@@ -96,15 +90,15 @@
   background-color: transparent;
   border: 0;
 }
-.dashboardcode-bsmultiselect ul.dropdown-menu > li .custom-control {
+.dashboardcode-bsmultiselect ul.dropdown-menu > li .form-check {
   justify-content: flex-start;
 }
-.dashboardcode-bsmultiselect ul.dropdown-menu > li .custom-control-input.disabled ~ .custom-control-label {
-  color: #6c757d;
+.dashboardcode-bsmultiselect ul.dropdown-menu > li .form-check-input.disabled ~ .form-check-label {
+  color: 0.5;
 }
 .dashboardcode-bsmultiselect ul.dropdown-menu .hover {
   color: var(--primary);
-  background-color: #f8f9fa;
+  background-color: #e9ecef;
 }
 .dashboardcode-bsmultiselect.input-group.input-group-sm ul.form-control {
   min-height: calc(1.5em + 0.5rem + 2px);
@@ -119,30 +113,29 @@
   font-size: 1.25rem;
 }
 
-.was-validated .dashboardcode-bsmultiselect ul.dropdown-menu > li .custom-control-input:valid:checked ~ .custom-control-label {
+.was-validated .dashboardcode-bsmultiselect ul.dropdown-menu > li .form-check-input:valid:checked ~ .form-check-label {
   color: #212529;
 }
 
-.was-validated .dashboardcode-bsmultiselect ul.dropdown-menu > li .custom-control-input:valid:not(:checked) ~ .custom-control-label {
+.was-validated .dashboardcode-bsmultiselect ul.dropdown-menu > li .form-check-input:valid:not(:checked) ~ .form-check-label {
   color: #212529;
 }
 
-.was-validated .dashboardcode-bsmultiselect ul.dropdown-menu > li.hover .custom-control-input:valid:checked ~ .custom-control-label {
-  color: var(--primary);
+.was-validated .dashboardcode-bsmultiselect ul.dropdown-menu > li.hover .form-check-input:valid:checked ~ .form-check-label {
+  color: var(--bs-primary);
 }
 
-.was-validated .dashboardcode-bsmultiselect ul.dropdown-menu > li.hover .custom-control-input:valid:not(:checked) ~ .custom-control-label {
-  color: var(--primary);
+.was-validated .dashboardcode-bsmultiselect ul.dropdown-menu > li.hover .form-check-input:valid:not(:checked) ~ .form-check-label {
+  color: var(--bs-primary);
 }
 
-.was-validated .dashboardcode-bsmultiselect ul.dropdown-menu > li .custom-control-input:valid:checked ~ .custom-control-label::before {
-  color: #fff;
-  border-color: #007bff;
-  background-color: #007bff;
+.was-validated .dashboardcode-bsmultiselect ul.dropdown-menu > li .form-check-input:valid:checked {
+  border-color: var(--bs-primary);
+  background-color: var(--bs-primary);
 }
 
-.was-validated .dashboardcode-bsmultiselect ul.dropdown-menu > li .custom-control-input:valid:not(:checked) ~ .custom-control-label::before {
-  border: #adb5bd solid 1px;
+.was-validated .dashboardcode-bsmultiselect ul.dropdown-menu > li .form-check-input:valid:not(:checked) {
+  border: 1px solid rgba(0, 0, 0, 0.25);
 }
 
 /*# sourceMappingURL=BsMultiSelect.css.map */

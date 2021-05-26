@@ -1,13 +1,7 @@
 import {createCss, extendCss} from '../ToolsStyling';
 import {isBoolean} from '../ToolsJs';
-import {cssPatch} from '../BsCss'
 
 export function CssPatchPlugin(){
-}
-
-CssPatchPlugin.plugDefaultConfig = (defaults) => {
-    defaults.useCssPatch = true;
-    defaults.cssPatch = cssPatch;
 }
 
 CssPatchPlugin.plugMergeSettings = (configuration, defaults, settings) => {

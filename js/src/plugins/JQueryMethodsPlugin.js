@@ -5,7 +5,7 @@ export function JQueryMethodsPlugin(pluginData){
     let {staticDom, choicesDom, filterDom, picksList} = pluginData;
     return {
         buildApi(api){
-            api.getContainer = () => staticDom.containerElement;
+            api.getContainer = () =>  staticDom.containerElement;
             api.getChoices = () => choicesDom.choicesElement;
             api.getFilterInput = () => filterDom.filterInputElement;
             api.getPicks = () => picksDom.picksElement;

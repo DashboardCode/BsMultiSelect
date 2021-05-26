@@ -8,13 +8,13 @@ import {composeSync} from '../ToolsJs';
 // OptionToggleAspect overrided in DisabledOptionPlugin
 
 // wrap.isOptionSelected ,  wrap.updateSelected
-export function SelectedOptionPlugin(pluginData){
+export function SelectedOptionPlugin(aspects){
     let {configuration, wrapsCollection, 
         createWrapAspect, buildChoiceAspect, removePickAspect,
         resetLayoutAspect, picksList, isChoiceSelectableAspect, optionToggleAspect,
-        inputAspect, filterDom, filterManagerAspect, createPickHandlersAspect, addPickAspect, 
+        /*inputAspect, filterDom, filterManagerAspect,*/ createPickHandlersAspect, addPickAspect,  fullMatchAspect, 
         onChangeAspect, filterPredicateAspect
-        } = pluginData;
+        } = aspects;
     let {getSelected : getIsOptionSelected, setSelected : setIsOptionSelected, options} = configuration;
     
     if (options) {
@@ -35,13 +35,49 @@ export function SelectedOptionPlugin(pluginData){
         }
     }
 
-    function trySetWrapSelected(wrap, booleanValue){
+    let origFilterPredicate = filterPredicateAspect.filterPredicate;
+    filterPredicateAspect.filterPredicate = (wrap, text) =>
+        !wrap.isOptionSelected  &&  origFilterPredicate(wrap, text)
+
+
+    let  origBuildChoice = buildChoiceAspect.buildChoice;
+    buildChoiceAspect.buildChoice= (wrap) => {
+        origBuildChoice(wrap);
+        wrap.updateSelected = () => {
+            wrap.choice.choiceDomManagerHandlers.updateSelected();
+            onChangeAspect.onChange();
+        }
+        wrap.dispose = composeSync( ()=>{wrap.updateSelected = null}, wrap.dispose)
+    }
+
+    // TODO: test this instead of wrap.updateSelected
+    // function updateSelected(wrap){
+    //     if (wrap.pick){
+    //         if (wrap.isOptionSelected)
+    //             pickHandlers.producePick();
+    //         else {
+    //             pickHandlers.removeAndDispose();
+    //             pickHandlers.removeAndDispose=null;
+    //         }
+    //     }
+    //     wrap.choice.choiceDomManagerHandlers.updateSelected();
+    //     onChangeAspect.onChange();
+    // }
+
+
+    function composeUpdateSelected(wrap, booleanValue){
+        return () => {
+            wrap.isOptionSelected = booleanValue;
+            wrap.updateSelected();
+        }
+    }
+
+    function trySetWrapSelected(option, updateSelected, booleanValue){ //  wrap.option
         let success = false;
-        var confirmed = setIsOptionSelected(wrap.option, booleanValue);
-            if (!(confirmed===false)) {
-                wrap.isOptionSelected = booleanValue;
-                wrap.updateSelected();
-                success = true;
+        var confirmed = setIsOptionSelected(option, booleanValue);
+        if (!(confirmed===false)) {
+            updateSelected();
+            success = true;
         }
         return success;
     }
@@ -54,97 +90,53 @@ export function SelectedOptionPlugin(pluginData){
         return wrap;
     }
     
-    let origFilterPredicate = filterPredicateAspect.filterPredicate
-    filterPredicateAspect.filterPredicate = (wrap, text) =>
-        !wrap.isOptionSelected  &&  origFilterPredicate(wrap, text)
 
     let origToggle = optionToggleAspect.toggle; // TODO: improve design, no replace
     optionToggleAspect.toggle= (wrap) => {
-        return trySetWrapSelected(wrap, !wrap.isOptionSelected)
+        return trySetWrapSelected(wrap.option, composeUpdateSelected(wrap, !wrap.isOptionSelected), !wrap.isOptionSelected)
     }
-
-    // let origChoiceClick = choiceClickAspect.choiceClick; // TODO: improve design, no replace
-    // choiceClickAspect.choiceClick= (wrap) => {
-    //     optionToggleAspect.toggle(wrap);
-    //     filterDom.setFocus();
-    // }
+ 
+    let origFullMatch = fullMatchAspect.fullMatch;
+    fullMatchAspect.fullMatch = (wrap) => {
+        return trySetWrapSelected(wrap.option, composeUpdateSelected(wrap, true), true);
+    }
 
     let removePickOrig = removePickAspect.removePick; // TODO: improve design, no replace
-    removePickAspect.removePick = (wrap) => { // TODO: try remove pick
-        return trySetWrapSelected(wrap, false);
+    removePickAspect.removePick = (wrap, pick) => { // TODO: try remove pick
+        return trySetWrapSelected(wrap.option, composeUpdateSelected(wrap, false), false);
     }
 
     
-    let  origBuildChoice = buildChoiceAspect.buildChoice;
-    buildChoiceAspect.buildChoice= (wrap) => {
-        origBuildChoice(wrap);
-        wrap.updateSelected = () => {
-            wrap.choice.choiceDomManagerHandlers.updateSelected();
-            onChangeAspect.onChange();
-        }
-        wrap.dispose = composeSync( ()=>{ wrap.updateSelected = null}, wrap.dispose)
-    }
-    
-    // TODO override buildPick and create .setSelectedFalse
-    let origProcessInput = inputAspect.processInput;
-
-    inputAspect.processInput =()=>{
-        let origResult = origProcessInput();
-        if (!origResult.isEmpty)
-        {
-            if ( filterManagerAspect.getNavigateManager().getCount() == 1)
-            {
-                // todo: move exact match to filterManager
-                let fullMatchWrap =  filterManagerAspect.getNavigateManager().getHead();
-                let text = filterManagerAspect.getFilter();
-                if (fullMatchWrap.choice.searchText == text)
-                {
-                    let success = trySetWrapSelected(fullMatchWrap, true);
-                    if (success) {
-                        filterDom.setEmpty();
-                        origResult.isEmpty = true;
-                    }
-                }
-            }
-        }
-        return origResult;
-    }
-
-    // TODO: test this instead of wrap.updateSelected
-    // function updateSelected(wrap){
-    //     if (wrap.pick){
-    //         if (wrap.isOptionSelected)
-    //             pickHandlers.addPick();
-    //         else {
-    //             pickHandlers.removePick();
-    //             pickHandlers.removePick=null;
-    //         }
-    //     }
-    //     wrap.choice.choiceDomManagerHandlers.updateSelected();
-    //     onChangeAspect.onChange();
-    // }
-
     let origCreatePickHandlers =  createPickHandlersAspect.createPickHandlers;
     createPickHandlersAspect.createPickHandlers = (wrap)=>{
         let pickHandlers = origCreatePickHandlers(wrap);
         wrap.updateSelected = composeSync(
             ()=>{
-                if (wrap.isOptionSelected)
-                    pickHandlers.addPick();
+                if (wrap.isOptionSelected){
+                    let pick = pickHandlers.producePick();
+                    wrap.pick = pick;
+                    pick.dispose = composeSync(pick.dispose, ()=>{wrap.pick=null;});
+                }
                 else {
-                    pickHandlers.removePick();
-                    pickHandlers.removePick=null;
+                    pickHandlers.removeAndDispose();
+                    pickHandlers.removeAndDispose=null;
                 }
             },
             wrap.updateSelected
         )
+
+        addPickAspect.addPick(wrap, pickHandlers); 
         return pickHandlers;
     }
 
     let origAddPick =  addPickAspect.addPick;
-    addPickAspect.addPick = (wrap, pickTools) => {
-        if (wrap.isOptionSelected)
-            origAddPick(wrap, pickTools);
+    addPickAspect.addPick = (wrap, pickHandlers) => {
+        if (wrap.isOptionSelected){
+            let pick = origAddPick(wrap, pickHandlers);
+            wrap.pick = pick;
+            pick.dispose = composeSync(pick.dispose, ()=>{wrap.pick=null;});
+            return pick;
+        }
     }
 
     return {
@@ -154,25 +146,24 @@ export function SelectedOptionPlugin(pluginData){
                 wrapsCollection.forLoop(
                     wrap => {
                         if (isChoiceSelectableAspect.isSelectable(wrap) &&  !wrap.isOptionSelected)
-                            trySetWrapSelected(wrap, true)
+                            trySetWrapSelected(wrap.option, composeUpdateSelected(wrap, true), true)
                     }
                 ); 
             }
         
             api.deselectAll= ()=>{
                 resetLayoutAspect.resetLayout(); // always hide 1st
-                picksList.forEach(wrap=>wrap.pick.setSelectedFalse())
+                picksList.forEach(pick=>pick.setSelectedFalse())
             }
 
             api.setOptionSelected = (key, value) => {
                 let wrap = wrapsCollection.get(key);
-                return trySetWrapSelected(wrap, value);
+                return trySetWrapSelected(wrap.option, composeUpdateSelected(wrap, value), value);
             }
 
             // used in FormRestoreOnBackwardPlugin
             api.updateOptionsSelected = () => wrapsCollection.forLoop( wrap => updateChoiceSelected(wrap, getIsOptionSelected))
             api.updateOptionSelected = (key) => updateChoiceSelected(wrapsCollection.get(key), getIsOptionSelected)
-
         }
     }
 }

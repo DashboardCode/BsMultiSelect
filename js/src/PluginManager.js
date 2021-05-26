@@ -42,8 +42,8 @@ export function plugMergeSettings(constructors, configuration, defaults, setting
     }
 }
 
-export function plugStaticDom(constructors, pluginData){
+export function plugStaticDom(constructors, aspects){
     for(let i = 0; i<constructors.length; i++){
-        constructors[i].plugStaticDom?.(pluginData)
+        constructors[i].plugStaticDom?.(aspects)
     }
 }

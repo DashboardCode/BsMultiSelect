@@ -70,16 +70,14 @@
             opacity: 1;
         }
         
+            //pickButton: {fontSize:'0.8em',  float : "none", verticalAlign: "text-top"},
+
         // JS css/cssPatch: pick
         > li.badge {
             padding-left: 0;
-            line-height: 1.5em;
-            button.close {
+            button.btn-close {
                 float: none;
-                font-size: 1.5em;
-                line-height: .9em;
-                // BS close orginally float:right, therefore it impossible to configure no-warp policy
-                // with .css("white-space", "nowrap") or  .css("display", "inline-block"); TODO: migrate to flex?
+                font-size: .8em;
             }
             span.disabled {
                 opacity: $btn-disabled-opacity;
@@ -96,10 +94,10 @@
         }
     
         &.form-control-lg {
-                min-height: #{$input-height-lg};
-                input{
-                    font-size: $font-size-lg;
-                }
+            min-height: #{$input-height-lg};
+            input{
+                font-size: $font-size-lg;
+            }
         }
     }
     @include form-validation-state-bsmultiselect("valid", $form-feedback-valid-color);
@@ -123,12 +121,14 @@
             white-space: nowrap;
             background-color: transparent;
             border: 0;
-            .custom-control{ // BS problem: without this dropdown menu's custom checkboxes on inline form justified center
+
+            .form-check{ // BS problem: without this dropdown menu's custom checkboxes on inline form justified center
                 justify-content: flex-start; // 'initial' works well but not for IE11
             }
-            .custom-control-input.disabled ~ .custom-control-label {
-                color: $custom-control-label-disabled-color;
+            .form-check-input.disabled ~ .form-check-label {
+                color: $form-check-input-disabled-opacity; // $custom-control-label-disabled-color;
             }
+
         }.hover{
             // from bs4 _dropdown.scss
             color: var(--primary); //$dropdown-link-hover-color;
@@ -155,33 +155,32 @@
     }
 }
 
-// Till the end I solving BS4 .was-validated problem: no possibility to exclude custom checkboxes from validation styling.
+// From this I am solving BS4 .was-validated problem: impossibility to exclude custom checkboxes from validation styling.
 // So there we redefine pseudoclasses :valid:checked and :valid:not(:checked) - our options are allready valid.
 // Note: nested form for dropdown with 'novalidate ' attribute possibly could solve it but nested forms are not allowed
 
-// 1. reset "coloring"  (for both checked and uchecked)
-.was-validated .dashboardcode-bsmultiselect ul.dropdown-menu > li .custom-control-input:valid:checked ~ .custom-control-label{
-    color: $dropdown-color;
+// 1. reset "coloring"  (for both checked and uchecked) labels
+.was-validated .dashboardcode-bsmultiselect ul.dropdown-menu > li .form-check-input:valid:checked ~ .form-check-label{
+    color: $dropdown-link-color;
 }
-.was-validated .dashboardcode-bsmultiselect ul.dropdown-menu > li .custom-control-input:valid:not(:checked) ~ .custom-control-label{
-    color: $dropdown-color;
+.was-validated .dashboardcode-bsmultiselect ul.dropdown-menu > li .form-check-input:valid:not(:checked) ~ .form-check-label{
+    color: $dropdown-link-color;
 }
 
-// 2. but use different color for hovered item (for both checked and uchecked)
-.was-validated .dashboardcode-bsmultiselect ul.dropdown-menu > li.hover .custom-control-input:valid:checked ~ .custom-control-label{
-    color: var(--primary);
+// 2. but use different color for hovered item (for both checked and uchecked) labels
+.was-validated .dashboardcode-bsmultiselect ul.dropdown-menu > li.hover .form-check-input:valid:checked ~ .form-check-label{
+    color: var(--bs-primary);
 }
-.was-validated .dashboardcode-bsmultiselect ul.dropdown-menu > li.hover .custom-control-input:valid:not(:checked) ~ .custom-control-label{
-    color: var(--primary);
+.was-validated .dashboardcode-bsmultiselect ul.dropdown-menu > li.hover .form-check-input:valid:not(:checked) ~ .form-check-label{
+    color: var(--bs-primary);
 }
 
 // 3. reset "coloring" for checkbox ('checked' and 'not(:checked)')
-.was-validated .dashboardcode-bsmultiselect ul.dropdown-menu > li .custom-control-input:valid:checked ~ .custom-control-label::before {
-    color: $custom-control-indicator-checked-color;
-    border-color: $custom-control-indicator-checked-border-color;
-    @include gradient-bg($custom-control-indicator-checked-bg);
-    @include box-shadow($custom-control-indicator-checked-box-shadow);
+.was-validated .dashboardcode-bsmultiselect ul.dropdown-menu > li .form-check-input:valid:checked  {
+    border-color: var(--bs-primary);
+    background-color: var(--bs-primary);
 }
-.was-validated .dashboardcode-bsmultiselect ul.dropdown-menu > li .custom-control-input:valid:not(:checked) ~ .custom-control-label::before {
-    border: $custom-control-indicator-border-color solid $custom-control-indicator-border-width;
-}
+.was-validated .dashboardcode-bsmultiselect ul.dropdown-menu > li .form-check-input:valid:not(:checked) {
+    border: $form-check-input-border;
+} 
+

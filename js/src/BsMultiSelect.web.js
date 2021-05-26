@@ -19,7 +19,7 @@ import {HiddenOptionPlugin} from './plugins/HiddenOptionPlugin';
 */
 
 (
-    (window, Popper) => {
+    (window, createPopper) => {
         // was:
         // var elementPrototype = Object.create(HTMLElement.prototype);
         //  elementPrototype.createdCallback = function() { var shadowRoot = this.createShadowRoot();... shadowRoot.appendChild(elem); }
@@ -35,4 +35,4 @@ import {HiddenOptionPlugin} from './plugins/HiddenOptionPlugin';
         // }
         // addToJQueryPrototype('BsMultiSelect', createPlugin, defaults, $);
     }
-)(window, Popper)
+)(window, createPopper)

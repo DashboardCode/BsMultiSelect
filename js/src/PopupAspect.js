@@ -1,4 +1,4 @@
-export function PopupAspect(choicesElement, filterInputElement, Popper) { 
+export function PopupAspect(choicesElement, filterInputElement, createPopper) { 
     let popper = null;
     let popperConfiguration = {
         placement: 'bottom-start',
@@ -10,19 +10,12 @@ export function PopupAspect(choicesElement, filterInputElement, Popper) {
     };
     return {
         init(){ 
-            //if (!!Popper.prototype && !!Popper.prototype.constructor.name) {
-            popper = new Popper(filterInputElement, choicesElement, popperConfiguration);
-            /*}else{
-                popper=Popper.createPopper(
-                    filterInputElement,
-                    choicesElement,
-                    //  https://github.com/popperjs/popper.js/blob/next/docs/src/pages/docs/modifiers/prevent-overflow.mdx#mainaxis
-                    // {
-                    //     placement: isRtl?'bottom-end':'bottom-start',
-                    //     modifiers: { preventOverflow: {enabled:false}, hide: {enabled:false}, flip: {enabled:false} }
-                    // }
-                );
-            }*/
+            if (!!createPopper.prototype && !!createPopper.prototype.constructor.name) { // it is a constructor
+                popper = new createPopper(filterInputElement, choicesElement, popperConfiguration); 
+            }else{
+                popper = createPopper(filterInputElement, choicesElement, popperConfiguration); 
+                //throw new Error("BsMultiSelect: popper paramater is not a constructor")
+            }
         },        
         isChoicesVisible(){ return choicesElement.style.display != 'none'},
         setChoicesVisible(visible){
@@ -30,7 +23,7 @@ export function PopupAspect(choicesElement, filterInputElement, Popper) {
         },
         popperConfiguration,
         updatePopupLocation(){
-            popper.update(); 
+            popper.update();  // become async in poppoer 2; use forceUpdate if sync is needed? 
         },
         dispose(){
             popper.destroy();

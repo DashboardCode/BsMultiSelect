@@ -1,21 +1,27 @@
-# DashboardCode Multiselect plugin for Bootstrap 4
+# DashboardCode Multiselect plugin for Bootstrap 5 (and 4)
 Demo: https://dashboardcode.github.io/BsMultiSelect/
+
+Bootstrap 4 Demo : https://dashboardcode.github.io/BsMultiSelect/indexBs4.html
+
+Breaking Change: to use with legacy Bootstrap 4 reference the `BsMultiSelect4` bundle|module: e.g. https://cdn.jsdelivr.net/npm/@dashboardcode/bsmultiselect@1.0.0/dist/css/BsMultiSelect4.min.js
 
 Snippets:
 
-1. [Custom Validation](https://dashboardcode.github.io/BsMultiSelect/snippetCustomValidation.html)
+1. [Custom Validation](https://dashboardcode.github.io/BsMultiSelect/snippetCustomValidation.html), [BS4 Version](https://dashboardcode.github.io/BsMultiSelect/snippetCustomValidationBs4.html)
 
-2. [HTML Form Validation](https://dashboardcode.github.io/BsMultiSelect/snippetFormValidation.html)
+2. [HTML Form Validation](https://dashboardcode.github.io/BsMultiSelect/snippetFormValidation.html), [BS4 Version](https://dashboardcode.github.io/BsMultiSelect/snippetFormValidationBs4.html)
 
-3. [Right To Left (RTL)](https://dashboardcode.github.io/BsMultiSelect/snippetRtl.html)
+3. [Right To Left (RTL)](https://dashboardcode.github.io/BsMultiSelect/snippetRtl.html), [BS4 Version](https://dashboardcode.github.io/BsMultiSelect/snippetRtlBs4.html)
 
-4. [ES6 module, no jquery](https://dashboardcode.github.io/BsMultiSelect/snippetEsm.html)
+4. [ES6 module, no jquery](https://dashboardcode.github.io/BsMultiSelect/snippetEsm.html), [BS4 Version](https://dashboardcode.github.io/BsMultiSelect/snippetEsmBs4.html)
 
-5. [Options manipulation API](https://dashboardcode.github.io/BsMultiSelect/snippetJs.html)
+5. [Options manipulation API](https://dashboardcode.github.io/BsMultiSelect/snippetJs.html), [BS4 Version](https://dashboardcode.github.io/BsMultiSelect/snippetJsBs4.html)
 
-6. [Columns](https://dashboardcode.github.io/BsMultiSelect/snippetColumns.html)
+6. [Columns](https://dashboardcode.github.io/BsMultiSelect/snippetColumns.html), [BS4 Version](https://dashboardcode.github.io/BsMultiSelect/snippetColumnsBs4.html)
 
-CodePen, use it for bug reporting: https://codepen.io/rpokrovskij/pen/yLymQwW 
+CodePen snippets, use them for bug reporting: 
+     https://codepen.io/rpokrovskij/pen/yLymQwW  (initialized using HTML SELECT)
+     https://codepen.io/rpokrovskij/pen/ExWyZMN  (initialized using JS)
 
 There are many similar plugins but this reuses maximum of Bootrap 4 styles/classes and code. In many cases it can be adjusted for your Bootsrap theme without editing CSS or with minimal efforts. 
 
@@ -33,9 +39,9 @@ BsMultiSelect follows Bootstrap 4 conventions and use the same instruments (babe
 `npm install @dashboardcode/bsmultiselect`
 
 # CDN
-https://cdn.jsdelivr.net/npm/@dashboardcode/bsmultiselect@0.6.27/dist/js/BsMultiSelect.min.js
-https://cdn.jsdelivr.net/npm/@dashboardcode/bsmultiselect@0.6.27/dist/js/BsMultiSelect.esm.min.js
-https://cdn.jsdelivr.net/npm/@dashboardcode/bsmultiselect@0.6.27/dist/css/BsMultiSelect.min.css
+https://cdn.jsdelivr.net/npm/@dashboardcode/bsmultiselect@1.0.0/dist/js/BsMultiSelect.min.js
+https://cdn.jsdelivr.net/npm/@dashboardcode/bsmultiselect@1.0.0/dist/js/BsMultiSelect.esm.min.js
+https://cdn.jsdelivr.net/npm/@dashboardcode/bsmultiselect@1.0.0/dist/css/BsMultiSelect.min.css
 
 
 # Architecture

@@ -14,9 +14,10 @@ import { FilterManagerAspect, NavigateManager, FilterPredicateAspect } from './F
 import { BuildAndAttachChoiceAspect, BuildChoiceAspect } from './BuildChoiceAspect';
 import { FillChoicesAspect } from './FillChoicesAspect';
 import { UpdateDataAspect } from './UpdateDataAspect';
-import { CreateWrapAspect, CreateChoiceBaseAspect, OptionToggleAspect, CreatePickHandlersAspect, RemovePickAspect, AddPickAspect, ChoiceClickAspect, IsChoiceSelectableAspect, SetOptionSelectedAspect } from './CreateWrapAspect.js';
+import { CreateWrapAspect, CreateChoiceBaseAspect, OptionToggleAspect, CreatePickHandlersAspect, RemovePickAspect, AddPickAspect, FullMatchAspect, ChoiceClickAspect, IsChoiceSelectableAspect, ProducePickAspect } from './CreateWrapAspect.js';
 import { NavigateAspect, HoveredChoiceAspect } from './NavigateAspect';
 import { Wraps } from './Wraps';
+import { PickButtonAspect } from './PickButtonAspect';
 import { BuildPickAspect } from './BuildPickAspect';
 import { InputAspect } from './InputAspect';
 import { ResetFilterAspect, FocusInAspect, ResetFilterListAspect } from './ResetFilterListAspect';
@@ -28,12 +29,17 @@ import { CountableChoicesListInsertAspect } from './CountableChoicesListInsertAs
 export function BsMultiSelect(element, environment, configuration, onInit) {
   var _extendIfUndefined;
 
-  var Popper = environment.Popper,
+  var createPopper = environment.createPopper,
       window = environment.window,
       plugins = environment.plugins;
 
-  if (typeof Popper === 'undefined') {
-    throw new Error("BsMultiSelect: Popper.js (https://popper.js.org) is required");
+  if (typeof createPopper === 'undefined') {
+    createPopper = environment.Popper;
+
+    if (typeof createPopper !== 'undefined') {//console.log(`DashboarCode.BsMultiSelect: 'environment.Popper' is depricated, use - 'environment.createPopper'}`);
+    } else {
+      throw new Error("BsMultiSelect: Popper component (https://popper.js.org) is required");
+    }
   }
 
   var containerClass = configuration.containerClass,
@@ -148,18 +154,21 @@ export function BsMultiSelect(element, environment, configuration, onInit) {
 
 
   var filterDom = FilterDom(staticDom.disposablePicksElement, createElementAspect, css);
-  var popupAspect = PopupAspect(choicesDom.choicesElement, filterDom.filterInputElement, Popper);
+  var popupAspect = PopupAspect(choicesDom.choicesElement, filterDom.filterInputElement, createPopper);
   var resetFilterListAspect = ResetFilterListAspect(filterDom, filterManagerAspect);
-  var resetFilterAspect = ResetFilterAspect(filterDom, resetFilterListAspect);
-  var inputAspect = InputAspect(filterDom, filterManagerAspect); // TODO get picksDom  from staticDomFactory
+  var resetFilterAspect = ResetFilterAspect(filterDom, resetFilterListAspect); // TODO get picksDom  from staticDomFactory
 
   var picksDom = PicksDom(staticDom.picksElement, staticDom.disposablePicksElement, createElementAspect, css);
   var focusInAspect = FocusInAspect(picksDom);
-  var pickDomFactory = PickDomFactory(css, componentPropertiesAspect, optionPropertiesAspect);
+  var pickButtonAspect = PickButtonAspect(configuration.pickButtonHTML);
+  var pickDomFactory = PickDomFactory(css, componentPropertiesAspect, optionPropertiesAspect, pickButtonAspect);
   var buildPickAspect = BuildPickAspect(picksDom, pickDomFactory);
-  var createPickHandlersAspect = CreatePickHandlersAspect(picksList, removePickAspect, buildPickAspect);
+  var producePickAspect = ProducePickAspect(picksList, removePickAspect, buildPickAspect);
+  var createPickHandlersAspect = CreatePickHandlersAspect(producePickAspect);
   var choiceDomFactory = ChoiceDomFactory(css, optionPropertiesAspect);
   var optionToggleAspect = OptionToggleAspect(createPickHandlersAspect, addPickAspect);
+  var fullMatchAspect = FullMatchAspect(createPickHandlersAspect, addPickAspect);
+  var inputAspect = InputAspect(filterDom, filterManagerAspect, fullMatchAspect);
   var choiceClickAspect = ChoiceClickAspect(optionToggleAspect, filterDom);
   var buildChoiceAspect = BuildChoiceAspect(choicesDom, choiceDomFactory, choiceClickAspect);
   var buildAndAttachChoiceAspect = BuildAndAttachChoiceAspect(buildChoiceAspect);
@@ -188,11 +197,12 @@ export function BsMultiSelect(element, environment, configuration, onInit) {
     buildAndAttachChoiceAspect: buildAndAttachChoiceAspect,
     fillChoicesAspect: fillChoicesAspect,
     buildPickAspect: buildPickAspect,
+    producePickAspect: producePickAspect,
     createPickHandlersAspect: createPickHandlersAspect,
     inputAspect: inputAspect,
     resetFilterListAspect: resetFilterListAspect,
     resetFilterAspect: resetFilterAspect
-  }, _extendIfUndefined["resetLayoutAspect"] = resetLayoutAspect, _extendIfUndefined.focusInAspect = focusInAspect, _extendIfUndefined.updateDisabledComponentAspect = updateDisabledComponentAspect, _extendIfUndefined.setDisabledComponentAspect = setDisabledComponentAspect, _extendIfUndefined.appearanceAspect = appearanceAspect, _extendIfUndefined.loadAspect = loadAspect, _extendIfUndefined.updateDataAspect = updateDataAspect, _extendIfUndefined));
+  }, _extendIfUndefined["resetLayoutAspect"] = resetLayoutAspect, _extendIfUndefined.focusInAspect = focusInAspect, _extendIfUndefined.updateDisabledComponentAspect = updateDisabledComponentAspect, _extendIfUndefined.setDisabledComponentAspect = setDisabledComponentAspect, _extendIfUndefined.appearanceAspect = appearanceAspect, _extendIfUndefined.loadAspect = loadAspect, _extendIfUndefined.updateDataAspect = updateDataAspect, _extendIfUndefined.fullMatchAspect = fullMatchAspect, _extendIfUndefined));
   var pluginManager = PluginManager(plugins, aspects);
   var multiSelectInlineLayout = MultiSelectInlineLayout(aspects);
   var api = {
@@ -202,8 +212,8 @@ export function BsMultiSelect(element, environment, configuration, onInit) {
   pluginManager.buildApi(api); // after this we can pass aspects methods call without wrapping - there should be no more overridings. TODO freeze aspects?
 
   api.dispose = composeSync(resetLayoutAspect.resetLayout, disposeAspect.dispose, pluginManager.dispose, function () {
-    picksList.forEach(function (wrap) {
-      return wrap.pick.dispose();
+    picksList.forEach(function (pick) {
+      return pick.dispose();
     });
   }, multiSelectInlineLayout.dispose, // TODO move to layout
   wraps.dispose, staticManager.dispose, popupAspect.dispose, picksDom.dispose, filterDom.dispose);

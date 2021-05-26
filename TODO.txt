@@ -1,4 +1,5 @@
- 
+-1 study https://reactstrap.github.io/
+
 0. UpdateOption (for all content, selected, hidden and disabled properties)
 0aaa. move selected to plugin
 0aa. pick.dispose become to complex - simplify

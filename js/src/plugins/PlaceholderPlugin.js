@@ -59,16 +59,16 @@ export function PlaceholderPlugin(pluginData){
     resetFilterListAspect.forceResetFilter = composeSync(resetFilterListAspect.forceResetFilter, updatePlacehodlerVisibility);
             
     let origAdd = picksList.add;
-    picksList.add = (wrap) => { 
-        let removeFromList= origAdd(wrap);
+    picksList.add = (pick) => { 
+        let returnValue = origAdd(pick);
         if (picksList.getCount()==1) 
             updatePlacehodlerVisibility()
-        wrap.pick.dispose = composeSync(wrap.pick.dispose, ()=>
+        /*wrap.*/pick.dispose = composeSync(/*wrap.*/pick.dispose, ()=>
             { 
                 if (picksList.getCount()==0) 
                     updatePlacehodlerVisibility()
             })
-        return removeFromList;
+        return returnValue;
     };
 
     updateDataAspect.updateData = composeSync(updateDataAspect.updateData, updatePlacehodlerVisibility);

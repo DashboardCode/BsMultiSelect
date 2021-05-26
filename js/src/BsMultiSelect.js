@@ -22,9 +22,13 @@ import {FillChoicesAspect} from './FillChoicesAspect'
 
 import {UpdateDataAspect } from './UpdateDataAspect'
 
-import {CreateWrapAspect, CreateChoiceBaseAspect, OptionToggleAspect, CreatePickHandlersAspect, RemovePickAspect, AddPickAspect, ChoiceClickAspect, IsChoiceSelectableAspect, SetOptionSelectedAspect} from './CreateWrapAspect.js'
+import {CreateWrapAspect, CreateChoiceBaseAspect, OptionToggleAspect, CreatePickHandlersAspect, RemovePickAspect, 
+    AddPickAspect, FullMatchAspect, ChoiceClickAspect, IsChoiceSelectableAspect, ProducePickAspect} from './CreateWrapAspect.js'
 import {NavigateAspect, HoveredChoiceAspect} from './NavigateAspect'
 import {Wraps} from './Wraps'
+
+
+import {PickButtonAspect} from './PickButtonAspect'
 
 import {BuildPickAspect} from './BuildPickAspect'
 import {InputAspect} from './InputAspect'
@@ -38,10 +42,15 @@ import {CountableChoicesListInsertAspect} from './CountableChoicesListInsertAspe
 
 /// environment - common for many; configuration for concreate
 export function BsMultiSelect(element, environment, configuration, onInit){
-    var {Popper, window, plugins} = environment;
+    var {createPopper, window, plugins} = environment;
     
-    if (typeof Popper === 'undefined') {
-        throw new Error("BsMultiSelect: Popper.js (https://popper.js.org) is required")
+    if (typeof createPopper === 'undefined') {
+        createPopper = environment.Popper;
+        if (typeof createPopper !== 'undefined') {
+            //console.log(`DashboarCode.BsMultiSelect: 'environment.Popper' is depricated, use - 'environment.createPopper'}`);
+        } else {
+            throw new Error("BsMultiSelect: Popper component (https://popper.js.org) is required")
+        }
     }
 
     let { containerClass,
@@ -64,6 +73,7 @@ export function BsMultiSelect(element, environment, configuration, onInit){
     
     let addPickAspect = AddPickAspect();
     let removePickAspect = RemovePickAspect();
+    
     let createElementAspect = CreateElementAspect(name => window.document.createElement(name));
     
     let choicesDomFactory = ChoicesDomFactory(createElementAspect);
@@ -141,21 +151,26 @@ export function BsMultiSelect(element, environment, configuration, onInit){
     // after this we can use staticDom in construtctor, this simplifies parameters passing a lot   
 
     let filterDom = FilterDom(staticDom.disposablePicksElement, createElementAspect, css);
-    let popupAspect = PopupAspect(choicesDom.choicesElement, filterDom.filterInputElement, Popper);
+    let popupAspect = PopupAspect(choicesDom.choicesElement, filterDom.filterInputElement, createPopper);
     let resetFilterListAspect = ResetFilterListAspect(filterDom, filterManagerAspect)
     let resetFilterAspect =  ResetFilterAspect(filterDom, resetFilterListAspect)
-    let inputAspect = InputAspect( filterDom,filterManagerAspect);    
+    
 
     // TODO get picksDom  from staticDomFactory
     let picksDom  = PicksDom(staticDom.picksElement, staticDom.disposablePicksElement, createElementAspect, css);
-    let focusInAspect = FocusInAspect(picksDom)
-
-    let pickDomFactory = PickDomFactory(css, componentPropertiesAspect, optionPropertiesAspect);
+    let focusInAspect = FocusInAspect(picksDom);
+    
+    let pickButtonAspect = PickButtonAspect(configuration.pickButtonHTML);
+    
+    let pickDomFactory = PickDomFactory(css, componentPropertiesAspect, optionPropertiesAspect, pickButtonAspect);
     let buildPickAspect = BuildPickAspect(picksDom, pickDomFactory);
-    let createPickHandlersAspect = CreatePickHandlersAspect(picksList, removePickAspect, buildPickAspect);
+    let producePickAspect = ProducePickAspect(picksList, removePickAspect, buildPickAspect)
+    let createPickHandlersAspect = CreatePickHandlersAspect(producePickAspect);
     
     let choiceDomFactory = ChoiceDomFactory(css, optionPropertiesAspect);
     let optionToggleAspect  = OptionToggleAspect(createPickHandlersAspect, addPickAspect);
+    let fullMatchAspect = FullMatchAspect(createPickHandlersAspect, addPickAspect);
+    let inputAspect = InputAspect(filterDom, filterManagerAspect, fullMatchAspect);    
 
     let choiceClickAspect = ChoiceClickAspect(optionToggleAspect, filterDom);
     let buildChoiceAspect = BuildChoiceAspect( choicesDom, choiceDomFactory, choiceClickAspect);
@@ -175,10 +190,10 @@ export function BsMultiSelect(element, environment, configuration, onInit){
         staticDom, picksDom, choicesDom,filterDom, resetLayoutAspect, pickDomFactory, choiceDomFactory,
         popupAspect, staticManager, buildChoiceAspect, optionToggleAspect,  choiceClickAspect, 
         buildAndAttachChoiceAspect , fillChoicesAspect, 
-        buildPickAspect, createPickHandlersAspect, inputAspect, resetFilterListAspect, resetFilterAspect, 
+        buildPickAspect, producePickAspect, createPickHandlersAspect, inputAspect, resetFilterListAspect, resetFilterAspect, 
         resetLayoutAspect, focusInAspect, 
         updateDisabledComponentAspect, setDisabledComponentAspect, appearanceAspect, loadAspect,
-        updateDataAspect} )
+        updateDataAspect , fullMatchAspect} )
     
     let pluginManager = PluginManager(plugins, aspects);
     let multiSelectInlineLayout =  MultiSelectInlineLayout(aspects);
@@ -191,7 +206,7 @@ export function BsMultiSelect(element, environment, configuration, onInit){
         resetLayoutAspect.resetLayout,
         disposeAspect.dispose,
         pluginManager.dispose, 
-        ()=>{picksList.forEach(wrap=>wrap.pick.dispose());},
+        ()=>{picksList.forEach(pick=>pick.dispose());},
         multiSelectInlineLayout.dispose, // TODO move to layout
         wraps.dispose,
         staticManager.dispose, popupAspect.dispose, picksDom.dispose, filterDom.dispose );

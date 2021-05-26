@@ -5,25 +5,7 @@ import {addToJQueryPrototype} from './AddToJQueryPrototype'
 import {BsMultiSelect} from './BsMultiSelect'
 import {plugDefaultConfig, plugMergeSettings} from './PluginManager'
 
-import {css} from './BsCss'
-
-import {LabelPlugin} from './plugins/LabelPlugin'
-import {RtlPlugin} from './plugins/RtlPlugin'
-import {FormResetPlugin} from './plugins/FormResetPlugin'
-import {ValidationApiPlugin} from './plugins/ValidationApiPlugin'
-import {BsAppearancePlugin} from './plugins/BsAppearancePlugin'
-
-import {HiddenOptionPlugin} from './plugins/HiddenOptionPlugin'
-
-import {CssPatchPlugin} from './plugins/CssPatchPlugin'
-import {PlaceholderPlugin} from './plugins/PlaceholderPlugin'
-import {JQueryMethodsPlugin} from './plugins/JQueryMethodsPlugin'
-import {OptionsApiPlugin} from './plugins/OptionsApiPlugin'
-import {FormRestoreOnBackwardPlugin} from './plugins/FormRestoreOnBackwardPlugin'
-import {SelectElementPlugin} from './plugins/SelectElementPlugin'
-import {SelectedOptionPlugin} from './plugins/SelectedOptionPlugin'
-import {DisabledOptionPlugin} from './plugins/DisabledOptionPlugin'
-import {PicksApiPlugin} from './plugins/PicksApiPlugin'
+import {Bs5Plugin} from './plugins/Bs5Plugin'
 
 import {adjustLegacySettings} from './BsMultiSelectDepricatedParameters'
 
@@ -33,17 +15,19 @@ import {extendIfUndefined, composeSync} from './ToolsJs'
 import  {EventBinder} from './ToolsDom'
 import  {addStyling, toggleStyling} from './ToolsStyling'
 
-(
-    (window, $, Popper) => {
-        const defaults = {containerClass: "dashboardcode-bsmultiselect", css: css}
+import  {MultiSelectBuilder} from './MultiSelectBuilder'
 
-        let defaultPlugins = [CssPatchPlugin, SelectElementPlugin, LabelPlugin, HiddenOptionPlugin, ValidationApiPlugin, 
-        BsAppearancePlugin, FormResetPlugin, RtlPlugin, PlaceholderPlugin , OptionsApiPlugin, 
-        JQueryMethodsPlugin, SelectedOptionPlugin, FormRestoreOnBackwardPlugin, DisabledOptionPlugin, PicksApiPlugin];
+(
+    (window, $, createPopper) => {
+        const defaults = {containerClass: "dashboardcode-bsmultiselect"}
+        if (createPopper.createPopper) {
+            createPopper = createPopper.createPopper;
+        }
+        let defaultPlugins = MultiSelectBuilder();
 
         let createBsMultiSelect = (element, settings, removeInstanceData) => { 
             let trigger = (e, eventName) => $(e).trigger(eventName);
-            let environment = {trigger, window, Popper}
+            let environment = {trigger, window, createPopper}
 
             let configuration = {};
             let buildConfiguration;
@@ -62,7 +46,7 @@ import  {addStyling, toggleStyling} from './ToolsStyling'
                 }
             }
 
-            if (!environment.plugins){
+            if (!environment.plugins) {
                 environment.plugins = defaultPlugins;
             }
 
@@ -78,17 +62,13 @@ import  {addStyling, toggleStyling} from './ToolsStyling'
             multiSelect.dispose = composeSync(multiSelect.dispose, removeInstanceData);
             return multiSelect;
         }
+        defaultPlugins.unshift(Bs5Plugin);
         let prototypable = addToJQueryPrototype('BsMultiSelect', createBsMultiSelect, $);
 
         plugDefaultConfig(defaultPlugins, defaults);
         prototypable.defaults = defaults;
-
-        prototypable.tools = {EventBinder, addStyling, toggleStyling, composeSync}
-        
-        prototypable.plugins = {CssPatchPlugin, SelectElementPlugin, LabelPlugin, HiddenOptionPlugin, ValidationApiPlugin, 
-            BsAppearancePlugin, FormResetPlugin, RtlPlugin, PlaceholderPlugin , OptionsApiPlugin, 
-            JQueryMethodsPlugin, SelectedOptionPlugin, FormRestoreOnBackwardPlugin,  DisabledOptionPlugin, PicksApiPlugin}
-                    
+        MultiSelectBuilder.plugins.Bs5Plugin = Bs5Plugin;
+        prototypable.tools = {EventBinder, addStyling, toggleStyling, composeSync, MultiSelectBuilder} 
     }
 )(window, $, Popper)
 

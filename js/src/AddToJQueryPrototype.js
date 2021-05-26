@@ -20,7 +20,8 @@ export function addToJQueryPrototype(pluginName, createPlugin, $){
     }
 
     function prototypable(options){
-        return this.each( function (i, e) {
+        let output=[];
+        this.each( function (i, e) {
             let $e = $(e);
             let instance = $e.data(dataKey)
             let isMethodName = typeof options === 'string';
@@ -39,9 +40,18 @@ export function addToJQueryPrototype(pluginName, createPlugin, $){
                         methodName = lMethodName;
                     }
                 }
-                instance[methodName]()
+                let result = instance[methodName]();
+                if (result !== undefined){
+                    output.push(result);
+                }
             }
         })
+        if (output.length==0)
+            return this;
+        else if (output.length==1)
+            return output[0];
+        else
+            return output;
     }
 
     function prototypableForInstance(options){
@@ -50,7 +60,7 @@ export function addToJQueryPrototype(pluginName, createPlugin, $){
             return instance;
         else if (this.length === 1){
             return createInstance(options, this.get(0), this);
-        } else if (this.length > 1) {
+        } else if (this.length > 1){
             let output=[];
             this.each(function(i, e){
                 output.push(createInstance(options, e, $(e)));

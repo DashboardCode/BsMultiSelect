@@ -36,12 +36,18 @@ export function shallowClearClone(source, ...sources) { // override previous, no
     return destination;
 }
 
-function forEachRecursion(f, i){
-    if (!i)
+function forEachRecursion(f, e){
+    if (!e)
         return;
-    let goOn = f(i.value); 
+    let goOn = f(e.value); 
     if (!(goOn===false))
-        forEachRecursion(f, i.prev);
+        forEachRecursion(f, e.prev);
+}
+
+function indexRecursion(index, e){
+    if (!e.prev)
+        return index;
+    indexRecursion(++index, e.prev);
 }
 
 export function List(){
@@ -68,7 +74,10 @@ export function List(){
                 }
                 count--;
             }
-            return remove;
+            function index(){
+                return indexRecursion(0, node);
+            }
+            return {remove, index};
         },
         forEach(f){
             forEachRecursion(f, tail);
@@ -76,8 +85,7 @@ export function List(){
         getTail(){ return (tail)?tail.value:null },
         getCount(){ return count },
         isEmpty(){ return count==0 },
-        reset(){ tail=null; 
-            count = 0 }
+        reset(){ tail=null; count = 0 }
     }
 }
 

@@ -5,7 +5,7 @@ import {ObservableLambda, composeSync} from '../ToolsJs';
 export function BsAppearancePlugin(pluginData){
     let {configuration, validationApiPluginData, 
         picksDom, staticDom, labelPluginData, appearanceAspect, componentPropertiesAspect} = pluginData;
-    let {getValidity, getSize, useCssPatch, css} = configuration;
+    let {getValidity, getSize, useCssPatch, css, composeGetSize, getDefaultLabel} = configuration;
     let selectElement = staticDom.selectElement;
     
     if (labelPluginData){
@@ -15,11 +15,10 @@ export function BsAppearancePlugin(pluginData){
             if (e)
                 return e;
             else{
-                let value = null;
-                let formGroup = closestByClassName(selectElement,'form-group');
-                if (formGroup) 
-                    value = formGroup.querySelector(`label[for="${selectElement.id}"]`);
-                return value;
+                if (selectElement){
+                    let labelElement = getDefaultLabel(selectElement);
+                    return labelElement;
+                }
             }
         }
     }
@@ -191,29 +190,5 @@ function composeGetValidity(selectElement){
     return getValidity;
 }
 
-function composeGetSize(selectElement){
-    let inputGroupElement = closestByClassName(selectElement, 'input-group');
-    let getSize = null;
-    if (inputGroupElement){
-        getSize = function(){
-            var value = null;
-            if (inputGroupElement.classList.contains('input-group-lg'))
-                value = 'lg';
-            else if (inputGroupElement.classList.contains('input-group-sm'))
-                value = 'sm';
-            return value;
-        }
-    }
-    else{ 
-        getSize = function(){
-            var value = null;
-            if (selectElement.classList.contains('custom-select-lg') || selectElement.classList.contains('form-control-lg'))
-                value = 'lg';
-            else if (selectElement.classList.contains('custom-select-sm') || selectElement.classList.contains('form-control-sm'))
-                value = 'sm'; 
-            return value;
-        }
-    }
-    return getSize;
-}
+
 

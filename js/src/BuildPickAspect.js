@@ -1,10 +1,10 @@
 export function BuildPickAspect(
-        picksDom, 
-        pickDomFactory
-        ){
+    picksDom, 
+    pickDomFactory
+){
     return {
         buildPick(wrap, removeOnButton){
-            let { pickElement, attach, detach } = picksDom.createPickElement(); 
+            let {pickElement, attach, detach} = picksDom.createPickElement(); 
             let {pickDomManager} = pickDomFactory.create(pickElement, wrap, removeOnButton); 
             let pickDomManagerHandlers = pickDomManager.init();
 
@@ -15,12 +15,11 @@ export function BuildPickAspect(
                     detach(); 
                     pickDomManager.dispose(); 
                     pickDomManagerHandlers = null;
-                    pick.pickElementAttach=null;
-                    pick.dispose=null;  
-                    wrap.pick = null;
+                    pick.pickElementAttach = null;
+                    pick.dispose = null;  
                 }
             }
-            wrap.pick = pick;
+            return pick;
         }
     }
 }
