@@ -431,11 +431,10 @@ Note, BS allready provide classes like: `h-25`, `bg-light`, `text-primary` that 
 
 ### Future development
 
-Actually plugin is ready for BS 5 that means for "no jquery". 
 Plugin is highly customizable even now, but API is not published. "Single select", "Enter Tags" or "Enter emails", "Fonts list" etc. can be developed right now with it, but I need to stabilize API before open it (also I should made "search" customizable).
-Dropdown menu API also should be proposed: two different look for with and without filters;  limitation on size.
 
- 
+Integration with floating labels (.form-floating) .
+
 ### Alternatives:
 
 BsMultiSelect was created because at the moment when Bootstrap 4 was released all existed multiselect plugins had strange side effects. It was just simpler to try to combine several BS 4 tools together: `form-control`, `dropdown-menu`, `close` button, `badge` then trying to understand internals of mature projects. I hope now all of them supports BS4 but this list still could be interesting for some people.
