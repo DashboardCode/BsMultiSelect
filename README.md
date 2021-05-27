@@ -3,7 +3,7 @@ Demo: https://dashboardcode.github.io/BsMultiSelect/
 
 Bootstrap 4 Demo : https://dashboardcode.github.io/BsMultiSelect/indexBs4.html
 
-**Breaking Change**: to use with legacy Bootstrap 4 reference the `BsMultiSelect4` bundle|module: e.g. https://cdn.jsdelivr.net/npm/@dashboardcode/bsmultiselect@1.0.0/dist/css/BsMultiSelect.bs4.min.js
+**Breaking Change**: to use with legacy Bootstrap 4 reference the `BsMultiSelect4` bundle|module: e.g. https://cdn.jsdelivr.net/npm/@dashboardcode/bsmultiselect@1.0.0/dist/js/BsMultiSelect.bs4.min.js and https://cdn.jsdelivr.net/npm/@dashboardcode/bsmultiselect@1.0.0/dist/css/BsMultiSelect.bs4.min.css
 
 Snippets:
 
