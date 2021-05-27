@@ -3,21 +3,21 @@ Demo: https://dashboardcode.github.io/BsMultiSelect/
 
 Bootstrap 4 Demo : https://dashboardcode.github.io/BsMultiSelect/indexBs4.html
 
-Breaking Change: to use with legacy Bootstrap 4 reference the `BsMultiSelect4` bundle|module: e.g. https://cdn.jsdelivr.net/npm/@dashboardcode/bsmultiselect@1.0.0/dist/css/BsMultiSelect4.min.js
+**Breaking Change**: to use with legacy Bootstrap 4 reference the `BsMultiSelect4` bundle|module: e.g. https://cdn.jsdelivr.net/npm/@dashboardcode/bsmultiselect@1.0.0/dist/css/BsMultiSelect.bs4.min.js
 
 Snippets:
 
-1. [Custom Validation](https://dashboardcode.github.io/BsMultiSelect/snippetCustomValidation.html), [BS4 Version](https://dashboardcode.github.io/BsMultiSelect/snippetCustomValidationBs4.html)
+1. [Custom Validation](https://dashboardcode.github.io/BsMultiSelect/snippetCustomValidation.html),  ([BS4 Version](https://dashboardcode.github.io/BsMultiSelect/snippetCustomValidationBs4.html))
 
-2. [HTML Form Validation](https://dashboardcode.github.io/BsMultiSelect/snippetFormValidation.html), [BS4 Version](https://dashboardcode.github.io/BsMultiSelect/snippetFormValidationBs4.html)
+2. [HTML Form Validation](https://dashboardcode.github.io/BsMultiSelect/snippetFormValidation.html),  ([BS4 Version](https://dashboardcode.github.io/BsMultiSelect/snippetFormValidationBs4.html))
 
-3. [Right To Left (RTL)](https://dashboardcode.github.io/BsMultiSelect/snippetRtl.html), [BS4 Version](https://dashboardcode.github.io/BsMultiSelect/snippetRtlBs4.html)
+3. [Right To Left (RTL)](https://dashboardcode.github.io/BsMultiSelect/snippetRtl.html),  ([BS4 Version](https://dashboardcode.github.io/BsMultiSelect/snippetRtlBs4.html))
 
-4. [ES6 module, no jquery](https://dashboardcode.github.io/BsMultiSelect/snippetEsm.html), [BS4 Version](https://dashboardcode.github.io/BsMultiSelect/snippetEsmBs4.html)
+4. [ES6 module, no jquery](https://dashboardcode.github.io/BsMultiSelect/snippetEsm.html), ([BS4 Version](https://dashboardcode.github.io/BsMultiSelect/snippetEsmBs4.html))
 
-5. [Options manipulation API](https://dashboardcode.github.io/BsMultiSelect/snippetJs.html), [BS4 Version](https://dashboardcode.github.io/BsMultiSelect/snippetJsBs4.html)
+5. [Options manipulation API](https://dashboardcode.github.io/BsMultiSelect/snippetJs.html), ([BS4 Version](https://dashboardcode.github.io/BsMultiSelect/snippetJsBs4.html))
 
-6. [Columns](https://dashboardcode.github.io/BsMultiSelect/snippetColumns.html), [BS4 Version](https://dashboardcode.github.io/BsMultiSelect/snippetColumnsBs4.html)
+6. [Columns](https://dashboardcode.github.io/BsMultiSelect/snippetColumns.html), ([BS4 Version](https://dashboardcode.github.io/BsMultiSelect/snippetColumnsBs4.html))
 
 CodePen snippets, use them for bug reporting: 
      https://codepen.io/rpokrovskij/pen/yLymQwW  (initialized using HTML SELECT)
@@ -39,10 +39,15 @@ BsMultiSelect follows Bootstrap 4 conventions and use the same instruments (babe
 `npm install @dashboardcode/bsmultiselect`
 
 # CDN
+Bootstrap 5
 https://cdn.jsdelivr.net/npm/@dashboardcode/bsmultiselect@1.0.0/dist/js/BsMultiSelect.min.js
 https://cdn.jsdelivr.net/npm/@dashboardcode/bsmultiselect@1.0.0/dist/js/BsMultiSelect.esm.min.js
 https://cdn.jsdelivr.net/npm/@dashboardcode/bsmultiselect@1.0.0/dist/css/BsMultiSelect.min.css
 
+Bootstrap 4
+https://cdn.jsdelivr.net/npm/@dashboardcode/bsmultiselect@1.0.0/dist/js/BsMultiSelect.bs4.min.js
+https://cdn.jsdelivr.net/npm/@dashboardcode/bsmultiselect@1.0.0/dist/js/BsMultiSelect.bs4.esm.min.js
+https://cdn.jsdelivr.net/npm/@dashboardcode/bsmultiselect@1.0.0/dist/css/BsMultiSelect.bs4.min.css
 
 # Architecture
 Instead of using BS4 Dropdown component (it is not possible since BS Dropdown requires presence of `toggle-buttons` https://github.com/twbs/bootstrap/issues/26420) the plugin uses `popper.js` (V1) directly.
