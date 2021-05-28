@@ -1,38 +1,48 @@
+import {BsMultiSelect} from './BsMultiSelect'
+import {plugMergeSettings, plugDefaultConfig} from './PluginManager'
 
-import {LabelPlugin} from './plugins/LabelPlugin'
-import {RtlPlugin} from './plugins/RtlPlugin'
-import {FormResetPlugin} from './plugins/FormResetPlugin'
-import {ValidationApiPlugin} from './plugins/ValidationApiPlugin'
-import {BsAppearancePlugin} from './plugins/BsAppearancePlugin'
+import {adjustLegacySettings} from './BsMultiSelectDepricatedParameters'
 
-import {HiddenOptionPlugin} from './plugins/HiddenOptionPlugin'
-//import {HiddenOptionPlugin} from './plugins/HiddenOptionAltPlugin'
+import {createCss} from './ToolsStyling'
+import {extendIfUndefined, composeSync} from './ToolsJs'
 
-import {CssPatchPlugin} from './plugins/CssPatchPlugin'
-import {PlaceholderPlugin} from './plugins/PlaceholderPlugin'
-import {JQueryMethodsPlugin} from './plugins/JQueryMethodsPlugin'
-import {OptionsApiPlugin} from './plugins/OptionsApiPlugin'
-import {FormRestoreOnBackwardPlugin} from './plugins/FormRestoreOnBackwardPlugin'
-import {SelectElementPlugin} from './plugins/SelectElementPlugin'
-import {SelectedOptionPlugin} from './plugins/SelectedOptionPlugin'
-import {DisabledOptionPlugin} from './plugins/DisabledOptionPlugin'
-import {PicksApiPlugin} from './plugins/PicksApiPlugin'
-import {PicksPlugin} from './plugins/PicksPlugin'
-
-let defaultPlugins = [CssPatchPlugin, SelectElementPlugin, LabelPlugin, HiddenOptionPlugin, ValidationApiPlugin, 
-    BsAppearancePlugin, FormResetPlugin, RtlPlugin, PlaceholderPlugin , OptionsApiPlugin, 
-    JQueryMethodsPlugin, SelectedOptionPlugin, FormRestoreOnBackwardPlugin, DisabledOptionPlugin, PicksApiPlugin];
-
-export function MultiSelectBuilder(builderOptions) 
+export function MultiSelectBuilder(plugins ,window, createPopper,  trigger) 
 {
-    if (!builderOptions)
-        return defaultPlugins;
-    else if (builderOptions.ajax)
-        return [CssPatchPlugin, PicksPlugin, LabelPlugin, ValidationApiPlugin, 
-            BsAppearancePlugin, RtlPlugin, PlaceholderPlugin , OptionsApiPlugin, 
-            JQueryMethodsPlugin, PicksApiPlugin];
-}
+    if (createPopper.createPopper) {
+        createPopper = createPopper.createPopper;
+    }
 
-MultiSelectBuilder.plugins = {CssPatchPlugin, SelectElementPlugin, PicksPlugin, LabelPlugin, HiddenOptionPlugin, ValidationApiPlugin, 
-    BsAppearancePlugin, FormResetPlugin, RtlPlugin, PlaceholderPlugin , OptionsApiPlugin, 
-    JQueryMethodsPlugin, SelectedOptionPlugin, FormRestoreOnBackwardPlugin,  DisabledOptionPlugin, PicksApiPlugin}
+    const defaults = {containerClass: "dashboardcode-bsmultiselect"}
+
+    let createBsMultiSelect = (element, settings, removeInstanceData) => { 
+        let environment = {trigger, window, createPopper}
+        let configuration = {};
+        let buildConfiguration;
+        if (settings instanceof Function) {
+            buildConfiguration = settings;
+            settings = null;
+        } else {
+            buildConfiguration = settings?.buildConfiguration;
+        }
+        if (settings){
+            adjustLegacySettings(settings);
+            if (settings.plugins) {
+                environment.plugins = settings.plugins;
+                settings.plugins = null;
+            }
+        }
+        if (!environment.plugins) {
+            environment.plugins = plugins;
+        }
+        configuration.css = createCss(defaults.css, settings?.css);
+        plugMergeSettings(environment.plugins, configuration, defaults, settings); // merge settings.cssPatch and defaults.cssPatch
+        extendIfUndefined(configuration, settings);
+        extendIfUndefined(configuration, defaults);
+        let onInit = buildConfiguration?.(element, configuration);
+        let multiSelect = BsMultiSelect(element, environment, configuration, onInit); // onInit(api, aspects) - before load data
+        multiSelect.dispose = composeSync(multiSelect.dispose, removeInstanceData);
+        return multiSelect;
+    }
+    plugDefaultConfig(plugins, defaults);
+    return {constructor:createBsMultiSelect, defaultOptions: defaults}
+}

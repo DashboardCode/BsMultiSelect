@@ -3,7 +3,7 @@ Demo: https://dashboardcode.github.io/BsMultiSelect/
 
 Bootstrap 4 Demo : https://dashboardcode.github.io/BsMultiSelect/indexBs4.html
 
-**Breaking Change**: to use with legacy Bootstrap 4 reference the `BsMultiSelect.bs4.*` bundle|module: e.g. https://cdn.jsdelivr.net/npm/@dashboardcode/bsmultiselect@1.0.0/dist/js/BsMultiSelect.bs4.min.js and https://cdn.jsdelivr.net/npm/@dashboardcode/bsmultiselect@1.0.0/dist/css/BsMultiSelect.bs4.min.css
+**Breaking Change**: to use with legacy Bootstrap 4 reference the `BsMultiSelect.bs4.*` bundle|module: e.g. https://cdn.jsdelivr.net/npm/@dashboardcode/bsmultiselect@1.0.1/dist/js/BsMultiSelect.bs4.min.js and https://cdn.jsdelivr.net/npm/@dashboardcode/bsmultiselect@1.0.1/dist/css/BsMultiSelect.bs4.min.css
 
 Snippets:
 
@@ -40,14 +40,14 @@ BsMultiSelect follows Bootstrap 4 conventions and use the same instruments (babe
 
 # CDN
 Bootstrap 5
-https://cdn.jsdelivr.net/npm/@dashboardcode/bsmultiselect@1.0.0/dist/js/BsMultiSelect.min.js
-https://cdn.jsdelivr.net/npm/@dashboardcode/bsmultiselect@1.0.0/dist/js/BsMultiSelect.esm.min.js
-https://cdn.jsdelivr.net/npm/@dashboardcode/bsmultiselect@1.0.0/dist/css/BsMultiSelect.min.css
+https://cdn.jsdelivr.net/npm/@dashboardcode/bsmultiselect@1.0.1/dist/js/BsMultiSelect.min.js
+https://cdn.jsdelivr.net/npm/@dashboardcode/bsmultiselect@1.0.1/dist/js/BsMultiSelect.esm.min.js
+https://cdn.jsdelivr.net/npm/@dashboardcode/bsmultiselect@1.0.1/dist/css/BsMultiSelect.min.css
 
 Bootstrap 4
-https://cdn.jsdelivr.net/npm/@dashboardcode/bsmultiselect@1.0.0/dist/js/BsMultiSelect.bs4.min.js
-https://cdn.jsdelivr.net/npm/@dashboardcode/bsmultiselect@1.0.0/dist/js/BsMultiSelect.bs4.esm.min.js
-https://cdn.jsdelivr.net/npm/@dashboardcode/bsmultiselect@1.0.0/dist/css/BsMultiSelect.bs4.min.css
+https://cdn.jsdelivr.net/npm/@dashboardcode/bsmultiselect@1.0.1/dist/js/BsMultiSelect.bs4.min.js
+https://cdn.jsdelivr.net/npm/@dashboardcode/bsmultiselect@1.0.1/dist/js/BsMultiSelect.bs4.esm.min.js
+https://cdn.jsdelivr.net/npm/@dashboardcode/bsmultiselect@1.0.1/dist/css/BsMultiSelect.bs4.min.css
 
 # Architecture
 Instead of using BS4 Dropdown component (it is not possible since BS Dropdown requires presence of `toggle-buttons` https://github.com/twbs/bootstrap/issues/26420) the plugin uses `popper.js` (V1) directly.
