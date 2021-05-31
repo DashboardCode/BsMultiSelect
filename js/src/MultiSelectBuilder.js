@@ -4,45 +4,35 @@ import {plugMergeSettings, plugDefaultConfig} from './PluginManager'
 import {adjustLegacySettings} from './BsMultiSelectDepricatedParameters'
 
 import {createCss} from './ToolsStyling'
-import {extendIfUndefined, composeSync} from './ToolsJs'
+import {extendIfUndefined} from './ToolsJs'
 
-export function MultiSelectBuilder(plugins ,window, createPopper,  trigger) 
+// TODO: remove environment - replace it with plugins
+export function MultiSelectBuilder(environment, plugins) 
 {
-    if (createPopper.createPopper) {
-        createPopper = createPopper.createPopper;
-    }
-
     const defaults = {containerClass: "dashboardcode-bsmultiselect"}
 
-    let createBsMultiSelect = (element, settings, removeInstanceData) => { 
-        let environment = {trigger, window, createPopper}
+    let construct = (element, options) => { 
+        if (options.plugins)
+            console.log(`DashboarCode.BsMultiSelect: 'options.plugins' is depricated, use - MultiSelectBuilder(environment, plugins) instead`);
         let configuration = {};
         let buildConfiguration;
-        if (settings instanceof Function) {
-            buildConfiguration = settings;
-            settings = null;
+        if (options instanceof Function) {
+            buildConfiguration = options;
+            options = null;
         } else {
-            buildConfiguration = settings?.buildConfiguration;
+            buildConfiguration = options?.buildConfiguration;
         }
-        if (settings){
-            adjustLegacySettings(settings);
-            if (settings.plugins) {
-                environment.plugins = settings.plugins;
-                settings.plugins = null;
-            }
+        if (options){
+            adjustLegacySettings(options);
         }
-        if (!environment.plugins) {
-            environment.plugins = plugins;
-        }
-        configuration.css = createCss(defaults.css, settings?.css);
-        plugMergeSettings(environment.plugins, configuration, defaults, settings); // merge settings.cssPatch and defaults.cssPatch
-        extendIfUndefined(configuration, settings);
+        configuration.css = createCss(defaults.css, options?.css);
+        plugMergeSettings(plugins, configuration, defaults, options); // merge settings.cssPatch and defaults.cssPatch
+        extendIfUndefined(configuration, options);
         extendIfUndefined(configuration, defaults);
         let onInit = buildConfiguration?.(element, configuration);
-        let multiSelect = BsMultiSelect(element, environment, configuration, onInit); // onInit(api, aspects) - before load data
-        multiSelect.dispose = composeSync(multiSelect.dispose, removeInstanceData);
+        let multiSelect = BsMultiSelect(element, environment, plugins, configuration, onInit); // onInit(api, aspects) - before load data
         return multiSelect;
     }
     plugDefaultConfig(plugins, defaults);
-    return {constructor:createBsMultiSelect, defaultOptions: defaults}
+    return {construct, defaultSettings: defaults}
 }

@@ -6,10 +6,12 @@ export function MultiSelectInlineLayout (
     ) 
 {
     let {environment,filterDom,picksDom,choicesDom, 
-        popupAspect, hoveredChoiceAspect, navigateAspect,filterManagerAspect,
+        choicesVisibilityAspect, 
+        hoveredChoiceAspect, navigateAspect,filterManagerAspect,
         focusInAspect, optionToggleAspect,
         createPickHandlersAspect,
-        inputAspect, picksList, buildChoiceAspect, 
+        picksList,
+        inputAspect, specialPicksEventsAspect,  buildChoiceAspect, 
         setDisabledComponentAspect, resetLayoutAspect
     } = aspects;
 
@@ -49,11 +51,11 @@ export function MultiSelectInlineLayout (
     }
 
     function showChoices() {
-        if ( !popupAspect.isChoicesVisible() )
+        if ( !choicesVisibilityAspect.isChoicesVisible() )
         {
-            popupAspect.updatePopupLocation();
+            choicesVisibilityAspect.updatePopupLocation();
             eventLoopFlag.set();
-            popupAspect.setChoicesVisible(true);
+            choicesVisibilityAspect.setChoicesVisible(true);
             
             // add listeners that manages close dropdown on  click outside container
             choicesElement.addEventListener("mousedown", skipoutMousedown);
@@ -64,10 +66,10 @@ export function MultiSelectInlineLayout (
     function hideChoices() {
         resetMouseCandidateChoice();
         hoveredChoiceAspect.resetHoveredChoice();
-        if (popupAspect.isChoicesVisible())
+        if (choicesVisibilityAspect.isChoicesVisible())
         {
             // COOMENT OUT DEBUGGING popup layout
-            popupAspect.setChoicesVisible(false);
+            choicesVisibilityAspect.setChoicesVisible(false);
             
             choicesElement.removeEventListener("mousedown", skipoutMousedown);
             document.removeEventListener("mouseup", documentMouseup);
@@ -89,7 +91,7 @@ export function MultiSelectInlineLayout (
     function clickToShowChoices(event){
         filterDom.setFocusIfNotTarget(event.target);
         if (preventDefaultClickEvent != event) {
-            if (popupAspect.isChoicesVisible()){
+            if (choicesVisibilityAspect.isChoicesVisible()){
                 hideChoices() 
             } else {
                 if (filterManagerAspect.getNavigateManager().getCount()>0)
@@ -210,7 +212,7 @@ export function MultiSelectInlineLayout (
         let visibleCount = filterManagerAspect.getNavigateManager().getCount();
 
         if (visibleCount>0){
-            let panelIsVisble = popupAspect.isChoicesVisible();
+            let panelIsVisble = choicesVisibilityAspect.isChoicesVisible();
             if (!panelIsVisble){
                 showChoices(); 
             }
@@ -221,7 +223,7 @@ export function MultiSelectInlineLayout (
                     hoveredChoiceAspect.resetHoveredChoice();
             }   
         }else{
-            if (popupAspect.isChoicesVisible())
+            if (choicesVisibilityAspect.isChoicesVisible())
                 hideChoices();
         }
     }
@@ -278,8 +280,7 @@ export function MultiSelectInlineLayout (
             if (empty) {
                 let pick = picksList.getTail();
                 if (pick){ 
-                    pick.setSelectedFalse(); 
-                    popupAspect.updatePopupLocation();
+                    specialPicksEventsAspect.backSpace(pick);
                 }
             }
         }
@@ -292,7 +293,7 @@ export function MultiSelectInlineLayout (
         }
         else if (keyCode == 27 /*esc*/ ) { // NOTE: forbid the ESC to close the modal (in case the nonempty or dropdown is open)
         
-            if (!empty  || popupAspect.isChoicesVisible())
+            if (!empty  || choicesVisibilityAspect.isChoicesVisible())
                 event.stopPropagation()
         }
         else if (keyCode == 38) {
@@ -307,12 +308,12 @@ export function MultiSelectInlineLayout (
         //var handler = keyUp[event.which/* key code */];
         //handler();    
         if (keyCode == 9) {
-            if (popupAspect.isChoicesVisible()) {
+            if (choicesVisibilityAspect.isChoicesVisible()) {
                 hoveredToSelected();
             } 
         }
         else if (keyCode == 13 ) {
-            if (popupAspect.isChoicesVisible()) {
+            if (choicesVisibilityAspect.isChoicesVisible()) {
                 hoveredToSelected();
             } else {
                 if (filterManagerAspect.getNavigateManager().getCount()>0){

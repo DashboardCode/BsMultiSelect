@@ -3,7 +3,7 @@ import {isBoolean} from '../ToolsJs';
 
 export function RtlPlugin(pluginData){
     
-    let {configuration, popupAspect, staticDom} = pluginData;
+    let {configuration, rtlAspect, staticDom} = pluginData;
     let {isRtl} = configuration;
     let forceRtlOnContainer = false; 
     if (isBoolean(isRtl))
@@ -21,11 +21,22 @@ export function RtlPlugin(pluginData){
             attributeBackup.set(staticDom.containerElement, "dir", dirAttributeValue);
         }
     } 
-    if (isRtl)
-        popupAspect.popperConfiguration.placement = 'bottom-end';
+    if (rtlAspect.adoptRtl)
+        rtlAspect.adoptRtl(isRtl);
+        
     return {
         dispose(){
             attributeBackup.restore;
         }
+    }
+}
+
+RtlPlugin.plugStaticDom = (aspects) => {
+    aspects.rtlAspect = RtlAspect();
+}
+
+function RtlAspect() {
+    return {
+        adoptRtl(){},
     }
 }

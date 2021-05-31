@@ -2,74 +2,26 @@ import $ from 'jquery'
 import Popper from 'popper.js'
 
 import {addToJQueryPrototype} from './AddToJQueryPrototype'
-import {BsMultiSelect} from './BsMultiSelect'
-import {plugDefaultConfig, plugMergeSettings} from './PluginManager'
 
-import {adjustLegacySettings} from './BsMultiSelectDepricatedParameters'
-
-import {createCss} from './ToolsStyling'
-import {extendIfUndefined, composeSync} from './ToolsJs'
-
-import {EventBinder} from './ToolsDom'
-import {addStyling, toggleStyling} from './ToolsStyling'
-
-import {MultiSelectBuilder} from './MultiSelectBuilder'
+import {defaultPlugins} from './PluginSet'
 import {Bs4Plugin} from './plugins/Bs4Plugin'
 
+import {composeSync, shallowClearClone, ObjectValues} from './ToolsJs'
+import {utilities} from './ToolSet'
+
+import  {MultiSelectBuilder} from './MultiSelectBuilder'
 (
     (window, $, createPopper) => {
-        const defaults = {containerClass: "dashboardcode-bsmultiselect"}
-        if (createPopper.createPopper) {
-            createPopper = createPopper.createPopper;
-        }
-        let defaultPlugins = MultiSelectBuilder();
-
-        let createBsMultiSelect = (element, settings, removeInstanceData) => { 
-            let trigger = (e, eventName) => $(e).trigger(eventName);
-            let environment = {trigger, window, createPopper}
-
-            let configuration = {};
-            let buildConfiguration;
-            if (settings instanceof Function) {
-                buildConfiguration = settings;
-                settings = null;
-            } else {
-                buildConfiguration = settings?.buildConfiguration;
-            }
-
-            if (settings){
-                adjustLegacySettings(settings);
-                if (settings.plugins) {
-                    environment.plugins = settings.plugins;
-                    settings.plugins = null;
-                }
-            }
-
-            if (!environment.plugins) {
-                environment.plugins = defaultPlugins;
-            }
-
-            configuration.css = createCss(defaults.css, settings?.css);
-            plugMergeSettings(environment.plugins, configuration, defaults, settings); // merge settings.cssPatch and defaults.cssPatch
-
-            extendIfUndefined(configuration, settings);
-            extendIfUndefined(configuration, defaults);
-
-            let onInit = buildConfiguration?.(element, configuration);
-
-            let multiSelect = BsMultiSelect(element, environment, configuration, onInit); // onInit(api, aspects) - before load data
-            multiSelect.dispose = composeSync(multiSelect.dispose, removeInstanceData);
-            return multiSelect;
-        }
-        defaultPlugins.unshift(Bs4Plugin);
-        let prototypable = addToJQueryPrototype('BsMultiSelect', createBsMultiSelect, $);
-
-        plugDefaultConfig(defaultPlugins, defaults);
-        prototypable.defaults = defaults;
+        let trigger = (e, eventName) => $(e).trigger(eventName);
+        let plugins = shallowClearClone({Bs4Plugin}, defaultPlugins);
+        let environment = {trigger, window, createPopper}
+        let pluginsArray = ObjectValues(plugins)
+        let {construct, defaultSettings} = MultiSelectBuilder(environment, pluginsArray);
+        let constructor2 = (element, settings, removeInstanceData) => {let multiSelect = construct(element, settings); multiSelect.dispose = composeSync(multiSelect.dispose, removeInstanceData); return multiSelect;} 
+        let prototypable = addToJQueryPrototype('BsMultiSelect', constructor2, $);
         
-        MultiSelectBuilder.plugins.Bs4Plugin = Bs4Plugin;
-        
-        prototypable.tools = {EventBinder, addStyling, toggleStyling, composeSync, MultiSelectBuilder} 
+        prototypable.defaults = defaultSettings;
+        prototypable.tools = {MultiSelectBuilder, plugins, utilities} 
     }
 )(window, $, Popper)
 

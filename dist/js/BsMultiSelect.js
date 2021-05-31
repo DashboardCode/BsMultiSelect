@@ -1,5 +1,5 @@
 /*!
-  * DashboardCode BsMultiSelect v1.0.0 (https://dashboardcode.github.io/BsMultiSelect/)
+  * DashboardCode BsMultiSelect v1.0.1 (https://dashboardcode.github.io/BsMultiSelect/)
   * Copyright 2017-2021 Roman Pokrovskij (github user rpokrovskij)
   * Licensed under APACHE 2 (https://github.com/DashboardCode/BsMultiSelect/blob/master/LICENSE)
   */
@@ -403,6 +403,16 @@
         }
       };
     }
+    function ObjectValues(object) {
+      // Object.values(plugins) - problem for IE11; full impementation of polifill is mor complex, but for our purpose this is enough
+      var arr = [];
+
+      for (var key in object) {
+        arr.push(object[key]);
+      }
+
+      return arr;
+    }
 
     function LabelPlugin(pluginData) {
       var configuration = pluginData.configuration,
@@ -583,7 +593,7 @@
 
     function RtlPlugin(pluginData) {
       var configuration = pluginData.configuration,
-          popupAspect = pluginData.popupAspect,
+          rtlAspect = pluginData.rtlAspect,
           staticDom = pluginData.staticDom;
       var isRtl = configuration.isRtl;
       var forceRtlOnContainer = false;
@@ -600,10 +610,20 @@
         }
       }
 
-      if (isRtl) popupAspect.popperConfiguration.placement = 'bottom-end';
+      if (rtlAspect.adoptRtl) rtlAspect.adoptRtl(isRtl);
       return {
         dispose: function dispose() {
         }
+      };
+    }
+
+    RtlPlugin.plugStaticDom = function (aspects) {
+      aspects.rtlAspect = RtlAspect();
+    };
+
+    function RtlAspect() {
+      return {
+        adoptRtl: function adoptRtl() {}
       };
     }
 
@@ -1400,8 +1420,7 @@
 
           api.picksCount = function () {
             return picksList.getCount();
-          }; //api.staticContent = popupAspect; // depricated, alternative accept to popupAspect.setChoicesVisible
-
+          };
 
           pluginData.jQueryMethodsPluginData = {
             EventBinder: EventBinder,
@@ -2000,7 +2019,99 @@
       };
     }
 
-    var defaultPlugins = [CssPatchPlugin, SelectElementPlugin, LabelPlugin, HiddenOptionPlugin, ValidationApiPlugin, BsAppearancePlugin, FormResetPlugin, RtlPlugin, PlaceholderPlugin, OptionsApiPlugin, JQueryMethodsPlugin, SelectedOptionPlugin, FormRestoreOnBackwardPlugin, DisabledOptionPlugin, PicksApiPlugin];
+    function PopperPlugin(pluginData) {
+      var staticManager = pluginData.staticManager,
+          environment = pluginData.environment,
+          specialPicksEventsAspect = pluginData.specialPicksEventsAspect,
+          choicesVisibilityAspect = pluginData.choicesVisibilityAspect,
+          rtlAspect = pluginData.rtlAspect,
+          choicesDom = pluginData.choicesDom,
+          filterDom = pluginData.filterDom;
+      var createPopper = environment.createPopper;
+          environment.Popper;
+      var choicesElement = choicesDom.choicesElement;
+      var filterInputElement = filterDom.filterInputElement;
+      var popper = null;
+      var popperConfiguration = {
+        placement: 'bottom-start',
+        modifiers: {
+          preventOverflow: {
+            enabled: true
+          },
+          hide: {
+            enabled: false
+          },
+          flip: {
+            enabled: false
+          }
+        }
+      };
+
+      if (typeof createPopper === 'undefined') {
+        createPopper = environment.Popper;
+
+        if (typeof createPopper === 'undefined') {
+          throw new Error("BsMultiSelect: Popper component (https://popper.js.org) is required");
+        }
+      } else {
+        if (createPopper.createPopper) {
+          createPopper = createPopper.createPopper;
+        }
+      }
+
+      function init() {
+        if (!!createPopper.prototype && !!createPopper.prototype.constructor.name) {
+          // it is a constructor
+          popper = new createPopper(filterInputElement, choicesElement, popperConfiguration);
+        } else {
+          popper = createPopper(filterInputElement, choicesElement, popperConfiguration); //throw new Error("BsMultiSelect: popper paramater is not a constructor")
+        }
+      }
+      staticManager.appendToContainer = composeSync(staticManager.appendToContainer, init);
+      var origBackSpace = specialPicksEventsAspect.backSpace;
+
+      specialPicksEventsAspect.backSpace = function (pick) {
+        origBackSpace(pick);
+        popper.update();
+      };
+
+      if (rtlAspect) {
+        var origUpdateRtl = rtlAspect.updateRtl;
+
+        rtlAspect.updateRtl = function (isRtl) {
+          origUpdateRtl(isRtl);
+          if (isRtl) popperConfiguration.placement = 'bottom-end';
+        };
+      }
+
+      choicesVisibilityAspect.updatePopupLocation = composeSync(choicesVisibilityAspect.updatePopupLocation, function () {
+        popper.update(); // become async in poppoer 2; use forceUpdate if sync is needed? 
+      });
+      return {
+        dispose: function dispose() {
+          popper.destroy();
+        }
+      };
+    }
+
+    var defaultPlugins = {
+      CssPatchPlugin: CssPatchPlugin,
+      SelectElementPlugin: SelectElementPlugin,
+      LabelPlugin: LabelPlugin,
+      HiddenOptionPlugin: HiddenOptionPlugin,
+      ValidationApiPlugin: ValidationApiPlugin,
+      BsAppearancePlugin: BsAppearancePlugin,
+      FormResetPlugin: FormResetPlugin,
+      RtlPlugin: RtlPlugin,
+      PopperPlugin: PopperPlugin,
+      PlaceholderPlugin: PlaceholderPlugin,
+      OptionsApiPlugin: OptionsApiPlugin,
+      JQueryMethodsPlugin: JQueryMethodsPlugin,
+      SelectedOptionPlugin: SelectedOptionPlugin,
+      FormRestoreOnBackwardPlugin: FormRestoreOnBackwardPlugin,
+      DisabledOptionPlugin: DisabledOptionPlugin,
+      PicksApiPlugin: PicksApiPlugin
+    };
 
     function Bs5Plugin() {}
 
@@ -2180,6 +2291,13 @@
         opacity: '.65',
         transform: 'scale(.85) translateY(-.5rem) translateX(.15rem)'
       }
+    };
+
+    var utilities = {
+      composeSync: composeSync,
+      EventBinder: EventBinder,
+      addStyling: addStyling,
+      toggleStyling: toggleStyling
     };
 
     function PluginManager(plugins, pluginData) {
@@ -2557,43 +2675,52 @@
       };
     }
 
-    function PopupAspect(choicesElement, filterInputElement, createPopper) {
-      var popper = null;
-      var popperConfiguration = {
-        placement: 'bottom-start',
-        modifiers: {
-          preventOverflow: {
-            enabled: true
-          },
-          hide: {
-            enabled: false
-          },
-          flip: {
-            enabled: false
-          }
-        }
-      };
+    function ChoicesVisibilityAspect(choicesElement) {
       return {
-        init: function init() {
-          if (!!createPopper.prototype && !!createPopper.prototype.constructor.name) {
-            // it is a constructor
-            popper = new createPopper(filterInputElement, choicesElement, popperConfiguration);
-          } else {
-            popper = createPopper(filterInputElement, choicesElement, popperConfiguration); //throw new Error("BsMultiSelect: popper paramater is not a constructor")
-          }
-        },
         isChoicesVisible: function isChoicesVisible() {
           return choicesElement.style.display != 'none';
         },
         setChoicesVisible: function setChoicesVisible(visible) {
           choicesElement.style.display = visible ? 'block' : 'none';
         },
-        popperConfiguration: popperConfiguration,
-        updatePopupLocation: function updatePopupLocation() {
-          popper.update(); // become async in poppoer 2; use forceUpdate if sync is needed? 
-        },
-        dispose: function dispose() {
-          popper.destroy();
+        updatePopupLocation: function updatePopupLocation() {}
+      };
+    } // export function PopupAspect(choicesElement, filterInputElement, createPopper) { 
+    //     let popper = null;
+    //     let popperConfiguration = {
+    //         placement: 'bottom-start',
+    //         modifiers: {
+    //             preventOverflow: {enabled:true},
+    //             hide: {enabled:false},
+    //             flip: {enabled:false}
+    //         }
+    //     };
+    //     return {
+    //         init(){ 
+    //             if (!!createPopper.prototype && !!createPopper.prototype.constructor.name) { // it is a constructor
+    //                 popper = new createPopper(filterInputElement, choicesElement, popperConfiguration); 
+    //             }else{
+    //                 popper = createPopper(filterInputElement, choicesElement, popperConfiguration); 
+    //                 //throw new Error("BsMultiSelect: popper paramater is not a constructor")
+    //             }
+    //         },        
+    //         updatePopupLocation(){
+    //             popper.update();  // become async in poppoer 2; use forceUpdate if sync is needed? 
+    //         },
+    //         adoptRtl(isRtl){
+    //             if (isRtl)
+    //                 popperConfiguration.placement = 'bottom-end';
+    //         },
+    //         dispose(){
+    //             popper.destroy();
+    //         }
+    //     }
+    // }
+
+    function SpecialPicksEventsAspect() {
+      return {
+        backSpace: function backSpace(pick) {
+          pick.setSelectedFalse(); //popupAspect.updatePopupLocation();
         }
       };
     }
@@ -3146,15 +3273,16 @@
           filterDom = aspects.filterDom,
           picksDom = aspects.picksDom,
           choicesDom = aspects.choicesDom,
-          popupAspect = aspects.popupAspect,
+          choicesVisibilityAspect = aspects.choicesVisibilityAspect,
           hoveredChoiceAspect = aspects.hoveredChoiceAspect,
           navigateAspect = aspects.navigateAspect,
           filterManagerAspect = aspects.filterManagerAspect,
           focusInAspect = aspects.focusInAspect,
           optionToggleAspect = aspects.optionToggleAspect,
           createPickHandlersAspect = aspects.createPickHandlersAspect,
-          inputAspect = aspects.inputAspect,
           picksList = aspects.picksList,
+          inputAspect = aspects.inputAspect,
+          specialPicksEventsAspect = aspects.specialPicksEventsAspect,
           buildChoiceAspect = aspects.buildChoiceAspect,
           setDisabledComponentAspect = aspects.setDisabledComponentAspect,
           resetLayoutAspect = aspects.resetLayoutAspect;
@@ -3191,10 +3319,10 @@
       };
 
       function showChoices() {
-        if (!popupAspect.isChoicesVisible()) {
-          popupAspect.updatePopupLocation();
+        if (!choicesVisibilityAspect.isChoicesVisible()) {
+          choicesVisibilityAspect.updatePopupLocation();
           eventLoopFlag.set();
-          popupAspect.setChoicesVisible(true); // add listeners that manages close dropdown on  click outside container
+          choicesVisibilityAspect.setChoicesVisible(true); // add listeners that manages close dropdown on  click outside container
 
           choicesElement.addEventListener("mousedown", skipoutMousedown);
           document.addEventListener("mouseup", documentMouseup);
@@ -3205,9 +3333,9 @@
         resetMouseCandidateChoice();
         hoveredChoiceAspect.resetHoveredChoice();
 
-        if (popupAspect.isChoicesVisible()) {
+        if (choicesVisibilityAspect.isChoicesVisible()) {
           // COOMENT OUT DEBUGGING popup layout
-          popupAspect.setChoicesVisible(false);
+          choicesVisibilityAspect.setChoicesVisible(false);
           choicesElement.removeEventListener("mousedown", skipoutMousedown);
           document.removeEventListener("mouseup", documentMouseup);
         }
@@ -3229,7 +3357,7 @@
         filterDom.setFocusIfNotTarget(event.target);
 
         if (preventDefaultClickEvent != event) {
-          if (popupAspect.isChoicesVisible()) {
+          if (choicesVisibilityAspect.isChoicesVisible()) {
             hideChoices();
           } else {
             if (filterManagerAspect.getNavigateManager().getCount() > 0) showChoices();
@@ -3348,7 +3476,7 @@
         var visibleCount = filterManagerAspect.getNavigateManager().getCount();
 
         if (visibleCount > 0) {
-          var panelIsVisble = popupAspect.isChoicesVisible();
+          var panelIsVisble = choicesVisibilityAspect.isChoicesVisible();
 
           if (!panelIsVisble) {
             showChoices();
@@ -3360,7 +3488,7 @@
             if (panelIsVisble) hoveredChoiceAspect.resetHoveredChoice();
           }
         } else {
-          if (popupAspect.isChoicesVisible()) hideChoices();
+          if (choicesVisibilityAspect.isChoicesVisible()) hideChoices();
         }
       }
 
@@ -3419,8 +3547,7 @@
               var pick = picksList.getTail();
 
               if (pick) {
-                pick.setSelectedFalse();
-                popupAspect.updatePopupLocation();
+                specialPicksEventsAspect.backSpace(pick);
               }
             }
           } // ---------------------------------------------------------------------------------
@@ -3436,7 +3563,7 @@
           /*esc*/
           ) {
               // NOTE: forbid the ESC to close the modal (in case the nonempty or dropdown is open)
-              if (!empty || popupAspect.isChoicesVisible()) event.stopPropagation();
+              if (!empty || choicesVisibilityAspect.isChoicesVisible()) event.stopPropagation();
             } else if (keyCode == 38) {
             keyDownArrow(false); // up
           } else if (keyCode == 40) {
@@ -3449,11 +3576,11 @@
         //handler();    
 
         if (keyCode == 9) {
-          if (popupAspect.isChoicesVisible()) {
+          if (choicesVisibilityAspect.isChoicesVisible()) {
             hoveredToSelected();
           }
         } else if (keyCode == 13) {
-          if (popupAspect.isChoicesVisible()) {
+          if (choicesVisibilityAspect.isChoicesVisible()) {
             hoveredToSelected();
           } else {
             if (filterManagerAspect.getNavigateManager().getCount() > 0) {
@@ -3563,21 +3690,10 @@
       };
     }
 
-    function BsMultiSelect(element, environment, configuration, onInit) {
+    function BsMultiSelect(element, environment, plugins, configuration, onInit) {
       var _extendIfUndefined;
 
-      var createPopper = environment.createPopper,
-          window = environment.window,
-          plugins = environment.plugins;
-
-      if (typeof createPopper === 'undefined') {
-        createPopper = environment.Popper;
-
-        if (typeof createPopper !== 'undefined') ; else {
-          throw new Error("BsMultiSelect: Popper component (https://popper.js.org) is required");
-        }
-      }
-
+      var window = environment.window;
       var containerClass = configuration.containerClass,
           css = configuration.css,
           getDisabled = configuration.getDisabled,
@@ -3593,7 +3709,8 @@
       var optionPropertiesAspect = OptionPropertiesAspect(getText);
       var isChoiceSelectableAspect = IsChoiceSelectableAspect();
       var createWrapAspect = CreateWrapAspect();
-      var createChoiceBaseAspect = CreateChoiceBaseAspect(optionPropertiesAspect); //let setOptionSelectedAspect = SetOptionSelectedAspect(optionPropertiesAspect);
+      var createChoiceBaseAspect = CreateChoiceBaseAspect(optionPropertiesAspect); //let rtlAspect = RtlAspect();
+      //let setOptionSelectedAspect = SetOptionSelectedAspect(optionPropertiesAspect);
 
       var addPickAspect = AddPickAspect();
       var removePickAspect = RemovePickAspect();
@@ -3690,7 +3807,8 @@
 
 
       var filterDom = FilterDom(staticDom.disposablePicksElement, createElementAspect, css);
-      var popupAspect = PopupAspect(choicesDom.choicesElement, filterDom.filterInputElement, createPopper);
+      var specialPicksEventsAspect = SpecialPicksEventsAspect();
+      var choicesVisibilityAspect = ChoicesVisibilityAspect(choicesDom.choicesElement);
       var resetFilterListAspect = ResetFilterListAspect(filterDom, filterManagerAspect);
       var resetFilterAspect = ResetFilterAspect(filterDom, resetFilterListAspect); // TODO get picksDom  from staticDomFactory
 
@@ -3725,7 +3843,7 @@
         resetLayoutAspect: resetLayoutAspect,
         pickDomFactory: pickDomFactory,
         choiceDomFactory: choiceDomFactory,
-        popupAspect: popupAspect,
+        choicesVisibilityAspect: choicesVisibilityAspect,
         staticManager: staticManager,
         buildChoiceAspect: buildChoiceAspect,
         optionToggleAspect: optionToggleAspect,
@@ -3737,7 +3855,8 @@
         createPickHandlersAspect: createPickHandlersAspect,
         inputAspect: inputAspect,
         resetFilterListAspect: resetFilterListAspect,
-        resetFilterAspect: resetFilterAspect
+        resetFilterAspect: resetFilterAspect,
+        specialPicksEventsAspect: specialPicksEventsAspect
       }, _extendIfUndefined["resetLayoutAspect"] = resetLayoutAspect, _extendIfUndefined.focusInAspect = focusInAspect, _extendIfUndefined.updateDisabledComponentAspect = updateDisabledComponentAspect, _extendIfUndefined.setDisabledComponentAspect = setDisabledComponentAspect, _extendIfUndefined.appearanceAspect = appearanceAspect, _extendIfUndefined.loadAspect = loadAspect, _extendIfUndefined.updateDataAspect = updateDataAspect, _extendIfUndefined.fullMatchAspect = fullMatchAspect, _extendIfUndefined));
       var pluginManager = PluginManager(plugins, aspects);
       var multiSelectInlineLayout = MultiSelectInlineLayout(aspects);
@@ -3752,7 +3871,7 @@
           return pick.dispose();
         });
       }, multiSelectInlineLayout.dispose, // TODO move to layout
-      wraps.dispose, staticManager.dispose, popupAspect.dispose, picksDom.dispose, filterDom.dispose);
+      wraps.dispose, staticManager.dispose, picksDom.dispose, filterDom.dispose);
       api.updateAppearance = appearanceAspect.updateAppearance;
       api.updateData = updateDataAspect.updateData;
 
@@ -3766,8 +3885,8 @@
       onInit == null ? void 0 : onInit(api, aspects);
       picksDom.pickFilterElement.appendChild(filterDom.filterInputElement);
       picksDom.picksElement.appendChild(picksDom.pickFilterElement);
-      staticManager.appendToContainer();
-      popupAspect.init();
+      staticManager.appendToContainer(); //    popupAspect.init();
+
       loadAspect.load();
       return api;
     }
@@ -3900,64 +4019,46 @@
       }
     }
 
-    function MultiSelectBuilder(plugins, window, createPopper, trigger) {
-      if (createPopper.createPopper) {
-        createPopper = createPopper.createPopper;
-      }
-
+    function MultiSelectBuilder(environment, plugins) {
       var defaults = {
         containerClass: "dashboardcode-bsmultiselect"
       };
 
-      var createBsMultiSelect = function createBsMultiSelect(element, settings, removeInstanceData) {
-        var _settings2;
+      var construct = function construct(element, options) {
+        var _options2;
 
-        var environment = {
-          trigger: trigger,
-          window: window,
-          createPopper: createPopper
-        };
+        if (options.plugins) console.log("DashboarCode.BsMultiSelect: 'options.plugins' is depricated, use - MultiSelectBuilder(environment, plugins) instead");
         var configuration = {};
         var buildConfiguration;
 
-        if (settings instanceof Function) {
-          buildConfiguration = settings;
-          settings = null;
+        if (options instanceof Function) {
+          buildConfiguration = options;
+          options = null;
         } else {
-          var _settings;
+          var _options;
 
-          buildConfiguration = (_settings = settings) == null ? void 0 : _settings.buildConfiguration;
+          buildConfiguration = (_options = options) == null ? void 0 : _options.buildConfiguration;
         }
 
-        if (settings) {
-          adjustLegacySettings(settings);
-
-          if (settings.plugins) {
-            environment.plugins = settings.plugins;
-            settings.plugins = null;
-          }
+        if (options) {
+          adjustLegacySettings(options);
         }
 
-        if (!environment.plugins) {
-          environment.plugins = plugins;
-        }
+        configuration.css = createCss(defaults.css, (_options2 = options) == null ? void 0 : _options2.css);
+        plugMergeSettings(plugins, configuration, defaults, options); // merge settings.cssPatch and defaults.cssPatch
 
-        configuration.css = createCss(defaults.css, (_settings2 = settings) == null ? void 0 : _settings2.css);
-        plugMergeSettings(environment.plugins, configuration, defaults, settings); // merge settings.cssPatch and defaults.cssPatch
-
-        extendIfUndefined(configuration, settings);
+        extendIfUndefined(configuration, options);
         extendIfUndefined(configuration, defaults);
         var onInit = buildConfiguration == null ? void 0 : buildConfiguration(element, configuration);
-        var multiSelect = BsMultiSelect(element, environment, configuration, onInit); // onInit(api, aspects) - before load data
+        var multiSelect = BsMultiSelect(element, environment, plugins, configuration, onInit); // onInit(api, aspects) - before load data
 
-        multiSelect.dispose = composeSync(multiSelect.dispose, removeInstanceData);
         return multiSelect;
       };
 
       plugDefaultConfig(plugins, defaults);
       return {
-        constructor: createBsMultiSelect,
-        defaultOptions: defaults
+        construct: construct,
+        defaultSettings: defaults
       };
     }
 
@@ -3966,21 +4067,32 @@
         return $(e).trigger(eventName);
       };
 
-      defaultPlugins.unshift(Bs5Plugin);
+      var plugins = shallowClearClone({
+        Bs5Plugin: Bs5Plugin
+      }, defaultPlugins);
+      var environment = {
+        trigger: trigger,
+        window: window,
+        createPopper: createPopper
+      };
+      var pluginsArray = ObjectValues(plugins);
 
-      var _MultiSelectBuilder = MultiSelectBuilder(defaultPlugins, window, createPopper, trigger),
-          constructor = _MultiSelectBuilder.constructor,
-          defaultOptions = _MultiSelectBuilder.defaultOptions;
+      var _MultiSelectBuilder = MultiSelectBuilder(environment, pluginsArray),
+          construct = _MultiSelectBuilder.construct,
+          defaultSettings = _MultiSelectBuilder.defaultSettings;
 
-      var prototypable = addToJQueryPrototype('BsMultiSelect', constructor, $);
-      prototypable.defaults = defaultOptions;
+      var constructor2 = function constructor2(element, settings, removeInstanceData) {
+        var multiSelect = construct(element, settings);
+        multiSelect.dispose = composeSync(multiSelect.dispose, removeInstanceData);
+        return multiSelect;
+      };
+
+      var prototypable = addToJQueryPrototype('BsMultiSelect', constructor2, $);
+      prototypable.defaults = defaultSettings;
       prototypable.tools = {
-        EventBinder: EventBinder,
-        addStyling: addStyling,
-        toggleStyling: toggleStyling,
-        composeSync: composeSync,
         MultiSelectBuilder: MultiSelectBuilder,
-        defaultPlugins: defaultPlugins
+        plugins: plugins,
+        utilities: utilities
       };
     })(window, $__default['default'], Popper__default['default']);
 

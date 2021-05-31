@@ -1,61 +1,33 @@
-import {BsMultiSelect as BsMultiSelectBase}  from './BsMultiSelect'
-import {plugDefaultConfig, plugMergeSettings}  from './PluginManager'
 import {Bs5Plugin} from './plugins/Bs5Plugin'
-import {LabelPlugin} from './plugins/LabelPlugin'
-import {RtlPlugin} from './plugins/RtlPlugin'
-import {FormResetPlugin} from './plugins/FormResetPlugin'
-import {ValidationApiPlugin} from './plugins/ValidationApiPlugin'
-import {BsAppearancePlugin} from './plugins/BsAppearancePlugin'
-import {HiddenOptionPlugin} from './plugins/HiddenOptionPlugin'
-import {CssPatchPlugin} from './plugins/CssPatchPlugin'
-import {PlaceholderPlugin} from './plugins/PlaceholderPlugin'
-import {JQueryMethodsPlugin} from './plugins/JQueryMethodsPlugin'
-import {OptionsApiPlugin} from './plugins/OptionsApiPlugin'
-import {SelectElementPlugin} from './plugins/SelectElementPlugin'
+import {defaultPlugins} from './PluginSet'
+import {shallowClearClone, ObjectValues} from './ToolsJs'
+import {utilities} from './ToolSet'
+import  {MultiSelectBuilder} from './MultiSelectBuilder'
 
-import {SelectedOptionPlugin} from './plugins/SelectedOptionPlugin'
-import {DisabledOptionPlugin} from './plugins/DisabledOptionPlugin'
-import {FormRestoreOnBackwardPlugin} from './plugins/FormRestoreOnBackwardPlugin'
-import {PicksApiPlugin} from './plugins/PicksApiPlugin'
-
-import {createCss} from './ToolsStyling'
-import {extendIfUndefined, composeSync} from './ToolsJs'
-
-import  {EventBinder} from './ToolsDom'
-import  {addStyling, toggleStyling} from './ToolsStyling'
-
-const defaults = {containerClass : "dashboardcode-bsmultiselect"}
-const defaultPlugins = [Bs5Plugin, CssPatchPlugin, SelectElementPlugin, LabelPlugin, HiddenOptionPlugin, ValidationApiPlugin, 
-    BsAppearancePlugin, FormResetPlugin, RtlPlugin, PlaceholderPlugin , OptionsApiPlugin,
-    JQueryMethodsPlugin, SelectedOptionPlugin, FormRestoreOnBackwardPlugin,  DisabledOptionPlugin, PicksApiPlugin];
-
-function BsMultiSelect(element, environment, settings){
+function ModuleFactory(environment){
     if (!environment.trigger)
         environment.trigger = (e, name) => e.dispatchEvent(new environment.window.Event(name))
-
-    if (!environment.plugins)
-        environment.plugins = defaultPlugins;
+    let plugins = shallowClearClone({Bs5Plugin}, defaultPlugins);
+    let pluginsArray = ObjectValues(plugins);
     
-    let configuration = {};
-
-    configuration.css = createCss(defaults.css, settings?.css);
-    plugMergeSettings(defaultPlugins, configuration, defaults, settings);
-
-    extendIfUndefined(configuration, settings);
-    extendIfUndefined(configuration, defaults);
-
-    return BsMultiSelectBase(element, environment, configuration, settings?.onInit);
+    let {construct, defaultSettings} = MultiSelectBuilder(environment, pluginsArray) 
+    construct.Default = defaultSettings;
+    
+    return {
+        BsMultiSelect: construct,
+        plugins,
+        utilities  
+    }
 }
 
-plugDefaultConfig(defaultPlugins, defaults);
-BsMultiSelect.defaults=defaults;
-BsMultiSelect.tools = {EventBinder, addStyling, toggleStyling, composeSync}
-BsMultiSelect.plugins = {Bs5Plugin, CssPatchPlugin, SelectElementPlugin, LabelPlugin, HiddenOptionPlugin, ValidationApiPlugin, 
-    BsAppearancePlugin, FormResetPlugin, RtlPlugin, PlaceholderPlugin , OptionsApiPlugin, JQueryMethodsPlugin, SelectedOptionPlugin, FormRestoreOnBackwardPlugin,  DisabledOptionPlugin, PicksApiPlugin}
+function legacyConstructor(element, environment, settings){
+    console.log(`DashboarCode.BsMultiSelect: 'BsMultiSelect' is depricated, use - ModuleFactory(environment).BsMultiSelect(element, settings) `);
+    var {BsMultiSelect} =  ModuleFactory(environment);
+    var bsMultiSelect = BsMultiSelect(element, settings);
+    return bsMultiSelect;
+}
 
-export  {
-    BsMultiSelect, 
-    addStyling, toggleStyling, composeSync,
-    Bs5Plugin, CssPatchPlugin, SelectElementPlugin, LabelPlugin, HiddenOptionPlugin, ValidationApiPlugin, 
-    BsAppearancePlugin, FormResetPlugin, RtlPlugin, PlaceholderPlugin , OptionsApiPlugin,
-    JQueryMethodsPlugin, SelectedOptionPlugin, FormRestoreOnBackwardPlugin,  DisabledOptionPlugin, PicksApiPlugin}
+export  { 
+    legacyConstructor as BsMultiSelect,
+    ModuleFactory
+}

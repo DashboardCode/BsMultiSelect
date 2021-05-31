@@ -10,7 +10,9 @@ import {PicksDom} from './PicksDom';
 import {FilterDom} from './FilterDom';
 
 import {ChoicesDomFactory} from './ChoicesDomFactory';
-import {PopupAspect} from './PopupAspect';
+//import {PopupAspect} from './PopupAspect';
+import {ChoicesVisibilityAspect} from './PopupAspect';
+import {SpecialPicksEventsAspect} from './SpecialPicksEventsAspect';
  
 import {ComponentPropertiesAspect, TriggerAspect, OnChangeAspect} from './ComponentPropertiesAspect';
 import {OptionsAspect, OptionPropertiesAspect} from './OptionsAspect';
@@ -21,7 +23,7 @@ import {BuildAndAttachChoiceAspect, BuildChoiceAspect} from './BuildChoiceAspect
 import {FillChoicesAspect} from './FillChoicesAspect'
 
 import {UpdateDataAspect } from './UpdateDataAspect'
-
+//import {RtlAspect} from './RtlAspect'
 import {CreateWrapAspect, CreateChoiceBaseAspect, OptionToggleAspect, CreatePickHandlersAspect, RemovePickAspect, 
     AddPickAspect, FullMatchAspect, ChoiceClickAspect, IsChoiceSelectableAspect, ProducePickAspect} from './CreateWrapAspect.js'
 import {NavigateAspect, HoveredChoiceAspect} from './NavigateAspect'
@@ -41,18 +43,9 @@ import {DoublyLinkedList, ArrayFacade} from './ToolsJs'
 import {CountableChoicesListInsertAspect} from './CountableChoicesListInsertAspect'
 
 /// environment - common for many; configuration for concreate
-export function BsMultiSelect(element, environment, configuration, onInit){
-    var {createPopper, window, plugins} = environment;
+export function BsMultiSelect(element, environment, plugins, configuration, onInit){
+    var {window} = environment;
     
-    if (typeof createPopper === 'undefined') {
-        createPopper = environment.Popper;
-        if (typeof createPopper !== 'undefined') {
-            //console.log(`DashboarCode.BsMultiSelect: 'environment.Popper' is depricated, use - 'environment.createPopper'}`);
-        } else {
-            throw new Error("BsMultiSelect: Popper component (https://popper.js.org) is required")
-        }
-    }
-
     let { containerClass,
           css, 
           getDisabled,
@@ -69,6 +62,7 @@ export function BsMultiSelect(element, environment, configuration, onInit){
     let isChoiceSelectableAspect = IsChoiceSelectableAspect();
     let createWrapAspect        = CreateWrapAspect();
     let createChoiceBaseAspect   = CreateChoiceBaseAspect(optionPropertiesAspect);
+    //let rtlAspect = RtlAspect();
     //let setOptionSelectedAspect = SetOptionSelectedAspect(optionPropertiesAspect);
     
     let addPickAspect = AddPickAspect();
@@ -131,7 +125,7 @@ export function BsMultiSelect(element, environment, configuration, onInit){
         (w, key)=>countableChoicesListInsertAspect.countableChoicesListInsert(w, key));
 
     let aspects = {
-        environment, configuration, triggerAspect, onChangeAspect, componentPropertiesAspect, disposeAspect,
+        environment, configuration, triggerAspect, onChangeAspect, componentPropertiesAspect, disposeAspect, 
         countableChoicesList, countableChoicesListInsertAspect,
         optionsAspect, optionPropertiesAspect, 
         createWrapAspect, createChoiceBaseAspect, isChoiceSelectableAspect, 
@@ -151,7 +145,9 @@ export function BsMultiSelect(element, environment, configuration, onInit){
     // after this we can use staticDom in construtctor, this simplifies parameters passing a lot   
 
     let filterDom = FilterDom(staticDom.disposablePicksElement, createElementAspect, css);
-    let popupAspect = PopupAspect(choicesDom.choicesElement, filterDom.filterInputElement, createPopper);
+    let specialPicksEventsAspect = SpecialPicksEventsAspect();
+
+    let choicesVisibilityAspect = ChoicesVisibilityAspect(choicesDom.choicesElement);
     let resetFilterListAspect = ResetFilterListAspect(filterDom, filterManagerAspect)
     let resetFilterAspect =  ResetFilterAspect(filterDom, resetFilterListAspect)
     
@@ -188,9 +184,10 @@ export function BsMultiSelect(element, environment, configuration, onInit){
 
     extendIfUndefined(aspects, {
         staticDom, picksDom, choicesDom,filterDom, resetLayoutAspect, pickDomFactory, choiceDomFactory,
-        popupAspect, staticManager, buildChoiceAspect, optionToggleAspect,  choiceClickAspect, 
+        choicesVisibilityAspect, staticManager, buildChoiceAspect, optionToggleAspect,  choiceClickAspect, 
         buildAndAttachChoiceAspect , fillChoicesAspect, 
         buildPickAspect, producePickAspect, createPickHandlersAspect, inputAspect, resetFilterListAspect, resetFilterAspect, 
+        specialPicksEventsAspect,
         resetLayoutAspect, focusInAspect, 
         updateDisabledComponentAspect, setDisabledComponentAspect, appearanceAspect, loadAspect,
         updateDataAspect , fullMatchAspect} )
@@ -209,7 +206,7 @@ export function BsMultiSelect(element, environment, configuration, onInit){
         ()=>{picksList.forEach(pick=>pick.dispose());},
         multiSelectInlineLayout.dispose, // TODO move to layout
         wraps.dispose,
-        staticManager.dispose, popupAspect.dispose, picksDom.dispose, filterDom.dispose );
+        staticManager.dispose,  picksDom.dispose, filterDom.dispose );
     
     api.updateAppearance = appearanceAspect.updateAppearance;
     api.updateData = updateDataAspect.updateData;
@@ -225,7 +222,7 @@ export function BsMultiSelect(element, environment, configuration, onInit){
     picksDom.pickFilterElement.appendChild(filterDom.filterInputElement);
     picksDom.picksElement.appendChild(picksDom.pickFilterElement); 
     staticManager.appendToContainer();
-    popupAspect.init();
+//    popupAspect.init();
     loadAspect.load();
     
     return api;

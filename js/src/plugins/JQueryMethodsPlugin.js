@@ -11,7 +11,6 @@ export function JQueryMethodsPlugin(pluginData){
             api.getPicks = () => picksDom.picksElement;
             
             api.picksCount = () => picksList.getCount();
-            //api.staticContent = popupAspect; // depricated, alternative accept to popupAspect.setChoicesVisible
 
             pluginData.jQueryMethodsPluginData = {EventBinder, addStyling, toggleStyling}
         }

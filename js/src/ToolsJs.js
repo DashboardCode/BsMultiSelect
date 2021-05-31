@@ -337,3 +337,11 @@ export function ObservableLambda(func){
         }
     }
 }
+
+export function ObjectValues(object){ // Object.values(plugins) - problem for IE11; full impementation of polifill is mor complex, but for our purpose this is enough
+    var arr = [];
+	for (var key in object) {
+        arr.push(object[key]);
+	}
+	return arr;
+}

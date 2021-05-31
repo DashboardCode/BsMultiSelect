@@ -18,10 +18,12 @@ import {DisabledOptionPlugin} from './plugins/DisabledOptionPlugin'
 import {PicksApiPlugin} from './plugins/PicksApiPlugin'
 import {PicksPlugin} from './plugins/PicksPlugin'
 
-export let defaultPlugins = [CssPatchPlugin, SelectElementPlugin, LabelPlugin, HiddenOptionPlugin, ValidationApiPlugin, 
-    BsAppearancePlugin, FormResetPlugin, RtlPlugin, PlaceholderPlugin , OptionsApiPlugin, 
-    JQueryMethodsPlugin, SelectedOptionPlugin, FormRestoreOnBackwardPlugin, DisabledOptionPlugin, PicksApiPlugin];
+import {PopperPlugin} from './plugins/PopperPlugin'
 
-export let ajaxPlugins = [CssPatchPlugin, PicksPlugin, LabelPlugin, ValidationApiPlugin, 
-    BsAppearancePlugin, RtlPlugin, PlaceholderPlugin , OptionsApiPlugin, 
-    JQueryMethodsPlugin, PicksApiPlugin];
+export let defaultPlugins = {CssPatchPlugin, SelectElementPlugin, LabelPlugin, HiddenOptionPlugin, ValidationApiPlugin, 
+    BsAppearancePlugin, FormResetPlugin, RtlPlugin, PopperPlugin, PlaceholderPlugin , OptionsApiPlugin, 
+    JQueryMethodsPlugin, SelectedOptionPlugin, FormRestoreOnBackwardPlugin, DisabledOptionPlugin, PicksApiPlugin};
+
+export let ajaxPlugins = {CssPatchPlugin, PicksPlugin, LabelPlugin, ValidationApiPlugin, 
+    BsAppearancePlugin, RtlPlugin, PopperPlugin, PlaceholderPlugin , OptionsApiPlugin, 
+    JQueryMethodsPlugin, PicksApiPlugin};
