@@ -7,7 +7,7 @@ Bootstrap 4 Demo : https://dashboardcode.github.io/BsMultiSelect/indexBs4.html
 
 Snippets:
 
-1. [Floating Label](https://dashboardcode.github.io/BsMultiSelect/snippetFloating.html),  (Only BS5)
+1. [Floating Labels](https://dashboardcode.github.io/BsMultiSelect/snippetFloating.html),  (Only BS5)
 
 2. [Custom Validation](https://dashboardcode.github.io/BsMultiSelect/snippetCustomValidation.html),  ([BS4 Version](https://dashboardcode.github.io/BsMultiSelect/snippetCustomValidationBs4.html))
 
