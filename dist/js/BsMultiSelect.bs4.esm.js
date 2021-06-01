@@ -673,7 +673,7 @@ function RtlPlugin(pluginData) {
     }
   }
 
-  if (rtlAspect.adoptRtl) rtlAspect.adoptRtl(isRtl);
+  if (rtlAspect.updateRtl) rtlAspect.updateRtl(isRtl);
   return {
     dispose: function dispose() {
     }
@@ -686,7 +686,7 @@ RtlPlugin.plugStaticDom = function (aspects) {
 
 function RtlAspect() {
   return {
-    adoptRtl: function adoptRtl() {}
+    updateRtl: function updateRtl() {}
   };
 }
 
@@ -1025,7 +1025,8 @@ function BsAppearancePlugin(pluginData) {
       staticDom = pluginData.staticDom,
       labelPluginData = pluginData.labelPluginData,
       appearanceAspect = pluginData.appearanceAspect,
-      componentPropertiesAspect = pluginData.componentPropertiesAspect;
+      componentPropertiesAspect = pluginData.componentPropertiesAspect,
+      floatingLabelAspect = pluginData.floatingLabelAspect;
   var getValidity = configuration.getValidity,
       getSize = configuration.getSize,
       useCssPatch = configuration.useCssPatch,
@@ -1033,6 +1034,16 @@ function BsAppearancePlugin(pluginData) {
       composeGetSize = configuration.composeGetSize,
       getDefaultLabel = configuration.getDefaultLabel;
   var selectElement = staticDom.selectElement;
+  var initialElement = staticDom.initialElement;
+  var isFloatingLabel = false;
+
+  if (floatingLabelAspect) {
+    isFloatingLabel = initialElement.closest('.form-floating') ? true : false;
+
+    floatingLabelAspect.isFloatingLabel = function () {
+      return isFloatingLabel;
+    };
+  }
 
   if (labelPluginData) {
     var origGetLabelElementAspect = labelPluginData.getLabelElementAspect;
@@ -1071,7 +1082,9 @@ function BsAppearancePlugin(pluginData) {
   } else {
     var picks_lg = css.picks_lg,
         picks_sm = css.picks_sm,
-        picks_def = css.picks_def;
+        picks_def = css.picks_def,
+        picks_floating_def = css.picks_floating_def;
+    if (isFloatingLabel) picks_lg = picks_sm = picks_def = picks_floating_def;
 
     updateSize = function updateSize() {
       return updateSizeJsForAdapter(picksDom.picksElement, picks_lg, picks_sm, picks_def, getSize);
@@ -1184,7 +1197,7 @@ function updateValidity(picksElement, validMessages, invalidMessages, validity) 
   }
 }
 
-function updateSize(picksElement, size) {
+function updateSizeClasses(picksElement, size) {
   if (size == "lg") {
     picksElement.classList.add('form-control-lg');
     picksElement.classList.remove('form-control-sm');
@@ -1197,9 +1210,7 @@ function updateSize(picksElement, size) {
   }
 }
 
-function updateSizeJs(picksElement, picksLgStyling, picksSmStyling, picksDefStyling, size) {
-  updateSize(picksElement, size);
-
+function updateSizeJsPicks(picksElement, picksLgStyling, picksSmStyling, picksDefStyling, size) {
   if (size == "lg") {
     addStyling(picksElement, picksLgStyling);
   } else if (size == "sm") {
@@ -1209,8 +1220,13 @@ function updateSizeJs(picksElement, picksLgStyling, picksSmStyling, picksDefStyl
   }
 }
 
+function updateSizeJs(picksElement, picksLgStyling, picksSmStyling, picksDefStyling, size) {
+  updateSizeClasses(picksElement, size);
+  updateSizeJsPicks(picksElement, picksLgStyling, picksSmStyling, picksDefStyling, size);
+}
+
 function updateSizeForAdapter(picksElement, getSize) {
-  updateSize(picksElement, getSize());
+  updateSizeClasses(picksElement, getSize());
 }
 
 function updateSizeJsForAdapter(picksElement, picksLgStyling, picksSmStyling, picksDefStyling, getSize) {
@@ -1287,10 +1303,10 @@ function HiddenOptionPlugin(pluginData) {
     };
   }
 
-  var origСreateWrap = createWrapAspect.createWrap;
+  var origCreateWrap = createWrapAspect.createWrap;
 
   createWrapAspect.createWrap = function (option) {
-    var wrap = origСreateWrap(option);
+    var wrap = origCreateWrap(option);
     wrap.isOptionHidden = getIsOptionHidden(option);
     return wrap;
   };
@@ -1944,10 +1960,10 @@ function DisabledOptionPlugin(pluginData) {
   // }
 
 
-  var origСreateWrap = createWrapAspect.createWrap;
+  var origCreateWrap = createWrapAspect.createWrap;
 
   createWrapAspect.createWrap = function (option) {
-    var wrap = origСreateWrap(option);
+    var wrap = origCreateWrap(option);
     wrap.isOptionDisabled = getIsOptionDisabled(option); // TODO: remove usage wrap.isOptionDisabled
 
     wrap.updateDisabled = null;
@@ -2090,8 +2106,8 @@ function PopperPlugin(pluginData) {
       rtlAspect = pluginData.rtlAspect,
       choicesDom = pluginData.choicesDom,
       filterDom = pluginData.filterDom;
-  var createPopper = environment.createPopper;
-      environment.Popper;
+  var createPopper = environment.createPopper,
+      Popper = environment.Popper;
   var choicesElement = choicesDom.choicesElement;
   var filterInputElement = filterDom.filterInputElement;
   var popper = null;
@@ -2111,7 +2127,7 @@ function PopperPlugin(pluginData) {
   };
 
   if (typeof createPopper === 'undefined') {
-    createPopper = environment.Popper;
+    createPopper = Popper;
 
     if (typeof createPopper === 'undefined') {
       throw new Error("BsMultiSelect: Popper component (https://popper.js.org) is required");
@@ -2157,6 +2173,72 @@ function PopperPlugin(pluginData) {
   };
 }
 
+function FloatingLabelPlugin(pluginData) {
+  var configuration = pluginData.configuration,
+      picksList = pluginData.picksList,
+      picksDom = pluginData.picksDom,
+      filterDom = pluginData.filterDom,
+      staticDom = pluginData.staticDom,
+      updateDataAspect = pluginData.updateDataAspect,
+      resetFilterListAspect = pluginData.resetFilterListAspect,
+      floatingLabelAspect = pluginData.floatingLabelAspect;
+  var css = configuration.css,
+      getDefaultLabel = configuration.getDefaultLabel;
+  var initialElement = staticDom.initialElement;
+
+  if (floatingLabelAspect.isFloatingLabel()) {
+    var liftedLabel = function liftedLabel(isEmpty) {
+      liftToggleStyling1(isEmpty);
+      liftToggleStyling2(isEmpty);
+    };
+
+    var updateLiftedLabel = function updateLiftedLabel() {
+      liftedLabel(!isEmpty());
+    };
+
+    var labelElement = getDefaultLabel(initialElement);
+    var picksElement = picksDom.picksElement;
+    var liftToggleStyling1 = toggleStyling(labelElement, css.label_floating_lifted);
+    var liftToggleStyling2 = toggleStyling(picksElement, css.picks_floating_lifted);
+
+    var isEmpty = function isEmpty() {
+      return picksList.isEmpty() && filterDom.isEmpty() && !picksDom.getIsFocusIn();
+    };
+    updateLiftedLabel();
+    resetFilterListAspect.forceResetFilter = composeSync(resetFilterListAspect.forceResetFilter, updateLiftedLabel);
+    var origAdd = picksList.add;
+
+    picksList.add = function (pick) {
+      var returnValue = origAdd(pick);
+      if (picksList.getCount() == 1) updateLiftedLabel();
+      pick.dispose = composeSync(pick.dispose, function () {
+        if (picksList.getCount() == 0) updateLiftedLabel();
+      });
+      return returnValue;
+    };
+
+    var origToggleFocusStyling = picksDom.toggleFocusStyling;
+
+    picksDom.toggleFocusStyling = function () {
+      var isFocusIn = picksDom.getIsFocusIn();
+      origToggleFocusStyling(isFocusIn);
+      updateLiftedLabel();
+    };
+
+    updateDataAspect.updateData = composeSync(updateDataAspect.updateData, updateLiftedLabel);
+  }
+}
+
+FloatingLabelPlugin.plugStaticDom = function (aspects) {
+  aspects.floatingLabelAspect = FloatingLabelAspect();
+};
+
+function FloatingLabelAspect() {
+  return {
+    isFloatingLabel: function isFloatingLabel() {}
+  };
+}
+
 var defaultPlugins = {
   CssPatchPlugin: CssPatchPlugin,
   SelectElementPlugin: SelectElementPlugin,
@@ -2165,9 +2247,10 @@ var defaultPlugins = {
   ValidationApiPlugin: ValidationApiPlugin,
   BsAppearancePlugin: BsAppearancePlugin,
   FormResetPlugin: FormResetPlugin,
-  RtlPlugin: RtlPlugin,
   PopperPlugin: PopperPlugin,
+  RtlPlugin: RtlPlugin,
   PlaceholderPlugin: PlaceholderPlugin,
+  FloatingLabelPlugin: FloatingLabelPlugin,
   OptionsApiPlugin: OptionsApiPlugin,
   JQueryMethodsPlugin: JQueryMethodsPlugin,
   SelectedOptionPlugin: SelectedOptionPlugin,
@@ -3910,7 +3993,7 @@ function MultiSelectBuilder(environment, plugins) {
   var construct = function construct(element, options) {
     var _options2;
 
-    if (options.plugins) console.log("DashboarCode.BsMultiSelect: 'options.plugins' is depricated, use - MultiSelectBuilder(environment, plugins) instead");
+    if (options && options.plugins) console.log("DashboarCode.BsMultiSelect: 'options.plugins' is depricated, use - MultiSelectBuilder(environment, plugins) instead");
     var configuration = {};
     var buildConfiguration;
 

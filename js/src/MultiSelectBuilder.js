@@ -12,7 +12,7 @@ export function MultiSelectBuilder(environment, plugins)
     const defaults = {containerClass: "dashboardcode-bsmultiselect"}
 
     let construct = (element, options) => { 
-        if (options.plugins)
+        if (options && options.plugins)
             console.log(`DashboarCode.BsMultiSelect: 'options.plugins' is depricated, use - MultiSelectBuilder(environment, plugins) instead`);
         let configuration = {};
         let buildConfiguration;

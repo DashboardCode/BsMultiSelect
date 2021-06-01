@@ -155,6 +155,25 @@
     }
 }
 
+.form-floating{
+    .dashboardcode-bsmultiselect{
+        ul.form-control{
+            min-height: calc(3.5rem + 2px);
+
+            &.floating-lifted{
+                padding-top: 1.625rem;
+                padding-left: 0.7rem;
+                padding-bottom: 0;
+            }
+        } 
+
+        +label.floating-lifted{
+            opacity: .65; 
+            transform: scale(.85) translateY(-.5rem) translateX(.15rem); 
+        }
+    }
+}
+
 // From this I am solving BS4 .was-validated problem: impossibility to exclude custom checkboxes from validation styling.
 // So there we redefine pseudoclasses :valid:checked and :valid:not(:checked) - our options are allready valid.
 // Note: nested form for dropdown with 'novalidate ' attribute possibly could solve it but nested forms are not allowed

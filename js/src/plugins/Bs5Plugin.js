@@ -81,7 +81,10 @@ const css = {
     choiceContent: 'form-check', // bs4 d-flex required for rtl to align items
     choiceCheckBox: 'form-check-input', // bs4
     choiceLabel: 'form-check-label',
-    choiceLabel_disabled: ''  
+    choiceLabel_disabled: '',
+
+    label_floating_lifted: 'floating-lifted',
+    picks_floating_lifted: 'floating-lifted'
 }
 
 const cssPatch = {
@@ -108,6 +111,7 @@ const cssPatch = {
     picks_def: {minHeight: 'calc(2.25rem + 2px)'},
     picks_lg:  {minHeight: 'calc(2.875rem + 2px)'},
     picks_sm:  {minHeight: 'calc(1.8125rem + 2px)'},
+    picks_floating_def: {minHeight: 'calc(3.5rem + 2px)'},
     
     // used in pickContentGenerator
     pick: {paddingLeft: '0px' },
@@ -120,9 +124,8 @@ const cssPatch = {
     choiceCheckBox: {color: 'inherit'},
     choiceLabel_disabled: {opacity: '.65'},  // more flexible than {color: '#6c757d'}; note: avoid opacity on pickElement's border; TODO write to BS4 
 
-    //floating plugin
-    floating_choices: {minHeight: '58px'},
-    floating_choices_empty_unfocus: {paddingTop: '1.625rem', paddingBottom : '.625rem', },
-    floating_label_empty_unfocus: {opacity: '.65', transform : 'scale(.85) translateY(-.5rem) translateX(.15rem)'},
+    // floating plugin
+    label_floating_lifted: {opacity: '.65', transform : 'scale(.85) translateY(-.5rem) translateX(.15rem)'},
+    picks_floating_lifted: {paddingTop: '1.625rem', paddingLeft:'0.8rem', paddingBottom : '0'}
 }
 

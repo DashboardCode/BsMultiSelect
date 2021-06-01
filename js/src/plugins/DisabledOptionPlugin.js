@@ -19,9 +19,9 @@ export function DisabledOptionPlugin(pluginData){
     //     wrap?.pick?.pickDomManagerHandlers?.updateDisabled?.();
     // }
 
-    let origСreateWrap = createWrapAspect.createWrap;
+    let origCreateWrap = createWrapAspect.createWrap;
     createWrapAspect.createWrap = (option) => {
-        let wrap = origСreateWrap(option);
+        let wrap = origCreateWrap(option);
         wrap.isOptionDisabled = getIsOptionDisabled(option); // TODO: remove usage wrap.isOptionDisabled
         wrap.updateDisabled = null; 
         return wrap;

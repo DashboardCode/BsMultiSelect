@@ -34,9 +34,9 @@ export function HiddenOptionPlugin(pluginData){
             } 
     }
     
-    var origСreateWrap = createWrapAspect.createWrap;
+    var origCreateWrap = createWrapAspect.createWrap;
     createWrapAspect.createWrap = (option) => {
-        let wrap = origСreateWrap(option);
+        let wrap = origCreateWrap(option);
         wrap.isOptionHidden = getIsOptionHidden(option);
         return wrap;
     };

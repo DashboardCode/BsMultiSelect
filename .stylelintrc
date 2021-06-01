@@ -4,6 +4,7 @@
     "stylelint-order"
   ],
   "rules": {
+    "block-closing-brace-newline-before": null,
     "no-invalid-position-at-import-rule": null,
     "selector-descendant-combinator-no-non-space":null,
     "declaration-colon-space-after":null,
@@ -15,7 +16,7 @@
     "block-closing-brace-newline-after": null,
     "block-opening-brace-space-before": null,
     "color-named": null,
-    "declaration-block-semicolon-newline-after": "always-multi-line",
+    "declaration-block-semicolon-newline-after": null,
     "declaration-block-semicolon-newline-before": "never-multi-line",
     "declaration-block-semicolon-space-after": "always-single-line",
     "declaration-empty-line-before": null,

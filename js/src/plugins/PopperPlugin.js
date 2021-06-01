@@ -5,7 +5,6 @@ export function PopperPlugin(pluginData){
     let {createPopper, Popper} = environment;
     let choicesElement = choicesDom.choicesElement;
     let filterInputElement = filterDom.filterInputElement;
-    filterInputElement
     let popper = null;
     let popperConfiguration = {
         placement: 'bottom-start',
@@ -17,7 +16,7 @@ export function PopperPlugin(pluginData){
     };
 
     if (typeof createPopper === 'undefined') {
-        createPopper = environment.Popper;
+        createPopper = Popper;
         if (typeof createPopper === 'undefined') {
             throw new Error("BsMultiSelect: Popper component (https://popper.js.org) is required")
         }
@@ -40,9 +39,13 @@ export function PopperPlugin(pluginData){
     
     var origBackSpace = specialPicksEventsAspect.backSpace;
     specialPicksEventsAspect.backSpace = (pick) => { origBackSpace(pick);  popper.update();  };
+    
     if (rtlAspect){
         var origUpdateRtl = rtlAspect.updateRtl;
-        rtlAspect.updateRtl = (isRtl) => {origUpdateRtl(isRtl); if (isRtl) popperConfiguration.placement = 'bottom-end';};
+        rtlAspect.updateRtl = (isRtl) => {
+            origUpdateRtl(isRtl); 
+            if (isRtl) popperConfiguration.placement = 'bottom-end';
+        };
     }
     
     choicesVisibilityAspect.updatePopupLocation = composeSync(choicesVisibilityAspect.updatePopupLocation, ()=>{

@@ -26,7 +26,6 @@ export function InputAspect(
                     let text = filterManagerAspect.getFilter();
                     if (fullMatchWrap.choice.searchText == text)
                     {
-                        //console.log("fullMatchAspect.fullMatch");
                         let success = fullMatchAspect.fullMatch(fullMatchWrap); 
                         if (success) {
                             filterDom.setEmpty();

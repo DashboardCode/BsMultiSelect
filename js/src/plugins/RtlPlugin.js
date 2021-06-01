@@ -21,8 +21,8 @@ export function RtlPlugin(pluginData){
             attributeBackup.set(staticDom.containerElement, "dir", dirAttributeValue);
         }
     } 
-    if (rtlAspect.adoptRtl)
-        rtlAspect.adoptRtl(isRtl);
+    if (rtlAspect.updateRtl)
+        rtlAspect.updateRtl(isRtl);
         
     return {
         dispose(){
@@ -37,6 +37,6 @@ RtlPlugin.plugStaticDom = (aspects) => {
 
 function RtlAspect() {
     return {
-        adoptRtl(){},
+        updateRtl(){},
     }
 }

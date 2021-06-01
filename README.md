@@ -7,17 +7,19 @@ Bootstrap 4 Demo : https://dashboardcode.github.io/BsMultiSelect/indexBs4.html
 
 Snippets:
 
-1. [Custom Validation](https://dashboardcode.github.io/BsMultiSelect/snippetCustomValidation.html),  ([BS4 Version](https://dashboardcode.github.io/BsMultiSelect/snippetCustomValidationBs4.html))
+1. [Floating Label](https://dashboardcode.github.io/BsMultiSelect/snippetFloating.html),  (Only BS5)
 
-2. [HTML Form Validation](https://dashboardcode.github.io/BsMultiSelect/snippetFormValidation.html),  ([BS4 Version](https://dashboardcode.github.io/BsMultiSelect/snippetFormValidationBs4.html))
+2. [Custom Validation](https://dashboardcode.github.io/BsMultiSelect/snippetCustomValidation.html),  ([BS4 Version](https://dashboardcode.github.io/BsMultiSelect/snippetCustomValidationBs4.html))
 
-3. [Right To Left (RTL)](https://dashboardcode.github.io/BsMultiSelect/snippetRtl.html),  ([BS4 Version](https://dashboardcode.github.io/BsMultiSelect/snippetRtlBs4.html))
+3. [HTML Form Validation](https://dashboardcode.github.io/BsMultiSelect/snippetFormValidation.html),  ([BS4 Version](https://dashboardcode.github.io/BsMultiSelect/snippetFormValidationBs4.html))
 
-4. [ES6 module, no jquery](https://dashboardcode.github.io/BsMultiSelect/snippetEsm.html), ([BS4 Version](https://dashboardcode.github.io/BsMultiSelect/snippetEsmBs4.html))
+4. [Right To Left (RTL)](https://dashboardcode.github.io/BsMultiSelect/snippetRtl.html),  ([BS4 Version](https://dashboardcode.github.io/BsMultiSelect/snippetRtlBs4.html))
 
-5. [Options manipulation API](https://dashboardcode.github.io/BsMultiSelect/snippetJs.html), ([BS4 Version](https://dashboardcode.github.io/BsMultiSelect/snippetJsBs4.html))
+5. [ES6 module, no jquery](https://dashboardcode.github.io/BsMultiSelect/snippetEsm.html), ([BS4 Version](https://dashboardcode.github.io/BsMultiSelect/snippetEsmBs4.html))
 
-6. [Columns](https://dashboardcode.github.io/BsMultiSelect/snippetColumns.html), ([BS4 Version](https://dashboardcode.github.io/BsMultiSelect/snippetColumnsBs4.html))
+6. [Options manipulation API](https://dashboardcode.github.io/BsMultiSelect/snippetJs.html), ([BS4 Version](https://dashboardcode.github.io/BsMultiSelect/snippetJsBs4.html))
+
+7. [Columns](https://dashboardcode.github.io/BsMultiSelect/snippetColumns.html), ([BS4 Version](https://dashboardcode.github.io/BsMultiSelect/snippetColumnsBs4.html))
 
 CodePen snippets, use them for bug reporting: 
      https://codepen.io/rpokrovskij/pen/yLymQwW  (initialized using HTML SELECT)

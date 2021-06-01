@@ -20,10 +20,13 @@ import {PicksPlugin} from './plugins/PicksPlugin'
 
 import {PopperPlugin} from './plugins/PopperPlugin'
 
+import {FloatingLabelPlugin} from './plugins/FloatingLabelPlugin'
+
+
 export let defaultPlugins = {CssPatchPlugin, SelectElementPlugin, LabelPlugin, HiddenOptionPlugin, ValidationApiPlugin, 
-    BsAppearancePlugin, FormResetPlugin, RtlPlugin, PopperPlugin, PlaceholderPlugin , OptionsApiPlugin, 
+    BsAppearancePlugin, FormResetPlugin, PopperPlugin, RtlPlugin,  PlaceholderPlugin, FloatingLabelPlugin, OptionsApiPlugin, 
     JQueryMethodsPlugin, SelectedOptionPlugin, FormRestoreOnBackwardPlugin, DisabledOptionPlugin, PicksApiPlugin};
 
 export let ajaxPlugins = {CssPatchPlugin, PicksPlugin, LabelPlugin, ValidationApiPlugin, 
-    BsAppearancePlugin, RtlPlugin, PopperPlugin, PlaceholderPlugin , OptionsApiPlugin, 
+    BsAppearancePlugin, PopperPlugin, RtlPlugin,  PlaceholderPlugin, FloatingLabelPlugin, OptionsApiPlugin, 
     JQueryMethodsPlugin, PicksApiPlugin};

@@ -4,10 +4,18 @@ import {ObservableLambda, composeSync} from '../ToolsJs';
 
 export function BsAppearancePlugin(pluginData){
     let {configuration, validationApiPluginData, 
-        picksDom, staticDom, labelPluginData, appearanceAspect, componentPropertiesAspect} = pluginData;
+        picksDom, staticDom, labelPluginData, appearanceAspect, componentPropertiesAspect, floatingLabelAspect} = pluginData;
     let {getValidity, getSize, useCssPatch, css, composeGetSize, getDefaultLabel} = configuration;
     let selectElement = staticDom.selectElement;
     
+    let initialElement = staticDom.initialElement;
+
+    let isFloatingLabel = false;
+    if (floatingLabelAspect){
+        isFloatingLabel = initialElement.closest('.form-floating')?true:false;
+        floatingLabelAspect.isFloatingLabel = () => isFloatingLabel
+    }
+
     if (labelPluginData){
         let origGetLabelElementAspect = labelPluginData.getLabelElementAspect;
         labelPluginData.getLabelElementAspect = () => {
@@ -43,8 +51,10 @@ export function BsAppearancePlugin(pluginData){
         updateSize= () => updateSizeForAdapter(picksDom.picksElement, getSize)
     }
     else{
-        const {picks_lg, picks_sm, picks_def} = css;
-        updateSize = () => updateSizeJsForAdapter(picksDom.picksElement, picks_lg, picks_sm, picks_def, getSize);
+        let {picks_lg, picks_sm, picks_def, picks_floating_def} = css;
+        if (isFloatingLabel)
+            picks_lg = picks_sm = picks_def = picks_floating_def;
+        updateSize = () => updateSizeJsForAdapter(picksDom.picksElement, picks_lg, picks_sm, picks_def,  getSize);
     }
 
     if (useCssPatch){
@@ -84,10 +94,7 @@ export function BsAppearancePlugin(pluginData){
     validationObservable.attach(
         (value)=>{
             var  {validMessages, invalidMessages} = getMessagesElements(staticDom.containerElement);
-            updateValidity( 
-            picksDom.picksElement,
-            validMessages, invalidMessages,
-            value);
+            updateValidity( picksDom.picksElement, validMessages, invalidMessages, value);
             picksDom.toggleFocusStyling();
         }
     )
@@ -140,7 +147,7 @@ function updateValidity(picksElement, validMessages, invalidMessages, validity){
     }
 }
 
-function updateSize(picksElement, size){
+function updateSizeClasses(picksElement, size){
     if (size=="lg"){
         picksElement.classList.add('form-control-lg');
         picksElement.classList.remove('form-control-sm');
@@ -155,8 +162,7 @@ function updateSize(picksElement, size){
     }
 }
 
-function updateSizeJs(picksElement, picksLgStyling, picksSmStyling, picksDefStyling, size){
-    updateSize(picksElement, size);
+function updateSizeJsPicks(picksElement, picksLgStyling, picksSmStyling, picksDefStyling, size){
     if (size=="lg"){
         addStyling(picksElement, picksLgStyling);
     } else if (size=="sm"){
@@ -166,8 +172,13 @@ function updateSizeJs(picksElement, picksLgStyling, picksSmStyling, picksDefStyl
     }
 }
 
+function updateSizeJs(picksElement, picksLgStyling, picksSmStyling, picksDefStyling, size){
+    updateSizeClasses(picksElement, size);
+    updateSizeJsPicks(picksElement, picksLgStyling, picksSmStyling, picksDefStyling, size)
+}
+
 function updateSizeForAdapter(picksElement, getSize){
-    updateSize(picksElement, getSize())
+    updateSizeClasses(picksElement, getSize())
 }
 
 function updateSizeJsForAdapter(picksElement, picksLgStyling, picksSmStyling, picksDefStyling, getSize){

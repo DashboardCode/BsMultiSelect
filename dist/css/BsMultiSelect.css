@@ -113,6 +113,19 @@
   font-size: 1.25rem;
 }
 
+.form-floating .dashboardcode-bsmultiselect ul.form-control {
+  min-height: calc(3.5rem + 2px);
+}
+.form-floating .dashboardcode-bsmultiselect ul.form-control.floating-lifted {
+  padding-top: 1.625rem;
+  padding-left: 0.7rem;
+  padding-bottom: 0;
+}
+.form-floating .dashboardcode-bsmultiselect + label.floating-lifted {
+  opacity: 0.65;
+  transform: scale(0.85) translateY(-0.5rem) translateX(0.15rem);
+}
+
 .was-validated .dashboardcode-bsmultiselect ul.dropdown-menu > li .form-check-input:valid:checked ~ .form-check-label {
   color: #212529;
 }
