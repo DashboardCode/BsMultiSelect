@@ -21,10 +21,12 @@ export function RtlPlugin(pluginData){
             attributeBackup.set(staticDom.containerElement, "dir", dirAttributeValue);
         }
     } 
-    if (rtlAspect.updateRtl)
-        rtlAspect.updateRtl(isRtl);
         
     return {
+        buildApi(api){
+            if (rtlAspect.updateRtl)
+                rtlAspect.updateRtl(isRtl);
+        },
         dispose(){
             attributeBackup.restore;
         }

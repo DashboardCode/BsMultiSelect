@@ -5,9 +5,8 @@ import { ChoiceDomFactory } from './ChoiceDomFactory';
 import { StaticDomFactory, CreateElementAspect } from './StaticDomFactory';
 import { PicksDom } from './PicksDom';
 import { FilterDom } from './FilterDom';
-import { ChoicesDomFactory } from './ChoicesDomFactory'; //import {PopupAspect} from './PopupAspect';
-
-import { ChoicesVisibilityAspect } from './PopupAspect';
+import { ChoicesDomFactory } from './ChoicesDomFactory';
+import { ChoicesVisibilityAspect } from './ChoicesVisibilityAspect';
 import { SpecialPicksEventsAspect } from './SpecialPicksEventsAspect';
 import { ComponentPropertiesAspect, TriggerAspect, OnChangeAspect } from './ComponentPropertiesAspect';
 import { OptionsAspect, OptionPropertiesAspect } from './OptionsAspect';
@@ -15,8 +14,7 @@ import { ChoicesEnumerableAspect } from './ChoicesEnumerableAspect';
 import { FilterManagerAspect, NavigateManager, FilterPredicateAspect } from './FilterManagerAspect';
 import { BuildAndAttachChoiceAspect, BuildChoiceAspect } from './BuildChoiceAspect';
 import { FillChoicesAspect } from './FillChoicesAspect';
-import { UpdateDataAspect } from './UpdateDataAspect'; //import {RtlAspect} from './RtlAspect'
-
+import { UpdateDataAspect } from './UpdateDataAspect';
 import { CreateWrapAspect, CreateChoiceBaseAspect, OptionToggleAspect, CreatePickHandlersAspect, RemovePickAspect, AddPickAspect, FullMatchAspect, ChoiceClickAspect, IsChoiceSelectableAspect, ProducePickAspect } from './CreateWrapAspect.js';
 import { NavigateAspect, HoveredChoiceAspect } from './NavigateAspect';
 import { Wraps } from './Wraps';

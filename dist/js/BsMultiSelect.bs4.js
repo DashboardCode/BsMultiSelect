@@ -610,8 +610,10 @@
         }
       }
 
-      if (rtlAspect.updateRtl) rtlAspect.updateRtl(isRtl);
       return {
+        buildApi: function buildApi(api) {
+          if (rtlAspect.updateRtl) rtlAspect.updateRtl(isRtl);
+        },
         dispose: function dispose() {
         }
       };
@@ -2749,42 +2751,12 @@
         },
         updatePopupLocation: function updatePopupLocation() {}
       };
-    } // export function PopupAspect(choicesElement, filterInputElement, createPopper) { 
-    //     let popper = null;
-    //     let popperConfiguration = {
-    //         placement: 'bottom-start',
-    //         modifiers: {
-    //             preventOverflow: {enabled:true},
-    //             hide: {enabled:false},
-    //             flip: {enabled:false}
-    //         }
-    //     };
-    //     return {
-    //         init(){ 
-    //             if (!!createPopper.prototype && !!createPopper.prototype.constructor.name) { // it is a constructor
-    //                 popper = new createPopper(filterInputElement, choicesElement, popperConfiguration); 
-    //             }else{
-    //                 popper = createPopper(filterInputElement, choicesElement, popperConfiguration); 
-    //                 //throw new Error("BsMultiSelect: popper paramater is not a constructor")
-    //             }
-    //         },        
-    //         updatePopupLocation(){
-    //             popper.update();  // become async in poppoer 2; use forceUpdate if sync is needed? 
-    //         },
-    //         adoptRtl(isRtl){
-    //             if (isRtl)
-    //                 popperConfiguration.placement = 'bottom-end';
-    //         },
-    //         dispose(){
-    //             popper.destroy();
-    //         }
-    //     }
-    // }
+    }
 
     function SpecialPicksEventsAspect() {
       return {
         backSpace: function backSpace(pick) {
-          pick.setSelectedFalse(); //popupAspect.updatePopupLocation();
+          pick.setSelectedFalse();
         }
       };
     }
@@ -3284,7 +3256,6 @@
               var _text = filterManagerAspect.getFilter();
 
               if (fullMatchWrap.choice.searchText == _text) {
-                //console.log("fullMatchAspect.fullMatch");
                 var success = fullMatchAspect.fullMatch(fullMatchWrap);
 
                 if (success) {

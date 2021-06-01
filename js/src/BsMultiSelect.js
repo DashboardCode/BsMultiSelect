@@ -10,8 +10,7 @@ import {PicksDom} from './PicksDom';
 import {FilterDom} from './FilterDom';
 
 import {ChoicesDomFactory} from './ChoicesDomFactory';
-//import {PopupAspect} from './PopupAspect';
-import {ChoicesVisibilityAspect} from './PopupAspect';
+import {ChoicesVisibilityAspect} from './ChoicesVisibilityAspect';
 import {SpecialPicksEventsAspect} from './SpecialPicksEventsAspect';
  
 import {ComponentPropertiesAspect, TriggerAspect, OnChangeAspect} from './ComponentPropertiesAspect';
@@ -23,7 +22,6 @@ import {BuildAndAttachChoiceAspect, BuildChoiceAspect} from './BuildChoiceAspect
 import {FillChoicesAspect} from './FillChoicesAspect'
 
 import {UpdateDataAspect } from './UpdateDataAspect'
-//import {RtlAspect} from './RtlAspect'
 import {CreateWrapAspect, CreateChoiceBaseAspect, OptionToggleAspect, CreatePickHandlersAspect, RemovePickAspect, 
     AddPickAspect, FullMatchAspect, ChoiceClickAspect, IsChoiceSelectableAspect, ProducePickAspect} from './CreateWrapAspect.js'
 import {NavigateAspect, HoveredChoiceAspect} from './NavigateAspect'
