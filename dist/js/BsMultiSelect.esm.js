@@ -1,7 +1,7 @@
 /*!
-  * DashboardCode BsMultiSelect v1.0.1 (https://dashboardcode.github.io/BsMultiSelect/)
+  * BsMultiSelect v1.0.2 (https://dashboardcode.github.io/BsMultiSelect/)
   * Copyright 2017-2021 Roman Pokrovskij (github user rpokrovskij)
-  * Licensed under APACHE 2 (https://github.com/DashboardCode/BsMultiSelect/blob/master/LICENSE)
+  * Licensed under Apache 2 (https://github.com/DashboardCode/BsMultiSelect/blob/master/LICENSE)
   */
 function findDirectChildByTagName(element, tagName) {
   var value = null;
@@ -1062,7 +1062,7 @@ function BsAppearancePlugin(pluginData) {
   var isFloatingLabel = false;
 
   if (floatingLabelAspect) {
-    isFloatingLabel = initialElement.closest('.form-floating') ? true : false;
+    isFloatingLabel = closestByClassName(initialElement, 'form-floating');
 
     floatingLabelAspect.isFloatingLabel = function () {
       return isFloatingLabel;
@@ -2163,7 +2163,7 @@ function PopperPlugin(pluginData) {
   }
 
   function init() {
-    if (!!createPopper.prototype && !!createPopper.prototype.constructor.name) {
+    if (!!createPopper.prototype && !!createPopper.prototype.constructor) {
       // it is a constructor
       popper = new createPopper(filterInputElement, choicesElement, popperConfiguration);
     } else {
@@ -2688,7 +2688,7 @@ function SpecialPicksEventsAspect() {
 function TriggerAspect(element, _trigger) {
   return {
     trigger: function trigger(eventName) {
-      return _trigger(element, eventName);
+      _trigger(element, eventName);
     }
   };
 }
@@ -3983,7 +3983,7 @@ function MultiSelectBuilder(environment, plugins) {
     containerClass: "dashboardcode-bsmultiselect"
   };
 
-  var construct = function construct(element, options) {
+  var create = function create(element, options) {
     var _options2;
 
     if (options && options.plugins) console.log("DashboarCode.BsMultiSelect: 'options.plugins' is depricated, use - MultiSelectBuilder(environment, plugins) instead");
@@ -4016,7 +4016,7 @@ function MultiSelectBuilder(environment, plugins) {
 
   plugDefaultConfig(plugins, defaults);
   return {
-    construct: construct,
+    create: create,
     defaultSettings: defaults
   };
 }
@@ -4031,19 +4031,19 @@ function ModuleFactory(environment) {
   var pluginsArray = ObjectValues(plugins);
 
   var _MultiSelectBuilder = MultiSelectBuilder(environment, pluginsArray),
-      construct = _MultiSelectBuilder.construct,
+      create = _MultiSelectBuilder.create,
       defaultSettings = _MultiSelectBuilder.defaultSettings;
 
-  construct.Default = defaultSettings;
+  create.Default = defaultSettings;
   return {
-    BsMultiSelect: construct,
+    BsMultiSelect: create,
     plugins: plugins,
     utilities: utilities
   };
 }
 
 function legacyConstructor(element, environment, settings) {
-  console.log("DashboarCode.BsMultiSelect: 'BsMultiSelect' is depricated, use - ModuleFactory(environment).BsMultiSelect(element, settings) ");
+  console.log("DashboarCode.BsMultiSelect: 'BsMultiSelect' is depricated, use - ModuleFactory(environment).BsMultiSelect(element, settings)");
 
   var _ModuleFactory = ModuleFactory(environment),
       BsMultiSelect = _ModuleFactory.BsMultiSelect;

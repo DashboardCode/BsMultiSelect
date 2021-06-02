@@ -27,7 +27,7 @@ export function PopperPlugin(pluginData){
     }
 
     function init(){
-        if (!!createPopper.prototype && !!createPopper.prototype.constructor.name) { // it is a constructor
+        if (!!createPopper.prototype && !!createPopper.prototype.constructor) { // it is a constructor
             popper = new createPopper(filterInputElement, choicesElement, popperConfiguration); 
         }else{
             popper = createPopper(filterInputElement, choicesElement, popperConfiguration); 

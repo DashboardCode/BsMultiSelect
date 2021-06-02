@@ -12,6 +12,23 @@ export function findDirectChildByTagName(element, tagName){
     return value;
 }
 
+export function composeEventTrigger(window){ 
+    let trigger;
+    if (typeof(window.Event) === 'function'){
+        trigger = (e, eventName) =>{ 
+            var event = new window.Event(eventName);
+            e.dispatchEvent(event);
+        }
+    }
+    else
+        trigger = (e, eventName) =>  { // IE 11 polyfill
+            let event = window.document.createEvent("CustomEvent");
+            event.initCustomEvent(eventName, false, false, undefined);
+            e.dispatchEvent(event);
+    }
+    return trigger;
+}
+
 export function closestByTagName(element, tagName){
     return closest(element, e => e.tagName === tagName) // TODO support xhtml?  e.tagName.toUpperCase() ?
 }

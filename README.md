@@ -3,23 +3,25 @@ Demo: https://dashboardcode.github.io/BsMultiSelect/
 
 Bootstrap 4 Demo : https://dashboardcode.github.io/BsMultiSelect/indexBs4.html
 
-**Breaking Change**: to use with legacy Bootstrap 4 reference the `BsMultiSelect.bs4.*` bundle|module: e.g. https://cdn.jsdelivr.net/npm/@dashboardcode/bsmultiselect@1.0.1/dist/js/BsMultiSelect.bs4.min.js and https://cdn.jsdelivr.net/npm/@dashboardcode/bsmultiselect@1.0.1/dist/css/BsMultiSelect.bs4.min.css
+**Breaking Change**: to use with legacy Bootstrap 4 reference the `BsMultiSelect.bs4.*` bundle|module: e.g. https://cdn.jsdelivr.net/npm/@dashboardcode/bsmultiselect@1.0.2/dist/js/BsMultiSelect.bs4.min.js and https://cdn.jsdelivr.net/npm/@dashboardcode/bsmultiselect@1.0.2/dist/css/BsMultiSelect.bs4.min.css
 
 Snippets:
 
 1. [Floating Labels](https://dashboardcode.github.io/BsMultiSelect/snippetFloating.html),  (Only BS5)
+  
+2. [UMD package load to window.dashboardcode.BsMultiselect](https://dashboardcode.github.io/BsMultiSelect/snippetUmd.html),  ([BS4 Version](https://dashboardcode.github.io/BsMultiSelect/snippetUmdBs4.html))
 
-2. [Custom Validation](https://dashboardcode.github.io/BsMultiSelect/snippetCustomValidation.html),  ([BS4 Version](https://dashboardcode.github.io/BsMultiSelect/snippetCustomValidationBs4.html))
+3. [Custom Validation](https://dashboardcode.github.io/BsMultiSelect/snippetCustomValidation.html),  ([BS4 Version](https://dashboardcode.github.io/BsMultiSelect/snippetCustomValidationBs4.html))
 
-3. [HTML Form Validation](https://dashboardcode.github.io/BsMultiSelect/snippetFormValidation.html),  ([BS4 Version](https://dashboardcode.github.io/BsMultiSelect/snippetFormValidationBs4.html))
+4. [HTML Form Validation](https://dashboardcode.github.io/BsMultiSelect/snippetFormValidation.html),  ([BS4 Version](https://dashboardcode.github.io/BsMultiSelect/snippetFormValidationBs4.html))
 
-4. [Right To Left (RTL)](https://dashboardcode.github.io/BsMultiSelect/snippetRtl.html),  ([BS4 Version](https://dashboardcode.github.io/BsMultiSelect/snippetRtlBs4.html))
+5. [Right To Left (RTL)](https://dashboardcode.github.io/BsMultiSelect/snippetRtl.html),  ([BS4 Version](https://dashboardcode.github.io/BsMultiSelect/snippetRtlBs4.html))
 
-5. [ES6 module, no jquery](https://dashboardcode.github.io/BsMultiSelect/snippetEsm.html), ([BS4 Version](https://dashboardcode.github.io/BsMultiSelect/snippetEsmBs4.html))
+6. [ES6 module, no jquery](https://dashboardcode.github.io/BsMultiSelect/snippetEsm.html), ([BS4 Version](https://dashboardcode.github.io/BsMultiSelect/snippetEsmBs4.html))
 
-6. [Options manipulation API](https://dashboardcode.github.io/BsMultiSelect/snippetJs.html), ([BS4 Version](https://dashboardcode.github.io/BsMultiSelect/snippetJsBs4.html))
+7. [Options manipulation API](https://dashboardcode.github.io/BsMultiSelect/snippetJs.html), ([BS4 Version](https://dashboardcode.github.io/BsMultiSelect/snippetJsBs4.html))
 
-7. [Columns](https://dashboardcode.github.io/BsMultiSelect/snippetColumns.html), ([BS4 Version](https://dashboardcode.github.io/BsMultiSelect/snippetColumnsBs4.html))
+8. [Columns](https://dashboardcode.github.io/BsMultiSelect/snippetColumns.html), ([BS4 Version](https://dashboardcode.github.io/BsMultiSelect/snippetColumnsBs4.html))
 
 CodePen snippets, use them for bug reporting: 
      https://codepen.io/rpokrovskij/pen/yLymQwW  (initialized using HTML SELECT)
@@ -42,14 +44,14 @@ BsMultiSelect follows Bootstrap 4 conventions and use the same instruments (babe
 
 # CDN
 Bootstrap 5
-https://cdn.jsdelivr.net/npm/@dashboardcode/bsmultiselect@1.0.1/dist/js/BsMultiSelect.min.js
-https://cdn.jsdelivr.net/npm/@dashboardcode/bsmultiselect@1.0.1/dist/js/BsMultiSelect.esm.min.js
-https://cdn.jsdelivr.net/npm/@dashboardcode/bsmultiselect@1.0.1/dist/css/BsMultiSelect.min.css
+https://cdn.jsdelivr.net/npm/@dashboardcode/bsmultiselect@1.0.2/dist/js/BsMultiSelect.min.js
+https://cdn.jsdelivr.net/npm/@dashboardcode/bsmultiselect@1.0.2/dist/js/BsMultiSelect.esm.min.js
+https://cdn.jsdelivr.net/npm/@dashboardcode/bsmultiselect@1.0.2/dist/css/BsMultiSelect.min.css
 
 Bootstrap 4
-https://cdn.jsdelivr.net/npm/@dashboardcode/bsmultiselect@1.0.1/dist/js/BsMultiSelect.bs4.min.js
-https://cdn.jsdelivr.net/npm/@dashboardcode/bsmultiselect@1.0.1/dist/js/BsMultiSelect.bs4.esm.min.js
-https://cdn.jsdelivr.net/npm/@dashboardcode/bsmultiselect@1.0.1/dist/css/BsMultiSelect.bs4.min.css
+https://cdn.jsdelivr.net/npm/@dashboardcode/bsmultiselect@1.0.2/dist/js/BsMultiSelect.bs4.min.js
+https://cdn.jsdelivr.net/npm/@dashboardcode/bsmultiselect@1.0.2/dist/js/BsMultiSelect.bs4.esm.min.js
+https://cdn.jsdelivr.net/npm/@dashboardcode/bsmultiselect@1.0.2/dist/css/BsMultiSelect.bs4.min.css
 
 # Architecture
 Instead of using BS4 Dropdown component (it is not possible since BS Dropdown requires presence of `toggle-buttons` https://github.com/twbs/bootstrap/issues/26420) the plugin uses `popper.js` (V1) directly.
@@ -180,6 +182,31 @@ To update specific option `UpdateOptionSelected`,`UpdateOptionDisabled`,`UpdateO
           bsMultiSelect.updateOptionHidden(index);
 ````    
 
+## Umd factories
+````
+      <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"></script>
+      <script src="https://cdn.jsdelivr.net/npm/@dashboardcode/bsmultiselect@1.0.2/dist/js/BsMultiSelect.min.js"></script>
+        
+      <script>
+            dashboardcode.BsMultiSelect("#myElement" /*, options*/);
+
+            // alternatively
+            // var element = document.querySelector("#myElement");
+            // dashboardcode.BsMultiSelect(element /*, options*/);
+      </script>
+````
+
+## ESM factories
+````
+      <script type="module">
+            import {createPopper} from "https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/esm/popper.min.js"
+            import {ModuleFactory as dashboardCodeFactory} from "https://cdn.jsdelivr.net/npm/@dashboardcode/bsmultiselect@1.0.2/dist/js/BsMultiSelect.esm.min.js"
+            var element = document.querySelector('#languages-id');
+            var environment = {window, createPopper};
+            let dashboardCode = dashboardCodeFactory(environment);
+            bsMultiSelect = dashboardCode.BsMultiSelect(element /*, options*/); 
+      </script>
+````
 ## jQuery factories
 
 Method 1:
@@ -320,7 +347,7 @@ With `css` parameter  you can change classes of generated HTML elements. Default
 ````
 **without select element - intialize with js object**: in this case plugin should be initialized over `div`
 ````
-$('div.#bsMultiSelectJson').bsMultiSelect(
+$('div#bsMultiSelectJson').bsMultiSelect(
             {
                 options : [
                             {text:"Asia", value:"C0",hidden:false,disabled:false,selected:true},
@@ -415,6 +442,11 @@ Vote there: https://github.com/twbs/bootstrap/issues/26412
 
 Note, BS allready provide classes like: `h-25`, `bg-light`, `text-primary` that make many variables available as classes so the proposal is just an improovement of theirs class system.
 
+### Browser compatability
+`Popper v2` requires those polyfills for IE11:
+````
+<script src="https://polyfill.io/v3/polyfill.min.js?features=CustomEvent,Array.prototype.find,Promise,Object.assign"></script>
+````
 
 ### Known issues
 * Tested only for IE11, Chrome 66, Edge 42/17, IPhone Safari; Browser should support flexbox (IE 9 doesn't); 

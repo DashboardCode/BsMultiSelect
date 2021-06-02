@@ -11,9 +11,9 @@ export function MultiSelectBuilder(environment, plugins)
 {
     const defaults = {containerClass: "dashboardcode-bsmultiselect"}
 
-    let construct = (element, options) => { 
+    let create = (element, options) => { 
         if (options && options.plugins)
-            console.log(`DashboarCode.BsMultiSelect: 'options.plugins' is depricated, use - MultiSelectBuilder(environment, plugins) instead`);
+            console.log("DashboarCode.BsMultiSelect: 'options.plugins' is depricated, use - MultiSelectBuilder(environment, plugins) instead");
         let configuration = {};
         let buildConfiguration;
         if (options instanceof Function) {
@@ -34,5 +34,5 @@ export function MultiSelectBuilder(environment, plugins)
         return multiSelect;
     }
     plugDefaultConfig(plugins, defaults);
-    return {construct, defaultSettings: defaults}
+    return {create, defaultSettings: defaults}
 }

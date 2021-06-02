@@ -12,7 +12,7 @@ export function BsAppearancePlugin(pluginData){
 
     let isFloatingLabel = false;
     if (floatingLabelAspect){
-        isFloatingLabel = initialElement.closest('.form-floating')?true:false;
+        isFloatingLabel =  closestByClassName(initialElement, 'form-floating');
         floatingLabelAspect.isFloatingLabel = () => isFloatingLabel
     }
 

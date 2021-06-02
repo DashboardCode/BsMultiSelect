@@ -3,28 +3,13 @@
 const path    = require('path')
 const { babel } = require('@rollup/plugin-babel')
 const { nodeResolve } = require('@rollup/plugin-node-resolve')
+const replace = require('@rollup/plugin-replace')
 const banner = require('./banner.js')
 
-const pkg     = require(path.resolve(__dirname, '../package.json'))
-const year    = new Date().getFullYear()
 const isEsm   = process.env.ESM === 'true'
 const isBundle = process.env.BUNDLE  === 'true'
 const isBS4 = process.env.BS4  === 'true'
 
-// let presets = [
-//   [
-//       "@babel/env",
-//       {
-//           loose: true,
-//           modules: false,
-//           targets: {
-//               browsers: [
-//                   "chrome  >= 45", "Firefox >= 38", "Explorer >= 10", "edge >= 12", "iOS >= 9","Safari >= 9","Android >= 4.4","Opera >= 30"]
-//           },
-//           debug: true
-//       }
-//   ]
-// ];
 
 let bundleName = process.env.ALT;
 if (!bundleName) 
@@ -33,24 +18,21 @@ if (isBS4)
    bundleName +=".bs4";
 
 let fileDest  = `${bundleName}${isEsm ? '.esm' : ''}.js`;
-let external  = ['jquery', 'popper.js'];
-let globals   = {'jquery': 'jQuery', 'popper.js': 'Popper'};
+let external  = isBS4? ['jquery', 'popper.js']:[ '@popperjs/core'];
+let globals   = isBS4? {'jquery': 'jQuery', 'popper.js': 'Popper'} :{'@popperjs/core': 'Popper'};
 
 // NOTE: with Babel 7 babel helpers are managed in .babelrc
 const plugins = [
   babel({
-    exclude: 'node_modules/**'//,
-    //presets: presets
+    // Only transpile our source code
+    exclude: 'node_modules/**',
+    babelHelpers: 'bundled'
   })]
 
 module.exports = {
   input: path.resolve(__dirname, `../js/src/${bundleName}${isEsm ? '.esm' : '.jquery'}.js`),
   output: {
-    banner: `/*!
-  * DashboardCode ${bundleName} v${pkg.version} (${pkg.homepage})
-  * Copyright 2017-${year} ${pkg.author}
-  * Licensed under APACHE 2 (https://github.com/DashboardCode/BsMultiSelect/blob/master/LICENSE)
-  */`,
+    banner,
     file: path.resolve(__dirname, `../dist/js/${fileDest}`),
     format: isEsm ? 'esm' :'umd',
     globals,
@@ -61,5 +43,5 @@ module.exports = {
 }
 
 if (!isEsm) {
-  module.exports.output.name = bundleName
+  module.exports.output.name = 'dashboardcode'
 }

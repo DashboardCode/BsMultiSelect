@@ -1,6 +1,8 @@
 export function TriggerAspect(element, trigger) {
     return {
-        trigger: (eventName) => trigger(element, eventName)
+        trigger: (eventName) => {
+            trigger(element, eventName)
+        }
     }
 }
 

@@ -10,18 +10,18 @@ function ModuleFactory(environment){
     let plugins = shallowClearClone({Bs5Plugin}, defaultPlugins);
     let pluginsArray = ObjectValues(plugins);
     
-    let {construct, defaultSettings} = MultiSelectBuilder(environment, pluginsArray) 
-    construct.Default = defaultSettings;
+    let {create, defaultSettings} = MultiSelectBuilder(environment, pluginsArray) 
+    create.Default = defaultSettings;
     
     return {
-        BsMultiSelect: construct,
+        BsMultiSelect: create,
         plugins,
         utilities  
     }
 }
 
 function legacyConstructor(element, environment, settings){
-    console.log(`DashboarCode.BsMultiSelect: 'BsMultiSelect' is depricated, use - ModuleFactory(environment).BsMultiSelect(element, settings) `);
+    console.log("DashboarCode.BsMultiSelect: 'BsMultiSelect' is depricated, use - ModuleFactory(environment).BsMultiSelect(element, settings)");
     var {BsMultiSelect} =  ModuleFactory(environment);
     var bsMultiSelect = BsMultiSelect(element, settings);
     return bsMultiSelect;

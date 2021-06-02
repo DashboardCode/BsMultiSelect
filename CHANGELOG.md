@@ -1,5 +1,9 @@
 # CHANGELOG
 ````
+1.0.2  - UMD bundle without jquery support
+1.0.1  - Floating labels
+1.0.0  - Boostrap 5 support (ESM only)
+0.6.28 - optimization
 0.6.27 - restore compatability with old code (when data is js) 
 0.6.26 - SelectedOptionPlugin
 0.6.25 - PicksApiPlugin: optimizations

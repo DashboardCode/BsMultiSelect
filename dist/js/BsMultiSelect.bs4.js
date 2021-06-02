@@ -1,12 +1,12 @@
 /*!
-  * DashboardCode BsMultiSelect.bs4 v1.0.1 (https://dashboardcode.github.io/BsMultiSelect/)
+  * BsMultiSelect v1.0.2 (https://dashboardcode.github.io/BsMultiSelect/)
   * Copyright 2017-2021 Roman Pokrovskij (github user rpokrovskij)
-  * Licensed under APACHE 2 (https://github.com/DashboardCode/BsMultiSelect/blob/master/LICENSE)
+  * Licensed under Apache 2 (https://github.com/DashboardCode/BsMultiSelect/blob/master/LICENSE)
   */
 (function (global, factory) {
-    typeof exports === 'object' && typeof module !== 'undefined' ? factory(require('jquery'), require('popper.js')) :
+    typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory(require('jquery'), require('popper.js')) :
     typeof define === 'function' && define.amd ? define(['jquery', 'popper.js'], factory) :
-    (global = typeof globalThis !== 'undefined' ? globalThis : global || self, factory(global.jQuery, global.Popper));
+    (global = typeof globalThis !== 'undefined' ? globalThis : global || self, global.dashboardcode = factory(global.jQuery, global.Popper));
 }(this, (function ($, Popper) { 'use strict';
 
     function _interopDefaultLegacy (e) { return e && typeof e === 'object' && 'default' in e ? e : { 'default': e }; }
@@ -471,6 +471,23 @@
       }
 
       return value;
+    }
+    function composeEventTrigger(window) {
+      var trigger;
+
+      if (typeof window.Event === 'function') {
+        trigger = function trigger(e, eventName) {
+          var event = new window.Event(eventName);
+          e.dispatchEvent(event);
+        };
+      } else trigger = function trigger(e, eventName) {
+        // IE 11 polyfill
+        var event = window.document.createEvent("CustomEvent");
+        event.initCustomEvent(eventName, false, false, undefined);
+        e.dispatchEvent(event);
+      };
+
+      return trigger;
     }
     function closestByTagName(element, tagName) {
       return closest(element, function (e) {
@@ -977,7 +994,7 @@
       var isFloatingLabel = false;
 
       if (floatingLabelAspect) {
-        isFloatingLabel = initialElement.closest('.form-floating') ? true : false;
+        isFloatingLabel = closestByClassName(initialElement, 'form-floating');
 
         floatingLabelAspect.isFloatingLabel = function () {
           return isFloatingLabel;
@@ -2078,7 +2095,7 @@
       }
 
       function init() {
-        if (!!createPopper.prototype && !!createPopper.prototype.constructor.name) {
+        if (!!createPopper.prototype && !!createPopper.prototype.constructor) {
           // it is a constructor
           popper = new createPopper(filterInputElement, choicesElement, popperConfiguration);
         } else {
@@ -2358,13 +2375,6 @@
       if (formGroup) value = formGroup.querySelector("label[for=\"" + selectElement.id + "\"]");
       return value;
     }
-
-    var utilities = {
-      composeSync: composeSync,
-      EventBinder: EventBinder,
-      addStyling: addStyling,
-      toggleStyling: toggleStyling
-    };
 
     function PluginManager(plugins, pluginData) {
       var instances = [];
@@ -2764,7 +2774,7 @@
     function TriggerAspect(element, _trigger) {
       return {
         trigger: function trigger(eventName) {
-          return _trigger(element, eventName);
+          _trigger(element, eventName);
         }
       };
     }
@@ -3725,7 +3735,7 @@
       };
     }
 
-    function BsMultiSelect(element, environment, plugins, configuration, onInit) {
+    function BsMultiSelect$1(element, environment, plugins, configuration, onInit) {
       var _extendIfUndefined;
 
       var window = environment.window;
@@ -4059,7 +4069,7 @@
         containerClass: "dashboardcode-bsmultiselect"
       };
 
-      var construct = function construct(element, options) {
+      var create = function create(element, options) {
         var _options2;
 
         if (options && options.plugins) console.log("DashboarCode.BsMultiSelect: 'options.plugins' is depricated, use - MultiSelectBuilder(environment, plugins) instead");
@@ -4085,22 +4095,36 @@
         extendIfUndefined(configuration, options);
         extendIfUndefined(configuration, defaults);
         var onInit = buildConfiguration == null ? void 0 : buildConfiguration(element, configuration);
-        var multiSelect = BsMultiSelect(element, environment, plugins, configuration, onInit); // onInit(api, aspects) - before load data
+        var multiSelect = BsMultiSelect$1(element, environment, plugins, configuration, onInit); // onInit(api, aspects) - before load data
 
         return multiSelect;
       };
 
       plugDefaultConfig(plugins, defaults);
       return {
-        construct: construct,
+        create: create,
         defaultSettings: defaults
       };
     }
 
-    (function (window, $, createPopper) {
-      var trigger = function trigger(e, eventName) {
-        return $(e).trigger(eventName);
-      };
+    var utilities = {
+      composeSync: composeSync,
+      EventBinder: EventBinder,
+      addStyling: addStyling,
+      toggleStyling: toggleStyling
+    };
+
+    var BsMultiSelect = function (window, $, createPopper) {
+      var trigger = null;
+      var isJQyery = $ && !window.document.body.hasAttribute('data-bs-no-jquery');
+
+      if (isJQyery) {
+        trigger = function trigger(e, eventName) {
+          return $(e).trigger(eventName);
+        };
+      } else {
+        trigger = composeEventTrigger(window);
+      }
 
       var plugins = shallowClearClone({
         Bs4Plugin: Bs4Plugin
@@ -4113,23 +4137,40 @@
       var pluginsArray = ObjectValues(plugins);
 
       var _MultiSelectBuilder = MultiSelectBuilder(environment, pluginsArray),
-          construct = _MultiSelectBuilder.construct,
+          create = _MultiSelectBuilder.create,
           defaultSettings = _MultiSelectBuilder.defaultSettings;
 
-      var constructor2 = function constructor2(element, settings, removeInstanceData) {
-        var multiSelect = construct(element, settings);
-        multiSelect.dispose = composeSync(multiSelect.dispose, removeInstanceData);
-        return multiSelect;
+      var createForUmd = function createForUmd(element, settings) {
+        if (isString(element)) element = window.document.querySelector(element);
+        return create(element, settings);
       };
 
-      var prototypable = addToJQueryPrototype('BsMultiSelect', constructor2, $);
-      prototypable.defaults = defaultSettings;
-      prototypable.tools = {
-        MultiSelectBuilder: MultiSelectBuilder,
-        plugins: plugins,
-        utilities: utilities
-      };
-    })(window, $__default['default'], Popper__default['default']);
+      createForUmd.Default = defaultSettings;
+
+      if (isJQyery) {
+        var constructorForJquery = function constructorForJquery(element, settings, removeInstanceData) {
+          var multiSelect = create(element, settings);
+          multiSelect.dispose = composeSync(multiSelect.dispose, removeInstanceData);
+          return multiSelect;
+        };
+
+        var prototypable = addToJQueryPrototype('BsMultiSelect', constructorForJquery, $);
+        prototypable.defaults = defaultSettings;
+        prototypable.tools = {
+          MultiSelectBuilder: MultiSelectBuilder,
+          plugins: plugins,
+          utilities: utilities
+        };
+      }
+
+      return createForUmd;
+    }(window, $__default['default'], Popper__default['default']);
+
+    var BsMultiSelect_bs4_jquery = {
+      BsMultiSelect: BsMultiSelect
+    };
+
+    return BsMultiSelect_bs4_jquery;
 
 })));
 //# sourceMappingURL=BsMultiSelect.bs4.js.map
