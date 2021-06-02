@@ -9,7 +9,7 @@ Snippets:
 
 1. [Floating Labels](https://dashboardcode.github.io/BsMultiSelect/snippetFloating.html),  (Only BS5)
   
-2. [UMD package load to window.dashboardcode.BsMultiselect](https://dashboardcode.github.io/BsMultiSelect/snippetUmd.html),  ([BS4 Version](https://dashboardcode.github.io/BsMultiSelect/snippetUmdBs4.html))
+2. [Load UMD package to window.dashboardcode.BsMultiselect](https://dashboardcode.github.io/BsMultiSelect/snippetUmd.html),  ([BS4 Version](https://dashboardcode.github.io/BsMultiSelect/snippetUmdBs4.html))
 
 3. [Custom Validation](https://dashboardcode.github.io/BsMultiSelect/snippetCustomValidation.html),  ([BS4 Version](https://dashboardcode.github.io/BsMultiSelect/snippetCustomValidationBs4.html))
 
