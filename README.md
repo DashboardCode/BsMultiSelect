@@ -117,7 +117,8 @@ Sample `useCssPatch=true` configuration (default values used):
                 choiceContent: {justifyContent: 'flex-start'}, // BS problem: without this on inline form menu items justified center
                 choiceLabel: {color: 'inherit'}, // otherwise BS .was-validated set its color
                 choiceCheckBox: {color: 'inherit'},
-                choiceLabel_disabled: {opacity: '.65'},  // more flexible than {color: '#6c757d'}; note: avoid opacity on pickElement's             border; TODO write to BS 
+                choiceLabel_disabled: {opacity: '.65'},  // more flexible than {color: '#6c757d'};
+                                                         //  note:  avoid opacity on pickElement's border; TODO write to BS 
             
                 // floating plugin
                 label_floating_lifted: {opacity: '.65', transform : 'scale(.85) translateY(-.5rem) translateX(.15rem)'},
