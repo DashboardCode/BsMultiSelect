@@ -3,7 +3,7 @@ Demo: https://dashboardcode.github.io/BsMultiSelect/
 
 Bootstrap 4 Demo : https://dashboardcode.github.io/BsMultiSelect/indexBs4.html
 
-**Breaking Change**: to use with legacy Bootstrap 4 reference the `BsMultiSelect.bs4.*` bundle|module: e.g. https://cdn.jsdelivr.net/npm/@dashboardcode/bsmultiselect@1.0.2/dist/js/BsMultiSelect.bs4.min.js and https://cdn.jsdelivr.net/npm/@dashboardcode/bsmultiselect@1.0.2/dist/css/BsMultiSelect.bs4.min.css
+**Breaking Change**: to use with legacy Bootstrap 4 reference the `BsMultiSelect.bs4.*` bundle|module: e.g. https://cdn.jsdelivr.net/npm/@dashboardcode/bsmultiselect@1.0.3/dist/js/BsMultiSelect.bs4.min.js and https://cdn.jsdelivr.net/npm/@dashboardcode/bsmultiselect@1.0.3/dist/css/BsMultiSelect.bs4.min.css
 
 Snippets:
 
@@ -44,14 +44,14 @@ BsMultiSelect follows Bootstrap 4 conventions and use the same instruments (babe
 
 # CDN
 Bootstrap 5
-https://cdn.jsdelivr.net/npm/@dashboardcode/bsmultiselect@1.0.2/dist/js/BsMultiSelect.min.js
-https://cdn.jsdelivr.net/npm/@dashboardcode/bsmultiselect@1.0.2/dist/js/BsMultiSelect.esm.min.js
-https://cdn.jsdelivr.net/npm/@dashboardcode/bsmultiselect@1.0.2/dist/css/BsMultiSelect.min.css
+https://cdn.jsdelivr.net/npm/@dashboardcode/bsmultiselect@1.0.3/dist/js/BsMultiSelect.min.js
+https://cdn.jsdelivr.net/npm/@dashboardcode/bsmultiselect@1.0.3/dist/js/BsMultiSelect.esm.min.js
+https://cdn.jsdelivr.net/npm/@dashboardcode/bsmultiselect@1.0.3/dist/css/BsMultiSelect.min.css
 
 Bootstrap 4
-https://cdn.jsdelivr.net/npm/@dashboardcode/bsmultiselect@1.0.2/dist/js/BsMultiSelect.bs4.min.js
-https://cdn.jsdelivr.net/npm/@dashboardcode/bsmultiselect@1.0.2/dist/js/BsMultiSelect.bs4.esm.min.js
-https://cdn.jsdelivr.net/npm/@dashboardcode/bsmultiselect@1.0.2/dist/css/BsMultiSelect.bs4.min.css
+https://cdn.jsdelivr.net/npm/@dashboardcode/bsmultiselect@1.0.3/dist/js/BsMultiSelect.bs4.min.js
+https://cdn.jsdelivr.net/npm/@dashboardcode/bsmultiselect@1.0.3/dist/js/BsMultiSelect.bs4.esm.min.js
+https://cdn.jsdelivr.net/npm/@dashboardcode/bsmultiselect@1.0.3/dist/css/BsMultiSelect.bs4.min.css
 
 # Architecture
 Instead of using BS4 Dropdown component (it is not possible since BS Dropdown requires presence of `toggle-buttons` https://github.com/twbs/bootstrap/issues/26420) the plugin uses `popper.js` (V1) directly.
@@ -185,7 +185,7 @@ To update specific option `UpdateOptionSelected`,`UpdateOptionDisabled`,`UpdateO
 ## Umd factories
 ````
       <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"></script>
-      <script src="https://cdn.jsdelivr.net/npm/@dashboardcode/bsmultiselect@1.0.2/dist/js/BsMultiSelect.min.js"></script>
+      <script src="https://cdn.jsdelivr.net/npm/@dashboardcode/bsmultiselect@1.0.3/dist/js/BsMultiSelect.min.js"></script>
         
       <script>
             dashboardcode.BsMultiSelect("#myElement" /*, options*/);
@@ -200,7 +200,7 @@ To update specific option `UpdateOptionSelected`,`UpdateOptionDisabled`,`UpdateO
 ````
       <script type="module">
             import {createPopper} from "https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/esm/popper.min.js"
-            import {ModuleFactory as dashboardCodeFactory} from "https://cdn.jsdelivr.net/npm/@dashboardcode/bsmultiselect@1.0.2/dist/js/BsMultiSelect.esm.min.js"
+            import {ModuleFactory as dashboardCodeFactory} from "https://cdn.jsdelivr.net/npm/@dashboardcode/bsmultiselect@1.0.3/dist/js/BsMultiSelect.esm.min.js"
             var element = document.querySelector('#languages-id');
             var environment = {window, createPopper};
             let dashboardCode = dashboardCodeFactory(environment);

@@ -73,6 +73,9 @@
         // JS css/cssPatch: pick
         > li.badge {
             padding-left: 0;
+            padding-inline-start: 0;
+            padding-inline-end: .5rem;
+
             line-height: 1.5em;
             button.close {
                 float: none;

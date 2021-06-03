@@ -1,5 +1,5 @@
 /*!
-  * BsMultiSelect v1.0.2 (https://dashboardcode.github.io/BsMultiSelect/)
+  * BsMultiSelect v1.0.3 (https://dashboardcode.github.io/BsMultiSelect/)
   * Copyright 2017-2021 Roman Pokrovskij (github user rpokrovskij)
   * Licensed under Apache 2 (https://github.com/DashboardCode/BsMultiSelect/blob/master/LICENSE)
   */
@@ -281,7 +281,10 @@ var cssPatch = {
   },
   // used in pickContentGenerator
   pick: {
-    paddingLeft: '0px'
+    paddingLeft: '0',
+    paddingRight: '.5rem',
+    paddingInlineStart: '0',
+    paddingInlineEnd: '0.5rem'
   },
   pickButton: {
     fontSize: '0.8em',

@@ -34,6 +34,10 @@
 }
 .dashboardcode-bsmultiselect ul.form-control > li.badge {
   padding-left: 0;
+  -webkit-padding-start: 0;
+  padding-inline-start: 0;
+  -webkit-padding-end: 0.5rem;
+  padding-inline-end: 0.5rem;
 }
 .dashboardcode-bsmultiselect ul.form-control > li.badge button.btn-close {
   float: none;

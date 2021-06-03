@@ -114,7 +114,7 @@ const cssPatch = {
     picks_floating_def: {minHeight: 'calc(3.5rem + 2px)'},
     
     // used in pickContentGenerator
-    pick: {paddingLeft: '0px' },
+    pick: {paddingLeft: '0', paddingRight: '.5rem', paddingInlineStart:'0', paddingInlineEnd:'0.5rem'},
     pickButton: {fontSize:'0.8em',  float : "none", verticalAlign: "text-top"},
     pickContent_disabled: {opacity: '.65'}, 
     

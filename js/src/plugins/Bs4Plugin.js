@@ -70,7 +70,7 @@ const cssPatch = {
     picks_sm:  {minHeight: 'calc(1.8125rem + 2px)'},
     
     // used in pickContentGenerator
-    pick: {paddingLeft: '0px', lineHeight: '1.5em'},
+    pick: {lineHeight: '1.5em', paddingLeft: '0', paddingRight: '.5rem', paddingInlineStart:'0', paddingInlineEnd:'0.5rem'},
     pickButton: {fontSize:'1.5em', lineHeight: '.9em', float : "none"},
     pickContent_disabled: {opacity: '.65'}, 
     
