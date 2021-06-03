@@ -35,7 +35,7 @@ There are two modes of usage: you can use plugin with or without external CSS (m
 
 2. If you are building your project CSS file form SASS then use `useCssPatch=false` mode and link [./scss/BsMultiSelect.scss](https://github.com/DashboardCode/BsMultiSelect/blob/master/scss/BsMultiSelect.scss) to your project. SCSS file utilize your Bootstrap theme variables.  Other use case is traditional (not involving SASS): copy static [./dist/css/BsMultiSelect.css](https://github.com/DashboardCode/BsMultiSelect/blob/master/dist/css/BsMultiSelect.css) and manually adjust it for your theme.
 
-BsMultiSelect follows Bootstrap 4 conventions and use the same instruments (babel, sass, rollup) so pretend to represent a BS team's modern plugin's **boilerplate**.  Supports all Bootsrap component features: pre/append buttons, custom validation, [form validation](https://dashboardcode.github.io/BsMultiSelect/snippetFormValidation.html). Additionally supports [RTL](https://dashboardcode.github.io/BsMultiSelect/snippetRtl.html).
+BsMultiSelect follows Bootstrap 5 conventions and use the same instruments (babel, sass, rollup) so pretend to represent a BS team's modern plugin's **boilerplate**.  Supports all Bootsrap component features: pre/append buttons, custom validation, [form validation](https://dashboardcode.github.io/BsMultiSelect/snippetFormValidation.html). Additionally supports [RTL](https://dashboardcode.github.io/BsMultiSelect/snippetRtl.html).
 
 ![image](https://user-images.githubusercontent.com/11598038/39988733-cda205e2-5770-11e8-8ca2-0d30cefc3ca1.png)
 
@@ -56,15 +56,15 @@ https://cdn.jsdelivr.net/npm/@dashboardcode/bsmultiselect@1.0.3/dist/css/BsMulti
 # Architecture
 Instead of using BS4 Dropdown component (it is not possible since BS Dropdown requires presence of `toggle-buttons` https://github.com/twbs/bootstrap/issues/26420) the plugin uses `popper.js` (V1) directly.
 
-Inspite of this the plugin utilize `dropdown-menu` class. Menu items contains BS4 Custom checkboxes.
+Inspite of this the plugin utilize `dropdown-menu` class. Menu items contains BS Custom checkboxes.
 
 Other BS4 classes were used:
 
 * `form-control` class - it is applied to `ul` that emulates `input`
 
-* `badge` class - selected items, each item contains BS4 `close` button
+* `badge` class - selected items, each item contains BS `close` button
 
-* `custom-control-input` class - each dropdown item contains BS4 custom checkboxes
+* `custom-control-input` class - each dropdown item contains BS custom checkboxes
 
 It was a clear design goal to provide the MultiSelect that not require external css (use Bootstrap components only) but unfortunatly, if you do not use SCSS, this can be achived only for limited number of themes. Not all bootstrap themes varibales can be accessed from a plugin as classes, or CSS-variables, therefore we need to setup them in javascript (default `useCssPatch=true` mode). Some of those variables are:
 
@@ -117,7 +117,7 @@ Sample `useCssPatch=true` configuration (default values used):
                 choiceContent: {justifyContent: 'flex-start'}, // BS problem: without this on inline form menu items justified center
                 choiceLabel: {color: 'inherit'}, // otherwise BS .was-validated set its color
                 choiceCheckBox: {color: 'inherit'},
-                choiceLabel_disabled: {opacity: '.65'},  // more flexible than {color: '#6c757d'}; note: avoid opacity on pickElement's             border; TODO write to BS4 
+                choiceLabel_disabled: {opacity: '.65'},  // more flexible than {color: '#6c757d'}; note: avoid opacity on pickElement's             border; TODO write to BS 
             
                 // floating plugin
                 label_floating_lifted: {opacity: '.65', transform : 'scale(.85) translateY(-.5rem) translateX(.15rem)'},
@@ -244,7 +244,7 @@ Method 2:
 
 ## Features
 
- Shortly: BsMultiSelect supports ALL Bootstrap 4 component features (append/prepend input buttons, custom validation, HTML form validation visualization with `.was-validated`). Additionally it also supports RTL (right-to-left).
+ Shortly: BsMultiSelect supports ALL Bootstrap 5 component features (append/prepend input buttons, floating labels, custom validation, HTML form validation visualization with `.was-validated`). Additionally it also supports RTL (right-to-left).
 
 **multiline**: input can grow vertically;
 
@@ -274,7 +274,7 @@ Method 2:
 
 **Suports HTML form custom validation**: you can get HTMLElement *validation API* "emulation" by `multiSelect.validationApi`, then you can call `.setCustomValidity(...)` method the same as you would do it for original [`select`](https://developer.mozilla.org/en-US/docs/Learn/Forms/Form_validation)
 
-**Bootstrap HTML form validation visualizations with .was-validated**: supports Bbootstrap 4 styles for input elements with pseudoclasses `.was-validated :invalid` and `.was-validated :valid`; manage border, hoovered border, toggle sibling `(in)valid-feedback` or `(in)valid-tooltip` );  [`snippet is here...`](https://dashboardcode.github.io/BsMultiSelect/snippetFormValidation.html) ;
+**Bootstrap HTML form validation visualizations with .was-validated**: supports Bbootstrap 5 styles for input elements with pseudoclasses `.was-validated :invalid` and `.was-validated :valid`; manage border, hoovered border, toggle sibling `(in)valid-feedback` or `(in)valid-tooltip` );  [`snippet is here...`](https://dashboardcode.github.io/BsMultiSelect/snippetFormValidation.html) ;
 
 **sizes**: supports bootstrap `custom-select-lg`, `custom-select-sm` or `input-group-lg`, `input-group-sm` on original `select`
 
@@ -304,7 +304,7 @@ Or you can use [./scss/BsMultiSelect.scss](https://github.com/DashboardCode/BsMu
           });
             
 ````
-Also `useCssPatch: false` allows you to go to heavy styling (and even use plugin without bootstrap 4). Those additional options are available (you see default values):
+Also `useCssPatch: false` allows you to go to heavy styling (and even use plugin without bootstrap 5). Those additional options are available (you see default values):
 
 
 ````
@@ -487,16 +487,16 @@ Plugin is highly customizable even now, but API is not published. "Single select
 
 ### Alternatives:
 
-BsMultiSelect was created because at the moment when Bootstrap 4 was released all existed multiselect plugins had strange side effects. It was just simpler to try to combine several BS 4 tools together: `form-control`, `dropdown-menu`, `close` button, `badge` then trying to understand internals of mature projects. I hope now all of them supports BS4 but this list still could be interesting for some people.
+BsMultiSelect was created because at the moment when Bootstrap 4 was released all existed multiselect plugins had strange side effects. It was just simpler to try to combine several BS 5 tools together: `form-control`, `dropdown-menu`, `close` button, `badge` then trying to understand internals of mature projects. I hope now all of them supports BS4 but this list still could be interesting for some people.
 
 
 * Chosen.js: https://harvesthq.github.io/chosen/ - (ver 1.8.5), strange multiple "Consider marking event handler as 'passive' to make the page more responsive" warnings to console, not integrated to bootstrap themes (30KB+10KB js+css minified);
 
 * Select2: https://select2.org/appearance - (ver 3.5.3) strange or broken backspace handling (at least in my Chrome 66), not integrated to bootstrap theme (66KB+14KB js+css minified);
 
-* Bootstrap multiselect: http://davidstutz.de/bootstrap-multiselect/  -  (ver. 0.9.15) BS 4 was not supported, also no SCSS, selected options looks as plain text (not as badges, no backspace key handling (67KB+1KB js+css NOT minified);
+* Bootstrap multiselect: http://davidstutz.de/bootstrap-multiselect/  -  (ver. 0.9.15) BS 5 was not supported, also no SCSS, selected options looks as plain text (not as badges, no backspace key handling (67KB+1KB js+css NOT minified);
 
-* Bootstrap-select: https://silviomoreto.github.io/bootstrap-select/ - (ver. 1.12.4) BS 4 supported, but SCSS is not integrated with BS4 variables, also picks list can't be multiline (33KB+7KB js+css minified)
+* Bootstrap-select: https://silviomoreto.github.io/bootstrap-select/ - (ver. 1.12.4) BS 5 supported, but SCSS was not integrated with BS4 variables, also picks list can't be multiline (33KB+7KB js+css minified)
 
 * Choices https://github.com/jshjohnson/Choices - not integrated to bootstrap;
 
