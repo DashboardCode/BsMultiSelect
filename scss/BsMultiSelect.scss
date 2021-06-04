@@ -69,8 +69,7 @@
             // NOTE: CopyPaste from BS - override Firefox's unusual default opacity; see https://github.com/twbs/bootstrap/pull/11526.
             opacity: 1;
         }
-        
-            //pickButton: {fontSize:'0.8em',  float : "none", verticalAlign: "text-top"},
+        // pickButton: {fontSize:'0.8em',  float : "none", verticalAlign: "text-top"},
 
         // JS css/cssPatch: pick
         > li.badge {
@@ -89,10 +88,10 @@
         @include form-control-focus-bsmultiselect();
 
         &.form-control-sm {
-                min-height: #{$input-height-sm};
-                input{
-                    font-size: $font-size-sm;
-                }
+            min-height: #{$input-height-sm};
+            input{
+                font-size: $font-size-sm;
+            }
         }
     
         &.form-control-lg {
@@ -106,35 +105,39 @@
     @include form-validation-state-bsmultiselect("invalid", $form-feedback-invalid-color);
 
     // JS css/cssPatch: choices
-    ul.dropdown-menu {
-        list-style-type: none;
-        
-        // JS css/cssPatch: choice
-        > li{
-            // NOTE: next block copied from .dropdown-item to have similar styles
-            display: block;
-            width: 100%;
-            padding: 0 map.get($spacers, 2); // NOTE: overrides BS $dropdown-item-padding-x; because it is too large
-            clear: both;
-            font-weight: $font-weight-normal;
-            color: $dropdown-link-color;
-            text-align: inherit;
-            
-            white-space: nowrap;
-            background-color: transparent;
-            border: 0;
+    div.dropdown-menu {
+        > ul {
+            list-style-type: none;
+            padding-left: 0;
+            padding-right: 0;
+            margin-bottom: 0;
+            // JS css/cssPatch: choice
+            > li {
+                // NOTE: next block copied from .dropdown-item to have similar styles
+                display: block;
+                width: 100%;
+                padding: 0 map.get($spacers, 2); // NOTE: overrides BS $dropdown-item-padding-x; because it is too large
+                clear: both;
+                font-weight: $font-weight-normal;
+                color: $dropdown-link-color;
+                text-align: inherit;
 
-            .form-check{ // BS problem: without this dropdown menu's custom checkboxes on inline form justified center
-                justify-content: flex-start; // 'initial' works well but not for IE11
-            }
-            .form-check-input.disabled ~ .form-check-label {
-                color: $form-check-input-disabled-opacity; // $custom-control-label-disabled-color;
-            }
+                white-space: nowrap;
+                background-color: transparent;
+                border: 0;
 
-        }.hover{
-            // from bs4 _dropdown.scss
-            color: var(--primary); //$dropdown-link-hover-color;
-            @include gradient-bg($dropdown-link-hover-bg);
+                .form-check{ // BS problem: without this dropdown menu's custom checkboxes on inline form justified center
+                    justify-content: flex-start; // 'initial' works well but not for IE11
+                }
+                .form-check-input.disabled ~ .form-check-label {
+                    color: $form-check-input-disabled-opacity; // $custom-control-label-disabled-color;
+                }
+
+            }.hover{
+                // from bs4 _dropdown.scss
+                color: var(--primary); //$dropdown-link-hover-color;
+                @include gradient-bg($dropdown-link-hover-bg);
+            }
         }
     }
 
@@ -181,27 +184,23 @@
 // Note: nested form for dropdown with 'novalidate ' attribute possibly could solve it but nested forms are not allowed
 
 // 1. reset "coloring"  (for both checked and uchecked) labels
-.was-validated .dashboardcode-bsmultiselect ul.dropdown-menu > li .form-check-input:valid:checked ~ .form-check-label{
-    color: $dropdown-link-color;
-}
-.was-validated .dashboardcode-bsmultiselect ul.dropdown-menu > li .form-check-input:valid:not(:checked) ~ .form-check-label{
+.was-validated .dashboardcode-bsmultiselect div.dropdown-menu  > ul > li .form-check-input:valid:checked ~ .form-check-label,
+.was-validated .dashboardcode-bsmultiselect div.dropdown-menu  > ul > li .form-check-input:valid:not(:checked) ~ .form-check-label {
     color: $dropdown-link-color;
 }
 
 // 2. but use different color for hovered item (for both checked and uchecked) labels
-.was-validated .dashboardcode-bsmultiselect ul.dropdown-menu > li.hover .form-check-input:valid:checked ~ .form-check-label{
-    color: var(--bs-primary);
-}
-.was-validated .dashboardcode-bsmultiselect ul.dropdown-menu > li.hover .form-check-input:valid:not(:checked) ~ .form-check-label{
+.was-validated .dashboardcode-bsmultiselect div.dropdown-menu > ul > li.hover .form-check-input:valid:checked ~ .form-check-label,
+.was-validated .dashboardcode-bsmultiselect div.dropdown-menu > ul > li.hover .form-check-input:valid:not(:checked) ~ .form-check-label{
     color: var(--bs-primary);
 }
 
 // 3. reset "coloring" for checkbox ('checked' and 'not(:checked)')
-.was-validated .dashboardcode-bsmultiselect ul.dropdown-menu > li .form-check-input:valid:checked  {
+.was-validated .dashboardcode-bsmultiselect  div.dropdown-menu > ul > li .form-check-input:valid:checked  {
     border-color: var(--bs-primary);
     background-color: var(--bs-primary);
 }
-.was-validated .dashboardcode-bsmultiselect ul.dropdown-menu > li .form-check-input:valid:not(:checked) {
+.was-validated .dashboardcode-bsmultiselect  div.dropdown-menu > ul > li .form-check-input:valid:not(:checked) {
     border: $form-check-input-border;
 } 
 

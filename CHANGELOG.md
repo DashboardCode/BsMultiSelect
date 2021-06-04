@@ -1,5 +1,6 @@
 # CHANGELOG
 ````
+1.1.0  - breaking change in DOM generation: previous dropdown ul become wrapped to div
 1.0.3  - problem with padding between picks in rtl solved
 1.0.2  - UMD bundle without jquery support
 1.0.1  - Floating labels

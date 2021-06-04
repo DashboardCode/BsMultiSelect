@@ -79,10 +79,13 @@
   border-color: #dc3545;
   box-shadow: 0 0 0 0.25rem rgba(220, 53, 69, 0.25);
 }
-.dashboardcode-bsmultiselect ul.dropdown-menu {
+.dashboardcode-bsmultiselect div.dropdown-menu > ul {
   list-style-type: none;
+  padding-left: 0;
+  padding-right: 0;
+  margin-bottom: 0;
 }
-.dashboardcode-bsmultiselect ul.dropdown-menu > li {
+.dashboardcode-bsmultiselect div.dropdown-menu > ul > li {
   display: block;
   width: 100%;
   padding: 0 0.5rem;
@@ -94,13 +97,13 @@
   background-color: transparent;
   border: 0;
 }
-.dashboardcode-bsmultiselect ul.dropdown-menu > li .form-check {
+.dashboardcode-bsmultiselect div.dropdown-menu > ul > li .form-check {
   justify-content: flex-start;
 }
-.dashboardcode-bsmultiselect ul.dropdown-menu > li .form-check-input.disabled ~ .form-check-label {
+.dashboardcode-bsmultiselect div.dropdown-menu > ul > li .form-check-input.disabled ~ .form-check-label {
   color: 0.5;
 }
-.dashboardcode-bsmultiselect ul.dropdown-menu .hover {
+.dashboardcode-bsmultiselect div.dropdown-menu > ul .hover {
   color: var(--primary);
   background-color: #e9ecef;
 }
@@ -130,28 +133,22 @@
   transform: scale(0.85) translateY(-0.5rem) translateX(0.15rem);
 }
 
-.was-validated .dashboardcode-bsmultiselect ul.dropdown-menu > li .form-check-input:valid:checked ~ .form-check-label {
+.was-validated .dashboardcode-bsmultiselect div.dropdown-menu > ul > li .form-check-input:valid:checked ~ .form-check-label,
+.was-validated .dashboardcode-bsmultiselect div.dropdown-menu > ul > li .form-check-input:valid:not(:checked) ~ .form-check-label {
   color: #212529;
 }
 
-.was-validated .dashboardcode-bsmultiselect ul.dropdown-menu > li .form-check-input:valid:not(:checked) ~ .form-check-label {
-  color: #212529;
-}
-
-.was-validated .dashboardcode-bsmultiselect ul.dropdown-menu > li.hover .form-check-input:valid:checked ~ .form-check-label {
+.was-validated .dashboardcode-bsmultiselect div.dropdown-menu > ul > li.hover .form-check-input:valid:checked ~ .form-check-label,
+.was-validated .dashboardcode-bsmultiselect div.dropdown-menu > ul > li.hover .form-check-input:valid:not(:checked) ~ .form-check-label {
   color: var(--bs-primary);
 }
 
-.was-validated .dashboardcode-bsmultiselect ul.dropdown-menu > li.hover .form-check-input:valid:not(:checked) ~ .form-check-label {
-  color: var(--bs-primary);
-}
-
-.was-validated .dashboardcode-bsmultiselect ul.dropdown-menu > li .form-check-input:valid:checked {
+.was-validated .dashboardcode-bsmultiselect div.dropdown-menu > ul > li .form-check-input:valid:checked {
   border-color: var(--bs-primary);
   background-color: var(--bs-primary);
 }
 
-.was-validated .dashboardcode-bsmultiselect ul.dropdown-menu > li .form-check-input:valid:not(:checked) {
+.was-validated .dashboardcode-bsmultiselect div.dropdown-menu > ul > li .form-check-input:valid:not(:checked) {
   border: 1px solid rgba(0, 0, 0, 0.25);
 }
 

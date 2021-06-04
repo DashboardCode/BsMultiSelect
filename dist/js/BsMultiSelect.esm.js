@@ -1,5 +1,5 @@
 /*!
-  * BsMultiSelect v1.0.3 (https://dashboardcode.github.io/BsMultiSelect/)
+  * BsMultiSelect v1.1.0 (https://dashboardcode.github.io/BsMultiSelect/)
   * Copyright 2017-2021 Roman Pokrovskij (github user rpokrovskij)
   * Licensed under Apache 2 (https://github.com/DashboardCode/BsMultiSelect/blob/master/LICENSE)
   */
@@ -189,7 +189,9 @@ function getDefaultLabel(selectElement) {
 
 var css = {
   choices: 'dropdown-menu',
-  // bs4, in bsmultiselect.scss as ul.dropdown-menu
+  // bs4, in bsmultiselect.scss as div.dropdown-menu
+  choicesList: '',
+  // bs4, in bsmultiselect.scss as div.dropdown-menu>ul (first child)
   choice_hover: 'hover',
   //  not bs4, in scss as 'ul.dropdown-menu li.hover'
   choice_selected: '',
@@ -225,8 +227,11 @@ var css = {
   picks_floating_lifted: 'floating-lifted'
 };
 var cssPatch = {
-  choices: {
-    listStyleType: 'none'
+  choicesList: {
+    listStyleType: 'none',
+    paddingLeft: '0',
+    paddingRight: '0',
+    marginBottom: '0'
   },
   picks: {
     listStyleType: 'none',
@@ -1516,6 +1521,10 @@ function JQueryMethodsPlugin(pluginData) {
         return choicesDom.choicesElement;
       };
 
+      api.getChoicesList = function () {
+        return choicesDom.choicesListElement;
+      };
+
       api.getFilterInput = function () {
         return filterDom.filterInputElement;
       };
@@ -2642,11 +2651,15 @@ function FilterDom(disposablePicksElement, createElementAspect, css) {
 function ChoicesDomFactory(createElementAspect) {
   return {
     create: function create(css) {
-      var choicesElement = createElementAspect.createElement('UL');
+      var choicesElement = createElementAspect.createElement('DIV');
+      var choicesListElement = createElementAspect.createElement('UL');
+      choicesElement.appendChild(choicesListElement);
       choicesElement.style.display = 'none';
       addStyling(choicesElement, css.choices);
+      addStyling(choicesListElement, css.choicesList);
       return {
         choicesElement: choicesElement,
+        choicesListElement: choicesListElement,
         createChoiceElement: function createChoiceElement() {
           var choiceElement = createElementAspect.createElement('LI');
           addStyling(choiceElement, css.choice);
@@ -2656,10 +2669,10 @@ function ChoicesDomFactory(createElementAspect) {
               return choiceElement.style.display = isVisible ? 'block' : 'none';
             },
             attach: function attach(beforeElement) {
-              return choicesElement.insertBefore(choiceElement, beforeElement);
+              return choicesListElement.insertBefore(choiceElement, beforeElement);
             },
             detach: function detach() {
-              return choicesElement.removeChild(choiceElement);
+              return choicesListElement.removeChild(choiceElement);
             }
           };
         }
@@ -2903,7 +2916,7 @@ function UpdateDataAspect(choicesDom, wraps, picksList, fillChoicesAspect, reset
     updateData: function updateData() {
       // close drop down , remove filter
       resetLayoutAspect.resetLayout();
-      choicesDom.choicesElement.innerHTML = ""; // TODO: there should better "optimization"
+      choicesDom.choicesListElement.innerHTML = ""; // TODO: there should better "optimization"
 
       wraps.clear();
       picksList.forEach(function (pick) {

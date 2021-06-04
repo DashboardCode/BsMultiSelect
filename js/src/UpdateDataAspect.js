@@ -5,7 +5,7 @@ export function UpdateDataAspect(
         updateData(){
             // close drop down , remove filter
             resetLayoutAspect.resetLayout();
-            choicesDom.choicesElement.innerHTML = ""; // TODO: there should better "optimization"
+            choicesDom.choicesListElement.innerHTML = ""; // TODO: there should better "optimization"
             wraps.clear();
             picksList.forEach(pick=>pick.dispose());
             picksList.reset();

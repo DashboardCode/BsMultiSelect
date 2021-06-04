@@ -18,6 +18,7 @@ function setDefaults(defaults){
 
 const css = {
     choices: 'dropdown-menu', // bs4, in bsmultiselect.scss as ul.dropdown-menu
+    choicesList: '', // bs4, in bsmultiselect.scss as div.dropdown-menu>ul (first child)
     choice_hover:  'hover',  //  not bs4, in scss as 'ul.dropdown-menu li.hover'
     choice_selected: '', 
     choice_disabled: '', 
@@ -46,7 +47,7 @@ const css = {
 }
 
 const cssPatch = {
-    choices: {listStyleType:'none'},
+    choicesList: {listStyleType:'none', paddingLeft:'0', paddingRight:'0', marginBottom:'0'},
     picks: {listStyleType:'none', display:'flex', flexWrap:'wrap',  height: 'auto', marginBottom: '0'},
     choice: 'px-md-2 px-1',  
     choice_hover: 'text-primary bg-light', 
