@@ -88,7 +88,7 @@ Sample `useCssPatch=true` configuration (default values used):
           $("select[multiple='multiple']").bsMultiSelect({
               useCssPatch=true, // default, can be ommitted
               cssPatch: {
-                choices: {listStyleType:'none'},
+                choicesList: {listStyleType:'none', paddingLeft:'0', paddingRight:'0', marginBottom:'0'},
                 picks: {listStyleType:'none', display:'flex', flexWrap:'wrap',  height: 'auto', marginBottom: '0'},
                 choice: 'px-md-2 px-1',  
                 choice_hover: 'text-primary bg-light', 
@@ -122,8 +122,7 @@ Sample `useCssPatch=true` configuration (default values used):
                 choiceContent: {justifyContent: 'flex-start'}, // BS problem: without this on inline form menu items justified center
                 choiceLabel: {color: 'inherit'}, // otherwise BS .was-validated set its color
                 choiceCheckBox: {color: 'inherit'},
-                choiceLabel_disabled: {opacity: '.65'},  // more flexible than {color: '#6c757d'};
-                                                         //  note:  avoid opacity on pickElement's border; TODO write to BS 
+                choiceLabel_disabled: {opacity: '.65'},  // more flexible than {color: '#6c757d'}; note: avoid opacity on pickElement's border; TODO write to BS4 
             
                 // floating plugin
                 label_floating_lifted: {opacity: '.65', transform : 'scale(.85) translateY(-.5rem) translateX(.15rem)'},
@@ -317,27 +316,36 @@ Also `useCssPatch: false` allows you to go to heavy styling (and even use plugin
           $("select[multiple='multiple']").bsMultiSelect({
               useCssPatch: false,
               css : {
-                  choices: 'dropdown-menu', 
-                  choice_hover:  'hover',  
-                  choice_selected: '', 
-                  choice_disabled: '', 
-                  
-                  choiceCheckBox_disabled: 'disabled',
-                  choiceContent: 'custom-control custom-checkbox d-flex', 
-                  choiceCheckBox: 'custom-control-input', 
-                  choiceLabel: 'custom-control-label justify-content-start',
-                  choiceLabel_disabled: ''
+                      choices: 'dropdown-menu', // bs4, in bsmultiselect.scss as div.dropdown-menu
+                      choicesList: '', // bs4, in bsmultiselect.scss as div.dropdown-menu>ul (first child)
+                      choice_hover:  'hover',  //  not bs4, in scss as 'ul.dropdown-menu li.hover'
+                      choice_selected: '', 
+                      choice_disabled: '', 
 
-                  picks: 'form-control', 
-                  picks_focus: 'focus', 
-                  picks_disabled: 'disabled',
-                  pick_disabled: '',  
-                  
-                  pickFilter: '', 
-                  pick: 'badge', 
-                  pickContent_disabled: 'disabled', 
-                  pickButton: 'close', 
-                  filterInput: '',                  
+                      picks: 'form-control',  // bs4, in scss 'ul.form-control'
+                      picks_focus: 'focus', // not bs4, in scss 'ul.form-control.focus'
+                      picks_disabled: 'disabled', //  not bs4, in scss 'ul.form-control.disabled'
+                      pick_disabled: '',  
+
+                      pickFilter: '', 
+                      filterInput: '',
+
+                      // used in pickContentGenerator
+                      pick: 'badge text-dark', // bs4
+                      pickContent: '',
+                      pickContent_disabled: 'disabled', // not bs4, in scss 'ul.form-control li span.disabled'
+                      pickButton: 'btn-close', // bs4
+
+                      // used in choiceContentGenerator
+                      // choice:  'dropdown-item', // it seems like hover should be managed manually since there should be keyboard support
+                      choiceCheckBox_disabled: 'disabled', //  not bs4, in scss as 'ul.form-control li .custom-control-input.disabled ~ .custom-control-label'
+                      choiceContent: 'form-check', // bs4 d-flex required for rtl to align items
+                      choiceCheckBox: 'form-check-input', // bs4
+                      choiceLabel: 'form-check-label',
+                      choiceLabel_disabled: '',
+
+                      label_floating_lifted: 'floating-lifted',
+                      picks_floating_lifted: 'floating-lifted'           
                 }
             });
             
@@ -353,20 +361,22 @@ With `css` parameter  you can change classes of generated HTML elements. Default
               <li class="badge"><span class="disabled">Pennsylvania</span><button class="close">..</button></li>
               <li><input id=".." style=".." ..></li>
           </ul>
-          <ul class="dropdown-menu" style=".." ..>
-              <li class="px-2 text-primary bg-light">
-                <div class="custom-control custom-checkbox">
-                   <input type="checkbox" .. >
-                   <label ..>Alabama</label>
-                </div>
-              </li>
-              <li class="px-2">
-                <div class="custom-control custom-checkbox">
-                  <input type="checkbox" ..>
-                  <label ..>Alaska</label>
-                </div>
-              </li>
-          </ul>
+          <div class="dropdown-menu">
+            <ul style=".." ..>
+                <li class="px-2 text-primary bg-light">
+                  <div class="custom-control custom-checkbox">
+                     <input type="checkbox" .. >
+                     <label ..>Alabama</label>
+                  </div>
+                </li>
+                <li class="px-2">
+                  <div class="custom-control custom-checkbox">
+                    <input type="checkbox" ..>
+                    <label ..>Alaska</label>
+                  </div>
+                </li>
+            </ul>
+          </div>
         </div>
 ````
 **without select element - intialize with js object**: in this case plugin should be initialized over `div`
