@@ -1,4 +1,4 @@
-# DashboardCode Multiselect plugin for Bootstrap 5 (and 4)
+# DashboardCode Multiselect plugin for Bootstrap 5 (4)
 Demo: https://dashboardcode.github.io/BsMultiSelect/
 
 Bootstrap 4 Demo : https://dashboardcode.github.io/BsMultiSelect/indexBs4.html
@@ -40,7 +40,7 @@ There are two modes of usage: you can use plugin with or without external CSS (m
 
 2. If you are building your project CSS file form SASS then use `useCssPatch=false` mode and link [./scss/BsMultiSelect.scss](https://github.com/DashboardCode/BsMultiSelect/blob/master/scss/BsMultiSelect.scss) to your project. SCSS file utilize your Bootstrap theme variables.  Other use case is traditional (not involving SASS): copy static [./dist/css/BsMultiSelect.css](https://github.com/DashboardCode/BsMultiSelect/blob/master/dist/css/BsMultiSelect.css) and manually adjust it for your theme.
 
-BsMultiSelect follows Bootstrap 5 conventions and use the same instruments (babel, sass, rollup) so pretend to represent a BS team's modern plugin's **boilerplate**.  Supports all Bootsrap component features: pre/append buttons, custom validation, [form validation](https://dashboardcode.github.io/BsMultiSelect/snippetFormValidation.html). Additionally supports [RTL](https://dashboardcode.github.io/BsMultiSelect/snippetRtl.html).
+BsMultiSelect follows Bootstrap 5 conventions and use the same instruments (babel, sass, rollup) so pretend to represent a BS team's modern plugin's **boilerplate**.  Supports all Bootsrap component features: pre/append buttons, custom validation, [form validation](https://dashboardcode.github.io/BsMultiSelect/snippetFormValidation.html), [RTL](https://dashboardcode.github.io/BsMultiSelect/snippetRtl.html).
 
 ![image](https://user-images.githubusercontent.com/11598038/39988733-cda205e2-5770-11e8-8ca2-0d30cefc3ca1.png)
 
@@ -59,11 +59,11 @@ https://cdn.jsdelivr.net/npm/@dashboardcode/bsmultiselect@1.1.0/dist/js/BsMultiS
 https://cdn.jsdelivr.net/npm/@dashboardcode/bsmultiselect@1.1.0/dist/css/BsMultiSelect.bs4.min.css
 
 # Architecture
-Instead of using BS4 Dropdown component (it is not possible since BS Dropdown requires presence of `toggle-buttons` https://github.com/twbs/bootstrap/issues/26420) the plugin uses `popper.js` (V1) directly.
+Instead of using BS5 Dropdown component (it is not possible since BS Dropdown requires presence of `toggle-buttons` https://github.com/twbs/bootstrap/issues/26420) the plugin uses `popper.js` (V1) directly.
 
-Inspite of this the plugin utilize `dropdown-menu` class. Menu items contains BS Custom checkboxes.
+Inspite of this the plugin utilize `dropdown-menu` CSS class. Menu items contains BS Custom checkboxes.
 
-Other BS4 classes were used:
+Other BS classes were used:
 
 * `form-control` class - it is applied to `ul` that emulates `input`
 
@@ -99,31 +99,31 @@ Sample `useCssPatch=true` configuration (default values used):
                     backgroundImage: 'none' // otherwise BS .was-validated set its image
                 },
                 filterInput_empty: 'form-control', // need for placeholder, TODO test form-control-plaintext
-            
+
                 // used in PicksDom
                 picks_disabled: {backgroundColor: '#e9ecef'},
-            
+
                 picks_focus: {borderColor: '#80bdff', boxShadow: '0 0 0 0.2rem rgba(0, 123, 255, 0.25)'},
                 picks_focus_valid: {borderColor: '', boxShadow: '0 0 0 0.2rem rgba(40, 167, 69, 0.25)'},
                 picks_focus_invalid: {borderColor: '', boxShadow: '0 0 0 0.2rem rgba(220, 53, 69, 0.25)'},
-                
+
                 // used in BsAppearancePlugin
                 picks_def: {minHeight: 'calc(2.25rem + 2px)'},
                 picks_lg:  {minHeight: 'calc(2.875rem + 2px)'},
                 picks_sm:  {minHeight: 'calc(1.8125rem + 2px)'},
                 picks_floating_def: {minHeight: 'calc(3.5rem + 2px)'},
-                
+
                 // used in pickContentGenerator
                 pick: {paddingLeft: '0', paddingRight: '.5rem', paddingInlineStart:'0', paddingInlineEnd:'0.5rem'},
                 pickButton: {fontSize:'0.8em',  float : "none", verticalAlign: "text-top"},
                 pickContent_disabled: {opacity: '.65'}, 
-                
+
                 // used in choiceContentGenerator
                 choiceContent: {justifyContent: 'flex-start'}, // BS problem: without this on inline form menu items justified center
                 choiceLabel: {color: 'inherit'}, // otherwise BS .was-validated set its color
                 choiceCheckBox: {color: 'inherit'},
-                choiceLabel_disabled: {opacity: '.65'},  // more flexible than {color: '#6c757d'}; note: avoid opacity on pickElement's border; TODO write to BS4 
-            
+                choiceLabel_disabled: {opacity: '.65'},  // more flexible than {color: '#6c757d'}; note: avoid opacity on pickElement's border; 
+
                 // floating plugin
                 label_floating_lifted: {opacity: '.65', transform : 'scale(.85) translateY(-.5rem) translateX(.15rem)'},
                 picks_floating_lifted: {paddingTop: '1.625rem', paddingLeft:'0.8rem', paddingBottom : '0'}
@@ -316,31 +316,31 @@ Also `useCssPatch: false` allows you to go to heavy styling (and even use plugin
           $("select[multiple='multiple']").bsMultiSelect({
               useCssPatch: false,
               css : {
-                      choices: 'dropdown-menu', // bs4, in bsmultiselect.scss as div.dropdown-menu
-                      choicesList: '', // bs4, in bsmultiselect.scss as div.dropdown-menu>ul (first child)
-                      choice_hover:  'hover',  //  not bs4, in scss as 'ul.dropdown-menu li.hover'
+                      choices: 'dropdown-menu', // bs, in bsmultiselect.scss as div.dropdown-menu
+                      choicesList: '', // bs, in bsmultiselect.scss as div.dropdown-menu>ul (first child)
+                      choice_hover:  'hover',  //  not bs, in scss as 'ul.dropdown-menu li.hover'
                       choice_selected: '', 
                       choice_disabled: '', 
 
-                      picks: 'form-control',  // bs4, in scss 'ul.form-control'
-                      picks_focus: 'focus', // not bs4, in scss 'ul.form-control.focus'
-                      picks_disabled: 'disabled', //  not bs4, in scss 'ul.form-control.disabled'
+                      picks: 'form-control',  // bs, in scss 'ul.form-control'
+                      picks_focus: 'focus', // not bs, in scss 'ul.form-control.focus'
+                      picks_disabled: 'disabled', //  not bs, in scss 'ul.form-control.disabled'
                       pick_disabled: '',  
 
                       pickFilter: '', 
                       filterInput: '',
 
                       // used in pickContentGenerator
-                      pick: 'badge text-dark', // bs4
+                      pick: 'badge text-dark', // bs
                       pickContent: '',
-                      pickContent_disabled: 'disabled', // not bs4, in scss 'ul.form-control li span.disabled'
-                      pickButton: 'btn-close', // bs4
+                      pickContent_disabled: 'disabled', // not bs, in scss 'ul.form-control li span.disabled'
+                      pickButton: 'btn-close', // bs
 
                       // used in choiceContentGenerator
                       // choice:  'dropdown-item', // it seems like hover should be managed manually since there should be keyboard support
-                      choiceCheckBox_disabled: 'disabled', //  not bs4, in scss as 'ul.form-control li .custom-control-input.disabled ~ .custom-control-label'
-                      choiceContent: 'form-check', // bs4 d-flex required for rtl to align items
-                      choiceCheckBox: 'form-check-input', // bs4
+                      choiceCheckBox_disabled: 'disabled', //  not bs, in scss as 'ul.form-control li .custom-control-input.disabled ~ .custom-control-label'
+                      choiceContent: 'form-check', // bs d-flex required for rtl to align items
+                      choiceCheckBox: 'form-check-input', // bs
                       choiceLabel: 'form-check-label',
                       choiceLabel_disabled: '',
 
@@ -503,7 +503,7 @@ Plugin is highly customizable even now, but API is not published. "Single select
 
 ### Alternatives:
 
-BsMultiSelect was created because at the moment when Bootstrap 4 was released all existed multiselect plugins had strange side effects. It was just simpler to try to combine several BS 5 tools together: `form-control`, `dropdown-menu`, `close` button, `badge` then trying to understand internals of mature projects. I hope now all of them supports BS4 but this list still could be interesting for some people.
+BsMultiSelect was created because at the moment when Bootstrap 4 was released all existed multiselect plugins had strange side effects. It was just simpler to try to combine several BS 5 tools together: `form-control`, `dropdown-menu`, `close` button, `badge` then trying to understand internals of mature projects. I hope now all of them supports BS but this list still could be interesting for some people.
 
 
 * Chosen.js: https://harvesthq.github.io/chosen/ - (ver 1.8.5), strange multiple "Consider marking event handler as 'passive' to make the page more responsive" warnings to console, not integrated to bootstrap themes (30KB+10KB js+css minified);
@@ -512,7 +512,7 @@ BsMultiSelect was created because at the moment when Bootstrap 4 was released al
 
 * Bootstrap multiselect: http://davidstutz.de/bootstrap-multiselect/  -  (ver. 0.9.15) BS 5 was not supported, also no SCSS, selected options looks as plain text (not as badges, no backspace key handling (67KB+1KB js+css NOT minified);
 
-* Bootstrap-select: https://silviomoreto.github.io/bootstrap-select/ - (ver. 1.12.4) BS 5 supported, but SCSS was not integrated with BS4 variables, also picks list can't be multiline (33KB+7KB js+css minified)
+* Bootstrap-select: https://silviomoreto.github.io/bootstrap-select/ - (ver. 1.12.4) BS 5 supported, but SCSS was not integrated with BS variables, also picks list can't be multiline (33KB+7KB js+css minified)
 
 * Choices https://github.com/jshjohnson/Choices - not integrated to bootstrap;
 

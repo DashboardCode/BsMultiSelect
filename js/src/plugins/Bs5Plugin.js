@@ -33,7 +33,7 @@ function composeGetSize(selectElement){
     else{ 
         getSize = function(){
             var value = null;
-            if (selectElement.classList.contains('form-select-lg') || selectElement.classList.contains('form-control-lg')) // changed for BS4
+            if (selectElement.classList.contains('form-select-lg') || selectElement.classList.contains('form-control-lg')) // changed for BS
                 value = 'lg';
             else if (selectElement.classList.contains('form-select-sm') || selectElement.classList.contains('form-control-sm'))
                 value = 'sm'; 
@@ -56,31 +56,31 @@ function getDefaultLabel(selectElement){
 }
 
 const css = {
-    choices: 'dropdown-menu', // bs4, in bsmultiselect.scss as div.dropdown-menu
-    choicesList: '', // bs4, in bsmultiselect.scss as div.dropdown-menu>ul (first child)
-    choice_hover:  'hover',  //  not bs4, in scss as 'ul.dropdown-menu li.hover'
+    choices: 'dropdown-menu', // bs, in bsmultiselect.scss as div.dropdown-menu
+    choicesList: '', // bs, in bsmultiselect.scss as div.dropdown-menu>ul (first child)
+    choice_hover:  'hover',  //  not bs, in scss as 'ul.dropdown-menu li.hover'
     choice_selected: '', 
     choice_disabled: '', 
 
-    picks: 'form-control',  // bs4, in scss 'ul.form-control'
-    picks_focus: 'focus', // not bs4, in scss 'ul.form-control.focus'
-    picks_disabled: 'disabled', //  not bs4, in scss 'ul.form-control.disabled'
+    picks: 'form-control',  // bs, in scss 'ul.form-control'
+    picks_focus: 'focus', // not bs, in scss 'ul.form-control.focus'
+    picks_disabled: 'disabled', //  not bs, in scss 'ul.form-control.disabled'
     pick_disabled: '',  
     
     pickFilter: '', 
     filterInput: '',
 
     // used in pickContentGenerator
-    pick: 'badge text-dark', // bs4
+    pick: 'badge text-dark', // bs
     pickContent: '',
-    pickContent_disabled: 'disabled', // not bs4, in scss 'ul.form-control li span.disabled'
-    pickButton: 'btn-close', // bs4
+    pickContent_disabled: 'disabled', // not bs, in scss 'ul.form-control li span.disabled'
+    pickButton: 'btn-close', // bs
 
     // used in choiceContentGenerator
     // choice:  'dropdown-item', // it seems like hover should be managed manually since there should be keyboard support
-    choiceCheckBox_disabled: 'disabled', //  not bs4, in scss as 'ul.form-control li .custom-control-input.disabled ~ .custom-control-label'
-    choiceContent: 'form-check', // bs4 d-flex required for rtl to align items
-    choiceCheckBox: 'form-check-input', // bs4
+    choiceCheckBox_disabled: 'disabled', //  not bs, in scss as 'ul.form-control li .custom-control-input.disabled ~ .custom-control-label'
+    choiceContent: 'form-check', // bs d-flex required for rtl to align items
+    choiceCheckBox: 'form-check-input', // bs
     choiceLabel: 'form-check-label',
     choiceLabel_disabled: '',
 
@@ -123,7 +123,7 @@ const cssPatch = {
     choiceContent: {justifyContent: 'flex-start'}, // BS problem: without this on inline form menu items justified center
     choiceLabel: {color: 'inherit'}, // otherwise BS .was-validated set its color
     choiceCheckBox: {color: 'inherit'},
-    choiceLabel_disabled: {opacity: '.65'},  // more flexible than {color: '#6c757d'}; note: avoid opacity on pickElement's border; TODO write to BS4 
+    choiceLabel_disabled: {opacity: '.65'},  // more flexible than {color: '#6c757d'}; note: avoid opacity on pickElement's border; TODO write to BS 
 
     // floating plugin
     label_floating_lifted: {opacity: '.65', transform : 'scale(.85) translateY(-.5rem) translateX(.15rem)'},
