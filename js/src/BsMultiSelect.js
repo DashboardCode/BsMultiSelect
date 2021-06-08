@@ -43,7 +43,8 @@ import {CountableChoicesListInsertAspect} from './CountableChoicesListInsertAspe
 /// environment - common for many; configuration for concreate
 export function BsMultiSelect(element, environment, plugins, configuration, onInit){
     var {window} = environment;
-    
+    environment.isIE11 = !!window.MSInputMethodContext && !!document.documentMode;
+
     let { containerClass,
           css, 
           getDisabled,

@@ -1,5 +1,5 @@
 /*!
-  * BsMultiSelect v1.1.0 (https://dashboardcode.github.io/BsMultiSelect/)
+  * BsMultiSelect v1.1.1 (https://dashboardcode.github.io/BsMultiSelect/)
   * Copyright 2017-2021 Roman Pokrovskij (github user rpokrovskij)
   * Licensed under Apache 2 (https://github.com/DashboardCode/BsMultiSelect/blob/master/LICENSE)
   */
@@ -132,6 +132,20 @@ function EventLoopFlag(window) {
       window.setTimeout(function () {
         flag = false;
       }, 0);
+    }
+  };
+}
+function ResetableFlag() {
+  var flag = false;
+  return {
+    get: function get() {
+      return flag;
+    },
+    set: function set() {
+      flag = true;
+    },
+    reset: function reset() {
+      flag = false;
     }
   };
 }
@@ -1401,20 +1415,39 @@ CssPatchPlugin.plugStaticDom = function (configurationPluginData) {
   if (configuration.useCssPatch) extendCss(configuration.css, configuration.cssPatch);
 };
 
-function PlaceholderPlugin(pluginData) {
-  var configuration = pluginData.configuration,
-      staticManager = pluginData.staticManager,
-      picksList = pluginData.picksList,
-      picksDom = pluginData.picksDom,
-      filterDom = pluginData.filterDom,
-      staticDom = pluginData.staticDom,
-      updateDataAspect = pluginData.updateDataAspect,
-      resetFilterListAspect = pluginData.resetFilterListAspect,
-      filterManagerAspect = pluginData.filterManagerAspect;
+function PlaceholderPlugin(aspects) {
+  var configuration = aspects.configuration,
+      staticManager = aspects.staticManager,
+      picksList = aspects.picksList,
+      picksDom = aspects.picksDom,
+      filterDom = aspects.filterDom,
+      staticDom = aspects.staticDom,
+      updateDataAspect = aspects.updateDataAspect,
+      resetFilterListAspect = aspects.resetFilterListAspect,
+      filterManagerAspect = aspects.filterManagerAspect,
+      environment = aspects.environment;
+  var isIE11 = environment.isIE11;
   var placeholder = configuration.placeholder,
       css = configuration.css;
   var picksElement = picksDom.picksElement;
   var filterInputElement = filterDom.filterInputElement;
+
+  function setPlaceholder(placeholder) {
+    filterInputElement.placeholder = placeholder;
+  }
+
+  if (isIE11) {
+    var ignoreNextInputResetableFlag = ResetableFlag();
+    var placeholderStopInputAspect = PlaceholderStopInputAspect(ignoreNextInputResetableFlag);
+    var setPlaceholderOrig = setPlaceholder;
+
+    setPlaceholder = function setPlaceholder(placeholder) {
+      ignoreNextInputResetableFlag.set();
+      setPlaceholderOrig(placeholder);
+    };
+
+    aspects.placeholderStopInputAspect = placeholderStopInputAspect;
+  }
 
   if (!placeholder) {
     placeholder = getDataGuardedWithPrefix(staticDom.initialElement, "bsmultiselect", "placeholder");
@@ -1428,10 +1461,10 @@ function PlaceholderPlugin(pluginData) {
 
   function showPlacehodler(isVisible) {
     if (isVisible) {
-      filterInputElement.placeholder = placeholder ? placeholder : '';
+      setPlaceholder(placeholder ? placeholder : '');
       picksElement.style.display = 'block';
     } else {
-      filterInputElement.placeholder = '';
+      setPlaceholder('');
       picksElement.style.display = 'flex';
     }
 
@@ -1482,6 +1515,17 @@ function PlaceholderPlugin(pluginData) {
   };
 
   updateDataAspect.updateData = composeSync(updateDataAspect.updateData, updatePlacehodlerVisibility);
+}
+
+function PlaceholderStopInputAspect(resetableFlag) {
+  return {
+    get: function get() {
+      return resetableFlag.get();
+    },
+    reset: function reset() {
+      return resetableFlag.reset();
+    }
+  };
 }
 
 function JQueryMethodsPlugin(pluginData) {
@@ -2112,6 +2156,86 @@ function PicksApiPlugin(pluginData) {
   };
 }
 
+function PicksPlugin(aspects) {
+  var configuration = aspects.configuration;
+      aspects.inputAspect;
+      aspects.filterDom;
+      aspects.filterManagerAspect;
+  configuration.picks;
+      configuration.addOptionPicked;
+  /*
+  if (!addOptionPicked){
+      addOptionPicked = (option, index, value) => {
+          if (value)
+              picks.push(option);
+          else
+              picks.splice(index, 1);
+          return true;
+      };
+  }
+    function trySetWrapSelected(option, updateSelected, booleanValue){
+      let success = false;
+      var confirmed = setIsOptionSelected(option, booleanValue);
+      if (!(confirmed===false)) {
+          updateSelected();
+          success = true;
+      }
+      return success;
+  }
+    let origProcessInput = inputAspect.processInput;
+  inputAspect.processInput = () => {
+      let origResult = origProcessInput();
+      if (!origResult.isEmpty)
+      {
+          if ( filterManagerAspect.getNavigateManager().getCount() == 1)
+          {
+              // todo: move exact match to filterManager
+              let fullMatchWrap =  filterManagerAspect.getNavigateManager().getHead();
+              let text = filterManagerAspect.getFilter();
+              if (fullMatchWrap.choice.searchText == text)
+              {
+                  let success = trySetWrapSelected(fullMatchWrap, true);
+                  if (success) {
+                      filterDom.setEmpty();
+                      origResult.isEmpty = true;
+                  }
+              }
+          }
+      }
+      return origResult;
+  }*/
+}
+
+PicksPlugin.plugStaticDom = function (aspects) {
+  var configuration = aspects.configuration,
+      picksList = aspects.picksList;
+  var picks = configuration.picks;
+
+  if (picks) {
+    var origAdd = picksList.add,
+        origReset = picksList.reset;
+
+    picksList.add = function (e) {
+      var _origAdd = origAdd(e),
+          remove = _origAdd.remove,
+          index = _origAdd.index;
+
+      picks.push(e);
+      return {
+        remove: composeSync(remove, function () {
+          return void picks.splice(index(), 1);
+        }),
+        index: index
+      };
+    };
+
+    picksList.reset = function () {
+      origReset();
+      picks.length = 0;
+    };
+  }
+};
+
 function PopperPlugin(pluginData) {
   var staticManager = pluginData.staticManager,
       environment = pluginData.environment,
@@ -2272,6 +2396,24 @@ var defaultPlugins = {
   DisabledOptionPlugin: DisabledOptionPlugin,
   PicksApiPlugin: PicksApiPlugin
 };
+var picksPlugins = {
+  CssPatchPlugin: CssPatchPlugin,
+  PicksPlugin: PicksPlugin,
+  LabelPlugin: LabelPlugin,
+  ValidationApiPlugin: ValidationApiPlugin,
+  BsAppearancePlugin: BsAppearancePlugin,
+  PopperPlugin: PopperPlugin,
+  RtlPlugin: RtlPlugin,
+  PlaceholderPlugin: PlaceholderPlugin,
+  FloatingLabelPlugin: FloatingLabelPlugin,
+  OptionsApiPlugin: OptionsApiPlugin,
+  JQueryMethodsPlugin: JQueryMethodsPlugin,
+  PicksApiPlugin: PicksApiPlugin
+};
+var allPlugins = shallowClearClone(defaultPlugins, {
+  PicksPlugin: PicksPlugin
+});
+/*SelectedPicksPlugin*/
 
 var utilities = {
   composeSync: composeSync,
@@ -3238,7 +3380,8 @@ function MultiSelectInlineLayout(aspects) {
       specialPicksEventsAspect = aspects.specialPicksEventsAspect,
       buildChoiceAspect = aspects.buildChoiceAspect,
       setDisabledComponentAspect = aspects.setDisabledComponentAspect,
-      resetLayoutAspect = aspects.resetLayoutAspect;
+      resetLayoutAspect = aspects.resetLayoutAspect,
+      placeholderStopInputAspect = aspects.placeholderStopInputAspect;
   var picksElement = picksDom.picksElement;
   var choicesElement = choicesDom.choicesElement;
   var window = environment.window;
@@ -3446,6 +3589,11 @@ function MultiSelectInlineLayout(aspects) {
   }
 
   filterDom.onInput(function () {
+    if (placeholderStopInputAspect && placeholderStopInputAspect.get()) {
+      placeholderStopInputAspect.reset();
+      return;
+    }
+
     var _inputAspect$processI = inputAspect.processInput(),
         filterInputValue = _inputAspect$processI.filterInputValue,
         isEmpty = _inputAspect$processI.isEmpty;
@@ -3647,6 +3795,7 @@ function BsMultiSelect(element, environment, plugins, configuration, onInit) {
   var _extendIfUndefined;
 
   var window = environment.window;
+  environment.isIE11 = !!window.MSInputMethodContext && !!document.documentMode;
   var containerClass = configuration.containerClass,
       css = configuration.css,
       getDisabled = configuration.getDisabled,
@@ -4019,20 +4168,34 @@ function ModuleFactory(environment) {
   if (!environment.trigger) environment.trigger = function (e, name) {
     return e.dispatchEvent(new environment.window.Event(name));
   };
-  var plugins = shallowClearClone({
+  var pluginsArray = ObjectValues(shallowClearClone({
     Bs4Plugin: Bs4Plugin
-  }, defaultPlugins);
-  var pluginsArray = ObjectValues(plugins);
+  }, defaultPlugins));
 
   var _MultiSelectBuilder = MultiSelectBuilder(environment, pluginsArray),
-      create = _MultiSelectBuilder.create,
-      defaultSettings = _MultiSelectBuilder.defaultSettings;
+      BsMultiSelect = _MultiSelectBuilder.create,
+      BsMultiSelectDefault = _MultiSelectBuilder.BsMultiSelectDefault;
 
-  create.Default = defaultSettings;
+  BsMultiSelect.Default = BsMultiSelectDefault;
+  var picksPluginsArray = ObjectValues(shallowClearClone({
+    Bs4Plugin: Bs4Plugin
+  }, picksPlugins));
+
+  var _MultiSelectBuilder2 = MultiSelectBuilder(environment, picksPluginsArray),
+      BsPicks = _MultiSelectBuilder2.create,
+      BsPicksDefault = _MultiSelectBuilder2.BsPicksDefault;
+
+  BsPicks.Default = BsPicksDefault;
   return {
-    BsMultiSelect: create,
-    plugins: plugins,
-    utilities: utilities
+    BsMultiSelect: BsMultiSelect,
+    BsPicks: BsPicks,
+    MultiSelectTools: {
+      MultiSelectBuilder: MultiSelectBuilder,
+      plugins: shallowClearClone({
+        Bs4Plugin: Bs4Plugin
+      }, allPlugins),
+      utilities: utilities
+    }
   };
 }
 

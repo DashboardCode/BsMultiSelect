@@ -140,3 +140,18 @@ export function EventLoopFlag(window) {
         }
     }
 }
+
+export function ResetableFlag() {
+    var flag = false;
+    return {
+        get(){
+            return flag;
+        },
+        set(){
+            flag = true;
+        },
+        reset(){
+            flag = false;
+        }
+    }
+}

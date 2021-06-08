@@ -31,6 +31,7 @@ export function BsMultiSelect(element, environment, plugins, configuration, onIn
   var _extendIfUndefined;
 
   var window = environment.window;
+  environment.isIE11 = !!window.MSInputMethodContext && !!document.documentMode;
   var containerClass = configuration.containerClass,
       css = configuration.css,
       getDisabled = configuration.getDisabled,

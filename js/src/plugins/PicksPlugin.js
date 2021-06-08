@@ -53,6 +53,7 @@ PicksPlugin.plugStaticDom = (aspects) => {
     let {picks} = configuration;
     if (picks) {
         let {add: origAdd, reset: origReset} = picksList;
+
         picksList.add = (e) => {
             let {remove, index} = origAdd(e);
             picks.push(e);
@@ -63,6 +64,5 @@ PicksPlugin.plugStaticDom = (aspects) => {
             origReset();
             picks.length = 0;
         }
-
     }
 }

@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.1/dist/css/bootstrap.min.css">
+        <!-- <link rel="stylesheet" href="./../../BsMultiSelect/dist/css/BsMultiSelect.css"> -->
+        
+        <title>DashboardCode Multiselect Plugin for Bootstrap 5</title>
+    </head>
+    <body class="bg-light">
+        <div class="container">
+            <div class="pt-4">
+		<button id="btnAttach" class="btn btn-primary">Attach | Dispose</button>
+                <button id="btnDisable" class="btn btn-secondary">Disable | Enable</button>
+		<button id="btnClick" class="btn btn-secondary">See console</button>
+                    <!-- <div id="toggle-disable-id" class="btn-group btn-group-toggle" data-toggle="buttons">
+                            <label class="btn btn-outline-secondary active">
+                               <input type="radio" id="optionEnable" name="optionEnableDisable" autocomplete="off"  value="ON" checked>Enable
+                            </label>
+                            <label class="btn btn-outline-secondary">
+                               <input type="radio" id="optionDisable" name="optionEnableDisable"  autocomplete="off" value="OFF">Disable
+                            </label>
+                    </div> -->
+            </div>
+            <br/>
+            <div class="form-group row">
+                <label class="col-form-label col-sm-2" for="languages-id">Languages:</label>
+                <div class="col-sm-10">
+                    <div id="languages-id"></div>
+                </div>
+            </div>
+
+        </div>
+
+        <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.1/dist/js/bootstrap.min.js"></script>
+
+
+	    <script src="./dist/js/BsMultiSelect.js"></script>
+        
+        <script>
+            var options = [
+                {text: "Arabic"},
+                {text: "Belarusian"},
+                {text: "Chinese"},
+                {text: "Dutch"},
+                {text: "English"},
+                {text: "French"},
+                {text: "Greek"},
+                {text: "Hindi"},
+                {text: "Italian"}
+            ];
+            var picks = []; 
+
+            var $languages = $('#languages-id')
+            var getIsAttached = function() { return $languages.data("DashboardCode.BsMultiSelect")!=null }
+            var disabled = false;
+            //var plugins = $.fn.bsMultiSelect.tools.MultiSelectBuilder({ajax:true});
+            //console.log(plugins);
+            $('#btnAttach').click(
+                function() {
+                    if (getIsAttached())
+                        $languages.bsMultiSelect("Dispose");
+                    else
+                        $languages.bsMultiSelect({
+                            options:options, 
+                            picks: picks,
+                            plugins: plugins,
+                            getDisabled: function(){return disabled },
+                            useCssPatch:false, 
+                            placeholder:"placeholder"});
+                }      
+	        );
+           
+            $('#btnDisable').click(
+                function() {
+                    disabled = ! disabled;
+                    if (getIsAttached())
+                        $languages.bsMultiSelect("UpdateDisabled");
+                }      
+            );
+
+	    $('#btnClick').click(
+                function() {
+                    console.log(picks);
+		            //$languages.BsMultiSelect().addPick({text:"bla" , selected:true, disabled:false, hidden:false});
+		   //let picks = [];
+                   //$languages.BsMultiSelect().forEachPeak(function(i){
+                   // 	picks.push(i) 
+                   //   }
+                   //)
+                   //console.log(picks)
+                }      
+            );
+        </script>
+    </body>
+</html>

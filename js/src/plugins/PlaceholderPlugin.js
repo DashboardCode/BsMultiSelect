@@ -1,13 +1,31 @@
 import {composeSync} from '../ToolsJs';
 import {getDataGuardedWithPrefix} from '../ToolsDom';
 import {toggleStyling} from '../ToolsStyling';
+import {ResetableFlag} from '../ToolsDom'
 
-export function PlaceholderPlugin(pluginData){
+export function PlaceholderPlugin(aspects){
     let {configuration, staticManager, picksList, picksDom, filterDom, staticDom, updateDataAspect,
-        resetFilterListAspect, filterManagerAspect} = pluginData;
+        resetFilterListAspect, filterManagerAspect, environment} = aspects;
+    let isIE11 = environment.isIE11;
     let {placeholder,  css} = configuration;
     let {picksElement} = picksDom;
     let filterInputElement = filterDom.filterInputElement;
+
+    function setPlaceholder(placeholder){
+        filterInputElement.placeholder = placeholder;
+    }
+    if (isIE11){
+        var ignoreNextInputResetableFlag = ResetableFlag(); 
+        let placeholderStopInputAspect = PlaceholderStopInputAspect(ignoreNextInputResetableFlag);
+        var setPlaceholderOrig = setPlaceholder;
+        setPlaceholder = function(placeholder){
+            ignoreNextInputResetableFlag.set();
+            setPlaceholderOrig(placeholder);
+        }
+        
+        aspects.placeholderStopInputAspect=placeholderStopInputAspect;
+    }
+
     if (!placeholder){
         placeholder = getDataGuardedWithPrefix(staticDom.initialElement,"bsmultiselect","placeholder");
     }
@@ -22,12 +40,12 @@ export function PlaceholderPlugin(pluginData){
     function showPlacehodler(isVisible){
         if (isVisible)
         {
-            filterInputElement.placeholder = placeholder?placeholder:'';
+            setPlaceholder(placeholder?placeholder:'');
             picksElement.style.display = 'block';
         }
         else
         {
-            filterInputElement.placeholder = '';
+            setPlaceholder('');
             picksElement.style.display = 'flex';
         }
         emptyToggleStyling(isVisible);
@@ -73,4 +91,15 @@ export function PlaceholderPlugin(pluginData){
 
     updateDataAspect.updateData = composeSync(updateDataAspect.updateData, updatePlacehodlerVisibility);
     
+}
+
+function PlaceholderStopInputAspect(resetableFlag){
+    return{
+        get(){
+            return resetableFlag.get();
+        },
+        reset(){
+            return resetableFlag.reset();
+        }             
+    }
 }

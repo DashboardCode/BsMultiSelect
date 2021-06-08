@@ -12,7 +12,7 @@ export function MultiSelectInlineLayout (
         createPickHandlersAspect,
         picksList,
         inputAspect, specialPicksEventsAspect,  buildChoiceAspect, 
-        setDisabledComponentAspect, resetLayoutAspect
+        setDisabledComponentAspect, resetLayoutAspect, placeholderStopInputAspect
     } = aspects;
 
     let picksElement = picksDom.picksElement;
@@ -21,6 +21,7 @@ export function MultiSelectInlineLayout (
     var window = environment.window;
     var document = window.document;
     var eventLoopFlag = EventLoopFlag(window); 
+    
     var skipFocusout = false;
     
     function getSkipFocusout() {
@@ -229,6 +230,10 @@ export function MultiSelectInlineLayout (
     }
 
     filterDom.onInput(() => {
+        if (placeholderStopInputAspect && placeholderStopInputAspect.get()){
+            placeholderStopInputAspect.reset();
+            return;    
+        }
         let {filterInputValue, isEmpty} = inputAspect.processInput();
         if (isEmpty)
             filterManagerAspect.processEmptyInput();

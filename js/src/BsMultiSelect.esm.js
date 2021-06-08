@@ -1,5 +1,5 @@
 import {Bs5Plugin} from './plugins/Bs5Plugin'
-import {defaultPlugins} from './PluginSet'
+import {defaultPlugins, picksPlugins, allPlugins } from './PluginSet'
 import {shallowClearClone, ObjectValues} from './ToolsJs'
 import {utilities} from './ToolSet'
 import  {MultiSelectBuilder} from './MultiSelectBuilder'
@@ -7,16 +7,19 @@ import  {MultiSelectBuilder} from './MultiSelectBuilder'
 function ModuleFactory(environment){
     if (!environment.trigger)
         environment.trigger = (e, name) => e.dispatchEvent(new environment.window.Event(name))
-    let plugins = shallowClearClone({Bs5Plugin}, defaultPlugins);
-    let pluginsArray = ObjectValues(plugins);
+
+    let pluginsArray = ObjectValues(shallowClearClone({Bs5Plugin}, defaultPlugins));
+    let {create: BsMultiSelect, BsMultiSelectDefault} = MultiSelectBuilder(environment, pluginsArray) 
+    BsMultiSelect.Default = BsMultiSelectDefault;
     
-    let {create, defaultSettings} = MultiSelectBuilder(environment, pluginsArray) 
-    create.Default = defaultSettings;
-    
+    let picksPluginsArray = ObjectValues(shallowClearClone({Bs5Plugin}, picksPlugins));
+    let {create: BsPicks, BsPicksDefault} = MultiSelectBuilder(environment, picksPluginsArray) 
+    BsPicks.Default = BsPicksDefault;
+
     return {
-        BsMultiSelect: create,
-        plugins,
-        utilities  
+        BsMultiSelect,
+        BsPicks,
+        MultiSelectTools: {MultiSelectBuilder, plugins: shallowClearClone({Bs5Plugin}, allPlugins), utilities} 
     }
 }
 

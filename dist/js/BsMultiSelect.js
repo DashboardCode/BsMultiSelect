@@ -1,5 +1,5 @@
 /*!
-  * BsMultiSelect v1.1.0 (https://dashboardcode.github.io/BsMultiSelect/)
+  * BsMultiSelect v1.1.1 (https://dashboardcode.github.io/BsMultiSelect/)
   * Copyright 2017-2021 Roman Pokrovskij (github user rpokrovskij)
   * Licensed under Apache 2 (https://github.com/DashboardCode/BsMultiSelect/blob/master/LICENSE)
   */
@@ -413,50 +413,6 @@
       return arr;
     }
 
-    function LabelPlugin(pluginData) {
-      var configuration = pluginData.configuration,
-          staticDom = pluginData.staticDom,
-          filterDom = pluginData.filterDom;
-      var containerClass = configuration.containerClass,
-          label = configuration.label;
-
-      var getLabelElementAspect = function getLabelElementAspect() {
-        return defCall(label);
-      };
-
-      var labelPluginData = {
-        getLabelElementAspect: getLabelElementAspect
-      }; // overrided by BS Appearance Plugin
-
-      pluginData.labelPluginData = labelPluginData;
-      var createInputId = null;
-      var selectElement = staticDom.selectElement,
-          containerElement = staticDom.containerElement;
-      var filterInputElement = filterDom.filterInputElement;
-      if (selectElement) createInputId = function createInputId() {
-        return containerClass + "-generated-input-" + (selectElement.id ? selectElement.id : selectElement.name).toLowerCase() + "-id";
-      };else createInputId = function createInputId() {
-        return containerClass + "-generated-filter-" + containerElement.id;
-      };
-      return {
-        buildApi: function buildApi() {
-          var labelElement = labelPluginData.getLabelElementAspect();
-          var backupedForAttribute = null; // state saved between init and dispose
-
-          if (labelElement) {
-            backupedForAttribute = labelElement.getAttribute('for');
-            var newId = createInputId();
-            filterInputElement.setAttribute('id', newId);
-            labelElement.setAttribute('for', newId);
-          }
-
-          if (backupedForAttribute) return function () {
-            return labelElement.setAttribute('for', backupedForAttribute);
-          };
-        }
-      };
-    }
-
     function findDirectChildByTagName(element, tagName) {
       var value = null;
 
@@ -606,174 +562,79 @@
         }
       };
     }
+    function ResetableFlag() {
+      var flag = false;
+      return {
+        get: function get() {
+          return flag;
+        },
+        set: function set() {
+          flag = true;
+        },
+        reset: function reset() {
+          flag = false;
+        }
+      };
+    }
 
-    function RtlPlugin(pluginData) {
-      var configuration = pluginData.configuration,
-          rtlAspect = pluginData.rtlAspect,
-          staticDom = pluginData.staticDom;
-      var isRtl = configuration.isRtl;
-      var forceRtlOnContainer = false;
-      if (isBoolean(isRtl)) forceRtlOnContainer = true;else isRtl = getIsRtl(staticDom.initialElement);
-      var attributeBackup = AttributeBackup();
+    function PluginManager(plugins, pluginData) {
+      var instances = [];
 
-      if (forceRtlOnContainer) {
-        attributeBackup.set(staticDom.containerElement, "dir", "rtl");
-      } else if (staticDom.selectElement) {
-        var dirAttributeValue = staticDom.selectElement.getAttribute("dir");
-
-        if (dirAttributeValue) {
-          attributeBackup.set(staticDom.containerElement, "dir", dirAttributeValue);
+      if (plugins) {
+        for (var i = 0; i < plugins.length; i++) {
+          var instance = plugins[i](pluginData);
+          if (instance) instances.push(instance);
         }
       }
 
+      var disposes = [];
       return {
         buildApi: function buildApi(api) {
-          if (rtlAspect.updateRtl) rtlAspect.updateRtl(isRtl);
+          for (var _i = 0; _i < instances.length; _i++) {
+            var _instances$_i$buildAp, _instances$_i;
+
+            var dispose = (_instances$_i$buildAp = (_instances$_i = instances[_i]).buildApi) == null ? void 0 : _instances$_i$buildAp.call(_instances$_i, api);
+            if (dispose) disposes.push(dispose);
+          }
         },
         dispose: function dispose() {
-        }
-      };
-    }
-
-    RtlPlugin.plugStaticDom = function (aspects) {
-      aspects.rtlAspect = RtlAspect();
-    };
-
-    function RtlAspect() {
-      return {
-        updateRtl: function updateRtl() {}
-      };
-    }
-
-    function FormResetPlugin(pluginData) {
-      var staticDom = pluginData.staticDom,
-          environment = pluginData.environment;
-      return {
-        buildApi: function buildApi(api) {
-          var eventBuilder = EventBinder();
-
-          if (staticDom.selectElement) {
-            var form = closestByTagName(staticDom.selectElement, 'FORM');
-
-            if (form) {
-              eventBuilder.bind(form, 'reset', function () {
-                return environment.window.setTimeout(function () {
-                  return api.updateData();
-                });
-              });
-            }
+          for (var _i2 = 0; _i2 < disposes.length; _i2++) {
+            disposes[_i2]();
           }
 
-          return eventBuilder.unbind;
-        }
-      };
-    }
+          disposes = null;
 
-    function createValidity(valueMissing, customError) {
-      return Object.freeze({
-        valueMissing: valueMissing,
-        customError: customError,
-        valid: !(valueMissing || customError)
-      });
-    }
+          for (var _i3 = 0; _i3 < instances.length; _i3++) {
+            var _instances$_i3$dispos, _instances$_i2;
 
-    function ValidityApi(visibleElement, isValueMissingObservable, valueMissingMessage, onValid, trigger) {
-      var customValidationMessage = "";
-      var validationMessage = "";
-      var validity = null;
-      var willValidate = true;
-
-      function setMessage(valueMissing, customError) {
-        validity = createValidity(valueMissing, customError);
-        validationMessage = customError ? customValidationMessage : valueMissing ? valueMissingMessage : "";
-        visibleElement.setCustomValidity(validationMessage);
-        onValid(validity.valid);
-      }
-
-      setMessage(isValueMissingObservable.getValue(), false);
-      isValueMissingObservable.attach(function (value) {
-        setMessage(value, validity.customError);
-      });
-
-      var checkValidity = function checkValidity() {
-        if (!validity.valid) trigger('dashboardcode.multiselect:invalid');
-        return validity.valid;
-      };
-
-      return {
-        validationMessage: validationMessage,
-        willValidate: willValidate,
-        validity: validity,
-        setCustomValidity: function setCustomValidity(message) {
-          customValidationMessage = message;
-          setMessage(validity.valueMissing, customValidationMessage ? true : false);
-        },
-        checkValidity: checkValidity,
-        reportValidity: function reportValidity() {
-          visibleElement.reportValidity();
-          return checkValidity();
-        }
-      };
-    }
-
-    var defValueMissingMessage = 'Please select an item in the list';
-    function ValidationApiPlugin(pluginData) {
-      var configuration = pluginData.configuration,
-          triggerAspect = pluginData.triggerAspect,
-          onChangeAspect = pluginData.onChangeAspect,
-          optionsAspect = pluginData.optionsAspect,
-          selectElementPluginData = pluginData.selectElementPluginData,
-          staticDom = pluginData.staticDom,
-          filterDom = pluginData.filterDom,
-          updateDataAspect = pluginData.updateDataAspect; // TODO: required could be a function
-
-      var getIsValueMissing = configuration.getIsValueMissing,
-          valueMissingMessage = configuration.valueMissingMessage,
-          required = configuration.required;
-      if (!isBoolean(required)) required = selectElementPluginData == null ? void 0 : selectElementPluginData.required;else if (!isBoolean(required)) required = false;
-      valueMissingMessage = defCall(valueMissingMessage, function () {
-        return getDataGuardedWithPrefix(staticDom.initialElement, "bsmultiselect", "value-missing-message");
-      }, defValueMissingMessage);
-
-      if (!getIsValueMissing) {
-        getIsValueMissing = function getIsValueMissing() {
-          var count = 0;
-          var optionsArray = optionsAspect.getOptions();
-
-          for (var i = 0; i < optionsArray.length; i++) {
-            if (optionsArray[i].selected) count++;
+            (_instances$_i3$dispos = (_instances$_i2 = instances[_i3]).dispose) == null ? void 0 : _instances$_i3$dispos.call(_instances$_i2);
           }
 
-          return count === 0;
-        };
-      }
-
-      var isValueMissingObservable = ObservableLambda(function () {
-        return required && getIsValueMissing();
-      });
-      var validationApiObservable = ObservableValue(!isValueMissingObservable.getValue());
-      onChangeAspect.onChange = composeSync(isValueMissingObservable.call, onChangeAspect.onChange);
-      updateDataAspect.updateData = composeSync(isValueMissingObservable.call, updateDataAspect.updateData);
-      pluginData.validationApiPluginData = {
-        validationApiObservable: validationApiObservable
-      };
-      var validationApi = ValidityApi(filterDom.filterInputElement, isValueMissingObservable, valueMissingMessage, function (isValid) {
-        return validationApiObservable.setValue(isValid);
-      }, triggerAspect.trigger);
-      return {
-        buildApi: function buildApi(api) {
-          api.validationApi = validationApi;
-        },
-        dispose: function dispose() {
-          isValueMissingObservable.detachAll();
-          validationApiObservable.detachAll();
+          instances = null;
         }
       };
     }
+    function plugDefaultConfig(constructors, defaults) {
+      for (var i = 0; i < constructors.length; i++) {
+        var _constructors$i$plugD, _constructors$i;
 
-    ValidationApiPlugin.plugDefaultConfig = function (defaults) {
-      defaults.valueMissingMessage = '';
-    };
+        (_constructors$i$plugD = (_constructors$i = constructors[i]).plugDefaultConfig) == null ? void 0 : _constructors$i$plugD.call(_constructors$i, defaults);
+      }
+    }
+    function plugMergeSettings(constructors, configuration, defaults, settings) {
+      for (var i = 0; i < constructors.length; i++) {
+        var _constructors$i$plugM, _constructors$i2;
+
+        (_constructors$i$plugM = (_constructors$i2 = constructors[i]).plugMergeSettings) == null ? void 0 : _constructors$i$plugM.call(_constructors$i2, configuration, defaults, settings);
+      }
+    }
+    function plugStaticDom(constructors, aspects) {
+      for (var i = 0; i < constructors.length; i++) {
+        var _constructors$i$plugS, _constructors$i3;
+
+        (_constructors$i$plugS = (_constructors$i3 = constructors[i]).plugStaticDom) == null ? void 0 : _constructors$i$plugS.call(_constructors$i3, aspects);
+      }
+    }
 
     function addStyling(element, styling) {
       var backupStyling = {
@@ -970,1501 +831,6 @@
         if (param1 === undefined) stylings1[property] = Styling(param2);else {
           stylings1[property] = createStyling(false, param1, param2);
         }
-      }
-    }
-
-    function BsAppearancePlugin(pluginData) {
-      var configuration = pluginData.configuration,
-          validationApiPluginData = pluginData.validationApiPluginData,
-          picksDom = pluginData.picksDom,
-          staticDom = pluginData.staticDom,
-          labelPluginData = pluginData.labelPluginData,
-          appearanceAspect = pluginData.appearanceAspect,
-          componentPropertiesAspect = pluginData.componentPropertiesAspect,
-          floatingLabelAspect = pluginData.floatingLabelAspect;
-      var getValidity = configuration.getValidity,
-          getSize = configuration.getSize,
-          useCssPatch = configuration.useCssPatch,
-          css = configuration.css,
-          composeGetSize = configuration.composeGetSize,
-          getDefaultLabel = configuration.getDefaultLabel;
-      var selectElement = staticDom.selectElement;
-      var initialElement = staticDom.initialElement;
-      var isFloatingLabel = false;
-
-      if (floatingLabelAspect) {
-        isFloatingLabel = closestByClassName(initialElement, 'form-floating');
-
-        floatingLabelAspect.isFloatingLabel = function () {
-          return isFloatingLabel;
-        };
-      }
-
-      if (labelPluginData) {
-        var origGetLabelElementAspect = labelPluginData.getLabelElementAspect;
-
-        labelPluginData.getLabelElementAspect = function () {
-          var e = origGetLabelElementAspect();
-          if (e) return e;else {
-            if (selectElement) {
-              var labelElement = getDefaultLabel(selectElement);
-              return labelElement;
-            }
-          }
-        };
-      }
-
-      if (staticDom.selectElement) {
-        if (!getValidity) getValidity = composeGetValidity(selectElement);
-        if (!getSize) getSize = composeGetSize(selectElement);
-      } else {
-        if (!getValidity) getValidity = function getValidity() {
-          return null;
-        };
-        if (!getSize) getSize = function getSize() {
-          return null;
-        };
-      }
-
-      componentPropertiesAspect.getSize = getSize;
-      componentPropertiesAspect.getValidity = getValidity;
-      var updateSize;
-
-      if (!useCssPatch) {
-        updateSize = function updateSize() {
-          return updateSizeForAdapter(picksDom.picksElement, getSize);
-        };
-      } else {
-        var picks_lg = css.picks_lg,
-            picks_sm = css.picks_sm,
-            picks_def = css.picks_def,
-            picks_floating_def = css.picks_floating_def;
-        if (isFloatingLabel) picks_lg = picks_sm = picks_def = picks_floating_def;
-
-        updateSize = function updateSize() {
-          return updateSizeJsForAdapter(picksDom.picksElement, picks_lg, picks_sm, picks_def, getSize);
-        };
-      }
-
-      if (useCssPatch) {
-        var origToggleFocusStyling = picksDom.toggleFocusStyling;
-
-        picksDom.toggleFocusStyling = function () {
-          var validity = validationObservable.getValue();
-          var isFocusIn = picksDom.getIsFocusIn();
-          origToggleFocusStyling(isFocusIn);
-
-          if (isFocusIn) {
-            if (validity === false) {
-              // but not toggle events (I know it will be done in future)
-              picksDom.setIsFocusIn(isFocusIn);
-              addStyling(picksDom.picksElement, css.picks_focus_invalid);
-            } else if (validity === true) {
-              // but not toggle events (I know it will be done in future)
-              picksDom.setIsFocusIn(isFocusIn);
-              addStyling(picksDom.picksElement, css.picks_focus_valid);
-            }
-          }
-        };
-      }
-
-      var getWasValidated = function getWasValidated() {
-        var wasValidatedElement = closestByClassName(staticDom.initialElement, 'was-validated');
-        return wasValidatedElement ? true : false;
-      };
-
-      var wasUpdatedObservable = ObservableLambda(function () {
-        return getWasValidated();
-      });
-      var getManualValidationObservable = ObservableLambda(function () {
-        return getValidity();
-      });
-      var validationApiObservable = validationApiPluginData == null ? void 0 : validationApiPluginData.validationApiObservable;
-      var validationObservable = ObservableLambda(function () {
-        return wasUpdatedObservable.getValue() ? validationApiObservable.getValue() : getManualValidationObservable.getValue();
-      });
-      validationObservable.attach(function (value) {
-        var _getMessagesElements = getMessagesElements(staticDom.containerElement),
-            validMessages = _getMessagesElements.validMessages,
-            invalidMessages = _getMessagesElements.invalidMessages;
-
-        updateValidity(picksDom.picksElement, validMessages, invalidMessages, value);
-        picksDom.toggleFocusStyling();
-      });
-      wasUpdatedObservable.attach(function () {
-        return validationObservable.call();
-      });
-      validationApiObservable.attach(function () {
-        return validationObservable.call();
-      });
-      getManualValidationObservable.attach(function () {
-        return validationObservable.call();
-      });
-      appearanceAspect.updateAppearance = composeSync(appearanceAspect.updateAppearance, updateSize, validationObservable.call, getManualValidationObservable.call);
-      return {
-        buildApi: function buildApi(api) {
-          api.updateSize = updateSize;
-
-          api.updateValidity = function () {
-            return getManualValidationObservable.call();
-          };
-
-          api.updateWasValidated = function () {
-            return wasUpdatedObservable.call();
-          };
-        },
-        dispose: function dispose() {
-          wasUpdatedObservable.detachAll();
-          validationObservable.detachAll();
-          getManualValidationObservable.detachAll();
-        }
-      };
-    }
-
-    function updateValidity(picksElement, validMessages, invalidMessages, validity) {
-      if (validity === false) {
-        picksElement.classList.add('is-invalid');
-        picksElement.classList.remove('is-valid');
-        invalidMessages.map(function (e) {
-          return e.style.display = 'block';
-        });
-        validMessages.map(function (e) {
-          return e.style.display = 'none';
-        });
-      } else if (validity === true) {
-        picksElement.classList.remove('is-invalid');
-        picksElement.classList.add('is-valid');
-        invalidMessages.map(function (e) {
-          return e.style.display = 'none';
-        });
-        validMessages.map(function (e) {
-          return e.style.display = 'block';
-        });
-      } else {
-        picksElement.classList.remove('is-invalid');
-        picksElement.classList.remove('is-valid');
-        invalidMessages.map(function (e) {
-          return e.style.display = '';
-        });
-        validMessages.map(function (e) {
-          return e.style.display = '';
-        });
-      }
-    }
-
-    function updateSizeClasses(picksElement, size) {
-      if (size == "lg") {
-        picksElement.classList.add('form-control-lg');
-        picksElement.classList.remove('form-control-sm');
-      } else if (size == "sm") {
-        picksElement.classList.remove('form-control-lg');
-        picksElement.classList.add('form-control-sm');
-      } else {
-        picksElement.classList.remove('form-control-lg');
-        picksElement.classList.remove('form-control-sm');
-      }
-    }
-
-    function updateSizeJsPicks(picksElement, picksLgStyling, picksSmStyling, picksDefStyling, size) {
-      if (size == "lg") {
-        addStyling(picksElement, picksLgStyling);
-      } else if (size == "sm") {
-        addStyling(picksElement, picksSmStyling);
-      } else {
-        addStyling(picksElement, picksDefStyling);
-      }
-    }
-
-    function updateSizeJs(picksElement, picksLgStyling, picksSmStyling, picksDefStyling, size) {
-      updateSizeClasses(picksElement, size);
-      updateSizeJsPicks(picksElement, picksLgStyling, picksSmStyling, picksDefStyling, size);
-    }
-
-    function updateSizeForAdapter(picksElement, getSize) {
-      updateSizeClasses(picksElement, getSize());
-    }
-
-    function updateSizeJsForAdapter(picksElement, picksLgStyling, picksSmStyling, picksDefStyling, getSize) {
-      updateSizeJs(picksElement, picksLgStyling, picksSmStyling, picksDefStyling, getSize());
-    }
-
-    function getMessagesElements(containerElement) {
-      var siblings = siblingsAsArray(containerElement);
-      var invalidMessages = siblings.filter(function (e) {
-        return e.classList.contains('invalid-feedback') || e.classList.contains('invalid-tooltip');
-      });
-      var validMessages = siblings.filter(function (e) {
-        return e.classList.contains('valid-feedback') || e.classList.contains('valid-tooltip');
-      });
-      return {
-        validMessages: validMessages,
-        invalidMessages: invalidMessages
-      };
-    }
-
-    function composeGetValidity(selectElement) {
-      var getValidity = function getValidity() {
-        return selectElement.classList.contains('is-invalid') ? false : selectElement.classList.contains('is-valid') ? true : null;
-      };
-
-      return getValidity;
-    }
-
-    function HiddenOptionPlugin(pluginData) {
-      var configuration = pluginData.configuration,
-          createWrapAspect = pluginData.createWrapAspect,
-          isChoiceSelectableAspect = pluginData.isChoiceSelectableAspect,
-          wrapsCollection = pluginData.wrapsCollection,
-          buildChoiceAspect = pluginData.buildChoiceAspect,
-          buildAndAttachChoiceAspect = pluginData.buildAndAttachChoiceAspect,
-          countableChoicesListInsertAspect = pluginData.countableChoicesListInsertAspect,
-          countableChoicesList = pluginData.countableChoicesList;
-
-      countableChoicesListInsertAspect.countableChoicesListInsert = function (wrap, key) {
-        if (!wrap.isOptionHidden) {
-          var choiceNext = wrapsCollection.getNext(key, function (c) {
-            return !c.isOptionHidden;
-          });
-          countableChoicesList.add(wrap, choiceNext);
-        }
-      };
-
-      var origBuildAndAttachChoice = buildAndAttachChoiceAspect.buildAndAttachChoice;
-
-      buildAndAttachChoiceAspect.buildAndAttachChoice = function (wrap, getNextElement) {
-        if (wrap.isOptionHidden) {
-          buildHiddenChoice(wrap);
-        } else {
-          origBuildAndAttachChoice(wrap, getNextElement);
-        }
-      };
-
-      var origIsSelectable = isChoiceSelectableAspect.isSelectable;
-
-      isChoiceSelectableAspect.isSelectable = function (wrap) {
-        return origIsSelectable(wrap) && !wrap.isOptionHidden;
-      };
-
-      var getIsOptionHidden = configuration.getIsOptionHidden,
-          options = configuration.options;
-
-      if (options) {
-        if (!getIsOptionHidden) getIsOptionHidden = function getIsOptionHidden(option) {
-          return option.hidden === undefined ? false : option.hidden;
-        };
-      } else {
-        if (!getIsOptionHidden) getIsOptionHidden = function getIsOptionHidden(option) {
-          return option.hidden;
-        };
-      }
-
-      var origCreateWrap = createWrapAspect.createWrap;
-
-      createWrapAspect.createWrap = function (option) {
-        var wrap = origCreateWrap(option);
-        wrap.isOptionHidden = getIsOptionHidden(option);
-        return wrap;
-      };
-
-      return {
-        buildApi: function buildApi(api) {
-          var getNextNonHidden = function getNextNonHidden(key) {
-            return wrapsCollection.getNext(key, function (c) {
-              return !c.isOptionHidden;
-            });
-          };
-
-          api.updateOptionsHidden = function () {
-            return wrapsCollection.forLoop(function (wrap, key) {
-              return updateChoiceHidden(wrap, key, getNextNonHidden, countableChoicesList, getIsOptionHidden, buildChoiceAspect);
-            });
-          };
-
-          api.updateOptionHidden = function (key) {
-            return updateChoiceHidden(wrapsCollection.get(key), key, getNextNonHidden, countableChoicesList, getIsOptionHidden, buildChoiceAspect);
-          }; // TODO create updateHidden ? 
-          // it is too complex since we need to find the next non hidden, when this depends on key 
-          // there should be the backreference "wrap -> index" invited before
-          // api.updateOptionHidden  = (key) => wrapsCollection.get(key).updateHidden();
-
-        }
-      };
-    }
-
-    function buildHiddenChoice(wrap) {
-      wrap.updateSelected = function () {
-        return void 0;
-      };
-
-      wrap.choice.isChoiceElementAttached = false;
-      wrap.choice.choiceElement = null;
-      wrap.choice.choiceElementAttach = null;
-      wrap.choice.setVisible = null;
-      wrap.choice.setHoverIn = null;
-      wrap.choice.remove = null;
-
-      wrap.choice.dispose = function () {
-        wrap.choice.dispose = null;
-      };
-
-      wrap.dispose = function () {
-        wrap.choice.dispose();
-        wrap.dispose = null;
-      };
-    }
-
-    function updateChoiceHidden(wrap, key, getNextNonHidden, countableChoicesList, getIsOptionHidden, buildChoiceAspect) {
-      var newIsOptionHidden = getIsOptionHidden(wrap.option);
-
-      if (newIsOptionHidden != wrap.isOptionHidden) {
-        wrap.isOptionHidden = newIsOptionHidden;
-
-        if (wrap.isOptionHidden) {
-          countableChoicesList.remove(wrap);
-          wrap.choice.remove();
-          buildHiddenChoice(wrap);
-        } else {
-          var nextChoice = getNextNonHidden(key);
-          countableChoicesList.add(wrap, nextChoice);
-          buildChoiceAspect.buildChoice(wrap);
-          wrap.choice.choiceElementAttach(nextChoice == null ? void 0 : nextChoice.choice.choiceElement);
-        }
-      }
-    }
-
-    function CssPatchPlugin() {}
-
-    CssPatchPlugin.plugMergeSettings = function (configuration, defaults, settings) {
-      var cssPatch = settings == null ? void 0 : settings.cssPatch;
-      if (isBoolean(cssPatch)) throw new Error("BsMultiSelect: 'cssPatch' was used instead of 'useCssPatch'"); // often type of error
-
-      configuration.cssPatch = createCss(defaults.cssPatch, cssPatch); // replace classes, merge styles
-    };
-
-    CssPatchPlugin.plugStaticDom = function (configurationPluginData) {
-      var configuration = configurationPluginData.configuration;
-      if (configuration.useCssPatch) extendCss(configuration.css, configuration.cssPatch);
-    };
-
-    function PlaceholderPlugin(pluginData) {
-      var configuration = pluginData.configuration,
-          staticManager = pluginData.staticManager,
-          picksList = pluginData.picksList,
-          picksDom = pluginData.picksDom,
-          filterDom = pluginData.filterDom,
-          staticDom = pluginData.staticDom,
-          updateDataAspect = pluginData.updateDataAspect,
-          resetFilterListAspect = pluginData.resetFilterListAspect,
-          filterManagerAspect = pluginData.filterManagerAspect;
-      var placeholder = configuration.placeholder,
-          css = configuration.css;
-      var picksElement = picksDom.picksElement;
-      var filterInputElement = filterDom.filterInputElement;
-
-      if (!placeholder) {
-        placeholder = getDataGuardedWithPrefix(staticDom.initialElement, "bsmultiselect", "placeholder");
-      }
-
-      function setEmptyInputWidth(isVisible) {
-        if (isVisible) filterInputElement.style.width = '100%';else filterInputElement.style.width = '2ch';
-      }
-
-      var emptyToggleStyling = toggleStyling(filterInputElement, css.filterInput_empty);
-
-      function showPlacehodler(isVisible) {
-        if (isVisible) {
-          filterInputElement.placeholder = placeholder ? placeholder : '';
-          picksElement.style.display = 'block';
-        } else {
-          filterInputElement.placeholder = '';
-          picksElement.style.display = 'flex';
-        }
-
-        emptyToggleStyling(isVisible);
-        setEmptyInputWidth(isVisible);
-      }
-
-      showPlacehodler(true);
-
-      function setDisabled(isComponentDisabled) {
-        filterInputElement.disabled = isComponentDisabled;
-      }
-
-      var isEmpty = function isEmpty() {
-        return picksList.isEmpty() && filterDom.isEmpty();
-      };
-
-      function updatePlacehodlerVisibility() {
-        showPlacehodler(isEmpty());
-      }
-
-      function updateEmptyInputWidth() {
-        setEmptyInputWidth(isEmpty());
-      }
-      var origDisable = picksDom.disable;
-
-      picksDom.disable = function (isComponentDisabled) {
-        setDisabled(isComponentDisabled);
-        origDisable(isComponentDisabled);
-      };
-
-      staticManager.appendToContainer = composeSync(staticManager.appendToContainer, updateEmptyInputWidth);
-      filterManagerAspect.processEmptyInput = composeSync(updateEmptyInputWidth, filterManagerAspect.processEmptyInput);
-      resetFilterListAspect.forceResetFilter = composeSync(resetFilterListAspect.forceResetFilter, updatePlacehodlerVisibility);
-      var origAdd = picksList.add;
-
-      picksList.add = function (pick) {
-        var returnValue = origAdd(pick);
-        if (picksList.getCount() == 1) updatePlacehodlerVisibility();
-        /*wrap.*/
-
-        pick.dispose = composeSync(
-        /*wrap.*/
-        pick.dispose, function () {
-          if (picksList.getCount() == 0) updatePlacehodlerVisibility();
-        });
-        return returnValue;
-      };
-
-      updateDataAspect.updateData = composeSync(updateDataAspect.updateData, updatePlacehodlerVisibility);
-    }
-
-    function JQueryMethodsPlugin(pluginData) {
-      var staticDom = pluginData.staticDom,
-          choicesDom = pluginData.choicesDom,
-          filterDom = pluginData.filterDom,
-          picksList = pluginData.picksList;
-      return {
-        buildApi: function buildApi(api) {
-          api.getContainer = function () {
-            return staticDom.containerElement;
-          };
-
-          api.getChoices = function () {
-            return choicesDom.choicesElement;
-          };
-
-          api.getChoicesList = function () {
-            return choicesDom.choicesListElement;
-          };
-
-          api.getFilterInput = function () {
-            return filterDom.filterInputElement;
-          };
-
-          api.getPicks = function () {
-            return picksDom.picksElement;
-          };
-
-          api.picksCount = function () {
-            return picksList.getCount();
-          };
-
-          pluginData.jQueryMethodsPluginData = {
-            EventBinder: EventBinder,
-            addStyling: addStyling,
-            toggleStyling: toggleStyling
-          };
-        }
-      };
-    }
-
-    function OptionsApiPlugin(pluginData) {
-      var buildAndAttachChoiceAspect = pluginData.buildAndAttachChoiceAspect,
-          wraps = pluginData.wraps,
-          wrapsCollection = pluginData.wrapsCollection,
-          createWrapAspect = pluginData.createWrapAspect,
-          createChoiceBaseAspect = pluginData.createChoiceBaseAspect,
-          optionsAspect = pluginData.optionsAspect,
-          resetLayoutAspect = pluginData.resetLayoutAspect;
-      return {
-        buildApi: function buildApi(api) {
-          api.updateOptionAdded = function (key) {
-            // TODO: generalize index as key 
-            var options = optionsAspect.getOptions();
-            var option = options[key];
-            var wrap = createWrapAspect.createWrap(option);
-            wrap.choice = createChoiceBaseAspect.createChoiceBase(option);
-            wraps.insert(key, wrap);
-
-            var nextChoice = function nextChoice() {
-              return wrapsCollection.getNext(key, function (c) {
-                return c.choice.choiceElement;
-              });
-            };
-
-            buildAndAttachChoiceAspect.buildAndAttachChoice(wrap, function () {
-              var _nextChoice;
-
-              return (_nextChoice = nextChoice()) == null ? void 0 : _nextChoice.choice.choiceElement;
-            });
-          };
-
-          api.updateOptionRemoved = function (key) {
-            // TODO: generalize index as key 
-            resetLayoutAspect.resetLayout(); // always hide 1st, then reset filter
-
-            var wrap = wraps.remove(key);
-            wrap.choice.remove == null ? void 0 : wrap.choice.remove();
-            wrap.dispose == null ? void 0 : wrap.dispose();
-          };
-        }
-      };
-    }
-
-    function FormRestoreOnBackwardPlugin(pluginData) {
-      var staticDom = pluginData.staticDom,
-          environment = pluginData.environment,
-          loadAspect = pluginData.loadAspect,
-          configuration = pluginData.configuration;
-      var window = environment.window;
-      return {
-        buildApi: function buildApi(api) {
-          if (!api.updateOptionsSelected) {
-            if (options && configuration.setSelected) throw new Error("BsMultisilect: FormRestoreOnBackwardPlugin requires SelectedOptionPlugin defined first");
-          } else {
-            var origLoad = loadAspect.load;
-
-            loadAspect.load = function () {
-              origLoad(); // support browser's "step backward" and form's values restore
-
-              if (staticDom.selectElement && window.document.readyState != "complete") {
-                window.setTimeout(function () {
-                  api.updateOptionsSelected();
-                });
-              }
-            };
-          }
-        }
-      };
-    }
-
-    function SelectElementPlugin() {}
-
-    SelectElementPlugin.plugStaticDom = function (aspects) {
-      var configuration = aspects.configuration,
-          staticDomFactory = aspects.staticDomFactory,
-          createElementAspect = aspects.createElementAspect,
-          componentPropertiesAspect = aspects.componentPropertiesAspect,
-          onChangeAspect = aspects.onChangeAspect,
-          triggerAspect = aspects.triggerAspect,
-          optionsAspect = aspects.optionsAspect,
-          disposeAspect = aspects.disposeAspect;
-      var origCreate = staticDomFactory.create;
-
-      staticDomFactory.create = function (css) {
-        var _origCreate = origCreate(css),
-            choicesDom = _origCreate.choicesDom,
-            origCreateStaticDom = _origCreate.createStaticDom;
-
-        var choicesElement = choicesDom.choicesElement;
-        return {
-          choicesDom: choicesDom,
-          createStaticDom: function createStaticDom(element, containerClass) {
-            var selectElement = null;
-            var containerElement = null;
-            var picksElement = null;
-
-            if (element.tagName == 'SELECT') {
-              selectElement = element;
-
-              if (containerClass) {
-                containerElement = closestByClassName(selectElement, containerClass);
-                if (containerElement) picksElement = findDirectChildByTagName(containerElement, 'UL');
-              }
-            } else if (element.tagName == 'DIV') {
-              selectElement = findDirectChildByTagName(element, 'SELECT');
-
-              if (selectElement) {
-                if (containerClass) {
-                  containerElement = closestByClassName(element, containerClass);
-                  if (containerElement) picksElement = findDirectChildByTagName(containerElement, 'UL');
-                }
-              } else {
-                return origCreateStaticDom(element, containerClass);
-              }
-            }
-
-            var disposableContainerElement = false;
-
-            if (!containerElement) {
-              containerElement = createElementAspect.createElement('DIV');
-              containerElement.classList.add(containerClass);
-              disposableContainerElement = true;
-            }
-
-            var disposablePicksElement = false;
-
-            if (!picksElement) {
-              picksElement = createElementAspect.createElement('UL');
-              disposablePicksElement = true;
-            }
-
-            if (selectElement) {
-              var backupDisplay = selectElement.style.display;
-              selectElement.style.display = 'none';
-              var backupedRequired = selectElement.required;
-              aspects.selectElementPluginData = {
-                required: backupedRequired
-              };
-              if (selectElement.required === true) selectElement.required = false;
-              var getDisabled = configuration.getDisabled;
-
-              if (!getDisabled) {
-                var fieldsetElement = closestByTagName(selectElement, 'FIELDSET');
-
-                if (fieldsetElement) {
-                  componentPropertiesAspect.getDisabled = function () {
-                    return selectElement.disabled || fieldsetElement.disabled;
-                  };
-                } else {
-                  componentPropertiesAspect.getDisabled = function () {
-                    return selectElement.disabled;
-                  };
-                }
-              }
-
-              onChangeAspect.onChange = composeSync(function () {
-                return triggerAspect.trigger('change');
-              }, onChangeAspect.onChange);
-
-              optionsAspect.getOptions = function () {
-                return selectElement.options;
-              }; // if (!setSelected){
-              //     setSelected = (option, value) => {option.selected = value};
-              //     // NOTE: adding this (setAttribute) break Chrome's html form reset functionality:
-              //     // if (value) option.setAttribute('selected','');
-              //     // else option.removeAttribute('selected');
-              // }
-
-
-              disposeAspect.dispose = composeSync(disposeAspect.dispose, function () {
-                selectElement.required = backupedRequired;
-                selectElement.style.display = backupDisplay;
-              });
-            }
-
-            return {
-              staticDom: {
-                initialElement: element,
-                containerElement: containerElement,
-                picksElement: picksElement,
-                disposablePicksElement: disposablePicksElement,
-                selectElement: selectElement
-              },
-              staticManager: {
-                appendToContainer: function appendToContainer() {
-                  if (disposableContainerElement) {
-                    selectElement.parentNode.insertBefore(containerElement, selectElement.nextSibling);
-                    containerElement.appendChild(choicesElement);
-                  } else {
-                    selectElement.parentNode.insertBefore(choicesElement, selectElement.nextSibling);
-                  }
-
-                  if (disposablePicksElement) containerElement.appendChild(picksElement);
-                },
-                dispose: function dispose() {
-                  choicesElement.parentNode.removeChild(choicesElement);
-                  if (disposableContainerElement) selectElement.parentNode.removeChild(containerElement);
-                  if (disposablePicksElement) containerElement.removeChild(picksElement);
-                }
-              }
-            };
-          }
-        };
-      };
-    };
-
-    // plugin should overdrive them : call setWrapSelected and etc
-    // therefore there should new component API methods
-    // addOptionPick(key) -> call addPick(pick) which returns removePick() 
-    // SetOptionSelectedAspect, OptionToggleAspect should be moved there 
-    // OptionToggleAspect overrided in DisabledOptionPlugin
-    // wrap.isOptionSelected ,  wrap.updateSelected
-
-    function SelectedOptionPlugin(aspects) {
-      var configuration = aspects.configuration,
-          wrapsCollection = aspects.wrapsCollection,
-          createWrapAspect = aspects.createWrapAspect,
-          buildChoiceAspect = aspects.buildChoiceAspect,
-          removePickAspect = aspects.removePickAspect,
-          resetLayoutAspect = aspects.resetLayoutAspect,
-          picksList = aspects.picksList,
-          isChoiceSelectableAspect = aspects.isChoiceSelectableAspect,
-          optionToggleAspect = aspects.optionToggleAspect,
-          createPickHandlersAspect = aspects.createPickHandlersAspect,
-          addPickAspect = aspects.addPickAspect,
-          fullMatchAspect = aspects.fullMatchAspect,
-          onChangeAspect = aspects.onChangeAspect,
-          filterPredicateAspect = aspects.filterPredicateAspect;
-      var getIsOptionSelected = configuration.getSelected,
-          setIsOptionSelected = configuration.setSelected,
-          options = configuration.options;
-
-      if (options) {
-        if (!setIsOptionSelected) {
-          setIsOptionSelected = function setIsOptionSelected(option, value) {
-            option.selected = value;
-          };
-        }
-
-        if (!getIsOptionSelected) getIsOptionSelected = function getIsOptionSelected(option) {
-          return option.selected;
-        };
-      } else {
-        // selectElement
-        if (!getIsOptionSelected) {
-          getIsOptionSelected = function getIsOptionSelected(option) {
-            return option.selected;
-          };
-        }
-
-        if (!setIsOptionSelected) {
-          setIsOptionSelected = function setIsOptionSelected(option, value) {
-            option.selected = value;
-          }; // NOTE: adding this (setAttribute) break Chrome's html form reset functionality:
-          // if (value) option.setAttribute('selected','');
-          // else option.removeAttribute('selected');
-
-        }
-      }
-
-      var origFilterPredicate = filterPredicateAspect.filterPredicate;
-
-      filterPredicateAspect.filterPredicate = function (wrap, text) {
-        return !wrap.isOptionSelected && origFilterPredicate(wrap, text);
-      };
-
-      var origBuildChoice = buildChoiceAspect.buildChoice;
-
-      buildChoiceAspect.buildChoice = function (wrap) {
-        origBuildChoice(wrap);
-
-        wrap.updateSelected = function () {
-          wrap.choice.choiceDomManagerHandlers.updateSelected();
-          onChangeAspect.onChange();
-        };
-
-        wrap.dispose = composeSync(function () {
-          wrap.updateSelected = null;
-        }, wrap.dispose);
-      }; // TODO: test this instead of wrap.updateSelected
-      // function updateSelected(wrap){
-      //     if (wrap.pick){
-      //         if (wrap.isOptionSelected)
-      //             pickHandlers.producePick();
-      //         else {
-      //             pickHandlers.removeAndDispose();
-      //             pickHandlers.removeAndDispose=null;
-      //         }
-      //     }
-      //     wrap.choice.choiceDomManagerHandlers.updateSelected();
-      //     onChangeAspect.onChange();
-      // }
-
-
-      function composeUpdateSelected(wrap, booleanValue) {
-        return function () {
-          wrap.isOptionSelected = booleanValue;
-          wrap.updateSelected();
-        };
-      }
-
-      function trySetWrapSelected(option, updateSelected, booleanValue) {
-        //  wrap.option
-        var success = false;
-        var confirmed = setIsOptionSelected(option, booleanValue);
-
-        if (!(confirmed === false)) {
-          updateSelected();
-          success = true;
-        }
-
-        return success;
-      }
-
-      var origCreateWrap = createWrapAspect.createWrap;
-
-      createWrapAspect.createWrap = function (option) {
-        var wrap = origCreateWrap(option);
-        wrap.isOptionSelected = getIsOptionSelected(option);
-        wrap.updateSelected = null; // can it be combined ?
-
-        return wrap;
-      };
-
-      optionToggleAspect.toggle; // TODO: improve design, no replace
-
-      optionToggleAspect.toggle = function (wrap) {
-        return trySetWrapSelected(wrap.option, composeUpdateSelected(wrap, !wrap.isOptionSelected), !wrap.isOptionSelected);
-      };
-
-      fullMatchAspect.fullMatch;
-
-      fullMatchAspect.fullMatch = function (wrap) {
-        return trySetWrapSelected(wrap.option, composeUpdateSelected(wrap, true), true);
-      };
-
-      removePickAspect.removePick; // TODO: improve design, no replace
-
-      removePickAspect.removePick = function (wrap, pick) {
-        // TODO: try remove pick
-        return trySetWrapSelected(wrap.option, composeUpdateSelected(wrap, false), false);
-      };
-
-      var origCreatePickHandlers = createPickHandlersAspect.createPickHandlers;
-
-      createPickHandlersAspect.createPickHandlers = function (wrap) {
-        var pickHandlers = origCreatePickHandlers(wrap);
-        wrap.updateSelected = composeSync(function () {
-          if (wrap.isOptionSelected) {
-            var pick = pickHandlers.producePick();
-            wrap.pick = pick;
-            pick.dispose = composeSync(pick.dispose, function () {
-              wrap.pick = null;
-            });
-          } else {
-            pickHandlers.removeAndDispose();
-            pickHandlers.removeAndDispose = null;
-          }
-        }, wrap.updateSelected);
-        addPickAspect.addPick(wrap, pickHandlers);
-        return pickHandlers;
-      };
-
-      var origAddPick = addPickAspect.addPick;
-
-      addPickAspect.addPick = function (wrap, pickHandlers) {
-        if (wrap.isOptionSelected) {
-          var pick = origAddPick(wrap, pickHandlers);
-          wrap.pick = pick;
-          pick.dispose = composeSync(pick.dispose, function () {
-            wrap.pick = null;
-          });
-          return pick;
-        }
-      };
-
-      return {
-        buildApi: function buildApi(api) {
-          api.selectAll = function () {
-            resetLayoutAspect.resetLayout(); // always hide 1st
-
-            wrapsCollection.forLoop(function (wrap) {
-              if (isChoiceSelectableAspect.isSelectable(wrap) && !wrap.isOptionSelected) trySetWrapSelected(wrap.option, composeUpdateSelected(wrap, true), true);
-            });
-          };
-
-          api.deselectAll = function () {
-            resetLayoutAspect.resetLayout(); // always hide 1st
-
-            picksList.forEach(function (pick) {
-              return pick.setSelectedFalse();
-            });
-          };
-
-          api.setOptionSelected = function (key, value) {
-            var wrap = wrapsCollection.get(key);
-            return trySetWrapSelected(wrap.option, composeUpdateSelected(wrap, value), value);
-          }; // used in FormRestoreOnBackwardPlugin
-
-
-          api.updateOptionsSelected = function () {
-            return wrapsCollection.forLoop(function (wrap) {
-              return updateChoiceSelected(wrap, getIsOptionSelected);
-            });
-          };
-
-          api.updateOptionSelected = function (key) {
-            return updateChoiceSelected(wrapsCollection.get(key), getIsOptionSelected);
-          };
-        }
-      };
-    }
-
-    function updateChoiceSelected(wrap, getIsOptionSelected) {
-      var newIsSelected = getIsOptionSelected(wrap.option);
-
-      if (newIsSelected != wrap.isOptionSelected) {
-        wrap.isOptionSelected = newIsSelected;
-        wrap.updateSelected == null ? void 0 : wrap.updateSelected(); // some hidden oesn't have element (and need to be updated)
-      }
-    }
-
-    function DisabledOptionPlugin(pluginData) {
-      var configuration = pluginData.configuration,
-          isChoiceSelectableAspect = pluginData.isChoiceSelectableAspect,
-          createWrapAspect = pluginData.createWrapAspect,
-          buildChoiceAspect = pluginData.buildChoiceAspect,
-          filterPredicateAspect = pluginData.filterPredicateAspect,
-          wrapsCollection = pluginData.wrapsCollection,
-          optionToggleAspect = pluginData.optionToggleAspect,
-          buildPickAspect = pluginData.buildPickAspect;
-      var getIsOptionDisabled = configuration.getIsOptionDisabled,
-          options = configuration.options;
-
-      if (options) {
-        if (!getIsOptionDisabled) getIsOptionDisabled = function getIsOptionDisabled(option) {
-          return option.disabled === undefined ? false : option.disabled;
-        };
-      } else {
-        // selectElement
-        if (!getIsOptionDisabled) getIsOptionDisabled = function getIsOptionDisabled(option) {
-          return option.disabled;
-        };
-      } // TODO check this instead of wrap.updateDisabled
-      // function updateDisabled(wrap){
-      //     wrap?.choice?.choiceDomManagerHandlers?.updateDisabled?.();
-      //     wrap?.pick?.pickDomManagerHandlers?.updateDisabled?.();
-      // }
-
-
-      var origCreateWrap = createWrapAspect.createWrap;
-
-      createWrapAspect.createWrap = function (option) {
-        var wrap = origCreateWrap(option);
-        wrap.isOptionDisabled = getIsOptionDisabled(option); // TODO: remove usage wrap.isOptionDisabled
-
-        wrap.updateDisabled = null;
-        return wrap;
-      };
-
-      var origToggle = optionToggleAspect.toggle;
-
-      optionToggleAspect.toggle = function (wrap) {
-        var success = false;
-
-        if (wrap.isOptionSelected !== undefined) {
-          if (wrap.isOptionSelected || !wrap.isOptionDisabled) // TODO: declare dependency on SelectedOptionPlugin
-            success = origToggle(wrap);
-        } else {
-          if (!wrap.isOptionDisabled) {
-            success = origToggle(wrap);
-          }
-        }
-
-        return success;
-      };
-
-      var origIsSelectable = isChoiceSelectableAspect.isSelectable;
-
-      isChoiceSelectableAspect.isSelectable = function (wrap) {
-        return origIsSelectable(wrap) && !wrap.isOptionDisabled;
-      };
-
-      var origFilterPredicate = filterPredicateAspect.filterPredicate;
-
-      filterPredicateAspect.filterPredicate = function (wrap, text) {
-        return !wrap.isOptionDisabled && origFilterPredicate(wrap, text);
-      };
-
-      var origBuildChoice = buildChoiceAspect.buildChoice;
-
-      buildChoiceAspect.buildChoice = function (wrap) {
-        origBuildChoice(wrap);
-        wrap.updateDisabled = wrap.choice.choiceDomManagerHandlers.updateDisabled;
-        wrap.choice.dispose = composeSync(function () {
-          wrap.updateDisabled = null;
-        }, wrap.choice.dispose);
-      };
-
-      var origBuildPick = buildPickAspect.buildPick;
-
-      buildPickAspect.buildPick = function (wrap, removeOnButton) {
-        var pick = origBuildPick(wrap, removeOnButton);
-
-        pick.updateDisabled = function () {
-          return pick.pickDomManagerHandlers.updateDisabled();
-        };
-
-        pick.dispose = composeSync(pick.dispose, function () {
-          pick.updateDisabled = null;
-        });
-        var choiceUpdateDisabledBackup = wrap.updateDisabled;
-        wrap.updateDisabled = composeSync(choiceUpdateDisabledBackup, pick.updateDisabled); // add pickDisabled
-
-        pick.dispose = composeSync(pick.dispose, function () {
-          wrap.updateDisabled = choiceUpdateDisabledBackup; // remove pickDisabled
-
-          wrap.updateDisabled(); // make "true disabled" without it checkbox only looks disabled
-        });
-        return pick;
-      };
-
-      return {
-        buildApi: function buildApi(api) {
-          api.updateOptionsDisabled = function () {
-            return wrapsCollection.forLoop(function (wrap) {
-              return updateChoiceDisabled(wrap, getIsOptionDisabled);
-            });
-          };
-
-          api.updateOptionDisabled = function (key) {
-            return updateChoiceDisabled(wrapsCollection.get(key), getIsOptionDisabled);
-          };
-        }
-      };
-    }
-
-    function updateChoiceDisabled(wrap, getIsOptionDisabled) {
-      var newIsDisabled = getIsOptionDisabled(wrap.option);
-
-      if (newIsDisabled != wrap.isOptionDisabled) {
-        wrap.isOptionDisabled = newIsDisabled;
-        wrap.updateDisabled == null ? void 0 : wrap.updateDisabled(); // some hidden oesn't have element (and need to be updated)
-      }
-    }
-
-    function PicksApiPlugin(pluginData) {
-      var picksList = pluginData.picksList,
-          createWrapAspect = pluginData.createWrapAspect,
-          createPickHandlersAspect = pluginData.createPickHandlersAspect,
-          addPickAspect = pluginData.addPickAspect;
-      return {
-        buildApi: function buildApi(api) {
-          api.forEachPeak = function (f) {
-            return picksList.forEach(function (wrap) {
-              return f(wrap.option);
-            });
-          }; // TODO: getHeadPeak
-
-
-          api.getTailPeak = function () {
-            var _picksList$getTail;
-
-            return (_picksList$getTail = picksList.getTail()) == null ? void 0 : _picksList$getTail.option;
-          };
-
-          api.countPeaks = function () {
-            return picksList.getCount();
-          };
-
-          api.isEmptyPeaks = function () {
-            return picksList.isEmpty();
-          };
-
-          api.addPick = function (option) {
-            var wrap = createWrapAspect.createWrap(option); // TODO should be moved to specific plugins
-
-            wrap.updateDisabled = function () {};
-
-            wrap.updateHidden = function () {};
-
-            var pickHandlers = createPickHandlersAspect.createPickHandlers(wrap);
-            addPickAspect.addPick(wrap, pickHandlers);
-          };
-        }
-      };
-    }
-
-    function PopperPlugin(pluginData) {
-      var staticManager = pluginData.staticManager,
-          environment = pluginData.environment,
-          specialPicksEventsAspect = pluginData.specialPicksEventsAspect,
-          choicesVisibilityAspect = pluginData.choicesVisibilityAspect,
-          rtlAspect = pluginData.rtlAspect,
-          choicesDom = pluginData.choicesDom,
-          filterDom = pluginData.filterDom;
-      var createPopper = environment.createPopper,
-          Popper = environment.Popper;
-      var choicesElement = choicesDom.choicesElement;
-      var filterInputElement = filterDom.filterInputElement;
-      var popper = null;
-      var popperConfiguration = {
-        placement: 'bottom-start',
-        modifiers: {
-          preventOverflow: {
-            enabled: true
-          },
-          hide: {
-            enabled: false
-          },
-          flip: {
-            enabled: false
-          }
-        }
-      };
-
-      if (typeof createPopper === 'undefined') {
-        createPopper = Popper;
-
-        if (typeof createPopper === 'undefined') {
-          throw new Error("BsMultiSelect: Popper component (https://popper.js.org) is required");
-        }
-      } else {
-        if (createPopper.createPopper) {
-          createPopper = createPopper.createPopper;
-        }
-      }
-
-      function init() {
-        if (!!createPopper.prototype && !!createPopper.prototype.constructor) {
-          // it is a constructor
-          popper = new createPopper(filterInputElement, choicesElement, popperConfiguration);
-        } else {
-          popper = createPopper(filterInputElement, choicesElement, popperConfiguration); //throw new Error("BsMultiSelect: popper paramater is not a constructor")
-        }
-      }
-      staticManager.appendToContainer = composeSync(staticManager.appendToContainer, init);
-      var origBackSpace = specialPicksEventsAspect.backSpace;
-
-      specialPicksEventsAspect.backSpace = function (pick) {
-        origBackSpace(pick);
-        popper.update();
-      };
-
-      if (rtlAspect) {
-        var origUpdateRtl = rtlAspect.updateRtl;
-
-        rtlAspect.updateRtl = function (isRtl) {
-          origUpdateRtl(isRtl);
-          if (isRtl) popperConfiguration.placement = 'bottom-end';
-        };
-      }
-
-      choicesVisibilityAspect.updatePopupLocation = composeSync(choicesVisibilityAspect.updatePopupLocation, function () {
-        popper.update(); // become async in poppoer 2; use forceUpdate if sync is needed? 
-      });
-      return {
-        dispose: function dispose() {
-          popper.destroy();
-        }
-      };
-    }
-
-    function FloatingLabelPlugin(pluginData) {
-      var configuration = pluginData.configuration,
-          picksList = pluginData.picksList,
-          picksDom = pluginData.picksDom,
-          filterDom = pluginData.filterDom,
-          staticDom = pluginData.staticDom,
-          updateDataAspect = pluginData.updateDataAspect,
-          resetFilterListAspect = pluginData.resetFilterListAspect,
-          floatingLabelAspect = pluginData.floatingLabelAspect;
-      var css = configuration.css,
-          getDefaultLabel = configuration.getDefaultLabel;
-      var initialElement = staticDom.initialElement;
-
-      if (floatingLabelAspect.isFloatingLabel()) {
-        var liftedLabel = function liftedLabel(isEmpty) {
-          liftToggleStyling1(isEmpty);
-          liftToggleStyling2(isEmpty);
-        };
-
-        var updateLiftedLabel = function updateLiftedLabel() {
-          liftedLabel(!isEmpty());
-        };
-
-        var labelElement = getDefaultLabel(initialElement);
-        var picksElement = picksDom.picksElement;
-        var liftToggleStyling1 = toggleStyling(labelElement, css.label_floating_lifted);
-        var liftToggleStyling2 = toggleStyling(picksElement, css.picks_floating_lifted);
-
-        var isEmpty = function isEmpty() {
-          return picksList.isEmpty() && filterDom.isEmpty() && !picksDom.getIsFocusIn();
-        };
-        updateLiftedLabel();
-        resetFilterListAspect.forceResetFilter = composeSync(resetFilterListAspect.forceResetFilter, updateLiftedLabel);
-        var origAdd = picksList.add;
-
-        picksList.add = function (pick) {
-          var returnValue = origAdd(pick);
-          if (picksList.getCount() == 1) updateLiftedLabel();
-          pick.dispose = composeSync(pick.dispose, function () {
-            if (picksList.getCount() == 0) updateLiftedLabel();
-          });
-          return returnValue;
-        };
-
-        var origToggleFocusStyling = picksDom.toggleFocusStyling;
-
-        picksDom.toggleFocusStyling = function () {
-          var isFocusIn = picksDom.getIsFocusIn();
-          origToggleFocusStyling(isFocusIn);
-          updateLiftedLabel();
-        };
-
-        updateDataAspect.updateData = composeSync(updateDataAspect.updateData, updateLiftedLabel);
-      }
-    }
-
-    FloatingLabelPlugin.plugStaticDom = function (aspects) {
-      aspects.floatingLabelAspect = FloatingLabelAspect();
-    };
-
-    function FloatingLabelAspect() {
-      return {
-        isFloatingLabel: function isFloatingLabel() {}
-      };
-    }
-
-    var defaultPlugins = {
-      CssPatchPlugin: CssPatchPlugin,
-      SelectElementPlugin: SelectElementPlugin,
-      LabelPlugin: LabelPlugin,
-      HiddenOptionPlugin: HiddenOptionPlugin,
-      ValidationApiPlugin: ValidationApiPlugin,
-      BsAppearancePlugin: BsAppearancePlugin,
-      FormResetPlugin: FormResetPlugin,
-      PopperPlugin: PopperPlugin,
-      RtlPlugin: RtlPlugin,
-      PlaceholderPlugin: PlaceholderPlugin,
-      FloatingLabelPlugin: FloatingLabelPlugin,
-      OptionsApiPlugin: OptionsApiPlugin,
-      JQueryMethodsPlugin: JQueryMethodsPlugin,
-      SelectedOptionPlugin: SelectedOptionPlugin,
-      FormRestoreOnBackwardPlugin: FormRestoreOnBackwardPlugin,
-      DisabledOptionPlugin: DisabledOptionPlugin,
-      PicksApiPlugin: PicksApiPlugin
-    };
-
-    function Bs5Plugin() {}
-
-    Bs5Plugin.plugDefaultConfig = function (defaults) {
-      defaults.css = css;
-      setDefaults(defaults);
-    };
-
-    function setDefaults(defaults) {
-      defaults.useCssPatch = true;
-      defaults.cssPatch = cssPatch;
-      defaults.pickButtonHTML = '<button aria-label="Remove" tabIndex="-1" type="button"></button>';
-      defaults.composeGetSize = composeGetSize;
-      defaults.getDefaultLabel = getDefaultLabel;
-    }
-
-    function composeGetSize(selectElement) {
-      var inputGroupElement = closestByClassName(selectElement, 'input-group');
-      var getSize = null;
-
-      if (inputGroupElement) {
-        getSize = function getSize() {
-          var value = null;
-          if (inputGroupElement.classList.contains('input-group-lg')) value = 'lg';else if (inputGroupElement.classList.contains('input-group-sm')) value = 'sm';
-          return value;
-        };
-      } else {
-        getSize = function getSize() {
-          var value = null;
-          if (selectElement.classList.contains('form-select-lg') || selectElement.classList.contains('form-control-lg')) // changed for BS4
-            value = 'lg';else if (selectElement.classList.contains('form-select-sm') || selectElement.classList.contains('form-control-sm')) value = 'sm';
-          return value;
-        };
-      }
-
-      return getSize;
-    }
-
-    function getDefaultLabel(selectElement) {
-      var value = null;
-      var query = "label[for=\"" + selectElement.id + "\"]";
-      var p1 = selectElement.parentElement;
-      value = p1.querySelector(query); // label can be wrapped into col-auto
-
-      if (!value) {
-        var p2 = p1.parentElement;
-        value = p2.querySelector(query);
-      }
-
-      return value;
-    }
-
-    var css = {
-      choices: 'dropdown-menu',
-      // bs4, in bsmultiselect.scss as div.dropdown-menu
-      choicesList: '',
-      // bs4, in bsmultiselect.scss as div.dropdown-menu>ul (first child)
-      choice_hover: 'hover',
-      //  not bs4, in scss as 'ul.dropdown-menu li.hover'
-      choice_selected: '',
-      choice_disabled: '',
-      picks: 'form-control',
-      // bs4, in scss 'ul.form-control'
-      picks_focus: 'focus',
-      // not bs4, in scss 'ul.form-control.focus'
-      picks_disabled: 'disabled',
-      //  not bs4, in scss 'ul.form-control.disabled'
-      pick_disabled: '',
-      pickFilter: '',
-      filterInput: '',
-      // used in pickContentGenerator
-      pick: 'badge text-dark',
-      // bs4
-      pickContent: '',
-      pickContent_disabled: 'disabled',
-      // not bs4, in scss 'ul.form-control li span.disabled'
-      pickButton: 'btn-close',
-      // bs4
-      // used in choiceContentGenerator
-      // choice:  'dropdown-item', // it seems like hover should be managed manually since there should be keyboard support
-      choiceCheckBox_disabled: 'disabled',
-      //  not bs4, in scss as 'ul.form-control li .custom-control-input.disabled ~ .custom-control-label'
-      choiceContent: 'form-check',
-      // bs4 d-flex required for rtl to align items
-      choiceCheckBox: 'form-check-input',
-      // bs4
-      choiceLabel: 'form-check-label',
-      choiceLabel_disabled: '',
-      label_floating_lifted: 'floating-lifted',
-      picks_floating_lifted: 'floating-lifted'
-    };
-    var cssPatch = {
-      choicesList: {
-        listStyleType: 'none',
-        paddingLeft: '0',
-        paddingRight: '0',
-        marginBottom: '0'
-      },
-      picks: {
-        listStyleType: 'none',
-        display: 'flex',
-        flexWrap: 'wrap',
-        height: 'auto',
-        marginBottom: '0'
-      },
-      choice: 'px-md-2 px-1',
-      choice_hover: 'text-primary bg-light',
-      filterInput: {
-        border: '0px',
-        height: 'auto',
-        boxShadow: 'none',
-        padding: '0',
-        margin: '0',
-        outline: 'none',
-        backgroundColor: 'transparent',
-        backgroundImage: 'none' // otherwise BS .was-validated set its image
-
-      },
-      filterInput_empty: 'form-control',
-      // need for placeholder, TODO test form-control-plaintext
-      // used in PicksDom
-      picks_disabled: {
-        backgroundColor: '#e9ecef'
-      },
-      picks_focus: {
-        borderColor: '#80bdff',
-        boxShadow: '0 0 0 0.2rem rgba(0, 123, 255, 0.25)'
-      },
-      picks_focus_valid: {
-        borderColor: '',
-        boxShadow: '0 0 0 0.2rem rgba(40, 167, 69, 0.25)'
-      },
-      picks_focus_invalid: {
-        borderColor: '',
-        boxShadow: '0 0 0 0.2rem rgba(220, 53, 69, 0.25)'
-      },
-      // used in BsAppearancePlugin
-      picks_def: {
-        minHeight: 'calc(2.25rem + 2px)'
-      },
-      picks_lg: {
-        minHeight: 'calc(2.875rem + 2px)'
-      },
-      picks_sm: {
-        minHeight: 'calc(1.8125rem + 2px)'
-      },
-      picks_floating_def: {
-        minHeight: 'calc(3.5rem + 2px)'
-      },
-      // used in pickContentGenerator
-      pick: {
-        paddingLeft: '0',
-        paddingRight: '.5rem',
-        paddingInlineStart: '0',
-        paddingInlineEnd: '0.5rem'
-      },
-      pickButton: {
-        fontSize: '0.8em',
-        float: "none",
-        verticalAlign: "text-top"
-      },
-      pickContent_disabled: {
-        opacity: '.65'
-      },
-      // used in choiceContentGenerator
-      choiceContent: {
-        justifyContent: 'flex-start'
-      },
-      // BS problem: without this on inline form menu items justified center
-      choiceLabel: {
-        color: 'inherit'
-      },
-      // otherwise BS .was-validated set its color
-      choiceCheckBox: {
-        color: 'inherit'
-      },
-      choiceLabel_disabled: {
-        opacity: '.65'
-      },
-      // more flexible than {color: '#6c757d'}; note: avoid opacity on pickElement's border; TODO write to BS4 
-      // floating plugin
-      label_floating_lifted: {
-        opacity: '.65',
-        transform: 'scale(.85) translateY(-.5rem) translateX(.15rem)'
-      },
-      picks_floating_lifted: {
-        paddingTop: '1.625rem',
-        paddingLeft: '0.8rem',
-        paddingBottom: '0'
-      }
-    };
-
-    function PluginManager(plugins, pluginData) {
-      var instances = [];
-
-      if (plugins) {
-        for (var i = 0; i < plugins.length; i++) {
-          var instance = plugins[i](pluginData);
-          if (instance) instances.push(instance);
-        }
-      }
-
-      var disposes = [];
-      return {
-        buildApi: function buildApi(api) {
-          for (var _i = 0; _i < instances.length; _i++) {
-            var _instances$_i$buildAp, _instances$_i;
-
-            var dispose = (_instances$_i$buildAp = (_instances$_i = instances[_i]).buildApi) == null ? void 0 : _instances$_i$buildAp.call(_instances$_i, api);
-            if (dispose) disposes.push(dispose);
-          }
-        },
-        dispose: function dispose() {
-          for (var _i2 = 0; _i2 < disposes.length; _i2++) {
-            disposes[_i2]();
-          }
-
-          disposes = null;
-
-          for (var _i3 = 0; _i3 < instances.length; _i3++) {
-            var _instances$_i3$dispos, _instances$_i2;
-
-            (_instances$_i3$dispos = (_instances$_i2 = instances[_i3]).dispose) == null ? void 0 : _instances$_i3$dispos.call(_instances$_i2);
-          }
-
-          instances = null;
-        }
-      };
-    }
-    function plugDefaultConfig(constructors, defaults) {
-      for (var i = 0; i < constructors.length; i++) {
-        var _constructors$i$plugD, _constructors$i;
-
-        (_constructors$i$plugD = (_constructors$i = constructors[i]).plugDefaultConfig) == null ? void 0 : _constructors$i$plugD.call(_constructors$i, defaults);
-      }
-    }
-    function plugMergeSettings(constructors, configuration, defaults, settings) {
-      for (var i = 0; i < constructors.length; i++) {
-        var _constructors$i$plugM, _constructors$i2;
-
-        (_constructors$i$plugM = (_constructors$i2 = constructors[i]).plugMergeSettings) == null ? void 0 : _constructors$i$plugM.call(_constructors$i2, configuration, defaults, settings);
-      }
-    }
-    function plugStaticDom(constructors, aspects) {
-      for (var i = 0; i < constructors.length; i++) {
-        var _constructors$i$plugS, _constructors$i3;
-
-        (_constructors$i$plugS = (_constructors$i3 = constructors[i]).plugStaticDom) == null ? void 0 : _constructors$i$plugS.call(_constructors$i3, aspects);
       }
     }
 
@@ -3367,7 +1733,8 @@
           specialPicksEventsAspect = aspects.specialPicksEventsAspect,
           buildChoiceAspect = aspects.buildChoiceAspect,
           setDisabledComponentAspect = aspects.setDisabledComponentAspect,
-          resetLayoutAspect = aspects.resetLayoutAspect;
+          resetLayoutAspect = aspects.resetLayoutAspect,
+          placeholderStopInputAspect = aspects.placeholderStopInputAspect;
       var picksElement = picksDom.picksElement;
       var choicesElement = choicesDom.choicesElement;
       var window = environment.window;
@@ -3575,6 +1942,11 @@
       }
 
       filterDom.onInput(function () {
+        if (placeholderStopInputAspect && placeholderStopInputAspect.get()) {
+          placeholderStopInputAspect.reset();
+          return;
+        }
+
         var _inputAspect$processI = inputAspect.processInput(),
             filterInputValue = _inputAspect$processI.filterInputValue,
             isEmpty = _inputAspect$processI.isEmpty;
@@ -3776,6 +2148,7 @@
       var _extendIfUndefined;
 
       var window = environment.window;
+      environment.isIE11 = !!window.MSInputMethodContext && !!document.documentMode;
       var containerClass = configuration.containerClass,
           css = configuration.css,
           getDisabled = configuration.getDisabled,
@@ -4144,18 +2517,8 @@
       };
     }
 
-    var utilities = {
-      composeSync: composeSync,
-      EventBinder: EventBinder,
-      addStyling: addStyling,
-      toggleStyling: toggleStyling
-    };
-
-    //import $ from 'jquery'
-
-    var BsMultiSelect = function (window, createPopper) {
+    function createForJQuery(window, $, createPopper, name, pluginsSet, stylePlugin) {
       var trigger = null;
-      var $ = window.jQuery;
       var isJQyery = $ && !window.document.body.hasAttribute('data-bs-no-jquery');
 
       if (isJQyery) {
@@ -4167,8 +2530,8 @@
       }
 
       var plugins = shallowClearClone({
-        Bs5Plugin: Bs5Plugin
-      }, defaultPlugins);
+        stylePlugin: stylePlugin
+      }, pluginsSet);
       var environment = {
         trigger: trigger,
         window: window,
@@ -4194,20 +2557,1814 @@
           return multiSelect;
         };
 
-        var prototypable = addToJQueryPrototype('BsMultiSelect', constructorForJquery, $);
+        var prototypable = addToJQueryPrototype(name, constructorForJquery, $);
         prototypable.defaults = defaultSettings;
-        prototypable.tools = {
-          MultiSelectBuilder: MultiSelectBuilder,
-          plugins: plugins,
-          utilities: utilities
-        };
       }
 
       return createForUmd;
-    }(window, Popper__default['default']);
+    }
+
+    function LabelPlugin(pluginData) {
+      var configuration = pluginData.configuration,
+          staticDom = pluginData.staticDom,
+          filterDom = pluginData.filterDom;
+      var containerClass = configuration.containerClass,
+          label = configuration.label;
+
+      var getLabelElementAspect = function getLabelElementAspect() {
+        return defCall(label);
+      };
+
+      var labelPluginData = {
+        getLabelElementAspect: getLabelElementAspect
+      }; // overrided by BS Appearance Plugin
+
+      pluginData.labelPluginData = labelPluginData;
+      var createInputId = null;
+      var selectElement = staticDom.selectElement,
+          containerElement = staticDom.containerElement;
+      var filterInputElement = filterDom.filterInputElement;
+      if (selectElement) createInputId = function createInputId() {
+        return containerClass + "-generated-input-" + (selectElement.id ? selectElement.id : selectElement.name).toLowerCase() + "-id";
+      };else createInputId = function createInputId() {
+        return containerClass + "-generated-filter-" + containerElement.id;
+      };
+      return {
+        buildApi: function buildApi() {
+          var labelElement = labelPluginData.getLabelElementAspect();
+          var backupedForAttribute = null; // state saved between init and dispose
+
+          if (labelElement) {
+            backupedForAttribute = labelElement.getAttribute('for');
+            var newId = createInputId();
+            filterInputElement.setAttribute('id', newId);
+            labelElement.setAttribute('for', newId);
+          }
+
+          if (backupedForAttribute) return function () {
+            return labelElement.setAttribute('for', backupedForAttribute);
+          };
+        }
+      };
+    }
+
+    function RtlPlugin(pluginData) {
+      var configuration = pluginData.configuration,
+          rtlAspect = pluginData.rtlAspect,
+          staticDom = pluginData.staticDom;
+      var isRtl = configuration.isRtl;
+      var forceRtlOnContainer = false;
+      if (isBoolean(isRtl)) forceRtlOnContainer = true;else isRtl = getIsRtl(staticDom.initialElement);
+      var attributeBackup = AttributeBackup();
+
+      if (forceRtlOnContainer) {
+        attributeBackup.set(staticDom.containerElement, "dir", "rtl");
+      } else if (staticDom.selectElement) {
+        var dirAttributeValue = staticDom.selectElement.getAttribute("dir");
+
+        if (dirAttributeValue) {
+          attributeBackup.set(staticDom.containerElement, "dir", dirAttributeValue);
+        }
+      }
+
+      return {
+        buildApi: function buildApi(api) {
+          if (rtlAspect.updateRtl) rtlAspect.updateRtl(isRtl);
+        },
+        dispose: function dispose() {
+        }
+      };
+    }
+
+    RtlPlugin.plugStaticDom = function (aspects) {
+      aspects.rtlAspect = RtlAspect();
+    };
+
+    function RtlAspect() {
+      return {
+        updateRtl: function updateRtl() {}
+      };
+    }
+
+    function FormResetPlugin(pluginData) {
+      var staticDom = pluginData.staticDom,
+          environment = pluginData.environment;
+      return {
+        buildApi: function buildApi(api) {
+          var eventBuilder = EventBinder();
+
+          if (staticDom.selectElement) {
+            var form = closestByTagName(staticDom.selectElement, 'FORM');
+
+            if (form) {
+              eventBuilder.bind(form, 'reset', function () {
+                return environment.window.setTimeout(function () {
+                  return api.updateData();
+                });
+              });
+            }
+          }
+
+          return eventBuilder.unbind;
+        }
+      };
+    }
+
+    function createValidity(valueMissing, customError) {
+      return Object.freeze({
+        valueMissing: valueMissing,
+        customError: customError,
+        valid: !(valueMissing || customError)
+      });
+    }
+
+    function ValidityApi(visibleElement, isValueMissingObservable, valueMissingMessage, onValid, trigger) {
+      var customValidationMessage = "";
+      var validationMessage = "";
+      var validity = null;
+      var willValidate = true;
+
+      function setMessage(valueMissing, customError) {
+        validity = createValidity(valueMissing, customError);
+        validationMessage = customError ? customValidationMessage : valueMissing ? valueMissingMessage : "";
+        visibleElement.setCustomValidity(validationMessage);
+        onValid(validity.valid);
+      }
+
+      setMessage(isValueMissingObservable.getValue(), false);
+      isValueMissingObservable.attach(function (value) {
+        setMessage(value, validity.customError);
+      });
+
+      var checkValidity = function checkValidity() {
+        if (!validity.valid) trigger('dashboardcode.multiselect:invalid');
+        return validity.valid;
+      };
+
+      return {
+        validationMessage: validationMessage,
+        willValidate: willValidate,
+        validity: validity,
+        setCustomValidity: function setCustomValidity(message) {
+          customValidationMessage = message;
+          setMessage(validity.valueMissing, customValidationMessage ? true : false);
+        },
+        checkValidity: checkValidity,
+        reportValidity: function reportValidity() {
+          visibleElement.reportValidity();
+          return checkValidity();
+        }
+      };
+    }
+
+    var defValueMissingMessage = 'Please select an item in the list';
+    function ValidationApiPlugin(pluginData) {
+      var configuration = pluginData.configuration,
+          triggerAspect = pluginData.triggerAspect,
+          onChangeAspect = pluginData.onChangeAspect,
+          optionsAspect = pluginData.optionsAspect,
+          selectElementPluginData = pluginData.selectElementPluginData,
+          staticDom = pluginData.staticDom,
+          filterDom = pluginData.filterDom,
+          updateDataAspect = pluginData.updateDataAspect; // TODO: required could be a function
+
+      var getIsValueMissing = configuration.getIsValueMissing,
+          valueMissingMessage = configuration.valueMissingMessage,
+          required = configuration.required;
+      if (!isBoolean(required)) required = selectElementPluginData == null ? void 0 : selectElementPluginData.required;else if (!isBoolean(required)) required = false;
+      valueMissingMessage = defCall(valueMissingMessage, function () {
+        return getDataGuardedWithPrefix(staticDom.initialElement, "bsmultiselect", "value-missing-message");
+      }, defValueMissingMessage);
+
+      if (!getIsValueMissing) {
+        getIsValueMissing = function getIsValueMissing() {
+          var count = 0;
+          var optionsArray = optionsAspect.getOptions();
+
+          for (var i = 0; i < optionsArray.length; i++) {
+            if (optionsArray[i].selected) count++;
+          }
+
+          return count === 0;
+        };
+      }
+
+      var isValueMissingObservable = ObservableLambda(function () {
+        return required && getIsValueMissing();
+      });
+      var validationApiObservable = ObservableValue(!isValueMissingObservable.getValue());
+      onChangeAspect.onChange = composeSync(isValueMissingObservable.call, onChangeAspect.onChange);
+      updateDataAspect.updateData = composeSync(isValueMissingObservable.call, updateDataAspect.updateData);
+      pluginData.validationApiPluginData = {
+        validationApiObservable: validationApiObservable
+      };
+      var validationApi = ValidityApi(filterDom.filterInputElement, isValueMissingObservable, valueMissingMessage, function (isValid) {
+        return validationApiObservable.setValue(isValid);
+      }, triggerAspect.trigger);
+      return {
+        buildApi: function buildApi(api) {
+          api.validationApi = validationApi;
+        },
+        dispose: function dispose() {
+          isValueMissingObservable.detachAll();
+          validationApiObservable.detachAll();
+        }
+      };
+    }
+
+    ValidationApiPlugin.plugDefaultConfig = function (defaults) {
+      defaults.valueMissingMessage = '';
+    };
+
+    function BsAppearancePlugin(pluginData) {
+      var configuration = pluginData.configuration,
+          validationApiPluginData = pluginData.validationApiPluginData,
+          picksDom = pluginData.picksDom,
+          staticDom = pluginData.staticDom,
+          labelPluginData = pluginData.labelPluginData,
+          appearanceAspect = pluginData.appearanceAspect,
+          componentPropertiesAspect = pluginData.componentPropertiesAspect,
+          floatingLabelAspect = pluginData.floatingLabelAspect;
+      var getValidity = configuration.getValidity,
+          getSize = configuration.getSize,
+          useCssPatch = configuration.useCssPatch,
+          css = configuration.css,
+          composeGetSize = configuration.composeGetSize,
+          getDefaultLabel = configuration.getDefaultLabel;
+      var selectElement = staticDom.selectElement;
+      var initialElement = staticDom.initialElement;
+      var isFloatingLabel = false;
+
+      if (floatingLabelAspect) {
+        isFloatingLabel = closestByClassName(initialElement, 'form-floating');
+
+        floatingLabelAspect.isFloatingLabel = function () {
+          return isFloatingLabel;
+        };
+      }
+
+      if (labelPluginData) {
+        var origGetLabelElementAspect = labelPluginData.getLabelElementAspect;
+
+        labelPluginData.getLabelElementAspect = function () {
+          var e = origGetLabelElementAspect();
+          if (e) return e;else {
+            if (selectElement) {
+              var labelElement = getDefaultLabel(selectElement);
+              return labelElement;
+            }
+          }
+        };
+      }
+
+      if (staticDom.selectElement) {
+        if (!getValidity) getValidity = composeGetValidity(selectElement);
+        if (!getSize) getSize = composeGetSize(selectElement);
+      } else {
+        if (!getValidity) getValidity = function getValidity() {
+          return null;
+        };
+        if (!getSize) getSize = function getSize() {
+          return null;
+        };
+      }
+
+      componentPropertiesAspect.getSize = getSize;
+      componentPropertiesAspect.getValidity = getValidity;
+      var updateSize;
+
+      if (!useCssPatch) {
+        updateSize = function updateSize() {
+          return updateSizeForAdapter(picksDom.picksElement, getSize);
+        };
+      } else {
+        var picks_lg = css.picks_lg,
+            picks_sm = css.picks_sm,
+            picks_def = css.picks_def,
+            picks_floating_def = css.picks_floating_def;
+        if (isFloatingLabel) picks_lg = picks_sm = picks_def = picks_floating_def;
+
+        updateSize = function updateSize() {
+          return updateSizeJsForAdapter(picksDom.picksElement, picks_lg, picks_sm, picks_def, getSize);
+        };
+      }
+
+      if (useCssPatch) {
+        var origToggleFocusStyling = picksDom.toggleFocusStyling;
+
+        picksDom.toggleFocusStyling = function () {
+          var validity = validationObservable.getValue();
+          var isFocusIn = picksDom.getIsFocusIn();
+          origToggleFocusStyling(isFocusIn);
+
+          if (isFocusIn) {
+            if (validity === false) {
+              // but not toggle events (I know it will be done in future)
+              picksDom.setIsFocusIn(isFocusIn);
+              addStyling(picksDom.picksElement, css.picks_focus_invalid);
+            } else if (validity === true) {
+              // but not toggle events (I know it will be done in future)
+              picksDom.setIsFocusIn(isFocusIn);
+              addStyling(picksDom.picksElement, css.picks_focus_valid);
+            }
+          }
+        };
+      }
+
+      var getWasValidated = function getWasValidated() {
+        var wasValidatedElement = closestByClassName(staticDom.initialElement, 'was-validated');
+        return wasValidatedElement ? true : false;
+      };
+
+      var wasUpdatedObservable = ObservableLambda(function () {
+        return getWasValidated();
+      });
+      var getManualValidationObservable = ObservableLambda(function () {
+        return getValidity();
+      });
+      var validationApiObservable = validationApiPluginData == null ? void 0 : validationApiPluginData.validationApiObservable;
+      var validationObservable = ObservableLambda(function () {
+        return wasUpdatedObservable.getValue() ? validationApiObservable.getValue() : getManualValidationObservable.getValue();
+      });
+      validationObservable.attach(function (value) {
+        var _getMessagesElements = getMessagesElements(staticDom.containerElement),
+            validMessages = _getMessagesElements.validMessages,
+            invalidMessages = _getMessagesElements.invalidMessages;
+
+        updateValidity(picksDom.picksElement, validMessages, invalidMessages, value);
+        picksDom.toggleFocusStyling();
+      });
+      wasUpdatedObservable.attach(function () {
+        return validationObservable.call();
+      });
+      validationApiObservable.attach(function () {
+        return validationObservable.call();
+      });
+      getManualValidationObservable.attach(function () {
+        return validationObservable.call();
+      });
+      appearanceAspect.updateAppearance = composeSync(appearanceAspect.updateAppearance, updateSize, validationObservable.call, getManualValidationObservable.call);
+      return {
+        buildApi: function buildApi(api) {
+          api.updateSize = updateSize;
+
+          api.updateValidity = function () {
+            return getManualValidationObservable.call();
+          };
+
+          api.updateWasValidated = function () {
+            return wasUpdatedObservable.call();
+          };
+        },
+        dispose: function dispose() {
+          wasUpdatedObservable.detachAll();
+          validationObservable.detachAll();
+          getManualValidationObservable.detachAll();
+        }
+      };
+    }
+
+    function updateValidity(picksElement, validMessages, invalidMessages, validity) {
+      if (validity === false) {
+        picksElement.classList.add('is-invalid');
+        picksElement.classList.remove('is-valid');
+        invalidMessages.map(function (e) {
+          return e.style.display = 'block';
+        });
+        validMessages.map(function (e) {
+          return e.style.display = 'none';
+        });
+      } else if (validity === true) {
+        picksElement.classList.remove('is-invalid');
+        picksElement.classList.add('is-valid');
+        invalidMessages.map(function (e) {
+          return e.style.display = 'none';
+        });
+        validMessages.map(function (e) {
+          return e.style.display = 'block';
+        });
+      } else {
+        picksElement.classList.remove('is-invalid');
+        picksElement.classList.remove('is-valid');
+        invalidMessages.map(function (e) {
+          return e.style.display = '';
+        });
+        validMessages.map(function (e) {
+          return e.style.display = '';
+        });
+      }
+    }
+
+    function updateSizeClasses(picksElement, size) {
+      if (size == "lg") {
+        picksElement.classList.add('form-control-lg');
+        picksElement.classList.remove('form-control-sm');
+      } else if (size == "sm") {
+        picksElement.classList.remove('form-control-lg');
+        picksElement.classList.add('form-control-sm');
+      } else {
+        picksElement.classList.remove('form-control-lg');
+        picksElement.classList.remove('form-control-sm');
+      }
+    }
+
+    function updateSizeJsPicks(picksElement, picksLgStyling, picksSmStyling, picksDefStyling, size) {
+      if (size == "lg") {
+        addStyling(picksElement, picksLgStyling);
+      } else if (size == "sm") {
+        addStyling(picksElement, picksSmStyling);
+      } else {
+        addStyling(picksElement, picksDefStyling);
+      }
+    }
+
+    function updateSizeJs(picksElement, picksLgStyling, picksSmStyling, picksDefStyling, size) {
+      updateSizeClasses(picksElement, size);
+      updateSizeJsPicks(picksElement, picksLgStyling, picksSmStyling, picksDefStyling, size);
+    }
+
+    function updateSizeForAdapter(picksElement, getSize) {
+      updateSizeClasses(picksElement, getSize());
+    }
+
+    function updateSizeJsForAdapter(picksElement, picksLgStyling, picksSmStyling, picksDefStyling, getSize) {
+      updateSizeJs(picksElement, picksLgStyling, picksSmStyling, picksDefStyling, getSize());
+    }
+
+    function getMessagesElements(containerElement) {
+      var siblings = siblingsAsArray(containerElement);
+      var invalidMessages = siblings.filter(function (e) {
+        return e.classList.contains('invalid-feedback') || e.classList.contains('invalid-tooltip');
+      });
+      var validMessages = siblings.filter(function (e) {
+        return e.classList.contains('valid-feedback') || e.classList.contains('valid-tooltip');
+      });
+      return {
+        validMessages: validMessages,
+        invalidMessages: invalidMessages
+      };
+    }
+
+    function composeGetValidity(selectElement) {
+      var getValidity = function getValidity() {
+        return selectElement.classList.contains('is-invalid') ? false : selectElement.classList.contains('is-valid') ? true : null;
+      };
+
+      return getValidity;
+    }
+
+    function HiddenOptionPlugin(pluginData) {
+      var configuration = pluginData.configuration,
+          createWrapAspect = pluginData.createWrapAspect,
+          isChoiceSelectableAspect = pluginData.isChoiceSelectableAspect,
+          wrapsCollection = pluginData.wrapsCollection,
+          buildChoiceAspect = pluginData.buildChoiceAspect,
+          buildAndAttachChoiceAspect = pluginData.buildAndAttachChoiceAspect,
+          countableChoicesListInsertAspect = pluginData.countableChoicesListInsertAspect,
+          countableChoicesList = pluginData.countableChoicesList;
+
+      countableChoicesListInsertAspect.countableChoicesListInsert = function (wrap, key) {
+        if (!wrap.isOptionHidden) {
+          var choiceNext = wrapsCollection.getNext(key, function (c) {
+            return !c.isOptionHidden;
+          });
+          countableChoicesList.add(wrap, choiceNext);
+        }
+      };
+
+      var origBuildAndAttachChoice = buildAndAttachChoiceAspect.buildAndAttachChoice;
+
+      buildAndAttachChoiceAspect.buildAndAttachChoice = function (wrap, getNextElement) {
+        if (wrap.isOptionHidden) {
+          buildHiddenChoice(wrap);
+        } else {
+          origBuildAndAttachChoice(wrap, getNextElement);
+        }
+      };
+
+      var origIsSelectable = isChoiceSelectableAspect.isSelectable;
+
+      isChoiceSelectableAspect.isSelectable = function (wrap) {
+        return origIsSelectable(wrap) && !wrap.isOptionHidden;
+      };
+
+      var getIsOptionHidden = configuration.getIsOptionHidden,
+          options = configuration.options;
+
+      if (options) {
+        if (!getIsOptionHidden) getIsOptionHidden = function getIsOptionHidden(option) {
+          return option.hidden === undefined ? false : option.hidden;
+        };
+      } else {
+        if (!getIsOptionHidden) getIsOptionHidden = function getIsOptionHidden(option) {
+          return option.hidden;
+        };
+      }
+
+      var origCreateWrap = createWrapAspect.createWrap;
+
+      createWrapAspect.createWrap = function (option) {
+        var wrap = origCreateWrap(option);
+        wrap.isOptionHidden = getIsOptionHidden(option);
+        return wrap;
+      };
+
+      return {
+        buildApi: function buildApi(api) {
+          var getNextNonHidden = function getNextNonHidden(key) {
+            return wrapsCollection.getNext(key, function (c) {
+              return !c.isOptionHidden;
+            });
+          };
+
+          api.updateOptionsHidden = function () {
+            return wrapsCollection.forLoop(function (wrap, key) {
+              return updateChoiceHidden(wrap, key, getNextNonHidden, countableChoicesList, getIsOptionHidden, buildChoiceAspect);
+            });
+          };
+
+          api.updateOptionHidden = function (key) {
+            return updateChoiceHidden(wrapsCollection.get(key), key, getNextNonHidden, countableChoicesList, getIsOptionHidden, buildChoiceAspect);
+          }; // TODO create updateHidden ? 
+          // it is too complex since we need to find the next non hidden, when this depends on key 
+          // there should be the backreference "wrap -> index" invited before
+          // api.updateOptionHidden  = (key) => wrapsCollection.get(key).updateHidden();
+
+        }
+      };
+    }
+
+    function buildHiddenChoice(wrap) {
+      wrap.updateSelected = function () {
+        return void 0;
+      };
+
+      wrap.choice.isChoiceElementAttached = false;
+      wrap.choice.choiceElement = null;
+      wrap.choice.choiceElementAttach = null;
+      wrap.choice.setVisible = null;
+      wrap.choice.setHoverIn = null;
+      wrap.choice.remove = null;
+
+      wrap.choice.dispose = function () {
+        wrap.choice.dispose = null;
+      };
+
+      wrap.dispose = function () {
+        wrap.choice.dispose();
+        wrap.dispose = null;
+      };
+    }
+
+    function updateChoiceHidden(wrap, key, getNextNonHidden, countableChoicesList, getIsOptionHidden, buildChoiceAspect) {
+      var newIsOptionHidden = getIsOptionHidden(wrap.option);
+
+      if (newIsOptionHidden != wrap.isOptionHidden) {
+        wrap.isOptionHidden = newIsOptionHidden;
+
+        if (wrap.isOptionHidden) {
+          countableChoicesList.remove(wrap);
+          wrap.choice.remove();
+          buildHiddenChoice(wrap);
+        } else {
+          var nextChoice = getNextNonHidden(key);
+          countableChoicesList.add(wrap, nextChoice);
+          buildChoiceAspect.buildChoice(wrap);
+          wrap.choice.choiceElementAttach(nextChoice == null ? void 0 : nextChoice.choice.choiceElement);
+        }
+      }
+    }
+
+    function CssPatchPlugin() {}
+
+    CssPatchPlugin.plugMergeSettings = function (configuration, defaults, settings) {
+      var cssPatch = settings == null ? void 0 : settings.cssPatch;
+      if (isBoolean(cssPatch)) throw new Error("BsMultiSelect: 'cssPatch' was used instead of 'useCssPatch'"); // often type of error
+
+      configuration.cssPatch = createCss(defaults.cssPatch, cssPatch); // replace classes, merge styles
+    };
+
+    CssPatchPlugin.plugStaticDom = function (configurationPluginData) {
+      var configuration = configurationPluginData.configuration;
+      if (configuration.useCssPatch) extendCss(configuration.css, configuration.cssPatch);
+    };
+
+    function PlaceholderPlugin(aspects) {
+      var configuration = aspects.configuration,
+          staticManager = aspects.staticManager,
+          picksList = aspects.picksList,
+          picksDom = aspects.picksDom,
+          filterDom = aspects.filterDom,
+          staticDom = aspects.staticDom,
+          updateDataAspect = aspects.updateDataAspect,
+          resetFilterListAspect = aspects.resetFilterListAspect,
+          filterManagerAspect = aspects.filterManagerAspect,
+          environment = aspects.environment;
+      var isIE11 = environment.isIE11;
+      var placeholder = configuration.placeholder,
+          css = configuration.css;
+      var picksElement = picksDom.picksElement;
+      var filterInputElement = filterDom.filterInputElement;
+
+      function setPlaceholder(placeholder) {
+        filterInputElement.placeholder = placeholder;
+      }
+
+      if (isIE11) {
+        var ignoreNextInputResetableFlag = ResetableFlag();
+        var placeholderStopInputAspect = PlaceholderStopInputAspect(ignoreNextInputResetableFlag);
+        var setPlaceholderOrig = setPlaceholder;
+
+        setPlaceholder = function setPlaceholder(placeholder) {
+          ignoreNextInputResetableFlag.set();
+          setPlaceholderOrig(placeholder);
+        };
+
+        aspects.placeholderStopInputAspect = placeholderStopInputAspect;
+      }
+
+      if (!placeholder) {
+        placeholder = getDataGuardedWithPrefix(staticDom.initialElement, "bsmultiselect", "placeholder");
+      }
+
+      function setEmptyInputWidth(isVisible) {
+        if (isVisible) filterInputElement.style.width = '100%';else filterInputElement.style.width = '2ch';
+      }
+
+      var emptyToggleStyling = toggleStyling(filterInputElement, css.filterInput_empty);
+
+      function showPlacehodler(isVisible) {
+        if (isVisible) {
+          setPlaceholder(placeholder ? placeholder : '');
+          picksElement.style.display = 'block';
+        } else {
+          setPlaceholder('');
+          picksElement.style.display = 'flex';
+        }
+
+        emptyToggleStyling(isVisible);
+        setEmptyInputWidth(isVisible);
+      }
+
+      showPlacehodler(true);
+
+      function setDisabled(isComponentDisabled) {
+        filterInputElement.disabled = isComponentDisabled;
+      }
+
+      var isEmpty = function isEmpty() {
+        return picksList.isEmpty() && filterDom.isEmpty();
+      };
+
+      function updatePlacehodlerVisibility() {
+        showPlacehodler(isEmpty());
+      }
+
+      function updateEmptyInputWidth() {
+        setEmptyInputWidth(isEmpty());
+      }
+      var origDisable = picksDom.disable;
+
+      picksDom.disable = function (isComponentDisabled) {
+        setDisabled(isComponentDisabled);
+        origDisable(isComponentDisabled);
+      };
+
+      staticManager.appendToContainer = composeSync(staticManager.appendToContainer, updateEmptyInputWidth);
+      filterManagerAspect.processEmptyInput = composeSync(updateEmptyInputWidth, filterManagerAspect.processEmptyInput);
+      resetFilterListAspect.forceResetFilter = composeSync(resetFilterListAspect.forceResetFilter, updatePlacehodlerVisibility);
+      var origAdd = picksList.add;
+
+      picksList.add = function (pick) {
+        var returnValue = origAdd(pick);
+        if (picksList.getCount() == 1) updatePlacehodlerVisibility();
+        /*wrap.*/
+
+        pick.dispose = composeSync(
+        /*wrap.*/
+        pick.dispose, function () {
+          if (picksList.getCount() == 0) updatePlacehodlerVisibility();
+        });
+        return returnValue;
+      };
+
+      updateDataAspect.updateData = composeSync(updateDataAspect.updateData, updatePlacehodlerVisibility);
+    }
+
+    function PlaceholderStopInputAspect(resetableFlag) {
+      return {
+        get: function get() {
+          return resetableFlag.get();
+        },
+        reset: function reset() {
+          return resetableFlag.reset();
+        }
+      };
+    }
+
+    function JQueryMethodsPlugin(pluginData) {
+      var staticDom = pluginData.staticDom,
+          choicesDom = pluginData.choicesDom,
+          filterDom = pluginData.filterDom,
+          picksList = pluginData.picksList;
+      return {
+        buildApi: function buildApi(api) {
+          api.getContainer = function () {
+            return staticDom.containerElement;
+          };
+
+          api.getChoices = function () {
+            return choicesDom.choicesElement;
+          };
+
+          api.getChoicesList = function () {
+            return choicesDom.choicesListElement;
+          };
+
+          api.getFilterInput = function () {
+            return filterDom.filterInputElement;
+          };
+
+          api.getPicks = function () {
+            return picksDom.picksElement;
+          };
+
+          api.picksCount = function () {
+            return picksList.getCount();
+          };
+
+          pluginData.jQueryMethodsPluginData = {
+            EventBinder: EventBinder,
+            addStyling: addStyling,
+            toggleStyling: toggleStyling
+          };
+        }
+      };
+    }
+
+    function OptionsApiPlugin(pluginData) {
+      var buildAndAttachChoiceAspect = pluginData.buildAndAttachChoiceAspect,
+          wraps = pluginData.wraps,
+          wrapsCollection = pluginData.wrapsCollection,
+          createWrapAspect = pluginData.createWrapAspect,
+          createChoiceBaseAspect = pluginData.createChoiceBaseAspect,
+          optionsAspect = pluginData.optionsAspect,
+          resetLayoutAspect = pluginData.resetLayoutAspect;
+      return {
+        buildApi: function buildApi(api) {
+          api.updateOptionAdded = function (key) {
+            // TODO: generalize index as key 
+            var options = optionsAspect.getOptions();
+            var option = options[key];
+            var wrap = createWrapAspect.createWrap(option);
+            wrap.choice = createChoiceBaseAspect.createChoiceBase(option);
+            wraps.insert(key, wrap);
+
+            var nextChoice = function nextChoice() {
+              return wrapsCollection.getNext(key, function (c) {
+                return c.choice.choiceElement;
+              });
+            };
+
+            buildAndAttachChoiceAspect.buildAndAttachChoice(wrap, function () {
+              var _nextChoice;
+
+              return (_nextChoice = nextChoice()) == null ? void 0 : _nextChoice.choice.choiceElement;
+            });
+          };
+
+          api.updateOptionRemoved = function (key) {
+            // TODO: generalize index as key 
+            resetLayoutAspect.resetLayout(); // always hide 1st, then reset filter
+
+            var wrap = wraps.remove(key);
+            wrap.choice.remove == null ? void 0 : wrap.choice.remove();
+            wrap.dispose == null ? void 0 : wrap.dispose();
+          };
+        }
+      };
+    }
+
+    function FormRestoreOnBackwardPlugin(pluginData) {
+      var staticDom = pluginData.staticDom,
+          environment = pluginData.environment,
+          loadAspect = pluginData.loadAspect,
+          configuration = pluginData.configuration;
+      var window = environment.window;
+      return {
+        buildApi: function buildApi(api) {
+          if (!api.updateOptionsSelected) {
+            if (options && configuration.setSelected) throw new Error("BsMultisilect: FormRestoreOnBackwardPlugin requires SelectedOptionPlugin defined first");
+          } else {
+            var origLoad = loadAspect.load;
+
+            loadAspect.load = function () {
+              origLoad(); // support browser's "step backward" and form's values restore
+
+              if (staticDom.selectElement && window.document.readyState != "complete") {
+                window.setTimeout(function () {
+                  api.updateOptionsSelected();
+                });
+              }
+            };
+          }
+        }
+      };
+    }
+
+    function SelectElementPlugin() {}
+
+    SelectElementPlugin.plugStaticDom = function (aspects) {
+      var configuration = aspects.configuration,
+          staticDomFactory = aspects.staticDomFactory,
+          createElementAspect = aspects.createElementAspect,
+          componentPropertiesAspect = aspects.componentPropertiesAspect,
+          onChangeAspect = aspects.onChangeAspect,
+          triggerAspect = aspects.triggerAspect,
+          optionsAspect = aspects.optionsAspect,
+          disposeAspect = aspects.disposeAspect;
+      var origCreate = staticDomFactory.create;
+
+      staticDomFactory.create = function (css) {
+        var _origCreate = origCreate(css),
+            choicesDom = _origCreate.choicesDom,
+            origCreateStaticDom = _origCreate.createStaticDom;
+
+        var choicesElement = choicesDom.choicesElement;
+        return {
+          choicesDom: choicesDom,
+          createStaticDom: function createStaticDom(element, containerClass) {
+            var selectElement = null;
+            var containerElement = null;
+            var picksElement = null;
+
+            if (element.tagName == 'SELECT') {
+              selectElement = element;
+
+              if (containerClass) {
+                containerElement = closestByClassName(selectElement, containerClass);
+                if (containerElement) picksElement = findDirectChildByTagName(containerElement, 'UL');
+              }
+            } else if (element.tagName == 'DIV') {
+              selectElement = findDirectChildByTagName(element, 'SELECT');
+
+              if (selectElement) {
+                if (containerClass) {
+                  containerElement = closestByClassName(element, containerClass);
+                  if (containerElement) picksElement = findDirectChildByTagName(containerElement, 'UL');
+                }
+              } else {
+                return origCreateStaticDom(element, containerClass);
+              }
+            }
+
+            var disposableContainerElement = false;
+
+            if (!containerElement) {
+              containerElement = createElementAspect.createElement('DIV');
+              containerElement.classList.add(containerClass);
+              disposableContainerElement = true;
+            }
+
+            var disposablePicksElement = false;
+
+            if (!picksElement) {
+              picksElement = createElementAspect.createElement('UL');
+              disposablePicksElement = true;
+            }
+
+            if (selectElement) {
+              var backupDisplay = selectElement.style.display;
+              selectElement.style.display = 'none';
+              var backupedRequired = selectElement.required;
+              aspects.selectElementPluginData = {
+                required: backupedRequired
+              };
+              if (selectElement.required === true) selectElement.required = false;
+              var getDisabled = configuration.getDisabled;
+
+              if (!getDisabled) {
+                var fieldsetElement = closestByTagName(selectElement, 'FIELDSET');
+
+                if (fieldsetElement) {
+                  componentPropertiesAspect.getDisabled = function () {
+                    return selectElement.disabled || fieldsetElement.disabled;
+                  };
+                } else {
+                  componentPropertiesAspect.getDisabled = function () {
+                    return selectElement.disabled;
+                  };
+                }
+              }
+
+              onChangeAspect.onChange = composeSync(function () {
+                return triggerAspect.trigger('change');
+              }, onChangeAspect.onChange);
+
+              optionsAspect.getOptions = function () {
+                return selectElement.options;
+              }; // if (!setSelected){
+              //     setSelected = (option, value) => {option.selected = value};
+              //     // NOTE: adding this (setAttribute) break Chrome's html form reset functionality:
+              //     // if (value) option.setAttribute('selected','');
+              //     // else option.removeAttribute('selected');
+              // }
+
+
+              disposeAspect.dispose = composeSync(disposeAspect.dispose, function () {
+                selectElement.required = backupedRequired;
+                selectElement.style.display = backupDisplay;
+              });
+            }
+
+            return {
+              staticDom: {
+                initialElement: element,
+                containerElement: containerElement,
+                picksElement: picksElement,
+                disposablePicksElement: disposablePicksElement,
+                selectElement: selectElement
+              },
+              staticManager: {
+                appendToContainer: function appendToContainer() {
+                  if (disposableContainerElement) {
+                    selectElement.parentNode.insertBefore(containerElement, selectElement.nextSibling);
+                    containerElement.appendChild(choicesElement);
+                  } else {
+                    selectElement.parentNode.insertBefore(choicesElement, selectElement.nextSibling);
+                  }
+
+                  if (disposablePicksElement) containerElement.appendChild(picksElement);
+                },
+                dispose: function dispose() {
+                  choicesElement.parentNode.removeChild(choicesElement);
+                  if (disposableContainerElement) selectElement.parentNode.removeChild(containerElement);
+                  if (disposablePicksElement) containerElement.removeChild(picksElement);
+                }
+              }
+            };
+          }
+        };
+      };
+    };
+
+    // plugin should overdrive them : call setWrapSelected and etc
+    // therefore there should new component API methods
+    // addOptionPick(key) -> call addPick(pick) which returns removePick() 
+    // SetOptionSelectedAspect, OptionToggleAspect should be moved there 
+    // OptionToggleAspect overrided in DisabledOptionPlugin
+    // wrap.isOptionSelected ,  wrap.updateSelected
+
+    function SelectedOptionPlugin(aspects) {
+      var configuration = aspects.configuration,
+          wrapsCollection = aspects.wrapsCollection,
+          createWrapAspect = aspects.createWrapAspect,
+          buildChoiceAspect = aspects.buildChoiceAspect,
+          removePickAspect = aspects.removePickAspect,
+          resetLayoutAspect = aspects.resetLayoutAspect,
+          picksList = aspects.picksList,
+          isChoiceSelectableAspect = aspects.isChoiceSelectableAspect,
+          optionToggleAspect = aspects.optionToggleAspect,
+          createPickHandlersAspect = aspects.createPickHandlersAspect,
+          addPickAspect = aspects.addPickAspect,
+          fullMatchAspect = aspects.fullMatchAspect,
+          onChangeAspect = aspects.onChangeAspect,
+          filterPredicateAspect = aspects.filterPredicateAspect;
+      var getIsOptionSelected = configuration.getSelected,
+          setIsOptionSelected = configuration.setSelected,
+          options = configuration.options;
+
+      if (options) {
+        if (!setIsOptionSelected) {
+          setIsOptionSelected = function setIsOptionSelected(option, value) {
+            option.selected = value;
+          };
+        }
+
+        if (!getIsOptionSelected) getIsOptionSelected = function getIsOptionSelected(option) {
+          return option.selected;
+        };
+      } else {
+        // selectElement
+        if (!getIsOptionSelected) {
+          getIsOptionSelected = function getIsOptionSelected(option) {
+            return option.selected;
+          };
+        }
+
+        if (!setIsOptionSelected) {
+          setIsOptionSelected = function setIsOptionSelected(option, value) {
+            option.selected = value;
+          }; // NOTE: adding this (setAttribute) break Chrome's html form reset functionality:
+          // if (value) option.setAttribute('selected','');
+          // else option.removeAttribute('selected');
+
+        }
+      }
+
+      var origFilterPredicate = filterPredicateAspect.filterPredicate;
+
+      filterPredicateAspect.filterPredicate = function (wrap, text) {
+        return !wrap.isOptionSelected && origFilterPredicate(wrap, text);
+      };
+
+      var origBuildChoice = buildChoiceAspect.buildChoice;
+
+      buildChoiceAspect.buildChoice = function (wrap) {
+        origBuildChoice(wrap);
+
+        wrap.updateSelected = function () {
+          wrap.choice.choiceDomManagerHandlers.updateSelected();
+          onChangeAspect.onChange();
+        };
+
+        wrap.dispose = composeSync(function () {
+          wrap.updateSelected = null;
+        }, wrap.dispose);
+      }; // TODO: test this instead of wrap.updateSelected
+      // function updateSelected(wrap){
+      //     if (wrap.pick){
+      //         if (wrap.isOptionSelected)
+      //             pickHandlers.producePick();
+      //         else {
+      //             pickHandlers.removeAndDispose();
+      //             pickHandlers.removeAndDispose=null;
+      //         }
+      //     }
+      //     wrap.choice.choiceDomManagerHandlers.updateSelected();
+      //     onChangeAspect.onChange();
+      // }
+
+
+      function composeUpdateSelected(wrap, booleanValue) {
+        return function () {
+          wrap.isOptionSelected = booleanValue;
+          wrap.updateSelected();
+        };
+      }
+
+      function trySetWrapSelected(option, updateSelected, booleanValue) {
+        //  wrap.option
+        var success = false;
+        var confirmed = setIsOptionSelected(option, booleanValue);
+
+        if (!(confirmed === false)) {
+          updateSelected();
+          success = true;
+        }
+
+        return success;
+      }
+
+      var origCreateWrap = createWrapAspect.createWrap;
+
+      createWrapAspect.createWrap = function (option) {
+        var wrap = origCreateWrap(option);
+        wrap.isOptionSelected = getIsOptionSelected(option);
+        wrap.updateSelected = null; // can it be combined ?
+
+        return wrap;
+      };
+
+      optionToggleAspect.toggle; // TODO: improve design, no replace
+
+      optionToggleAspect.toggle = function (wrap) {
+        return trySetWrapSelected(wrap.option, composeUpdateSelected(wrap, !wrap.isOptionSelected), !wrap.isOptionSelected);
+      };
+
+      fullMatchAspect.fullMatch;
+
+      fullMatchAspect.fullMatch = function (wrap) {
+        return trySetWrapSelected(wrap.option, composeUpdateSelected(wrap, true), true);
+      };
+
+      removePickAspect.removePick; // TODO: improve design, no replace
+
+      removePickAspect.removePick = function (wrap, pick) {
+        // TODO: try remove pick
+        return trySetWrapSelected(wrap.option, composeUpdateSelected(wrap, false), false);
+      };
+
+      var origCreatePickHandlers = createPickHandlersAspect.createPickHandlers;
+
+      createPickHandlersAspect.createPickHandlers = function (wrap) {
+        var pickHandlers = origCreatePickHandlers(wrap);
+        wrap.updateSelected = composeSync(function () {
+          if (wrap.isOptionSelected) {
+            var pick = pickHandlers.producePick();
+            wrap.pick = pick;
+            pick.dispose = composeSync(pick.dispose, function () {
+              wrap.pick = null;
+            });
+          } else {
+            pickHandlers.removeAndDispose();
+            pickHandlers.removeAndDispose = null;
+          }
+        }, wrap.updateSelected);
+        addPickAspect.addPick(wrap, pickHandlers);
+        return pickHandlers;
+      };
+
+      var origAddPick = addPickAspect.addPick;
+
+      addPickAspect.addPick = function (wrap, pickHandlers) {
+        if (wrap.isOptionSelected) {
+          var pick = origAddPick(wrap, pickHandlers);
+          wrap.pick = pick;
+          pick.dispose = composeSync(pick.dispose, function () {
+            wrap.pick = null;
+          });
+          return pick;
+        }
+      };
+
+      return {
+        buildApi: function buildApi(api) {
+          api.selectAll = function () {
+            resetLayoutAspect.resetLayout(); // always hide 1st
+
+            wrapsCollection.forLoop(function (wrap) {
+              if (isChoiceSelectableAspect.isSelectable(wrap) && !wrap.isOptionSelected) trySetWrapSelected(wrap.option, composeUpdateSelected(wrap, true), true);
+            });
+          };
+
+          api.deselectAll = function () {
+            resetLayoutAspect.resetLayout(); // always hide 1st
+
+            picksList.forEach(function (pick) {
+              return pick.setSelectedFalse();
+            });
+          };
+
+          api.setOptionSelected = function (key, value) {
+            var wrap = wrapsCollection.get(key);
+            return trySetWrapSelected(wrap.option, composeUpdateSelected(wrap, value), value);
+          }; // used in FormRestoreOnBackwardPlugin
+
+
+          api.updateOptionsSelected = function () {
+            return wrapsCollection.forLoop(function (wrap) {
+              return updateChoiceSelected(wrap, getIsOptionSelected);
+            });
+          };
+
+          api.updateOptionSelected = function (key) {
+            return updateChoiceSelected(wrapsCollection.get(key), getIsOptionSelected);
+          };
+        }
+      };
+    }
+
+    function updateChoiceSelected(wrap, getIsOptionSelected) {
+      var newIsSelected = getIsOptionSelected(wrap.option);
+
+      if (newIsSelected != wrap.isOptionSelected) {
+        wrap.isOptionSelected = newIsSelected;
+        wrap.updateSelected == null ? void 0 : wrap.updateSelected(); // some hidden oesn't have element (and need to be updated)
+      }
+    }
+
+    function DisabledOptionPlugin(pluginData) {
+      var configuration = pluginData.configuration,
+          isChoiceSelectableAspect = pluginData.isChoiceSelectableAspect,
+          createWrapAspect = pluginData.createWrapAspect,
+          buildChoiceAspect = pluginData.buildChoiceAspect,
+          filterPredicateAspect = pluginData.filterPredicateAspect,
+          wrapsCollection = pluginData.wrapsCollection,
+          optionToggleAspect = pluginData.optionToggleAspect,
+          buildPickAspect = pluginData.buildPickAspect;
+      var getIsOptionDisabled = configuration.getIsOptionDisabled,
+          options = configuration.options;
+
+      if (options) {
+        if (!getIsOptionDisabled) getIsOptionDisabled = function getIsOptionDisabled(option) {
+          return option.disabled === undefined ? false : option.disabled;
+        };
+      } else {
+        // selectElement
+        if (!getIsOptionDisabled) getIsOptionDisabled = function getIsOptionDisabled(option) {
+          return option.disabled;
+        };
+      } // TODO check this instead of wrap.updateDisabled
+      // function updateDisabled(wrap){
+      //     wrap?.choice?.choiceDomManagerHandlers?.updateDisabled?.();
+      //     wrap?.pick?.pickDomManagerHandlers?.updateDisabled?.();
+      // }
+
+
+      var origCreateWrap = createWrapAspect.createWrap;
+
+      createWrapAspect.createWrap = function (option) {
+        var wrap = origCreateWrap(option);
+        wrap.isOptionDisabled = getIsOptionDisabled(option); // TODO: remove usage wrap.isOptionDisabled
+
+        wrap.updateDisabled = null;
+        return wrap;
+      };
+
+      var origToggle = optionToggleAspect.toggle;
+
+      optionToggleAspect.toggle = function (wrap) {
+        var success = false;
+
+        if (wrap.isOptionSelected !== undefined) {
+          if (wrap.isOptionSelected || !wrap.isOptionDisabled) // TODO: declare dependency on SelectedOptionPlugin
+            success = origToggle(wrap);
+        } else {
+          if (!wrap.isOptionDisabled) {
+            success = origToggle(wrap);
+          }
+        }
+
+        return success;
+      };
+
+      var origIsSelectable = isChoiceSelectableAspect.isSelectable;
+
+      isChoiceSelectableAspect.isSelectable = function (wrap) {
+        return origIsSelectable(wrap) && !wrap.isOptionDisabled;
+      };
+
+      var origFilterPredicate = filterPredicateAspect.filterPredicate;
+
+      filterPredicateAspect.filterPredicate = function (wrap, text) {
+        return !wrap.isOptionDisabled && origFilterPredicate(wrap, text);
+      };
+
+      var origBuildChoice = buildChoiceAspect.buildChoice;
+
+      buildChoiceAspect.buildChoice = function (wrap) {
+        origBuildChoice(wrap);
+        wrap.updateDisabled = wrap.choice.choiceDomManagerHandlers.updateDisabled;
+        wrap.choice.dispose = composeSync(function () {
+          wrap.updateDisabled = null;
+        }, wrap.choice.dispose);
+      };
+
+      var origBuildPick = buildPickAspect.buildPick;
+
+      buildPickAspect.buildPick = function (wrap, removeOnButton) {
+        var pick = origBuildPick(wrap, removeOnButton);
+
+        pick.updateDisabled = function () {
+          return pick.pickDomManagerHandlers.updateDisabled();
+        };
+
+        pick.dispose = composeSync(pick.dispose, function () {
+          pick.updateDisabled = null;
+        });
+        var choiceUpdateDisabledBackup = wrap.updateDisabled;
+        wrap.updateDisabled = composeSync(choiceUpdateDisabledBackup, pick.updateDisabled); // add pickDisabled
+
+        pick.dispose = composeSync(pick.dispose, function () {
+          wrap.updateDisabled = choiceUpdateDisabledBackup; // remove pickDisabled
+
+          wrap.updateDisabled(); // make "true disabled" without it checkbox only looks disabled
+        });
+        return pick;
+      };
+
+      return {
+        buildApi: function buildApi(api) {
+          api.updateOptionsDisabled = function () {
+            return wrapsCollection.forLoop(function (wrap) {
+              return updateChoiceDisabled(wrap, getIsOptionDisabled);
+            });
+          };
+
+          api.updateOptionDisabled = function (key) {
+            return updateChoiceDisabled(wrapsCollection.get(key), getIsOptionDisabled);
+          };
+        }
+      };
+    }
+
+    function updateChoiceDisabled(wrap, getIsOptionDisabled) {
+      var newIsDisabled = getIsOptionDisabled(wrap.option);
+
+      if (newIsDisabled != wrap.isOptionDisabled) {
+        wrap.isOptionDisabled = newIsDisabled;
+        wrap.updateDisabled == null ? void 0 : wrap.updateDisabled(); // some hidden oesn't have element (and need to be updated)
+      }
+    }
+
+    function PicksApiPlugin(pluginData) {
+      var picksList = pluginData.picksList,
+          createWrapAspect = pluginData.createWrapAspect,
+          createPickHandlersAspect = pluginData.createPickHandlersAspect,
+          addPickAspect = pluginData.addPickAspect;
+      return {
+        buildApi: function buildApi(api) {
+          api.forEachPeak = function (f) {
+            return picksList.forEach(function (wrap) {
+              return f(wrap.option);
+            });
+          }; // TODO: getHeadPeak
+
+
+          api.getTailPeak = function () {
+            var _picksList$getTail;
+
+            return (_picksList$getTail = picksList.getTail()) == null ? void 0 : _picksList$getTail.option;
+          };
+
+          api.countPeaks = function () {
+            return picksList.getCount();
+          };
+
+          api.isEmptyPeaks = function () {
+            return picksList.isEmpty();
+          };
+
+          api.addPick = function (option) {
+            var wrap = createWrapAspect.createWrap(option); // TODO should be moved to specific plugins
+
+            wrap.updateDisabled = function () {};
+
+            wrap.updateHidden = function () {};
+
+            var pickHandlers = createPickHandlersAspect.createPickHandlers(wrap);
+            addPickAspect.addPick(wrap, pickHandlers);
+          };
+        }
+      };
+    }
+
+    function PicksPlugin(aspects) {
+      var configuration = aspects.configuration;
+          aspects.inputAspect;
+          aspects.filterDom;
+          aspects.filterManagerAspect;
+      configuration.picks;
+          configuration.addOptionPicked;
+      /*
+      if (!addOptionPicked){
+          addOptionPicked = (option, index, value) => {
+              if (value)
+                  picks.push(option);
+              else
+                  picks.splice(index, 1);
+              return true;
+          };
+      }
+        function trySetWrapSelected(option, updateSelected, booleanValue){
+          let success = false;
+          var confirmed = setIsOptionSelected(option, booleanValue);
+          if (!(confirmed===false)) {
+              updateSelected();
+              success = true;
+          }
+          return success;
+      }
+        let origProcessInput = inputAspect.processInput;
+      inputAspect.processInput = () => {
+          let origResult = origProcessInput();
+          if (!origResult.isEmpty)
+          {
+              if ( filterManagerAspect.getNavigateManager().getCount() == 1)
+              {
+                  // todo: move exact match to filterManager
+                  let fullMatchWrap =  filterManagerAspect.getNavigateManager().getHead();
+                  let text = filterManagerAspect.getFilter();
+                  if (fullMatchWrap.choice.searchText == text)
+                  {
+                      let success = trySetWrapSelected(fullMatchWrap, true);
+                      if (success) {
+                          filterDom.setEmpty();
+                          origResult.isEmpty = true;
+                      }
+                  }
+              }
+          }
+          return origResult;
+      }*/
+    }
+
+    PicksPlugin.plugStaticDom = function (aspects) {
+      var configuration = aspects.configuration,
+          picksList = aspects.picksList;
+      var picks = configuration.picks;
+
+      if (picks) {
+        var origAdd = picksList.add,
+            origReset = picksList.reset;
+
+        picksList.add = function (e) {
+          var _origAdd = origAdd(e),
+              remove = _origAdd.remove,
+              index = _origAdd.index;
+
+          picks.push(e);
+          return {
+            remove: composeSync(remove, function () {
+              return void picks.splice(index(), 1);
+            }),
+            index: index
+          };
+        };
+
+        picksList.reset = function () {
+          origReset();
+          picks.length = 0;
+        };
+      }
+    };
+
+    function PopperPlugin(pluginData) {
+      var staticManager = pluginData.staticManager,
+          environment = pluginData.environment,
+          specialPicksEventsAspect = pluginData.specialPicksEventsAspect,
+          choicesVisibilityAspect = pluginData.choicesVisibilityAspect,
+          rtlAspect = pluginData.rtlAspect,
+          choicesDom = pluginData.choicesDom,
+          filterDom = pluginData.filterDom;
+      var createPopper = environment.createPopper,
+          Popper = environment.Popper;
+      var choicesElement = choicesDom.choicesElement;
+      var filterInputElement = filterDom.filterInputElement;
+      var popper = null;
+      var popperConfiguration = {
+        placement: 'bottom-start',
+        modifiers: {
+          preventOverflow: {
+            enabled: true
+          },
+          hide: {
+            enabled: false
+          },
+          flip: {
+            enabled: false
+          }
+        }
+      };
+
+      if (typeof createPopper === 'undefined') {
+        createPopper = Popper;
+
+        if (typeof createPopper === 'undefined') {
+          throw new Error("BsMultiSelect: Popper component (https://popper.js.org) is required");
+        }
+      } else {
+        if (createPopper.createPopper) {
+          createPopper = createPopper.createPopper;
+        }
+      }
+
+      function init() {
+        if (!!createPopper.prototype && !!createPopper.prototype.constructor) {
+          // it is a constructor
+          popper = new createPopper(filterInputElement, choicesElement, popperConfiguration);
+        } else {
+          popper = createPopper(filterInputElement, choicesElement, popperConfiguration); //throw new Error("BsMultiSelect: popper paramater is not a constructor")
+        }
+      }
+      staticManager.appendToContainer = composeSync(staticManager.appendToContainer, init);
+      var origBackSpace = specialPicksEventsAspect.backSpace;
+
+      specialPicksEventsAspect.backSpace = function (pick) {
+        origBackSpace(pick);
+        popper.update();
+      };
+
+      if (rtlAspect) {
+        var origUpdateRtl = rtlAspect.updateRtl;
+
+        rtlAspect.updateRtl = function (isRtl) {
+          origUpdateRtl(isRtl);
+          if (isRtl) popperConfiguration.placement = 'bottom-end';
+        };
+      }
+
+      choicesVisibilityAspect.updatePopupLocation = composeSync(choicesVisibilityAspect.updatePopupLocation, function () {
+        popper.update(); // become async in poppoer 2; use forceUpdate if sync is needed? 
+      });
+      return {
+        dispose: function dispose() {
+          popper.destroy();
+        }
+      };
+    }
+
+    function FloatingLabelPlugin(pluginData) {
+      var configuration = pluginData.configuration,
+          picksList = pluginData.picksList,
+          picksDom = pluginData.picksDom,
+          filterDom = pluginData.filterDom,
+          staticDom = pluginData.staticDom,
+          updateDataAspect = pluginData.updateDataAspect,
+          resetFilterListAspect = pluginData.resetFilterListAspect,
+          floatingLabelAspect = pluginData.floatingLabelAspect;
+      var css = configuration.css,
+          getDefaultLabel = configuration.getDefaultLabel;
+      var initialElement = staticDom.initialElement;
+
+      if (floatingLabelAspect.isFloatingLabel()) {
+        var liftedLabel = function liftedLabel(isEmpty) {
+          liftToggleStyling1(isEmpty);
+          liftToggleStyling2(isEmpty);
+        };
+
+        var updateLiftedLabel = function updateLiftedLabel() {
+          liftedLabel(!isEmpty());
+        };
+
+        var labelElement = getDefaultLabel(initialElement);
+        var picksElement = picksDom.picksElement;
+        var liftToggleStyling1 = toggleStyling(labelElement, css.label_floating_lifted);
+        var liftToggleStyling2 = toggleStyling(picksElement, css.picks_floating_lifted);
+
+        var isEmpty = function isEmpty() {
+          return picksList.isEmpty() && filterDom.isEmpty() && !picksDom.getIsFocusIn();
+        };
+        updateLiftedLabel();
+        resetFilterListAspect.forceResetFilter = composeSync(resetFilterListAspect.forceResetFilter, updateLiftedLabel);
+        var origAdd = picksList.add;
+
+        picksList.add = function (pick) {
+          var returnValue = origAdd(pick);
+          if (picksList.getCount() == 1) updateLiftedLabel();
+          pick.dispose = composeSync(pick.dispose, function () {
+            if (picksList.getCount() == 0) updateLiftedLabel();
+          });
+          return returnValue;
+        };
+
+        var origToggleFocusStyling = picksDom.toggleFocusStyling;
+
+        picksDom.toggleFocusStyling = function () {
+          var isFocusIn = picksDom.getIsFocusIn();
+          origToggleFocusStyling(isFocusIn);
+          updateLiftedLabel();
+        };
+
+        updateDataAspect.updateData = composeSync(updateDataAspect.updateData, updateLiftedLabel);
+      }
+    }
+
+    FloatingLabelPlugin.plugStaticDom = function (aspects) {
+      aspects.floatingLabelAspect = FloatingLabelAspect();
+    };
+
+    function FloatingLabelAspect() {
+      return {
+        isFloatingLabel: function isFloatingLabel() {}
+      };
+    }
+
+    var defaultPlugins = {
+      CssPatchPlugin: CssPatchPlugin,
+      SelectElementPlugin: SelectElementPlugin,
+      LabelPlugin: LabelPlugin,
+      HiddenOptionPlugin: HiddenOptionPlugin,
+      ValidationApiPlugin: ValidationApiPlugin,
+      BsAppearancePlugin: BsAppearancePlugin,
+      FormResetPlugin: FormResetPlugin,
+      PopperPlugin: PopperPlugin,
+      RtlPlugin: RtlPlugin,
+      PlaceholderPlugin: PlaceholderPlugin,
+      FloatingLabelPlugin: FloatingLabelPlugin,
+      OptionsApiPlugin: OptionsApiPlugin,
+      JQueryMethodsPlugin: JQueryMethodsPlugin,
+      SelectedOptionPlugin: SelectedOptionPlugin,
+      FormRestoreOnBackwardPlugin: FormRestoreOnBackwardPlugin,
+      DisabledOptionPlugin: DisabledOptionPlugin,
+      PicksApiPlugin: PicksApiPlugin
+    };
+    var picksPlugins = {
+      CssPatchPlugin: CssPatchPlugin,
+      PicksPlugin: PicksPlugin,
+      LabelPlugin: LabelPlugin,
+      ValidationApiPlugin: ValidationApiPlugin,
+      BsAppearancePlugin: BsAppearancePlugin,
+      PopperPlugin: PopperPlugin,
+      RtlPlugin: RtlPlugin,
+      PlaceholderPlugin: PlaceholderPlugin,
+      FloatingLabelPlugin: FloatingLabelPlugin,
+      OptionsApiPlugin: OptionsApiPlugin,
+      JQueryMethodsPlugin: JQueryMethodsPlugin,
+      PicksApiPlugin: PicksApiPlugin
+    };
+    var allPlugins = shallowClearClone(defaultPlugins, {
+      PicksPlugin: PicksPlugin
+    });
+    /*SelectedPicksPlugin*/
+
+    function Bs5Plugin() {}
+
+    Bs5Plugin.plugDefaultConfig = function (defaults) {
+      defaults.css = css;
+      setDefaults(defaults);
+    };
+
+    function setDefaults(defaults) {
+      defaults.useCssPatch = true;
+      defaults.cssPatch = cssPatch;
+      defaults.pickButtonHTML = '<button aria-label="Remove" tabIndex="-1" type="button"></button>';
+      defaults.composeGetSize = composeGetSize;
+      defaults.getDefaultLabel = getDefaultLabel;
+    }
+
+    function composeGetSize(selectElement) {
+      var inputGroupElement = closestByClassName(selectElement, 'input-group');
+      var getSize = null;
+
+      if (inputGroupElement) {
+        getSize = function getSize() {
+          var value = null;
+          if (inputGroupElement.classList.contains('input-group-lg')) value = 'lg';else if (inputGroupElement.classList.contains('input-group-sm')) value = 'sm';
+          return value;
+        };
+      } else {
+        getSize = function getSize() {
+          var value = null;
+          if (selectElement.classList.contains('form-select-lg') || selectElement.classList.contains('form-control-lg')) // changed for BS
+            value = 'lg';else if (selectElement.classList.contains('form-select-sm') || selectElement.classList.contains('form-control-sm')) value = 'sm';
+          return value;
+        };
+      }
+
+      return getSize;
+    }
+
+    function getDefaultLabel(selectElement) {
+      var value = null;
+      var query = "label[for=\"" + selectElement.id + "\"]";
+      var p1 = selectElement.parentElement;
+      value = p1.querySelector(query); // label can be wrapped into col-auto
+
+      if (!value) {
+        var p2 = p1.parentElement;
+        value = p2.querySelector(query);
+      }
+
+      return value;
+    }
+
+    var css = {
+      choices: 'dropdown-menu',
+      // bs, in bsmultiselect.scss as div.dropdown-menu
+      choicesList: '',
+      // bs, in bsmultiselect.scss as div.dropdown-menu>ul (first child)
+      choice_hover: 'hover',
+      //  not bs, in scss as 'ul.dropdown-menu li.hover'
+      choice_selected: '',
+      choice_disabled: '',
+      picks: 'form-control',
+      // bs, in scss 'ul.form-control'
+      picks_focus: 'focus',
+      // not bs, in scss 'ul.form-control.focus'
+      picks_disabled: 'disabled',
+      //  not bs, in scss 'ul.form-control.disabled'
+      pick_disabled: '',
+      pickFilter: '',
+      filterInput: '',
+      // used in pickContentGenerator
+      pick: 'badge text-dark',
+      // bs
+      pickContent: '',
+      pickContent_disabled: 'disabled',
+      // not bs, in scss 'ul.form-control li span.disabled'
+      pickButton: 'btn-close',
+      // bs
+      // used in choiceContentGenerator
+      // choice:  'dropdown-item', // it seems like hover should be managed manually since there should be keyboard support
+      choiceCheckBox_disabled: 'disabled',
+      //  not bs, in scss as 'ul.form-control li .custom-control-input.disabled ~ .custom-control-label'
+      choiceContent: 'form-check',
+      // bs d-flex required for rtl to align items
+      choiceCheckBox: 'form-check-input',
+      // bs
+      choiceLabel: 'form-check-label',
+      choiceLabel_disabled: '',
+      label_floating_lifted: 'floating-lifted',
+      picks_floating_lifted: 'floating-lifted'
+    };
+    var cssPatch = {
+      choicesList: {
+        listStyleType: 'none',
+        paddingLeft: '0',
+        paddingRight: '0',
+        marginBottom: '0'
+      },
+      picks: {
+        listStyleType: 'none',
+        display: 'flex',
+        flexWrap: 'wrap',
+        height: 'auto',
+        marginBottom: '0'
+      },
+      choice: 'px-md-2 px-1',
+      choice_hover: 'text-primary bg-light',
+      filterInput: {
+        border: '0px',
+        height: 'auto',
+        boxShadow: 'none',
+        padding: '0',
+        margin: '0',
+        outline: 'none',
+        backgroundColor: 'transparent',
+        backgroundImage: 'none' // otherwise BS .was-validated set its image
+
+      },
+      filterInput_empty: 'form-control',
+      // need for placeholder, TODO test form-control-plaintext
+      // used in PicksDom
+      picks_disabled: {
+        backgroundColor: '#e9ecef'
+      },
+      picks_focus: {
+        borderColor: '#80bdff',
+        boxShadow: '0 0 0 0.2rem rgba(0, 123, 255, 0.25)'
+      },
+      picks_focus_valid: {
+        borderColor: '',
+        boxShadow: '0 0 0 0.2rem rgba(40, 167, 69, 0.25)'
+      },
+      picks_focus_invalid: {
+        borderColor: '',
+        boxShadow: '0 0 0 0.2rem rgba(220, 53, 69, 0.25)'
+      },
+      // used in BsAppearancePlugin
+      picks_def: {
+        minHeight: 'calc(2.25rem + 2px)'
+      },
+      picks_lg: {
+        minHeight: 'calc(2.875rem + 2px)'
+      },
+      picks_sm: {
+        minHeight: 'calc(1.8125rem + 2px)'
+      },
+      picks_floating_def: {
+        minHeight: 'calc(3.5rem + 2px)'
+      },
+      // used in pickContentGenerator
+      pick: {
+        paddingLeft: '0',
+        paddingRight: '.5rem',
+        paddingInlineStart: '0',
+        paddingInlineEnd: '0.5rem'
+      },
+      pickButton: {
+        fontSize: '0.8em',
+        float: "none",
+        verticalAlign: "text-top"
+      },
+      pickContent_disabled: {
+        opacity: '.65'
+      },
+      // used in choiceContentGenerator
+      choiceContent: {
+        justifyContent: 'flex-start'
+      },
+      // BS problem: without this on inline form menu items justified center
+      choiceLabel: {
+        color: 'inherit'
+      },
+      // otherwise BS .was-validated set its color
+      choiceCheckBox: {
+        color: 'inherit'
+      },
+      choiceLabel_disabled: {
+        opacity: '.65'
+      },
+      // more flexible than {color: '#6c757d'}; note: avoid opacity on pickElement's border; TODO write to BS 
+      // floating plugin
+      label_floating_lifted: {
+        opacity: '.65',
+        transform: 'scale(.85) translateY(-.5rem) translateX(.15rem)'
+      },
+      picks_floating_lifted: {
+        paddingTop: '1.625rem',
+        paddingLeft: '0.8rem',
+        paddingBottom: '0'
+      }
+    };
+
+    var utilities = {
+      composeSync: composeSync,
+      EventBinder: EventBinder,
+      addStyling: addStyling,
+      toggleStyling: toggleStyling
+    };
+
+    var BsMultiSelect = function (window, jQuery, createPopper) {
+      return createForJQuery(window, jQuery, createPopper, 'BsMultiSelect', defaultPlugins, Bs5Plugin);
+    }(window, window.jQuery, Popper__default['default']);
+
+    var BsPicks = function (window, jQuery, createPopper) {
+      return createForJQuery(window, jQuery, createPopper, 'BsPicks', picksPlugins, Bs5Plugin);
+    }(window, window.jQuery, Popper__default['default']);
 
     var BsMultiSelect_jquery = {
-      BsMultiSelect: BsMultiSelect
+      BsMultiSelect: BsMultiSelect,
+      BsPicks: BsPicks,
+      MultiSelectTools: {
+        MultiSelectBuilder: MultiSelectBuilder,
+        plugins: shallowClearClone({
+          Bs5Plugin: Bs5Plugin
+        }, allPlugins),
+        utilities: utilities
+      }
     };
 
     return BsMultiSelect_jquery;

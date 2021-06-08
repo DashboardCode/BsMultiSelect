@@ -22,11 +22,18 @@ import {PopperPlugin} from './plugins/PopperPlugin'
 
 import {FloatingLabelPlugin} from './plugins/FloatingLabelPlugin'
 
+import {shallowClearClone} from './ToolsJs'
 
 export let defaultPlugins = {CssPatchPlugin, SelectElementPlugin, LabelPlugin, HiddenOptionPlugin, ValidationApiPlugin, 
     BsAppearancePlugin, FormResetPlugin, PopperPlugin, RtlPlugin,  PlaceholderPlugin, FloatingLabelPlugin, OptionsApiPlugin, 
     JQueryMethodsPlugin, SelectedOptionPlugin, FormRestoreOnBackwardPlugin, DisabledOptionPlugin, PicksApiPlugin};
 
-export let ajaxPlugins = {CssPatchPlugin, PicksPlugin, LabelPlugin, ValidationApiPlugin, 
+export let picksPlugins = {CssPatchPlugin, PicksPlugin, LabelPlugin, ValidationApiPlugin, 
     BsAppearancePlugin, PopperPlugin, RtlPlugin,  PlaceholderPlugin, FloatingLabelPlugin, OptionsApiPlugin, 
     JQueryMethodsPlugin, PicksApiPlugin};
+
+export let allPlugins =  shallowClearClone(defaultPlugins, {PicksPlugin});
+
+
+    
+    /*SelectedPicksPlugin*/
