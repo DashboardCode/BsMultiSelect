@@ -1,5 +1,5 @@
 /*!
-  * BsMultiSelect v1.1.1 (https://dashboardcode.github.io/BsMultiSelect/)
+  * BsMultiSelect v1.1.2-beta (https://dashboardcode.github.io/BsMultiSelect/)
   * Copyright 2017-2021 Roman Pokrovskij (github user rpokrovskij)
   * Licensed under Apache 2 (https://github.com/DashboardCode/BsMultiSelect/blob/master/LICENSE)
   */

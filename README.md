@@ -247,6 +247,32 @@ Method 2:
 
 `$.fn["bsMultiSelect"].noConflict` and `$.fn["BsMultiSelect"].noConflict` are available.
 
+## Bundling with WEBPACK from UMD bundles
+
+Building webpack bumndel from UMD bundles with webpack 1) use exact names in aliases 2) manually put jQuery first
+
+Lets `index.js` - used as start point for webpack :
+````
+import 'jquery'; // should be manually loaded first since '@dashboardcode/bsmultiselect' do not require it as dependency and can be loaded ahead it 
+import '@popperjs/core'; // do not use aliases for jquery and '@popperjs/core' since exact names are required by bootstrap and bsmultiselect umd bundle
+import 'bootstrap#umd'; // requires jquery and popper
+import '@dashboardcode/bsmultiselect#umd'; // requires popper
+
+````
+
+Then UMD resolution in `webpack.config` should look like:
+````
+resolve: {
+        alias: {
+            '@popperjs/core': '@popperjs/core/dist/umd/popper.js',
+            'bootstrap#umd': 'bootstrap/dist/js/bootstrap.js',
+            '@dashboardcode/bsmultiselect#umd':'@dashboardcode/bsmultiselect/dist/js/BsMultiSelect.js'
+            // ......
+        }
+    },
+````
+
+
 ## Features
 
  Shortly: BsMultiSelect supports ALL Bootstrap 5 component features (append/prepend input buttons, floating labels, custom validation, HTML form validation visualization with `.was-validated`). Additionally it also supports RTL (right-to-left).
