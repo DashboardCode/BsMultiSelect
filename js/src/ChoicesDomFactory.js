@@ -13,7 +13,7 @@ export function ChoicesDomFactory(createElementAspect) {
             return {
                 choicesElement,
                 choicesListElement,
-                createChoiceElement() {
+                createChoiceElement(){
                     var choiceElement = createElementAspect.createElement('LI');
                     addStyling(choiceElement, css.choice);
                     return {
