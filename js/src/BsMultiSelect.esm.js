@@ -1,8 +1,8 @@
 import {Bs5Plugin} from './plugins/Bs5Plugin'
-import {defaultPlugins, picksPlugins, allPlugins } from './PluginSet'
+import {defaultPlugins, picksPlugins, allPlugins} from './PluginSet'
 import {shallowClearClone, ObjectValues} from './ToolsJs'
 import {utilities} from './ToolSet'
-import  {MultiSelectBuilder} from './MultiSelectBuilder'
+import {MultiSelectBuilder} from './MultiSelectBuilder'
 
 function ModuleFactory(environment){
     if (!environment.trigger)

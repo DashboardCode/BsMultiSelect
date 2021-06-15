@@ -10,7 +10,7 @@ export function FilterDom(disposablePicksElement, createElementAspect, css){
     var eventBinder = EventBinder();
     return {
         filterInputElement,
-        isEmpty: () => filterInputElement.value ? false:true,
+        isEmpty: () => filterInputElement.value ? false : true,
         setEmpty(){
             filterInputElement.value ='';
         },
@@ -21,7 +21,7 @@ export function FilterDom(disposablePicksElement, createElementAspect, css){
             filterInputElement.focus();
         },
         setWidth(text){
-            filterInputElement.style.width = text.length*1.3 + 2 + "ch"
+            filterInputElement.style.width = text.length * 1.3 + 2 + "ch"
         },
         // TODO: check why I need this comparision? 
         setFocusIfNotTarget(target){

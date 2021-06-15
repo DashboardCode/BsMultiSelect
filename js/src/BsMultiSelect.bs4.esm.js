@@ -1,5 +1,5 @@
 import {Bs4Plugin} from './plugins/Bs4Plugin'
-import {defaultPlugins, picksPlugins, allPlugins } from './PluginSet'
+import {defaultPlugins, picksPlugins, allPlugins} from './PluginSet'
 import {shallowClearClone, ObjectValues} from './ToolsJs'
 import {utilities} from './ToolSet'
 import {MultiSelectBuilder} from './MultiSelectBuilder'

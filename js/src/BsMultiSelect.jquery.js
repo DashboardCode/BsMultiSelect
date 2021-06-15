@@ -2,7 +2,7 @@ import Popper from '@popperjs/core'
 
 import {createForJQuery} from './CreateForJQuery'
 
-import {defaultPlugins, picksPlugins, allPlugins } from './PluginSet'
+import {defaultPlugins, picksPlugins, allPlugins} from './PluginSet'
 import {Bs5Plugin} from './plugins/Bs5Plugin'
 
 import {MultiSelectBuilder} from './MultiSelectBuilder'

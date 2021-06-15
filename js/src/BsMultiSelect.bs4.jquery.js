@@ -3,7 +3,7 @@ import Popper from 'popper.js'
 
 import {createForJQuery} from './CreateForJQuery'
 
-import {defaultPlugins, picksPlugins, allPlugins } from './PluginSet'
+import {defaultPlugins, picksPlugins, allPlugins} from './PluginSet'
 import {Bs4Plugin} from './plugins/Bs4Plugin'
 
 import {MultiSelectBuilder} from './MultiSelectBuilder'

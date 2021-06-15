@@ -35,7 +35,6 @@ export function PicksDom(picksElement, disposablePicksElement, createElementAspe
         setIsFocusIn(newIsFocusIn){
             isFocusIn = newIsFocusIn
         }, 
-        
         dispose(){
             if (!disposablePicksElement){
                 disableToggleStyling(false)
