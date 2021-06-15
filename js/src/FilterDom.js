@@ -10,7 +10,7 @@ export function FilterDom(disposablePicksElement, createElementAspect, css){
     var eventBinder = EventBinder();
     return {
         filterInputElement,
-        isEmpty: () => filterInputElement.value ? false : true,
+        isEmpty(){return filterInputElement.value ? false : true},
         setEmpty(){
             filterInputElement.value ='';
         },
