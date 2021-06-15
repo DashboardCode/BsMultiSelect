@@ -1,5 +1,5 @@
-import  {EventBinder} from './ToolsDom';
-import  {addStyling, toggleStyling} from './ToolsStyling';
+import {EventBinder} from './ToolsDom';
+import {addStyling, toggleStyling} from './ToolsStyling';
 
 export function ChoiceDomFactory(css, optionPropertiesAspect){
     return {
