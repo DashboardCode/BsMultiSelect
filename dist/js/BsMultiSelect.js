@@ -1,5 +1,5 @@
 /*!
-  * BsMultiSelect v1.1.2 (https://dashboardcode.github.io/BsMultiSelect/)
+  * BsMultiSelect v1.1.3 (https://dashboardcode.github.io/BsMultiSelect/)
   * Copyright 2017-2021 Roman Pokrovskij (github user rpokrovskij)
   * Licensed under Apache 2 (https://github.com/DashboardCode/BsMultiSelect/blob/master/LICENSE)
   */
@@ -4166,12 +4166,12 @@
           createElementAspect = pluginData.createElementAspect,
           staticManager = pluginData.staticManager;
       var css = configuration.css;
-      if (configuration.isNoResultWarningEnabled) pluginData.warningAspect = WarningAspect(choicesDom, createElementAspect, staticManager, css);
+      if (configuration.isNoResultsWarningEnabled) pluginData.warningAspect = WarningAspect(choicesDom, createElementAspect, staticManager, css);
     }
 
     WarningPlugin.plugDefaultConfig = function (defaults) {
       defaults.noResultsWarning = "No results found";
-      defaults.isNoResultWarningEnabled = false;
+      defaults.isNoResultsWarningEnabled = false;
     };
 
     function WarningAspect(choicesDom, createElementAspect, staticManager, css) {
