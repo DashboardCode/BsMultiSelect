@@ -310,6 +310,15 @@ resolve: {
 
 **sizes**: supports bootstrap `custom-select-lg`, `custom-select-sm` or `input-group-lg`, `input-group-sm` on original `select`
 
+**no result found warning**: can be found usefull, since "no result" search blocks TAB jump to next field
+
+````
+      dashboardCode.BsMultiSelect({
+           isNoResultsWarningEnabled : true,
+           // noResultsWarning = "No results found";  // default message
+      });
+````
+
 **bootstrap input-group + prepend + append support**  but you will need to setup more infromation about the dom  - to mark a container with `dashboardcode-bsmultiselect` class
 ````
           <div class="input-group dashboardcode-bsmultiselect"> <!-- mark the container with dashboardcode-bsmultiselect"  -->
