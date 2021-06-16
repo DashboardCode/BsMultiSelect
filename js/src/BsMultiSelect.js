@@ -192,6 +192,7 @@ export function BsMultiSelect(element, environment, plugins, configuration, onIn
         updateDataAspect , fullMatchAspect} )
     
     let pluginManager = PluginManager(plugins, aspects);
+    
     let multiSelectInlineLayout =  MultiSelectInlineLayout(aspects);
 
     let api = {component: "BsMultiSelect.api"} // key used in memory leak analyzes

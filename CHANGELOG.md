@@ -1,5 +1,6 @@
 # CHANGELOG
 ````
+1.1.2  - "no result" warning (disabled by default)
 1.1.1  - IE11 set placeholder problem solved (was: open the dropdown)
 1.1.0  - breaking change in DOM generation: previous dropdown ul become wrapped to div
 1.0.3  - problem with padding between picks in rtl solved

@@ -111,6 +111,12 @@
   color: var(--primary);
   background-color: #e9ecef;
 }
+.dashboardcode-bsmultiselect div.dropdown-menu + div.alert-warning {
+  padding-left: 0.25rem;
+  padding-right: 0.25rem;
+  z-index: 4;
+  font-size: small;
+}
 .dashboardcode-bsmultiselect.input-group.input-group-sm ul.form-control {
   min-height: calc(1.5em + 0.5rem + 2px);
 }

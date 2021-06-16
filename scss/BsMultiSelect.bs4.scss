@@ -141,6 +141,13 @@
             color: var(--primary); //$dropdown-link-hover-color;
             @include gradient-bg($dropdown-link-hover-bg);
         }
+
+        +div.alert-warning {
+            padding-left: .25rem;
+            padding-right: .25rem;
+            z-index: 4;  
+            font-size:small; 
+        }
     }
 
     &.input-group.input-group-sm {

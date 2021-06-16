@@ -1,5 +1,5 @@
 /*!
-  * BsMultiSelect v1.1.2-beta (https://dashboardcode.github.io/BsMultiSelect/)
+  * BsMultiSelect v1.1.2 (https://dashboardcode.github.io/BsMultiSelect/)
   * Copyright 2017-2021 Roman Pokrovskij (github user rpokrovskij)
   * Licensed under Apache 2 (https://github.com/DashboardCode/BsMultiSelect/blob/master/LICENSE)
   */
@@ -1735,9 +1735,61 @@
           buildChoiceAspect = aspects.buildChoiceAspect,
           setDisabledComponentAspect = aspects.setDisabledComponentAspect,
           resetLayoutAspect = aspects.resetLayoutAspect,
-          placeholderStopInputAspect = aspects.placeholderStopInputAspect;
+          placeholderStopInputAspect = aspects.placeholderStopInputAspect,
+          warningAspect = aspects.warningAspect,
+          configuration = aspects.configuration,
+          createPopperAspect = aspects.createPopperAspect,
+          rtlAspect = aspects.rtlAspect,
+          staticManager = aspects.staticManager;
       var picksElement = picksDom.picksElement;
-      var choicesElement = choicesDom.choicesElement;
+      var choicesElement = choicesDom.choicesElement; // pop up layout, require createPopperPlugin
+
+      var filterInputElement = filterDom.filterInputElement;
+      var pop = createPopperAspect.create(choicesElement, filterInputElement, true);
+      staticManager.appendToContainer = composeSync(staticManager.appendToContainer, pop.init);
+      var origBackSpace = specialPicksEventsAspect.backSpace;
+
+      specialPicksEventsAspect.backSpace = function (pick) {
+        origBackSpace(pick);
+        pop.update();
+      };
+
+      if (rtlAspect) {
+        var origUpdateRtl = rtlAspect.updateRtl;
+
+        rtlAspect.updateRtl = function (isRtl) {
+          origUpdateRtl(isRtl);
+          pop.setRtl(isRtl);
+        };
+      }
+
+      choicesVisibilityAspect.updatePopupLocation = composeSync(choicesVisibilityAspect.updatePopupLocation, function () {
+        pop.update();
+      });
+
+      if (warningAspect) {
+        var pop2 = createPopperAspect.create(warningAspect.warningElement, filterInputElement, false);
+        staticManager.appendToContainer = composeSync(staticManager.appendToContainer, pop2.init);
+
+        if (rtlAspect) {
+          var origUpdateRtl2 = rtlAspect.updateRtl;
+
+          rtlAspect.updateRtl = function (isRtl) {
+            origUpdateRtl2(isRtl);
+            pop2.setRtl(isRtl);
+          };
+        }
+
+        var origWarningAspectShow = warningAspect.show;
+
+        warningAspect.show = function (msg) {
+          pop2.update();
+          origWarningAspectShow(msg);
+        };
+
+        pop.dispose = composeSync(pop.dispose, pop2.dispose);
+      }
+
       var window = environment.window;
       var document = window.document;
       var eventLoopFlag = EventLoopFlag(window);
@@ -1921,11 +1973,13 @@
       // and there could be difference in processing: (2) should hide the menu, then reset , when (1) should just reset without hiding.
 
       function afterInput() {
-        eventLoopFlag.set(); // means disable some mouse handlers; otherwise we will get "Hover On MouseEnter" when filter's changes should remove hover
-
         var visibleCount = filterManagerAspect.getNavigateManager().getCount();
 
         if (visibleCount > 0) {
+          if (warningAspect) {
+            warningAspect.hide();
+          }
+
           var panelIsVisble = choicesVisibilityAspect.isChoicesVisible();
 
           if (!panelIsVisble) {
@@ -1938,7 +1992,13 @@
             if (panelIsVisble) hoveredChoiceAspect.resetHoveredChoice();
           }
         } else {
-          if (choicesVisibilityAspect.isChoicesVisible()) hideChoices();
+          if (choicesVisibilityAspect.isChoicesVisible()) {
+            hideChoices();
+          }
+
+          if (warningAspect) {
+            if (filterManagerAspect.getFilter()) warningAspect.show(configuration.noResultsWarning);else warningAspect.hide();
+          }
         }
       }
 
@@ -1953,6 +2013,8 @@
             isEmpty = _inputAspect$processI.isEmpty;
 
         if (isEmpty) filterManagerAspect.processEmptyInput();else filterDom.setWidth(filterInputValue);
+        eventLoopFlag.set(); // means disable some mouse handlers; otherwise we will get "Hover On MouseEnter" when filter's changes should remove hover
+
         afterInput();
       });
 
@@ -2058,7 +2120,9 @@
         if (isComponentDisabled) componentDisabledEventBinder.unbind();else componentDisabledEventBinder.bind(picksElement, "click", clickToShowChoices);
       };
 
-      resetLayoutAspect.resetLayout = composeSync(hideChoices, resetLayoutAspect.resetLayout // resetFilter by default
+      resetLayoutAspect.resetLayout = composeSync(hideChoices, function () {
+        if (warningAspect) warningAspect.hide();
+      }, resetLayoutAspect.resetLayout // resetFilter by default
       );
       var origCreatePickHandlers = createPickHandlersAspect.createPickHandlers;
 
@@ -2088,6 +2152,7 @@
           resetMouseCandidateChoice();
           picksElement.removeEventListener("mousedown", skipoutAndResetMousedown);
           componentDisabledEventBinder.unbind();
+          pop.dispose();
         }
       };
     }
@@ -3971,33 +4036,10 @@
       }
     };
 
-    function PopperPlugin(pluginData) {
-      var staticManager = pluginData.staticManager,
-          environment = pluginData.environment,
-          specialPicksEventsAspect = pluginData.specialPicksEventsAspect,
-          choicesVisibilityAspect = pluginData.choicesVisibilityAspect,
-          rtlAspect = pluginData.rtlAspect,
-          choicesDom = pluginData.choicesDom,
-          filterDom = pluginData.filterDom;
+    function CreatePopperPlugin(pluginData) {
+      var environment = pluginData.environment;
       var createPopper = environment.createPopper,
           Popper = environment.Popper;
-      var choicesElement = choicesDom.choicesElement;
-      var filterInputElement = filterDom.filterInputElement;
-      var popper = null;
-      var popperConfiguration = {
-        placement: 'bottom-start',
-        modifiers: {
-          preventOverflow: {
-            enabled: true
-          },
-          hide: {
-            enabled: false
-          },
-          flip: {
-            enabled: false
-          }
-        }
-      };
 
       if (typeof createPopper === 'undefined') {
         createPopper = Popper;
@@ -4011,37 +4053,44 @@
         }
       }
 
-      function init() {
-        if (!!createPopper.prototype && !!createPopper.prototype.constructor) {
-          // it is a constructor
-          popper = new createPopper(filterInputElement, choicesElement, popperConfiguration);
-        } else {
-          popper = createPopper(filterInputElement, choicesElement, popperConfiguration); //throw new Error("BsMultiSelect: popper paramater is not a constructor")
-        }
-      }
-      staticManager.appendToContainer = composeSync(staticManager.appendToContainer, init);
-      var origBackSpace = specialPicksEventsAspect.backSpace;
-
-      specialPicksEventsAspect.backSpace = function (pick) {
-        origBackSpace(pick);
-        popper.update();
-      };
-
-      if (rtlAspect) {
-        var origUpdateRtl = rtlAspect.updateRtl;
-
-        rtlAspect.updateRtl = function (isRtl) {
-          origUpdateRtl(isRtl);
-          if (isRtl) popperConfiguration.placement = 'bottom-end';
-        };
-      }
-
-      choicesVisibilityAspect.updatePopupLocation = composeSync(choicesVisibilityAspect.updatePopupLocation, function () {
-        popper.update(); // become async in poppoer 2; use forceUpdate if sync is needed? 
-      });
-      return {
-        dispose: function dispose() {
-          popper.destroy();
+      pluginData.createPopperAspect = {
+        create: function create(element, anchorElement, preventOverflow) {
+          var popperConfiguration = {
+            placement: 'bottom-start',
+            modifiers: {
+              preventOverflow: {
+                enabled: preventOverflow
+              },
+              hide: {
+                enabled: false
+              },
+              flip: {
+                enabled: false
+              }
+            }
+          };
+          var popper = null;
+          return {
+            init: function init() {
+              if (!!createPopper.prototype && !!createPopper.prototype.constructor) {
+                // it is a constructor
+                popper = new createPopper(anchorElement, element, popperConfiguration);
+              } else {
+                popper = createPopper(anchorElement, element, popperConfiguration);
+              }
+            },
+            update: function update() {
+              popper.update(); // become async in poppoer 2; use forceUpdate if sync is needed? 
+            },
+            setRtl: function setRtl(isRtl) {
+              if (isRtl) {
+                popperConfiguration.placement = 'bottom-end';
+              }
+            },
+            dispose: function dispose() {
+              popper.destroy();
+            }
+          };
         }
       };
     }
@@ -4112,6 +4161,45 @@
       };
     }
 
+    function WarningPlugin(pluginData) {
+      var configuration = pluginData.configuration,
+          choicesDom = pluginData.choicesDom,
+          createElementAspect = pluginData.createElementAspect,
+          staticManager = pluginData.staticManager;
+      var css = configuration.css;
+      if (configuration.isNoResultWarningEnabled) pluginData.warningAspect = WarningAspect(choicesDom, createElementAspect, staticManager, css);
+    }
+
+    WarningPlugin.plugDefaultConfig = function (defaults) {
+      defaults.noResultsWarning = "No results found";
+      defaults.isNoResultWarningEnabled = false;
+    };
+
+    function WarningAspect(choicesDom, createElementAspect, staticManager, css) {
+      var choicesElement = choicesDom.choicesElement;
+      var warningElement = createElementAspect.createElement('div');
+      var origAppendToContainer = staticManager.appendToContainer;
+
+      staticManager.appendToContainer = function () {
+        origAppendToContainer();
+        choicesElement.parentNode.insertBefore(warningElement, choicesElement.nextSibling); // insert after
+      };
+
+      warningElement.style.display = 'none';
+      addStyling(warningElement, css.warning);
+      return {
+        warningElement: warningElement,
+        show: function show(message) {
+          warningElement.style.display = 'block';
+          warningElement.innerHTML = message;
+        },
+        hide: function hide() {
+          warningElement.style.display = 'none';
+          warningElement.innerHTML = "";
+        }
+      };
+    }
+
     var defaultPlugins = {
       CssPatchPlugin: CssPatchPlugin,
       SelectElementPlugin: SelectElementPlugin,
@@ -4120,7 +4208,8 @@
       ValidationApiPlugin: ValidationApiPlugin,
       BsAppearancePlugin: BsAppearancePlugin,
       FormResetPlugin: FormResetPlugin,
-      PopperPlugin: PopperPlugin,
+      CreatePopperPlugin: CreatePopperPlugin,
+      WarningPlugin: WarningPlugin,
       RtlPlugin: RtlPlugin,
       PlaceholderPlugin: PlaceholderPlugin,
       FloatingLabelPlugin: FloatingLabelPlugin,
@@ -4137,7 +4226,8 @@
       LabelPlugin: LabelPlugin,
       ValidationApiPlugin: ValidationApiPlugin,
       BsAppearancePlugin: BsAppearancePlugin,
-      PopperPlugin: PopperPlugin,
+      CreatePopperPlugin: CreatePopperPlugin,
+      WarningPlugin: WarningPlugin,
       RtlPlugin: RtlPlugin,
       PlaceholderPlugin: PlaceholderPlugin,
       FloatingLabelPlugin: FloatingLabelPlugin,
@@ -4200,7 +4290,8 @@
       choiceCheckBox: 'custom-control-input',
       // bs4
       choiceLabel: 'custom-control-label justify-content-start',
-      choiceLabel_disabled: ''
+      choiceLabel_disabled: '',
+      warning: 'alert-warning'
     };
     var cssPatch = {
       choicesList: {
@@ -4287,7 +4378,15 @@
       },
       choiceLabel_disabled: {
         opacity: '.65'
-      } // more flexible than {color: '#6c757d'}; note: avoid opacity on pickElement's border; TODO write to BS4 
+      },
+      // more flexible than {color: '#6c757d'}; note: avoid opacity on pickElement's border; TODO write to BS4 
+      warning: {
+        paddingLeft: '.25rem',
+        paddingRight: '.25rem',
+        zIndex: 4,
+        fontSize: 'small',
+        backgroundColor: 'var(--bs-warning)'
+      } // zIndex=4  since the input-group zIndex=3
 
     };
 

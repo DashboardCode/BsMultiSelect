@@ -18,18 +18,20 @@ import {DisabledOptionPlugin} from './plugins/DisabledOptionPlugin'
 import {PicksApiPlugin} from './plugins/PicksApiPlugin'
 import {PicksPlugin} from './plugins/PicksPlugin'
 
-import {PopperPlugin} from './plugins/PopperPlugin'
+import {CreatePopperPlugin} from './plugins/CreatePopperPlugin'
 
 import {FloatingLabelPlugin} from './plugins/FloatingLabelPlugin'
 
 import {shallowClearClone} from './ToolsJs'
 
+import {WarningPlugin} from './plugins/WarningPlugin'
+
 export let defaultPlugins = {CssPatchPlugin, SelectElementPlugin, LabelPlugin, HiddenOptionPlugin, ValidationApiPlugin, 
-    BsAppearancePlugin, FormResetPlugin, PopperPlugin, RtlPlugin,  PlaceholderPlugin, FloatingLabelPlugin, OptionsApiPlugin, 
+    BsAppearancePlugin, FormResetPlugin, CreatePopperPlugin, WarningPlugin, RtlPlugin,  PlaceholderPlugin, FloatingLabelPlugin, OptionsApiPlugin, 
     JQueryMethodsPlugin, SelectedOptionPlugin, FormRestoreOnBackwardPlugin, DisabledOptionPlugin, PicksApiPlugin};
 
 export let picksPlugins = {CssPatchPlugin, PicksPlugin, LabelPlugin, ValidationApiPlugin, 
-    BsAppearancePlugin, PopperPlugin, RtlPlugin,  PlaceholderPlugin, FloatingLabelPlugin, OptionsApiPlugin, 
+    BsAppearancePlugin, CreatePopperPlugin, WarningPlugin, RtlPlugin,  PlaceholderPlugin, FloatingLabelPlugin, OptionsApiPlugin, 
     JQueryMethodsPlugin, PicksApiPlugin};
 
 export let allPlugins =  shallowClearClone(defaultPlugins, {PicksPlugin});

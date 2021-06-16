@@ -3,8 +3,9 @@ import {addStyling} from './ToolsStyling';
 export function ChoicesDomFactory(createElementAspect) {
     return {
         create(css){
-            var choicesElement = createElementAspect.createElement('DIV'); 
-            var choicesListElement = createElementAspect.createElement('UL'); 
+            var choicesElement = createElementAspect.createElement('DIV');
+            var choicesListElement = createElementAspect.createElement('UL');
+            
             choicesElement.appendChild(choicesListElement);
             choicesElement.style.display = 'none';
 
@@ -17,7 +18,7 @@ export function ChoicesDomFactory(createElementAspect) {
                     var choiceElement = createElementAspect.createElement('LI');
                     addStyling(choiceElement, css.choice);
                     return {
-                        choiceElement, 
+                        choiceElement,
                         setVisible: (isVisible) => choiceElement.style.display = isVisible ? 'block': 'none',
                         attach: (beforeElement) => choicesListElement.insertBefore(choiceElement, beforeElement),
                         detach: () => choicesListElement.removeChild(choiceElement)

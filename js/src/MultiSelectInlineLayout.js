@@ -12,11 +12,49 @@ export function MultiSelectInlineLayout (
         createPickHandlersAspect,
         picksList,
         inputAspect, specialPicksEventsAspect,  buildChoiceAspect, 
-        setDisabledComponentAspect, resetLayoutAspect, placeholderStopInputAspect
+        setDisabledComponentAspect, resetLayoutAspect, placeholderStopInputAspect,
+        warningAspect,
+        configuration,
+        createPopperAspect, rtlAspect, staticManager
     } = aspects;
 
     let picksElement = picksDom.picksElement;
     let choicesElement = choicesDom.choicesElement;
+
+    // pop up layout, require createPopperPlugin
+    let filterInputElement = filterDom.filterInputElement;
+    let pop = createPopperAspect.create(choicesElement, filterInputElement, true);
+    staticManager.appendToContainer = composeSync(staticManager.appendToContainer, pop.init);
+    var origBackSpace = specialPicksEventsAspect.backSpace;
+    specialPicksEventsAspect.backSpace = (pick) => { origBackSpace(pick);  pop.update();};
+    if (rtlAspect){
+        let origUpdateRtl = rtlAspect.updateRtl;
+        rtlAspect.updateRtl = (isRtl) => {
+            origUpdateRtl(isRtl); 
+            pop.setRtl(isRtl);
+        };
+    }
+    choicesVisibilityAspect.updatePopupLocation = composeSync(choicesVisibilityAspect.updatePopupLocation, 
+        function(){pop.update();}
+    )
+
+    if (warningAspect) {
+        let pop2 = createPopperAspect.create(warningAspect.warningElement, filterInputElement, false);
+        staticManager.appendToContainer = composeSync(staticManager.appendToContainer, pop2.init);
+        if (rtlAspect){
+            let origUpdateRtl2 = rtlAspect.updateRtl;
+            rtlAspect.updateRtl = (isRtl) => {
+                origUpdateRtl2(isRtl); 
+                pop2.setRtl(isRtl);
+            };
+        }
+        var origWarningAspectShow =warningAspect.show;
+        warningAspect.show = (msg) => {
+            pop2.update();
+            origWarningAspectShow(msg);
+        }
+        pop.dispose = composeSync(pop.dispose, pop2.dispose);
+    }
 
     var window = environment.window;
     var document = window.document;
@@ -101,8 +139,6 @@ export function MultiSelectInlineLayout (
         }
         preventDefaultClickEvent=null;
     }
-
-    
 
     function processUncheck(uncheckOption, event){
         // we can't remove item on "click" in the same loop iteration - it is unfrendly for 3PP event handlers (they will get detached element)
@@ -208,24 +244,32 @@ export function MultiSelectInlineLayout (
     // and there could be difference in processing: (2) should hide the menu, then reset , when (1) should just reset without hiding.
 
     function afterInput(){
-        eventLoopFlag.set(); // means disable some mouse handlers; otherwise we will get "Hover On MouseEnter" when filter's changes should remove hover
-
         let visibleCount = filterManagerAspect.getNavigateManager().getCount();
 
-        if (visibleCount>0){
+        if (visibleCount > 0){
+            if (warningAspect){
+                warningAspect.hide();
+            }
             let panelIsVisble = choicesVisibilityAspect.isChoicesVisible();
             if (!panelIsVisble){
-                showChoices(); 
+                  showChoices(); 
             }
-            if (visibleCount == 1) {
+            if (visibleCount == 1){
                 navigateAspect.hoverIn(filterManagerAspect.getNavigateManager().getHead())
-            } else {
+            }else{
                 if (panelIsVisble)
                     hoveredChoiceAspect.resetHoveredChoice();
             }   
         }else{
-            if (choicesVisibilityAspect.isChoicesVisible())
+            if (choicesVisibilityAspect.isChoicesVisible()){
                 hideChoices();
+            }
+            if (warningAspect){
+                if (filterManagerAspect.getFilter())
+                    warningAspect.show(configuration.noResultsWarning);
+                else
+                    warningAspect.hide();
+            } 
         }
     }
 
@@ -240,6 +284,7 @@ export function MultiSelectInlineLayout (
         else
             filterDom.setWidth(filterInputValue);  
 
+        eventLoopFlag.set(); // means disable some mouse handlers; otherwise we will get "Hover On MouseEnter" when filter's changes should remove hover
         afterInput();
     });
 
@@ -297,7 +342,6 @@ export function MultiSelectInlineLayout (
             }
         }
         else if (keyCode == 27 /*esc*/ ) { // NOTE: forbid the ESC to close the modal (in case the nonempty or dropdown is open)
-        
             if (!empty  || choicesVisibilityAspect.isChoicesVisible())
                 event.stopPropagation()
         }
@@ -346,6 +390,8 @@ export function MultiSelectInlineLayout (
 
     resetLayoutAspect.resetLayout = composeSync(
         hideChoices,
+        ()=>{if (warningAspect)
+            warningAspect.hide();},
         resetLayoutAspect.resetLayout // resetFilter by default
     );
 
@@ -377,6 +423,7 @@ export function MultiSelectInlineLayout (
             resetMouseCandidateChoice();
             picksElement.removeEventListener("mousedown", skipoutAndResetMousedown);
             componentDisabledEventBinder.unbind();
+            pop.dispose(); 
         }
     }
 }
