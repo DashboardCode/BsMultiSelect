@@ -24,6 +24,8 @@ export function RtlPlugin(pluginData){
         
     return {
         buildApi(api){
+            // TODO there is something wrong with this. may be should moved to specific plugin
+            // sample of correct plugin - aspect pair is WarningPlugin: aspect is added on plugin constrictor
             if (rtlAspect.updateRtl)
                 rtlAspect.updateRtl(isRtl);
         },

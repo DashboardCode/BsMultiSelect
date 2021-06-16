@@ -1,5 +1,6 @@
 # CHANGELOG
 ````
+1.1.6  - ESM module bug resolved
 1.1.5  - "no result" message improoved
 1.1.4  - "no result" message improoved
 1.1.3  - "no result" message improoved

@@ -2,12 +2,9 @@
 
 const path    = require('path')
 const { babel } = require('@rollup/plugin-babel')
-const { nodeResolve } = require('@rollup/plugin-node-resolve')
-const replace = require('@rollup/plugin-replace')
 const banner = require('./banner.js')
 
 const isEsm   = process.env.ESM === 'true'
-const isBundle = process.env.BUNDLE  === 'true'
 const isBS4 = process.env.BS4  === 'true'
 
 
