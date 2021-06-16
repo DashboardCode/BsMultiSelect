@@ -1,11 +1,11 @@
 /*!
-  * BsMultiSelect v1.1.3 (https://dashboardcode.github.io/BsMultiSelect/)
+  * BsMultiSelect v1.1.5 (https://dashboardcode.github.io/BsMultiSelect/)
   * Copyright 2017-2021 Roman Pokrovskij (github user rpokrovskij)
   * Licensed under Apache 2 (https://github.com/DashboardCode/BsMultiSelect/blob/master/LICENSE)
   */
 (function (global, factory) {
-    typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory(require('@popperjs/core')) :
-    typeof define === 'function' && define.amd ? define(['@popperjs/core'], factory) :
+    typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory(require('@popperjs/core'), require('jquery')) :
+    typeof define === 'function' && define.amd ? define(['@popperjs/core', 'jquery'], factory) :
     (global = typeof globalThis !== 'undefined' ? globalThis : global || self, global.dashboardcode = factory(global.Popper));
 }(this, (function (Popper) { 'use strict';
 

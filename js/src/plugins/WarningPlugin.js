@@ -1,3 +1,4 @@
+import { css } from "jquery";
 import { addStyling } from "../ToolsStyling";
 
 export function WarningPlugin(pluginData){

@@ -45,7 +45,7 @@ const css = {
     choiceLabel: 'custom-control-label justify-content-start',
     choiceLabel_disabled: '' ,
 
-    warning: 'alert-warning',
+    warning: 'alert-warning bg-warning',
 
 }
 

@@ -1,5 +1,5 @@
 /*!
-  * BsMultiSelect v1.1.3 (https://dashboardcode.github.io/BsMultiSelect/)
+  * BsMultiSelect v1.1.5 (https://dashboardcode.github.io/BsMultiSelect/)
   * Copyright 2017-2021 Roman Pokrovskij (github user rpokrovskij)
   * Licensed under Apache 2 (https://github.com/DashboardCode/BsMultiSelect/blob/master/LICENSE)
   */
@@ -4291,7 +4291,7 @@
       // bs4
       choiceLabel: 'custom-control-label justify-content-start',
       choiceLabel_disabled: '',
-      warning: 'alert-warning'
+      warning: 'alert-warning bg-warning'
     };
     var cssPatch = {
       choicesList: {
