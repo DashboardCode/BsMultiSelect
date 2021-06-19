@@ -28,6 +28,7 @@ Snippets:
 
 8. [Columns and 'no result warning'](https://dashboardcode.github.io/BsMultiSelect/snippetColumns.html), ([BS4 Version](https://dashboardcode.github.io/BsMultiSelect/snippetColumnsBs4.html))
 
+9. [Popup Maximum Height and Scroll Bar](https://dashboardcode.github.io/BsMultiSelect/snippetMaxWidth.html), ([BS4 Version](https://dashboardcode.github.io/BsMultiSelect/snippetMaxWidthBs4.html))
 
 CodePen snippets, use them for bug reporting: 
      https://codepen.io/rpokrovskij/pen/yLymQwW  (initialized using HTML SELECT)
