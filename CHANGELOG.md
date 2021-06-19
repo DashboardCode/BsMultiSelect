@@ -1,5 +1,6 @@
 # CHANGELOG
 ````
+1.1.7  - ChoicesDynamicStylingPlugin (srolling through useChoicesDynamicStyling=true option)
 1.1.6  - ESM module bug resolved
 1.1.5  - "no result" message improoved
 1.1.4  - "no result" message improoved

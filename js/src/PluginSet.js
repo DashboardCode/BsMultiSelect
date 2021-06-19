@@ -22,17 +22,19 @@ import {CreatePopperPlugin} from './plugins/CreatePopperPlugin'
 
 import {FloatingLabelPlugin} from './plugins/FloatingLabelPlugin'
 
+import {ChoicesDynamicStylingPlugin} from './plugins/ChoicesDynamicStylingPlugin'
+
 import {shallowClearClone} from './ToolsJs'
 
 import {WarningPlugin} from './plugins/WarningPlugin'
 
 export let defaultPlugins = {CssPatchPlugin, SelectElementPlugin, LabelPlugin, HiddenOptionPlugin, ValidationApiPlugin, 
     BsAppearancePlugin, FormResetPlugin, CreatePopperPlugin, WarningPlugin, RtlPlugin,  PlaceholderPlugin, FloatingLabelPlugin, OptionsApiPlugin, 
-    JQueryMethodsPlugin, SelectedOptionPlugin, FormRestoreOnBackwardPlugin, DisabledOptionPlugin, PicksApiPlugin};
+    JQueryMethodsPlugin, SelectedOptionPlugin, FormRestoreOnBackwardPlugin, DisabledOptionPlugin, PicksApiPlugin, ChoicesDynamicStylingPlugin};
 
 export let picksPlugins = {CssPatchPlugin, PicksPlugin, LabelPlugin, ValidationApiPlugin, 
     BsAppearancePlugin, CreatePopperPlugin, WarningPlugin, RtlPlugin,  PlaceholderPlugin, FloatingLabelPlugin, OptionsApiPlugin, 
-    JQueryMethodsPlugin, PicksApiPlugin};
+    JQueryMethodsPlugin, PicksApiPlugin, ChoicesDynamicStylingPlugin};
 
 export let allPlugins =  shallowClearClone(defaultPlugins, {PicksPlugin});
 
