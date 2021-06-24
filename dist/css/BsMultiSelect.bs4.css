@@ -4,6 +4,7 @@
   height: auto;
   min-height: calc(1.5em + 0.75rem + 2px);
   margin-bottom: 0;
+  cursor: text;
   list-style-type: none;
 }
 .dashboardcode-bsmultiselect ul.form-control input {
@@ -100,11 +101,15 @@
   white-space: nowrap;
   background-color: transparent;
   border: 0;
+  cursor: pointer;
 }
 .dashboardcode-bsmultiselect div.dropdown-menu > ul > li .custom-control {
   justify-content: flex-start;
 }
-.dashboardcode-bsmultiselect div.dropdown-menu > ul > li .custom-control-input.disabled ~ .custom-control-label {
+.dashboardcode-bsmultiselect div.dropdown-menu > ul > li .custom-control .custom-control-input, .dashboardcode-bsmultiselect div.dropdown-menu > ul > li .custom-control .custom-control-label {
+  cursor: inherit;
+}
+.dashboardcode-bsmultiselect div.dropdown-menu > ul > li .custom-control .custom-control-input.disabled ~ .custom-control-label {
   color: #6c757d;
 }
 .dashboardcode-bsmultiselect div.dropdown-menu .hover {

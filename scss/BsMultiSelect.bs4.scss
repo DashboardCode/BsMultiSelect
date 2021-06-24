@@ -47,7 +47,7 @@
         height: auto;
         min-height: #{$input-height};
         margin-bottom: 0;
-        
+        cursor: text;
         list-style-type: none;
         
         input {
@@ -129,11 +129,15 @@
                 white-space: nowrap;
                 background-color: transparent;
                 border: 0;
+                cursor: pointer;
                 .custom-control{ // BS problem: without this dropdown menu's custom checkboxes on inline form justified center
                     justify-content: flex-start; // 'initial' works well but not for IE11
-                }
-                .custom-control-input.disabled ~ .custom-control-label {
-                    color: $custom-control-label-disabled-color;
+                    .custom-control-input, .custom-control-label{
+                        cursor: inherit;
+                    }
+                    .custom-control-input.disabled ~ .custom-control-label{
+                        color: $custom-control-label-disabled-color;
+                    }
                 }
             }
         }.hover{

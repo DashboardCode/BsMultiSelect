@@ -92,8 +92,8 @@ const css = {
 
 const cssPatch = {
     choicesList: {listStyleType:'none', paddingLeft:'0', paddingRight:'0', marginBottom:'0'},
-    picks: {listStyleType:'none', display:'flex', flexWrap:'wrap',  height: 'auto', marginBottom: '0'},
-    choice: 'px-md-2 px-1',  
+    picks: {listStyleType:'none', display:'flex', flexWrap:'wrap',  height: 'auto', marginBottom: '0', cursor: 'text'},
+    choice: {classes:'px-md-2 px-1', styles:{cursor:'pointer'}},
     choice_hover: 'text-primary bg-light', 
     filterInput: {
         border:'0px', height: 'auto', boxShadow:'none', 
@@ -107,7 +107,7 @@ const cssPatch = {
     picks_disabled: {backgroundColor: '#e9ecef'},
 
     picks_focus: {borderColor: '#80bdff', boxShadow: '0 0 0 0.2rem rgba(0, 123, 255, 0.25)'},
-    picks_focus_valid: {borderColor: '', boxShadow: '0 0 0 0.2rem rgba(40, 167, 69, 0.25)'},
+    picks_focus_valid: {borderColor: '',  boxShadow: '0 0 0 0.2rem rgba(40, 167, 69, 0.25)'},
     picks_focus_invalid: {borderColor: '', boxShadow: '0 0 0 0.2rem rgba(220, 53, 69, 0.25)'},
     
     // used in BsAppearancePlugin
@@ -122,9 +122,9 @@ const cssPatch = {
     pickContent_disabled: {opacity: '.65'}, 
     
     // used in choiceContentGenerator
-    choiceContent: {justifyContent: 'flex-start'}, // BS problem: without this on inline form menu items justified center
-    choiceLabel: {color: 'inherit'}, // otherwise BS .was-validated set its color
-    choiceCheckBox: {color: 'inherit'},
+    choiceContent: {justifyContent: 'flex-start', cursor:'inherit'}, // BS problem: without this on inline form menu items justified center
+    choiceLabel: {color: 'inherit', cursor:'inherit'}, // otherwise BS .was-validated set its color
+    choiceCheckBox: {color: 'inherit', cursor:'inherit'},
     choiceLabel_disabled: {opacity: '.65'},  // more flexible than {color: '#6c757d'}; note: avoid opacity on pickElement's border; TODO write to BS 
 
     // floating plugin

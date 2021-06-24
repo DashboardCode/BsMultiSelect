@@ -47,7 +47,7 @@
         height: auto;
         min-height: #{$input-height};
         margin-bottom: 0;
-        
+        cursor: text;
         list-style-type: none;
         
         input {
@@ -125,16 +125,18 @@
                 white-space: nowrap;
                 background-color: transparent;
                 border: 0;
-
+                cursor: pointer;
                 .form-check{ // BS problem: without this dropdown menu's custom checkboxes on inline form justified center
+                    cursor: inherit;
                     justify-content: flex-start; // 'initial' works well but not for IE11
+                    .form-check-label, .form-check-input{
+                        cursor: inherit;
+                    }
+                    .form-check-input.disabled ~ .form-check-label {
+                        color: $form-check-input-disabled-opacity; // $custom-control-label-disabled-color;
+                    }
                 }
-                .form-check-input.disabled ~ .form-check-label {
-                    color: $form-check-input-disabled-opacity; // $custom-control-label-disabled-color;
-                }
-
-            }.hover{
-                // from bs4 _dropdown.scss
+            }.hover{ // from bs4 _dropdown.scss
                 color: var(--primary); //$dropdown-link-hover-color;
                 @include gradient-bg($dropdown-link-hover-bg);
             }

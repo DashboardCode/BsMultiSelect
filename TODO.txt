@@ -1,8 +1,6 @@
--2 span SelectPicks content
+Plugin packing or pickSelect or single layout ?
 
 -1 study https://reactstrap.github.io/
-
-
 
 0. UpdateOption (for all content, selected, hidden and disabled properties)
 0aaa. move selected to plugin

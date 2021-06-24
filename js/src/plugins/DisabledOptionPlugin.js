@@ -58,7 +58,6 @@ export function DisabledOptionPlugin(pluginData){
         wrap.updateDisabled = wrap.choice.choiceDomManagerHandlers.updateDisabled
         wrap.choice.dispose = composeSync(()=>{wrap.updateDisabled=null;}, wrap.choice.dispose);
     }
-
     
     let origBuildPick = buildPickAspect.buildPick;
     buildPickAspect.buildPick = (wrap, removeOnButton) => {

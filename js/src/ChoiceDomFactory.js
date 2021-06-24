@@ -25,9 +25,10 @@ export function ChoiceDomFactory(css, optionPropertiesAspect, highlightAspect){
             let updateHoverIn = function(){
                 choiceHoverToggle(wrap.choice.isHoverIn);
             }
-
+            
             if (wrap.hasOwnProperty("isOptionSelected")){
                 choiceElement.innerHTML = '<div><input formnovalidate type="checkbox"><label></label></div>';
+                
                 let choiceContentElement = choiceElement.querySelector('DIV');
                 let choiceCheckBoxElement = choiceContentElement.querySelector('INPUT');
                 let choiceLabelElement = choiceContentElement.querySelector('LABEL');
@@ -52,13 +53,17 @@ export function ChoiceDomFactory(css, optionPropertiesAspect, highlightAspect){
                 let choiceDisabledToggle = toggleStyling(choiceElement, css.choice_disabled);
                 let choiceCheckBoxDisabledToggle = toggleStyling(choiceCheckBoxElement, css.choiceCheckBox_disabled);
                 let choiceLabelDisabledToggle = toggleStyling(choiceLabelElement, css.choiceLabel_disabled);
+                let choiceCursorDisabledToggle = toggleStyling(choiceElement, {classes:[], styles:{cursor:"default"}}); 
                 let updateDisabled = function(){
                     choiceDisabledToggle(wrap.isOptionDisabled);
                     choiceCheckBoxDisabledToggle(wrap.isOptionDisabled);
                     choiceLabelDisabledToggle(wrap.isOptionDisabled);
     
                     // do not desable checkBox if option is selected! there should be possibility to unselect "disabled"
-                    choiceCheckBoxElement.disabled = wrap.isOptionDisabled && !wrap.isOptionSelected;
+                    let isCheckBoxDisabled = wrap.isOptionDisabled && !wrap.isOptionSelected;
+                    choiceCheckBoxElement.disabled = isCheckBoxDisabled;
+                    choiceCursorDisabledToggle(isCheckBoxDisabled);
+                    
                 }
 
                 choiceDomManagerHandlers = {
@@ -71,11 +76,15 @@ export function ChoiceDomFactory(css, optionPropertiesAspect, highlightAspect){
 
                 
             }else{
+                choiceElement.innerHTML = '<span></span>';
+                let choiceContentElement = choiceElement.querySelector('SPAN');
                 choiceDom = {
-                    choiceElement
+                    
+                    choiceElement,
+                    choiceContentElement,
                 };
                 choiceDomManagerHandlers = {
-                    updateData: ()=>updateDataInternal(wrap, choiceElement),
+                    updateData: ()=>updateDataInternal(wrap, choiceContentElement),
                     updateHighlighted: ()=>updateHighlightedInternal(wrap, choiceDom, choiceElement), 
                     updateHoverIn
                 }

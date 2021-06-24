@@ -43,16 +43,15 @@ const css = {
     choiceContent: 'custom-control custom-checkbox d-flex', // bs4 d-flex required for rtl to align items
     choiceCheckBox: 'custom-control-input', // bs4
     choiceLabel: 'custom-control-label justify-content-start',
-    choiceLabel_disabled: '' ,
+    choiceLabel_disabled: '',
 
-    warning: 'alert-warning bg-warning',
-
+    warning: 'alert-warning bg-warning'
 }
 
 const cssPatch = {
     choicesList: {listStyleType:'none', paddingLeft:'0', paddingRight:'0', marginBottom:'0'},
-    picks: {listStyleType:'none', display:'flex', flexWrap:'wrap',  height: 'auto', marginBottom: '0'},
-    choice: 'px-md-2 px-1',  
+    picks: {listStyleType:'none', display:'flex', flexWrap:'wrap',  height: 'auto', marginBottom: '0',cursor: 'text'},
+    choice: {classes:'px-md-2 px-1', styles:{cursor:'pointer'}},    
     choice_hover: 'text-primary bg-light', 
     filterInput: {border:'0px', height: 'auto', boxShadow:'none', 
         padding:'0', margin:'0', 
@@ -79,9 +78,9 @@ const cssPatch = {
     pickContent_disabled: {opacity: '.65'}, 
     
     // used in choiceContentGenerator
-    choiceContent: {justifyContent: 'flex-start'}, // BS problem: without this on inline form menu items justified center
-    choiceLabel: {color: 'inherit'}, // otherwise BS .was-validated set its color
-    choiceCheckBox: {color: 'inherit'},
+    choiceContent: {justifyContent: 'flex-start', cursor:'inherit'}, // BS problem: without this on inline form menu items justified center
+    choiceLabel: {color: 'inherit', cursor:'inherit'}, // otherwise BS .was-validated set its color
+    choiceCheckBox: {color: 'inherit', cursor:'inherit'},
     choiceLabel_disabled: {opacity: '.65'},  // more flexible than {color: '#6c757d'}; note: avoid opacity on pickElement's border; TODO write to BS4 
 
     warning: {paddingLeft: '.25rem', paddingRight: '.25rem', zIndex: 4,  fontSize:'small', backgroundColor: 'var(--bs-warning)'}, // zIndex=4  since the input-group zIndex=3

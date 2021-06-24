@@ -1,5 +1,5 @@
 /*!
-  * BsMultiSelect v1.1.10 (https://dashboardcode.github.io/BsMultiSelect/)
+  * BsMultiSelect v1.1.11 (https://dashboardcode.github.io/BsMultiSelect/)
   * Copyright 2017-2021 Roman Pokrovskij (github user rpokrovskij)
   * Licensed under Apache 2 (https://github.com/DashboardCode/BsMultiSelect/blob/master/LICENSE)
   */
@@ -215,9 +215,15 @@ var cssPatch = {
     display: 'flex',
     flexWrap: 'wrap',
     height: 'auto',
-    marginBottom: '0'
+    marginBottom: '0',
+    cursor: 'text'
   },
-  choice: 'px-md-2 px-1',
+  choice: {
+    classes: 'px-md-2 px-1',
+    styles: {
+      cursor: 'pointer'
+    }
+  },
   choice_hover: 'text-primary bg-light',
   filterInput: {
     border: '0px',
@@ -276,15 +282,18 @@ var cssPatch = {
   },
   // used in choiceContentGenerator
   choiceContent: {
-    justifyContent: 'flex-start'
+    justifyContent: 'flex-start',
+    cursor: 'inherit'
   },
   // BS problem: without this on inline form menu items justified center
   choiceLabel: {
-    color: 'inherit'
+    color: 'inherit',
+    cursor: 'inherit'
   },
   // otherwise BS .was-validated set its color
   choiceCheckBox: {
-    color: 'inherit'
+    color: 'inherit',
+    cursor: 'inherit'
   },
   choiceLabel_disabled: {
     opacity: '.65'
@@ -2830,13 +2839,21 @@ function ChoiceDomFactory(css, optionPropertiesAspect, highlightAspect) {
         var choiceDisabledToggle = toggleStyling(choiceElement, css.choice_disabled);
         var choiceCheckBoxDisabledToggle = toggleStyling(choiceCheckBoxElement, css.choiceCheckBox_disabled);
         var choiceLabelDisabledToggle = toggleStyling(choiceLabelElement, css.choiceLabel_disabled);
+        var choiceCursorDisabledToggle = toggleStyling(choiceElement, {
+          classes: [],
+          styles: {
+            cursor: "default"
+          }
+        });
 
         var updateDisabled = function updateDisabled() {
           choiceDisabledToggle(wrap.isOptionDisabled);
           choiceCheckBoxDisabledToggle(wrap.isOptionDisabled);
           choiceLabelDisabledToggle(wrap.isOptionDisabled); // do not desable checkBox if option is selected! there should be possibility to unselect "disabled"
 
-          choiceCheckBoxElement.disabled = wrap.isOptionDisabled && !wrap.isOptionSelected;
+          var isCheckBoxDisabled = wrap.isOptionDisabled && !wrap.isOptionSelected;
+          choiceCheckBoxElement.disabled = isCheckBoxDisabled;
+          choiceCursorDisabledToggle(isCheckBoxDisabled);
         };
 
         choiceDomManagerHandlers = {
@@ -2851,12 +2868,17 @@ function ChoiceDomFactory(css, optionPropertiesAspect, highlightAspect) {
           updateSelected: updateSelected
         };
       } else {
+        choiceElement.innerHTML = '<span></span>';
+
+        var _choiceContentElement = choiceElement.querySelector('SPAN');
+
         choiceDom = {
-          choiceElement: choiceElement
+          choiceElement: choiceElement,
+          choiceContentElement: _choiceContentElement
         };
         choiceDomManagerHandlers = {
           updateData: function updateData() {
-            return updateDataInternal(wrap, choiceElement);
+            return updateDataInternal(wrap, _choiceContentElement);
           },
           updateHighlighted: function updateHighlighted() {
             return updateHighlightedInternal(wrap, choiceDom, choiceElement);
