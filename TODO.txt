@@ -1,5 +1,3 @@
--3 input widht problem
-
 -2 span SelectPicks content
 
 -1 study https://reactstrap.github.io/

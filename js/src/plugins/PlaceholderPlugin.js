@@ -33,7 +33,7 @@ export function PlaceholderPlugin(aspects){
     function setEmptyInputWidth(isVisible){
         if(isVisible)
             filterInputElement.style.width ='100%';
-        else
+        else 
             filterInputElement.style.width ='2ch';
     }
     var emptyToggleStyling = toggleStyling(filterInputElement, css.filterInput_empty);
@@ -79,13 +79,21 @@ export function PlaceholderPlugin(aspects){
     let origAdd = picksList.add;
     picksList.add = (pick) => { 
         let returnValue = origAdd(pick);
-        if (picksList.getCount()==1) 
-            updatePlacehodlerVisibility()
-        /*wrap.*/pick.dispose = composeSync(/*wrap.*/pick.dispose, ()=>
+        if (picksList.getCount()==1 ){ // make flex
+            if (filterDom.isEmpty()){
+                setPlaceholder('');
+                picksElement.style.display = 'flex';
+                emptyToggleStyling(false);
+                filterInputElement.style.width ='2ch';
+            } else {
+                picksElement.style.display = 'flex';
+            }
+        }
+        pick.dispose = composeSync(pick.dispose, function()
             { 
                 if (picksList.getCount()==0) 
                     updatePlacehodlerVisibility()
-            })
+            });
         return returnValue;
     };
 

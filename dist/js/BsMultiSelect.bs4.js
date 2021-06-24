@@ -1,5 +1,5 @@
 /*!
-  * BsMultiSelect v1.1.9 (https://dashboardcode.github.io/BsMultiSelect/)
+  * BsMultiSelect v1.1.10 (https://dashboardcode.github.io/BsMultiSelect/)
   * Copyright 2017-2021 Roman Pokrovskij (github user rpokrovskij)
   * Licensed under Apache 2 (https://github.com/DashboardCode/BsMultiSelect/blob/master/LICENSE)
   */
@@ -3343,12 +3343,20 @@
 
       picksList.add = function (pick) {
         var returnValue = origAdd(pick);
-        if (picksList.getCount() == 1) updatePlacehodlerVisibility();
-        /*wrap.*/
 
-        pick.dispose = composeSync(
-        /*wrap.*/
-        pick.dispose, function () {
+        if (picksList.getCount() == 1) {
+          // make flex
+          if (filterDom.isEmpty()) {
+            setPlaceholder('');
+            picksElement.style.display = 'flex';
+            emptyToggleStyling(false);
+            filterInputElement.style.width = '2ch';
+          } else {
+            picksElement.style.display = 'flex';
+          }
+        }
+
+        pick.dispose = composeSync(pick.dispose, function () {
           if (picksList.getCount() == 0) updatePlacehodlerVisibility();
         });
         return returnValue;

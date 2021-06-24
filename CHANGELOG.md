@@ -1,5 +1,6 @@
 # CHANGELOG
 ````
+1.1.10  - Solved: inaccurate input width problem when first pick added
 1.1.9  - CustomChoiceStylingPlugin, CustomPickStylingPlugin improovements
 1.1.8  - HighlightPlugin, CustomChoiceStylingPlugin, CustomPickStylingPlugin
 1.1.7  - ChoicesDynamicStylingPlugin (srolling through useChoicesDynamicStyling=true option)
