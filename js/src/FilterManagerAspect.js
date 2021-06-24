@@ -38,7 +38,7 @@ export function FilterManagerAspect(
         getNavigateManager(){
             return (showEmptyFilter)?emptyNavigateManager:filteredNavigateManager;
         },
-        processEmptyInput(){ // redefined in PlaceholderPulgin
+        processEmptyInput(){ // redefined in PlaceholderPulgin, HighlightPlugin
             showEmptyFilter =true;
             filterText ="";
             choicesEnumerableAspect.forEach( (wrap)=>{
@@ -48,7 +48,7 @@ export function FilterManagerAspect(
         getFilter(){
             return filterText;
         },
-        setFilter(text){ 
+        setFilter(text){   // redefined in  HighlightPlugin
             showEmptyFilter =false;
             filterText = text;
             filteredChoicesList.reset();
@@ -62,3 +62,5 @@ export function FilterManagerAspect(
         }
     }
 }
+
+

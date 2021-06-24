@@ -55,21 +55,23 @@
             var picks = []; 
 
             var $languages = $('#languages-id')
-            var getIsAttached = function() { return $languages.data("DashboardCode.BsMultiSelect")!=null }
+            var getIsAttached = function() { return $languages.data("DashboardCode.BsPicks")!=null }
             var disabled = false;
             //var plugins = $.fn.bsMultiSelect.tools.MultiSelectBuilder({ajax:true});
             //console.log(plugins);
             $('#btnAttach').click(
                 function() {
                     if (getIsAttached())
-                        $languages.bsMultiSelect("Dispose");
+                        $languages.bsPicks("Dispose");
                     else
-                        $languages.bsMultiSelect({
+                        $languages.bsPicks({
                             options:options, 
                             picks: picks,
-                            plugins: plugins,
+                            //useNoResultsWarning: true,
+                            isNoResultsWarningEnabled: true,
+                            //plugins: plugins,
                             getDisabled: function(){return disabled },
-                            useCssPatch:false, 
+                            //useCssPatch:false, 
                             placeholder:"placeholder"});
                 }      
 	        );
@@ -78,7 +80,7 @@
                 function() {
                     disabled = ! disabled;
                     if (getIsAttached())
-                        $languages.bsMultiSelect("UpdateDisabled");
+                        $languages.bsPicks("UpdateDisabled");
                 }      
             );
 

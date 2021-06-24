@@ -6,7 +6,7 @@ Bootstrap 4 Demo : https://dashboardcode.github.io/BsMultiSelect/indexBs4.html
 
 **Breaking Change in ver 1.1.0**: important only for those who had custom css; where selector was `ul.dropdown-menu` it should become `div.dropdown-menu` (with `ul` iniside as the firt child); nothing changes for those who use initial styling or reference BsMultiSelect.scss .
 
-**Breaking Change in ver 1.0.0**: to use with legacy Bootstrap 4 reference the `BsMultiSelect.bs4.*` bundle|module: e.g. https://cdn.jsdelivr.net/npm/@dashboardcode/bsmultiselect@1.1.7/dist/js/BsMultiSelect.bs4.min.js and https://cdn.jsdelivr.net/npm/@dashboardcode/bsmultiselect@1.1.7/dist/css/BsMultiSelect.bs4.min.css
+**Breaking Change in ver 1.0.0**: to use with legacy Bootstrap 4 reference the `BsMultiSelect.bs4.*` bundle|module: e.g. https://cdn.jsdelivr.net/npm/@dashboardcode/bsmultiselect@1.1.8/dist/js/BsMultiSelect.bs4.min.js and https://cdn.jsdelivr.net/npm/@dashboardcode/bsmultiselect@1.1.8/dist/css/BsMultiSelect.bs4.min.css
 
 
 
@@ -26,9 +26,13 @@ Snippets:
 
 7. [Options manipulation API](https://dashboardcode.github.io/BsMultiSelect/snippetJs.html), ([BS4 Version](https://dashboardcode.github.io/BsMultiSelect/snippetJsBs4.html))
 
-8. [Columns and 'no result warning'](https://dashboardcode.github.io/BsMultiSelect/snippetColumns.html), ([BS4 Version](https://dashboardcode.github.io/BsMultiSelect/snippetColumnsBs4.html))
+8. [Columns and 'no results warning'](https://dashboardcode.github.io/BsMultiSelect/snippetColumns.html), ([BS4 Version](https://dashboardcode.github.io/BsMultiSelect/snippetColumnsBs4.html))
 
 9. [Popup Maximum Height and Scroll Bar](https://dashboardcode.github.io/BsMultiSelect/snippetMaxWidth.html), ([BS4 Version](https://dashboardcode.github.io/BsMultiSelect/snippetMaxWidthBs4.html))
+
+10. [Custom items styling](https://dashboardcode.github.io/BsMultiSelect/snippetCustomStyling.html), ([BS4 Version](https://dashboardcode.github.io/BsMultiSelect/snippetCustomStylingBs4.html))
+
+11. [Filter's highlighting](https://dashboardcode.github.io/BsMultiSelect/snippetFilter.html), ([BS4 Version](https://dashboardcode.github.io/BsMultiSelect/snippetFilterBs4.html))
 
 CodePen snippets, use them for bug reporting: 
      https://codepen.io/rpokrovskij/pen/yLymQwW  (initialized using HTML SELECT)
@@ -51,14 +55,14 @@ BsMultiSelect follows Bootstrap 5 conventions and use the same instruments (babe
 
 # CDN
 Bootstrap 5
-https://cdn.jsdelivr.net/npm/@dashboardcode/bsmultiselect@1.1.7/dist/js/BsMultiSelect.min.js
-https://cdn.jsdelivr.net/npm/@dashboardcode/bsmultiselect@1.1.7/dist/js/BsMultiSelect.esm.min.js
-https://cdn.jsdelivr.net/npm/@dashboardcode/bsmultiselect@1.1.7/dist/css/BsMultiSelect.min.css
+https://cdn.jsdelivr.net/npm/@dashboardcode/bsmultiselect@1.1.8/dist/js/BsMultiSelect.min.js
+https://cdn.jsdelivr.net/npm/@dashboardcode/bsmultiselect@1.1.8/dist/js/BsMultiSelect.esm.min.js
+https://cdn.jsdelivr.net/npm/@dashboardcode/bsmultiselect@1.1.8/dist/css/BsMultiSelect.min.css
 
 Bootstrap 4
-https://cdn.jsdelivr.net/npm/@dashboardcode/bsmultiselect@1.1.7/dist/js/BsMultiSelect.bs4.min.js
-https://cdn.jsdelivr.net/npm/@dashboardcode/bsmultiselect@1.1.7/dist/js/BsMultiSelect.bs4.esm.min.js
-https://cdn.jsdelivr.net/npm/@dashboardcode/bsmultiselect@1.1.7/dist/css/BsMultiSelect.bs4.min.css
+https://cdn.jsdelivr.net/npm/@dashboardcode/bsmultiselect@1.1.8/dist/js/BsMultiSelect.bs4.min.js
+https://cdn.jsdelivr.net/npm/@dashboardcode/bsmultiselect@1.1.8/dist/js/BsMultiSelect.bs4.esm.min.js
+https://cdn.jsdelivr.net/npm/@dashboardcode/bsmultiselect@1.1.8/dist/css/BsMultiSelect.bs4.min.css
 
 # Architecture
 Instead of using BS5 Dropdown component (it is not possible since BS Dropdown requires presence of `toggle-buttons` https://github.com/twbs/bootstrap/issues/26420) the plugin uses `popper.js` (V1) directly.
@@ -212,7 +216,7 @@ To update specific option `UpdateOptionSelected`,`UpdateOptionDisabled`,`UpdateO
 ## Umd factories
 ````
       <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"></script>
-      <script src="https://cdn.jsdelivr.net/npm/@dashboardcode/bsmultiselect@1.1.7/dist/js/BsMultiSelect.min.js"></script>
+      <script src="https://cdn.jsdelivr.net/npm/@dashboardcode/bsmultiselect@1.1.8/dist/js/BsMultiSelect.min.js"></script>
         
       <script>
             dashboardcode.BsMultiSelect("#myElement" /*, options*/);
@@ -227,7 +231,7 @@ To update specific option `UpdateOptionSelected`,`UpdateOptionDisabled`,`UpdateO
 ````
       <script type="module">
             import {createPopper} from "https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/esm/popper.min.js"
-            import {ModuleFactory as dashboardCodeFactory} from "https://cdn.jsdelivr.net/npm/@dashboardcode/bsmultiselect@1.1.7/dist/js/BsMultiSelect.esm.min.js"
+            import {ModuleFactory as dashboardCodeFactory} from "https://cdn.jsdelivr.net/npm/@dashboardcode/bsmultiselect@1.1.8/dist/js/BsMultiSelect.esm.min.js"
             var element = document.querySelector('#languages-id');
             var environment = {window, createPopper};
             let dashboardCode = dashboardCodeFactory(environment);
@@ -313,7 +317,7 @@ resolve: {
 
 **sizes**: supports bootstrap `custom-select-lg`, `custom-select-sm` or `input-group-lg`, `input-group-sm` on original `select`
 
-**no result found warning**: can be found usefull, since "no result" search blocks TAB jump to next field
+**no results found warning**: can be found usefull by some users, since "no results" situation blocks TAB jump to next field (ESC bypass this)
 
 ````
       dashboardCode.BsMultiSelect({

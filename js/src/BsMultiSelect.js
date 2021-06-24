@@ -17,7 +17,7 @@ import {ComponentPropertiesAspect, TriggerAspect, OnChangeAspect} from './Compon
 import {OptionsAspect, OptionPropertiesAspect} from './OptionsAspect';
 
 import {ChoicesEnumerableAspect } from './ChoicesEnumerableAspect'
-import {FilterManagerAspect, NavigateManager, FilterPredicateAspect } from './FilterManagerAspect'
+import {FilterManagerAspect, NavigateManager, FilterPredicateAspect} from './FilterManagerAspect'
 import {BuildAndAttachChoiceAspect, BuildChoiceAspect} from './BuildChoiceAspect'
 import {FillChoicesAspect} from './FillChoicesAspect'
 
@@ -104,6 +104,7 @@ export function BsMultiSelect(element, environment, plugins, configuration, onIn
         (wrap)=>wrap.choice.filteredNext ); 
 
     let filterPredicateAspect = FilterPredicateAspect()
+
     let filterManagerAspect = FilterManagerAspect(
         emptyNavigateManager,
         filteredNavigateManager,
@@ -162,12 +163,15 @@ export function BsMultiSelect(element, environment, plugins, configuration, onIn
     let producePickAspect = ProducePickAspect(picksList, removePickAspect, buildPickAspect)
     let createPickHandlersAspect = CreatePickHandlersAspect(producePickAspect);
     
-    let choiceDomFactory = ChoiceDomFactory(css, optionPropertiesAspect);
+    
     let optionToggleAspect  = OptionToggleAspect(createPickHandlersAspect, addPickAspect);
     let fullMatchAspect = FullMatchAspect(createPickHandlersAspect, addPickAspect);
     let inputAspect = InputAspect(filterDom, filterManagerAspect, fullMatchAspect);    
 
     let choiceClickAspect = ChoiceClickAspect(optionToggleAspect, filterDom);
+
+    let choiceDomFactory = ChoiceDomFactory(css, optionPropertiesAspect, aspects.highlightAspect); // optional highlightAspect added by highlightPlugin
+    
     let buildChoiceAspect = BuildChoiceAspect( choicesDom, choiceDomFactory, choiceClickAspect);
     let buildAndAttachChoiceAspect =  BuildAndAttachChoiceAspect(buildChoiceAspect);
     let resetLayoutAspect = ResetLayoutAspect(() => resetFilterAspect.resetFilter());

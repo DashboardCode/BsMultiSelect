@@ -157,11 +157,12 @@ export function BsMultiSelect(element, environment, plugins, configuration, onIn
   var buildPickAspect = BuildPickAspect(picksDom, pickDomFactory);
   var producePickAspect = ProducePickAspect(picksList, removePickAspect, buildPickAspect);
   var createPickHandlersAspect = CreatePickHandlersAspect(producePickAspect);
-  var choiceDomFactory = ChoiceDomFactory(css, optionPropertiesAspect);
   var optionToggleAspect = OptionToggleAspect(createPickHandlersAspect, addPickAspect);
   var fullMatchAspect = FullMatchAspect(createPickHandlersAspect, addPickAspect);
   var inputAspect = InputAspect(filterDom, filterManagerAspect, fullMatchAspect);
   var choiceClickAspect = ChoiceClickAspect(optionToggleAspect, filterDom);
+  var choiceDomFactory = ChoiceDomFactory(css, optionPropertiesAspect, aspects.highlightAspect); // optional highlightAspect added by highlightPlugin
+
   var buildChoiceAspect = BuildChoiceAspect(choicesDom, choiceDomFactory, choiceClickAspect);
   var buildAndAttachChoiceAspect = BuildAndAttachChoiceAspect(buildChoiceAspect);
   var resetLayoutAspect = ResetLayoutAspect(function () {

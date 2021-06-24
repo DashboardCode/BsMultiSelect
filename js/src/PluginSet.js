@@ -27,14 +27,21 @@ import {ChoicesDynamicStylingPlugin} from './plugins/ChoicesDynamicStylingPlugin
 import {shallowClearClone} from './ToolsJs'
 
 import {WarningPlugin} from './plugins/WarningPlugin'
+import {HighlightPlugin} from './plugins/HighlightPlugin'
+
+import {CustomChoiceStylingsPlugin} from './plugins/CustomChoiceStylingsPlugin'
+import {CustomPickStylingsPlugin} from './plugins/CustomPickStylingsPlugin'
+
 
 export let defaultPlugins = {CssPatchPlugin, SelectElementPlugin, LabelPlugin, HiddenOptionPlugin, ValidationApiPlugin, 
     BsAppearancePlugin, FormResetPlugin, CreatePopperPlugin, WarningPlugin, RtlPlugin,  PlaceholderPlugin, FloatingLabelPlugin, OptionsApiPlugin, 
-    JQueryMethodsPlugin, SelectedOptionPlugin, FormRestoreOnBackwardPlugin, DisabledOptionPlugin, PicksApiPlugin, ChoicesDynamicStylingPlugin};
+    JQueryMethodsPlugin, SelectedOptionPlugin, FormRestoreOnBackwardPlugin, DisabledOptionPlugin, PicksApiPlugin, HighlightPlugin,
+    ChoicesDynamicStylingPlugin, CustomPickStylingsPlugin, CustomChoiceStylingsPlugin};
 
 export let picksPlugins = {CssPatchPlugin, PicksPlugin, LabelPlugin, ValidationApiPlugin, 
     BsAppearancePlugin, CreatePopperPlugin, WarningPlugin, RtlPlugin,  PlaceholderPlugin, FloatingLabelPlugin, OptionsApiPlugin, 
-    JQueryMethodsPlugin, PicksApiPlugin, ChoicesDynamicStylingPlugin};
+    JQueryMethodsPlugin, PicksApiPlugin, HighlightPlugin,
+    ChoicesDynamicStylingPlugin, CustomPickStylingsPlugin, CustomChoiceStylingsPlugin};
 
 export let allPlugins =  shallowClearClone(defaultPlugins, {PicksPlugin});
 

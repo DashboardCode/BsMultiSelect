@@ -2,7 +2,7 @@
 export function SetDisabledComponentAspect(picksList, picksDom){
     return {
         setDisabledComponent(isComponentDisabled){
-            picksList.forEach(pick=>pick.pickDomManagerHandlers.updateRemoveDisabled())
+            picksList.forEach(pick=>pick.pickDomManagerHandlers.updateComponentDisabled())
             picksDom.disable(isComponentDisabled);
         }
     }

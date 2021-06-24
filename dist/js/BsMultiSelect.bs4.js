@@ -1,5 +1,5 @@
 /*!
-  * BsMultiSelect v1.1.7 (https://dashboardcode.github.io/BsMultiSelect/)
+  * BsMultiSelect v1.1.8 (https://dashboardcode.github.io/BsMultiSelect/)
   * Copyright 2017-2021 Roman Pokrovskij (github user rpokrovskij)
   * Licensed under Apache 2 (https://github.com/DashboardCode/BsMultiSelect/blob/master/LICENSE)
   */
@@ -843,108 +843,129 @@
           pickElement.innerHTML = '<span></span>' + buttonHTML;
           var pickContentElement = pickElement.querySelector('SPAN');
           var pickButtonElement = pickElement.querySelector('BUTTON');
-          eventBinder.bind(pickButtonElement, "click", remove); // TODO: explicit conditional styling 
+          eventBinder.bind(pickButtonElement, "click", remove);
+          addStyling(pickContentElement, css.pickContent);
+          addStyling(pickButtonElement, css.pickButton);
+          var disableToggle = toggleStyling(pickContentElement, css.pickContent_disabled);
+
+          function updateData() {
+            pickContentElement.textContent = optionPropertiesAspect.getText(wrap.option);
+          }
+
+          function updateDisabled() {
+            disableToggle(wrap.isOptionDisabled);
+          }
+
+          function updateComponentDisabled() {
+            pickButtonElement.disabled = componentPropertiesAspect.getDisabled();
+          }
 
           return {
             pickDom: {
               pickContentElement: pickContentElement,
               pickButtonElement: pickButtonElement
             },
-            pickDomManager: {
-              init: function init() {
-                addStyling(pickContentElement, css.pickContent);
-                addStyling(pickButtonElement, css.pickButton);
-                var disableToggle = toggleStyling(pickContentElement, css.pickContent_disabled);
-
-                function updateData() {
-                  pickContentElement.textContent = optionPropertiesAspect.getText(wrap.option);
-                }
-
-                function updateDisabled() {
-                  disableToggle(wrap.isOptionDisabled);
-                }
-
-                function updateRemoveDisabled() {
-                  pickButtonElement.disabled = componentPropertiesAspect.getDisabled();
-                }
-
-                updateData();
-                updateDisabled();
-                updateRemoveDisabled();
-                return {
-                  updateData: updateData,
-                  updateDisabled: updateDisabled,
-                  updateRemoveDisabled: updateRemoveDisabled
-                };
-              },
-              dispose: function dispose() {
-                eventBinder.unbind();
-              }
+            pickDomManagerHandlers: {
+              updateData: updateData,
+              updateDisabled: updateDisabled,
+              updateComponentDisabled: updateComponentDisabled
+            },
+            dispose: function dispose() {
+              eventBinder.unbind();
             }
           };
         }
       };
     }
 
-    function ChoiceDomFactory(css, optionPropertiesAspect) {
+    function ChoiceDomFactory(css, optionPropertiesAspect, highlightAspect) {
+      var updateHighlightedInternal = function updateHighlightedInternal(wrap, choiceDom, element) {
+        var text = optionPropertiesAspect.getText(wrap.option);
+        var highlighter = highlightAspect.getHighlighter();
+        if (highlighter) highlighter(element, choiceDom, text);else element.textContent = text;
+      };
+
+      var updateDataInternal = function updateDataInternal(wrap, element) {
+        element.textContent = optionPropertiesAspect.getText(wrap.option);
+      }; //TODO move check which aspects availbale like wrap.hasOwnProperty("isOptionSelected") to there
+
+
       return {
         create: function create(choiceElement, wrap, toggle) {
-          choiceElement.innerHTML = '<div><input formnovalidate type="checkbox"><label></label></div>';
-          var choiceContentElement = choiceElement.querySelector('DIV');
-          var choiceCheckBoxElement = choiceContentElement.querySelector('INPUT');
-          var choiceLabelElement = choiceContentElement.querySelector('LABEL');
+          var choiceDom = null;
+          var choiceDomManagerHandlers = null;
           var eventBinder = EventBinder();
-          eventBinder.bind(choiceElement, "click", toggle); // TODO: explicit conditional styling 
+          eventBinder.bind(choiceElement, "click", toggle);
+          var choiceHoverToggle = toggleStyling(choiceElement, css.choice_hover);
 
-          return {
-            choiceDom: {
+          var updateHoverIn = function updateHoverIn() {
+            choiceHoverToggle(wrap.choice.isHoverIn);
+          };
+
+          if (wrap.hasOwnProperty("isOptionSelected")) {
+            choiceElement.innerHTML = '<div><input formnovalidate type="checkbox"><label></label></div>';
+            var choiceContentElement = choiceElement.querySelector('DIV');
+            var choiceCheckBoxElement = choiceContentElement.querySelector('INPUT');
+            var choiceLabelElement = choiceContentElement.querySelector('LABEL');
+            addStyling(choiceContentElement, css.choiceContent);
+            addStyling(choiceCheckBoxElement, css.choiceCheckBox);
+            addStyling(choiceLabelElement, css.choiceLabel);
+            choiceDom = {
+              choiceElement: choiceElement,
               choiceContentElement: choiceContentElement,
               choiceCheckBoxElement: choiceCheckBoxElement,
               choiceLabelElement: choiceLabelElement
-            },
-            choiceDomManager: {
-              init: function init() {
-                addStyling(choiceContentElement, css.choiceContent);
-                addStyling(choiceCheckBoxElement, css.choiceCheckBox);
-                addStyling(choiceLabelElement, css.choiceLabel);
-                var choiceSelectedToggle = toggleStyling(choiceElement, css.choice_selected);
-                var choiceDisabledToggle = toggleStyling(choiceElement, css.choice_disabled);
-                var choiceHoverToggle = toggleStyling(choiceElement, css.choice_hover);
-                var choiceCheckBoxDisabledToggle = toggleStyling(choiceCheckBoxElement, css.choiceCheckBox_disabled);
-                var choiceLabelDisabledToggle = toggleStyling(choiceLabelElement, css.choiceLabel_disabled);
+            };
+            var choiceSelectedToggle = toggleStyling(choiceElement, css.choice_selected);
 
-                function updateData() {
-                  choiceLabelElement.textContent = optionPropertiesAspect.getText(wrap.option);
-                }
+            var updateSelected = function updateSelected() {
+              choiceSelectedToggle(wrap.isOptionSelected);
+              choiceCheckBoxElement.checked = wrap.isOptionSelected;
+            };
 
-                function updateSelected() {
-                  choiceSelectedToggle(wrap.isOptionSelected);
-                  choiceCheckBoxElement.checked = wrap.isOptionSelected;
-                }
+            var choiceDisabledToggle = toggleStyling(choiceElement, css.choice_disabled);
+            var choiceCheckBoxDisabledToggle = toggleStyling(choiceCheckBoxElement, css.choiceCheckBox_disabled);
+            var choiceLabelDisabledToggle = toggleStyling(choiceLabelElement, css.choiceLabel_disabled);
 
-                function updateDisabled() {
-                  choiceDisabledToggle(wrap.isOptionDisabled);
-                  choiceCheckBoxDisabledToggle(wrap.isOptionDisabled);
-                  choiceLabelDisabledToggle(wrap.isOptionDisabled); // do not desable checkBox if option is selected! there should be possibility to unselect "disabled"
+            var updateDisabled = function updateDisabled() {
+              choiceDisabledToggle(wrap.isOptionDisabled);
+              choiceCheckBoxDisabledToggle(wrap.isOptionDisabled);
+              choiceLabelDisabledToggle(wrap.isOptionDisabled); // do not desable checkBox if option is selected! there should be possibility to unselect "disabled"
 
-                  choiceCheckBoxElement.disabled = wrap.isOptionDisabled && !wrap.isOptionSelected;
-                }
+              choiceCheckBoxElement.disabled = wrap.isOptionDisabled && !wrap.isOptionSelected;
+            };
 
-                updateData();
-                updateSelected();
-                updateDisabled();
-                return {
-                  updateData: updateData,
-                  updateSelected: updateSelected,
-                  updateDisabled: updateDisabled,
-                  updateHoverIn: function updateHoverIn() {
-                    choiceHoverToggle(wrap.choice.isHoverIn);
-                  }
-                };
+            choiceDomManagerHandlers = {
+              updateData: function updateData() {
+                return updateDataInternal(wrap, choiceLabelElement);
               },
-              dispose: function dispose() {
-                eventBinder.unbind();
-              }
+              updateHighlighted: function updateHighlighted() {
+                return updateHighlightedInternal(wrap, choiceDom, choiceLabelElement);
+              },
+              updateHoverIn: updateHoverIn,
+              updateDisabled: updateDisabled,
+              updateSelected: updateSelected
+            };
+          } else {
+            choiceDom = {
+              choiceElement: choiceElement
+            };
+            choiceDomManagerHandlers = {
+              updateData: function updateData() {
+                return updateDataInternal(wrap, choiceElement);
+              },
+              updateHighlighted: function updateHighlighted() {
+                return updateHighlightedInternal(wrap, choiceDom, choiceElement);
+              },
+              updateHoverIn: updateHoverIn
+            };
+          }
+
+          return {
+            choiceDom: choiceDom,
+            choiceDomManagerHandlers: choiceDomManagerHandlers,
+            dispose: function dispose() {
+              eventBinder.unbind();
             }
           };
         }
@@ -1261,7 +1282,7 @@
           return showEmptyFilter ? emptyNavigateManager : filteredNavigateManager;
         },
         processEmptyInput: function processEmptyInput() {
-          // redefined in PlaceholderPulgin
+          // redefined in PlaceholderPulgin, HighlightPlugin
           showEmptyFilter = true;
           filterText = "";
           choicesEnumerableAspect.forEach(function (wrap) {
@@ -1272,6 +1293,7 @@
           return filterText;
         },
         setFilter: function setFilter(text) {
+          // redefined in  HighlightPlugin
           showEmptyFilter = false;
           filterText = text;
           filteredChoicesList.reset();
@@ -1309,9 +1331,14 @@
           var _choiceDomFactory$cre = choiceDomFactory.create(choiceElement, wrap, function () {
             return choiceClickAspect.choiceClick(wrap);
           }),
-              choiceDomManager = _choiceDomFactory$cre.choiceDomManager;
+              dispose = _choiceDomFactory$cre.dispose,
+              choiceDom = _choiceDomFactory$cre.choiceDom,
+              choiceDomManagerHandlers = _choiceDomFactory$cre.choiceDomManagerHandlers;
 
-          var choiceDomManagerHandlers = choiceDomManager.init();
+          wrap.choice.choiceDom = choiceDom;
+          choiceDomManagerHandlers.updateData();
+          if (choiceDomManagerHandlers.updateSelected) choiceDomManagerHandlers.updateSelected();
+          if (choiceDomManagerHandlers.updateDisabled) choiceDomManagerHandlers.updateDisabled();
           wrap.choice.choiceDomManagerHandlers = choiceDomManagerHandlers;
 
           wrap.choice.remove = function () {
@@ -1332,8 +1359,9 @@
 
           wrap.choice.dispose = function () {
             wrap.choice.choiceDomManagerHandlers = null;
-            choiceDomManager.dispose();
+            dispose();
             wrap.choice.choiceElement = null;
+            wrap.choice.choiceDom = null;
             wrap.choice.choiceElementAttach = null;
             wrap.choice.isChoiceElementAttached = false;
             wrap.choice.remove = null; // not real data manipulation but internal state
@@ -1527,6 +1555,7 @@
             // TODO: is it a really sense to have them there?
             isChoiceElementAttached: false,
             choiceElement: null,
+            choiceDom: null,
             choiceElementAttach: null,
             itemPrev: null,
             itemNext: null,
@@ -1632,16 +1661,24 @@
               detach = _picksDom$createPickE.detach;
 
           var _pickDomFactory$creat = pickDomFactory.create(pickElement, wrap, removeOnButton),
-              pickDomManager = _pickDomFactory$creat.pickDomManager;
+              _dispose = _pickDomFactory$creat.dispose,
+              pickDom = _pickDomFactory$creat.pickDom,
+              pickDomManagerHandlers = _pickDomFactory$creat.pickDomManagerHandlers;
 
-          var pickDomManagerHandlers = pickDomManager.init();
+          pickDomManagerHandlers.updateData();
+          if (pickDomManagerHandlers.updateDisabled) pickDomManagerHandlers.updateDisabled();
+          if (pickDomManagerHandlers.updateComponentDisabled) pickDomManagerHandlers.updateComponentDisabled();
           var pick = {
+            pickDom: pickDom,
             pickDomManagerHandlers: pickDomManagerHandlers,
             pickElementAttach: attach,
             dispose: function dispose() {
               detach();
-              pickDomManager.dispose();
-              pickDomManagerHandlers = null;
+
+              _dispose();
+
+              pick.pickDomManagerHandlers = null;
+              pick.pickDom = pickDom;
               pick.pickElementAttach = null;
               pick.dispose = null;
             }
@@ -2161,7 +2198,7 @@
       return {
         setDisabledComponent: function setDisabledComponent(isComponentDisabled) {
           picksList.forEach(function (pick) {
-            return pick.pickDomManagerHandlers.updateRemoveDisabled();
+            return pick.pickDomManagerHandlers.updateComponentDisabled();
           });
           picksDom.disable(isComponentDisabled);
         }
@@ -2340,11 +2377,12 @@
       var buildPickAspect = BuildPickAspect(picksDom, pickDomFactory);
       var producePickAspect = ProducePickAspect(picksList, removePickAspect, buildPickAspect);
       var createPickHandlersAspect = CreatePickHandlersAspect(producePickAspect);
-      var choiceDomFactory = ChoiceDomFactory(css, optionPropertiesAspect);
       var optionToggleAspect = OptionToggleAspect(createPickHandlersAspect, addPickAspect);
       var fullMatchAspect = FullMatchAspect(createPickHandlersAspect, addPickAspect);
       var inputAspect = InputAspect(filterDom, filterManagerAspect, fullMatchAspect);
       var choiceClickAspect = ChoiceClickAspect(optionToggleAspect, filterDom);
+      var choiceDomFactory = ChoiceDomFactory(css, optionPropertiesAspect, aspects.highlightAspect); // optional highlightAspect added by highlightPlugin
+
       var buildChoiceAspect = BuildChoiceAspect(choicesDom, choiceDomFactory, choiceClickAspect);
       var buildAndAttachChoiceAspect = BuildAndAttachChoiceAspect(buildChoiceAspect);
       var resetLayoutAspect = ResetLayoutAspect(function () {
@@ -4252,6 +4290,169 @@
       };
     }
 
+    function HighlightPlugin(aspects) {
+      var highlightAspect = aspects.highlightAspect,
+          filterManagerAspect = aspects.filterManagerAspect,
+          buildChoiceAspect = aspects.buildChoiceAspect;
+
+      if (highlightAspect) {
+        var origProcessEmptyInput = filterManagerAspect.processEmptyInput;
+
+        filterManagerAspect.processEmptyInput = function () {
+          highlightAspect.reset();
+          origProcessEmptyInput();
+        };
+
+        var origSetFilter = filterManagerAspect.setFilter;
+
+        filterManagerAspect.setFilter = function (text) {
+          highlightAspect.set(text);
+          origSetFilter(text);
+        };
+
+        var origBuildChoice = buildChoiceAspect.buildChoice;
+
+        buildChoiceAspect.buildChoice = function (wrap) {
+          origBuildChoice(wrap);
+          var origSetVisible = wrap.choice.setVisible;
+
+          wrap.choice.setVisible = function (v) {
+            origSetVisible(v);
+            wrap.choice.choiceDomManagerHandlers.updateHighlighted();
+          };
+        };
+      }
+    }
+
+    HighlightPlugin.plugStaticDom = function (aspects) {
+      if (aspects.configuration.useHighlighting) aspects.highlightAspect = HighlightAspect();
+    };
+
+    HighlightPlugin.plugDefaultConfig = function (defaults) {
+      defaults.useHighlighting = false;
+    };
+
+    function HighlightAspect() {
+      var highlighter = null;
+      return {
+        getHighlighter: function getHighlighter() {
+          return highlighter;
+        },
+        set: function set(filter) {
+          var guarded = filter.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+          var regex = new RegExp("(" + guarded + ")", "gi");
+
+          highlighter = function highlighter(e, choiceDom, text) {
+            // TODO replace with
+            // var pos = text.indexOf(filter);
+            e.innerHTML = text.replace(regex, "<u>$1</u>"); // TODO to method
+            // var nodes = e.querySelectorAll('u');
+            // var array = Array.prototype.slice.call(nodes);
+            // if (choiceDom.highlightedElements)
+            //     choiceDom.highlightedElements.concat(array);
+            // else
+            //     choiceDom.highlightedElements = array;
+          };
+        },
+        reset: function reset() {
+          highlighter = null;
+        }
+      };
+    }
+
+    function CustomChoiceStylingsPlugin(apsects) {
+      var configuration = apsects.configuration,
+          buildChoiceAspect = apsects.buildChoiceAspect;
+      var customChoiceStylingsAspect = CustomChoiceStylingsAspect(configuration.customChoiceStylings);
+      var origBuildChoice = buildChoiceAspect.buildChoice;
+
+      buildChoiceAspect.buildChoice = function (wrap) {
+        origBuildChoice(wrap);
+        customChoiceStylingsAspect.customize(wrap);
+      };
+    }
+
+    CustomChoiceStylingsPlugin.plugDefaultConfig = function (defaults) {
+      defaults.customChoiceStylings = null;
+    };
+
+    function CustomChoiceStylingsAspect(customChoiceStylings) {
+      return {
+        customize: function customize(wrap) {
+          var _wrap$choice = wrap.choice,
+              choiceDomManagerHandlers = _wrap$choice.choiceDomManagerHandlers,
+              choiceDom = _wrap$choice.choiceDom;
+
+          if (customChoiceStylings) {
+            var handlers = customChoiceStylings(choiceDom, wrap.option);
+
+            if (handlers) {
+              var customChoiceStylingsClosure = function customChoiceStylingsClosure(custom) {
+                return function () {
+                  custom({
+                    isOptionSelected: wrap.isOptionSelected,
+                    isOptionDisabled: wrap.isOptionDisabled,
+                    isHoverIn: wrap.choice.isHoverIn //isHighlighted: wrap.choice.isHighlighted  // TODO isHighlighted should be developed
+
+                  });
+                };
+              };
+
+              if (choiceDomManagerHandlers.updateHoverIn && handlers.updateHoverIn) choiceDomManagerHandlers.updateHoverIn = composeSync(choiceDomManagerHandlers.updateHoverIn, customChoiceStylingsClosure(handlers.updateHoverIn));
+              if (choiceDomManagerHandlers.updateSelected && handlers.updateSelected) choiceDomManagerHandlers.updateSelected = composeSync(choiceDomManagerHandlers.updateSelected, customChoiceStylingsClosure(handlers.updateSelected));
+              if (choiceDomManagerHandlers.updateDisabled && handlers.updateDisabled) choiceDomManagerHandlers.updateDisabled = composeSync(choiceDomManagerHandlers.updateDisabled, customChoiceStylingsClosure(handlers.updateDisabled));
+              if (choiceDomManagerHandlers.updateHighlighted && handlers.updateHighlighted) choiceDomManagerHandlers.updateHighlighted = composeSync(choiceDomManagerHandlers.updateHighlighted, customChoiceStylingsClosure(handlers.updateHighlighted));
+            }
+          }
+        }
+      };
+    }
+
+    function CustomPickStylingsPlugin(aspects) {
+      var componentPropertiesAspect = aspects.componentPropertiesAspect,
+          configuration = aspects.configuration,
+          buildPickAspect = aspects.buildPickAspect;
+      var customPickStylingsAspect = CustomPickStylingsAspect(componentPropertiesAspect, configuration.customPickStylings);
+      var origBuildPick = buildPickAspect.buildPick;
+
+      buildPickAspect.buildPick = function (wrap, removeOnButton) {
+        var pick = origBuildPick(wrap, removeOnButton);
+        customPickStylingsAspect.customize(wrap, pick);
+        return pick;
+      };
+    }
+
+    CustomPickStylingsPlugin.plugDefaultConfig = function (defaults) {
+      defaults.customPickStylings = null;
+    };
+
+    function CustomPickStylingsAspect(componentPropertiesAspect, customPickStylings) {
+      return {
+        customize: function customize(wrap, pick) {
+          var pickDomManagerHandlers = pick.pickDomManagerHandlers,
+              pickDom = pick.pickDom;
+
+          if (customPickStylings) {
+            var handlers = customPickStylings(pickDom, wrap.option);
+
+            if (handlers) {
+              var customPickStylingsClosure = function customPickStylingsClosure(custom) {
+                return function () {
+                  custom({
+                    isOptionDisabled: wrap.isOptionDisabled,
+                    isComponentDisabled: componentPropertiesAspect.getDisabled()
+                  });
+                };
+              };
+
+              if (pickDomManagerHandlers.updateDisabled && handlers.updateDisabled) pickDomManagerHandlers.updateDisabled = composeSync(pickDomManagerHandlers.updateDisabled, customPickStylingsClosure(handlers.updateDisabled));
+              if (pickDomManagerHandlers.updateComponentDisabled && handlers.updateComponentDisabled) pickDomManagerHandlers.updateComponentDisabled = composeSync(pickDomManagerHandlers.updateComponentDisabled, customPickStylingsClosure(handlers.updateComponentDisabled));
+            }
+          }
+        }
+      };
+    }
+
     var defaultPlugins = {
       CssPatchPlugin: CssPatchPlugin,
       SelectElementPlugin: SelectElementPlugin,
@@ -4271,7 +4472,10 @@
       FormRestoreOnBackwardPlugin: FormRestoreOnBackwardPlugin,
       DisabledOptionPlugin: DisabledOptionPlugin,
       PicksApiPlugin: PicksApiPlugin,
-      ChoicesDynamicStylingPlugin: ChoicesDynamicStylingPlugin
+      HighlightPlugin: HighlightPlugin,
+      ChoicesDynamicStylingPlugin: ChoicesDynamicStylingPlugin,
+      CustomPickStylingsPlugin: CustomPickStylingsPlugin,
+      CustomChoiceStylingsPlugin: CustomChoiceStylingsPlugin
     };
     var picksPlugins = {
       CssPatchPlugin: CssPatchPlugin,
@@ -4287,7 +4491,10 @@
       OptionsApiPlugin: OptionsApiPlugin,
       JQueryMethodsPlugin: JQueryMethodsPlugin,
       PicksApiPlugin: PicksApiPlugin,
-      ChoicesDynamicStylingPlugin: ChoicesDynamicStylingPlugin
+      HighlightPlugin: HighlightPlugin,
+      ChoicesDynamicStylingPlugin: ChoicesDynamicStylingPlugin,
+      CustomPickStylingsPlugin: CustomPickStylingsPlugin,
+      CustomChoiceStylingsPlugin: CustomChoiceStylingsPlugin
     };
     var allPlugins = shallowClearClone(defaultPlugins, {
       PicksPlugin: PicksPlugin

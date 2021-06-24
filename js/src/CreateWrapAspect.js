@@ -120,6 +120,7 @@ export function CreateChoiceBaseAspect(optionPropertiesAspect){
                 // TODO: is it a really sense to have them there?
                 isChoiceElementAttached: false,
                 choiceElement: null,
+                choiceDom:null,
                 choiceElementAttach: null,
                 
                 itemPrev: null,

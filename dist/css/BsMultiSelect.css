@@ -2,7 +2,7 @@
   display: flex;
   flex-wrap: wrap;
   height: auto;
-  min-height: calc(1.5em + 0.75rem + 2px);
+  min-height: calc(1.5em + (0.75rem + 2px));
   margin-bottom: 0;
   list-style-type: none;
 }
@@ -54,13 +54,13 @@
   box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
 }
 .dashboardcode-bsmultiselect ul.form-control.form-control-sm {
-  min-height: calc(1.5em + 0.5rem + 2px);
+  min-height: calc(1.5em + (0.5rem + 2px));
 }
 .dashboardcode-bsmultiselect ul.form-control.form-control-sm input {
   font-size: 0.875rem;
 }
 .dashboardcode-bsmultiselect ul.form-control.form-control-lg {
-  min-height: calc(1.5em + 1rem + 2px);
+  min-height: calc(1.5em + (1rem + 2px));
 }
 .dashboardcode-bsmultiselect ul.form-control.form-control-lg input {
   font-size: 1.25rem;
@@ -114,13 +114,13 @@
   font-size: small;
 }
 .dashboardcode-bsmultiselect.input-group.input-group-sm ul.form-control {
-  min-height: calc(1.5em + 0.5rem + 2px);
+  min-height: calc(1.5em + (0.5rem + 2px));
 }
 .dashboardcode-bsmultiselect.input-group.input-group-sm ul.form-control input {
   font-size: 0.875rem;
 }
 .dashboardcode-bsmultiselect.input-group.input-group-lg ul.form-control {
-  min-height: calc(1.5em + 1rem + 2px);
+  min-height: calc(1.5em + (1rem + 2px));
 }
 .dashboardcode-bsmultiselect.input-group.input-group-lg ul.form-control input {
   font-size: 1.25rem;
