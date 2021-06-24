@@ -1,11 +1,16 @@
+-3 input widht problem
+
+-2 span SelectPicks content
+
 -1 study https://reactstrap.github.io/
+
+
 
 0. UpdateOption (for all content, selected, hidden and disabled properties)
 0aaa. move selected to plugin
 0aa. pick.dispose become to complex - simplify
 0a. simplify BuildChoiceAspect and BuildPickAspect (both should accept one choice parameter? BuildPick should not return pick - should use choice)
 0b. UpdateOptionContent ?
-0c. conditional styling ?
 
 1. should got focus on "mouse down" (now on mouse up) as standart input
 1b. click on label when pulldown is opened should close the menu (complex, requres "remember the state on mouse down" because dropdown will be closed on mousedown as control loose focus, and return on mouse up - the standard behaviour for input also ) 

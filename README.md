@@ -548,18 +548,18 @@ Plugin is highly customizable even now, but API is not published. "Single select
 
 ### Alternatives:
 
-BsMultiSelect was created because at the moment when Bootstrap 4 was released all existed multiselect plugins had strange side effects. It was just simpler to try to combine several BS 5 tools together: `form-control`, `dropdown-menu`, `close` button, `badge` then trying to understand internals of mature projects. I hope now all of them supports BS but this list still could be interesting for some people.
+BsMultiSelect was created because at the moment when Bootstrap 4 was released all existed multiselect plugins had strange side effects. It was just simpler to try to combine several BS 5 tools together: `form-control`, `dropdown-menu`, `close` button, `badge` then trying to understand internals of mature projects. Now I mantain this list only to motivate myself to improove the BsMultiSelect.  
 
 
-* Chosen.js: https://harvesthq.github.io/chosen/ - (ver 1.8.5), strange multiple "Consider marking event handler as 'passive' to make the page more responsive" warnings to console, not integrated to bootstrap themes (30KB+10KB js+css minified);
+* Chosen.js: https://harvesthq.github.io/chosen/  
 
-* Select2: https://select2.org/appearance - (ver 3.5.3) strange or broken backspace handling (at least in my Chrome 66), not integrated to bootstrap theme (66KB+14KB js+css minified);
+* Select2: https://select2.org/appearance  
 
-* Bootstrap multiselect: http://davidstutz.de/bootstrap-multiselect/  -  (ver. 0.9.15) BS 5 was not supported, also no SCSS, selected options looks as plain text (not as badges, no backspace key handling (67KB+1KB js+css NOT minified);
+* Bootstrap multiselect: http://davidstutz.de/bootstrap-multiselect/  
 
-* Bootstrap-select: https://silviomoreto.github.io/bootstrap-select/ - (ver. 1.12.4) BS 5 supported, but SCSS was not integrated with BS variables, also picks list can't be multiline (33KB+7KB js+css minified)
+* Bootstrap-select: https://developer.snapappointments.com/bootstrap-select/examples/#live-search 
 
-* Choices https://github.com/jshjohnson/Choices - not integrated to bootstrap;
+* Choices https://github.com/jshjohnson/Choices 
 
 Other Bootstrap extension ideas:
 https://github.com/trumbitta/bootstrap-css-utils
