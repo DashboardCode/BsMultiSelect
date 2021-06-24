@@ -101,6 +101,7 @@ export function BsAppearancePlugin(pluginData){
     wasUpdatedObservable.attach(
         ()=>validationObservable.call()
     )
+    if (validationApiObservable)
     validationApiObservable.attach(
         ()=>validationObservable.call()
     )

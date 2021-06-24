@@ -1,13 +1,13 @@
 import { composeSync } from "../ToolsJs";
 
 export function CustomPickStylingsPlugin(aspects){
-    let {componentPropertiesAspect,configuration,buildPickAspect} = aspects;
+    let {componentPropertiesAspect,configuration, pickDomFactory} = aspects;
     let customPickStylingsAspect = CustomPickStylingsAspect(componentPropertiesAspect, configuration.customPickStylings);
-    let origBuildPick = buildPickAspect.buildPick;
-    buildPickAspect.buildPick = function(wrap, removeOnButton){
-        let pick = origBuildPick(wrap, removeOnButton);
-        customPickStylingsAspect.customize(wrap, pick);
-        return pick;
+    let origPickDomFactoryCreate = pickDomFactory.create;
+    pickDomFactory.create = function(pickElement, wrap, removeOnButton){
+        var o = origPickDomFactoryCreate(pickElement, wrap, removeOnButton);
+        customPickStylingsAspect.customize(wrap, o.pickDom, o.pickDomManagerHandlers);
+        return o;
     }
 }
 
@@ -18,8 +18,7 @@ CustomPickStylingsPlugin.plugDefaultConfig = (defaults)=>{
 function CustomPickStylingsAspect(componentPropertiesAspect, customPickStylings){
     
     return {
-        customize(wrap, pick){
-            let {pickDomManagerHandlers, pickDom} = pick;
+        customize(wrap, pickDom, pickDomManagerHandlers){
             if (customPickStylings){
                 var handlers = customPickStylings(pickDom, wrap.option);
 
@@ -34,10 +33,10 @@ function CustomPickStylingsAspect(componentPropertiesAspect, customPickStylings)
                     }
                     if (pickDomManagerHandlers.updateDisabled && handlers.updateDisabled)  
                         pickDomManagerHandlers.updateDisabled 
-                            = composeSync(pickDomManagerHandlers.updateDisabled, customPickStylingsClosure(handlers.updateDisabled) );
+                            = composeSync(pickDomManagerHandlers.updateDisabled, customPickStylingsClosure(handlers.updateDisabled));
                     if (pickDomManagerHandlers.updateComponentDisabled && handlers.updateComponentDisabled)  
                         pickDomManagerHandlers.updateComponentDisabled 
-                            = composeSync(pickDomManagerHandlers.updateComponentDisabled, customPickStylingsClosure(handlers.updateComponentDisabled) );
+                            = composeSync(pickDomManagerHandlers.updateComponentDisabled, customPickStylingsClosure(handlers.updateComponentDisabled));
                 }
             }
         }

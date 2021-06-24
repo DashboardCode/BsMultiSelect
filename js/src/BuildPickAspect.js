@@ -6,6 +6,7 @@ export function BuildPickAspect(
         buildPick(wrap, removeOnButton){
             let {pickElement, attach, detach} = picksDom.createPickElement(); 
             let {dispose, pickDom, pickDomManagerHandlers} = pickDomFactory.create(pickElement, wrap, removeOnButton); 
+            
             pickDomManagerHandlers.updateData();
             if (pickDomManagerHandlers.updateDisabled)
                 pickDomManagerHandlers.updateDisabled();

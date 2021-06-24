@@ -74,9 +74,9 @@ export function SelectedOptionPlugin(aspects){
 
     function trySetWrapSelected(option, updateSelected, booleanValue){ //  wrap.option
         let success = false;
-        var confirmed = setIsOptionSelected(option, booleanValue);
+        var confirmed = setIsOptionSelected(option, booleanValue); 
         if (!(confirmed===false)) {
-            updateSelected();
+            updateSelected(); 
             success = true;
         }
         return success;

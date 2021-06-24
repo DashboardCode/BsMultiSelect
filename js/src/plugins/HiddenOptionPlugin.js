@@ -1,7 +1,7 @@
-export function HiddenOptionPlugin(pluginData){
+export function HiddenOptionPlugin(aspects){
     let {configuration, createWrapAspect, isChoiceSelectableAspect,
         wrapsCollection, buildChoiceAspect, buildAndAttachChoiceAspect,
-        countableChoicesListInsertAspect, countableChoicesList} = pluginData;
+        countableChoicesListInsertAspect, countableChoicesList} = aspects;
 
     countableChoicesListInsertAspect.countableChoicesListInsert = (wrap, key) => {
         if ( !wrap.isOptionHidden ){
@@ -78,7 +78,6 @@ function buildHiddenChoice(wrap){
         wrap.choice.dispose();
         wrap.dispose = null;
     };
-
 }
 
 function updateChoiceHidden(wrap, key, getNextNonHidden, countableChoicesList, getIsOptionHidden, buildChoiceAspect){

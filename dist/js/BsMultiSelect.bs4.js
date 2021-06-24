@@ -1,5 +1,5 @@
 /*!
-  * BsMultiSelect v1.1.8 (https://dashboardcode.github.io/BsMultiSelect/)
+  * BsMultiSelect v1.1.9 (https://dashboardcode.github.io/BsMultiSelect/)
   * Copyright 2017-2021 Roman Pokrovskij (github user rpokrovskij)
   * Licensed under Apache 2 (https://github.com/DashboardCode/BsMultiSelect/blob/master/LICENSE)
   */
@@ -3003,7 +3003,7 @@
       wasUpdatedObservable.attach(function () {
         return validationObservable.call();
       });
-      validationApiObservable.attach(function () {
+      if (validationApiObservable) validationApiObservable.attach(function () {
         return validationObservable.call();
       });
       getManualValidationObservable.attach(function () {
@@ -3119,15 +3119,15 @@
       return getValidity;
     }
 
-    function HiddenOptionPlugin(pluginData) {
-      var configuration = pluginData.configuration,
-          createWrapAspect = pluginData.createWrapAspect,
-          isChoiceSelectableAspect = pluginData.isChoiceSelectableAspect,
-          wrapsCollection = pluginData.wrapsCollection,
-          buildChoiceAspect = pluginData.buildChoiceAspect,
-          buildAndAttachChoiceAspect = pluginData.buildAndAttachChoiceAspect,
-          countableChoicesListInsertAspect = pluginData.countableChoicesListInsertAspect,
-          countableChoicesList = pluginData.countableChoicesList;
+    function HiddenOptionPlugin(aspects) {
+      var configuration = aspects.configuration,
+          createWrapAspect = aspects.createWrapAspect,
+          isChoiceSelectableAspect = aspects.isChoiceSelectableAspect,
+          wrapsCollection = aspects.wrapsCollection,
+          buildChoiceAspect = aspects.buildChoiceAspect,
+          buildAndAttachChoiceAspect = aspects.buildAndAttachChoiceAspect,
+          countableChoicesListInsertAspect = aspects.countableChoicesListInsertAspect,
+          countableChoicesList = aspects.countableChoicesList;
 
       countableChoicesListInsertAspect.countableChoicesListInsert = function (wrap, key) {
         if (!wrap.isOptionHidden) {
@@ -4362,13 +4362,14 @@
 
     function CustomChoiceStylingsPlugin(apsects) {
       var configuration = apsects.configuration,
-          buildChoiceAspect = apsects.buildChoiceAspect;
+          choiceDomFactory = apsects.choiceDomFactory;
       var customChoiceStylingsAspect = CustomChoiceStylingsAspect(configuration.customChoiceStylings);
-      var origBuildChoice = buildChoiceAspect.buildChoice;
+      var origChoiceDomFactoryCreate = choiceDomFactory.create;
 
-      buildChoiceAspect.buildChoice = function (wrap) {
-        origBuildChoice(wrap);
-        customChoiceStylingsAspect.customize(wrap);
+      choiceDomFactory.create = function (choiceElement, wrap, toggle) {
+        var o = origChoiceDomFactoryCreate(choiceElement, wrap, toggle);
+        customChoiceStylingsAspect.customize(wrap, o.choiceDom, o.choiceDomManagerHandlers);
+        return o;
       };
     }
 
@@ -4378,11 +4379,7 @@
 
     function CustomChoiceStylingsAspect(customChoiceStylings) {
       return {
-        customize: function customize(wrap) {
-          var _wrap$choice = wrap.choice,
-              choiceDomManagerHandlers = _wrap$choice.choiceDomManagerHandlers,
-              choiceDom = _wrap$choice.choiceDom;
-
+        customize: function customize(wrap, choiceDom, choiceDomManagerHandlers) {
           if (customChoiceStylings) {
             var handlers = customChoiceStylings(choiceDom, wrap.option);
 
@@ -4411,14 +4408,14 @@
     function CustomPickStylingsPlugin(aspects) {
       var componentPropertiesAspect = aspects.componentPropertiesAspect,
           configuration = aspects.configuration,
-          buildPickAspect = aspects.buildPickAspect;
+          pickDomFactory = aspects.pickDomFactory;
       var customPickStylingsAspect = CustomPickStylingsAspect(componentPropertiesAspect, configuration.customPickStylings);
-      var origBuildPick = buildPickAspect.buildPick;
+      var origPickDomFactoryCreate = pickDomFactory.create;
 
-      buildPickAspect.buildPick = function (wrap, removeOnButton) {
-        var pick = origBuildPick(wrap, removeOnButton);
-        customPickStylingsAspect.customize(wrap, pick);
-        return pick;
+      pickDomFactory.create = function (pickElement, wrap, removeOnButton) {
+        var o = origPickDomFactoryCreate(pickElement, wrap, removeOnButton);
+        customPickStylingsAspect.customize(wrap, o.pickDom, o.pickDomManagerHandlers);
+        return o;
       };
     }
 
@@ -4428,10 +4425,7 @@
 
     function CustomPickStylingsAspect(componentPropertiesAspect, customPickStylings) {
       return {
-        customize: function customize(wrap, pick) {
-          var pickDomManagerHandlers = pick.pickDomManagerHandlers,
-              pickDom = pick.pickDom;
-
+        customize: function customize(wrap, pickDom, pickDomManagerHandlers) {
           if (customPickStylings) {
             var handlers = customPickStylings(pickDom, wrap.option);
 
@@ -4499,7 +4493,6 @@
     var allPlugins = shallowClearClone(defaultPlugins, {
       PicksPlugin: PicksPlugin
     });
-    /*SelectedPicksPlugin*/
 
     function Bs4Plugin() {}
 

@@ -35,7 +35,8 @@ import {CustomPickStylingsPlugin} from './plugins/CustomPickStylingsPlugin'
 
 export let defaultPlugins = {CssPatchPlugin, SelectElementPlugin, LabelPlugin, HiddenOptionPlugin, ValidationApiPlugin, 
     BsAppearancePlugin, FormResetPlugin, CreatePopperPlugin, WarningPlugin, RtlPlugin,  PlaceholderPlugin, FloatingLabelPlugin, OptionsApiPlugin, 
-    JQueryMethodsPlugin, SelectedOptionPlugin, FormRestoreOnBackwardPlugin, DisabledOptionPlugin, PicksApiPlugin, HighlightPlugin,
+    JQueryMethodsPlugin, SelectedOptionPlugin, FormRestoreOnBackwardPlugin, 
+    DisabledOptionPlugin, PicksApiPlugin, HighlightPlugin,
     ChoicesDynamicStylingPlugin, CustomPickStylingsPlugin, CustomChoiceStylingsPlugin};
 
 export let picksPlugins = {CssPatchPlugin, PicksPlugin, LabelPlugin, ValidationApiPlugin, 
@@ -45,6 +46,3 @@ export let picksPlugins = {CssPatchPlugin, PicksPlugin, LabelPlugin, ValidationA
 
 export let allPlugins =  shallowClearClone(defaultPlugins, {PicksPlugin});
 
-
-    
-    /*SelectedPicksPlugin*/

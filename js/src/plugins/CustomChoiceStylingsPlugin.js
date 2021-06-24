@@ -1,12 +1,13 @@
 import { composeSync } from "../ToolsJs";
 
 export function CustomChoiceStylingsPlugin(apsects){
-    let {configuration, buildChoiceAspect} = apsects;
+    let {configuration, choiceDomFactory} = apsects;
     let customChoiceStylingsAspect = CustomChoiceStylingsAspect(configuration.customChoiceStylings);
-    let origBuildChoice = buildChoiceAspect.buildChoice;
-    buildChoiceAspect.buildChoice = function(wrap){
-        origBuildChoice(wrap);
-        customChoiceStylingsAspect.customize(wrap);
+    let origChoiceDomFactoryCreate = choiceDomFactory.create;
+    choiceDomFactory.create = function(choiceElement, wrap, toggle){
+        var o = origChoiceDomFactoryCreate(choiceElement, wrap, toggle);
+        customChoiceStylingsAspect.customize(wrap, o.choiceDom, o.choiceDomManagerHandlers);
+        return o;
     }
 }
 
@@ -17,8 +18,7 @@ CustomChoiceStylingsPlugin.plugDefaultConfig = (defaults)=>{
 export function CustomChoiceStylingsAspect(customChoiceStylings){
     
     return {
-        customize(wrap){
-            let {choiceDomManagerHandlers, choiceDom} = wrap.choice;
+        customize(wrap, choiceDom, choiceDomManagerHandlers){
             if (customChoiceStylings){
                 var handlers = customChoiceStylings(choiceDom, wrap.option);
 
