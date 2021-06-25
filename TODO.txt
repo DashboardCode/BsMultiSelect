@@ -1,39 +1,43 @@
-Plugin packing or pickSelect or single layout ?
+REFACTORINGS
 
--1 study https://reactstrap.github.io/
+-2 option Title (e.g. picks as numbers)
+-2a. when clear (and input 100% width) - pulldown should be opened on mouse down (now on mouse up); when there are items shold also got focus on mouse down (now mouse up)
+-2b. click on label when pulldown is open should close the menu (complex, requres "remember the state on mouse down" because dropdown will be closed on mousedown as control loose focus, and return on mouse up - the standard behaviour for input also ) 
+                                    // filter labels mouse down's ?
+-2c. pick.dispose become to complex - simplify
+-2d. unify BuildChoiceAspect and BuildPickAspect (now one return pick other build wrap)
+-2e. UpdateOption (for all content, selected, hidden and disabled properties) , UpdateOptionContent ?
+-2f. Jquery UI, Bootstrap 3 styling
+-2g. create snippet for jquery validate ( https://jqueryvalidation.org/ ) and unobtrusive-validation ( 
+ https://exceptionnotfound.net/asp-net-mvc-demystified-unobtrusive-validation/ )
 
-0. UpdateOption (for all content, selected, hidden and disabled properties)
-0aaa. move selected to plugin
-0aa. pick.dispose become to complex - simplify
-0a. simplify BuildChoiceAspect and BuildPickAspect (both should accept one choice parameter? BuildPick should not return pick - should use choice)
-0b. UpdateOptionContent ?
+NEW FEATURES
+1. optGrouops ?
+2. not-removable picks ?
+3. "selected choices first" in default menu ?
 
-1. should got focus on "mouse down" (now on mouse up) as standart input
-1b. click on label when pulldown is opened should close the menu (complex, requres "remember the state on mouse down" because dropdown will be closed on mousedown as control loose focus, and return on mouse up - the standard behaviour for input also ) 
-1c. mouse move not working on whole choice item
+MAJOR TASKS:  I pickSelect / bloodhound  => II new layouts: single select layout, tags  => III  plugin packing => IV reactJS
 
-2. publish new version of hidden plugin
-1a. better method to manipulate plugins for jquey/bootstrap and esm
-2b. dist modules for tools, MultiSelect, plugins, 
+MAIN TASK: pickSelect / bloodhound  
 
+II new layouts
 3. custom layouts (slide instead of popup, filter input to choices)
-3a. choices: ul to <div><ul></ul></div>
-3b. optGrouops
 3c. custom Dialog ?
+
+III  plugin packing 
+2. publish new version of hidden plugin
+2a. better method to manipulate plugins for jquey/bootstrap and esm
+2b. dist modules for tools, MultiSelect, plugins, 
 3d. request css-live.ru community for UX help
-3e. picks as count
-3f. "selected picks first"
-
-4. not-removable picks 
-
-5. check IE 11 (after restart)
-
 6. create/extract "tag input component", extract "autosuggestion component"
 6a. async sarch
 6b. search as API - include integration with https://fusejs.io/ ?
 
-7. create snippet for jquery validate ( https://jqueryvalidation.org/ ) and unobtrusive-validation ( 
- https://exceptionnotfound.net/asp-net-mvc-demystified-unobtrusive-validation/ )
+
+IV "ReactJS"
+-1 study https://reactstrap.github.io/
+
+
 
 8. more new css 
 8a use min(), max() и clamp() https://habr.com/ru/company/ruvds/blog/501634/

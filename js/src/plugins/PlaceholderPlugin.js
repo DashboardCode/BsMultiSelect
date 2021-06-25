@@ -31,6 +31,7 @@ export function PlaceholderPlugin(aspects){
     }
 
     function setEmptyInputWidth(isVisible){
+        console.log("setEmptyInputWidth");
         if(isVisible)
             filterInputElement.style.width ='100%';
         else 
@@ -64,7 +65,7 @@ export function PlaceholderPlugin(aspects){
     function updateEmptyInputWidth(){
         setEmptyInputWidth(isEmpty())
     };
-            
+    
     let origDisable = picksDom.disable;
     picksDom.disable = (isComponentDisabled)=>{
         setDisabled(isComponentDisabled);
@@ -91,8 +92,9 @@ export function PlaceholderPlugin(aspects){
         }
         pick.dispose = composeSync(pick.dispose, function()
             { 
-                if (picksList.getCount()==0) 
-                    updatePlacehodlerVisibility()
+                if (isEmpty()) {
+                    showPlacehodler(true);
+                }
             });
         return returnValue;
     };
@@ -101,6 +103,7 @@ export function PlaceholderPlugin(aspects){
     
 }
 
+// ie11 support
 function PlaceholderStopInputAspect(resetableFlag){
     return{
         get(){

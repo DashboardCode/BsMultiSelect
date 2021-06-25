@@ -1,5 +1,6 @@
 # CHANGELOG
 ````
+1.1.12  - Solved: inaccurate input width problem when first pick removed
 1.1.11  - cursors; 
 1.1.10  - Solved: inaccurate input width problem when first pick added
 1.1.9  - CustomChoiceStylingPlugin, CustomPickStylingPlugin improovements

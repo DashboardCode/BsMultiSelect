@@ -1,5 +1,5 @@
 /*!
-  * BsMultiSelect v1.1.11 (https://dashboardcode.github.io/BsMultiSelect/)
+  * BsMultiSelect v1.1.12 (https://dashboardcode.github.io/BsMultiSelect/)
   * Copyright 2017-2021 Roman Pokrovskij (github user rpokrovskij)
   * Licensed under Apache 2 (https://github.com/DashboardCode/BsMultiSelect/blob/master/LICENSE)
   */
@@ -3306,6 +3306,7 @@
       }
 
       function setEmptyInputWidth(isVisible) {
+        console.log("setEmptyInputWidth");
         if (isVisible) filterInputElement.style.width = '100%';else filterInputElement.style.width = '2ch';
       }
 
@@ -3369,13 +3370,15 @@
         }
 
         pick.dispose = composeSync(pick.dispose, function () {
-          if (picksList.getCount() == 0) updatePlacehodlerVisibility();
+          if (isEmpty()) {
+            showPlacehodler(true);
+          }
         });
         return returnValue;
       };
 
       updateDataAspect.updateData = composeSync(updateDataAspect.updateData, updatePlacehodlerVisibility);
-    }
+    } // ie11 support
 
     function PlaceholderStopInputAspect(resetableFlag) {
       return {
