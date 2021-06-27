@@ -33,6 +33,7 @@ NEW FEATURES
 4c. analyze CSSX (css in js) - is it possible to use for :hover or custom "is empty" rules: https://www.smashingmagazine.com/2016/04/finally-css-javascript-meet-cssx/
 some otther instruments: styled components, css modules https://github.com/w3c/webcomponents/issues/759 ,  Constructable Stylesheets https://developers.google.com/web/updates/2019/02/constructable-stylesheets,  emotion, jss, aphrodite, radium 
 4d. css houdini ? to get bootstrap theme variables
+5. are there better (browser dependent?) ways to calculate the 'transparent' input width then 'ch'? Or there should be only 'fake input' "between spans" to demostrate the input blinked cursor 
 
 HIGH LEVEL TASKS SUMMARY:  I pickSelect / bloodhound  => II new layouts: single select layout, tags  => III  plugin packing => IV reactJS
 
