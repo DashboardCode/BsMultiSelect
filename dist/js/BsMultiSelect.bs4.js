@@ -1,5 +1,5 @@
 /*!
-  * BsMultiSelect v1.1.12 (https://dashboardcode.github.io/BsMultiSelect/)
+  * BsMultiSelect v1.1.13 (https://dashboardcode.github.io/BsMultiSelect/)
   * Copyright 2017-2021 Roman Pokrovskij (github user rpokrovskij)
   * Licensed under Apache 2 (https://github.com/DashboardCode/BsMultiSelect/blob/master/LICENSE)
   */
@@ -1973,6 +1973,7 @@
         // https://stackoverflow.com/questions/59022563/browser-events-mouseover-doesnt-happen-when-you-make-element-visible-and-mous
 
         var onChoiceElementMouseover = function onChoiceElementMouseover() {
+          //console.log("onChoiceElementMouseover")
           if (eventLoopFlag.get()) {
             resetMouseCandidateChoice();
             mouseCandidateEventBinder.bind(choiceElement, 'mousemove', function () {
@@ -3307,7 +3308,6 @@
       }
 
       function setEmptyInputWidth(isVisible) {
-        console.log("setEmptyInputWidth");
         if (isVisible) filterInputElement.style.width = '100%';else filterInputElement.style.width = '2ch';
       }
 
@@ -4250,7 +4250,8 @@
     function choicesDynamicStyling(aspects) {
       var configuration = aspects.configuration,
           environment = aspects.environment,
-          choicesDom = aspects.choicesDom;
+          choicesDom = aspects.choicesDom,
+          navigateAspect = aspects.navigateAspect;
       var window = environment.window;
       var choicesElement = choicesDom.choicesElement;
       var minimalChoicesDynamicStylingMaxHeight = configuration.minimalChoicesDynamicStylingMaxHeight; //find height of the browser window
@@ -4267,6 +4268,19 @@
 
       choicesElement.style.setProperty("max-height", msHeight + "px");
       choicesElement.style.setProperty("overflow-y", "auto");
+
+      if (!choicesDom.ChoicesDynamicStylingPlugin_scrollHandle) {
+        choicesDom.ChoicesDynamicStylingPlugin_scrollHandle = true;
+        var origNavigateAspectNavigate = navigateAspect.navigate;
+
+        navigateAspect.navigate = function (down) {
+          var wrap = origNavigateAspectNavigate(down);
+          if (wrap != null && wrap.choice != null && wrap.choice.choiceElement != null) wrap.choice.choiceElement.scrollIntoView(false); // alignTo false -  scroll to the top bottom of dropdown first
+          // TODO: BUG if mouse left on the dropdow scroll to bottom and one after doesn't work properly
+
+          return wrap;
+        };
+      }
     }
 
     ChoicesDynamicStylingPlugin.plugDefaultConfig = function (defaults) {

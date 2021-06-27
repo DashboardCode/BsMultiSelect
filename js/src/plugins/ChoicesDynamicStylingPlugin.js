@@ -15,7 +15,7 @@ export function ChoicesDynamicStylingPlugin(aspects){
 }
 
 function choicesDynamicStyling(aspects){
-    let {configuration, environment, choicesDom} = aspects;
+    let {configuration, environment, choicesDom, navigateAspect} = aspects;
     let window = environment.window;
     let choicesElement = choicesDom.choicesElement;
     let minimalChoicesDynamicStylingMaxHeight = configuration.minimalChoicesDynamicStylingMaxHeight;
@@ -35,6 +35,18 @@ function choicesDynamicStyling(aspects){
     //add css height value
     choicesElement.style.setProperty("max-height", msHeight+"px");
     choicesElement.style.setProperty("overflow-y", "auto");
+
+    if (!choicesDom.ChoicesDynamicStylingPlugin_scrollHandle){
+        choicesDom.ChoicesDynamicStylingPlugin_scrollHandle = true;
+        var origNavigateAspectNavigate = navigateAspect.navigate;
+        navigateAspect.navigate = function(down){
+            var wrap = origNavigateAspectNavigate(down);
+            if (wrap!= null && wrap.choice!=null && wrap.choice.choiceElement!=null)
+            wrap.choice.choiceElement.scrollIntoView(false); // alignTo false -  scroll to the top bottom of dropdown first
+            // TODO: BUG if mouse left on the dropdow scroll to bottom and one after doesn't work properly
+            return wrap;
+        }
+    }
 }
 
 ChoicesDynamicStylingPlugin.plugDefaultConfig = (defaults)=>{

@@ -7,7 +7,7 @@ export function MultiSelectInlineLayout (
 {
     let {environment,filterDom,picksDom,choicesDom, 
         choicesVisibilityAspect, 
-        hoveredChoiceAspect, navigateAspect,filterManagerAspect,
+        hoveredChoiceAspect, navigateAspect, filterManagerAspect,
         focusInAspect, optionToggleAspect,
         createPickHandlersAspect,
         picksList,
@@ -195,6 +195,7 @@ export function MultiSelectInlineLayout (
         
         var onChoiceElementMouseover = () => 
         {
+            //console.log("onChoiceElementMouseover")
             if (eventLoopFlag.get())
             {
                 resetMouseCandidateChoice();

@@ -1,5 +1,6 @@
 # CHANGELOG
 ````
+1.1.13  - scrollIntoView for ChoicesDynamicStylingPlugin
 1.1.12  - Solved: inaccurate input width problem when first pick removed
 1.1.11  - cursors; 
 1.1.10  - Solved: inaccurate input width problem when first pick added

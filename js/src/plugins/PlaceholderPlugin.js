@@ -31,7 +31,6 @@ export function PlaceholderPlugin(aspects){
     }
 
     function setEmptyInputWidth(isVisible){
-        console.log("setEmptyInputWidth");
         if(isVisible)
             filterInputElement.style.width ='100%';
         else 
