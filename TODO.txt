@@ -1,57 +1,67 @@
+SAMPLES
+
+A. max selected use case with six different ways:
+1) setSelected (error popup?)
+2) over <selected> with validation API
+3) over <selected> with custom js/css validation
+4) integrate with jquery validate ( https://jqueryvalidation.org/ ) 
+5) integrate with unobtrusive-validation (https://exceptionnotfound.net/asp-net-mvc-demystified-unobtrusive-validation/)
+6) over js object  with custom js/css validation
+
+B. Jquery UI, Bootstrap 3 styles
+
+C. WEBPACK ESM AND Size management
+
 REFACTORINGS
 
--2 option Title (e.g. picks as numbers)
--2a. when clear (and input 100% width) - pulldown should be opened on mouse down (now on mouse up); when there are items shold also got focus on mouse down (now mouse up)
--2b. click on label when pulldown is open should close the menu (complex, requres "remember the state on mouse down" because dropdown will be closed on mousedown as control loose focus, and return on mouse up - the standard behaviour for input also ) 
+-1 option Title (e.g. picks as numbers), icon, keywords
+-1a. when clear (and input 100% width) - pulldown should be opened on mouse down (now on mouse up); when there are items shold also got focus on mouse down (now mouse up)
+-1b. click on label when pulldown is open should close the menu (complex, requres "remember the state on mouse down" because dropdown will be closed on mousedown as control loose focus, and return on mouse up - the standard behaviour for input also ) 
                                     // filter labels mouse down's ?
--2c. pick.dispose become to complex - simplify
--2d. unify BuildChoiceAspect and BuildPickAspect (now one return pick other build wrap)
--2e. UpdateOption (for all content, selected, hidden and disabled properties) , UpdateOptionContent ?
--2f. Jquery UI, Bootstrap 3 styling
--2g. create snippet for jquery validate ( https://jqueryvalidation.org/ ) and unobtrusive-validation ( 
- https://exceptionnotfound.net/asp-net-mvc-demystified-unobtrusive-validation/ )
+-1c. pick.dispose become to complex - simplify
+-1d. unify BuildChoiceAspect and BuildPickAspect (now one return pick other build wrap)
+-1e. UpdateOption (for all content, selected, hidden and disabled properties) , UpdateOptionContent ?
+
 
 NEW FEATURES
 1. optGrouops ?
 2. not-removable picks ?
-3. "selected choices first" in default menu ?
+3. specific view of default (no filter) pop-up view ?
+4. more new css
+4a. use min(), max() и clamp() https://habr.com/ru/company/ruvds/blog/501634/
+4b. grid for grid (navigation with arrow left/right)
+4c. analyze CSSX (css in js) - is it possible to use for :hover or custom "is empty" rules: https://www.smashingmagazine.com/2016/04/finally-css-javascript-meet-cssx/
+some otther instruments: styled components, css modules https://github.com/w3c/webcomponents/issues/759 ,  Constructable Stylesheets https://developers.google.com/web/updates/2019/02/constructable-stylesheets,  emotion, jss, aphrodite, radium 
+4d. css houdini ? to get bootstrap theme variables
 
-MAJOR TASKS:  I pickSelect / bloodhound  => II new layouts: single select layout, tags  => III  plugin packing => IV reactJS
+HIGH LEVEL TASKS SUMMARY:  I pickSelect / bloodhound  => II new layouts: single select layout, tags  => III  plugin packing => IV reactJS
 
-MAIN TASK: pickSelect / bloodhound  
+I - pickSelect / bloodhound  
 
-II new layouts
-3. custom layouts (slide instead of popup, filter input to choices)
-3c. custom Dialog ?
+II - new layouts
+1. custom layouts (slide instead of popup, filter input to choices)
+1a. custom Dialog ?
 
-III  plugin packing 
-2. publish new version of hidden plugin
-2a. better method to manipulate plugins for jquey/bootstrap and esm
-2b. dist modules for tools, MultiSelect, plugins, 
-3d. request css-live.ru community for UX help
-6. create/extract "tag input component", extract "autosuggestion component"
-6a. async sarch
-6b. search as API - include integration with https://fusejs.io/ ?
+III - plugin packing 
+1. publish new version of hidden plugin
+1a. better method to manipulate plugins for jquey/bootstrap and esm
+1b. dist modules for tools, MultiSelect, plugins, 
+1c. request css-live.ru community for UX help
+2. create/extract "tag input component", extract "autosuggestion component"
+2a. async sarch
+2b. search as API - include integration with https://fusejs.io/ ?
 
-
-IV "ReactJS"
+IV - "ReactJS"
 -1 study https://reactstrap.github.io/
 
 
-
-8. more new css 
-8a use min(), max() и clamp() https://habr.com/ru/company/ruvds/blog/501634/
-8b grid for grid (navigation with arrow left/right)
-8c analyze CSSX (css in js) - is it possible to use for :hover or custom "is empty" rules: https://www.smashingmagazine.com/2016/04/finally-css-javascript-meet-cssx/
-some otther instruments: styled components, css modules https://github.com/w3c/webcomponents/issues/759 ,  Constructable Stylesheets https://developers.google.com/web/updates/2019/02/constructable-stylesheets,  emotion, jss, aphrodite, radium 
-8d css houdini ? to get bootstrap theme variables
 
 == PORTS
 
 1. webpack generated bundle and html https://medium.com/@jonas_duri/build-a-landing-page-with-webpack-4-6efe83deb7fe  (handlebars.js ?)
 -multiple pages: https://www.ivarprudnikov.com/static-website-multiple-html-pages-using-webpack-plus-github-example/ )
-1a some webpack tricks https://habr.com/post/425215/
-1b configure package.json for multiple entrypoints. what is "main:src" there? Check how weback can handle it
+1a. some webpack tricks https://habr.com/post/425215/
+1b. configure package.json for multiple entrypoints. what is "main:src" there? Check how weback can handle it
     {
         "main":"dist/index.js"
         "module":"lib/index.es6.js"
@@ -89,7 +99,9 @@ Sample: https://www.webcomponents.org/element/@zooplus/zoo-web-components
 List of CSS framework
 https://habr.com/ru/post/512586/
 
-== ENVIRONMENT
+
+
+== DEVELOPMENT ENVIRONMENT
 1. Review eslint again 
 https://habr.com/post/417841/
 
@@ -97,7 +109,8 @@ https://habr.com/post/417841/
 
 3. VS Code
 2020 https://habr.com/ru/company/ruvds/blog/501648/
-2. test VisualCode plugins https://habr.com/company/ruvds/blog/425313/
+
+4. test VisualCode plugins https://habr.com/company/ruvds/blog/425313/
 1) describe current plugins
 2) test those plugins https://medium.com/nuances-of-programming/%D1%80%D0%B0%D1%81%D1%88%D0%B8%D1%80%D0%B5%D0%BD%D0%B8%D1%8F-%D0%B4%D0%BB%D1%8F-visual-studio-code-%D0%BA%D0%BE%D1%82%D0%BE%D1%80%D1%8B%D0%B5-%D0%BF%D0%BE%D0%B4%D0%BD%D0%B8%D0%BC%D1%83%D1%82-%D0%BF%D1%80%D0%BE%D1%86%D0%B5%D1%81%D1%81-%D1%80%D0%B0%D0%B7%D1%80%D0%B0%D0%B1%D0%BE%D1%82%D0%BA%D0%B8-%D0%BD%D0%B0-%D0%BD%D0%BE%D0%B2%D1%8B%D0%B9-%D1%83%D1%80%D0%BE%D0%B2%D0%B5%D0%BD%D1%8C-a24f29173079
 
@@ -114,9 +127,6 @@ Use those VS Code options:
     Smooth Scrolling
     Inline Values
 
-
-
-
 #### TODO for Changelog
 Follow http://keepachangelog.com/
 There is canonical version that contains link to version diffs.
@@ -129,9 +139,8 @@ https://habrahabr.ru/post/341166/
 review rtl: https://habr.com/ru/post/484886/
 
 
-### Auto patch generator
-
-        // Create our shared stylesheet:
-        // const sheet = new CSSStyleSheet();
-        // sheet.replaceSync('#target {color: darkseagreen}');
-        // document.adoptedStyleSheets = [sheet];
+### Auto patch generator ?
+    // Create our shared stylesheet:
+    // const sheet = new CSSStyleSheet();
+    // sheet.replaceSync('#target {color: darkseagreen}');
+    // document.adoptedStyleSheets = [sheet];
