@@ -1,3 +1,14 @@
+BUG in MultiSelectInlineLayout
+
+ var mouseOverToHoveredAndReset = (wrap) => {
+        // TODO this should be integrated with scrollToView
+        if (!wrap.choice.isHoverIn)
+            navigateAspect.hoverIn(wrap);
+        resetMouseCandidateChoice();
+    };
+ 
+
+
 SAMPLES
 
 A. max selected use case with six different ways:
@@ -34,6 +45,8 @@ NEW FEATURES
 some otther instruments: styled components, css modules https://github.com/w3c/webcomponents/issues/759 ,  Constructable Stylesheets https://developers.google.com/web/updates/2019/02/constructable-stylesheets,  emotion, jss, aphrodite, radium 
 4d. css houdini ? to get bootstrap theme variables
 5. are there better (browser dependent?) ways to calculate the 'transparent' input width then 'ch'? Or there should be only 'fake input' "between spans" to demostrate the input blinked cursor 
+6. ADD wrap.choice.isHighlighted , ADD choiceDOm highlilghted Elements
+
 
 HIGH LEVEL TASKS SUMMARY:  I pickSelect / bloodhound  => II new layouts: single select layout, tags  => III  plugin packing => IV reactJS
 

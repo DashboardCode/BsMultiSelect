@@ -1,5 +1,5 @@
 import {composeSync} from './ToolsJs';
-import {EventBinder, EventLoopFlag, containsAndSelf} from './ToolsDom'
+import {EventBinder, EventLoopProlongableFlag, containsAndSelf} from './ToolsDom'
 
 export function MultiSelectInlineLayout (
     aspects
@@ -58,8 +58,7 @@ export function MultiSelectInlineLayout (
 
     var window = environment.window;
     var document = window.document;
-    var eventLoopFlag = EventLoopFlag(window); 
-    
+    var eventLoopFlag =EventLoopProlongableFlag(window); 
     var skipFocusout = false;
     
     function getSkipFocusout() {
@@ -95,7 +94,8 @@ export function MultiSelectInlineLayout (
             choicesVisibilityAspect.updatePopupLocation();
             eventLoopFlag.set();
             choicesVisibilityAspect.setChoicesVisible(true);
-            
+            // TODO: move to scroll plugin
+            choicesElement.scrollTop =0;
             // add listeners that manages close dropdown on  click outside container
             choicesElement.addEventListener("mousedown", skipoutMousedown);
             document.addEventListener("mouseup", documentMouseup);
@@ -181,6 +181,7 @@ export function MultiSelectInlineLayout (
     };
 
     var mouseOverToHoveredAndReset = (wrap) => {
+        
         if (!wrap.choice.isHoverIn)
             navigateAspect.hoverIn(wrap);
         resetMouseCandidateChoice();
@@ -195,8 +196,7 @@ export function MultiSelectInlineLayout (
         
         var onChoiceElementMouseover = () => 
         {
-            //console.log("onChoiceElementMouseover")
-            if (eventLoopFlag.get())
+            if (eventLoopFlag.get() )
             {
                 resetMouseCandidateChoice();
                 mouseCandidateEventBinder.bind(choiceElement, 'mousemove', ()=>mouseOverToHoveredAndReset(wrap));
@@ -210,7 +210,7 @@ export function MultiSelectInlineLayout (
                     // when style was setuped without mouse (keyboard arrows)
                     // therefore force reset manually (done inside hoverIn)
                     navigateAspect.hoverIn(wrap);
-                }                
+                }   
             }
         }
         
@@ -284,8 +284,7 @@ export function MultiSelectInlineLayout (
             filterManagerAspect.processEmptyInput();
         else
             filterDom.setWidth(filterInputValue);  
-
-        eventLoopFlag.set(); // means disable some mouse handlers; otherwise we will get "Hover On MouseEnter" when filter's changes should remove hover
+            eventLoopFlag.set(); // means disable mouse handlers that set hovered item; otherwise we will get "Hover On MouseEnter" when filter's changes should remove hover
         afterInput();
     });
 
@@ -293,12 +292,15 @@ export function MultiSelectInlineLayout (
         let wrap = navigateAspect.navigate(down);  
         if (wrap)
         {
+            // TODO: next line should be moved to planned  "HeightAndScroll" plugin, actual only for scrolling with keyDown functionality
+            eventLoopFlag.set(400); // means disable mouse handlers that set hovered choice item; arrowDown can intiate scrolling when scrolling can itiate mouse leave on hovered item; this stops it
             navigateAspect.hoverIn(wrap); // !
-            showChoices(); // !
+            showChoices(); 
         }
     }
 
     function hoveredToSelected(){
+        
         let hoveredWrap = hoveredChoiceAspect.getHoveredChoice(); 
         if (hoveredWrap){
             let wasToggled = optionToggleAspect.toggle(hoveredWrap); 

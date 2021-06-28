@@ -133,10 +133,33 @@ export function EventLoopFlag(window) {
         },
         set(){
             flag = true;
-            window.setTimeout( 
+            pr = window.setTimeout( 
                 () => {  
-                    flag = false;
-                }, 0)
+                        flag = false;
+            })
+            
+        }
+    }
+}
+
+export function EventLoopProlongableFlag(window) {
+    var flag = false;
+    var pr = null;
+    return {
+        get(){
+            return flag;
+        },
+        set(timeout){
+            if (flag && pr){
+                window.clearTimeout(pr);
+            }
+            flag = true;
+            pr = window.setTimeout( 
+                () => {  
+                        flag = false;
+                        pr=null;
+                }, timeout?timeout:0)
+            
         }
     }
 }

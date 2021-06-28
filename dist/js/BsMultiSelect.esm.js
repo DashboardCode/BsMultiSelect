@@ -1,5 +1,5 @@
 /*!
-  * BsMultiSelect v1.1.13 (https://dashboardcode.github.io/BsMultiSelect/)
+  * BsMultiSelect v1.1.14 (https://dashboardcode.github.io/BsMultiSelect/)
   * Copyright 2017-2021 Roman Pokrovskij (github user rpokrovskij)
   * Licensed under Apache 2 (https://github.com/DashboardCode/BsMultiSelect/blob/master/LICENSE)
   */
@@ -121,17 +121,23 @@ function AttributeBackup() {
     }
   };
 }
-function EventLoopFlag(window) {
+function EventLoopProlongableFlag(window) {
   var flag = false;
+  var pr = null;
   return {
     get: function get() {
       return flag;
     },
-    set: function set() {
+    set: function set(timeout) {
+      if (flag && pr) {
+        window.clearTimeout(pr);
+      }
+
       flag = true;
-      window.setTimeout(function () {
+      pr = window.setTimeout(function () {
         flag = false;
-      }, 0);
+        pr = null;
+      }, timeout ? timeout : 0);
     }
   };
 }
@@ -3793,7 +3799,7 @@ function MultiSelectInlineLayout(aspects) {
 
   var window = environment.window;
   var document = window.document;
-  var eventLoopFlag = EventLoopFlag(window);
+  var eventLoopFlag = EventLoopProlongableFlag(window);
   var skipFocusout = false;
 
   function getSkipFocusout() {
@@ -3825,7 +3831,9 @@ function MultiSelectInlineLayout(aspects) {
     if (!choicesVisibilityAspect.isChoicesVisible()) {
       choicesVisibilityAspect.updatePopupLocation();
       eventLoopFlag.set();
-      choicesVisibilityAspect.setChoicesVisible(true); // add listeners that manages close dropdown on  click outside container
+      choicesVisibilityAspect.setChoicesVisible(true); // TODO: move to scroll plugin
+
+      choicesElement.scrollTop = 0; // add listeners that manages close dropdown on  click outside container
 
       choicesElement.addEventListener("mousedown", skipoutMousedown);
       document.addEventListener("mouseup", documentMouseup);
@@ -3924,7 +3932,6 @@ function MultiSelectInlineLayout(aspects) {
     // https://stackoverflow.com/questions/59022563/browser-events-mouseover-doesnt-happen-when-you-make-element-visible-and-mous
 
     var onChoiceElementMouseover = function onChoiceElementMouseover() {
-      //console.log("onChoiceElementMouseover")
       if (eventLoopFlag.get()) {
         resetMouseCandidateChoice();
         mouseCandidateEventBinder.bind(choiceElement, 'mousemove', function () {
@@ -4015,7 +4022,7 @@ function MultiSelectInlineLayout(aspects) {
         isEmpty = _inputAspect$processI.isEmpty;
 
     if (isEmpty) filterManagerAspect.processEmptyInput();else filterDom.setWidth(filterInputValue);
-    eventLoopFlag.set(); // means disable some mouse handlers; otherwise we will get "Hover On MouseEnter" when filter's changes should remove hover
+    eventLoopFlag.set(); // means disable mouse handlers that set hovered item; otherwise we will get "Hover On MouseEnter" when filter's changes should remove hover
 
     afterInput();
   });
@@ -4024,9 +4031,12 @@ function MultiSelectInlineLayout(aspects) {
     var wrap = navigateAspect.navigate(down);
 
     if (wrap) {
+      // TODO: next line should be moved to planned  "HeightAndScroll" plugin, actual only for scrolling with keyDown functionality
+      eventLoopFlag.set(400); // means disable mouse handlers that set hovered choice item; arrowDown can intiate scrolling when scrolling can itiate mouse leave on hovered item; this stops it
+
       navigateAspect.hoverIn(wrap); // !
 
-      showChoices(); // !
+      showChoices();
     }
   }
 
