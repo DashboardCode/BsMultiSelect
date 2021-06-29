@@ -1,13 +1,6 @@
-BUG in MultiSelectInlineLayout
+PLUGINS
 
- var mouseOverToHoveredAndReset = (wrap) => {
-        // TODO this should be integrated with scrollToView
-        if (!wrap.choice.isHoverIn)
-            navigateAspect.hoverIn(wrap);
-        resetMouseCandidateChoice();
-    };
- 
-
+ScrollAndWidth plugin
 
 SAMPLES
 
