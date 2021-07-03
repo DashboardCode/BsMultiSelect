@@ -8,12 +8,18 @@ export function FormRestoreOnBackwardPlugin(pluginData){
                     throw new Error("BsMultisilect: FormRestoreOnBackwardPlugin requires SelectedOptionPlugin defined first");
             }
             else{
-                let origLoad = loadAspect.load;
+                let origLoadAspectLoad = loadAspect.load;
                 loadAspect.load = ()=>{
-                    origLoad();
+                    origLoadAspectLoad();
                     // support browser's "step backward" and form's values restore
                     if (staticDom.selectElement && window.document.readyState !="complete"){
-                        window.setTimeout(function(){api.updateOptionsSelected()});
+                        window.setTimeout(function(){
+                            //TODO : from do not use api, migrate to aspects
+                            //console.log("FormRestoreOnBackwardPlugin");
+                            api.updateOptionsSelected();
+                            // there are no need to add more updates as api.updateWasValidated() because backward never trigger .was-validate
+                            // also backward never set the state to invalid
+                        });
                     }
                 }
             }

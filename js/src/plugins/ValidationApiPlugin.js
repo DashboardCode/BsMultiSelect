@@ -6,13 +6,11 @@ const defValueMissingMessage = 'Please select an item in the list'
 
 export function ValidationApiPlugin(pluginData){
     var {configuration, triggerAspect, onChangeAspect, optionsAspect, 
-        selectElementPluginData, staticDom, filterDom, updateDataAspect} = pluginData;
+         staticDom, filterDom, updateDataAspect} = pluginData;
     // TODO: required could be a function
-    let {getIsValueMissing, valueMissingMessage, required} = configuration;
+    let {getIsValueMissing, valueMissingMessage, required, getValueRequired} = configuration;
     if (!isBoolean(required))
-        required = selectElementPluginData?.required; 
-    else if (!isBoolean(required))
-        required = false;
+        required = getValueRequired(); 
     valueMissingMessage = defCall(valueMissingMessage,
         ()=> getDataGuardedWithPrefix(staticDom.initialElement,"bsmultiselect","value-missing-message"),
         defValueMissingMessage)
@@ -56,5 +54,8 @@ export function ValidationApiPlugin(pluginData){
 }
 
 ValidationApiPlugin.plugDefaultConfig = (defaults)=>{
+    defaults.getValueRequired = function(){
+        return false;
+    }
     defaults.valueMissingMessage = '';
 }

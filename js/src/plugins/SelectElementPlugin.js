@@ -1,15 +1,53 @@
 import {closestByTagName, findDirectChildByTagName, closestByClassName} from '../ToolsDom';
 import {composeSync} from '../ToolsJs';
 
-export function SelectElementPlugin(){
+export function SelectElementPlugin(aspects){
+    var {/*optionsLoopAspect,*/ loadAspect, environment} = aspects;
+    // var origOptionsLoopAspectLoop  = optionsLoopAspect.loop;
+    // var document = environment.window.document;
+
+    // optionsLoopAspect.loop = function(){
+    //     // browsers can change select value as part of "autocomplete" (IE11) 
+    //     // or "show preserved on go back" (Chrome) after page is loaded but before "ready" event;
+    //     // but they never "restore" selected-disabled options.
+    //     // TODO: make the FROM Validation for 'selected-disabled' easy.
+    //     if (document.readyState != 'loading'){
+    //         origOptionsLoopAspectLoop();
+    //     }else{
+    //         var domContentLoadedHandler = function(){
+    //             origOptionsLoopAspectLoop();
+    //             document.removeEventListener("DOMContentLoaded", domContentLoadedHandler);
+    //         }
+    //         document.addEventListener('DOMContentLoaded', domContentLoadedHandler); // IE9+
+    //     }
+    // }
+
+    var origLoadAspectLoop  = loadAspect.loop;
+    var document = environment.window.document;
+
+    loadAspect.loop = function(){
+        // browsers can change select value as part of "autocomplete" (IE11) 
+        // or "show preserved on go back" (Chrome) after page is loaded but before "ready" event;
+        // but they never "restore" selected-disabled options.
+        // TODO: make the FROM Validation for 'selected-disabled' easy.
+        if (document.readyState != 'loading'){
+            origLoadAspectLoop();
+        }else{
+            var domContentLoadedHandler = function(){
+                origLoadAspectLoop();
+                document.removeEventListener("DOMContentLoaded", domContentLoadedHandler);
+            }
+            document.addEventListener('DOMContentLoaded', domContentLoadedHandler); // IE9+
+        }
+    }
 }
 
 SelectElementPlugin.plugStaticDom = (aspects)=>{
     let {configuration, staticDomFactory, createElementAspect,
-         componentPropertiesAspect, onChangeAspect, triggerAspect, optionsAspect, disposeAspect} = aspects;
-    let {create: origCreate} = staticDomFactory;
+        componentPropertiesAspect, onChangeAspect, triggerAspect, optionsAspect, optGroupAspect, disposeAspect} = aspects;
+    let origStaticDomFactoryCreate = staticDomFactory.create;
     staticDomFactory.create = (css) => {
-        let {choicesDom, createStaticDom: origCreateStaticDom} = origCreate(css);
+        let {choicesDom, createStaticDom: origCreateStaticDom} = origStaticDomFactoryCreate(css);
         let {choicesElement} = choicesDom;
         return { 
             choicesDom,
@@ -53,9 +91,12 @@ SelectElementPlugin.plugStaticDom = (aspects)=>{
                 if (selectElement){
                     var backupDisplay = selectElement.style.display;
                     selectElement.style.display = 'none';
-
                     var backupedRequired = selectElement.required;
-                    aspects.selectElementPluginData =  {required: backupedRequired};
+
+                    configuration.getValueRequired = function(){
+                        return backupedRequired;
+                    }
+
                     if(selectElement.required===true)
                         selectElement.required = false;
 
@@ -72,6 +113,12 @@ SelectElementPlugin.plugStaticDom = (aspects)=>{
                     onChangeAspect.onChange = composeSync(() => triggerAspect.trigger('change'), onChangeAspect.onChange) 
                     optionsAspect.getOptions = () => selectElement.options;
                     
+                    if (optGroupAspect){
+                        optGroupAspect.getOptionOptGroup = (option) => option.parentNode;
+                        optGroupAspect.getOptGroupText = (optGroup) => optGroup.label;
+                        optGroupAspect.getOptGroupId = (optGroup) => optGroup.id;
+                    }
+
                     // if (!setSelected){
                     //     setSelected = (option, value) => {option.selected = value};
                     //     // NOTE: adding this (setAttribute) break Chrome's html form reset functionality:
@@ -86,32 +133,33 @@ SelectElementPlugin.plugStaticDom = (aspects)=>{
                 }
 
                 return {
-                    staticDom: {
+                    staticDom:{
                             initialElement:element,
                             containerElement,
                             picksElement,
                             disposablePicksElement,
                             selectElement
-                            }, 
-                    staticManager :{
+                    }, 
+                    staticManager:{
                         appendToContainer(){ 
                             if (disposableContainerElement){
                                 selectElement.parentNode.insertBefore(containerElement, selectElement.nextSibling) 
                                 containerElement.appendChild(choicesElement)
-                            } else {
+                            }else {
                                 selectElement.parentNode.insertBefore(choicesElement, selectElement.nextSibling)
                             }
                             if (disposablePicksElement)
                                 containerElement.appendChild(picksElement)
                         },
-                    dispose(){ 
-                        choicesElement.parentNode.removeChild(choicesElement);
-                        if (disposableContainerElement)
-                            selectElement.parentNode.removeChild(containerElement) 
-                        if (disposablePicksElement)
-                            containerElement.removeChild(picksElement)
+                        dispose(){ 
+                            choicesElement.parentNode.removeChild(choicesElement);
+                            if (disposableContainerElement)
+                                selectElement.parentNode.removeChild(containerElement) 
+                            if (disposablePicksElement)
+                                containerElement.removeChild(picksElement)
+                        }
                     }
-                }};
+                };
             }
         }
     }

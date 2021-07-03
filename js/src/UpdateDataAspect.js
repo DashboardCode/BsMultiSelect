@@ -1,5 +1,5 @@
 export function UpdateDataAspect(
-    choicesDom, wraps, picksList, fillChoicesAspect,resetLayoutAspect
+    choicesDom, wraps, picksList, optionsLoopAspect, resetLayoutAspect
     ){
     return {
         updateData(){
@@ -9,7 +9,7 @@ export function UpdateDataAspect(
             wraps.clear();
             picksList.forEach(pick=>pick.dispose());
             picksList.reset();
-            fillChoicesAspect.fillChoices();
+            optionsLoopAspect.loop();
         }
     }
 }

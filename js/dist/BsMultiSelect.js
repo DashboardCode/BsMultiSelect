@@ -13,7 +13,7 @@ import { OptionsAspect, OptionPropertiesAspect } from './OptionsAspect';
 import { ChoicesEnumerableAspect } from './ChoicesEnumerableAspect';
 import { FilterManagerAspect, NavigateManager, FilterPredicateAspect } from './FilterManagerAspect';
 import { BuildAndAttachChoiceAspect, BuildChoiceAspect } from './BuildChoiceAspect';
-import { FillChoicesAspect } from './FillChoicesAspect';
+import { OptionsLoopAspect, OptionAttachAspect } from './OptionsLoopAspect';
 import { UpdateDataAspect } from './UpdateDataAspect';
 import { CreateWrapAspect, CreateChoiceBaseAspect, OptionToggleAspect, CreatePickHandlersAspect, RemovePickAspect, AddPickAspect, FullMatchAspect, ChoiceClickAspect, IsChoiceSelectableAspect, ProducePickAspect } from './CreateWrapAspect.js';
 import { NavigateAspect, HoveredChoiceAspect } from './NavigateAspect';
@@ -23,7 +23,8 @@ import { BuildPickAspect } from './BuildPickAspect';
 import { InputAspect } from './InputAspect';
 import { ResetFilterAspect, FocusInAspect, ResetFilterListAspect } from './ResetFilterListAspect';
 import { MultiSelectInlineLayout } from './MultiSelectInlineLayout';
-import { SetDisabledComponentAspect, UpdateDisabledComponentAspect, LoadAspect, AppearanceAspect, ResetLayoutAspect } from './AppearanceAspect';
+import { SetDisabledComponentAspect, UpdateDisabledComponentAspect, AppearanceAspect, ResetLayoutAspect } from './AppearanceAspect';
+import { LoadAspect } from './LoadAspect';
 import { DoublyLinkedList, ArrayFacade } from './ToolsJs';
 import { CountableChoicesListInsertAspect } from './CountableChoicesListInsertAspect'; /// environment - common for many; configuration for concreate
 
@@ -171,9 +172,10 @@ export function BsMultiSelect(element, environment, plugins, configuration, onIn
   var setDisabledComponentAspect = SetDisabledComponentAspect(picksList, picksDom);
   var updateDisabledComponentAspect = UpdateDisabledComponentAspect(componentPropertiesAspect, setDisabledComponentAspect);
   var appearanceAspect = AppearanceAspect(updateDisabledComponentAspect);
-  var fillChoicesAspect = FillChoicesAspect(window.document, createWrapAspect, createChoiceBaseAspect, optionsAspect, wraps, buildAndAttachChoiceAspect);
-  var loadAspect = LoadAspect(fillChoicesAspect, appearanceAspect);
-  var updateDataAspect = UpdateDataAspect(choicesDom, wraps, picksList, fillChoicesAspect, resetLayoutAspect);
+  var optionAttachAspect = OptionAttachAspect(createWrapAspect, createChoiceBaseAspect, buildAndAttachChoiceAspect, wraps);
+  var optionsLoopAspect = OptionsLoopAspect(optionsAspect, optionAttachAspect);
+  var loadAspect = LoadAspect(optionsLoopAspect, appearanceAspect);
+  var updateDataAspect = UpdateDataAspect(choicesDom, wraps, picksList, optionsLoopAspect, resetLayoutAspect);
   extendIfUndefined(aspects, (_extendIfUndefined = {
     staticDom: staticDom,
     picksDom: picksDom,
@@ -188,7 +190,8 @@ export function BsMultiSelect(element, environment, plugins, configuration, onIn
     optionToggleAspect: optionToggleAspect,
     choiceClickAspect: choiceClickAspect,
     buildAndAttachChoiceAspect: buildAndAttachChoiceAspect,
-    fillChoicesAspect: fillChoicesAspect,
+    optionsLoopAspect: optionsLoopAspect,
+    optionAttachAspect: optionAttachAspect,
     buildPickAspect: buildPickAspect,
     producePickAspect: producePickAspect,
     createPickHandlersAspect: createPickHandlersAspect,
@@ -224,8 +227,7 @@ export function BsMultiSelect(element, environment, plugins, configuration, onIn
   onInit == null ? void 0 : onInit(api, aspects);
   picksDom.pickFilterElement.appendChild(filterDom.filterInputElement);
   picksDom.picksElement.appendChild(picksDom.pickFilterElement);
-  staticManager.appendToContainer(); //    popupAspect.init();
-
+  staticManager.appendToContainer();
   loadAspect.load();
   return api;
 }

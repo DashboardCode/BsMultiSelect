@@ -1,5 +1,5 @@
 /*!
-  * BsMultiSelect v1.1.14 (https://dashboardcode.github.io/BsMultiSelect/)
+  * BsMultiSelect v1.1.15 (https://dashboardcode.github.io/BsMultiSelect/)
   * Copyright 2017-2021 Roman Pokrovskij (github user rpokrovskij)
   * Licensed under Apache 2 (https://github.com/DashboardCode/BsMultiSelect/blob/master/LICENSE)
   */
@@ -817,15 +817,15 @@ function ValidationApiPlugin(pluginData) {
       triggerAspect = pluginData.triggerAspect,
       onChangeAspect = pluginData.onChangeAspect,
       optionsAspect = pluginData.optionsAspect,
-      selectElementPluginData = pluginData.selectElementPluginData,
       staticDom = pluginData.staticDom,
       filterDom = pluginData.filterDom,
       updateDataAspect = pluginData.updateDataAspect; // TODO: required could be a function
 
   var getIsValueMissing = configuration.getIsValueMissing,
       valueMissingMessage = configuration.valueMissingMessage,
-      required = configuration.required;
-  if (!isBoolean(required)) required = selectElementPluginData == null ? void 0 : selectElementPluginData.required;else if (!isBoolean(required)) required = false;
+      required = configuration.required,
+      getValueRequired = configuration.getValueRequired;
+  if (!isBoolean(required)) required = getValueRequired();
   valueMissingMessage = defCall(valueMissingMessage, function () {
     return getDataGuardedWithPrefix(staticDom.initialElement, "bsmultiselect", "value-missing-message");
   }, defValueMissingMessage);
@@ -867,6 +867,10 @@ function ValidationApiPlugin(pluginData) {
 }
 
 ValidationApiPlugin.plugDefaultConfig = function (defaults) {
+  defaults.getValueRequired = function () {
+    return false;
+  };
+
   defaults.valueMissingMessage = '';
 };
 
@@ -1658,14 +1662,17 @@ function FormRestoreOnBackwardPlugin(pluginData) {
       if (!api.updateOptionsSelected) {
         if (options && configuration.setSelected) throw new Error("BsMultisilect: FormRestoreOnBackwardPlugin requires SelectedOptionPlugin defined first");
       } else {
-        var origLoad = loadAspect.load;
+        var origLoadAspectLoad = loadAspect.load;
 
         loadAspect.load = function () {
-          origLoad(); // support browser's "step backward" and form's values restore
+          origLoadAspectLoad(); // support browser's "step backward" and form's values restore
 
           if (staticDom.selectElement && window.document.readyState != "complete") {
             window.setTimeout(function () {
-              api.updateOptionsSelected();
+              //TODO : from do not use api, migrate to aspects
+              //console.log("FormRestoreOnBackwardPlugin");
+              api.updateOptionsSelected(); // there are no need to add more updates as api.updateWasValidated() because backward never trigger .was-validate
+              // also backward never set the state to invalid
             });
           }
         };
@@ -1674,7 +1681,46 @@ function FormRestoreOnBackwardPlugin(pluginData) {
   };
 }
 
-function SelectElementPlugin() {}
+function SelectElementPlugin(aspects) {
+  var loadAspect = aspects.loadAspect,
+      environment = aspects.environment; // var origOptionsLoopAspectLoop  = optionsLoopAspect.loop;
+  // var document = environment.window.document;
+  // optionsLoopAspect.loop = function(){
+  //     // browsers can change select value as part of "autocomplete" (IE11) 
+  //     // or "show preserved on go back" (Chrome) after page is loaded but before "ready" event;
+  //     // but they never "restore" selected-disabled options.
+  //     // TODO: make the FROM Validation for 'selected-disabled' easy.
+  //     if (document.readyState != 'loading'){
+  //         origOptionsLoopAspectLoop();
+  //     }else{
+  //         var domContentLoadedHandler = function(){
+  //             origOptionsLoopAspectLoop();
+  //             document.removeEventListener("DOMContentLoaded", domContentLoadedHandler);
+  //         }
+  //         document.addEventListener('DOMContentLoaded', domContentLoadedHandler); // IE9+
+  //     }
+  // }
+
+  var origLoadAspectLoop = loadAspect.loop;
+  var document = environment.window.document;
+
+  loadAspect.loop = function () {
+    // browsers can change select value as part of "autocomplete" (IE11) 
+    // or "show preserved on go back" (Chrome) after page is loaded but before "ready" event;
+    // but they never "restore" selected-disabled options.
+    // TODO: make the FROM Validation for 'selected-disabled' easy.
+    if (document.readyState != 'loading') {
+      origLoadAspectLoop();
+    } else {
+      var domContentLoadedHandler = function domContentLoadedHandler() {
+        origLoadAspectLoop();
+        document.removeEventListener("DOMContentLoaded", domContentLoadedHandler);
+      };
+
+      document.addEventListener('DOMContentLoaded', domContentLoadedHandler); // IE9+
+    }
+  };
+}
 
 SelectElementPlugin.plugStaticDom = function (aspects) {
   var configuration = aspects.configuration,
@@ -1684,13 +1730,14 @@ SelectElementPlugin.plugStaticDom = function (aspects) {
       onChangeAspect = aspects.onChangeAspect,
       triggerAspect = aspects.triggerAspect,
       optionsAspect = aspects.optionsAspect,
+      optGroupAspect = aspects.optGroupAspect,
       disposeAspect = aspects.disposeAspect;
-  var origCreate = staticDomFactory.create;
+  var origStaticDomFactoryCreate = staticDomFactory.create;
 
   staticDomFactory.create = function (css) {
-    var _origCreate = origCreate(css),
-        choicesDom = _origCreate.choicesDom,
-        origCreateStaticDom = _origCreate.createStaticDom;
+    var _origStaticDomFactory = origStaticDomFactoryCreate(css),
+        choicesDom = _origStaticDomFactory.choicesDom,
+        origCreateStaticDom = _origStaticDomFactory.createStaticDom;
 
     var choicesElement = choicesDom.choicesElement;
     return {
@@ -1739,9 +1786,11 @@ SelectElementPlugin.plugStaticDom = function (aspects) {
           var backupDisplay = selectElement.style.display;
           selectElement.style.display = 'none';
           var backupedRequired = selectElement.required;
-          aspects.selectElementPluginData = {
-            required: backupedRequired
+
+          configuration.getValueRequired = function () {
+            return backupedRequired;
           };
+
           if (selectElement.required === true) selectElement.required = false;
           var getDisabled = configuration.getDisabled;
 
@@ -1765,7 +1814,21 @@ SelectElementPlugin.plugStaticDom = function (aspects) {
 
           optionsAspect.getOptions = function () {
             return selectElement.options;
-          }; // if (!setSelected){
+          };
+
+          if (optGroupAspect) {
+            optGroupAspect.getOptionOptGroup = function (option) {
+              return option.parentNode;
+            };
+
+            optGroupAspect.getOptGroupText = function (optGroup) {
+              return optGroup.label;
+            };
+
+            optGroupAspect.getOptGroupId = function (optGroup) {
+              return optGroup.id;
+            };
+          } // if (!setSelected){
           //     setSelected = (option, value) => {option.selected = value};
           //     // NOTE: adding this (setAttribute) break Chrome's html form reset functionality:
           //     // if (value) option.setAttribute('selected','');
@@ -3328,40 +3391,37 @@ function BuildChoiceAspect(choicesDom, choiceDomFactory, choiceClickAspect) {
   };
 }
 
-function FillChoicesAspect(document, createWrapAspect, createChoiceBaseAspect, optionsAspect, wraps, buildAndAttachChoiceAspect) {
+function OptionAttachAspect(createWrapAspect, createChoiceBaseAspect, buildAndAttachChoiceAspect, wraps) {
   return {
-    fillChoices: function fillChoices() {
-      var fillChoicesImpl = function fillChoicesImpl() {
-        var options = optionsAspect.getOptions();
+    attach: function attach(option) {
+      var wrap = createWrapAspect.createWrap(option); // let optGroup = optGroupAspect.getOptionOptGroup(option);
+      // if (prevOptGroup != optGroup){
+      //     currentOptGroup = optGroup;
+      //     var optGroupWrap = optGroupBuildAspect.wrapAndAttachOptGroupItem(option);
+      // }
+      // wrap.optGroup = currentOptGroup;
 
-        for (var i = 0; i < options.length; i++) {
-          var option = options[i];
-          var wrap = createWrapAspect.createWrap(option);
-          wrap.choice = createChoiceBaseAspect.createChoiceBase(option);
-          wraps.push(wrap);
-          buildAndAttachChoiceAspect.buildAndAttachChoice(wrap);
-        }
-      }; // browsers can change select value as part of "autocomplete" (IE11) 
-      // or "show preserved on go back" (Chrome) after page is loaded but before "ready" event;
-      // but they never "restore" selected-disabled options.
-      // TODO: make the FROM Validation for 'selected-disabled' easy.
+      wrap.choice = createChoiceBaseAspect.createChoiceBase(option);
+      wraps.push(wrap); // TODO move to the end
 
+      buildAndAttachChoiceAspect.buildAndAttachChoice(wrap); //wraps.push(wrap);
+    }
+  };
+}
+function OptionsLoopAspect(optionsAspect, optionAttachAspect) {
+  return {
+    loop: function loop() {
+      var options = optionsAspect.getOptions();
 
-      if (document.readyState != 'loading') {
-        fillChoicesImpl();
-      } else {
-        var domContentLoadedHandler = function domContentLoadedHandler() {
-          fillChoicesImpl();
-          document.removeEventListener("DOMContentLoaded", domContentLoadedHandler);
-        };
-
-        document.addEventListener('DOMContentLoaded', domContentLoadedHandler); // IE9+
+      for (var i = 0; i < options.length; i++) {
+        var option = options[i];
+        optionAttachAspect.attach(option);
       }
     }
   };
 }
 
-function UpdateDataAspect(choicesDom, wraps, picksList, fillChoicesAspect, resetLayoutAspect) {
+function UpdateDataAspect(choicesDom, wraps, picksList, optionsLoopAspect, resetLayoutAspect) {
   return {
     updateData: function updateData() {
       // close drop down , remove filter
@@ -3373,7 +3433,7 @@ function UpdateDataAspect(choicesDom, wraps, picksList, fillChoicesAspect, reset
         return pick.dispose();
       });
       picksList.reset();
-      fillChoicesAspect.fillChoices();
+      optionsLoopAspect.loop();
     }
   };
 }
@@ -4182,10 +4242,12 @@ function AppearanceAspect(updateDisabledComponentAspect) {
     }
   };
 }
-function LoadAspect(fillChoicesAspect, appearanceAspect) {
+
+function LoadAspect(optionsLoopAspect, appearanceAspect) {
   return {
     load: function load() {
-      fillChoicesAspect.fillChoices();
+      // redriven in FormRestoreOnBackwardPlugin
+      optionsLoopAspect.loop();
       appearanceAspect.updateAppearance();
     }
   };
@@ -4344,9 +4406,10 @@ function BsMultiSelect(element, environment, plugins, configuration, onInit) {
   var setDisabledComponentAspect = SetDisabledComponentAspect(picksList, picksDom);
   var updateDisabledComponentAspect = UpdateDisabledComponentAspect(componentPropertiesAspect, setDisabledComponentAspect);
   var appearanceAspect = AppearanceAspect(updateDisabledComponentAspect);
-  var fillChoicesAspect = FillChoicesAspect(window.document, createWrapAspect, createChoiceBaseAspect, optionsAspect, wraps, buildAndAttachChoiceAspect);
-  var loadAspect = LoadAspect(fillChoicesAspect, appearanceAspect);
-  var updateDataAspect = UpdateDataAspect(choicesDom, wraps, picksList, fillChoicesAspect, resetLayoutAspect);
+  var optionAttachAspect = OptionAttachAspect(createWrapAspect, createChoiceBaseAspect, buildAndAttachChoiceAspect, wraps);
+  var optionsLoopAspect = OptionsLoopAspect(optionsAspect, optionAttachAspect);
+  var loadAspect = LoadAspect(optionsLoopAspect, appearanceAspect);
+  var updateDataAspect = UpdateDataAspect(choicesDom, wraps, picksList, optionsLoopAspect, resetLayoutAspect);
   extendIfUndefined(aspects, (_extendIfUndefined = {
     staticDom: staticDom,
     picksDom: picksDom,
@@ -4361,7 +4424,8 @@ function BsMultiSelect(element, environment, plugins, configuration, onInit) {
     optionToggleAspect: optionToggleAspect,
     choiceClickAspect: choiceClickAspect,
     buildAndAttachChoiceAspect: buildAndAttachChoiceAspect,
-    fillChoicesAspect: fillChoicesAspect,
+    optionsLoopAspect: optionsLoopAspect,
+    optionAttachAspect: optionAttachAspect,
     buildPickAspect: buildPickAspect,
     producePickAspect: producePickAspect,
     createPickHandlersAspect: createPickHandlersAspect,
@@ -4397,8 +4461,7 @@ function BsMultiSelect(element, environment, plugins, configuration, onInit) {
   onInit == null ? void 0 : onInit(api, aspects);
   picksDom.pickFilterElement.appendChild(filterDom.filterInputElement);
   picksDom.picksElement.appendChild(picksDom.pickFilterElement);
-  staticManager.appendToContainer(); //    popupAspect.init();
-
+  staticManager.appendToContainer();
   loadAspect.load();
   return api;
 }

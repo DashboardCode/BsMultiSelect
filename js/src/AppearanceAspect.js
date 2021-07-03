@@ -35,12 +35,3 @@ export function AppearanceAspect(updateDisabledComponentAspect){
         }
     }
 }
-
-export function LoadAspect(fillChoicesAspect, appearanceAspect){
-    return {
-        load(){
-            fillChoicesAspect.fillChoices();
-            appearanceAspect.updateAppearance(); 
-        }
-    }
-}
