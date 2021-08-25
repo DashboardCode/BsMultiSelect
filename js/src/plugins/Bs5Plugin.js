@@ -59,9 +59,8 @@ const css = {
     choices: 'dropdown-menu', // bs, in bsmultiselect.scss as div.dropdown-menu
     choicesList: '', // bs, in bsmultiselect.scss as div.dropdown-menu>ul (first child)
     choice_hover:  'hover',  //  not bs, in scss as 'ul.dropdown-menu li.hover'
-    choice_selected: '', 
-    choice_disabled: '', 
-
+    choice_selected: 'selected',  //  not bs,
+    choice_disabled: 'disabled',  //  not bs,
     picks: 'form-control',  // bs, in scss 'ul.form-control'
     picks_focus: 'focus', // not bs, in scss 'ul.form-control.focus'
     picks_disabled: 'disabled', //  not bs, in scss 'ul.form-control.disabled'
@@ -71,7 +70,7 @@ const css = {
     filterInput: '',
 
     // used in pickContentGenerator
-    pick: 'badge text-dark', // bs
+    pick: {classes:'badge'}, // bs
     pickContent: '',
     pickContent_disabled: 'disabled', // not bs, in scss 'ul.form-control li span.disabled'
     pickButton: 'btn-close', // bs
@@ -94,7 +93,10 @@ const cssPatch = {
     choicesList: {listStyleType:'none', paddingLeft:'0', paddingRight:'0', marginBottom:'0'},
     picks: {listStyleType:'none', display:'flex', flexWrap:'wrap',  height: 'auto', marginBottom: '0', cursor: 'text'},
     choice: {classes:'px-md-2 px-1', styles:{cursor:'pointer'}},
+    //choice_selected: 'selected',  //  remove,
+    //choice_disabled: 'disabled',  //  remove,
     choice_hover: 'text-primary bg-light', 
+    choice_disabled_hover: 'bg-light', // actually 'disabled, not selected'
     filterInput: {
         border:'0px', height: 'auto', boxShadow:'none', 
         padding:'0', margin:'0', 
@@ -117,7 +119,7 @@ const cssPatch = {
     picks_floating_def: {minHeight: 'calc(3.5rem + 2px)'},
     
     // used in pickContentGenerator
-    pick: {paddingLeft: '0', paddingRight: '.5rem', paddingInlineStart:'0', paddingInlineEnd:'0.5rem'},
+    pick: {paddingLeft: '0', paddingRight: '.5rem', paddingInlineStart:'0', paddingInlineEnd:'0.5rem', color:'var(--bs-dark)'},
     pickButton: {fontSize:'0.8em',  float : "none", verticalAlign: "text-top"},
     pickContent_disabled: {opacity: '.65'}, 
     
@@ -131,6 +133,6 @@ const cssPatch = {
     label_floating_lifted: {opacity: '.65', transform : 'scale(.85) translateY(-.5rem) translateX(.15rem)'},
     picks_floating_lifted: {paddingTop: '1.625rem', paddingLeft:'0.8rem', paddingBottom : '0'},
 
-    warning: {paddingLeft: '.25rem', paddingRight: '.25rem', zIndex: 4,  fontSize:'small', backgroundColor: 'var(--bs-warning)'}, // zIndex=4  since the input-group zIndex=3
+    warning: {paddingLeft: '.25rem', paddingRight: '.25rem', zIndex: 4,  fontSize:'small', backgroundColor:'var(--bs-warning)'}, // zIndex=4  since the input-group zIndex=3
 }
 

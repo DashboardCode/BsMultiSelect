@@ -21,10 +21,6 @@ export function ChoiceDomFactory(css, optionPropertiesAspect, highlightAspect){
             let choiceDomManagerHandlers = null;
             let eventBinder = EventBinder();
                 eventBinder.bind(choiceElement, "click",  toggle);
-            let choiceHoverToggle    = toggleStyling(choiceElement, css.choice_hover);
-            let updateHoverIn = function(){
-                choiceHoverToggle(wrap.choice.isHoverIn);
-            }
             
             if (wrap.hasOwnProperty("isOptionSelected")){
                 choiceElement.innerHTML = '<div><input formnovalidate type="checkbox"><label></label></div>';
@@ -48,6 +44,9 @@ export function ChoiceDomFactory(css, optionPropertiesAspect, highlightAspect){
                 let updateSelected = function(){ 
                     choiceSelectedToggle(wrap.isOptionSelected);
                     choiceCheckBoxElement.checked = wrap.isOptionSelected;
+                    if (wrap.isOptionDisabled || wrap.choice.isHoverIn){
+                        choiceHoverToggle(wrap.choice.isHoverIn, true);
+                    }
                 }
 
                 let choiceDisabledToggle = toggleStyling(choiceElement, css.choice_disabled);
@@ -63,7 +62,16 @@ export function ChoiceDomFactory(css, optionPropertiesAspect, highlightAspect){
                     let isCheckBoxDisabled = wrap.isOptionDisabled && !wrap.isOptionSelected;
                     choiceCheckBoxElement.disabled = isCheckBoxDisabled;
                     choiceCursorDisabledToggle(isCheckBoxDisabled);
-                    
+                }
+
+                let choiceHoverToggle    = toggleStyling(choiceElement, ()=>{
+                    if (css.choice_disabled_hover &&  wrap.isOptionDisabled===true && wrap.isOptionSelected===false)
+                        return css.choice_disabled_hover;
+                    else
+                        return css.choice_hover;
+                });
+                let updateHoverIn = function(){
+                    choiceHoverToggle(wrap.choice.isHoverIn);
                 }
 
                 choiceDomManagerHandlers = {
@@ -76,6 +84,12 @@ export function ChoiceDomFactory(css, optionPropertiesAspect, highlightAspect){
 
                 
             }else{
+                let choiceHoverToggle    = toggleStyling(choiceElement, ()=>
+                    (wrap.isOptionDisabled && css.choice_disabled_hover)?css.choice_disabled_hover:css.choice_hover);
+                
+                let updateHoverIn = function(){
+                    choiceHoverToggle(wrap.choice.isHoverIn);
+                }
                 choiceElement.innerHTML = '<span></span>';
                 let choiceContentElement = choiceElement.querySelector('SPAN');
                 choiceDom = {

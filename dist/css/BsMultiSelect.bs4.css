@@ -109,12 +109,18 @@
 .dashboardcode-bsmultiselect div.dropdown-menu > ul > li .custom-control .custom-control-input, .dashboardcode-bsmultiselect div.dropdown-menu > ul > li .custom-control .custom-control-label {
   cursor: inherit;
 }
-.dashboardcode-bsmultiselect div.dropdown-menu > ul > li .custom-control .custom-control-input.disabled ~ .custom-control-label {
+.dashboardcode-bsmultiselect div.dropdown-menu > ul > li.disabled .custom-control-label {
   color: #6c757d;
 }
-.dashboardcode-bsmultiselect div.dropdown-menu .hover {
+.dashboardcode-bsmultiselect div.dropdown-menu > ul > li.hover {
   color: var(--primary);
   background-color: #e9ecef;
+}
+.dashboardcode-bsmultiselect div.dropdown-menu > ul > li.hover:not(.disabled) {
+  color: var(--primary);
+}
+.dashboardcode-bsmultiselect div.dropdown-menu > ul > li.hover.selected {
+  color: var(--primary);
 }
 .dashboardcode-bsmultiselect div.dropdown-menu + div.alert-warning {
   padding-left: 0.25rem;

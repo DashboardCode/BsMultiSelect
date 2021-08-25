@@ -76,6 +76,7 @@
             padding-left: 0;
             padding-inline-start: 0;
             padding-inline-end: .5rem;
+            color: var(--bs-dark);
             button.btn-close {
                 float: none;
                 font-size: .8em;
@@ -132,13 +133,19 @@
                     .form-check-label, .form-check-input{
                         cursor: inherit;
                     }
-                    .form-check-input.disabled ~ .form-check-label {
-                        color: $form-check-input-disabled-opacity; // $custom-control-label-disabled-color;
-                    }
                 }
-            }.hover{ // from bs4 _dropdown.scss
-                color: var(--primary); //$dropdown-link-hover-color;
-                @include gradient-bg($dropdown-link-hover-bg);
+                &.disabled .form-check-label { 
+                    opacity: $form-check-input-disabled-opacity; //  $custom-control-label-disabled-color; 
+                }
+                &.hover{ // from bs4 _dropdown.scss
+                    @include gradient-bg($dropdown-link-hover-bg);
+                }
+                &.hover:not(.disabled){
+                    color: var(--bs-primary); //$dropdown-link-hover-color;
+                }
+                &.hover.selected{
+                    color: var(--bs-primary); //$dropdown-link-hover-color;
+                }
             }
         }
     

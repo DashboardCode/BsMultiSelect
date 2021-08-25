@@ -278,7 +278,8 @@ export function ArrayFacade(){
 }
 
 export function composeSync(...functions){
-    return () => functions.forEach(
+    return () => 
+        functions.forEach(
         (f) => {
             if (f)
                 f();

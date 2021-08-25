@@ -1,3 +1,4 @@
+// aka auto height and scrolling
 export function ChoicesDynamicStylingPlugin(aspects){
     let {configuration} = aspects;
     if (configuration.useChoicesDynamicStyling) {

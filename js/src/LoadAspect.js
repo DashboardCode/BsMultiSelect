@@ -1,9 +1,8 @@
 
-export function LoadAspect(optionsLoopAspect, appearanceAspect){
-    return {
-        load(){  // redriven in FormRestoreOnBackwardPlugin
+export function LoadAspect(optionsLoopAspect){
+    return{
+        load(){  // redriven in AppearancePlugin, FormRestoreOnBackwardPlugin
             optionsLoopAspect.loop();
-            appearanceAspect.updateAppearance(); 
         }
     }
 }

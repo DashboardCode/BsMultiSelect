@@ -2,33 +2,15 @@ import {closestByTagName, findDirectChildByTagName, closestByClassName} from '..
 import {composeSync} from '../ToolsJs';
 
 export function SelectElementPlugin(aspects){
-    var {/*optionsLoopAspect,*/ loadAspect, environment} = aspects;
-    // var origOptionsLoopAspectLoop  = optionsLoopAspect.loop;
-    // var document = environment.window.document;
-
-    // optionsLoopAspect.loop = function(){
-    //     // browsers can change select value as part of "autocomplete" (IE11) 
-    //     // or "show preserved on go back" (Chrome) after page is loaded but before "ready" event;
-    //     // but they never "restore" selected-disabled options.
-    //     // TODO: make the FROM Validation for 'selected-disabled' easy.
-    //     if (document.readyState != 'loading'){
-    //         origOptionsLoopAspectLoop();
-    //     }else{
-    //         var domContentLoadedHandler = function(){
-    //             origOptionsLoopAspectLoop();
-    //             document.removeEventListener("DOMContentLoaded", domContentLoadedHandler);
-    //         }
-    //         document.addEventListener('DOMContentLoaded', domContentLoadedHandler); // IE9+
-    //     }
-    // }
-
+    var { loadAspect, environment} = aspects;
+ 
     var origLoadAspectLoop  = loadAspect.loop;
     var document = environment.window.document;
 
     loadAspect.loop = function(){
-        // browsers can change select value as part of "autocomplete" (IE11) 
+        // browsers can change select value as part of "autocomplete" (IE11) at load time
         // or "show preserved on go back" (Chrome) after page is loaded but before "ready" event;
-        // but they never "restore" selected-disabled options.
+        // mote: they never "restore" selected-disabled options.
         // TODO: make the FROM Validation for 'selected-disabled' easy.
         if (document.readyState != 'loading'){
             origLoadAspectLoop();
@@ -82,10 +64,10 @@ SelectElementPlugin.plugStaticDom = (aspects)=>{
                     disposableContainerElement= true;
                 }
             
-                let disposablePicksElement = false;
+                let isDisposablePicksElement = false;
                 if (!picksElement) {
                     picksElement = createElementAspect.createElement('UL');
-                    disposablePicksElement = true; 
+                    isDisposablePicksElement = true; 
                 }
             
                 if (selectElement){
@@ -119,16 +101,9 @@ SelectElementPlugin.plugStaticDom = (aspects)=>{
                         optGroupAspect.getOptGroupId = (optGroup) => optGroup.id;
                     }
 
-                    // if (!setSelected){
-                    //     setSelected = (option, value) => {option.selected = value};
-                    //     // NOTE: adding this (setAttribute) break Chrome's html form reset functionality:
-                    //     // if (value) option.setAttribute('selected','');
-                    //     // else option.removeAttribute('selected');
-                    // }
-                    
                     disposeAspect.dispose = composeSync(disposeAspect.dispose, () => {
-                        selectElement.required = backupedRequired;
-                        selectElement.style.display = backupDisplay;
+                         selectElement.required = backupedRequired;
+                         selectElement.style.display = backupDisplay;
                     });
                 }
 
@@ -137,7 +112,7 @@ SelectElementPlugin.plugStaticDom = (aspects)=>{
                             initialElement:element,
                             containerElement,
                             picksElement,
-                            disposablePicksElement,
+                            isDisposablePicksElement,
                             selectElement
                     }, 
                     staticManager:{
@@ -148,14 +123,14 @@ SelectElementPlugin.plugStaticDom = (aspects)=>{
                             }else {
                                 selectElement.parentNode.insertBefore(choicesElement, selectElement.nextSibling)
                             }
-                            if (disposablePicksElement)
+                            if (isDisposablePicksElement)
                                 containerElement.appendChild(picksElement)
                         },
                         dispose(){ 
                             choicesElement.parentNode.removeChild(choicesElement);
                             if (disposableContainerElement)
                                 selectElement.parentNode.removeChild(containerElement) 
-                            if (disposablePicksElement)
+                            if (isDisposablePicksElement)
                                 containerElement.removeChild(picksElement)
                         }
                     }

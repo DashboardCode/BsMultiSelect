@@ -1,39 +1,76 @@
-export function CreatePopperPlugin(pluginData){
-    let {environment} = pluginData;
-    let {createPopper, Popper} = environment;
-
-    if (typeof createPopper === 'undefined') {
-        createPopper = Popper;
-        if (typeof createPopper === 'undefined') {
-            throw new Error("BsMultiSelect: Popper component (https://popper.js.org) is required")
+export function CreatePopperPlugin(aspects){
+    let {environment} = aspects;
+    let {createPopper, Popper, globalPopper} = environment;
+    let createModifiersVX = null;
+    let createPopperVX = null;
+    if (Popper) { // V2
+        createPopperVX = createPopper =  (function(createPopperConstructor) {
+                     return function(anchorElement, element, popperConfiguration) {
+                         return new createPopperConstructor(anchorElement, element, popperConfiguration);
+                     }
+                 })(Popper);;
+        createModifiersVX = CreateModifiersV2;
+    } else if (createPopper) {
+        createPopperVX = createPopper;
+        createModifiersVX = CreateModifiersV1;
+    } else if (globalPopper) {
+        if (globalPopper.createPopper) {
+            createPopperVX = globalPopper.createPopper;
+            createModifiersVX = CreateModifiersV2;
+        } else {
+            createPopperVX = createPopper =  (function(createPopperConstructor) {
+                return function(anchorElement, element, popperConfiguration) {
+                    return new createPopperConstructor(anchorElement, element, popperConfiguration);
+                }
+            })(globalPopper);
+            createModifiersVX = CreateModifiersV1;
         }
     } else {
-        if (createPopper.createPopper) {
-            createPopper = createPopper.createPopper;
-        }
+        throw new Error("BsMultiSelect: Popper component (https://popper.js.org) is required");
     }
+    
+    aspects.createPopperAspect = CreatePopperAspect(createPopperVX, createModifiersVX);
+}
 
-    pluginData.createPopperAspect = {
-        create(element, anchorElement, preventOverflow){
+function CreateModifiersV1(preventOverflow){
+    return {
+        preventOverflow: {enabled:preventOverflow},
+        hide: {enabled:false},
+        flip: {enabled:false}
+    };
+}
+
+function CreateModifiersV2(preventOverflow){
+    var modifiers = [{
+            name: 'flip',
+            options: {
+                fallbackPlacements: ['bottom'],
+            },
+        }
+    ];
+    if (preventOverflow) {
+        modifiers.push({name: 'preventOverflow'});
+    }
+    return modifiers;
+}
+
+function CreatePopperAspect(createPopperVX, createModifiersVX){
+    return {
+        createPopper(element, anchorElement, preventOverflow){
+            
+            let modifiers = createModifiersVX(preventOverflow);
+            
             let popperConfiguration = {
                 placement: 'bottom-start',
-                modifiers: {
-                    preventOverflow: {enabled:preventOverflow},
-                    hide: {enabled:false},
-                    flip: {enabled:false}
-                }
+                modifiers: modifiers
             };
             let popper = null;
             return {
                 init(){
-                    if (!!createPopper.prototype && !!createPopper.prototype.constructor) { // it is a constructor
-                        popper = new createPopper(anchorElement, element, popperConfiguration); 
-                    }else{
-                        popper = createPopper(anchorElement, element, popperConfiguration); 
-                    }
+                    popper = createPopperVX(anchorElement, element, popperConfiguration); 
                 },
                 update(){ 
-                    popper.update(); // become async in poppoer 2; use forceUpdate if sync is needed? 
+                    popper.update(); // become async in popper 2; use forceUpdate if sync is needed? 
                 },
                 setRtl(isRtl){
                     if (isRtl) {
@@ -45,6 +82,5 @@ export function CreatePopperPlugin(pluginData){
                 }
             }
         }
-    };
+    }   
 }
-

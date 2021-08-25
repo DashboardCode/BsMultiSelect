@@ -2,6 +2,7 @@ export function OptionAttachAspect(createWrapAspect, createChoiceBaseAspect, bui
     return {
         attach(option){
             let wrap = createWrapAspect.createWrap(option);
+            wrap.choice = createChoiceBaseAspect.createChoiceBase(option);
 
             // let optGroup = optGroupAspect.getOptionOptGroup(option);
             // if (prevOptGroup != optGroup){
@@ -10,8 +11,8 @@ export function OptionAttachAspect(createWrapAspect, createChoiceBaseAspect, bui
             // }
             // wrap.optGroup = currentOptGroup;
             
-            wrap.choice = createChoiceBaseAspect.createChoiceBase(option);
-            wraps.push(wrap); // TODO move to the end
+            
+            wraps.push(wrap); // note: before attach because attach need it for navigation management
             buildAndAttachChoiceAspect.buildAndAttachChoice(wrap);
             //wraps.push(wrap);
         }

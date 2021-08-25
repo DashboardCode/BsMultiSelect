@@ -135,16 +135,24 @@
                     .custom-control-input, .custom-control-label{
                         cursor: inherit;
                     }
-                    .custom-control-input.disabled ~ .custom-control-label{
-                        color: $custom-control-label-disabled-color;
-                    }
+                }
+
+                &.disabled .custom-control-label { 
+                    color:  $custom-control-label-disabled-color; 
+                }
+                &.hover{ // from bs4 _dropdown.scss
+                    color: var(--primary); //$dropdown-link-hover-color;
+                    @include gradient-bg($dropdown-link-hover-bg);
+                }
+                &.hover:not(.disabled){
+                    color: var(--primary); //$dropdown-link-hover-color;
+                }
+                &.hover.selected{
+                    color: var(--primary); //$dropdown-link-hover-color;
                 }
             }
-        }.hover{
-            // from bs4 _dropdown.scss
-            color: var(--primary); //$dropdown-link-hover-color;
-            @include gradient-bg($dropdown-link-hover-bg);
         }
+        
 
         +div.alert-warning {
             padding-left: .25rem;

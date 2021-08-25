@@ -39,31 +39,32 @@ export function StaticDomFactory(choicesDomFactory, createElementAspect){
                     else if (element.tagName=="INPUT"){
                         showError('BsMultiSelect: INPUT element is not supported');
                     }
-                    let disposablePicksElement=false;
+                    let isDisposablePicksElement=false;
                     if (!picksElement) {
                         picksElement = createElementAspect.createElement('UL');
-                        disposablePicksElement = true; 
+                        isDisposablePicksElement = true; 
                     }
                 
+
                     return {
                         choicesDom,
                         staticDom: {
                             initialElement:element,
                             containerElement,
                             picksElement,
-                            disposablePicksElement
+                            isDisposablePicksElement
                         },
                         staticManager: {
                             appendToContainer(){ 
                                 containerElement.appendChild(choicesDom.choicesElement); 
-                                if (disposablePicksElement)
+                                if (isDisposablePicksElement)
                                     containerElement.appendChild(picksElement)
                             },
                             dispose(){ 
                                 containerElement.removeChild(choicesDom.choicesElement); 
                                 if (removableContainerClass)
                                     containerElement.classList.remove(containerClass);
-                                if (disposablePicksElement)
+                                if (isDisposablePicksElement)
                                     containerElement.removeChild(picksElement)
                             }
                         }

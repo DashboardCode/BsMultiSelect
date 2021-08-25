@@ -26,17 +26,21 @@ function removeStyling(element, styling){
 export function toggleStyling(element, styling){
     var backupStyling = {classes:[], styles:{}};
     var isOn=false;
-    return (value)=>{
+    var isF = styling instanceof Function;
+    return (value, force)=>{
         if (value) {
             if (isOn===false){
-                backupStyling = addStyling(element, styling)
+                backupStyling = addStyling(element, isF?styling():styling)
                 isOn=true;
+            } else if (force){
+                removeStyling(element, backupStyling);
+                backupStyling =addStyling(element, isF?styling():styling)
             }
         } else {
-            if (isOn===true){
+            if (isOn===true || force===true){
                 removeStyling(element, backupStyling);
                 isOn=false;
-            }
+            } 
         }
     }
 }

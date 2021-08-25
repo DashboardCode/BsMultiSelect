@@ -13,3 +13,11 @@ export function UpdateDataAspect(
         }
     }
 }
+
+export function UpdateAspect(updateDataAspect){
+    return {
+        update(){
+            updateDataAspect.updateData();
+        }
+    }
+}

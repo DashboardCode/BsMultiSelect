@@ -9,31 +9,14 @@ import {composeSync} from '../ToolsJs';
 
 // wrap.isOptionSelected ,  wrap.updateSelected
 export function SelectedOptionPlugin(aspects){
-    let {configuration, wrapsCollection, 
+    let {configuration, wrapsCollection, updateOptionsSelectedAspect,
         createWrapAspect, buildChoiceAspect, removePickAspect,
         resetLayoutAspect, picksList, isChoiceSelectableAspect, optionToggleAspect,
         /*inputAspect, filterDom, filterManagerAspect,*/ createPickHandlersAspect, addPickAspect,  fullMatchAspect, 
         onChangeAspect, filterPredicateAspect
         } = aspects;
-    let {getSelected : getIsOptionSelected, setSelected : setIsOptionSelected, options} = configuration;
+    let {getSelected : getIsOptionSelected, setSelected : setIsOptionSelected} = configuration;
     
-    if (options) {
-        if (!setIsOptionSelected){
-            setIsOptionSelected = (option, value) => {option.selected = value};
-        }
-        if (!getIsOptionSelected)
-            getIsOptionSelected = (option) => option.selected;     
-    } else { // selectElement
-        if (!getIsOptionSelected){
-            getIsOptionSelected = (option) => option.selected;
-        }
-        if (!setIsOptionSelected){
-            setIsOptionSelected = (option, value) => {option.selected = value};
-            // NOTE: adding this (setAttribute) break Chrome's html form reset functionality:
-            // if (value) option.setAttribute('selected','');
-            // else option.removeAttribute('selected');
-        }
-    }
 
     let origFilterPredicate = filterPredicateAspect.filterPredicate;
     filterPredicateAspect.filterPredicate = (wrap, text) =>
@@ -139,6 +122,7 @@ export function SelectedOptionPlugin(aspects){
         }
     }
 
+
     return {
         buildApi(api){
             api.selectAll= ()=>{
@@ -162,8 +146,42 @@ export function SelectedOptionPlugin(aspects){
             }
 
             // used in FormRestoreOnBackwardPlugin
-            api.updateOptionsSelected = () => wrapsCollection.forLoop( wrap => updateChoiceSelected(wrap, getIsOptionSelected))
+            api.updateOptionsSelected = () => updateOptionsSelectedAspect.updateOptionsSelected();
             api.updateOptionSelected = (key) => updateChoiceSelected(wrapsCollection.get(key), getIsOptionSelected)
+        }
+    }
+}
+
+SelectedOptionPlugin.plugStaticDom = (aspects) => {
+    let {configuration, wrapsCollection} = aspects;
+    let {getSelected : getIsOptionSelected, setSelected : setIsOptionSelected, options} = configuration;
+    
+    if (options) {
+        if (!setIsOptionSelected){
+            setIsOptionSelected = (option, value) => {option.selected = value};
+        }
+        if (!getIsOptionSelected)
+            getIsOptionSelected = (option) => option.selected;     
+    } else { // selectElement
+        if (!getIsOptionSelected){
+            getIsOptionSelected = (option) => option.selected;
+        }
+        if (!setIsOptionSelected){
+            setIsOptionSelected = (option, value) => {option.selected = value};
+            // NOTE: adding this (setAttribute) break Chrome's html form reset functionality:
+            // if (value) option.setAttribute('selected','');
+            // else option.removeAttribute('selected');
+        }
+    }
+    configuration.getSelected= getIsOptionSelected;
+    configuration.setSelected= setIsOptionSelected;
+    aspects.updateOptionsSelectedAspect = UpdateOptionsSelectedAspect(wrapsCollection, getIsOptionSelected);
+}
+
+function UpdateOptionsSelectedAspect(wrapsCollection, getIsOptionSelected){
+    return {
+        updateOptionsSelected(){
+            wrapsCollection.forLoop( wrap => updateChoiceSelected(wrap, getIsOptionSelected));
         }
     }
 }

@@ -29,7 +29,7 @@ export function MultiSelectBuilder(environment, plugins)
         plugMergeSettings(plugins, configuration, defaults, options); // merge settings.cssPatch and defaults.cssPatch
         extendIfUndefined(configuration, options);
         extendIfUndefined(configuration, defaults);
-        let onInit = buildConfiguration?.(element, configuration);
+        let onInit = buildConfiguration?.(element, configuration); // TODO: configuration should become an aspect
         let multiSelect = BsMultiSelect(element, environment, plugins, configuration, onInit); // onInit(api, aspects) - before load data
         return multiSelect;
     }

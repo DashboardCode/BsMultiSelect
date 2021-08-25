@@ -42,9 +42,9 @@ export function DisabledOptionPlugin(pluginData){
         return success;
     };
 
-    let origIsSelectable = isChoiceSelectableAspect.isSelectable
+    let origIsSelectable = isChoiceSelectableAspect.isSelectable;
     isChoiceSelectableAspect.isSelectable = (wrap) => {
-        return  origIsSelectable(wrap) && !wrap.isOptionDisabled ;
+        return  origIsSelectable(wrap) && !wrap.isOptionDisabled;
     };
 
     let origFilterPredicate = filterPredicateAspect.filterPredicate;

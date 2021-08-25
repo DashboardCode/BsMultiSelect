@@ -22,6 +22,7 @@ import {BuildAndAttachChoiceAspect, BuildChoiceAspect} from './BuildChoiceAspect
 import {OptionsLoopAspect, OptionAttachAspect} from './OptionsLoopAspect'
 
 import {UpdateDataAspect } from './UpdateDataAspect'
+import {UpdateAspect } from './UpdateDataAspect'
 import {CreateWrapAspect, CreateChoiceBaseAspect, OptionToggleAspect, CreatePickHandlersAspect, RemovePickAspect, 
     AddPickAspect, FullMatchAspect, ChoiceClickAspect, IsChoiceSelectableAspect, ProducePickAspect} from './CreateWrapAspect.js'
 import {NavigateAspect, HoveredChoiceAspect} from './NavigateAspect'
@@ -36,7 +37,8 @@ import {ResetFilterAspect, FocusInAspect, ResetFilterListAspect} from './ResetFi
 
 import {MultiSelectInlineLayout} from './MultiSelectInlineLayout'
 
-import {SetDisabledComponentAspect, UpdateDisabledComponentAspect, AppearanceAspect, ResetLayoutAspect} from './AppearanceAspect'
+import {ResetLayoutAspect} from './ResetLayoutAspect'
+
 import {LoadAspect} from './LoadAspect'
 import {DoublyLinkedList, ArrayFacade} from './ToolsJs'
 import {CountableChoicesListInsertAspect} from './CountableChoicesListInsertAspect'
@@ -53,7 +55,7 @@ export function BsMultiSelect(element, environment, plugins, configuration, onIn
           getText
         } = configuration;
     
-    let disposeAspect = {};
+    let disposeAspect = {dispose(){}};
     let triggerAspect = TriggerAspect(element, environment.trigger);
     let onChangeAspect = OnChangeAspect(triggerAspect, 'dashboardcode.multiselect:change');
     let componentPropertiesAspect = ComponentPropertiesAspect(getDisabled??(() => false));
@@ -143,9 +145,13 @@ export function BsMultiSelect(element, environment, plugins, configuration, onIn
 
     let {staticDom, staticManager} = createStaticDom(element, containerClass)
 
-    // after this we can use staticDom in construtctor, this simplifies parameters passing a lot   
+    // after this we can use staticDom (means generated DOM elements) in plugin construtctor, what simplifies parameters passing a lot   
 
-    let filterDom = FilterDom(staticDom.disposablePicksElement, createElementAspect, css);
+    // THINK: get filterDom, picksDom  from createStaticDom ?  But this would create excesive dublicate call in  selectElementPlugin
+    let filterDom = FilterDom(staticDom.isDisposablePicksElement, createElementAspect, css);
+    let picksDom  = PicksDom(staticDom.picksElement, staticDom.isDisposablePicksElement, createElementAspect, css);
+    
+
     let specialPicksEventsAspect = SpecialPicksEventsAspect();
 
     let choicesVisibilityAspect = ChoicesVisibilityAspect(choicesDom.choicesElement);
@@ -153,8 +159,6 @@ export function BsMultiSelect(element, environment, plugins, configuration, onIn
     let resetFilterAspect =  ResetFilterAspect(filterDom, resetFilterListAspect)
     
 
-    // TODO get picksDom  from staticDomFactory
-    let picksDom  = PicksDom(staticDom.picksElement, staticDom.disposablePicksElement, createElementAspect, css);
     let focusInAspect = FocusInAspect(picksDom);
     
     let pickButtonAspect = PickButtonAspect(configuration.pickButtonHTML);
@@ -177,14 +181,12 @@ export function BsMultiSelect(element, environment, plugins, configuration, onIn
     let buildAndAttachChoiceAspect =  BuildAndAttachChoiceAspect(buildChoiceAspect);
     let resetLayoutAspect = ResetLayoutAspect(() => resetFilterAspect.resetFilter());
 
-    let setDisabledComponentAspect = SetDisabledComponentAspect(picksList, picksDom);
-    let updateDisabledComponentAspect = UpdateDisabledComponentAspect(componentPropertiesAspect,setDisabledComponentAspect );
-    let appearanceAspect = AppearanceAspect(updateDisabledComponentAspect);
-    
     let optionAttachAspect = OptionAttachAspect(createWrapAspect, createChoiceBaseAspect, buildAndAttachChoiceAspect, wraps);
     let optionsLoopAspect = OptionsLoopAspect(optionsAspect, optionAttachAspect);
-    let loadAspect = LoadAspect(optionsLoopAspect, appearanceAspect);
     let updateDataAspect = UpdateDataAspect(choicesDom, wraps, picksList, optionsLoopAspect, resetLayoutAspect);
+    let updateAspect = UpdateAspect(updateDataAspect);
+
+    let loadAspect = LoadAspect(optionsLoopAspect);
 
     extendIfUndefined(aspects, {
         staticDom, picksDom, choicesDom,filterDom, resetLayoutAspect, pickDomFactory, choiceDomFactory,
@@ -193,34 +195,34 @@ export function BsMultiSelect(element, environment, plugins, configuration, onIn
         buildPickAspect, producePickAspect, createPickHandlersAspect, inputAspect, resetFilterListAspect, resetFilterAspect, 
         specialPicksEventsAspect,
         resetLayoutAspect, focusInAspect, 
-        updateDisabledComponentAspect, setDisabledComponentAspect, appearanceAspect, loadAspect,
-        updateDataAspect, fullMatchAspect} )
+        loadAspect, updateDataAspect, updateAspect, 
+        fullMatchAspect} )
     
     let pluginManager = PluginManager(plugins, aspects);
     
     let multiSelectInlineLayout =  MultiSelectInlineLayout(aspects);
 
-    let api = {component: "BsMultiSelect.api"} // key used in memory leak analyzes
-   
+    let api = {component: "BsMultiSelect.api"} // key to use in memory leak analyzes
     pluginManager.buildApi(api);
+
     // after this we can pass aspects methods call without wrapping - there should be no more overridings. TODO freeze aspects?
     api.dispose = composeSync(
         resetLayoutAspect.resetLayout,
-        disposeAspect.dispose,
+        ()=>{disposeAspect.dispose()},
         pluginManager.dispose, 
         ()=>{picksList.forEach(pick=>pick.dispose());},
         multiSelectInlineLayout.dispose, // TODO move to layout
         wraps.dispose,
         staticManager.dispose,  picksDom.dispose, filterDom.dispose );
     
-    api.updateAppearance = appearanceAspect.updateAppearance;
-    api.updateData = updateDataAspect.updateData;
-    api.update = () => {
+    api.updateData = () => { 
         updateDataAspect.updateData();
-        appearanceAspect.updateAppearance();
+    };
+    api.update = () => {
+        updateAspect.update()
     }
-
-    api.updateDisabled = updateDisabledComponentAspect.updateDisabledComponent;
+ 
+    
     // TODO api.updateOption = (key) => {/* all updates: selected, disabled, hidden, text */}
 
     onInit?.(api, aspects);

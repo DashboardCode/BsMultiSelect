@@ -5,7 +5,7 @@ import {composeEventTrigger} from './ToolsDom'
 
 import {MultiSelectBuilder} from './MultiSelectBuilder'
 
-export function createForJQuery(window, $,  createPopper, name, pluginsSet, stylePlugin){
+export function createForJQuery(window, $,  globalPopper, name, pluginsSet, stylePlugin){
     let trigger = null;
     let isJQyery = $ && !window.document.body.hasAttribute('data-bs-no-jquery');
     if (isJQyery) {
@@ -15,7 +15,7 @@ export function createForJQuery(window, $,  createPopper, name, pluginsSet, styl
     }
     let plugins = shallowClearClone({stylePlugin}, pluginsSet);
 
-    let environment = {trigger, window, createPopper}
+    let environment = {trigger, window, globalPopper}
     let pluginsArray = ObjectValues(plugins)
     let {create, defaultSettings} = MultiSelectBuilder(environment, pluginsArray);
     let createForUmd = (element, settings) => {

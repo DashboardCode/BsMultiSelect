@@ -1,7 +1,7 @@
 import {addStyling} from './ToolsStyling';
 import {EventBinder} from './ToolsDom';
 
-export function FilterDom(disposablePicksElement, createElementAspect, css){
+export function FilterDom(isDisposablePicksElement, createElementAspect, css){
     var filterInputElement = createElementAspect.createElement('INPUT');
     addStyling(filterInputElement, css.filterInput);
 
@@ -45,7 +45,7 @@ export function FilterDom(disposablePicksElement, createElementAspect, css){
         },
         dispose(){
             eventBinder.unbind();
-            if (!disposablePicksElement){
+            if (!isDisposablePicksElement){
                 if (filterInputElement.parentNode)
                     filterInputElement.parentNode.removeChild(filterInputElement)
             }

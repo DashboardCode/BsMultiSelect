@@ -4,7 +4,7 @@ import {ObservableLambda, composeSync} from '../ToolsJs';
 
 export function BsAppearancePlugin(pluginData){
     let {configuration, validationApiPluginData, 
-        picksDom, staticDom, labelPluginData, appearanceAspect, componentPropertiesAspect, floatingLabelAspect} = pluginData;
+        picksDom, staticDom, getLabelElementAspect, updateAppearanceAspect, componentPropertiesAspect, floatingLabelAspect} = pluginData;
     let {getValidity, getSize, useCssPatch, css, composeGetSize, getDefaultLabel} = configuration;
     let selectElement = staticDom.selectElement;
     
@@ -16,9 +16,9 @@ export function BsAppearancePlugin(pluginData){
         floatingLabelAspect.isFloatingLabel = () => isFloatingLabel
     }
 
-    if (labelPluginData){
-        let origGetLabelElementAspect = labelPluginData.getLabelElementAspect;
-        labelPluginData.getLabelElementAspect = () => {
+    if (getLabelElementAspect){
+        let origGetLabelElementAspect = getLabelElementAspect.getLabelElement;
+        getLabelElementAspect.getLabelElement = () => {
             var e = origGetLabelElementAspect();
             if (e)
                 return e;
@@ -109,10 +109,11 @@ export function BsAppearancePlugin(pluginData){
         ()=>validationObservable.call()
     )
 
-    appearanceAspect.updateAppearance = composeSync(
-        appearanceAspect.updateAppearance, 
+    updateAppearanceAspect.updateAppearance = composeSync(
+        updateAppearanceAspect.updateAppearance, 
         updateSize, 
-        validationObservable.call, getManualValidationObservable.call);
+        validationObservable.call, 
+        getManualValidationObservable.call);
 
     return {
         buildApi(api){
@@ -201,6 +202,3 @@ function composeGetValidity(selectElement){
         (selectElement.classList.contains('is-valid')?true:null);
     return getValidity;
 }
-
-
-

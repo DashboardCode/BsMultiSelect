@@ -53,6 +53,7 @@ const cssPatch = {
     picks: {listStyleType:'none', display:'flex', flexWrap:'wrap',  height: 'auto', marginBottom: '0',cursor: 'text'},
     choice: {classes:'px-md-2 px-1', styles:{cursor:'pointer'}},    
     choice_hover: 'text-primary bg-light', 
+    choice_disabled_hover: 'bg-light',
     filterInput: {border:'0px', height: 'auto', boxShadow:'none', 
         padding:'0', margin:'0', 
         outline:'none', backgroundColor:'transparent',

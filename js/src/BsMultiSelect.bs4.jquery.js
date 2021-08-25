@@ -17,13 +17,10 @@ const BsMultiSelect = (
     }
 )(window, $, Popper)
 
-
 const BsPicks = (
     (window, jQuery, createPopper) => {
          return createForJQuery(window, jQuery, createPopper, 'BsPicks', picksPlugins, Bs4Plugin)
     }
 )(window, $, Popper)
 
-
 export default {BsMultiSelect, BsPicks , MultiSelectTools: {MultiSelectBuilder, plugins: shallowClearClone({Bs4Plugin}, allPlugins), utilities} }
-

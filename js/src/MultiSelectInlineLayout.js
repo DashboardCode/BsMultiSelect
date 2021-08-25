@@ -12,7 +12,7 @@ export function MultiSelectInlineLayout (
         createPickHandlersAspect,
         picksList,
         inputAspect, specialPicksEventsAspect,  buildChoiceAspect, 
-        setDisabledComponentAspect, resetLayoutAspect, placeholderStopInputAspect,
+        disableComponentAspect, resetLayoutAspect, placeholderStopInputAspect,
         warningAspect,
         configuration,
         createPopperAspect, rtlAspect, staticManager
@@ -23,7 +23,7 @@ export function MultiSelectInlineLayout (
 
     // pop up layout, require createPopperPlugin
     let filterInputElement = filterDom.filterInputElement;
-    let pop = createPopperAspect.create(choicesElement, filterInputElement, true);
+    let pop = createPopperAspect.createPopper(choicesElement, filterInputElement, true);
     staticManager.appendToContainer = composeSync(staticManager.appendToContainer, pop.init);
     var origBackSpace = specialPicksEventsAspect.backSpace;
     specialPicksEventsAspect.backSpace = (pick) => { origBackSpace(pick);  pop.update();};
@@ -39,7 +39,7 @@ export function MultiSelectInlineLayout (
     )
 
     if (warningAspect) {
-        let pop2 = createPopperAspect.create(warningAspect.warningElement, filterInputElement, false);
+        let pop2 = createPopperAspect.createPopper(warningAspect.warningElement, filterInputElement, false);
         staticManager.appendToContainer = composeSync(staticManager.appendToContainer, pop2.init);
         if (rtlAspect){
             let origUpdateRtl2 = rtlAspect.updateRtl;
@@ -382,13 +382,15 @@ export function MultiSelectInlineLayout (
     filterDom.onKeyDown(onKeyDown);    
     filterDom.onKeyUp(onKeyUp);
 
-    let origSetDisabledComponent = setDisabledComponentAspect.setDisabledComponent; 
-    setDisabledComponentAspect.setDisabledComponent = (isComponentDisabled) => {
-        origSetDisabledComponent(isComponentDisabled);
-        if (isComponentDisabled)
-            componentDisabledEventBinder.unbind();
-        else
-            componentDisabledEventBinder.bind(picksElement, "click",  clickToShowChoices); 
+    if (disableComponentAspect){
+        let origDisableComponent = disableComponentAspect.disableComponent; 
+        disableComponentAspect.disableComponent = (isComponentDisabled) => {
+            origDisableComponent(isComponentDisabled);
+            if (isComponentDisabled)
+                componentDisabledEventBinder.unbind();
+            else
+                componentDisabledEventBinder.bind(picksElement, "click",  clickToShowChoices); 
+        }
     }
 
     resetLayoutAspect.resetLayout = composeSync(

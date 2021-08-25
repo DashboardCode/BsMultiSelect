@@ -11,17 +11,15 @@ import {utilities} from './ToolSet'
 import {shallowClearClone} from './ToolsJs'
 
 const BsMultiSelect = (
-    (window, jQuery, createPopper) => {
-         return createForJQuery(window, jQuery, createPopper, 'BsMultiSelect', defaultPlugins, Bs5Plugin)
+    (window, jQuery, globalPopper) => {
+         return createForJQuery(window, jQuery, globalPopper, 'BsMultiSelect', defaultPlugins, Bs5Plugin)
     }
 )(window, window.jQuery, Popper)
-
 
 const BsPicks = (
-    (window, jQuery, createPopper) => {
-         return createForJQuery(window, jQuery, createPopper, 'BsPicks', picksPlugins, Bs5Plugin)
+    (window, jQuery, globalPopper) => {
+         return createForJQuery(window, jQuery, globalPopper, 'BsPicks', picksPlugins, Bs5Plugin)
     }
 )(window, window.jQuery, Popper)
 
-
-export default {BsMultiSelect, BsPicks , MultiSelectTools: {MultiSelectBuilder, plugins: shallowClearClone({Bs5Plugin}, allPlugins), utilities} }
+export default {BsMultiSelect, BsPicks , MultiSelectTools: {MultiSelectBuilder, plugins: shallowClearClone({Bs5Plugin}, allPlugins), utilities}}

@@ -5,9 +5,10 @@ export function BuildAndAttachChoiceAspect(
         buildAndAttachChoice(
             wrap,
             getNextElement 
-            ){
-                buildChoiceAspect.buildChoice(wrap);
-                wrap.choice.choiceElementAttach(getNextElement?.());
+            )
+        {
+            buildChoiceAspect.buildChoice(wrap);
+            wrap.choice.choiceElementAttach(getNextElement?.());
         }
     }
 }

@@ -68,6 +68,8 @@
     "value-no-vendor-prefix": true,
     "no-eol-whitespace": null,
     "block-opening-brace-newline-after":null,
-    "no-missing-end-of-source-newline":null
+    "no-missing-end-of-source-newline":null,
+    "comment-empty-line-before": null,
+    "comment-whitespace-inside": null,
   }
 }

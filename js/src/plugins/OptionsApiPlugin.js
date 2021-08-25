@@ -14,9 +14,9 @@ export function OptionsApiPlugin(pluginData){
                 let nextChoice = ()=> wrapsCollection.getNext(key, c => c.choice.choiceElement);
 
                 buildAndAttachChoiceAspect.buildAndAttachChoice(
-                        wrap,
-                        () => nextChoice()?.choice.choiceElement
-                    )
+                    wrap,
+                    () => nextChoice()?.choice.choiceElement
+                )
             }
         
             api.updateOptionRemoved = (key) => { // TODO: generalize index as key 
