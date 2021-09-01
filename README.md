@@ -530,8 +530,6 @@ Note, BS allready provide classes like: `h-25`, `bg-light`, `text-primary` that 
 ### Known issues
 * Tested only for IE11, Chrome 66, Edge 42/17, IPhone Safari; Browser should support flexbox (IE 9 doesn't); 
 
-* dropdown options list could be too long if your filter is weak (and items number is not configurable); there are no scroller (but you can add it).
-
 * no 'smart tracking' of dynamic changes in options/data - after changes in data you need to call 'Update/UpdateData' method manually (this is actally not an issue, but desing decision); also you can't update concreate option (wait for `UpdateDataItem` in future versions). Detach/attach should be used if you have changed plugin styling parameters or RTL dinamically;
 
 * no "X selected" message on filter's dropdown;
