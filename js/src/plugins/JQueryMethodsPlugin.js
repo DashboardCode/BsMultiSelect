@@ -2,7 +2,7 @@ import  {EventBinder} from '../ToolsDom';
 import  {addStyling, toggleStyling} from '../ToolsStyling';
 
 export function JQueryMethodsPlugin(pluginData){
-    let {staticDom, choicesDom, filterDom, picksList} = pluginData;
+    let {staticDom, choicesDom, filterDom, picksList, picksDom} = pluginData;
     return {
         buildApi(api){
             api.getContainer = () =>  staticDom.containerElement;

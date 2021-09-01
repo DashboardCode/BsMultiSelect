@@ -1,5 +1,5 @@
 /*!
-  * BsMultiSelect v1.1.16 (https://dashboardcode.github.io/BsMultiSelect/)
+  * BsMultiSelect v1.1.17 (https://dashboardcode.github.io/BsMultiSelect/)
   * Copyright 2017-2021 Roman Pokrovskij (github user rpokrovskij)
   * Licensed under Apache 2 (https://github.com/DashboardCode/BsMultiSelect/blob/master/LICENSE)
   */
@@ -1596,7 +1596,8 @@ function JQueryMethodsPlugin(pluginData) {
   var staticDom = pluginData.staticDom,
       choicesDom = pluginData.choicesDom,
       filterDom = pluginData.filterDom,
-      picksList = pluginData.picksList;
+      picksList = pluginData.picksList,
+      picksDom = pluginData.picksDom;
   return {
     buildApi: function buildApi(api) {
       api.getContainer = function () {
