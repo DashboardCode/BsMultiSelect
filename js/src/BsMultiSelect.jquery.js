@@ -22,4 +22,6 @@ const BsPicks = (
     }
 )(window, window.jQuery, Popper)
 
-export default {BsMultiSelect, BsPicks , MultiSelectTools: {MultiSelectBuilder, plugins: shallowClearClone({Bs5Plugin}, allPlugins), utilities}}
+export default { BsMultiSelect, BsPicks, 
+    MultiSelectTools: {MultiSelectBuilder, plugins: shallowClearClone({Bs5Plugin}, allPlugins), utilities}
+}

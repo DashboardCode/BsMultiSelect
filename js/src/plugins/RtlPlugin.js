@@ -1,9 +1,8 @@
 import {getIsRtl, AttributeBackup} from '../ToolsDom';
 import {isBoolean} from '../ToolsJs';
 
-export function RtlPlugin(pluginData){
-    
-    let {configuration, rtlAspect, staticDom} = pluginData;
+export function RtlPlugin(aspects){
+    let {configuration, rtlAspect, staticDom} = aspects;
     let {isRtl} = configuration;
     let forceRtlOnContainer = false; 
     if (isBoolean(isRtl))
@@ -20,17 +19,16 @@ export function RtlPlugin(pluginData){
         if (dirAttributeValue){
             attributeBackup.set(staticDom.containerElement, "dir", dirAttributeValue);
         }
-    } 
-        
+    }
+
     return {
         buildApi(api){
-            // TODO there is something wrong with this. may be should moved to specific plugin
-            // sample of correct plugin - aspect pair is WarningPlugin: aspect is added on plugin constrictor
-            if (rtlAspect.updateRtl)
-                rtlAspect.updateRtl(isRtl);
+            // TODO: there is something wrong with this. may be should moved to specific plugin
+            // sample of correct plugin - aspect pair is WarningPlugin: aspect is added on plugin constructor
+            rtlAspect.updateRtl(isRtl);
         },
         dispose(){
-            attributeBackup.restore;
+            attributeBackup.restore();
         }
     }
 }
@@ -39,7 +37,7 @@ RtlPlugin.plugStaticDom = (aspects) => {
     aspects.rtlAspect = RtlAspect();
 }
 
-function RtlAspect() {
+function RtlAspect(){
     return {
         updateRtl(){},
     }

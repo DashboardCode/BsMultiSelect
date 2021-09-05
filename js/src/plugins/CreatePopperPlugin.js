@@ -9,10 +9,10 @@ export function CreatePopperPlugin(aspects){
                          return new createPopperConstructor(anchorElement, element, popperConfiguration);
                      }
                  })(Popper);;
-        createModifiersVX = CreateModifiersV2;
+        createModifiersVX = CreateModifiersV1;
     } else if (createPopper) {
         createPopperVX = createPopper;
-        createModifiersVX = CreateModifiersV1;
+        createModifiersVX = CreateModifiersV2;
     } else if (globalPopper) {
         if (globalPopper.createPopper) {
             createPopperVX = globalPopper.createPopper;

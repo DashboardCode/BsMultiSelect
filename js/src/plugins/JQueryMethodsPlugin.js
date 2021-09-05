@@ -1,8 +1,5 @@
-import  {EventBinder} from '../ToolsDom';
-import  {addStyling, toggleStyling} from '../ToolsStyling';
-
-export function JQueryMethodsPlugin(pluginData){
-    let {staticDom, choicesDom, filterDom, picksList, picksDom} = pluginData;
+export function JQueryMethodsPlugin(aspects){
+    let {staticDom, choicesDom, filterDom, picksList, picksDom} = aspects;
     return {
         buildApi(api){
             api.getContainer = () =>  staticDom.containerElement;
@@ -10,10 +7,7 @@ export function JQueryMethodsPlugin(pluginData){
             api.getChoicesList = () => choicesDom.choicesListElement;
             api.getFilterInput = () => filterDom.filterInputElement;
             api.getPicks = () => picksDom.picksElement;
-            
             api.picksCount = () => picksList.getCount();
-
-            pluginData.jQueryMethodsPluginData = {EventBinder, addStyling, toggleStyling}
         }
     }
 }

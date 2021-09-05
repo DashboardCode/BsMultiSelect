@@ -53,3 +53,15 @@ export let picksPlugins = {CssPatchPlugin, PicksPlugin,
 
 export let allPlugins =  shallowClearClone(defaultPlugins, {PicksPlugin});
 
+
+// var defaultConfig = {
+//     plugins: defaultPlugins
+// }
+
+// var picksConfig = {
+//     plugins: picksPlugins
+// }
+
+// export function createConfig(arg){
+//     return config;
+// }

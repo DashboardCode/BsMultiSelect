@@ -1,5 +1,5 @@
 /*!
-  * BsMultiSelect v1.1.17 (https://dashboardcode.github.io/BsMultiSelect/)
+  * BsMultiSelect v1.1.18 (https://dashboardcode.github.io/BsMultiSelect/)
   * Copyright 2017-2021 Roman Pokrovskij (github user rpokrovskij)
   * Licensed under Apache 2 (https://github.com/DashboardCode/BsMultiSelect/blob/master/LICENSE)
   */
@@ -2754,10 +2754,10 @@
       };
     }
 
-    function RtlPlugin(pluginData) {
-      var configuration = pluginData.configuration,
-          rtlAspect = pluginData.rtlAspect,
-          staticDom = pluginData.staticDom;
+    function RtlPlugin(aspects) {
+      var configuration = aspects.configuration,
+          rtlAspect = aspects.rtlAspect,
+          staticDom = aspects.staticDom;
       var isRtl = configuration.isRtl;
       var forceRtlOnContainer = false;
       if (isBoolean(isRtl)) forceRtlOnContainer = true;else isRtl = getIsRtl(staticDom.initialElement);
@@ -2775,11 +2775,12 @@
 
       return {
         buildApi: function buildApi(api) {
-          // TODO there is something wrong with this. may be should moved to specific plugin
-          // sample of correct plugin - aspect pair is WarningPlugin: aspect is added on plugin constrictor
-          if (rtlAspect.updateRtl) rtlAspect.updateRtl(isRtl);
+          // TODO: there is something wrong with this. may be should moved to specific plugin
+          // sample of correct plugin - aspect pair is WarningPlugin: aspect is added on plugin constructor
+          rtlAspect.updateRtl(isRtl);
         },
         dispose: function dispose() {
+          attributeBackup.restore();
         }
       };
     }
@@ -3425,12 +3426,12 @@
       };
     }
 
-    function JQueryMethodsPlugin(pluginData) {
-      var staticDom = pluginData.staticDom,
-          choicesDom = pluginData.choicesDom,
-          filterDom = pluginData.filterDom,
-          picksList = pluginData.picksList,
-          picksDom = pluginData.picksDom;
+    function JQueryMethodsPlugin(aspects) {
+      var staticDom = aspects.staticDom,
+          choicesDom = aspects.choicesDom,
+          filterDom = aspects.filterDom,
+          picksList = aspects.picksList,
+          picksDom = aspects.picksDom;
       return {
         buildApi: function buildApi(api) {
           api.getContainer = function () {
@@ -3455,12 +3456,6 @@
 
           api.picksCount = function () {
             return picksList.getCount();
-          };
-
-          pluginData.jQueryMethodsPluginData = {
-            EventBinder: EventBinder,
-            addStyling: addStyling,
-            toggleStyling: toggleStyling
           };
         }
       };
@@ -4194,10 +4189,10 @@
             return new createPopperConstructor(anchorElement, element, popperConfiguration);
           };
         }(Popper);
-        createModifiersVX = CreateModifiersV2;
+        createModifiersVX = CreateModifiersV1;
       } else if (createPopper) {
         createPopperVX = createPopper;
-        createModifiersVX = CreateModifiersV1;
+        createModifiersVX = CreateModifiersV2;
       } else if (globalPopper) {
         if (globalPopper.createPopper) {
           createPopperVX = globalPopper.createPopper;
@@ -4721,7 +4716,15 @@
     };
     var allPlugins = shallowClearClone(defaultPlugins, {
       PicksPlugin: PicksPlugin
-    });
+    }); // var defaultConfig = {
+    //     plugins: defaultPlugins
+    // }
+    // var picksConfig = {
+    //     plugins: picksPlugins
+    // }
+    // export function createConfig(arg){
+    //     return config;
+    // }
 
     function Bs5Plugin() {}
 

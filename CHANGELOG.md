@@ -1,5 +1,6 @@
 # CHANGELOG
 ````
+1.1.18  - solved popper configuration errors for BsMultiSelect ESM bundle;
 1.1.17  - problem with getPicks solved;
 1.1.16  - css changed to suppurt better hover on "selected and disabled" choices;  
 1.1.15  - load time optimizations
