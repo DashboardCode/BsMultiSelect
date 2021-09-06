@@ -1,5 +1,6 @@
 # CHANGELOG
 ````
+1.2.0-beta.0  - npm module redefined;
 1.1.18  - solved popper configuration errors for BsMultiSelect ESM bundle;
 1.1.17  - problem with getPicks solved;
 1.1.16  - css changed to suppurt better hover on "selected and disabled" choices;  

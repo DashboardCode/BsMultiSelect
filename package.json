@@ -1,6 +1,6 @@
 {
   "name": "@dashboardcode/bsmultiselect",
-  "version": "1.1.18",
+  "version": "1.2.0-beta.0",
   "private": false,
   "description": "Bootstrap 5 component - multiselect input",
   "homepage": "https://dashboardcode.github.io/BsMultiSelect/",
@@ -8,8 +8,15 @@
   "license": "Apache-2.0",
   "sass": "scss/BsMultiSelect.scss",
   "style": "dist/css/BsMultiSelect.css",
-  "main": "dist/js/BsMultiSelect.js",
-  "module": "dist/js/BsMultiSelect.esm.js",
+
+  "main": "dist/js/BsMultiSelect.esm.js",
+  "main:bs4": "dist/js/BsMultiSelect.bs4.esm.js",
+
+  "module": "src/index.js",
+  
+  "main:umd": "dist/js/BsMultiSelect.js",
+  "unpkg": "dist/js/BsMultiSelect.min.js",
+
   "bugs": {
     "url": "https://github.com/DashboardCode/BsMultiSelect/issues"
   },
