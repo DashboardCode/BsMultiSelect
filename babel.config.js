@@ -1,9 +1,11 @@
-{
+module.exports = {
     "presets": [
         [
             "@babel/preset-env",
             {
-                "loose": true,
+                "loose": true, // ES6 to ES5
+                "bugfixes": true,
+                //"useBuiltIns": "usage",
                 "modules": false,
                 "exclude": ["transform-typeof-symbol"],
                 "targets": {
@@ -13,6 +15,6 @@
                 "debug": true
             }
         ]
-    ],
-    "plugins": [ "@babel/plugin-proposal-object-rest-spread" ]
+    ]
+    //,"plugins": [ "@babel/plugin-proposal-object-rest-spread" ]
 }
