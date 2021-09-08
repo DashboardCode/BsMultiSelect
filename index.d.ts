@@ -1,5 +1,5 @@
 declare module '*';
-// declare module '@dashboardcode/bsmultiselect'{
+//declare module '@dashboardcode/bsmultiselect'{
 //     // example
 //     export function BsMultiSelect(multiSelectEnv:any): any
 // }
