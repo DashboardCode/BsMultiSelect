@@ -5,9 +5,9 @@ import {utilities} from './ToolSet'
 import {MultiSelectBuilder} from './MultiSelectBuilder'
 import {BsMultiSelect, ModuleFactory} from './MultiSelect.esm'
 
-export {Bs5Plugin}
-export {defaultPlugins, picksPlugins, allPlugins}
-export {shallowClearClone, ObjectValues}
-export {utilities}
-export {MultiSelectBuilder}
-export {BsMultiSelect, ModuleFactory}
+export {Bs5Plugin,
+        defaultPlugins, picksPlugins, allPlugins,
+        shallowClearClone, ObjectValues,
+        utilities,
+        MultiSelectBuilder,
+        BsMultiSelect, ModuleFactory}
