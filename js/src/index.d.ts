@@ -1,6 +1,6 @@
 declare module '@dashboardcode/bsmultiselect'{
     // example
-    export function ModuleFactory(multiSelectEnv:any): any
+    export function BsModuleFactory(environment:any): any
 }
 
 
