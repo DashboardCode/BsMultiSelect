@@ -1,0 +1,1 @@
+export declare type ModuleFactory = (environment: any) => any;

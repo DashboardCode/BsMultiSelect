@@ -1,5 +1,5 @@
 /*!
-  * BsMultiSelect v1.2.0-beta.10 (https://dashboardcode.github.io/BsMultiSelect/)
+  * BsMultiSelect v1.2.0-beta.11 (https://dashboardcode.github.io/BsMultiSelect/)
   * Copyright 2017-2021 Roman Pokrovskij (github user rpokrovskij)
   * Licensed under Apache 2 (https://github.com/DashboardCode/BsMultiSelect/blob/master/LICENSE)
   */
@@ -4722,10 +4722,10 @@ function MultiSelectBuilder(environment, plugins) {
   };
 }
 
-function ModuleFactory(environment) {
+function ModuleFactory$1(environment, customizationPlugins) {
   if (!environment.trigger) environment.trigger = (e, name) => e.dispatchEvent(new environment.window.Event(name));
   let pluginsArray = ObjectValues(shallowClearClone({
-    Bs5Plugin
+    Bs4Plugin
   }, defaultPlugins));
   let {
     create: BsMultiSelect,
@@ -4733,7 +4733,7 @@ function ModuleFactory(environment) {
   } = MultiSelectBuilder(environment, pluginsArray);
   BsMultiSelect.Default = BsMultiSelectDefault;
   let picksPluginsArray = ObjectValues(shallowClearClone({
-    Bs5Plugin
+    Bs4Plugin
   }, picksPlugins));
   let {
     create: BsPicks,
@@ -4745,12 +4745,38 @@ function ModuleFactory(environment) {
     BsPicks,
     MultiSelectTools: {
       MultiSelectBuilder,
-      plugins: shallowClearClone({
-        Bs5Plugin
-      }, allPlugins),
+      plugins: shallowClearClone(customizationPlugins, allPlugins),
       utilities
     }
   };
+} // TEST
+// function areValidElements(...args) {
+//     const result = Object.values(obj);
+//     return !args.some(
+//       (element) =>
+//         !(element && typeof element.getBoundingClientRect === 'function')
+//     );
+// }
+// function ModuleFactory(environment) {
+//     if (!environment.trigger)
+//         environment.trigger = (e, name) => e.dispatchEvent(new environment.window.Event(name))
+//     let pluginsArray = ObjectValues(shallowClearClone({Bs5Plugin}, defaultPlugins));
+//     let {create: BsMultiSelect, BsMultiSelectDefault} = MultiSelectBuilder(environment, pluginsArray) 
+//     BsMultiSelect.Default = BsMultiSelectDefault;
+//     let picksPluginsArray = ObjectValues(shallowClearClone({Bs5Plugin}, picksPlugins));
+//     let {create: BsPicks, BsPicksDefault} = MultiSelectBuilder(environment, picksPluginsArray) 
+//     BsPicks.Default = BsPicksDefault;
+//     return {
+//         BsMultiSelect,
+//         BsPicks,
+//         MultiSelectTools: {MultiSelectBuilder, plugins: shallowClearClone({Bs5Plugin}, allPlugins), utilities} 
+//     }
+// }
+
+function ModuleFactory(environment) {
+  return ModuleFactory$1(environment, {
+    Bs5Plugin
+  });
 }
 
 function legacyConstructor(element, environment, settings) {
