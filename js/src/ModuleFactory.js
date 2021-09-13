@@ -7,11 +7,11 @@ export function ModuleFactory(environment, customizationPlugins){
     if (!environment.trigger)
         environment.trigger = (e, name) => e.dispatchEvent(new environment.window.Event(name))
 
-    let pluginsArray = ObjectValues(shallowClearClone({Bs4Plugin}, defaultPlugins));
+    let pluginsArray = ObjectValues(shallowClearClone(customizationPlugins, defaultPlugins));
     let {create: BsMultiSelect, BsMultiSelectDefault} = MultiSelectBuilder(environment, pluginsArray) 
     BsMultiSelect.Default = BsMultiSelectDefault;
     
-    let picksPluginsArray = ObjectValues(shallowClearClone({Bs4Plugin}, picksPlugins));
+    let picksPluginsArray = ObjectValues(shallowClearClone(customizationPlugins, picksPlugins));
     let {create: BsPicks, BsPicksDefault} = MultiSelectBuilder(environment, picksPluginsArray) 
     BsPicks.Default = BsPicksDefault; 
 
