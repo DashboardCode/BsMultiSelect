@@ -1,5 +1,5 @@
 /*!
-  * BsMultiSelect v1.2.0-beta.9 (https://dashboardcode.github.io/BsMultiSelect/)
+  * BsMultiSelect v1.2.0-beta.10 (https://dashboardcode.github.io/BsMultiSelect/)
   * Copyright 2017-2021 Roman Pokrovskij (github user rpokrovskij)
   * Licensed under Apache 2 (https://github.com/DashboardCode/BsMultiSelect/blob/master/LICENSE)
   */
@@ -2587,7 +2587,7 @@
       }
 
       if (settings.useCss) {
-        console.log("DashboarCode.BsMultiSelect: useCss(=true) is depricated, use - 'useCssPatch: false'");
+        console.log("DashboarCode.BsMultiSelect: 'useCss: true' is depricated, use - 'useCssPatch: false'");
 
         if (!css.pick_disabled) {
           settings.useCssPatch = !settings.useCss;

@@ -1,10 +1,18 @@
-import {Bs5Plugin} from './plugins/Bs5Plugin'
-import {defaultPlugins, picksPlugins, allPlugins} from './PluginSet'
-import {shallowClearClone, ObjectValues} from './ToolsJs'
-import {utilities} from './ToolSet'
-import {MultiSelectBuilder} from './MultiSelectBuilder'
+import { Bs5Plugin } from "./plugins/Bs5Plugin.js";
+import { defaultPlugins, picksPlugins, allPlugins } from "./PluginSet.js";
+import { shallowClearClone, ObjectValues } from "./ToolsJs.js";
+import { utilities } from "./ToolSet.js";
+import { MultiSelectBuilder } from "./MultiSelectBuilder.js";
 
-function ModuleFactory(environment){
+function areValidElements(...args) {
+    const result = Object.values(obj);
+    return !args.some(
+      (element) =>
+        !(element && typeof element.getBoundingClientRect === 'function')
+    );
+}
+
+function ModuleFactory(environment) {
     if (!environment.trigger)
         environment.trigger = (e, name) => e.dispatchEvent(new environment.window.Event(name))
 

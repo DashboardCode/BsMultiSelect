@@ -13,7 +13,8 @@ if (!bundleName)
 if (isBS4)
    bundleName +=".bs4";
 
-let fileDest  = `${bundleName}${isEsm ? '.esm' : ''}.js`;
+let fileDest    = `${bundleName}${isEsm ? '.esm' : ''}.js`;
+let fileConfig  = `babel.bundle${isEsm ? '.esm' : '.umd'}.config.js`;
 let external  = isBS4? ['jquery', 'popper.js']:['@popperjs/core'];
 let globals   = isBS4? {'jquery': 'jQuery', 'popper.js': 'Popper'} :{'@popperjs/core': 'Popper'};
 
@@ -22,7 +23,8 @@ const plugins = [
   babel({
     // Only transpile our source code
     exclude: 'node_modules/**',
-    babelHelpers: 'bundled'
+    babelHelpers: 'bundled',
+    configFile: './'+fileConfig
   })]
 
 module.exports = {

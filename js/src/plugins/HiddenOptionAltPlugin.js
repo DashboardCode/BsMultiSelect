@@ -1,4 +1,4 @@
-export function HiddenOptionPlugin(pluginData){
+export function HiddenOptionAltPlugin(pluginData){
     let {configuration, createWrapAspect, isChoiceSelectableAspect,
         wrapsCollection, buildAndAttachChoiceAspect, countableChoicesListInsertAspect, countableChoicesList
     } = pluginData;

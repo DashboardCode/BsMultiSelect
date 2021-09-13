@@ -1,7 +1,7 @@
 'use strict'
 
 const rollup = require('rollup')
-const { babel } = require('@rollup/plugin-babel')
+const { babel, getBabelOutputPlugin} = require('@rollup/plugin-babel')
 const path = require('path')
 const banner = require('./banner.js')
 

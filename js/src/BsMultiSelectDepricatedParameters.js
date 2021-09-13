@@ -70,7 +70,7 @@ export function adjustLegacySettings(settings){
     }
 
     if (settings.useCss){
-        console.log("DashboarCode.BsMultiSelect: useCss(=true) is depricated, use - 'useCssPatch: false'");
+        console.log("DashboarCode.BsMultiSelect: 'useCss: true' is depricated, use - 'useCssPatch: false'");
         if(!css.pick_disabled){
             settings.useCssPatch = !settings.useCss
         }
