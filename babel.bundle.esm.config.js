@@ -11,8 +11,8 @@ module.exports = {
                 "exclude": ["transform-typeof-symbol"],
                 "targets": {
                     "browsers": [
-                        // browsers that can load ESM bundles: https://caniuse.com/es6-module
-                        "chrome  >= 61", "Firefox >= 60", "edge >= 16", "iOS >= 10.3","Safari >= 10.1","Android >= 93","Opera >= 48"]
+                        "chrome  >= 45", "Firefox >= 38", "Explorer >= 10", "edge >= 12", "iOS >= 9","Safari >= 9","Android >= 4.4","Opera >= 30"
+                    ]
                 },
                 "debug": true
             }

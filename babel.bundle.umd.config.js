@@ -11,7 +11,8 @@ module.exports = {
                 "exclude": ["transform-typeof-symbol"],
                 "targets": {
                     "browsers": [
-                        "chrome  >= 45", "Firefox >= 38", "Explorer >= 10", "edge >= 12", "iOS >= 9","Safari >= 9","Android >= 4.4","Opera >= 30"]
+                        "chrome  >= 45", "Firefox >= 38", "Explorer >= 10", "edge >= 12", "iOS >= 9","Safari >= 9","Android >= 4.4","Opera >= 30"
+                    ]
                 },
                 "debug": true
             }

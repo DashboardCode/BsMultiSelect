@@ -1,8 +1,11 @@
 'use strict'
 
+// alternative building method, saved as important sample
+
 const path    = require('path')
 const { babel, getBabelOutputPlugin } = require('@rollup/plugin-babel')
 const banner = require('./banner.js')
+const rollup = require('rollup')
 
 const isEsm = process.env.ESM === 'true'
 const isEcmaScript5 = process.env.ECMAS5 === 'true'
@@ -43,10 +46,33 @@ const rollupOutput = {
   sourcemap: true
 };
 
-module.exports = {
-   input: rollupInput,
-   external,
-   plugins: rollupPlugins,
-   output: rollupOutput
+
+
+
+var rollupExports = { bundle1 : { input: rollupInput, external, plugins: rollupPlugins, output: rollupOutput } }; 
+
+const build = async rollupExportKey => {
+  console.log(`Rollup ${rollupExportKey}...`)
+  var rollupExport = rollupExports[rollupExportKey];
+
+  const bundle = await rollup.rollup({
+    input: rollupExport.input,
+    plugins: rollupExport.plugins,
+    external: rollupExport.external
+  })
+
+  await bundle.write(rollupExport.output);
+
+  console.log(`Rollup ${rollupExportKey} done!`)
 }
 
+const main = async () => {
+  try {
+    await Promise.all(Object.keys(rollupExports).map(key => build(key)))
+  } catch (error) {
+    console.error(error)
+    process.exit(1)
+  }
+}
+
+main()

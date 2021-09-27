@@ -1,6 +1,6 @@
 {
   "name": "@dashboardcode/bsmultiselect",
-  "version": "1.2.0-beta.12",
+  "version": "1.2.0-beta.14",
   "private": false,
   "description": "Bootstrap 5 component - multiselect input",
   "homepage": "https://dashboardcode.github.io/BsMultiSelect/",
@@ -13,36 +13,44 @@
   "main":  "dist/js/BsMultiSelect.js",
   "unpkg": "dist/js/BsMultiSelect.min.js",
 
-  "main:bs4": "dist/js/BsMultiSelect.bs4.js",
-  "main:umd": "dist/js/BsMultiSelect.js",
-  
-  "module": "lib/index.js",
+  "source": "js/index.js",
+  "module": "dist/js/BsMultiSelect.js",
 
   "bugs": {
     "url": "https://github.com/DashboardCode/BsMultiSelect/issues"
   },
+
   "dependencies": {
-    "@popperjs/core": "^2.9.3"
+    "@popperjs/core": "^2.10.1"
   },
+
+  "exports": {
+    "./bs4/umd": "./dist/js/BsMultiSelect.bs4.js",
+    "./bs4/esm": "./dist/js/BsMultiSelect.bs4.esm.js",
+    "./bs5/umd": "./dist/js/BsMultiSelect.js",
+    "./bs5/esm": "./dist/js/BsMultiSelect.esm.js",
+    "./mjs": "./dist/js/BsMultiSelect.mjs"
+  },
+
   "peerDependencies": {},
   "devDependencies": {
-    "@babel/cli": "^7.15.4",
+    "@babel/cli": "^7.15.7",
     "@babel/core": "^7.15.5",
     "@babel/plugin-external-helpers": "^7.14.3",
     "@babel/plugin-proposal-object-rest-spread": "^7.15.6",
     "@babel/plugin-transform-spread": "^7.14.6",
     "@babel/preset-env": "^7.15.6",
     "@babel/preset-typescript": "^7.15.0",
+    "@babel/eslint-parser":"^7.15.7",
     "babel-plugin-add-import-extension":"^1.6.0",
     "babel-plugin-dev-expression":"^0.2.2",
     "babel-plugin-annotate-pure-calls":"0.4.0",
     "@popperjs/core": "^2.10.1",
     "@rollup/plugin-babel": "^5.3.0",
     "@rollup/plugin-commonjs": "^20.0.0",
-    "@rollup/plugin-node-resolve": "^13.0.4",
+    "@rollup/plugin-node-resolve": "^13.0.5",
     "@rollup/plugin-replace": "^3.0.0",
-    "autoprefixer": "^10.3.4",
-    "@babel/eslint-parser":"7.15.4",
+    "autoprefixer": "^10.3.6",
     "bootstrap": "^5.1.1",
     "clean-css-cli": "^5.3.3",
     "cross-env": "^7.0.3",
@@ -50,22 +58,22 @@
     "eslint-plugin-compat": "^3.13.0",
     "jquery": "^3.6.0",
     "npm-run-all": "^4.1.5",
-    "postcss": "^8.3.6",
-    "postcss-cli": "^8.3.1",
-    "rollup": "^2.56.3",
+    "postcss": "^8.3.8",
+    "postcss-cli": "^9.0.0",
+    "rollup": "^2.57.0",
     "rollup-plugin-istanbul": "^3.0.0",
-    "sass": "^1.39.2",
+    "sass": "^1.42.1",
     "bootstrap-4": "npm:bootstrap@4.6.0",
     "sass-legacy": "npm:sass@1.32.13",
 
     "shelljs": "^0.8.4",
-    "size-limit": "^5.0.3",
+    "size-limit": "^5.0.4",
     "stylelint": "^13.13.1",
     "stylelint-config-recommended-scss": "^4.3.0",
     "stylelint-config-standard": "^22.0.0",
     "stylelint-order": "^4.1.0",
-    "stylelint-scss": "^3.20.1",
-    "terser": "^5.7.2"
+    "stylelint-scss": "^3.21.0",
+    "terser": "^5.9.0"
   },
   "scripts": {
     "report": "echo.cd & cd & echo. & where node & echo.node -v & node -v & echo. & where npm & echo.npm -version & npm -version  & echo. & where eslint & echo.eslint -v & eslint -v & echo. & where rollup & echo.rollup -version & rollup -version & echo. &  echo.babel -version & node ./node_modules/@babel/cli/bin/babel --version",
@@ -75,46 +83,41 @@
     "css-compile-bs4": "node ./node_modules/sass-legacy/sass scss/BsMultiSelect.bs4.scss:dist/css/BsMultiSelect.bs4.css --source-map",
     "css-ncompile": "node-sass --output-style expanded --source-map true --source-map-contents true --precision 6 scss/BsMultiSelect.scss dist/css/BsMultiSelect.css",
     "css-lint": "stylelint --syntax scss \"scss/**/*.scss\"",
-    "css-prefix": "node ./node_modules/postcss-cli/bin/postcss --config build/postcss.config.js --replace \"dist/css/*.css\" \"!dist/css/*.min.css\"",
+    "css-prefix": "node ./node_modules/postcss-cli/index --config build/postcss.config.js --replace \"dist/css/*.css\" \"!dist/css/*.min.css\"",
     "css-minify": "npm-run-all --parallel css-minify-*",
     "css-minify-bs5": "cleancss -O1 --format breakWith=lf --with-rebase --source-map  --source-map-inline-sources --output dist/css/BsMultiSelect.min.css dist/css/BsMultiSelect.css",
     "css-minify-bs4": "cleancss -O1 --format breakWith=lf --with-rebase --source-map  --source-map-inline-sources --output dist/css/BsMultiSelect.bs4.min.css dist/css/BsMultiSelect.bs4.css",
-
-    "js": "npm-run-all js-lint js-compile js-minify",
-    "js-lib": "babel --config-file ./babel.lib.config.js js/src -d lib",
-
-    "js-xcompile-plugins": "node build/build-plugins.js",
-    
-    "js-xcompile-standalone-alt": "rollup --environment ALT:BsMultiSelect2 --config build/rollup.config.js --sourcemap",
-
-    "js-lint": "node ./node_modules/eslint/bin/eslint ./js/src",
 
     "js-standalone": "npm-run-all js-standalone-compile js-standalone-minify",
     "js-standalone-compile": "npm-run-all --parallel js-standalone-compile-*",
     "js-standalone-compile-umd": "npm-run-all --parallel js-standalone-compile-umd-*",
     "js-standalone-compile-esm": "npm-run-all --parallel js-standalone-compile-esm-*",
+    
     "js-standalone-compile-umd-bs5": "rollup --config build/rollup.config.js --sourcemap",
     "js-standalone-compile-umd-bs4": "rollup --config build/rollup.config.js --sourcemap --environment BS4:true",
-    "js-standalone-compile-esm-bs5": "rollup --config build/rollup.config.js --sourcemap --environment ESM:true ",
-    "js-standalone-compile-esm-bs4": "rollup --config build/rollup.config.js --sourcemap --environment ESM:true --environment BS4:true",
+    "js-standalone-compile-esm-bs5": "rollup --config build/rollup.config.js --sourcemap --environment ESM:true --environment ECMAS5:true",
+    "js-standalone-compile-esm-bs4": "rollup --config build/rollup.config.js --sourcemap --environment ESM:true --environment BS4:true --environment ECMAS5:true",
 
+    "js-standalone-compile-mjs": "rollup --config build/rollup.config.js --environment ESM:true",
+    
     "js-standalone-minify": "npm-run-all --parallel js-standalone-minify-*",
     "js-standalone-minify-umd":     "terser --compress typeofs=false --mangle --comments \"/^!/\" --source-map \"content=dist/js/BsMultiSelect.js.map,includeSources,url=BsMultiSelect.min.js.map\" --output dist/js/BsMultiSelect.min.js dist/js/BsMultiSelect.js",
     "js-standalone-minify-umd-bs4": "terser --compress typeofs=false --mangle --comments \"/^!/\" --source-map \"content=dist/js/BsMultiSelect.js.map,includeSources,url=BsMultiSelect.bs4.min.js.map\" --output dist/js/BsMultiSelect.bs4.min.js dist/js/BsMultiSelect.bs4.js",
     "js-standalone-minify-esm":     "terser --compress --mangle --comments \"/^!/\" --source-map \"content=dist/js/BsMultiSelect.esm.js.map,includeSources,url=BsMultiSelect.esm.min.js.map\" --output dist/js/BsMultiSelect.esm.min.js dist/js/BsMultiSelect.esm.js",
     "js-standalone-minify-esm-bs4": "terser --compress --mangle --comments \"/^!/\" --source-map \"content=dist/js/BsMultiSelect.esm.js.map,includeSources,url=BsMultiSelect.bs4.esm.min.js.map\" --output dist/js/BsMultiSelect.bs4.esm.min.js dist/js/BsMultiSelect.bs4.esm.js",
-    
  
-    "js-compile-babel": "cross-env PLUGINS=true babel ./js/src/BsMultiSelect.js --out-file ./js/dist/BsMultiSelect.js --source-maps",
+    "js-rollup": "cross-env ESM=true node build/rollup_async.js",
+    
+    "js-lib-lint": "node ./node_modules/eslint/bin/eslint ./src",
+    "js-lib-compile": "babel --config-file ./babel.lib.config.js /src -d lib",
+    "js-lib": "npm-run-all js-lib-lint js-lib-compile",
+
     "css":  "npm-run-all css-lint css-compile css-prefix css-minify",
-    "dist": "npm-run-all --parallel js-standalone js-lib css"
+    "dist": "npm-run-all --parallel js-standalone css"
   },
   "files": [
     "index.d.ts",
-    "dist/",
-    "lib/",
-    "js/{src,dist}/",
-    "scss/"
+    "/{src,scss,dist}/"
   ],
   "keywords": [
     "bootstrap multiselect multiline component"

@@ -1,3 +1,26 @@
+0. esm bundle for IE11 with min;
+1. create lib bundle (no transpile) and test it in babel and ts project;
+
+2. https://webpack.js.org/guides/package-exports/
+Providing CommonJs and ESM version (stateful)
+Providing devtools or production optimizations
+Providing different versions depending on target environment
+Combining patterns
+
+3. Babel for transpiling, tsc for types - new test project 
+https://www.typescriptlang.org/docs/handbook/babel-with-typescript.html
+
+4. micorbundle standard https://github.com/developit/microbundle/issues/91
+
+"main": "dist/foo.js",          // CJS bundle
+"umd:main": "dist/foo.umd.js",  // UMD bundle
+"module": "dist/foo.m.js",      // ES Modules bundle
+"source": "src/foo.js",  
+
+"browser": "dist/my-package.umd.js"
+
+"types": 
+
 PLUGINS
 
 ScrollAndWidth plugin
