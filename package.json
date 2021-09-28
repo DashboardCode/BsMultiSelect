@@ -1,6 +1,6 @@
 {
   "name": "@dashboardcode/bsmultiselect",
-  "version": "1.2.0-beta.14",
+  "version": "1.2.0-beta.15",
   "private": false,
   "description": "Bootstrap 5 component - multiselect input",
   "homepage": "https://dashboardcode.github.io/BsMultiSelect/",
@@ -29,7 +29,8 @@
     "./bs4/esm": "./dist/js/BsMultiSelect.bs4.esm.js",
     "./bs5/umd": "./dist/js/BsMultiSelect.js",
     "./bs5/esm": "./dist/js/BsMultiSelect.esm.js",
-    "./mjs": "./dist/js/BsMultiSelect.mjs"
+    "./mjs":     "./dist/js/BsMultiSelect.mjs",
+  	"./es2015":  "./dist/js/BsMultiSelect.ecma5.mjs"
   },
 
   "peerDependencies": {},
@@ -67,7 +68,7 @@
     "sass-legacy": "npm:sass@1.32.13",
 
     "shelljs": "^0.8.4",
-    "size-limit": "^5.0.4",
+    "size-limit": "^5.0.5",
     "stylelint": "^13.13.1",
     "stylelint-config-recommended-scss": "^4.3.0",
     "stylelint-config-standard": "^22.0.0",
@@ -93,12 +94,15 @@
     "js-standalone-compile-umd": "npm-run-all --parallel js-standalone-compile-umd-*",
     "js-standalone-compile-esm": "npm-run-all --parallel js-standalone-compile-esm-*",
     
-    "js-standalone-compile-umd-bs5": "rollup --config build/rollup.config.js --sourcemap",
-    "js-standalone-compile-umd-bs4": "rollup --config build/rollup.config.js --sourcemap --environment BS4:true",
-    "js-standalone-compile-esm-bs5": "rollup --config build/rollup.config.js --sourcemap --environment ESM:true --environment ECMAS5:true",
-    "js-standalone-compile-esm-bs4": "rollup --config build/rollup.config.js --sourcemap --environment ESM:true --environment BS4:true --environment ECMAS5:true",
+    "js-standalone-compile-umd-bs5": "rollup --config build/rollup.config.js --environment ECMA5:true",
+    "js-standalone-compile-esm-bs5": "rollup --config build/rollup.config.js --environment ECMA5:true --environment ESM:true",
 
-    "js-standalone-compile-mjs": "rollup --config build/rollup.config.js --environment ESM:true",
+    "js-standalone-compile-umd-bs4": "rollup --config build/rollup.config.js --environment ECMA5:true --environment BS4:true",
+    "js-standalone-compile-esm-bs4": "rollup --config build/rollup.config.js --environment ECMA5:true --environment BS4:true --environment ESM:true",
+
+
+    "js-standalone-compile-mjs": "rollup --config build/rollup.config.js   --environment MJS:true",
+    "js-standalone-compile-ecma5": "rollup --config build/rollup.config.js --environment MJS:true --environment ECMA5:true",
     
     "js-standalone-minify": "npm-run-all --parallel js-standalone-minify-*",
     "js-standalone-minify-umd":     "terser --compress typeofs=false --mangle --comments \"/^!/\" --source-map \"content=dist/js/BsMultiSelect.js.map,includeSources,url=BsMultiSelect.min.js.map\" --output dist/js/BsMultiSelect.min.js dist/js/BsMultiSelect.js",
@@ -117,7 +121,7 @@
   },
   "files": [
     "index.d.ts",
-    "/{src,scss,dist}/"
+    "/{dist,scss}/"
   ],
   "keywords": [
     "bootstrap multiselect multiline component"

@@ -1,571 +1,103 @@
 /*!
-  * BsMultiSelect v1.2.0-beta.14 (https://dashboardcode.github.io/BsMultiSelect/)
+  * BsMultiSelect v1.2.0-beta.15 (https://dashboardcode.github.io/BsMultiSelect/)
   * Copyright 2017-2021 Roman Pokrovskij (github user rpokrovskij)
   * Licensed under Apache 2 (https://github.com/DashboardCode/BsMultiSelect/blob/master/LICENSE)
   */
 (function (global, factory) {
-    typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports) :
-    typeof define === 'function' && define.amd ? define(['exports'], factory) :
-    (global = typeof globalThis !== 'undefined' ? globalThis : global || self, factory(global.dashboardcode = {}));
-})(this, (function (exports) { 'use strict';
+    typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory(require('@popperjs/core')) :
+    typeof define === 'function' && define.amd ? define(['@popperjs/core'], factory) :
+    (global = typeof globalThis !== 'undefined' ? globalThis : global || self, global.dashboardcode = factory(global.Popper));
+})(this, (function (Popper) { 'use strict';
 
-    function findDirectChildByTagName(element, tagName) {
-      var value = null;
+    function _interopDefaultLegacy (e) { return e && typeof e === 'object' && 'default' in e ? e : { 'default': e }; }
 
-      for (var i = 0; i < element.children.length; i++) {
-        var tmp = element.children[i];
+    var Popper__default = /*#__PURE__*/_interopDefaultLegacy(Popper);
 
-        if (tmp.tagName == tagName) {
-          value = tmp;
-          break;
-        }
+    function addToJQueryPrototype(pluginName, createPlugin, $) {
+      var firstChar = pluginName.charAt(0);
+      var firstCharLower = firstChar.toLowerCase();
+
+      if (firstCharLower == firstChar) {
+        throw new Error("Plugin name '" + pluginName + "' should be started from upper case char");
       }
 
-      return value;
-    }
-    function closestByTagName(element, tagName) {
-      return closest(element, function (e) {
-        return e.tagName === tagName;
-      }); // TODO support xhtml?  e.tagName.toUpperCase() ?
-    }
-    function closestByClassName(element, className) {
-      return closest(element, function (e) {
-        return e.classList.contains(className);
-      });
-    }
-    function closestByAttribute(element, attributeName, attribute) {
-      return closest(element, function (e) {
-        return e.getAttribute(attributeName) === attribute;
-      });
-    }
-    function containsAndSelf(node, otherNode) {
-      return node === otherNode || node.contains(otherNode);
-    }
-    function getDataGuardedWithPrefix(element, prefix, name) {
-      var tmp1 = element.getAttribute('data-' + prefix + '-' + name);
+      var prototypableName = firstCharLower + pluginName.slice(1);
+      var noConflictPrototypable = $.fn[prototypableName];
+      var noConflictPrototypableForInstance = $.fn[pluginName];
+      var dataKey = "DashboardCode." + pluginName;
 
-      if (tmp1) {
-        return tmp1;
-      } else {
-        var tmp2 = element.getAttribute('data-' + name);
-        if (tmp2) return tmp2;
+      function createInstance(options, e, $e) {
+        var optionsRef = typeof options === 'object' || options instanceof Function ? options : null;
+        var instance = createPlugin(e, optionsRef, function () {
+          $e.removeData(dataKey);
+        });
+        $e.data(dataKey, instance);
+        return instance;
       }
 
-      return null;
-    }
+      function prototypable(options) {
+        var output = [];
+        this.each(function (i, e) {
+          var $e = $(e);
+          var instance = $e.data(dataKey);
+          var isMethodName = typeof options === 'string';
 
-    function closest(element, predicate) {
-      if (!element || !(element instanceof Element)) return null; // should be element, not document (TODO: check iframe)
-
-      if (predicate(element)) return element;
-      return closest(element.parentNode, predicate);
-    }
-
-    function siblingsAsArray(element) {
-      var value = [];
-
-      if (element.parentNode) {
-        var children = element.parentNode.children;
-        var l = element.parentNode.children.length;
-
-        if (children.length > 1) {
-          for (var i = 0; i < l; ++i) {
-            var e = children[i];
-            if (e != element) value.push(e);
-          }
-        }
-      }
-
-      return value;
-    }
-    function getIsRtl(element) {
-      var isRtl = false;
-      var e = closestByAttribute(element, "dir", "rtl");
-      if (e) isRtl = true;
-      return isRtl;
-    }
-    function EventBinder() {
-      var list = [];
-      return {
-        bind: function bind(element, eventName, handler) {
-          element.addEventListener(eventName, handler);
-          list.push({
-            element: element,
-            eventName: eventName,
-            handler: handler
-          });
-        },
-        unbind: function unbind() {
-          list.forEach(function (e) {
-            var element = e.element,
-                eventName = e.eventName,
-                handler = e.handler;
-            element.removeEventListener(eventName, handler);
-          });
-        }
-      };
-    }
-    function AttributeBackup() {
-      var list = [];
-      return {
-        set: function set(element, attributeName, attribute) {
-          var currentAtribute = element.getAttribute(attributeName);
-          list.push({
-            element: element,
-            currentAtribute: currentAtribute,
-            attribute: attribute
-          });
-          element.setAttribute(attributeName, attribute);
-        },
-        restore: function restore() {
-          list.forEach(function (e) {
-            var element = e.element,
-                attributeName = e.attributeName,
-                attribute = e.attribute;
-            if (attributeName) element.setAttribute(attributeName, attribute);else element.removeAttribute(attributeName);
-          });
-        }
-      };
-    }
-    function EventLoopProlongableFlag(window) {
-      var flag = false;
-      var pr = null;
-      return {
-        get: function get() {
-          return flag;
-        },
-        set: function set(timeout) {
-          if (flag && pr) {
-            window.clearTimeout(pr);
+          if (!instance) {
+            if (isMethodName && /Dispose/.test(options)) return;
+            instance = createInstance(options, e, $e);
           }
 
-          flag = true;
-          pr = window.setTimeout(function () {
-            flag = false;
-            pr = null;
-          }, timeout ? timeout : 0);
+          if (isMethodName) {
+            var methodName = options;
+
+            if (typeof instance[methodName] === 'undefined') {
+              var lMethodName = methodName.charAt(0).toLowerCase() + methodName.slice(1);
+
+              if (typeof instance[lMethodName] === 'undefined') {
+                throw new Error("No method named '" + methodName + "'");
+              } else {
+                methodName = lMethodName;
+              }
+            }
+
+            var result = instance[methodName]();
+
+            if (result !== undefined) {
+              output.push(result);
+            }
+          }
+        });
+        if (output.length == 0) return this;else if (output.length == 1) return output[0];else return output;
+      }
+
+      function prototypableForInstance(options) {
+        var instance = this.data(dataKey);
+        if (instance) return instance;else if (this.length === 1) {
+          return createInstance(options, this.get(0), this);
+        } else if (this.length > 1) {
+          var output = [];
+          this.each(function (i, e) {
+            output.push(createInstance(options, e, $(e)));
+          });
+          return output;
         }
+      }
+
+      $.fn[prototypableName] = prototypable;
+
+      $.fn[prototypableName].noConflict = function () {
+        $.fn[prototypableName] = noConflictPrototypable;
+        return prototypable;
       };
-    }
-    function ResetableFlag() {
-      var flag = false;
-      return {
-        get: function get() {
-          return flag;
-        },
-        set: function set() {
-          flag = true;
-        },
-        reset: function reset() {
-          flag = false;
-        }
+
+      $.fn[pluginName] = prototypableForInstance;
+
+      $.fn[pluginName].noConflict = function () {
+        $.fn[pluginName] = noConflictPrototypableForInstance;
+        return prototypableForInstance;
       };
-    }
 
-    function Bs5Plugin() {}
-
-    Bs5Plugin.plugDefaultConfig = function (defaults) {
-      defaults.css = css$1;
-      setDefaults$1(defaults);
-    };
-
-    function setDefaults$1(defaults) {
-      defaults.useCssPatch = true;
-      defaults.cssPatch = cssPatch$1;
-      defaults.pickButtonHTML = '<button aria-label="Remove" tabIndex="-1" type="button"></button>';
-      defaults.composeGetSize = composeGetSize$1;
-      defaults.getDefaultLabel = getDefaultLabel$1;
-    }
-
-    function composeGetSize$1(selectElement) {
-      var inputGroupElement = closestByClassName(selectElement, 'input-group');
-      var getSize = null;
-
-      if (inputGroupElement) {
-        getSize = function getSize() {
-          var value = null;
-          if (inputGroupElement.classList.contains('input-group-lg')) value = 'lg';else if (inputGroupElement.classList.contains('input-group-sm')) value = 'sm';
-          return value;
-        };
-      } else {
-        getSize = function getSize() {
-          var value = null;
-          if (selectElement.classList.contains('form-select-lg') || selectElement.classList.contains('form-control-lg')) // changed for BS
-            value = 'lg';else if (selectElement.classList.contains('form-select-sm') || selectElement.classList.contains('form-control-sm')) value = 'sm';
-          return value;
-        };
-      }
-
-      return getSize;
-    }
-
-    function getDefaultLabel$1(selectElement) {
-      var value = null;
-      var query = "label[for=\"" + selectElement.id + "\"]";
-      var p1 = selectElement.parentElement;
-      value = p1.querySelector(query); // label can be wrapped into col-auto
-
-      if (!value) {
-        var p2 = p1.parentElement;
-        value = p2.querySelector(query);
-      }
-
-      return value;
-    }
-
-    var css$1 = {
-      choices: 'dropdown-menu',
-      // bs, in bsmultiselect.scss as div.dropdown-menu
-      choicesList: '',
-      // bs, in bsmultiselect.scss as div.dropdown-menu>ul (first child)
-      choice_hover: 'hover',
-      //  not bs, in scss as 'ul.dropdown-menu li.hover'
-      choice_selected: 'selected',
-      //  not bs,
-      choice_disabled: 'disabled',
-      //  not bs,
-      picks: 'form-control',
-      // bs, in scss 'ul.form-control'
-      picks_focus: 'focus',
-      // not bs, in scss 'ul.form-control.focus'
-      picks_disabled: 'disabled',
-      //  not bs, in scss 'ul.form-control.disabled'
-      pick_disabled: '',
-      pickFilter: '',
-      filterInput: '',
-      // used in pickContentGenerator
-      pick: {
-        classes: 'badge'
-      },
-      // bs
-      pickContent: '',
-      pickContent_disabled: 'disabled',
-      // not bs, in scss 'ul.form-control li span.disabled'
-      pickButton: 'btn-close',
-      // bs
-      // used in choiceContentGenerator
-      // choice:  'dropdown-item', // it seems like hover should be managed manually since there should be keyboard support
-      choiceCheckBox_disabled: 'disabled',
-      //  not bs, in scss as 'ul.form-control li .custom-control-input.disabled ~ .custom-control-label'
-      choiceContent: 'form-check',
-      // bs d-flex required for rtl to align items
-      choiceCheckBox: 'form-check-input',
-      // bs
-      choiceLabel: 'form-check-label',
-      choiceLabel_disabled: '',
-      label_floating_lifted: 'floating-lifted',
-      picks_floating_lifted: 'floating-lifted',
-      warning: 'alert-warning'
-    };
-    var cssPatch$1 = {
-      choicesList: {
-        listStyleType: 'none',
-        paddingLeft: '0',
-        paddingRight: '0',
-        marginBottom: '0'
-      },
-      picks: {
-        listStyleType: 'none',
-        display: 'flex',
-        flexWrap: 'wrap',
-        height: 'auto',
-        marginBottom: '0',
-        cursor: 'text'
-      },
-      choice: {
-        classes: 'px-md-2 px-1',
-        styles: {
-          cursor: 'pointer'
-        }
-      },
-      //choice_selected: 'selected',  //  remove,
-      //choice_disabled: 'disabled',  //  remove,
-      choice_hover: 'text-primary bg-light',
-      choice_disabled_hover: 'bg-light',
-      // actually 'disabled, not selected'
-      filterInput: {
-        border: '0px',
-        height: 'auto',
-        boxShadow: 'none',
-        padding: '0',
-        margin: '0',
-        outline: 'none',
-        backgroundColor: 'transparent',
-        backgroundImage: 'none' // otherwise BS .was-validated set its image
-
-      },
-      filterInput_empty: 'form-control',
-      // need for placeholder, TODO test form-control-plaintext
-      // used in PicksDom
-      picks_disabled: {
-        backgroundColor: '#e9ecef'
-      },
-      picks_focus: {
-        borderColor: '#80bdff',
-        boxShadow: '0 0 0 0.2rem rgba(0, 123, 255, 0.25)'
-      },
-      picks_focus_valid: {
-        borderColor: '',
-        boxShadow: '0 0 0 0.2rem rgba(40, 167, 69, 0.25)'
-      },
-      picks_focus_invalid: {
-        borderColor: '',
-        boxShadow: '0 0 0 0.2rem rgba(220, 53, 69, 0.25)'
-      },
-      // used in BsAppearancePlugin
-      picks_def: {
-        minHeight: 'calc(2.25rem + 2px)'
-      },
-      picks_lg: {
-        minHeight: 'calc(2.875rem + 2px)'
-      },
-      picks_sm: {
-        minHeight: 'calc(1.8125rem + 2px)'
-      },
-      picks_floating_def: {
-        minHeight: 'calc(3.5rem + 2px)'
-      },
-      // used in pickContentGenerator
-      pick: {
-        paddingLeft: '0',
-        paddingRight: '.5rem',
-        paddingInlineStart: '0',
-        paddingInlineEnd: '0.5rem',
-        color: 'var(--bs-dark)'
-      },
-      pickButton: {
-        fontSize: '0.8em',
-        float: "none",
-        verticalAlign: "text-top"
-      },
-      pickContent_disabled: {
-        opacity: '.65'
-      },
-      // used in choiceContentGenerator
-      choiceContent: {
-        justifyContent: 'flex-start',
-        cursor: 'inherit'
-      },
-      // BS problem: without this on inline form menu items justified center
-      choiceLabel: {
-        color: 'inherit',
-        cursor: 'inherit'
-      },
-      // otherwise BS .was-validated set its color
-      choiceCheckBox: {
-        color: 'inherit',
-        cursor: 'inherit'
-      },
-      choiceLabel_disabled: {
-        opacity: '.65'
-      },
-      // more flexible than {color: '#6c757d'}; note: avoid opacity on pickElement's border; TODO write to BS 
-      // floating plugin
-      label_floating_lifted: {
-        opacity: '.65',
-        transform: 'scale(.85) translateY(-.5rem) translateX(.15rem)'
-      },
-      picks_floating_lifted: {
-        paddingTop: '1.625rem',
-        paddingLeft: '0.8rem',
-        paddingBottom: '0'
-      },
-      warning: {
-        paddingLeft: '.25rem',
-        paddingRight: '.25rem',
-        zIndex: 4,
-        fontSize: 'small',
-        backgroundColor: 'var(--bs-warning)'
-      } // zIndex=4  since the input-group zIndex=3
-
-    };
-
-    function Bs4Plugin() {}
-
-    Bs4Plugin.plugDefaultConfig = function (defaults) {
-      defaults.css = css;
-      setDefaults(defaults);
-    };
-
-    function setDefaults(defaults) {
-      defaults.useCssPatch = true;
-      defaults.cssPatch = cssPatch;
-      defaults.pickButtonHTML = '<button aria-label="Remove" tabIndex="-1" type="button"><span aria-hidden="true">&times;</span></button>';
-      defaults.composeGetSize = composeGetSize;
-      defaults.getDefaultLabel = getDefaultLabel;
-    }
-
-    var css = {
-      choices: 'dropdown-menu',
-      // bs4, in bsmultiselect.scss as ul.dropdown-menu
-      choicesList: '',
-      // bs4, in bsmultiselect.scss as div.dropdown-menu>ul (first child)
-      choice_hover: 'hover',
-      //  not bs4, in scss as 'ul.dropdown-menu li.hover'
-      choice_selected: '',
-      choice_disabled: '',
-      picks: 'form-control',
-      // bs4, in scss 'ul.form-control'
-      picks_focus: 'focus',
-      // not bs4, in scss 'ul.form-control.focus'
-      picks_disabled: 'disabled',
-      //  not bs4, in scss 'ul.form-control.disabled'
-      pick_disabled: '',
-      pickFilter: '',
-      filterInput: '',
-      // used in pickContentGenerator
-      pick: 'badge',
-      // bs4
-      pickContent: '',
-      pickContent_disabled: 'disabled',
-      // not bs4, in scss 'ul.form-control li span.disabled'
-      pickButton: 'close',
-      // bs4
-      // used in choiceContentGenerator
-      // choice:  'dropdown-item', // it seems like hover should be managed manually since there should be keyboard support
-      choiceCheckBox_disabled: 'disabled',
-      //  not bs4, in scss as 'ul.form-control li .custom-control-input.disabled ~ .custom-control-label'
-      choiceContent: 'custom-control custom-checkbox d-flex',
-      // bs4 d-flex required for rtl to align items
-      choiceCheckBox: 'custom-control-input',
-      // bs4
-      choiceLabel: 'custom-control-label justify-content-start',
-      choiceLabel_disabled: '',
-      warning: 'alert-warning bg-warning'
-    };
-    var cssPatch = {
-      choicesList: {
-        listStyleType: 'none',
-        paddingLeft: '0',
-        paddingRight: '0',
-        marginBottom: '0'
-      },
-      picks: {
-        listStyleType: 'none',
-        display: 'flex',
-        flexWrap: 'wrap',
-        height: 'auto',
-        marginBottom: '0',
-        cursor: 'text'
-      },
-      choice: {
-        classes: 'px-md-2 px-1',
-        styles: {
-          cursor: 'pointer'
-        }
-      },
-      choice_hover: 'text-primary bg-light',
-      choice_disabled_hover: 'bg-light',
-      filterInput: {
-        border: '0px',
-        height: 'auto',
-        boxShadow: 'none',
-        padding: '0',
-        margin: '0',
-        outline: 'none',
-        backgroundColor: 'transparent',
-        backgroundImage: 'none' // otherwise BS .was-validated set its image
-
-      },
-      filterInput_empty: 'form-control',
-      // need for placeholder, TODO test form-control-plaintext
-      // used in PicksDom
-      picks_disabled: {
-        backgroundColor: '#e9ecef'
-      },
-      picks_focus: {
-        borderColor: '#80bdff',
-        boxShadow: '0 0 0 0.2rem rgba(0, 123, 255, 0.25)'
-      },
-      picks_focus_valid: {
-        borderColor: '',
-        boxShadow: '0 0 0 0.2rem rgba(40, 167, 69, 0.25)'
-      },
-      picks_focus_invalid: {
-        borderColor: '',
-        boxShadow: '0 0 0 0.2rem rgba(220, 53, 69, 0.25)'
-      },
-      // used in BsAppearancePlugin
-      picks_def: {
-        minHeight: 'calc(2.25rem + 2px)'
-      },
-      picks_lg: {
-        minHeight: 'calc(2.875rem + 2px)'
-      },
-      picks_sm: {
-        minHeight: 'calc(1.8125rem + 2px)'
-      },
-      // used in pickContentGenerator
-      pick: {
-        lineHeight: '1.5em',
-        paddingLeft: '0',
-        paddingRight: '.5rem',
-        paddingInlineStart: '0',
-        paddingInlineEnd: '0.5rem'
-      },
-      pickButton: {
-        fontSize: '1.5em',
-        lineHeight: '.9em',
-        float: "none"
-      },
-      pickContent_disabled: {
-        opacity: '.65'
-      },
-      // used in choiceContentGenerator
-      choiceContent: {
-        justifyContent: 'flex-start',
-        cursor: 'inherit'
-      },
-      // BS problem: without this on inline form menu items justified center
-      choiceLabel: {
-        color: 'inherit',
-        cursor: 'inherit'
-      },
-      // otherwise BS .was-validated set its color
-      choiceCheckBox: {
-        color: 'inherit',
-        cursor: 'inherit'
-      },
-      choiceLabel_disabled: {
-        opacity: '.65'
-      },
-      // more flexible than {color: '#6c757d'}; note: avoid opacity on pickElement's border; TODO write to BS4 
-      warning: {
-        paddingLeft: '.25rem',
-        paddingRight: '.25rem',
-        zIndex: 4,
-        fontSize: 'small',
-        backgroundColor: 'var(--bs-warning)'
-      } // zIndex=4  since the input-group zIndex=3
-
-    };
-
-    function composeGetSize(selectElement) {
-      var inputGroupElement = closestByClassName(selectElement, 'input-group');
-      var getSize = null;
-
-      if (inputGroupElement) {
-        getSize = function getSize() {
-          var value = null;
-          if (inputGroupElement.classList.contains('input-group-lg')) value = 'lg';else if (inputGroupElement.classList.contains('input-group-sm')) value = 'sm';
-          return value;
-        };
-      } else {
-        getSize = function getSize() {
-          var value = null;
-          if (selectElement.classList.contains('custom-select-lg') || selectElement.classList.contains('form-control-lg')) value = 'lg';else if (selectElement.classList.contains('custom-select-sm') || selectElement.classList.contains('form-control-sm')) value = 'sm';
-          return value;
-        };
-      }
-
-      return getSize;
-    }
-
-    function getDefaultLabel(selectElement) {
-      var value = null;
-      var formGroup = closestByClassName(selectElement, 'form-group');
-      if (formGroup) value = formGroup.querySelector("label[for=\"" + selectElement.id + "\"]");
-      return value;
+      return prototypable;
     }
 
     function isBoolean(value) {
@@ -881,6 +413,235 @@
       return arr;
     }
 
+    function findDirectChildByTagName(element, tagName) {
+      var value = null;
+
+      for (var i = 0; i < element.children.length; i++) {
+        var tmp = element.children[i];
+
+        if (tmp.tagName == tagName) {
+          value = tmp;
+          break;
+        }
+      }
+
+      return value;
+    }
+    function composeEventTrigger(window) {
+      var trigger;
+
+      if (typeof window.Event === 'function') {
+        trigger = function trigger(e, eventName) {
+          var event = new window.Event(eventName);
+          e.dispatchEvent(event);
+        };
+      } else trigger = function trigger(e, eventName) {
+        // IE 11 polyfill
+        var event = window.document.createEvent("CustomEvent");
+        event.initCustomEvent(eventName, false, false, undefined);
+        e.dispatchEvent(event);
+      };
+
+      return trigger;
+    }
+    function closestByTagName(element, tagName) {
+      return closest(element, function (e) {
+        return e.tagName === tagName;
+      }); // TODO support xhtml?  e.tagName.toUpperCase() ?
+    }
+    function closestByClassName(element, className) {
+      return closest(element, function (e) {
+        return e.classList.contains(className);
+      });
+    }
+    function closestByAttribute(element, attributeName, attribute) {
+      return closest(element, function (e) {
+        return e.getAttribute(attributeName) === attribute;
+      });
+    }
+    function containsAndSelf(node, otherNode) {
+      return node === otherNode || node.contains(otherNode);
+    }
+    function getDataGuardedWithPrefix(element, prefix, name) {
+      var tmp1 = element.getAttribute('data-' + prefix + '-' + name);
+
+      if (tmp1) {
+        return tmp1;
+      } else {
+        var tmp2 = element.getAttribute('data-' + name);
+        if (tmp2) return tmp2;
+      }
+
+      return null;
+    }
+
+    function closest(element, predicate) {
+      if (!element || !(element instanceof Element)) return null; // should be element, not document (TODO: check iframe)
+
+      if (predicate(element)) return element;
+      return closest(element.parentNode, predicate);
+    }
+
+    function siblingsAsArray(element) {
+      var value = [];
+
+      if (element.parentNode) {
+        var children = element.parentNode.children;
+        var l = element.parentNode.children.length;
+
+        if (children.length > 1) {
+          for (var i = 0; i < l; ++i) {
+            var e = children[i];
+            if (e != element) value.push(e);
+          }
+        }
+      }
+
+      return value;
+    }
+    function getIsRtl(element) {
+      var isRtl = false;
+      var e = closestByAttribute(element, "dir", "rtl");
+      if (e) isRtl = true;
+      return isRtl;
+    }
+    function EventBinder() {
+      var list = [];
+      return {
+        bind: function bind(element, eventName, handler) {
+          element.addEventListener(eventName, handler);
+          list.push({
+            element: element,
+            eventName: eventName,
+            handler: handler
+          });
+        },
+        unbind: function unbind() {
+          list.forEach(function (e) {
+            var element = e.element,
+                eventName = e.eventName,
+                handler = e.handler;
+            element.removeEventListener(eventName, handler);
+          });
+        }
+      };
+    }
+    function AttributeBackup() {
+      var list = [];
+      return {
+        set: function set(element, attributeName, attribute) {
+          var currentAtribute = element.getAttribute(attributeName);
+          list.push({
+            element: element,
+            currentAtribute: currentAtribute,
+            attribute: attribute
+          });
+          element.setAttribute(attributeName, attribute);
+        },
+        restore: function restore() {
+          list.forEach(function (e) {
+            var element = e.element,
+                attributeName = e.attributeName,
+                attribute = e.attribute;
+            if (attributeName) element.setAttribute(attributeName, attribute);else element.removeAttribute(attributeName);
+          });
+        }
+      };
+    }
+    function EventLoopProlongableFlag(window) {
+      var flag = false;
+      var pr = null;
+      return {
+        get: function get() {
+          return flag;
+        },
+        set: function set(timeout) {
+          if (flag && pr) {
+            window.clearTimeout(pr);
+          }
+
+          flag = true;
+          pr = window.setTimeout(function () {
+            flag = false;
+            pr = null;
+          }, timeout ? timeout : 0);
+        }
+      };
+    }
+    function ResetableFlag() {
+      var flag = false;
+      return {
+        get: function get() {
+          return flag;
+        },
+        set: function set() {
+          flag = true;
+        },
+        reset: function reset() {
+          flag = false;
+        }
+      };
+    }
+
+    function PluginManager(plugins, pluginData) {
+      var instances = [];
+
+      if (plugins) {
+        for (var i = 0; i < plugins.length; i++) {
+          var instance = plugins[i](pluginData);
+          if (instance) instances.push(instance);
+        }
+      }
+
+      var disposes = [];
+      return {
+        buildApi: function buildApi(api) {
+          for (var _i = 0; _i < instances.length; _i++) {
+            var _instances$_i$buildAp, _instances$_i;
+
+            var dispose = (_instances$_i$buildAp = (_instances$_i = instances[_i]).buildApi) == null ? void 0 : _instances$_i$buildAp.call(_instances$_i, api);
+            if (dispose) disposes.push(dispose);
+          }
+        },
+        dispose: function dispose() {
+          for (var _i2 = 0; _i2 < disposes.length; _i2++) {
+            disposes[_i2]();
+          }
+
+          disposes = null;
+
+          for (var _i3 = 0; _i3 < instances.length; _i3++) {
+            var _instances$_i3$dispos, _instances$_i2;
+
+            (_instances$_i3$dispos = (_instances$_i2 = instances[_i3]).dispose) == null ? void 0 : _instances$_i3$dispos.call(_instances$_i2);
+          }
+
+          instances = null;
+        }
+      };
+    }
+    function plugDefaultConfig(constructors, defaults) {
+      for (var i = 0; i < constructors.length; i++) {
+        var _constructors$i$plugD, _constructors$i;
+
+        (_constructors$i$plugD = (_constructors$i = constructors[i]).plugDefaultConfig) == null ? void 0 : _constructors$i$plugD.call(_constructors$i, defaults);
+      }
+    }
+    function plugMergeSettings(constructors, configuration, defaults, settings) {
+      for (var i = 0; i < constructors.length; i++) {
+        var _constructors$i$plugM, _constructors$i2;
+
+        (_constructors$i$plugM = (_constructors$i2 = constructors[i]).plugMergeSettings) == null ? void 0 : _constructors$i$plugM.call(_constructors$i2, configuration, defaults, settings);
+      }
+    }
+    function plugStaticDom(constructors, aspects) {
+      for (var i = 0; i < constructors.length; i++) {
+        var _constructors$i$plugS, _constructors$i3;
+
+        (_constructors$i$plugS = (_constructors$i3 = constructors[i]).plugStaticDom) == null ? void 0 : _constructors$i$plugS.call(_constructors$i3, aspects);
+      }
+    }
+
     function addStyling(element, styling) {
       var backupStyling = {
         classes: [],
@@ -1080,65 +841,6 @@
         if (param1 === undefined) stylings1[property] = Styling(param2);else {
           stylings1[property] = createStyling(false, param1, param2);
         }
-      }
-    }
-
-    function PluginManager(plugins, pluginData) {
-      var instances = [];
-
-      if (plugins) {
-        for (var i = 0; i < plugins.length; i++) {
-          var instance = plugins[i](pluginData);
-          if (instance) instances.push(instance);
-        }
-      }
-
-      var disposes = [];
-      return {
-        buildApi: function buildApi(api) {
-          for (var _i = 0; _i < instances.length; _i++) {
-            var _instances$_i$buildAp, _instances$_i;
-
-            var dispose = (_instances$_i$buildAp = (_instances$_i = instances[_i]).buildApi) == null ? void 0 : _instances$_i$buildAp.call(_instances$_i, api);
-            if (dispose) disposes.push(dispose);
-          }
-        },
-        dispose: function dispose() {
-          for (var _i2 = 0; _i2 < disposes.length; _i2++) {
-            disposes[_i2]();
-          }
-
-          disposes = null;
-
-          for (var _i3 = 0; _i3 < instances.length; _i3++) {
-            var _instances$_i3$dispos, _instances$_i2;
-
-            (_instances$_i3$dispos = (_instances$_i2 = instances[_i3]).dispose) == null ? void 0 : _instances$_i3$dispos.call(_instances$_i2);
-          }
-
-          instances = null;
-        }
-      };
-    }
-    function plugDefaultConfig(constructors, defaults) {
-      for (var i = 0; i < constructors.length; i++) {
-        var _constructors$i$plugD, _constructors$i;
-
-        (_constructors$i$plugD = (_constructors$i = constructors[i]).plugDefaultConfig) == null ? void 0 : _constructors$i$plugD.call(_constructors$i, defaults);
-      }
-    }
-    function plugMergeSettings(constructors, configuration, defaults, settings) {
-      for (var i = 0; i < constructors.length; i++) {
-        var _constructors$i$plugM, _constructors$i2;
-
-        (_constructors$i$plugM = (_constructors$i2 = constructors[i]).plugMergeSettings) == null ? void 0 : _constructors$i$plugM.call(_constructors$i2, configuration, defaults, settings);
-      }
-    }
-    function plugStaticDom(constructors, aspects) {
-      for (var i = 0; i < constructors.length; i++) {
-        var _constructors$i$plugS, _constructors$i3;
-
-        (_constructors$i$plugS = (_constructors$i3 = constructors[i]).plugStaticDom) == null ? void 0 : _constructors$i$plugS.call(_constructors$i3, aspects);
       }
     }
 
@@ -2565,7 +2267,7 @@
       };
     }
 
-    function BsMultiSelect(element, environment, plugins, configuration, onInit) {
+    function BsMultiSelect$1(element, environment, plugins, configuration, onInit) {
       var _extendIfUndefined;
 
       var window = environment.window;
@@ -2931,7 +2633,7 @@
         extendIfUndefined(configuration, defaults);
         var onInit = buildConfiguration == null ? void 0 : buildConfiguration(element, configuration); // TODO: configuration should become an aspect
 
-        var multiSelect = BsMultiSelect(element, environment, plugins, configuration, onInit); // onInit(api, aspects) - before load data
+        var multiSelect = BsMultiSelect$1(element, environment, plugins, configuration, onInit); // onInit(api, aspects) - before load data
 
         return multiSelect;
       };
@@ -2941,6 +2643,53 @@
         create: create,
         defaultSettings: defaults
       };
+    }
+
+    function createForJQuery(window, $, globalPopper, name, pluginsSet, stylePlugin) {
+      var trigger = null;
+      var isJQyery = $ && !window.document.body.hasAttribute('data-bs-no-jquery');
+
+      if (isJQyery) {
+        trigger = function trigger(e, eventName) {
+          return $(e).trigger(eventName);
+        };
+      } else {
+        trigger = composeEventTrigger(window);
+      }
+
+      var plugins = shallowClearClone({
+        stylePlugin: stylePlugin
+      }, pluginsSet);
+      var environment = {
+        trigger: trigger,
+        window: window,
+        globalPopper: globalPopper
+      };
+      var pluginsArray = ObjectValues(plugins);
+
+      var _MultiSelectBuilder = MultiSelectBuilder(environment, pluginsArray),
+          create = _MultiSelectBuilder.create,
+          defaultSettings = _MultiSelectBuilder.defaultSettings;
+
+      var createForUmd = function createForUmd(element, settings) {
+        if (isString(element)) element = window.document.querySelector(element);
+        return create(element, settings);
+      };
+
+      createForUmd.Default = defaultSettings;
+
+      if (isJQyery) {
+        var constructorForJquery = function constructorForJquery(element, settings, removeInstanceData) {
+          var multiSelect = create(element, settings);
+          multiSelect.dispose = composeSync(multiSelect.dispose, removeInstanceData);
+          return multiSelect;
+        };
+
+        var prototypable = addToJQueryPrototype(name, constructorForJquery, $);
+        prototypable.defaults = defaultSettings;
+      }
+
+      return createForUmd;
     }
 
     function LabelForAttributePlugin(aspects) {
@@ -3484,12 +3233,12 @@
 
           api.updateOptionsHidden = function () {
             return wrapsCollection.forLoop(function (wrap, key) {
-              return updateChoiceHidden$1(wrap, key, getNextNonHidden, countableChoicesList, getIsOptionHidden, buildChoiceAspect);
+              return updateChoiceHidden(wrap, key, getNextNonHidden, countableChoicesList, getIsOptionHidden, buildChoiceAspect);
             });
           };
 
           api.updateOptionHidden = function (key) {
-            return updateChoiceHidden$1(wrapsCollection.get(key), key, getNextNonHidden, countableChoicesList, getIsOptionHidden, buildChoiceAspect);
+            return updateChoiceHidden(wrapsCollection.get(key), key, getNextNonHidden, countableChoicesList, getIsOptionHidden, buildChoiceAspect);
           }; // TODO create updateHidden ? 
           // it is too complex since we need to find the next non hidden, when this depends on key 
           // there should be the backreference "wrap -> index" invited before
@@ -3521,7 +3270,7 @@
       };
     }
 
-    function updateChoiceHidden$1(wrap, key, getNextNonHidden, countableChoicesList, getIsOptionHidden, buildChoiceAspect) {
+    function updateChoiceHidden(wrap, key, getNextNonHidden, countableChoicesList, getIsOptionHidden, buildChoiceAspect) {
       var newIsOptionHidden = getIsOptionHidden(wrap.option);
 
       if (newIsOptionHidden != wrap.isOptionHidden) {
@@ -3537,93 +3286,6 @@
           buildChoiceAspect.buildChoice(wrap);
           wrap.choice.choiceElementAttach(nextChoice == null ? void 0 : nextChoice.choice.choiceElement);
         }
-      }
-    }
-
-    function HiddenOptionAltPlugin(pluginData) {
-      var configuration = pluginData.configuration,
-          createWrapAspect = pluginData.createWrapAspect,
-          isChoiceSelectableAspect = pluginData.isChoiceSelectableAspect,
-          wrapsCollection = pluginData.wrapsCollection,
-          buildAndAttachChoiceAspect = pluginData.buildAndAttachChoiceAspect,
-          countableChoicesListInsertAspect = pluginData.countableChoicesListInsertAspect,
-          countableChoicesList = pluginData.countableChoicesList;
-
-      countableChoicesListInsertAspect.countableChoicesListInsert = function (wrap, key) {
-        if (!wrap.isOptionHidden) {
-          var choiceNext = wrapsCollection.getNext(key, function (c) {
-            return !c.isOptionHidden;
-          });
-          countableChoicesList.add(wrap, choiceNext);
-        }
-      };
-
-      var origBuildAndAttachChoice = buildAndAttachChoiceAspect.buildAndAttachChoice;
-
-      buildAndAttachChoiceAspect.buildAndAttachChoice = function (wrap, getNextElement) {
-        origBuildAndAttachChoice(wrap, getNextElement);
-        wrap.choice.setVisible(!wrap.isOptionHidden);
-      };
-
-      var origIsSelectable = isChoiceSelectableAspect.isSelectable;
-
-      isChoiceSelectableAspect.isSelectable = function (wrap) {
-        return origIsSelectable(wrap) && !wrap.isOptionHidden;
-      };
-
-      var getIsOptionHidden = configuration.getIsOptionHidden,
-          options = configuration.options;
-
-      if (options) {
-        if (!getIsOptionHidden) getIsOptionHidden = function getIsOptionHidden(option) {
-          return option.hidden === undefined ? false : option.hidden;
-        };
-      } else {
-        if (!getIsOptionHidden) getIsOptionHidden = function getIsOptionHidden(option) {
-          return option.hidden;
-        };
-      }
-
-      var origCreateWrap = createWrapAspect.createWrap;
-
-      createWrapAspect.createWrap = function (option) {
-        var wrap = origCreateWrap(option);
-        wrap.isOptionHidden = getIsOptionHidden(option);
-        return wrap;
-      };
-
-      return {
-        buildApi: function buildApi(api) {
-          var getNextNonHidden = function getNextNonHidden(key) {
-            return wrapsCollection.getNext(key, function (c) {
-              return !c.isOptionHidden;
-            });
-          };
-
-          api.updateOptionsHidden = function () {
-            return wrapsCollection.forLoop(function (wrap, key) {
-              return updateChoiceHidden(wrap, key, getNextNonHidden, countableChoicesList, getIsOptionHidden);
-            });
-          };
-
-          api.updateOptionHidden = function (key) {
-            return updateChoiceHidden(wrapsCollection.get(key), key, getNextNonHidden, countableChoicesList, getIsOptionHidden);
-          };
-        }
-      };
-    }
-
-    function updateChoiceHidden(wrap, key, getNextNonHidden, countableChoicesList, getIsOptionHidden) {
-      var newIsOptionHidden = getIsOptionHidden(wrap.option);
-
-      if (newIsOptionHidden != wrap.isOptionHidden) {
-        wrap.isOptionHidden = newIsOptionHidden;
-        if (wrap.isOptionHidden) countableChoicesList.remove(wrap);else {
-          var nextChoice = getNextNonHidden(key); // TODO: should not rely on element but do
-
-          countableChoicesList.add(wrap, nextChoice);
-        }
-        wrap.choice.setVisible(!wrap.isOptionHidden);
       }
     }
 
@@ -5073,6 +4735,224 @@
     //     return config;
     // }
 
+    function Bs5Plugin() {}
+
+    Bs5Plugin.plugDefaultConfig = function (defaults) {
+      defaults.css = css;
+      setDefaults(defaults);
+    };
+
+    function setDefaults(defaults) {
+      defaults.useCssPatch = true;
+      defaults.cssPatch = cssPatch;
+      defaults.pickButtonHTML = '<button aria-label="Remove" tabIndex="-1" type="button"></button>';
+      defaults.composeGetSize = composeGetSize;
+      defaults.getDefaultLabel = getDefaultLabel;
+    }
+
+    function composeGetSize(selectElement) {
+      var inputGroupElement = closestByClassName(selectElement, 'input-group');
+      var getSize = null;
+
+      if (inputGroupElement) {
+        getSize = function getSize() {
+          var value = null;
+          if (inputGroupElement.classList.contains('input-group-lg')) value = 'lg';else if (inputGroupElement.classList.contains('input-group-sm')) value = 'sm';
+          return value;
+        };
+      } else {
+        getSize = function getSize() {
+          var value = null;
+          if (selectElement.classList.contains('form-select-lg') || selectElement.classList.contains('form-control-lg')) // changed for BS
+            value = 'lg';else if (selectElement.classList.contains('form-select-sm') || selectElement.classList.contains('form-control-sm')) value = 'sm';
+          return value;
+        };
+      }
+
+      return getSize;
+    }
+
+    function getDefaultLabel(selectElement) {
+      var value = null;
+      var query = "label[for=\"" + selectElement.id + "\"]";
+      var p1 = selectElement.parentElement;
+      value = p1.querySelector(query); // label can be wrapped into col-auto
+
+      if (!value) {
+        var p2 = p1.parentElement;
+        value = p2.querySelector(query);
+      }
+
+      return value;
+    }
+
+    var css = {
+      choices: 'dropdown-menu',
+      // bs, in bsmultiselect.scss as div.dropdown-menu
+      choicesList: '',
+      // bs, in bsmultiselect.scss as div.dropdown-menu>ul (first child)
+      choice_hover: 'hover',
+      //  not bs, in scss as 'ul.dropdown-menu li.hover'
+      choice_selected: 'selected',
+      //  not bs,
+      choice_disabled: 'disabled',
+      //  not bs,
+      picks: 'form-control',
+      // bs, in scss 'ul.form-control'
+      picks_focus: 'focus',
+      // not bs, in scss 'ul.form-control.focus'
+      picks_disabled: 'disabled',
+      //  not bs, in scss 'ul.form-control.disabled'
+      pick_disabled: '',
+      pickFilter: '',
+      filterInput: '',
+      // used in pickContentGenerator
+      pick: {
+        classes: 'badge'
+      },
+      // bs
+      pickContent: '',
+      pickContent_disabled: 'disabled',
+      // not bs, in scss 'ul.form-control li span.disabled'
+      pickButton: 'btn-close',
+      // bs
+      // used in choiceContentGenerator
+      // choice:  'dropdown-item', // it seems like hover should be managed manually since there should be keyboard support
+      choiceCheckBox_disabled: 'disabled',
+      //  not bs, in scss as 'ul.form-control li .custom-control-input.disabled ~ .custom-control-label'
+      choiceContent: 'form-check',
+      // bs d-flex required for rtl to align items
+      choiceCheckBox: 'form-check-input',
+      // bs
+      choiceLabel: 'form-check-label',
+      choiceLabel_disabled: '',
+      label_floating_lifted: 'floating-lifted',
+      picks_floating_lifted: 'floating-lifted',
+      warning: 'alert-warning'
+    };
+    var cssPatch = {
+      choicesList: {
+        listStyleType: 'none',
+        paddingLeft: '0',
+        paddingRight: '0',
+        marginBottom: '0'
+      },
+      picks: {
+        listStyleType: 'none',
+        display: 'flex',
+        flexWrap: 'wrap',
+        height: 'auto',
+        marginBottom: '0',
+        cursor: 'text'
+      },
+      choice: {
+        classes: 'px-md-2 px-1',
+        styles: {
+          cursor: 'pointer'
+        }
+      },
+      //choice_selected: 'selected',  //  remove,
+      //choice_disabled: 'disabled',  //  remove,
+      choice_hover: 'text-primary bg-light',
+      choice_disabled_hover: 'bg-light',
+      // actually 'disabled, not selected'
+      filterInput: {
+        border: '0px',
+        height: 'auto',
+        boxShadow: 'none',
+        padding: '0',
+        margin: '0',
+        outline: 'none',
+        backgroundColor: 'transparent',
+        backgroundImage: 'none' // otherwise BS .was-validated set its image
+
+      },
+      filterInput_empty: 'form-control',
+      // need for placeholder, TODO test form-control-plaintext
+      // used in PicksDom
+      picks_disabled: {
+        backgroundColor: '#e9ecef'
+      },
+      picks_focus: {
+        borderColor: '#80bdff',
+        boxShadow: '0 0 0 0.2rem rgba(0, 123, 255, 0.25)'
+      },
+      picks_focus_valid: {
+        borderColor: '',
+        boxShadow: '0 0 0 0.2rem rgba(40, 167, 69, 0.25)'
+      },
+      picks_focus_invalid: {
+        borderColor: '',
+        boxShadow: '0 0 0 0.2rem rgba(220, 53, 69, 0.25)'
+      },
+      // used in BsAppearancePlugin
+      picks_def: {
+        minHeight: 'calc(2.25rem + 2px)'
+      },
+      picks_lg: {
+        minHeight: 'calc(2.875rem + 2px)'
+      },
+      picks_sm: {
+        minHeight: 'calc(1.8125rem + 2px)'
+      },
+      picks_floating_def: {
+        minHeight: 'calc(3.5rem + 2px)'
+      },
+      // used in pickContentGenerator
+      pick: {
+        paddingLeft: '0',
+        paddingRight: '.5rem',
+        paddingInlineStart: '0',
+        paddingInlineEnd: '0.5rem',
+        color: 'var(--bs-dark)'
+      },
+      pickButton: {
+        fontSize: '0.8em',
+        float: "none",
+        verticalAlign: "text-top"
+      },
+      pickContent_disabled: {
+        opacity: '.65'
+      },
+      // used in choiceContentGenerator
+      choiceContent: {
+        justifyContent: 'flex-start',
+        cursor: 'inherit'
+      },
+      // BS problem: without this on inline form menu items justified center
+      choiceLabel: {
+        color: 'inherit',
+        cursor: 'inherit'
+      },
+      // otherwise BS .was-validated set its color
+      choiceCheckBox: {
+        color: 'inherit',
+        cursor: 'inherit'
+      },
+      choiceLabel_disabled: {
+        opacity: '.65'
+      },
+      // more flexible than {color: '#6c757d'}; note: avoid opacity on pickElement's border; TODO write to BS 
+      // floating plugin
+      label_floating_lifted: {
+        opacity: '.65',
+        transform: 'scale(.85) translateY(-.5rem) translateX(.15rem)'
+      },
+      picks_floating_lifted: {
+        paddingTop: '1.625rem',
+        paddingLeft: '0.8rem',
+        paddingBottom: '0'
+      },
+      warning: {
+        paddingLeft: '.25rem',
+        paddingRight: '.25rem',
+        zIndex: 4,
+        fontSize: 'small',
+        backgroundColor: 'var(--bs-warning)'
+      } // zIndex=4  since the input-group zIndex=3
+
+    };
+
     var utilities = {
       composeSync: composeSync,
       EventBinder: EventBinder,
@@ -5080,112 +4960,27 @@
       toggleStyling: toggleStyling
     };
 
-    function ModuleFactory$1(environment, customizationPlugins) {
-      if (!environment.trigger) environment.trigger = function (e, name) {
-        return e.dispatchEvent(new environment.window.Event(name));
-      };
-      var pluginsArray = ObjectValues(shallowClearClone(customizationPlugins, multiSelectPlugins));
+    var BsMultiSelect = function (window, jQuery, globalPopper) {
+      return createForJQuery(window, jQuery, globalPopper, 'BsMultiSelect', multiSelectPlugins, Bs5Plugin);
+    }(window, window.jQuery, Popper__default["default"]);
 
-      var _MultiSelectBuilder = MultiSelectBuilder(environment, pluginsArray),
-          BsMultiSelect = _MultiSelectBuilder.create,
-          BsMultiSelectDefault = _MultiSelectBuilder.BsMultiSelectDefault;
+    var BsPicks = function (window, jQuery, globalPopper) {
+      return createForJQuery(window, jQuery, globalPopper, 'BsPicks', picksPlugins, Bs5Plugin);
+    }(window, window.jQuery, Popper__default["default"]);
 
-      BsMultiSelect.Default = BsMultiSelectDefault;
-      var picksPluginsArray = ObjectValues(shallowClearClone(customizationPlugins, picksPlugins));
+    var BsMultiSelect_jquery = {
+      BsMultiSelect: BsMultiSelect,
+      BsPicks: BsPicks,
+      MultiSelectTools: {
+        MultiSelectBuilder: MultiSelectBuilder,
+        plugins: shallowClearClone({
+          Bs5Plugin: Bs5Plugin
+        }, allPlugins),
+        utilities: utilities
+      }
+    };
 
-      var _MultiSelectBuilder2 = MultiSelectBuilder(environment, picksPluginsArray),
-          BsPicks = _MultiSelectBuilder2.create,
-          BsPicksDefault = _MultiSelectBuilder2.BsPicksDefault;
-
-      BsPicks.Default = BsPicksDefault;
-      return {
-        BsMultiSelect: BsMultiSelect,
-        BsPicks: BsPicks,
-        MultiSelectTools: {
-          MultiSelectBuilder: MultiSelectBuilder,
-          plugins: shallowClearClone(customizationPlugins, allPlugins),
-          utilities: utilities
-        }
-      };
-    } // TEST
-    // function areValidElements(...args) {
-    //     const result = Object.values(obj);
-    //     return !args.some(
-    //       (element) =>
-    //         !(element && typeof element.getBoundingClientRect === 'function')
-    //     );
-    // }
-    // function ModuleFactory(environment) {
-    //     if (!environment.trigger)
-    //         environment.trigger = (e, name) => e.dispatchEvent(new environment.window.Event(name))
-    //     let pluginsArray = ObjectValues(shallowClearClone({Bs5Plugin}, multiSelectPlugins));
-    //     let {create: BsMultiSelect, BsMultiSelectDefault} = MultiSelectBuilder(environment, pluginsArray) 
-    //     BsMultiSelect.Default = BsMultiSelectDefault;
-    //     let picksPluginsArray = ObjectValues(shallowClearClone({Bs5Plugin}, picksPlugins));
-    //     let {create: BsPicks, BsPicksDefault} = MultiSelectBuilder(environment, picksPluginsArray) 
-    //     BsPicks.Default = BsPicksDefault;
-    //     return {
-    //         BsMultiSelect,
-    //         BsPicks,
-    //         MultiSelectTools: {MultiSelectBuilder, plugins: shallowClearClone({Bs5Plugin}, allPlugins), utilities} 
-    //     }
-    // }
-
-    function ModuleFactory(environment) {
-      return ModuleFactory$1(environment, {
-        Bs5Plugin: Bs5Plugin
-      });
-    }
-
-    function legacyConstructor(element, environment, settings) {
-      console.log("DashboarCode.BsMultiSelect: 'BsMultiSelect' is depricated, use - ModuleFactory(environment).BsMultiSelect(element, settings)");
-
-      var _ModuleFactory = ModuleFactory(environment),
-          BsMultiSelect = _ModuleFactory.BsMultiSelect;
-
-      var bsMultiSelect = BsMultiSelect(element, settings);
-      return bsMultiSelect;
-    }
-
-    exports.Bs4Plugin = Bs4Plugin;
-    exports.Bs5Plugin = Bs5Plugin;
-    exports.BsAppearancePlugin = BsAppearancePlugin;
-    exports.BsMultiSelect = legacyConstructor;
-    exports.ChoicesDynamicStylingPlugin = ChoicesDynamicStylingPlugin;
-    exports.CreatePopperPlugin = CreatePopperPlugin;
-    exports.CssPatchPlugin = CssPatchPlugin;
-    exports.CustomChoiceStylingsPlugin = CustomChoiceStylingsPlugin;
-    exports.CustomPickStylingsPlugin = CustomPickStylingsPlugin;
-    exports.DisableComponentPlugin = DisableComponentPlugin;
-    exports.DisabledOptionPlugin = DisabledOptionPlugin;
-    exports.EventBinder = EventBinder;
-    exports.FloatingLabelPlugin = FloatingLabelPlugin;
-    exports.FormResetPlugin = FormResetPlugin;
-    exports.FormRestoreOnBackwardPlugin = FormRestoreOnBackwardPlugin;
-    exports.HiddenOptionAltPlugin = HiddenOptionAltPlugin;
-    exports.HiddenOptionPlugin = HiddenOptionPlugin;
-    exports.HighlightPlugin = HighlightPlugin;
-    exports.JQueryMethodsPlugin = JQueryMethodsPlugin;
-    exports.LabelForAttributePlugin = LabelForAttributePlugin;
-    exports.ModuleFactory = ModuleFactory;
-    exports.MultiSelectBuilder = MultiSelectBuilder;
-    exports.ObjectValues = ObjectValues;
-    exports.OptionsApiPlugin = OptionsApiPlugin;
-    exports.PicksApiPlugin = PicksApiPlugin;
-    exports.PicksPlugin = PicksPlugin;
-    exports.PlaceholderPlugin = PlaceholderPlugin;
-    exports.RtlPlugin = RtlPlugin;
-    exports.SelectElementPlugin = SelectElementPlugin;
-    exports.SelectedOptionPlugin = SelectedOptionPlugin;
-    exports.UpdateAppearancePlugin = UpdateAppearancePlugin;
-    exports.ValidationApiPlugin = ValidationApiPlugin;
-    exports.WarningPlugin = WarningPlugin;
-    exports.addStyling = addStyling;
-    exports.composeSync = composeSync;
-    exports.shallowClearClone = shallowClearClone;
-    exports.toggleStyling = toggleStyling;
-
-    Object.defineProperty(exports, '__esModule', { value: true });
+    return BsMultiSelect_jquery;
 
 }));
 //# sourceMappingURL=BsMultiSelect.js.map

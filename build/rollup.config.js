@@ -1,14 +1,13 @@
 'use strict'
 
 const path    = require('path')
-const { babel, getBabelOutputPlugin } = require('@rollup/plugin-babel')
+const { babel } = require('@rollup/plugin-babel')
 const banner = require('./banner.js')
 
 const isEsm = process.env.ESM === 'true'
-const isEcmaScript5 = process.env.ECMAS5 === 'true'
+const isEcmaScript5 = process.env.ECMA5 === 'true'
 const isBS4 = process.env.BS4  === 'true'
-
-console.log({isEsm, isEcmaScript5, isBS4})
+const isMJS = process.env.MJS === 'true'
 
 let bundleName = process.env.ALT;
 if (!bundleName) 
@@ -16,19 +15,21 @@ if (!bundleName)
 if (isBS4)
     bundleName +=".bs4";
 
-let inputFile = !isEcmaScript5?'index.js':`${bundleName}${isEsm ? '.esm' : '.jquery'}.js`;
+let inputFile = isMJS?'index.js':`${bundleName}${isEsm ? '.esm' : '.jquery'}.js`;
 let external  = isBS4? ['jquery', 'popper.js']:['@popperjs/core'];
 let globals   = isBS4? {'jquery': 'jQuery', 'popper.js': 'Popper'} : {'@popperjs/core': 'Popper'};
 
-let fileDest  = `${bundleName}${isEsm ? (isEcmaScript5 ?'.esm.js':'.mjs') : '.js'}`
-let fileConfig= `babel.bundle${isEsm ? (isEcmaScript5 ?'.esm':'.mjs') : '.umd'}.config.js`
+let fileDest  = `${bundleName}${ isMJS? ( isEcmaScript5?'.ecma5.mjs': '.mjs' ) : ( isEsm ? '.esm.js':'.js')}`
+let fileConfig= `babel.${isMJS?('mjs'+(isEcmaScript5 ?'.ecma5':'')):('bundle'+(isEsm?'.esm':'.umd') )}.config.js`
+
+console.log({isEsm, isEcmaScript5, isBS4, isMJS, fileDest,fileConfig})
 
 // NOTE: with Babel 7 babel helpers are managed in .babelrc
 const rollupPlugins = [
   babel({
     // Only transpile our source code
     exclude: 'node_modules/**',
-    babelHelpers: (!isEcmaScript5)?undefined:'bundled',
+    babelHelpers: isMJS ? undefined : 'bundled',
     configFile: './'+fileConfig
   })];
 
@@ -37,9 +38,9 @@ const rollupInput = path.resolve(__dirname, `../src/${inputFile}`);
 const rollupOutput = {
   banner,
   file: path.resolve(__dirname, `../dist/js/${fileDest}`),
-  format: isEsm ? 'esm' : 'umd',
+  format: isEsm || isMJS ? 'esm' : 'umd',
   globals,
-  name: (!isEsm)? 'dashboardcode' : bundleName,
+  name: isEsm || isMJS ? bundleName: 'dashboardcode',
   sourcemap: true
 };
 
@@ -49,4 +50,3 @@ module.exports = {
    plugins: rollupPlugins,
    output: rollupOutput
 }
-
