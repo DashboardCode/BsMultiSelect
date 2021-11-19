@@ -1,14 +1,42 @@
 import  {EventBinder} from './ToolsDom';
 import  {addStyling, toggleStyling} from './ToolsStyling';
 
-export function PickDomFactory(css, componentPropertiesAspect, optionPropertiesAspect, pickButtonAspect){
+
+export function PickDomFactoryPlugCss(css){
+    css.pickContent = '';
+    css.pickContent_disabled = 'disabled';
+    css.pickButton = 'close';
+}
+
+export function PickDomFactoryPlugCssBs4(css){
+    css.pickButton = 'close';
+}
+
+export function PickDomFactoryPlugCssBs5(css){
+    css.pickButton = 'btn-close';
+}
+
+export function PickDomFactoryPlugCssPatch(cssPatch){
+    cssPatch.pickContent_disabled = {opacity: '.65'};
+}
+
+export function PickDomFactoryPlugCssPatchBs4(cssPatch){
+    cssPatch.pickButton = {float : "none", fontSize:'1.5em', lineHeight: '.9em', };
+}
+
+
+export function PickDomFactoryPlugCssPatchBs5(cssPatch){
+    cssPatch.pickButton = {float : "none", fontSize:'0.8em', verticalAlign: "text-top"};
+}
+
+export function PickDomFactory(css, createElementAspect, optionPropertiesAspect, pickButtonAspect){
     return { 
         create(pickElement, wrap, remove){
-            let eventBinder = EventBinder();
             let buttonHTML = pickButtonAspect.getButtonHTML();
-            pickElement.innerHTML = '<span></span>'+buttonHTML;
+            createElementAspect.createElementFromHtml(pickElement, '<span></span>'+buttonHTML);
             let pickContentElement = pickElement.querySelector('SPAN');
             let pickButtonElement  = pickElement.querySelector('BUTTON');
+            let eventBinder = EventBinder();
             eventBinder.bind(pickButtonElement, "click", remove);
             
             addStyling(pickContentElement, css.pickContent);
@@ -21,10 +49,6 @@ export function PickDomFactory(css, componentPropertiesAspect, optionPropertiesA
             function updateDisabled(){
                 disableToggle(wrap.isOptionDisabled)
             }
-            function updateComponentDisabled(){
-                pickButtonElement.disabled = componentPropertiesAspect.getDisabled();
-            }
-            
 
             return {
                 pickDom:{
@@ -34,12 +58,13 @@ export function PickDomFactory(css, componentPropertiesAspect, optionPropertiesA
                 pickDomManagerHandlers:{
                     updateData,
                     updateDisabled,
-                    updateComponentDisabled,
                 },
                 dispose(){
-                        eventBinder.unbind();
+                    eventBinder.unbind();
                 }
             }
         }
     }
 }
+
+

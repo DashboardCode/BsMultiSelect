@@ -1,8 +1,11 @@
-import { Bs4Plugin } from './plugins/Bs4Plugin'
+import { createDefaultCssBs4 } from './DomFactories'
+import { Bs4PluginSet } from './PluginSet'
 import { ModuleFactory as ModuleFactoryImpl } from "./ModuleFactory"
 
+const defaultCss = createDefaultCssBs4();
+
 function ModuleFactory(environment){
-    return ModuleFactoryImpl(environment, { Bs4Plugin } );
+    return ModuleFactoryImpl(environment, Bs4PluginSet, defaultCss);
 } 
 
 function legacyConstructor(element, environment, settings){

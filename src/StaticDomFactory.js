@@ -1,17 +1,10 @@
 import {findDirectChildByTagName, closestByClassName} from './ToolsDom';
 
-export function CreateElementAspect(createElement){
+export function StaticDomFactory(createElementAspect){
     return {
-        createElement
-    }
-}
-
-export function StaticDomFactory(choicesDomFactory, createElementAspect){
-    return {
-        create(css){
-            let choicesDom = choicesDomFactory.create(css);
+        create(choicesDomFactory, filterDomFactory, picksDomFactory){
+            let choicesDom = choicesDomFactory.create();
             return {
-                choicesDom,
                 createStaticDom(element, containerClass){
                     function showError(message){
                         element.style.backgroundColor = 'red';
@@ -44,10 +37,14 @@ export function StaticDomFactory(choicesDomFactory, createElementAspect){
                         picksElement = createElementAspect.createElement('UL');
                         isDisposablePicksElement = true; 
                     }
-                
 
+                    let filterDom = filterDomFactory.create(isDisposablePicksElement);
+                    let picksDom  = picksDomFactory.create(picksElement, isDisposablePicksElement);
+                
                     return {
                         choicesDom,
+                        filterDom,
+                        picksDom,
                         staticDom: {
                             initialElement:element,
                             containerElement,

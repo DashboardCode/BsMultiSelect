@@ -4,11 +4,10 @@ import {BsMultiSelect}  from './BsMultiSelect.esm'
 
 import {BsMultiSelectElement} from './BsMultiSelectElement';
 
-import {LabelPlugin} from './plugins/LabelPlugin';
-import {FormResetPlugin} from './plugins/FormResetPlugin';
-import {ValidationApiPlugin} from './plugins/ValidationApiPlugin';
-import {BsAppearancePlugin} from './plugins/BsAppearancePlugin';
-import {HiddenOptionPlugin} from './plugins/HiddenOptionPlugin';
+// import {FormResetPlugin} from './plugins/FormResetPlugin';
+// import {ValidationApiPlugin} from './plugins/ValidationApiPlugin';
+// import {BsAppearancePlugin} from './plugins/BsAppearancePlugin';
+// import {HiddenOptionPlugin} from './plugins/HiddenOptionPlugin';
 
 /*
 1.

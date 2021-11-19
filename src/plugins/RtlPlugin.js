@@ -1,44 +1,41 @@
+
 import {getIsRtl, AttributeBackup} from '../ToolsDom';
 import {isBoolean} from '../ToolsJs';
 
-export function RtlPlugin(aspects){
-    let {configuration, rtlAspect, staticDom} = aspects;
-    let {isRtl} = configuration;
-    let forceRtlOnContainer = false; 
-    if (isBoolean(isRtl))
-        forceRtlOnContainer = true;
-    else
-        isRtl = getIsRtl(staticDom.initialElement);
-    
-    var attributeBackup = AttributeBackup();
-    if (forceRtlOnContainer){
-        attributeBackup.set(staticDom.containerElement, "dir", "rtl");
-    }
-    else if (staticDom.selectElement){
-        var dirAttributeValue = staticDom.selectElement.getAttribute("dir");
-        if (dirAttributeValue){
-            attributeBackup.set(staticDom.containerElement, "dir", dirAttributeValue);
-        }
-    }
-
+export function RtlPlugin(){
     return {
-        buildApi(api){
-            // TODO: there is something wrong with this. may be should moved to specific plugin
-            // sample of correct plugin - aspect pair is WarningPlugin: aspect is added on plugin constructor
-            rtlAspect.updateRtl(isRtl);
-        },
-        dispose(){
-            attributeBackup.restore();
+        buildAspects: (aspects, configuration) => {
+            return {
+                layout: () => {
+                    let {popperRtlAspect, staticDom} = aspects;
+                    let {isRtl} = configuration;
+                    let forceRtlOnContainer = false; 
+                    if (isBoolean(isRtl))
+                        forceRtlOnContainer = true;
+                    else
+                        isRtl = getIsRtl(staticDom.initialElement);
+
+                    var attributeBackup = AttributeBackup();
+                    if (forceRtlOnContainer){
+                        attributeBackup.set(staticDom.containerElement, "dir", "rtl");
+                    }
+                    else if (staticDom.selectElement){
+                        var dirAttributeValue = staticDom.selectElement.getAttribute("dir");
+                        if (dirAttributeValue){
+                            attributeBackup.set(staticDom.containerElement, "dir", dirAttributeValue);
+                        }
+                    }
+                
+                    if (popperRtlAspect)
+                        popperRtlAspect.getIsRtl = () => isRtl;
+                
+                    return {
+                        dispose(){
+                            attributeBackup.restore();
+                        }
+                    }
+                }
+            }
         }
-    }
-}
-
-RtlPlugin.plugStaticDom = (aspects) => {
-    aspects.rtlAspect = RtlAspect();
-}
-
-function RtlAspect(){
-    return {
-        updateRtl(){},
     }
 }

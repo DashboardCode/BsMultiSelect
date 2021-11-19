@@ -1,65 +1,27 @@
 import {composeSync} from './ToolsJs';
-import {EventBinder, EventLoopProlongableFlag, containsAndSelf} from './ToolsDom'
+import {EventBinder, EventLoopProlongableFlag, EventTumbler, containsAndSelf} from './ToolsDom'
 
-export function MultiSelectInlineLayout (
-    aspects
-    ) 
-{
-    let {environment,filterDom,picksDom,choicesDom, 
+export function MultiSelectInlineLayoutAspect (
+        environment, filterDom, choicesDom, 
         choicesVisibilityAspect, 
         hoveredChoiceAspect, navigateAspect, filterManagerAspect,
         focusInAspect, optionToggleAspect,
         createPickHandlersAspect,
         picksList,
         inputAspect, specialPicksEventsAspect,  buildChoiceAspect, 
-        disableComponentAspect, resetLayoutAspect, placeholderStopInputAspect,
-        warningAspect,
-        configuration,
-        createPopperAspect, rtlAspect, staticManager
-    } = aspects;
+        resetLayoutAspect,
 
-    let picksElement = picksDom.picksElement;
+        picksElementAspect,
+        
+        afterInputAspect,
+        disposeAspect
+    ) 
+{
     let choicesElement = choicesDom.choicesElement;
-
-    // pop up layout, require createPopperPlugin
-    let filterInputElement = filterDom.filterInputElement;
-    let pop = createPopperAspect.createPopper(choicesElement, filterInputElement, true);
-    staticManager.appendToContainer = composeSync(staticManager.appendToContainer, pop.init);
-    var origBackSpace = specialPicksEventsAspect.backSpace;
-    specialPicksEventsAspect.backSpace = (pick) => { origBackSpace(pick);  pop.update();};
-    if (rtlAspect){
-        let origUpdateRtl = rtlAspect.updateRtl;
-        rtlAspect.updateRtl = (isRtl) => {
-            origUpdateRtl(isRtl); 
-            pop.setRtl(isRtl);
-        };
-    }
-    choicesVisibilityAspect.updatePopupLocation = composeSync(choicesVisibilityAspect.updatePopupLocation, 
-        function(){pop.update();}
-    )
-
-    if (warningAspect) {
-        let pop2 = createPopperAspect.createPopper(warningAspect.warningElement, filterInputElement, false);
-        staticManager.appendToContainer = composeSync(staticManager.appendToContainer, pop2.init);
-        if (rtlAspect){
-            let origUpdateRtl2 = rtlAspect.updateRtl;
-            rtlAspect.updateRtl = (isRtl) => {
-                origUpdateRtl2(isRtl); 
-                pop2.setRtl(isRtl);
-            };
-        }
-        var origWarningAspectShow =warningAspect.show;
-        warningAspect.show = (msg) => {
-            pop2.update();
-            origWarningAspectShow(msg);
-        }
-        pop.dispose = composeSync(pop.dispose, pop2.dispose);
-    }
-
     var window = environment.window;
     var document = window.document;
     var eventLoopFlag =EventLoopProlongableFlag(window); 
-    var skipFocusout = false;
+    var skipFocusout = false; // state
     
     function getSkipFocusout() {
         return skipFocusout;
@@ -76,13 +38,17 @@ export function MultiSelectInlineLayout (
         setSkipFocusout();
     }
 
+    // add listeners that manages close dropdown on  click outside container
+    var choicesElementMousedownEventTumbler = EventTumbler(choicesElement, "mousedown", skipoutMousedown);
+    var documentMouseupEventTumbler = EventTumbler(document, "mouseup", documentMouseup);
+
     var documentMouseup = function(event) {
         // if we would left without focus then "close the drop" do not remove focus border
         if (choicesElement == event.target) 
             filterDom.setFocus()
 
         // if click outside container - close dropdown
-        else if ( !containsAndSelf(choicesElement, event.target) && !containsAndSelf(picksElement, event.target)) {
+        else if ( !containsAndSelf(choicesElement, event.target) && !picksElementAspect.containsAndSelf(event.target)) {
             resetLayoutAspect.resetLayout();
             focusInAspect.setFocusIn(false);
         }
@@ -94,11 +60,12 @@ export function MultiSelectInlineLayout (
             choicesVisibilityAspect.updatePopupLocation();
             eventLoopFlag.set();
             choicesVisibilityAspect.setChoicesVisible(true);
+            
             // TODO: move to scroll plugin
-            choicesElement.scrollTop =0;
-            // add listeners that manages close dropdown on  click outside container
-            choicesElement.addEventListener("mousedown", skipoutMousedown);
-            document.addEventListener("mouseup", documentMouseup);
+            choicesElement.scrollTop = 0;
+            
+            choicesElementMousedownEventTumbler.on();
+            documentMouseupEventTumbler.on();
         }
     }
 
@@ -110,34 +77,17 @@ export function MultiSelectInlineLayout (
             // COOMENT OUT DEBUGGING popup layout
             choicesVisibilityAspect.setChoicesVisible(false);
             
-            choicesElement.removeEventListener("mousedown", skipoutMousedown);
-            document.removeEventListener("mouseup", documentMouseup);
+            choicesElementMousedownEventTumbler.off();
+            documentMouseupEventTumbler.off();
         }
     }
 
     var preventDefaultClickEvent = null;
 
-    var componentDisabledEventBinder = EventBinder();
-
-
     // TODO: remove setTimeout: set on start of mouse event reset on end
     function skipoutAndResetMousedown(){
         skipoutMousedown();
         window.setTimeout(()=>resetSkipFocusout());
-    }
-    picksElement.addEventListener("mousedown", skipoutAndResetMousedown);
-
-    function clickToShowChoices(event){
-        filterDom.setFocusIfNotTarget(event.target);
-        if (preventDefaultClickEvent != event) {
-            if (choicesVisibilityAspect.isChoicesVisible()){
-                hideChoices() 
-            } else {
-                if (filterManagerAspect.getNavigateManager().getCount()>0)
-                    showChoices();
-            }
-        }
-        preventDefaultClickEvent=null;
     }
 
     function processUncheck(uncheckOption, event){
@@ -229,15 +179,7 @@ export function MultiSelectInlineLayout (
     }
 
     
-    filterDom.onFocusIn(()=>focusInAspect.setFocusIn(true));
-    filterDom.onFocusOut(() => { 
-            if (!getSkipFocusout()){ // skip initiated by mouse click (we manage it different way)
-                resetLayoutAspect.resetLayout(); // if do not do this we will return to filtered list without text filter in input
-                focusInAspect.setFocusIn(false);
-            }
-            resetSkipFocusout();
-        }
-    );
+
 
     // it can be initated by 3PP functionality
     // sample (1) BS functionality - input x button click - clears input
@@ -248,45 +190,11 @@ export function MultiSelectInlineLayout (
         let visibleCount = filterManagerAspect.getNavigateManager().getCount();
 
         if (visibleCount > 0){
-            if (warningAspect){
-                warningAspect.hide();
-            }
-            let panelIsVisble = choicesVisibilityAspect.isChoicesVisible();
-            if (!panelIsVisble){
-                  showChoices(); 
-            }
-            if (visibleCount == 1){
-                navigateAspect.hoverIn(filterManagerAspect.getNavigateManager().getHead())
-            }else{
-                if (panelIsVisble)
-                    hoveredChoiceAspect.resetHoveredChoice();
-            }   
+            afterInputAspect.visible(showChoices, visibleCount);
         }else{
-            if (choicesVisibilityAspect.isChoicesVisible()){
-                hideChoices();
-            }
-            if (warningAspect){
-                if (filterManagerAspect.getFilter())
-                    warningAspect.show(configuration.noResultsWarning);
-                else
-                    warningAspect.hide();
-            } 
+            afterInputAspect.notVisible(hideChoices);
         }
     }
-
-    filterDom.onInput(() => {
-        if (placeholderStopInputAspect && placeholderStopInputAspect.get()){
-            placeholderStopInputAspect.reset();
-            return;    
-        }
-        let {filterInputValue, isEmpty} = inputAspect.processInput();
-        if (isEmpty)
-            filterManagerAspect.processEmptyInput();
-        else
-            filterDom.setWidth(filterInputValue);  
-            eventLoopFlag.set(); // means disable mouse handlers that set hovered item; otherwise we will get "Hover On MouseEnter" when filter's changes should remove hover
-        afterInput();
-    });
 
     function keyDownArrow(down) {
         let wrap = navigateAspect.navigate(down);  
@@ -300,7 +208,6 @@ export function MultiSelectInlineLayout (
     }
 
     function hoveredToSelected(){
-        
         let hoveredWrap = hoveredChoiceAspect.getHoveredChoice(); 
         if (hoveredWrap){
             let wasToggled = optionToggleAspect.toggle(hoveredWrap); 
@@ -359,10 +266,14 @@ export function MultiSelectInlineLayout (
         let keyCode = event.which;
         //var handler = keyUp[event.which/* key code */];
         //handler();    
-        if (keyCode == 9) {
+        if (keyCode == 9 /*tab*/) {
             if (choicesVisibilityAspect.isChoicesVisible()) {
-                hoveredToSelected();
-            } 
+                keyDownArrow(true);
+            } else {
+                if (filterManagerAspect.getNavigateManager().getCount()>0){
+                    showChoices();
+                }
+            }
         }
         else if (keyCode == 13 ) {
             if (choicesVisibilityAspect.isChoicesVisible()) {
@@ -379,56 +290,75 @@ export function MultiSelectInlineLayout (
         }
     }
 
-    filterDom.onKeyDown(onKeyDown);    
-    filterDom.onKeyUp(onKeyUp);
-
-    if (disableComponentAspect){
-        let origDisableComponent = disableComponentAspect.disableComponent; 
-        disableComponentAspect.disableComponent = (isComponentDisabled) => {
-            origDisableComponent(isComponentDisabled);
-            if (isComponentDisabled)
-                componentDisabledEventBinder.unbind();
-            else
-                componentDisabledEventBinder.bind(picksElement, "click",  clickToShowChoices); 
-        }
-    }
-
-    resetLayoutAspect.resetLayout = composeSync(
-        hideChoices,
-        ()=>{if (warningAspect)
-            warningAspect.hide();},
-        resetLayoutAspect.resetLayout // resetFilter by default
-    );
-
-    let origCreatePickHandlers = createPickHandlersAspect.createPickHandlers;
-    createPickHandlersAspect.createPickHandlers = (wrap) => {
-        let pickHandlers = origCreatePickHandlers(wrap);
-        pickHandlers.removeOnButton = handleOnRemoveButton(pickHandlers.removeOnButton);
-        return pickHandlers;
-    } 
-
-    let origBuildChoice = buildChoiceAspect.buildChoice;
-    buildChoiceAspect.buildChoice = (wrap) => {
-        origBuildChoice(wrap);
-        let pickHandlers = createPickHandlersAspect.createPickHandlers(wrap);
-
-        wrap.choice.remove = composeSync(wrap.choice.remove, () => {
-            if (pickHandlers.removeAndDispose) {
-                pickHandlers.removeAndDispose();
-                pickHandlers.removeAndDispose=null;
+    function clickToShowChoices(event){
+        filterDom.setFocusIfNotTarget(event.target);
+        if (preventDefaultClickEvent != event) {
+            if (choicesVisibilityAspect.isChoicesVisible()){
+                hideChoices() 
+            } else {
+                if (filterManagerAspect.getNavigateManager().getCount()>0)
+                    showChoices();
             }
-        })
-        
-        let unbindChoiceElement = adoptChoiceElement(wrap);
-        wrap.choice.dispose = composeSync(unbindChoiceElement, wrap.choice.dispose);
+        }
+        preventDefaultClickEvent=null;
     }
 
     return {
-        dispose(){
-            resetMouseCandidateChoice();
-            picksElement.removeEventListener("mousedown", skipoutAndResetMousedown);
-            componentDisabledEventBinder.unbind();
-            pop.dispose(); 
+        init(){
+            filterDom.onFocusIn(()=>focusInAspect.setFocusIn(true));
+            filterDom.onFocusOut(() => { 
+                    if (!getSkipFocusout()){ // skip initiated by mouse click (we manage it different way)
+                        resetLayoutAspect.resetLayout(); // if do not do this we will return to filtered list without text filter in input
+                        focusInAspect.setFocusIn(false);
+                    }
+                    resetSkipFocusout();
+                }
+            );
+                
+            filterDom.onInput(() => {
+                let {filterInputValue, isEmpty} = inputAspect.processInput();
+                if (isEmpty)
+                    filterManagerAspect.processEmptyInput();
+                else
+                    filterDom.setWidth(filterInputValue);  
+                eventLoopFlag.set(); // means disable mouse handlers that set hovered item; otherwise we will get "Hover On MouseEnter" when filter's changes should remove hover
+                afterInput();
+            });    
+            filterDom.onKeyDown(onKeyDown);    
+            filterDom.onKeyUp(onKeyUp);
+                
+            picksElementAspect.onClick(clickToShowChoices);
+            picksElementAspect.onMousedown(skipoutAndResetMousedown);
+        
+            resetLayoutAspect.resetLayout = composeSync(
+                hideChoices,
+                resetLayoutAspect.resetLayout // resetFilter by default
+            );
+        
+            let origCreatePickHandlers = createPickHandlersAspect.createPickHandlers;
+            createPickHandlersAspect.createPickHandlers = (wrap) => {
+                let pickHandlers = origCreatePickHandlers(wrap);
+                pickHandlers.removeOnButton = handleOnRemoveButton(pickHandlers.removeOnButton);
+                return pickHandlers;
+            } 
+        
+            let origBuildChoice = buildChoiceAspect.buildChoice;
+            buildChoiceAspect.buildChoice = (wrap) => {
+                origBuildChoice(wrap);
+                let pickHandlers = createPickHandlersAspect.createPickHandlers(wrap);
+        
+                wrap.choice.remove = composeSync(wrap.choice.remove, () => {
+                    if (pickHandlers.removeAndDispose) {
+                        pickHandlers.removeAndDispose();
+                        pickHandlers.removeAndDispose=null;
+                    }
+                })
+                
+                let unbindChoiceElement = adoptChoiceElement(wrap);
+                wrap.choice.dispose = composeSync(unbindChoiceElement, wrap.choice.dispose);
+            }
+
+            disposeAspect.dispose = composeSync(disposeAspect.dispose, resetMouseCandidateChoice, () => picksElementAspect.unbind() );
         }
     }
 }

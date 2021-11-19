@@ -1,14 +1,20 @@
+//import {BsAppearancePlugin} from './BsAppearancePlugin'
+import {BsAppearanceBs4Plugin} from './BsAppearanceBs4Plugin'
+import {BsAppearanceBs5Plugin} from './BsAppearanceBs5Plugin'
+import {BsAppearanceBs4CssPatchPlugin} from './BsAppearanceBs4CssPatchPlugin'
+import {BsAppearanceBs5CssPatchPlugin} from './BsAppearanceBs5CssPatchPlugin'
+
 import {LabelForAttributePlugin} from './LabelForAttributePlugin'
 import {RtlPlugin} from './RtlPlugin'
 import {FormResetPlugin} from './FormResetPlugin'
 import {ValidationApiPlugin} from './ValidationApiPlugin'
-import {BsAppearancePlugin} from './BsAppearancePlugin'
 
 import {HiddenOptionPlugin} from './HiddenOptionPlugin'
 import {HiddenOptionAltPlugin} from './HiddenOptionAltPlugin'
 
-import {CssPatchPlugin} from './CssPatchPlugin'
-import {PlaceholderPlugin} from './PlaceholderPlugin'
+import {CssPatchBs4Plugin} from './CssPatchBs4Plugin'
+import {CssPatchBs5Plugin} from './CssPatchBs5Plugin'
+
 import {JQueryMethodsPlugin} from './JQueryMethodsPlugin'
 import {OptionsApiPlugin} from './OptionsApiPlugin'
 import {FormRestoreOnBackwardPlugin} from './FormRestoreOnBackwardPlugin'
@@ -19,12 +25,8 @@ import {PicksApiPlugin} from './PicksApiPlugin'
 import {PicksPlugin} from './PicksPlugin'
 
 import {CreatePopperPlugin} from './CreatePopperPlugin'
-
-import {FloatingLabelPlugin} from './FloatingLabelPlugin'
-
 import {ChoicesDynamicStylingPlugin} from './ChoicesDynamicStylingPlugin'
 
-import {WarningPlugin} from './WarningPlugin'
 import {HighlightPlugin} from './HighlightPlugin'
 
 import {CustomChoiceStylingsPlugin} from './CustomChoiceStylingsPlugin'
@@ -33,16 +35,36 @@ import {CustomPickStylingsPlugin} from './CustomPickStylingsPlugin'
 import {UpdateAppearancePlugin} from './UpdateAppearancePlugin'
 import {DisableComponentPlugin} from './DisableComponentPlugin'
 
+import {PlaceholderPlugin} from './PlaceholderPlugin'
+import {PlaceholderCssPatchPlugin} from './PlaceholderCssPatchPlugin'
+import {FloatingLabelPlugin} from './FloatingLabelPlugin'
+import {FloatingLabelCssPatchBs5Plugin} from './FloatingLabelCssPatchBs5Plugin'
+
+import {WarningCssPatchPlugin} from './WarningCssPatchPlugin'
+import {WarningBs4Plugin} from './WarningBs4Plugin'
+import {WarningBs5Plugin} from './WarningBs5Plugin'
+
 export {
-    CssPatchPlugin, SelectElementPlugin, 
+    BsAppearanceBs4Plugin, BsAppearanceBs5Plugin, 
+    BsAppearanceBs4CssPatchPlugin, BsAppearanceBs5CssPatchPlugin,
+
+    CssPatchBs4Plugin,  CssPatchBs5Plugin,
+
+    SelectElementPlugin, 
     LabelForAttributePlugin, HiddenOptionPlugin, ValidationApiPlugin, 
-    UpdateAppearancePlugin, BsAppearancePlugin, DisableComponentPlugin,
-    FormResetPlugin, CreatePopperPlugin, WarningPlugin, RtlPlugin,  PlaceholderPlugin, FloatingLabelPlugin, OptionsApiPlugin, 
+    UpdateAppearancePlugin, 
+    
+    DisableComponentPlugin,
+    FormResetPlugin, CreatePopperPlugin,  RtlPlugin,  PlaceholderPlugin, PlaceholderCssPatchPlugin, 
+    OptionsApiPlugin, 
     JQueryMethodsPlugin, 
     SelectedOptionPlugin, FormRestoreOnBackwardPlugin, 
     DisabledOptionPlugin, PicksApiPlugin, HighlightPlugin,
     ChoicesDynamicStylingPlugin, CustomPickStylingsPlugin, CustomChoiceStylingsPlugin,
     
+    FloatingLabelPlugin, FloatingLabelCssPatchBs5Plugin,
+    WarningBs5Plugin, WarningBs4Plugin, WarningCssPatchPlugin, 
+
     PicksPlugin,
 
     HiddenOptionAltPlugin

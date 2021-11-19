@@ -1,17 +1,28 @@
 // aka auto height and scrolling
-export function ChoicesDynamicStylingPlugin(aspects){
-    let {configuration} = aspects;
-    if (configuration.useChoicesDynamicStyling) {
-        let {choicesVisibilityAspect, specialPicksEventsAspect} = aspects;
-        var origSetChoicesVisible = choicesVisibilityAspect.setChoicesVisible;
-        aspects.choicesVisibilityAspect.setChoicesVisible = 
-            function(visible){
-                if (visible)
-                    choicesDynamicStyling(aspects);
-                origSetChoicesVisible(visible);
-            };
-        var origBackSpace = specialPicksEventsAspect.backSpace;
-        specialPicksEventsAspect.backSpace = (pick) => { origBackSpace(pick);  choicesDynamicStyling(aspects);};
+export function ChoicesDynamicStylingPlugin(defaults){
+    defaults.useChoicesDynamicStyling = false;
+    defaults.choicesDynamicStyling = choicesDynamicStyling;
+    defaults.minimalChoicesDynamicStylingMaxHeight = 20;
+    return {
+        buildAspects: (aspects, configuration) => {
+            return {
+                layout: () => {
+                    let {choicesDynamicStyling, useChoicesDynamicStyling} = configuration;
+                    if (useChoicesDynamicStyling) {
+                        let {choicesVisibilityAspect, specialPicksEventsAspect} = aspects;
+                        var origSetChoicesVisible = choicesVisibilityAspect.setChoicesVisible;
+                        choicesVisibilityAspect.setChoicesVisible = 
+                            function(visible){
+                                if (visible)
+                                    choicesDynamicStyling(aspects);
+                                origSetChoicesVisible(visible);
+                            };
+                        var origBackSpace = specialPicksEventsAspect.backSpace;
+                        specialPicksEventsAspect.backSpace = (pick) => { origBackSpace(pick);  choicesDynamicStyling(aspects);};
+                    }
+                }
+            }
+        }
     }
 }
 
@@ -48,10 +59,4 @@ function choicesDynamicStyling(aspects){
             return wrap;
         }
     }
-}
-
-ChoicesDynamicStylingPlugin.plugDefaultConfig = (defaults)=>{
-    defaults.useChoicesDynamicStyling = false;
-    defaults.choicesDynamicStyling = choicesDynamicStyling;
-    defaults.minimalChoicesDynamicStylingMaxHeight = 20;
 }

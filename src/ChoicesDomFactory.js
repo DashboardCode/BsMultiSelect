@@ -1,8 +1,8 @@
 import {addStyling} from './ToolsStyling';
 
-export function ChoicesDomFactory(createElementAspect) {
+export function ChoicesDomFactory(css, createElementAspect) {
     return {
-        create(css){
+        create(){
             var choicesElement = createElementAspect.createElement('DIV');
             var choicesListElement = createElementAspect.createElement('UL');
             
@@ -11,6 +11,7 @@ export function ChoicesDomFactory(createElementAspect) {
 
             addStyling(choicesElement, css.choices);
             addStyling(choicesListElement, css.choicesList);
+            
             return {
                 choicesElement,
                 choicesListElement,
@@ -28,3 +29,16 @@ export function ChoicesDomFactory(createElementAspect) {
         }
     }
 }
+
+
+export function ChoicesDomFactoryPlugCss(css){
+    css.choices = 'dropdown-menu';
+    css.choicesList = '';
+    css.choice = '';
+}
+
+export function ChoicesDomFactoryPlugCssPatch(cssPatch){
+    cssPatch.choicesList = {listStyleType:'none', paddingLeft:'0', paddingRight:'0', marginBottom:'0'};
+    cssPatch.choice = {classes:'px-md-2 px-1', styles:{cursor:'pointer'}};
+}
+

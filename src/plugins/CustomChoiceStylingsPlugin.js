@@ -1,17 +1,22 @@
 import { composeSync } from "../ToolsJs";
 
-export function CustomChoiceStylingsPlugin(apsects){
-    let {configuration, choiceDomFactory} = apsects;
-    let customChoiceStylings = configuration.customChoiceStylings;
-    CustomChoiceStylingsPluginF(customChoiceStylings, choiceDomFactory);
-}
-
-CustomChoiceStylingsPlugin.plugDefaultConfig = (defaults)=>{
+export function CustomChoiceStylingsPlugin(defaults){
     defaults.customChoiceStylings =  null;
+    return {
+        buildAspects: (aspects, configuration) => {
+            return {
+	            plugStaticDom: ()=> {
+                    let {choiceDomFactory} = aspects;
+                    let customChoiceStylings = configuration.customChoiceStylings;
+                    let customChoiceStylingsAspect = CustomChoiceStylingsAspect(customChoiceStylings);
+                    ExtendChoiceDomFactory(choiceDomFactory, customChoiceStylingsAspect);
+        	    }
+            }
+        }
+    }
 }
 
-export function CustomChoiceStylingsPluginF(customChoiceStylings, choiceDomFactory){
-    let customChoiceStylingsAspect = CustomChoiceStylingsAspect(customChoiceStylings);
+function ExtendChoiceDomFactory(choiceDomFactory, customChoiceStylingsAspect){
     let origChoiceDomFactoryCreate = choiceDomFactory.create;
     choiceDomFactory.create = function(choiceElement, wrap, toggle){
         var o = origChoiceDomFactoryCreate(choiceElement, wrap, toggle);
@@ -20,7 +25,7 @@ export function CustomChoiceStylingsPluginF(customChoiceStylings, choiceDomFacto
     }
 }
 
-export function CustomChoiceStylingsAspect(customChoiceStylings){
+function CustomChoiceStylingsAspect(customChoiceStylings){
     return {
         customize(wrap, choiceDom, choiceDomManagerHandlers){
             if (customChoiceStylings){

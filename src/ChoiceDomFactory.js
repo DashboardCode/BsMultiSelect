@@ -1,18 +1,9 @@
 import {EventBinder} from './ToolsDom';
 import {addStyling, toggleStyling} from './ToolsStyling';
 
-export function ChoiceDomFactory(css, optionPropertiesAspect, highlightAspect){
-    
-    var updateHighlightedInternal = function(wrap, choiceDom,  element) {
-        var text = optionPropertiesAspect.getText(wrap.option);
-        var highlighter = highlightAspect.getHighlighter();
-        if (highlighter)
-            highlighter(element, choiceDom, text);                    
-        else
-            element.textContent = text;
-    }
+export function ChoiceDomFactory(css, createElementAspect,  optionPropertiesAspect){
     var updateDataInternal = function(wrap, element){
-        element.textContent = optionPropertiesAspect.getText(wrap.option);;
+        element.textContent = optionPropertiesAspect.getText(wrap.option);
     }
     //TODO move check which aspects availbale like wrap.hasOwnProperty("isOptionSelected") to there
     return {
@@ -23,7 +14,7 @@ export function ChoiceDomFactory(css, optionPropertiesAspect, highlightAspect){
                 eventBinder.bind(choiceElement, "click",  toggle);
             
             if (wrap.hasOwnProperty("isOptionSelected")){
-                choiceElement.innerHTML = '<div><input formnovalidate type="checkbox"><label></label></div>';
+                createElementAspect.createElementFromHtml(choiceElement, '<div><input formnovalidate type="checkbox"><label></label></div>');
                 
                 let choiceContentElement = choiceElement.querySelector('DIV');
                 let choiceCheckBoxElement = choiceContentElement.querySelector('INPUT');
@@ -76,13 +67,10 @@ export function ChoiceDomFactory(css, optionPropertiesAspect, highlightAspect){
 
                 choiceDomManagerHandlers = {
                     updateData: ()=>updateDataInternal(wrap, choiceLabelElement),
-                    updateHighlighted: ()=>updateHighlightedInternal(wrap, choiceDom, choiceLabelElement), 
                     updateHoverIn,
                     updateDisabled,
                     updateSelected, 
                 }
-
-                
             }else{
                 let choiceHoverToggle    = toggleStyling(choiceElement, ()=>
                     (wrap.isOptionDisabled && css.choice_disabled_hover)?css.choice_disabled_hover:css.choice_hover);
@@ -93,13 +81,11 @@ export function ChoiceDomFactory(css, optionPropertiesAspect, highlightAspect){
                 choiceElement.innerHTML = '<span></span>';
                 let choiceContentElement = choiceElement.querySelector('SPAN');
                 choiceDom = {
-                    
                     choiceElement,
                     choiceContentElement,
                 };
                 choiceDomManagerHandlers = {
                     updateData: ()=>updateDataInternal(wrap, choiceContentElement),
-                    updateHighlighted: ()=>updateHighlightedInternal(wrap, choiceDom, choiceElement), 
                     updateHoverIn
                 }
             }
@@ -115,4 +101,35 @@ export function ChoiceDomFactory(css, optionPropertiesAspect, highlightAspect){
     }
 }
 
+export function ChoiceDomFactoryPlugCss(css){
+    css.choiceCheckBox_disabled = 'disabled'; //  not bs, in scss as 'ul.form-control li .custom-control-input.disabled ~ .custom-control-label'
+    css.choiceLabel_disabled = '';
+    css.choice_disabled_hover  = '';
+    css.choice_hover = 'hover'; //  not bs, in scss as 'ul.dropdown-menu li.hover'
+}
+
+export function ChoiceDomFactoryPlugCssBs4(css){
+    css.choiceCheckBox = 'custom-control-input';
+    css.choiceContent = 'custom-control custom-checkbox d-flex';
+    css.choiceLabel = 'custom-control-label justify-content-start';
+    css.choice_selected = '';
+    css.choice_disabled = '';
+}
+
+export function ChoiceDomFactoryPlugCssBs5(css){
+    css.choiceCheckBox = 'form-check-input'; // bs
+    css.choiceContent = 'form-check'; // bs d-flex required for rtl to align items
+    css.choiceLabel = 'form-check-label';
+    css.choice_selected = 'selected'; //  not bs,
+    css.choice_disabled = 'disabled'; //  not bs,
+}
+
+export function ChoiceDomFactoryPlugCssPatch(cssPatch){
+    cssPatch.choiceCheckBox = {color: 'inherit', cursor:'inherit'};
+    cssPatch.choiceContent = {justifyContent: 'flex-start', cursor:'inherit'}; // BS problem: without this on inline form menu items justified center
+    cssPatch.choiceLabel = {color: 'inherit', cursor:'inherit'}; // otherwise BS .was-validated set its color
+    cssPatch.choiceLabel_disabled = {opacity: '.65'};  // more flexible than {color: '#6c757d'}; note: avoid opacity on pickElement's border; TODO write to BS4 
+    cssPatch.choice_disabled_hover  = 'bg-light';
+    cssPatch.choice_hover = 'text-primary bg-light';
+}
 

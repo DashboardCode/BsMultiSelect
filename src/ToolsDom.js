@@ -105,6 +105,17 @@ export function EventBinder(){
     }
 }
 
+export function EventTumbler(element, eventName, handler){
+    return {
+        on() {
+            element.addEventListener(eventName, handler)
+        },
+        off() {
+            element.removeEventListener(eventName, handler)
+        }
+    }
+}
+
 export function AttributeBackup(){
     var list = [];
     return {

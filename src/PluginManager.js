@@ -1,15 +1,34 @@
-export function PluginManager(plugins, pluginData){
-    let instances = [];
-    if (plugins){
-        for(let i = 0; i<plugins.length; i++){
-            let instance = plugins[i](pluginData)
-            if (instance)
-                instances.push(instance);
+import {extendIfUndefined} from './ToolsJs';
+
+export function ComposePluginManagerFactory(plugins, defaults){
+    let buildAspectsList = [];
+
+    for(let i = 0; i<plugins.length; i++){
+        let buildAspects =  plugins[i].value(defaults);
+        if (buildAspects){
+            buildAspectsList.push({key:plugins[i].key, value:buildAspects});
         }
     }
     
+    return (configuration, settings)=>{
+        let eventHandlers = [];
+        let aspects = {};
+        for(let i = 0; i<buildAspectsList.length; i++){
+            let events = buildAspectsList[i].value.buildAspects(aspects, configuration, settings)
+            if (events){
+                eventHandlers.push({key:buildAspectsList[i].key, value:events});
+            }
+        }
+        return PluginManager(aspects, eventHandlers);
+    };
+}
+
+export function PluginManager(aspects, eventHandlers){
+    let instances = [];
     let disposes = [];
+    
     return {
+        aspects, // TODO: hide
         buildApi(api){
             for(let i = 0; i<instances.length; i++){
                 let dispose = instances[i].buildApi?.(api)
@@ -26,24 +45,45 @@ export function PluginManager(plugins, pluginData){
                 instances[i].dispose?.()
             }
             instances=null;
+        },
+        plugStaticDomFactories(newAspects){
+            extendIfUndefined(aspects, newAspects)
+            for(let i = 0; i<eventHandlers.length; i++){
+                eventHandlers[i].value.plugStaticDomFactories?.(aspects);
+            }
+        },
+        plugStaticDom(newAspects){
+            extendIfUndefined(aspects, newAspects)
+            for(let i = 0; i<eventHandlers.length; i++){
+                eventHandlers[i].value.plugStaticDom?.(aspects);
+            }
+        },
+        layout(newAspects){
+            extendIfUndefined(aspects, newAspects)
+            if (eventHandlers){
+                // TODO: complete to full bus event system
+                for(let i = 0; i<eventHandlers.length; i++){
+                    let a = eventHandlers[i].value;
+                    if (a.plugStaticDomBus){
+                        if (eventHandlers.some(c => c.key===a.plugStaticDomBus.after))
+                            a.plugStaticDomBus.plugStaticDom?.(aspects);
+                    }
+                }
+        
+                for(let i = 0; i<eventHandlers.length; i++){
+                    let instance = eventHandlers[i].value.layout?.(aspects)
+                    if (instance)
+                        instances.push(instance);
+                    
+                }
+            
+            }
+        },
+        attach(){
+            if (eventHandlers)
+                for(let i = 0; i<eventHandlers.length; i++){
+                    eventHandlers[i].value.attach?.(aspects)
+                }
         }
-    }
-}
-
-export function plugDefaultConfig(constructors, defaults){
-    for(let i = 0; i<constructors.length; i++){
-        constructors[i].plugDefaultConfig?.(defaults)
-    }
-}
-
-export function plugMergeSettings(constructors, configuration, defaults, settings){
-    for(let i = 0; i<constructors.length; i++){
-        constructors[i].plugMergeSettings?.(configuration, defaults, settings)
-    }
-}
-
-export function plugStaticDom(constructors, aspects){
-    for(let i = 0; i<constructors.length; i++){
-        constructors[i].plugStaticDom?.(aspects)
     }
 }

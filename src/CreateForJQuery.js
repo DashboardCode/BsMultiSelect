@@ -1,11 +1,11 @@
 import {addToJQueryPrototype} from './AddToJQueryPrototype'
 
-import {composeSync, shallowClearClone, ObjectValues, isString} from './ToolsJs'
+import {composeSync, ObjectValuesEx, isString} from './ToolsJs'
 import {composeEventTrigger} from './ToolsDom'
 
 import {MultiSelectBuilder} from './MultiSelectBuilder'
 
-export function createForJQuery(window, $,  globalPopper, name, pluginsSet, stylePlugin){
+export function createForJQuery(window, $,  globalPopper, name, plugins, defaultCss){
     let trigger = null;
     let isJQyery = $ && !window.document.body.hasAttribute('data-bs-no-jquery');
     if (isJQyery) {
@@ -13,11 +13,10 @@ export function createForJQuery(window, $,  globalPopper, name, pluginsSet, styl
     } else {
         trigger = composeEventTrigger(window);
     }
-    let plugins = shallowClearClone({stylePlugin}, pluginsSet);
 
     let environment = {trigger, window, globalPopper}
-    let pluginsArray = ObjectValues(plugins)
-    let {create, defaultSettings} = MultiSelectBuilder(environment, pluginsArray);
+    let pluginsArray = ObjectValuesEx(plugins)
+    let {create, defaultSettings} = MultiSelectBuilder(environment, pluginsArray, defaultCss);
     let createForUmd = (element, settings) => {
         if (isString(element))
             element = window.document.querySelector(element);

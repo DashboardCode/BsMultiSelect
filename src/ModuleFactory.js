@@ -1,26 +1,29 @@
 import {multiSelectPlugins, picksPlugins, allPlugins} from './PluginSet'
-import {shallowClearClone, ObjectValues} from './ToolsJs'
+import {shallowClearClone, ObjectValuesEx} from './ToolsJs'
 import {utilities} from './ToolSet'
 import {MultiSelectBuilder} from './MultiSelectBuilder'
 
-export function ModuleFactory(environment, customizationPlugins){
+export function ModuleFactory(environment, customizationPlugins, defaultCss){
     if (!environment.trigger)
         environment.trigger = (e, name) => e.dispatchEvent(new environment.window.Event(name))
 
-    let pluginsArray = ObjectValues(shallowClearClone(customizationPlugins, multiSelectPlugins));
-    let {create: BsMultiSelect, BsMultiSelectDefault} = MultiSelectBuilder(environment, pluginsArray) 
+    let multiSelectPluginsObj = shallowClearClone(customizationPlugins, multiSelectPlugins);
+    let pluginsArray = ObjectValuesEx(multiSelectPluginsObj);
+    let {create: BsMultiSelect, BsMultiSelectDefault} = MultiSelectBuilder(environment, pluginsArray, defaultCss) 
     BsMultiSelect.Default = BsMultiSelectDefault;
     
-    let picksPluginsArray = ObjectValues(shallowClearClone(customizationPlugins, picksPlugins));
-    let {create: BsPicks, BsPicksDefault} = MultiSelectBuilder(environment, picksPluginsArray) 
+    let picksPluginsObj = shallowClearClone(customizationPlugins, picksPlugins);
+    let picksPluginsArray = ObjectValuesEx(picksPluginsObj);
+    let {create: BsPicks, BsPicksDefault} = MultiSelectBuilder(environment, picksPluginsArray, defaultCss) 
     BsPicks.Default = BsPicksDefault; 
 
     return {
         BsMultiSelect,
         BsPicks,
-        MultiSelectTools: {MultiSelectBuilder, plugins: shallowClearClone(customizationPlugins, allPlugins), utilities} 
+        MultiSelectTools: {MultiSelectBuilder, plugins: shallowClearClone(customizationPlugins, allPlugins), defaultCss, utilities} 
     }
 }
+
 
 // TEST
 // function areValidElements(...args) {

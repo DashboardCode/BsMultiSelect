@@ -1,8 +1,15 @@
-import { Bs5Plugin} from "./plugins/Bs5Plugin";
-import { ModuleFactory as ModuleFactoryImpl } from "./ModuleFactory";
+import {createDefaultCssBs5} from "./DomFactories";
+import {Bs4PluginSet} from './PluginSet'
+import {ModuleFactory as ModuleFactoryImpl} from "./ModuleFactory";
+
+const defaultCss = createDefaultCssBs5();
 
 function ModuleFactory(environment){
-    return ModuleFactoryImpl(environment, { Bs5Plugin } );
+    return ModuleFactoryImpl(
+        environment,
+        Bs4PluginSet,
+        defaultCss
+    );
 } 
 
 function legacyConstructor(element, environment, settings){

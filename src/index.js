@@ -1,8 +1,4 @@
-import { Bs5Plugin } from "./plugins/Bs5Plugin.js";
-import { Bs4Plugin } from "./plugins/Bs4Plugin.js";
-
-//import { multiSelectPlugins, picksPlugins} from "./PluginSet.js";
-import { shallowClearClone, ObjectValues } from "./ToolsJs.js";
+import { shallowClearClone, ObjectValuesEx } from "./ToolsJs.js";
 
 import { composeSync } from "./ToolsJs.js";
 import { EventBinder } from "./ToolsDom.js";
@@ -11,23 +7,32 @@ import { addStyling, toggleStyling } from "./ToolsStyling.js";
 import { MultiSelectBuilder } from "./MultiSelectBuilder.js";
 import { BsMultiSelect, ModuleFactory } from "./BsMultiSelect.esm.js";
 
-import { CssPatchPlugin, SelectElementPlugin, LabelForAttributePlugin, ValidationApiPlugin, UpdateAppearancePlugin, BsAppearancePlugin, DisableComponentPlugin, 
-    FormResetPlugin, CreatePopperPlugin, WarningPlugin, RtlPlugin, PlaceholderPlugin, FloatingLabelPlugin, OptionsApiPlugin, JQueryMethodsPlugin, SelectedOptionPlugin, 
+import { BsAppearanceBs5Plugin, BsAppearanceBs4Plugin, CssPatchBs4Plugin, CssPatchBs5Plugin, SelectElementPlugin, LabelForAttributePlugin, ValidationApiPlugin, UpdateAppearancePlugin,  DisableComponentPlugin, 
+    FormResetPlugin, CreatePopperPlugin, WarningCssPatchPlugin, RtlPlugin, PlaceholderPlugin, PlaceholderCssPatchPlugin, 
+    FloatingLabelPlugin, FloatingLabelCssPatchBs5Plugin, OptionsApiPlugin, JQueryMethodsPlugin, SelectedOptionPlugin, 
     FormRestoreOnBackwardPlugin, DisabledOptionPlugin, PicksApiPlugin, HighlightPlugin, ChoicesDynamicStylingPlugin, CustomPickStylingsPlugin, CustomChoiceStylingsPlugin, 
-    PicksPlugin, HiddenOptionPlugin, HiddenOptionAltPlugin
+    PicksPlugin, HiddenOptionPlugin, HiddenOptionAltPlugin,
+    BsAppearanceBs4CssPatchPlugin, BsAppearanceBs5CssPatchPlugin,
+    WarningBs4Plugin, WarningBs5Plugin
+    /*,SelectedPicksPlugin*/
     } from "./plugins/index.js";
 
 export { 
-    Bs5Plugin, Bs4Plugin, 
+    BsAppearanceBs4Plugin, WarningBs4Plugin, 
+    BsAppearanceBs5Plugin, WarningBs5Plugin, 
     
-    CssPatchPlugin, 
+    CssPatchBs4Plugin, BsAppearanceBs4CssPatchPlugin, 
+    CssPatchBs5Plugin, BsAppearanceBs5CssPatchPlugin, FloatingLabelCssPatchBs5Plugin, PlaceholderCssPatchPlugin, WarningCssPatchPlugin,
     SelectElementPlugin, PicksPlugin,
     
-    LabelForAttributePlugin, ValidationApiPlugin, UpdateAppearancePlugin, BsAppearancePlugin, DisableComponentPlugin, 
-    FormResetPlugin, CreatePopperPlugin, WarningPlugin, RtlPlugin, PlaceholderPlugin, FloatingLabelPlugin, OptionsApiPlugin, JQueryMethodsPlugin, SelectedOptionPlugin, 
-    FormRestoreOnBackwardPlugin, DisabledOptionPlugin, PicksApiPlugin, HighlightPlugin, ChoicesDynamicStylingPlugin, CustomPickStylingsPlugin, CustomChoiceStylingsPlugin, 
+    LabelForAttributePlugin, ValidationApiPlugin, UpdateAppearancePlugin, 
     
+    DisableComponentPlugin, 
+    FormResetPlugin, CreatePopperPlugin, RtlPlugin, PlaceholderPlugin, 
+    FloatingLabelPlugin, OptionsApiPlugin, JQueryMethodsPlugin, SelectedOptionPlugin, 
+    FormRestoreOnBackwardPlugin, DisabledOptionPlugin, PicksApiPlugin, HighlightPlugin, ChoicesDynamicStylingPlugin, CustomPickStylingsPlugin, CustomChoiceStylingsPlugin, 
+   
     HiddenOptionPlugin, HiddenOptionAltPlugin,
 
-    shallowClearClone, ObjectValues, composeSync, EventBinder, addStyling, toggleStyling,
-    MultiSelectBuilder, BsMultiSelect, ModuleFactory };
+    shallowClearClone, ObjectValuesEx, composeSync, EventBinder, addStyling, toggleStyling,
+    MultiSelectBuilder, BsMultiSelect, ModuleFactory};

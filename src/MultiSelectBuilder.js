@@ -1,20 +1,23 @@
 import {BsMultiSelect} from './BsMultiSelect'
-import {plugMergeSettings, plugDefaultConfig} from './PluginManager'
+import {ComposePluginManagerFactory} from './PluginManager'
 
 import {adjustLegacySettings} from './BsMultiSelectDepricatedParameters'
 
-import {createCss} from './ToolsStyling'
 import {extendIfUndefined} from './ToolsJs'
 
+import {createCss} from './ToolsStyling'
+
 // TODO: remove environment - replace it with plugins
-export function MultiSelectBuilder(environment, plugins) 
+export function MultiSelectBuilder(environment, plugins, defaultCss) 
 {
-    const defaults = {containerClass: "dashboardcode-bsmultiselect"}
+    const defaults = {containerClass: "dashboardcode-bsmultiselect", css: defaultCss}
+
+    var pluginManagerFactory = ComposePluginManagerFactory(plugins, defaults);
 
     let create = (element, options) => { 
         if (options && options.plugins)
             console.log("DashboarCode.BsMultiSelect: 'options.plugins' is depricated, use - MultiSelectBuilder(environment, plugins) instead");
-        let configuration = {};
+        
         let buildConfiguration;
         if (options instanceof Function) {
             buildConfiguration = options;
@@ -25,14 +28,19 @@ export function MultiSelectBuilder(environment, plugins)
         if (options){
             adjustLegacySettings(options);
         }
+        let configuration = {};
+        
+        // TODO: move to each plugin that add css (as plugMergeSettings) 
         configuration.css = createCss(defaults.css, options?.css);
-        plugMergeSettings(plugins, configuration, defaults, options); // merge settings.cssPatch and defaults.cssPatch
+        
+        var pluginManager = pluginManagerFactory(configuration, options); // merge settings.cssPatch and defaults.cssPatch
+
         extendIfUndefined(configuration, options);
         extendIfUndefined(configuration, defaults);
         let onInit = buildConfiguration?.(element, configuration); // TODO: configuration should become an aspect
-        let multiSelect = BsMultiSelect(element, environment, plugins, configuration, onInit); // onInit(api, aspects) - before load data
+        let multiSelect = BsMultiSelect(element, environment, pluginManager, configuration, onInit); // onInit(api, aspects) - before load data
         return multiSelect;
     }
-    plugDefaultConfig(plugins, defaults);
+    
     return {create, defaultSettings: defaults}
 }

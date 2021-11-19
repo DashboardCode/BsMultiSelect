@@ -1,62 +1,70 @@
-export function HiddenOptionPlugin(aspects){
-    let {configuration, createWrapAspect, isChoiceSelectableAspect,
-        wrapsCollection, buildChoiceAspect, buildAndAttachChoiceAspect,
-        countableChoicesListInsertAspect, countableChoicesList} = aspects;
-
-    countableChoicesListInsertAspect.countableChoicesListInsert = (wrap, key) => {
-        if ( !wrap.isOptionHidden ){
-            let choiceNext = wrapsCollection.getNext(key, c=>!c.isOptionHidden );
-            countableChoicesList.add(wrap, choiceNext)
-        }
-    }
-
-    let origBuildAndAttachChoice = buildAndAttachChoiceAspect.buildAndAttachChoice;
-    buildAndAttachChoiceAspect.buildAndAttachChoice=(wrap, getNextElement)=>{
-        if (wrap.isOptionHidden){ 
-            buildHiddenChoice(wrap);
-        }
-        else{ 
-            origBuildAndAttachChoice(wrap, getNextElement);
-        }
-    }
-
-    var origIsSelectable = isChoiceSelectableAspect.isSelectable;
-    isChoiceSelectableAspect.isSelectable = (wrap) => origIsSelectable(wrap) && !wrap.isOptionHidden;
-
-    let {getIsOptionHidden, options} = configuration;
-    if (options) {
-        if (!getIsOptionHidden)
-            getIsOptionHidden = (option) => (option.hidden===undefined)?false:option.hidden;     
-    } else {
-        if (!getIsOptionHidden)
-            getIsOptionHidden = (option) => {
-                return option.hidden;     
-            } 
-    }
-    
-    var origCreateWrap = createWrapAspect.createWrap;
-    createWrapAspect.createWrap = (option) => {
-        let wrap = origCreateWrap(option);
-        wrap.isOptionHidden = getIsOptionHidden(option);
-        return wrap;
-    };
-
+export function HiddenOptionPlugin(){
     return {
-        buildApi(api){     
-            let getNextNonHidden =  (key) => wrapsCollection.getNext(key, c => !c.isOptionHidden );
-
-            api.updateOptionsHidden = () => 
-                wrapsCollection.forLoop( (wrap, key) => 
-                        updateChoiceHidden(wrap, key, getNextNonHidden, countableChoicesList, getIsOptionHidden, buildChoiceAspect)
-                    );
-
-            api.updateOptionHidden  = (key) => 
-                updateChoiceHidden(wrapsCollection.get(key), key, getNextNonHidden, countableChoicesList, getIsOptionHidden, buildChoiceAspect);
-            // TODO create updateHidden ? 
-            // it is too complex since we need to find the next non hidden, when this depends on key 
-            // there should be the backreference "wrap -> index" invited before
-            // api.updateOptionHidden  = (key) => wrapsCollection.get(key).updateHidden();
-        }
+        buildAspects: (aspects, configuration) => {
+            return {
+                layout: () => {
+                    let {createWrapAspect, isChoiceSelectableAspect,
+                        wrapsCollection, buildChoiceAspect, buildAndAttachChoiceAspect,
+                        countableChoicesListInsertAspect, countableChoicesList} = aspects;
+                
+                    countableChoicesListInsertAspect.countableChoicesListInsert = (wrap, key) => {
+                        if ( !wrap.isOptionHidden ){
+                            let choiceNext = wrapsCollection.getNext(key, c=>!c.isOptionHidden );
+                            countableChoicesList.add(wrap, choiceNext)
+                        }
+                    }
+                
+                    let origBuildAndAttachChoice = buildAndAttachChoiceAspect.buildAndAttachChoice;
+                    buildAndAttachChoiceAspect.buildAndAttachChoice=(wrap, getNextElement)=>{
+                        if (wrap.isOptionHidden){ 
+                            buildHiddenChoice(wrap);
+                        }
+                        else{ 
+                            origBuildAndAttachChoice(wrap, getNextElement);
+                        }
+                    }
+                
+                    var origIsSelectable = isChoiceSelectableAspect.isSelectable;
+                    isChoiceSelectableAspect.isSelectable = (wrap) => origIsSelectable(wrap) && !wrap.isOptionHidden;
+                
+                    let {getIsOptionHidden, options} = configuration;
+                    if (options) {
+                        if (!getIsOptionHidden)
+                            getIsOptionHidden = (option) => (option.hidden===undefined)?false:option.hidden;     
+                    } else {
+                        if (!getIsOptionHidden)
+                            getIsOptionHidden = (option) => {
+                                return option.hidden;     
+                            } 
+                    }
+                    
+                    var origCreateWrap = createWrapAspect.createWrap;
+                    createWrapAspect.createWrap = (option) => {
+                        let wrap = origCreateWrap(option);
+                        wrap.isOptionHidden = getIsOptionHidden(option);
+                        return wrap;
+                    };
+                
+                    return {
+                        buildApi(api){     
+                            let getNextNonHidden =  (key) => wrapsCollection.getNext(key, c => !c.isOptionHidden );
+                
+                            api.updateOptionsHidden = () => 
+                                wrapsCollection.forLoop( (wrap, key) => 
+                                        updateChoiceHidden(wrap, key, getNextNonHidden, countableChoicesList, getIsOptionHidden, buildChoiceAspect)
+                                    );
+                
+                            api.updateOptionHidden  = (key) => 
+                                updateChoiceHidden(wrapsCollection.get(key), key, getNextNonHidden, countableChoicesList, getIsOptionHidden, buildChoiceAspect);
+                            // TODO create updateHidden ? 
+                            // it is too complex since we need to find the next non hidden, when this depends on key 
+                            // there should be the backreference "wrap -> index" invited before
+                            // api.updateOptionHidden  = (key) => wrapsCollection.get(key).updateHidden();
+                        }
+                    }
+                }
+            }
+        },
     }
 }
 
