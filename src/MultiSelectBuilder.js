@@ -19,25 +19,27 @@ export function MultiSelectBuilder(environment, plugins, defaultCss)
             console.log("DashboarCode.BsMultiSelect: 'options.plugins' is depricated, use - MultiSelectBuilder(environment, plugins) instead");
         
         let buildConfiguration;
+        let settings;
         if (options instanceof Function) {
             buildConfiguration = options;
-            options = null;
+            settings = null;
         } else {
             buildConfiguration = options?.buildConfiguration;
+            settings = options;
         }
-        if (options){
-            adjustLegacySettings(options);
+        if (settings){
+            adjustLegacySettings(settings);
         }
         let configuration = {};
         
         // TODO: move to each plugin that add css (as plugMergeSettings) 
-        configuration.css = createCss(defaults.css, options?.css);
+        configuration.css = createCss(defaults.css, settings?.css);
         
-        var pluginManager = pluginManagerFactory(configuration, options); // merge settings.cssPatch and defaults.cssPatch
-
-        extendIfUndefined(configuration, options);
+        extendIfUndefined(configuration, settings);
         extendIfUndefined(configuration, defaults);
-        let onInit = buildConfiguration?.(element, configuration); // TODO: configuration should become an aspect
+        var pluginManager = pluginManagerFactory(configuration, settings); // merge settings.cssPatch and defaults.cssPatch
+        let onInit = buildConfiguration?.(element, configuration); 
+        Object.freeze(configuration);
         let multiSelect = BsMultiSelect(element, environment, pluginManager, configuration, onInit); // onInit(api, aspects) - before load data
         return multiSelect;
     }

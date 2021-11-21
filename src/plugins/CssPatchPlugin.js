@@ -4,22 +4,19 @@ import {isBoolean} from '../ToolsJs';
 export function CssPatchPlugin(defaults){
     defaults.useCssPatch = true;
     return {
-        buildAspects: (aspects, configuration, settings) => {
-            // merge
+        merge(configuration, settings){
             let cssPatch = settings?.cssPatch;
             if (isBoolean(cssPatch))
                 throw new Error("BsMultiSelect: 'cssPatch' was used instead of 'useCssPatch'") // often type of error
             configuration.cssPatch = createCss(defaults.cssPatch, cssPatch); // replace classes, merge styles
-            return {
-                // TODO: this means after all cssPatch added, but this should be done different way (another static extension point?)
-                plugStaticDom: () => {
-                    if (configuration.useCssPatch)
-                        extendCss(configuration.css, configuration.cssPatch); 
-                }
-            }
+        },
+        plug(configuration){
+            if (configuration.useCssPatch)
+                extendCss(configuration.css, configuration.cssPatch);
         }
     }
 }
+
 
 const _cssPatchBs5 = {
     choicesList: {listStyleType:'none', paddingLeft:'0', paddingRight:'0', marginBottom:'0'},

@@ -3,23 +3,27 @@ import {defCall, composeSync} from '../ToolsJs';
 export function LabelForAttributePlugin(defaults){
     defaults.label = null;
     return {
-        buildAspects: (aspects, configuration) => {
-            return {
-	            plugStaticDom: ()=> {
-                    aspects.labelAspect = LabelAspect(configuration);
-                    aspects.labelNewIdAspect = LabelNewIdAspect(aspects); // ?
-        	    },
-                layout: () => {
-                    var {filterDom, labelAspect, loadAspect, labelNewIdAspect, disposeAspect} = aspects;
-    
-                    // TODO: move to 
-                    console.log("LabelForAttributePlugin, labelNewIdAspect");
-                    
-                    var labelForAttributeAspect = LabelForAttributeAspect(filterDom, labelAspect, labelNewIdAspect, disposeAspect);
-                    aspects.labelForAttributeAspect=labelForAttributeAspect;
-                    
-                    loadAspect.load = composeSync(loadAspect.load, ()=>labelForAttributeAspect.update())
-                }
+        plug
+    }
+}
+
+export function plug(configuration){
+    return (aspects) => {
+        return {
+            plugStaticDom: ()=> {
+                aspects.labelAspect = LabelAspect(configuration);
+                aspects.labelNewIdAspect = LabelNewIdAspect(aspects); // ?
+            },
+            layout: () => {
+                var {filterDom, labelAspect, loadAspect, labelNewIdAspect, disposeAspect} = aspects;
+
+                // TODO: move to 
+                console.log("LabelForAttributePlugin, labelNewIdAspect");
+
+                var labelForAttributeAspect = LabelForAttributeAspect(filterDom, labelAspect, labelNewIdAspect, disposeAspect);
+                aspects.labelForAttributeAspect=labelForAttributeAspect;
+
+                loadAspect.load = composeSync(loadAspect.load, ()=>labelForAttributeAspect.update())
             }
         }
     }

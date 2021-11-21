@@ -3,14 +3,18 @@ import { composeSync } from "../ToolsJs";
 export function CustomPickStylingsPlugin(defaults){
     defaults.customPickStylings = null;
     return {
-        buildAspects: (aspects, configuration) => {
-            return {
-	            plugStaticDom: ()=> {
-                    let {componentPropertiesAspect, pickDomFactory} = aspects;
-                    let customPickStylings = configuration.customPickStylings;
-                    let customPickStylingsAspect = CustomPickStylingsAspect(componentPropertiesAspect, customPickStylings);
-                    ExtendPickDomFactory(pickDomFactory, customPickStylingsAspect);
-        	    }
+        plug
+    }
+}
+
+export function plug(configuration){
+    return (aspects) => {
+        return {
+            plugStaticDom: ()=> {
+                let {componentPropertiesAspect, pickDomFactory} = aspects;
+                let customPickStylings = configuration.customPickStylings;
+                let customPickStylingsAspect = CustomPickStylingsAspect(componentPropertiesAspect, customPickStylings);
+                ExtendPickDomFactory(pickDomFactory, customPickStylingsAspect);
             }
         }
     }

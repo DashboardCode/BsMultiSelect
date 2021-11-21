@@ -4,144 +4,148 @@ import {ObservableLambda, composeSync} from '../ToolsJs';
 
 export function BsAppearancePlugin(){
     return {
-        buildAspects: (aspects, configuration) => {
-            return {
-                plugStaticDomBus: {
-                    after: "LabelForAttributePlugin",
-                    plugStaticDom: () => {
-                        console.log("TODOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO");
-                        var {labelAspect, staticDom, configuration} = aspects; 
-                        var {selectElement} = staticDom;
-                        var {getDefaultLabel} = configuration;
-                        let origLabelAspectGetLabel = labelAspect.getLabel; 
-                        console.log("BsAppearancePlugin - new labelAspect.getLabel  ");
-                        labelAspect.getLabel = () => {
-                            var e = origLabelAspectGetLabel();
-                            if (e)
-                                return e;
-                            else{
-                                console.log("BsAppearancePlugin - new labelAspect.getLabel  - selectElement");
-                                if (selectElement){
-                                    console.log("BsAppearancePlugin - new labelAspect.getLabel  - selectElement +");
-                                    let labelElement = getDefaultLabel(selectElement);
-                                    console.log({name:"BsAppearancePlugin - new labelAspect.getLabel  - selectElement +", labelElement});
-                                    return labelElement;
-                                }
+        plug
+    }
+}
+
+export function plug(configuration){ 
+    return (aspects) => {
+        return {
+            plugStaticDomBus: {
+                after: "LabelForAttributePlugin",
+                plugStaticDom: () => {
+                    console.log("TODOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO");
+                    var {labelAspect, staticDom, configuration} = aspects; 
+                    var {selectElement} = staticDom;
+                    var {getDefaultLabel} = configuration;
+                    let origLabelAspectGetLabel = labelAspect.getLabel; 
+                    console.log("BsAppearancePlugin - new labelAspect.getLabel  ");
+                    labelAspect.getLabel = () => {
+                        var e = origLabelAspectGetLabel();
+                        if (e)
+                            return e;
+                        else{
+                            console.log("BsAppearancePlugin - new labelAspect.getLabel  - selectElement");
+                            if (selectElement){
+                                console.log("BsAppearancePlugin - new labelAspect.getLabel  - selectElement +");
+                                let labelElement = getDefaultLabel(selectElement);
+                                console.log({name:"BsAppearancePlugin - new labelAspect.getLabel  - selectElement +", labelElement});
+                                return labelElement;
                             }
                         }
                     }
-                },
-                layout: () => {
-                    let {validationApiAspect, 
-                        picksDom, staticDom, updateAppearanceAspect, componentPropertiesAspect, floatingLabelAspect} = aspects;
-                    let {getValidity, getSize, useCssPatch, css, composeGetSize} = configuration;
-                    
-                    let selectElement = staticDom.selectElement;
-                    
-                    let initialElement = staticDom.initialElement;
+                }
+            },
+            layout: () => {
+                let {validationApiAspect, 
+                    picksDom, staticDom, updateAppearanceAspect, componentPropertiesAspect, floatingLabelAspect} = aspects;
+                let {getValidity, getSize, useCssPatch, css, composeGetSize} = configuration;
                 
-                    let isFloatingLabel = false;
-                    if (floatingLabelAspect){
-                        isFloatingLabel =  closestByClassName(initialElement, 'form-floating');
-                        floatingLabelAspect.isFloatingLabel = () => isFloatingLabel
-                    }
+                let selectElement = staticDom.selectElement;
                 
-                    if (staticDom.selectElement) {
-                        if(!getValidity)
-                            getValidity = composeGetValidity(selectElement)
-                        if(!getSize) 
-                            getSize = composeGetSize(selectElement)
-                    } else {
-                        if (!getValidity)
-                            getValidity = () => null
-                        if (!getSize)
-                            getSize = () => null
-                    }
+                let initialElement = staticDom.initialElement;
                 
-                    componentPropertiesAspect.getSize=getSize;
-                
-                    componentPropertiesAspect.getValidity=getValidity;
-                
-                    var updateSize;
-                    if (!useCssPatch){
-                        updateSize= () => updateSizeForAdapter(picksDom.picksElement, getSize)
-                    }
-                    else{
-                        let {picks_lg, picks_sm, picks_def, picks_floating_def} = css;
-                        if (isFloatingLabel)
-                            picks_lg = picks_sm = picks_def = picks_floating_def;
-                        updateSize = () => updateSizeJsForAdapter(picksDom.picksElement, picks_lg, picks_sm, picks_def,  getSize);
-                    }
-                
-                    if (useCssPatch){
-                        var origToggleFocusStyling = picksDom.toggleFocusStyling;
-                        picksDom.toggleFocusStyling = () => {
-                            var validity =  validationObservable.getValue();
-                            var isFocusIn = picksDom.getIsFocusIn();
-                            origToggleFocusStyling(isFocusIn)
-                            if (isFocusIn){
-                                if (validity===false) { 
-                                    // but not toggle events (I know it will be done in future)
-                                    picksDom.setIsFocusIn(isFocusIn);
-                                    
-                                    addStyling(picksDom.picksElement, css.picks_focus_invalid)
-                                } else if (validity===true) {
-                                    // but not toggle events (I know it will be done in future)
-                                    picksDom.setIsFocusIn(isFocusIn);
-                                    
-                                    addStyling(picksDom.picksElement, css.picks_focus_valid)  
-                                }              
-                            }
+                let isFloatingLabel = false;
+                if (floatingLabelAspect){
+                    isFloatingLabel =  closestByClassName(initialElement, 'form-floating');
+                    floatingLabelAspect.isFloatingLabel = () => isFloatingLabel
+                }
+            
+                if (staticDom.selectElement) {
+                    if(!getValidity)
+                        getValidity = composeGetValidity(selectElement)
+                    if(!getSize) 
+                        getSize = composeGetSize(selectElement)
+                } else {
+                    if (!getValidity)
+                        getValidity = () => null
+                    if (!getSize)
+                        getSize = () => null
+                }
+            
+                componentPropertiesAspect.getSize=getSize;
+            
+                componentPropertiesAspect.getValidity=getValidity;
+            
+                var updateSize;
+                if (!useCssPatch){
+                    updateSize= () => updateSizeForAdapter(picksDom.picksElement, getSize)
+                }
+                else{
+                    let {picks_lg, picks_sm, picks_def, picks_floating_def} = css;
+                    if (isFloatingLabel)
+                        picks_lg = picks_sm = picks_def = picks_floating_def;
+                    updateSize = () => updateSizeJsForAdapter(picksDom.picksElement, picks_lg, picks_sm, picks_def,  getSize);
+                }
+            
+                if (useCssPatch){
+                    var origToggleFocusStyling = picksDom.toggleFocusStyling;
+                    picksDom.toggleFocusStyling = () => {
+                        var validity =  validationObservable.getValue();
+                        var isFocusIn = picksDom.getIsFocusIn();
+                        origToggleFocusStyling(isFocusIn)
+                        if (isFocusIn){
+                            if (validity===false) { 
+                                // but not toggle events (I know it will be done in future)
+                                picksDom.setIsFocusIn(isFocusIn);
+                                
+                                addStyling(picksDom.picksElement, css.picks_focus_invalid)
+                            } else if (validity===true) {
+                                // but not toggle events (I know it will be done in future)
+                                picksDom.setIsFocusIn(isFocusIn);
+                                
+                                addStyling(picksDom.picksElement, css.picks_focus_valid)  
+                            }              
                         }
                     }
+                }
+            
+                var getWasValidated = () => {
+                    var wasValidatedElement = closestByClassName(staticDom.initialElement, 'was-validated');
+                    return wasValidatedElement?true:false;
+                }
+                var wasUpdatedObservable = ObservableLambda(()=>getWasValidated());
+                var getManualValidationObservable = ObservableLambda(()=>getValidity());
+                let validationApiObservable = validationApiAspect?.validationApiObservable;
                 
-                    var getWasValidated = () => {
-                        var wasValidatedElement = closestByClassName(staticDom.initialElement, 'was-validated');
-                        return wasValidatedElement?true:false;
+                var validationObservable = ObservableLambda(
+                    () => wasUpdatedObservable.getValue()?validationApiObservable.getValue():getManualValidationObservable.getValue()
+                )
+                
+                validationObservable.attach(
+                    (value)=>{
+                        var  {validMessages, invalidMessages} = getMessagesElements(staticDom.containerElement);
+                        updateValidity( picksDom.picksElement, validMessages, invalidMessages, value);
+                        picksDom.toggleFocusStyling();
                     }
-                    var wasUpdatedObservable = ObservableLambda(()=>getWasValidated());
-                    var getManualValidationObservable = ObservableLambda(()=>getValidity());
-                    let validationApiObservable = validationApiAspect?.validationApiObservable;
-                    
-                    var validationObservable = ObservableLambda(
-                        () => wasUpdatedObservable.getValue()?validationApiObservable.getValue():getManualValidationObservable.getValue()
-                    )
-                  
-                    validationObservable.attach(
-                        (value)=>{
-                            var  {validMessages, invalidMessages} = getMessagesElements(staticDom.containerElement);
-                            updateValidity( picksDom.picksElement, validMessages, invalidMessages, value);
-                            picksDom.toggleFocusStyling();
-                        }
-                    )
-                    wasUpdatedObservable.attach(
+                )
+                wasUpdatedObservable.attach(
+                    ()=>validationObservable.call()
+                )
+                if (validationApiObservable)
+                    validationApiObservable.attach(
                         ()=>validationObservable.call()
                     )
-                    if (validationApiObservable)
-                        validationApiObservable.attach(
-                            ()=>validationObservable.call()
-                        )
-                    getManualValidationObservable.attach(
-                        ()=>validationObservable.call()
-                    )
+                getManualValidationObservable.attach(
+                    ()=>validationObservable.call()
+                )
                 
-                    updateAppearanceAspect.updateAppearance = composeSync(
-                        updateAppearanceAspect.updateAppearance, 
-                        updateSize, 
-                        validationObservable.call, 
-                        getManualValidationObservable.call);
+                updateAppearanceAspect.updateAppearance = composeSync(
+                    updateAppearanceAspect.updateAppearance, 
+                    updateSize, 
+                    validationObservable.call, 
+                    getManualValidationObservable.call);
                 
-                    return {
-                        buildApi(api){
-                            api.updateSize = updateSize;
-                            api.updateValidity = ()=> getManualValidationObservable.call();
-                            api.updateWasValidated = ()=>wasUpdatedObservable.call();
-                        },
-                        dispose(){
-                            wasUpdatedObservable.detachAll();
-                            validationObservable.detachAll();
-                            getManualValidationObservable.detachAll();
-                        }
+                return {
+                    buildApi(api){
+                        api.updateSize = updateSize;
+                        api.updateValidity = ()=> getManualValidationObservable.call();
+                        api.updateWasValidated = ()=>wasUpdatedObservable.call();
+                    },
+                    dispose(){
+                        wasUpdatedObservable.detachAll();
+                        validationObservable.detachAll();
+                        getManualValidationObservable.detachAll();
                     }
                 }
             }

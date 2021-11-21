@@ -1,5 +1,5 @@
 /*!
-  * BsMultiSelect v1.2.0-beta.18 (https://dashboardcode.github.io/BsMultiSelect/)
+  * BsMultiSelect v1.2.0-beta.19 (https://dashboardcode.github.io/BsMultiSelect/)
   * Copyright 2017-2021 Roman Pokrovskij (github user rpokrovskij)
   * Licensed under Apache 2 (https://github.com/DashboardCode/BsMultiSelect/blob/master/LICENSE)
   */
@@ -693,17 +693,20 @@ function extendCss(stylings1, stylings2) {
 function PickDomFactoryPlugCss(css) {
   css.pickContent = '';
   css.pickContent_disabled = 'disabled';
-  css.pickButton = 'close';
 }
 function PickDomFactoryPlugCssBs5(css) {
+  PickDomFactoryPlugCss(css);
   css.pickButton = 'btn-close';
 }
+
 function PickDomFactoryPlugCssPatch(cssPatch) {
   cssPatch.pickContent_disabled = {
     opacity: '.65'
   };
 }
+
 function PickDomFactoryPlugCssPatchBs4(cssPatch) {
+  PickDomFactoryPlugCssPatch(cssPatch);
   cssPatch.pickButton = {
     float: "none",
     fontSize: '1.5em',
@@ -711,6 +714,7 @@ function PickDomFactoryPlugCssPatchBs4(cssPatch) {
   };
 }
 function PickDomFactoryPlugCssPatchBs5(cssPatch) {
+  PickDomFactoryPlugCssPatch(cssPatch);
   cssPatch.pickButton = {
     float: "none",
     fontSize: '0.8em',
@@ -864,6 +868,7 @@ function ChoiceDomFactory(css, createElementAspect, optionPropertiesAspect) {
     }
   };
 }
+
 function ChoiceDomFactoryPlugCss(css) {
   css.choiceCheckBox_disabled = 'disabled'; //  not bs, in scss as 'ul.form-control li .custom-control-input.disabled ~ .custom-control-label'
 
@@ -872,6 +877,7 @@ function ChoiceDomFactoryPlugCss(css) {
   css.choice_hover = 'hover'; //  not bs, in scss as 'ul.dropdown-menu li.hover'
 }
 function ChoiceDomFactoryPlugCssBs5(css) {
+  ChoiceDomFactoryPlugCss(css);
   css.choiceCheckBox = 'form-check-input'; // bs
 
   css.choiceContent = 'form-check'; // bs d-flex required for rtl to align items
@@ -1038,6 +1044,7 @@ function PicksDomFactoryPlugCss(css) {
   css.picks_focus = 'focus';
   css.pick = 'badge';
 }
+
 function PicksDomFactoryPlugCssPatch(cssPatch) {
   cssPatch.picks = {
     listStyleType: 'none',
@@ -1054,7 +1061,9 @@ function PicksDomFactoryPlugCssPatch(cssPatch) {
     boxShadow: '0 0 0 0.2rem rgba(0, 123, 255, 0.25)'
   };
 }
+
 function PicksDomFactoryPlugCssPatchBs4(cssPatch) {
+  PicksDomFactoryPlugCssPatch(cssPatch);
   cssPatch.pick = {
     paddingLeft: '0',
     paddingRight: '.5rem',
@@ -1064,6 +1073,7 @@ function PicksDomFactoryPlugCssPatchBs4(cssPatch) {
   };
 }
 function PicksDomFactoryPlugCssPatchBs5(cssPatch) {
+  PicksDomFactoryPlugCssPatch(cssPatch);
   cssPatch.pick = {
     paddingLeft: '0',
     paddingRight: '.5rem',
@@ -2196,7 +2206,7 @@ function AfterInputAspect(filterManagerAspect, navigateAspect, choicesVisibility
 }
 
 function BsMultiSelect(element, environment, pluginManager, configuration, onInit) {
-  var _pluginManager$layout;
+  var _eventHandlers$layout;
 
   var window = environment.window;
   environment.isIE11 = !!window.MSInputMethodContext && !!document.documentMode;
@@ -2278,7 +2288,8 @@ function BsMultiSelect(element, environment, pluginManager, configuration, onIni
   var pickButtonAspect = PickButtonAspect(configuration.pickButtonHTML);
   var pickDomFactory = PickDomFactory(css, createElementAspect, optionPropertiesAspect, pickButtonAspect);
   var choiceDomFactory = ChoiceDomFactory(css, createElementAspect, optionPropertiesAspect);
-  pluginManager.plugStaticDomFactories({
+  var eventHandlers = pluginManager.createHandlers();
+  eventHandlers.plugStaticDomFactories({
     environment: environment,
     configuration: configuration,
     disposeAspect: disposeAspect,
@@ -2311,7 +2322,7 @@ function BsMultiSelect(element, environment, pluginManager, configuration, onIni
     removePickAspect: removePickAspect
   });
   var staticDomFactory = StaticDomFactory(createElementAspect);
-  pluginManager.plugStaticDom({
+  eventHandlers.plugStaticDom({
     staticDomFactory: staticDomFactory
   }); // apply cssPatch to css, apply selectElement support;  
 
@@ -2352,7 +2363,7 @@ function BsMultiSelect(element, environment, pluginManager, configuration, onIni
   var picksElementAspect = PicksElementAspect(picksDom.picksElement);
   var afterInputAspect = AfterInputAspect(filterManagerAspect, navigateAspect, choicesVisibilityAspect, hoveredChoiceAspect);
   var multiSelectInlineLayoutAspect = MultiSelectInlineLayoutAspect(environment, filterDom, choicesDom, choicesVisibilityAspect, hoveredChoiceAspect, navigateAspect, filterManagerAspect, focusInAspect, optionToggleAspect, createPickHandlersAspect, picksList, inputAspect, specialPicksEventsAspect, buildChoiceAspect, resetLayoutAspect, picksElementAspect, afterInputAspect, disposeAspect);
-  pluginManager.layout((_pluginManager$layout = {
+  eventHandlers.layout((_eventHandlers$layout = {
     staticDom: staticDom,
     picksDom: picksDom,
     choicesDom: choicesDom,
@@ -2373,18 +2384,18 @@ function BsMultiSelect(element, environment, pluginManager, configuration, onIni
     resetFilterListAspect: resetFilterListAspect,
     resetFilterAspect: resetFilterAspect,
     specialPicksEventsAspect: specialPicksEventsAspect
-  }, _pluginManager$layout["resetLayoutAspect"] = resetLayoutAspect, _pluginManager$layout.focusInAspect = focusInAspect, _pluginManager$layout.loadAspect = loadAspect, _pluginManager$layout.updateDataAspect = updateDataAspect, _pluginManager$layout.updateAspect = updateAspect, _pluginManager$layout.fullMatchAspect = fullMatchAspect, _pluginManager$layout.picksElementAspect = picksElementAspect, _pluginManager$layout.afterInputAspect = afterInputAspect, _pluginManager$layout.multiSelectInlineLayoutAspect = multiSelectInlineLayoutAspect, _pluginManager$layout));
+  }, _eventHandlers$layout["resetLayoutAspect"] = resetLayoutAspect, _eventHandlers$layout.focusInAspect = focusInAspect, _eventHandlers$layout.loadAspect = loadAspect, _eventHandlers$layout.updateDataAspect = updateDataAspect, _eventHandlers$layout.updateAspect = updateAspect, _eventHandlers$layout.fullMatchAspect = fullMatchAspect, _eventHandlers$layout.picksElementAspect = picksElementAspect, _eventHandlers$layout.afterInputAspect = afterInputAspect, _eventHandlers$layout.multiSelectInlineLayoutAspect = multiSelectInlineLayoutAspect, _eventHandlers$layout));
   multiSelectInlineLayoutAspect.init();
-  pluginManager.attach();
+  eventHandlers.attach();
   var api = {
     component: "BsMultiSelect.api"
   }; // key to use in memory leak analyzes
 
-  pluginManager.buildApi(api); // after this we can pass aspects methods call without wrapping - there should be no more overridings. TODO freeze aspects?
+  eventHandlers.buildApi(api); // after this we can pass aspects methods call without wrapping - there should be no more overridings. TODO freeze aspects?
 
   api.dispose = composeSync(resetLayoutAspect.resetLayout, function () {
     disposeAspect.dispose();
-  }, pluginManager.dispose, function () {
+  }, eventHandlers.dispose, function () {
     picksList.forEach(function (pick) {
       return pick.dispose();
     });
@@ -2408,118 +2419,152 @@ function BsMultiSelect(element, environment, pluginManager, configuration, onIni
 }
 
 function ComposePluginManagerFactory(plugins, defaults) {
-  var buildAspectsList = [];
+  var plugedList = [];
+  var mergeList = [];
 
   for (var i = 0; i < plugins.length; i++) {
-    var buildAspects = plugins[i].value(defaults);
+    var pluged = plugins[i].value(defaults);
 
-    if (buildAspects) {
-      buildAspectsList.push({
+    if (pluged) {
+      if (pluged.plug) plugedList.push({
         key: plugins[i].key,
-        value: buildAspects
+        value: pluged.plug
+      });
+      if (pluged.merge) mergeList.push({
+        key: plugins[i].key,
+        value: pluged.merge
       });
     }
   }
 
   return function (configuration, settings) {
+    var buildAspectsList = [];
+
+    for (var _i = 0; _i < mergeList.length; _i++) {
+      var merge = mergeList[_i].value;
+
+      if (merge) {
+        merge(configuration, settings);
+      }
+    }
+
+    for (var j = 0; j < plugedList.length; j++) {
+      var buildAspects = plugedList[j].value(configuration);
+
+      if (buildAspects) {
+        buildAspectsList.push({
+          key: plugedList[j].key,
+          value: buildAspects
+        }); // let events = tmp(aspects)
+        // if (events)
+        //     eventHandlers.push({key:buildAspectsList[j].key, value:events})
+      }
+    }
+
+    return PluginManager(buildAspectsList);
+  };
+}
+function PluginManager(buildAspectsList) {
+  var aspects = {};
+
+  var createHandlers = function createHandlers() {
+    var instances = [];
+    var disposes = [];
     var eventHandlers = [];
-    var aspects = {};
 
-    for (var _i = 0; _i < buildAspectsList.length; _i++) {
-      var events = buildAspectsList[_i].value.buildAspects(aspects, configuration, settings);
+    for (var j = 0; j < buildAspectsList.length; j++) {
+      var eh = buildAspectsList[j].value(aspects);
 
-      if (events) {
+      if (eh) {
         eventHandlers.push({
-          key: buildAspectsList[_i].key,
-          value: events
+          key: buildAspectsList[j].key,
+          value: eh
         });
       }
     }
 
-    return PluginManager(aspects, eventHandlers);
+    return {
+      buildApi: function buildApi(api) {
+        for (var i = 0; i < instances.length; i++) {
+          var _instances$i$buildApi, _instances$i;
+
+          var dispose = (_instances$i$buildApi = (_instances$i = instances[i]).buildApi) == null ? void 0 : _instances$i$buildApi.call(_instances$i, api);
+          if (dispose) disposes.push(dispose);
+        }
+      },
+      dispose: function dispose() {
+        for (var i = 0; i < disposes.length; i++) {
+          disposes[i]();
+        }
+
+        disposes = null;
+
+        for (var _i2 = 0; _i2 < instances.length; _i2++) {
+          var _instances$_i2$dispos, _instances$_i;
+
+          (_instances$_i2$dispos = (_instances$_i = instances[_i2]).dispose) == null ? void 0 : _instances$_i2$dispos.call(_instances$_i);
+        }
+
+        instances = null;
+      },
+      plugStaticDomFactories: function plugStaticDomFactories(newAspects) {
+        extendIfUndefined(aspects, newAspects);
+
+        for (var i = 0; i < eventHandlers.length; i++) {
+          var _eventHandlers$i$valu, _eventHandlers$i$valu2;
+
+          (_eventHandlers$i$valu = (_eventHandlers$i$valu2 = eventHandlers[i].value).plugStaticDomFactories) == null ? void 0 : _eventHandlers$i$valu.call(_eventHandlers$i$valu2, aspects);
+        }
+      },
+      plugStaticDom: function plugStaticDom(newAspects) {
+        extendIfUndefined(aspects, newAspects);
+
+        for (var i = 0; i < eventHandlers.length; i++) {
+          var _eventHandlers$i$valu3, _eventHandlers$i$valu4;
+
+          (_eventHandlers$i$valu3 = (_eventHandlers$i$valu4 = eventHandlers[i].value).plugStaticDom) == null ? void 0 : _eventHandlers$i$valu3.call(_eventHandlers$i$valu4, aspects);
+        }
+      },
+      layout: function layout(newAspects) {
+        extendIfUndefined(aspects, newAspects);
+
+        if (eventHandlers) {
+          var _loop = function _loop(i) {
+            var a = eventHandlers[i].value;
+
+            if (a.plugStaticDomBus) {
+              if (eventHandlers.some(function (c) {
+                return c.key === a.plugStaticDomBus.after;
+              })) a.plugStaticDomBus.plugStaticDom == null ? void 0 : a.plugStaticDomBus.plugStaticDom(aspects);
+            }
+          };
+
+          // TODO: complete to full bus event system
+          for (var i = 0; i < eventHandlers.length; i++) {
+            _loop(i);
+          }
+
+          for (var _i3 = 0; _i3 < eventHandlers.length; _i3++) {
+            var _eventHandlers$_i3$va, _eventHandlers$_i3$va2;
+
+            var instance = (_eventHandlers$_i3$va = (_eventHandlers$_i3$va2 = eventHandlers[_i3].value).layout) == null ? void 0 : _eventHandlers$_i3$va.call(_eventHandlers$_i3$va2, aspects);
+            if (instance) instances.push(instance);
+          }
+        }
+      },
+      attach: function attach() {
+        if (eventHandlers) for (var i = 0; i < eventHandlers.length; i++) {
+          var _eventHandlers$i$valu5, _eventHandlers$i$valu6;
+
+          (_eventHandlers$i$valu5 = (_eventHandlers$i$valu6 = eventHandlers[i].value).attach) == null ? void 0 : _eventHandlers$i$valu5.call(_eventHandlers$i$valu6, aspects);
+        }
+      }
+    };
   };
-}
-function PluginManager(aspects, eventHandlers) {
-  var instances = [];
-  var disposes = [];
+
   return {
     aspects: aspects,
-    // TODO: hide
-    buildApi: function buildApi(api) {
-      for (var i = 0; i < instances.length; i++) {
-        var _instances$i$buildApi, _instances$i;
-
-        var dispose = (_instances$i$buildApi = (_instances$i = instances[i]).buildApi) == null ? void 0 : _instances$i$buildApi.call(_instances$i, api);
-        if (dispose) disposes.push(dispose);
-      }
-    },
-    dispose: function dispose() {
-      for (var i = 0; i < disposes.length; i++) {
-        disposes[i]();
-      }
-
-      disposes = null;
-
-      for (var _i2 = 0; _i2 < instances.length; _i2++) {
-        var _instances$_i2$dispos, _instances$_i;
-
-        (_instances$_i2$dispos = (_instances$_i = instances[_i2]).dispose) == null ? void 0 : _instances$_i2$dispos.call(_instances$_i);
-      }
-
-      instances = null;
-    },
-    plugStaticDomFactories: function plugStaticDomFactories(newAspects) {
-      extendIfUndefined(aspects, newAspects);
-
-      for (var i = 0; i < eventHandlers.length; i++) {
-        var _eventHandlers$i$valu, _eventHandlers$i$valu2;
-
-        (_eventHandlers$i$valu = (_eventHandlers$i$valu2 = eventHandlers[i].value).plugStaticDomFactories) == null ? void 0 : _eventHandlers$i$valu.call(_eventHandlers$i$valu2, aspects);
-      }
-    },
-    plugStaticDom: function plugStaticDom(newAspects) {
-      extendIfUndefined(aspects, newAspects);
-
-      for (var i = 0; i < eventHandlers.length; i++) {
-        var _eventHandlers$i$valu3, _eventHandlers$i$valu4;
-
-        (_eventHandlers$i$valu3 = (_eventHandlers$i$valu4 = eventHandlers[i].value).plugStaticDom) == null ? void 0 : _eventHandlers$i$valu3.call(_eventHandlers$i$valu4, aspects);
-      }
-    },
-    layout: function layout(newAspects) {
-      extendIfUndefined(aspects, newAspects);
-
-      if (eventHandlers) {
-        var _loop = function _loop(i) {
-          var a = eventHandlers[i].value;
-
-          if (a.plugStaticDomBus) {
-            if (eventHandlers.some(function (c) {
-              return c.key === a.plugStaticDomBus.after;
-            })) a.plugStaticDomBus.plugStaticDom == null ? void 0 : a.plugStaticDomBus.plugStaticDom(aspects);
-          }
-        };
-
-        // TODO: complete to full bus event system
-        for (var i = 0; i < eventHandlers.length; i++) {
-          _loop(i);
-        }
-
-        for (var _i3 = 0; _i3 < eventHandlers.length; _i3++) {
-          var _eventHandlers$_i3$va, _eventHandlers$_i3$va2;
-
-          var instance = (_eventHandlers$_i3$va = (_eventHandlers$_i3$va2 = eventHandlers[_i3].value).layout) == null ? void 0 : _eventHandlers$_i3$va.call(_eventHandlers$_i3$va2, aspects);
-          if (instance) instances.push(instance);
-        }
-      }
-    },
-    attach: function attach() {
-      if (eventHandlers) for (var i = 0; i < eventHandlers.length; i++) {
-        var _eventHandlers$i$valu5, _eventHandlers$i$valu6;
-
-        (_eventHandlers$i$valu5 = (_eventHandlers$i$valu6 = eventHandlers[i].value).attach) == null ? void 0 : _eventHandlers$i$valu5.call(_eventHandlers$i$valu6, aspects);
-      }
-    }
+    createHandlers: createHandlers
   };
 }
 
@@ -2659,33 +2704,33 @@ function MultiSelectBuilder(environment, plugins, defaultCss) {
   var pluginManagerFactory = ComposePluginManagerFactory(plugins, defaults);
 
   var create = function create(element, options) {
-    var _options2;
+    var _settings;
 
     if (options && options.plugins) console.log("DashboarCode.BsMultiSelect: 'options.plugins' is depricated, use - MultiSelectBuilder(environment, plugins) instead");
     var buildConfiguration;
+    var settings;
 
     if (options instanceof Function) {
       buildConfiguration = options;
-      options = null;
+      settings = null;
     } else {
-      var _options;
-
-      buildConfiguration = (_options = options) == null ? void 0 : _options.buildConfiguration;
+      buildConfiguration = options == null ? void 0 : options.buildConfiguration;
+      settings = options;
     }
 
-    if (options) {
-      adjustLegacySettings(options);
+    if (settings) {
+      adjustLegacySettings(settings);
     }
 
     var configuration = {}; // TODO: move to each plugin that add css (as plugMergeSettings) 
 
-    configuration.css = createCss(defaults.css, (_options2 = options) == null ? void 0 : _options2.css);
-    var pluginManager = pluginManagerFactory(configuration, options); // merge settings.cssPatch and defaults.cssPatch
-
-    extendIfUndefined(configuration, options);
+    configuration.css = createCss(defaults.css, (_settings = settings) == null ? void 0 : _settings.css);
+    extendIfUndefined(configuration, settings);
     extendIfUndefined(configuration, defaults);
-    var onInit = buildConfiguration == null ? void 0 : buildConfiguration(element, configuration); // TODO: configuration should become an aspect
+    var pluginManager = pluginManagerFactory(configuration, settings); // merge settings.cssPatch and defaults.cssPatch
 
+    var onInit = buildConfiguration == null ? void 0 : buildConfiguration(element, configuration);
+    Object.freeze(configuration);
     var multiSelect = BsMultiSelect(element, environment, pluginManager, configuration, onInit); // onInit(api, aspects) - before load data
 
     return multiSelect;
@@ -2699,10 +2744,8 @@ function MultiSelectBuilder(environment, plugins, defaultCss) {
 
 function createDefaultCssBs5() {
   var defaultCss = {};
-  PickDomFactoryPlugCss(defaultCss);
   PickDomFactoryPlugCssBs5(defaultCss);
   PicksDomFactoryPlugCss(defaultCss);
-  ChoiceDomFactoryPlugCss(defaultCss);
   ChoiceDomFactoryPlugCssBs5(defaultCss);
   ChoicesDomFactoryPlugCss(defaultCss);
   FilterDomFactoryPlugCss(defaultCss);
@@ -2711,170 +2754,173 @@ function createDefaultCssBs5() {
 
 function BsAppearancePlugin() {
   return {
-    buildAspects: function buildAspects(aspects, configuration) {
-      return {
-        plugStaticDomBus: {
-          after: "LabelForAttributePlugin",
-          plugStaticDom: function plugStaticDom() {
-            console.log("TODOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO");
-            var labelAspect = aspects.labelAspect,
-                staticDom = aspects.staticDom,
-                configuration = aspects.configuration;
-            var selectElement = staticDom.selectElement;
-            var getDefaultLabel = configuration.getDefaultLabel;
-            var origLabelAspectGetLabel = labelAspect.getLabel;
-            console.log("BsAppearancePlugin - new labelAspect.getLabel  ");
-
-            labelAspect.getLabel = function () {
-              var e = origLabelAspectGetLabel();
-              if (e) return e;else {
-                console.log("BsAppearancePlugin - new labelAspect.getLabel  - selectElement");
-
-                if (selectElement) {
-                  console.log("BsAppearancePlugin - new labelAspect.getLabel  - selectElement +");
-                  var labelElement = getDefaultLabel(selectElement);
-                  console.log({
-                    name: "BsAppearancePlugin - new labelAspect.getLabel  - selectElement +",
-                    labelElement: labelElement
-                  });
-                  return labelElement;
-                }
-              }
-            };
-          }
-        },
-        layout: function layout() {
-          var validationApiAspect = aspects.validationApiAspect,
-              picksDom = aspects.picksDom,
+    plug: plug$o
+  };
+}
+function plug$o(configuration) {
+  return function (aspects) {
+    return {
+      plugStaticDomBus: {
+        after: "LabelForAttributePlugin",
+        plugStaticDom: function plugStaticDom() {
+          console.log("TODOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO");
+          var labelAspect = aspects.labelAspect,
               staticDom = aspects.staticDom,
-              updateAppearanceAspect = aspects.updateAppearanceAspect,
-              componentPropertiesAspect = aspects.componentPropertiesAspect,
-              floatingLabelAspect = aspects.floatingLabelAspect;
-          var getValidity = configuration.getValidity,
-              getSize = configuration.getSize,
-              useCssPatch = configuration.useCssPatch,
-              css = configuration.css,
-              composeGetSize = configuration.composeGetSize;
+              configuration = aspects.configuration;
           var selectElement = staticDom.selectElement;
-          var initialElement = staticDom.initialElement;
-          var isFloatingLabel = false;
+          var getDefaultLabel = configuration.getDefaultLabel;
+          var origLabelAspectGetLabel = labelAspect.getLabel;
+          console.log("BsAppearancePlugin - new labelAspect.getLabel  ");
 
-          if (floatingLabelAspect) {
-            isFloatingLabel = closestByClassName(initialElement, 'form-floating');
+          labelAspect.getLabel = function () {
+            var e = origLabelAspectGetLabel();
+            if (e) return e;else {
+              console.log("BsAppearancePlugin - new labelAspect.getLabel  - selectElement");
 
-            floatingLabelAspect.isFloatingLabel = function () {
-              return isFloatingLabel;
-            };
-          }
-
-          if (staticDom.selectElement) {
-            if (!getValidity) getValidity = composeGetValidity(selectElement);
-            if (!getSize) getSize = composeGetSize(selectElement);
-          } else {
-            if (!getValidity) getValidity = function getValidity() {
-              return null;
-            };
-            if (!getSize) getSize = function getSize() {
-              return null;
-            };
-          }
-
-          componentPropertiesAspect.getSize = getSize;
-          componentPropertiesAspect.getValidity = getValidity;
-          var updateSize;
-
-          if (!useCssPatch) {
-            updateSize = function updateSize() {
-              return updateSizeForAdapter(picksDom.picksElement, getSize);
-            };
-          } else {
-            var picks_lg = css.picks_lg,
-                picks_sm = css.picks_sm,
-                picks_def = css.picks_def,
-                picks_floating_def = css.picks_floating_def;
-            if (isFloatingLabel) picks_lg = picks_sm = picks_def = picks_floating_def;
-
-            updateSize = function updateSize() {
-              return updateSizeJsForAdapter(picksDom.picksElement, picks_lg, picks_sm, picks_def, getSize);
-            };
-          }
-
-          if (useCssPatch) {
-            var origToggleFocusStyling = picksDom.toggleFocusStyling;
-
-            picksDom.toggleFocusStyling = function () {
-              var validity = validationObservable.getValue();
-              var isFocusIn = picksDom.getIsFocusIn();
-              origToggleFocusStyling(isFocusIn);
-
-              if (isFocusIn) {
-                if (validity === false) {
-                  // but not toggle events (I know it will be done in future)
-                  picksDom.setIsFocusIn(isFocusIn);
-                  addStyling(picksDom.picksElement, css.picks_focus_invalid);
-                } else if (validity === true) {
-                  // but not toggle events (I know it will be done in future)
-                  picksDom.setIsFocusIn(isFocusIn);
-                  addStyling(picksDom.picksElement, css.picks_focus_valid);
-                }
+              if (selectElement) {
+                console.log("BsAppearancePlugin - new labelAspect.getLabel  - selectElement +");
+                var labelElement = getDefaultLabel(selectElement);
+                console.log({
+                  name: "BsAppearancePlugin - new labelAspect.getLabel  - selectElement +",
+                  labelElement: labelElement
+                });
+                return labelElement;
               }
-            };
-          }
-
-          var getWasValidated = function getWasValidated() {
-            var wasValidatedElement = closestByClassName(staticDom.initialElement, 'was-validated');
-            return wasValidatedElement ? true : false;
-          };
-
-          var wasUpdatedObservable = ObservableLambda(function () {
-            return getWasValidated();
-          });
-          var getManualValidationObservable = ObservableLambda(function () {
-            return getValidity();
-          });
-          var validationApiObservable = validationApiAspect == null ? void 0 : validationApiAspect.validationApiObservable;
-          var validationObservable = ObservableLambda(function () {
-            return wasUpdatedObservable.getValue() ? validationApiObservable.getValue() : getManualValidationObservable.getValue();
-          });
-          validationObservable.attach(function (value) {
-            var _getMessagesElements = getMessagesElements(staticDom.containerElement),
-                validMessages = _getMessagesElements.validMessages,
-                invalidMessages = _getMessagesElements.invalidMessages;
-
-            updateValidity(picksDom.picksElement, validMessages, invalidMessages, value);
-            picksDom.toggleFocusStyling();
-          });
-          wasUpdatedObservable.attach(function () {
-            return validationObservable.call();
-          });
-          if (validationApiObservable) validationApiObservable.attach(function () {
-            return validationObservable.call();
-          });
-          getManualValidationObservable.attach(function () {
-            return validationObservable.call();
-          });
-          updateAppearanceAspect.updateAppearance = composeSync(updateAppearanceAspect.updateAppearance, updateSize, validationObservable.call, getManualValidationObservable.call);
-          return {
-            buildApi: function buildApi(api) {
-              api.updateSize = updateSize;
-
-              api.updateValidity = function () {
-                return getManualValidationObservable.call();
-              };
-
-              api.updateWasValidated = function () {
-                return wasUpdatedObservable.call();
-              };
-            },
-            dispose: function dispose() {
-              wasUpdatedObservable.detachAll();
-              validationObservable.detachAll();
-              getManualValidationObservable.detachAll();
             }
           };
         }
-      };
-    }
+      },
+      layout: function layout() {
+        var validationApiAspect = aspects.validationApiAspect,
+            picksDom = aspects.picksDom,
+            staticDom = aspects.staticDom,
+            updateAppearanceAspect = aspects.updateAppearanceAspect,
+            componentPropertiesAspect = aspects.componentPropertiesAspect,
+            floatingLabelAspect = aspects.floatingLabelAspect;
+        var getValidity = configuration.getValidity,
+            getSize = configuration.getSize,
+            useCssPatch = configuration.useCssPatch,
+            css = configuration.css,
+            composeGetSize = configuration.composeGetSize;
+        var selectElement = staticDom.selectElement;
+        var initialElement = staticDom.initialElement;
+        var isFloatingLabel = false;
+
+        if (floatingLabelAspect) {
+          isFloatingLabel = closestByClassName(initialElement, 'form-floating');
+
+          floatingLabelAspect.isFloatingLabel = function () {
+            return isFloatingLabel;
+          };
+        }
+
+        if (staticDom.selectElement) {
+          if (!getValidity) getValidity = composeGetValidity(selectElement);
+          if (!getSize) getSize = composeGetSize(selectElement);
+        } else {
+          if (!getValidity) getValidity = function getValidity() {
+            return null;
+          };
+          if (!getSize) getSize = function getSize() {
+            return null;
+          };
+        }
+
+        componentPropertiesAspect.getSize = getSize;
+        componentPropertiesAspect.getValidity = getValidity;
+        var updateSize;
+
+        if (!useCssPatch) {
+          updateSize = function updateSize() {
+            return updateSizeForAdapter(picksDom.picksElement, getSize);
+          };
+        } else {
+          var picks_lg = css.picks_lg,
+              picks_sm = css.picks_sm,
+              picks_def = css.picks_def,
+              picks_floating_def = css.picks_floating_def;
+          if (isFloatingLabel) picks_lg = picks_sm = picks_def = picks_floating_def;
+
+          updateSize = function updateSize() {
+            return updateSizeJsForAdapter(picksDom.picksElement, picks_lg, picks_sm, picks_def, getSize);
+          };
+        }
+
+        if (useCssPatch) {
+          var origToggleFocusStyling = picksDom.toggleFocusStyling;
+
+          picksDom.toggleFocusStyling = function () {
+            var validity = validationObservable.getValue();
+            var isFocusIn = picksDom.getIsFocusIn();
+            origToggleFocusStyling(isFocusIn);
+
+            if (isFocusIn) {
+              if (validity === false) {
+                // but not toggle events (I know it will be done in future)
+                picksDom.setIsFocusIn(isFocusIn);
+                addStyling(picksDom.picksElement, css.picks_focus_invalid);
+              } else if (validity === true) {
+                // but not toggle events (I know it will be done in future)
+                picksDom.setIsFocusIn(isFocusIn);
+                addStyling(picksDom.picksElement, css.picks_focus_valid);
+              }
+            }
+          };
+        }
+
+        var getWasValidated = function getWasValidated() {
+          var wasValidatedElement = closestByClassName(staticDom.initialElement, 'was-validated');
+          return wasValidatedElement ? true : false;
+        };
+
+        var wasUpdatedObservable = ObservableLambda(function () {
+          return getWasValidated();
+        });
+        var getManualValidationObservable = ObservableLambda(function () {
+          return getValidity();
+        });
+        var validationApiObservable = validationApiAspect == null ? void 0 : validationApiAspect.validationApiObservable;
+        var validationObservable = ObservableLambda(function () {
+          return wasUpdatedObservable.getValue() ? validationApiObservable.getValue() : getManualValidationObservable.getValue();
+        });
+        validationObservable.attach(function (value) {
+          var _getMessagesElements = getMessagesElements(staticDom.containerElement),
+              validMessages = _getMessagesElements.validMessages,
+              invalidMessages = _getMessagesElements.invalidMessages;
+
+          updateValidity(picksDom.picksElement, validMessages, invalidMessages, value);
+          picksDom.toggleFocusStyling();
+        });
+        wasUpdatedObservable.attach(function () {
+          return validationObservable.call();
+        });
+        if (validationApiObservable) validationApiObservable.attach(function () {
+          return validationObservable.call();
+        });
+        getManualValidationObservable.attach(function () {
+          return validationObservable.call();
+        });
+        updateAppearanceAspect.updateAppearance = composeSync(updateAppearanceAspect.updateAppearance, updateSize, validationObservable.call, getManualValidationObservable.call);
+        return {
+          buildApi: function buildApi(api) {
+            api.updateSize = updateSize;
+
+            api.updateValidity = function () {
+              return getManualValidationObservable.call();
+            };
+
+            api.updateWasValidated = function () {
+              return wasUpdatedObservable.call();
+            };
+          },
+          dispose: function dispose() {
+            wasUpdatedObservable.detachAll();
+            validationObservable.detachAll();
+            getManualValidationObservable.detachAll();
+          }
+        };
+      }
+    };
   };
 }
 
@@ -3098,28 +3144,31 @@ function BsAppearanceBs5CssPatchPlugin(defaults) {
 function LabelForAttributePlugin(defaults) {
   defaults.label = null;
   return {
-    buildAspects: function buildAspects(aspects, configuration) {
-      return {
-        plugStaticDom: function plugStaticDom() {
-          aspects.labelAspect = LabelAspect(configuration);
-          aspects.labelNewIdAspect = LabelNewIdAspect(aspects); // ?
-        },
-        layout: function layout() {
-          var filterDom = aspects.filterDom,
-              labelAspect = aspects.labelAspect,
-              loadAspect = aspects.loadAspect,
-              labelNewIdAspect = aspects.labelNewIdAspect,
-              disposeAspect = aspects.disposeAspect; // TODO: move to 
+    plug: plug$n
+  };
+}
+function plug$n(configuration) {
+  return function (aspects) {
+    return {
+      plugStaticDom: function plugStaticDom() {
+        aspects.labelAspect = LabelAspect(configuration);
+        aspects.labelNewIdAspect = LabelNewIdAspect(aspects); // ?
+      },
+      layout: function layout() {
+        var filterDom = aspects.filterDom,
+            labelAspect = aspects.labelAspect,
+            loadAspect = aspects.loadAspect,
+            labelNewIdAspect = aspects.labelNewIdAspect,
+            disposeAspect = aspects.disposeAspect; // TODO: move to 
 
-          console.log("LabelForAttributePlugin, labelNewIdAspect");
-          var labelForAttributeAspect = LabelForAttributeAspect(filterDom, labelAspect, labelNewIdAspect, disposeAspect);
-          aspects.labelForAttributeAspect = labelForAttributeAspect;
-          loadAspect.load = composeSync(loadAspect.load, function () {
-            return labelForAttributeAspect.update();
-          });
-        }
-      };
-    }
+        console.log("LabelForAttributePlugin, labelNewIdAspect");
+        var labelForAttributeAspect = LabelForAttributeAspect(filterDom, labelAspect, labelNewIdAspect, disposeAspect);
+        aspects.labelForAttributeAspect = labelForAttributeAspect;
+        loadAspect.load = composeSync(loadAspect.load, function () {
+          return labelForAttributeAspect.update();
+        });
+      }
+    };
   };
 }
 
@@ -3179,70 +3228,76 @@ function LabelForAttributeAspect(filterDom, labelAspect, labelNewIdAspect, dispo
 
 function RtlPlugin() {
   return {
-    buildAspects: function buildAspects(aspects, configuration) {
-      return {
-        layout: function layout() {
-          var popperRtlAspect = aspects.popperRtlAspect,
-              staticDom = aspects.staticDom;
-          var isRtl = configuration.isRtl;
-          var forceRtlOnContainer = false;
-          if (isBoolean(isRtl)) forceRtlOnContainer = true;else isRtl = getIsRtl(staticDom.initialElement);
-          var attributeBackup = AttributeBackup();
+    plug: plug$m
+  };
+}
+function plug$m(configuration) {
+  return function (aspects) {
+    return {
+      layout: function layout() {
+        var popperRtlAspect = aspects.popperRtlAspect,
+            staticDom = aspects.staticDom;
+        var isRtl = configuration.isRtl;
+        var forceRtlOnContainer = false;
+        if (isBoolean(isRtl)) forceRtlOnContainer = true;else isRtl = getIsRtl(staticDom.initialElement);
+        var attributeBackup = AttributeBackup();
 
-          if (forceRtlOnContainer) {
-            attributeBackup.set(staticDom.containerElement, "dir", "rtl");
-          } else if (staticDom.selectElement) {
-            var dirAttributeValue = staticDom.selectElement.getAttribute("dir");
+        if (forceRtlOnContainer) {
+          attributeBackup.set(staticDom.containerElement, "dir", "rtl");
+        } else if (staticDom.selectElement) {
+          var dirAttributeValue = staticDom.selectElement.getAttribute("dir");
 
-            if (dirAttributeValue) {
-              attributeBackup.set(staticDom.containerElement, "dir", dirAttributeValue);
-            }
+          if (dirAttributeValue) {
+            attributeBackup.set(staticDom.containerElement, "dir", dirAttributeValue);
           }
-
-          if (popperRtlAspect) popperRtlAspect.getIsRtl = function () {
-            return isRtl;
-          };
-          return {
-            dispose: function dispose() {
-              attributeBackup.restore();
-            }
-          };
         }
-      };
-    }
+
+        if (popperRtlAspect) popperRtlAspect.getIsRtl = function () {
+          return isRtl;
+        };
+        return {
+          dispose: function dispose() {
+            attributeBackup.restore();
+          }
+        };
+      }
+    };
   };
 }
 
 function FormResetPlugin() {
   return {
-    buildAspects: function buildAspects(aspects) {
-      return {
-        layout: function layout() {
-          var staticDom = aspects.staticDom,
-              updateDataAspect = aspects.updateDataAspect,
-              environment = aspects.environment;
-          var eventBuilder = EventBinder();
+    plug: plug$l
+  };
+}
+function plug$l() {
+  return function (aspects) {
+    return {
+      layout: function layout() {
+        var staticDom = aspects.staticDom,
+            updateDataAspect = aspects.updateDataAspect,
+            environment = aspects.environment;
+        var eventBuilder = EventBinder();
 
-          if (staticDom.selectElement) {
-            var form = closestByTagName(staticDom.selectElement, 'FORM');
+        if (staticDom.selectElement) {
+          var form = closestByTagName(staticDom.selectElement, 'FORM');
 
-            if (form) {
-              eventBuilder.bind(form, 'reset', function () {
-                return environment.window.setTimeout(function () {
-                  return updateDataAspect.updateData();
-                });
+          if (form) {
+            eventBuilder.bind(form, 'reset', function () {
+              return environment.window.setTimeout(function () {
+                return updateDataAspect.updateData();
               });
-            }
+            });
           }
-
-          return {
-            dispose: function dispose() {
-              eventBuilder.unbind();
-            }
-          };
         }
-      };
-    }
+
+        return {
+          dispose: function dispose() {
+            eventBuilder.unbind();
+          }
+        };
+      }
+    };
   };
 }
 
@@ -3254,60 +3309,70 @@ function ValidationApiPlugin(defaults) {
 
   defaults.valueMissingMessage = '';
   return {
-    buildAspects: function buildAspects(aspects, configuration) {
-      return {
-        layout: function layout() {
-          var triggerAspect = aspects.triggerAspect,
-              onChangeAspect = aspects.onChangeAspect,
-              optionsAspect = aspects.optionsAspect,
-              staticDom = aspects.staticDom,
-              filterDom = aspects.filterDom,
-              updateDataAspect = aspects.updateDataAspect; // TODO: required could be a function
+    plug: plug$k
+  };
+}
+function plug$k(configuration) {
+  return function (aspects) {
+    var getValueRequiredAspect = GetValueRequiredAspect(configuration.getValueRequired);
+    aspects.getValueRequiredAspect = getValueRequiredAspect;
+    return {
+      layout: function layout() {
+        var triggerAspect = aspects.triggerAspect,
+            onChangeAspect = aspects.onChangeAspect,
+            optionsAspect = aspects.optionsAspect,
+            staticDom = aspects.staticDom,
+            filterDom = aspects.filterDom,
+            updateDataAspect = aspects.updateDataAspect; // TODO: required could be a function
 
-          var getIsValueMissing = configuration.getIsValueMissing,
-              valueMissingMessage = configuration.valueMissingMessage,
-              required = configuration.required,
-              getValueRequired = configuration.getValueRequired;
-          if (!isBoolean(required)) required = getValueRequired();
-          valueMissingMessage = defCall(valueMissingMessage, function () {
-            return getDataGuardedWithPrefix(staticDom.initialElement, "bsmultiselect", "value-missing-message");
-          }, defValueMissingMessage);
+        var getIsValueMissing = configuration.getIsValueMissing,
+            valueMissingMessage = configuration.valueMissingMessage,
+            required = configuration.required;
+        if (!isBoolean(required)) required = getValueRequiredAspect.getValueRequired();
+        valueMissingMessage = defCall(valueMissingMessage, function () {
+          return getDataGuardedWithPrefix(staticDom.initialElement, "bsmultiselect", "value-missing-message");
+        }, defValueMissingMessage);
 
-          if (!getIsValueMissing) {
-            getIsValueMissing = function getIsValueMissing() {
-              var count = 0;
-              var optionsArray = optionsAspect.getOptions();
+        if (!getIsValueMissing) {
+          getIsValueMissing = function getIsValueMissing() {
+            var count = 0;
+            var optionsArray = optionsAspect.getOptions();
 
-              for (var i = 0; i < optionsArray.length; i++) {
-                if (optionsArray[i].selected) count++;
-              }
-
-              return count === 0;
-            };
-          }
-
-          var isValueMissingObservable = ObservableLambda(function () {
-            return required && getIsValueMissing();
-          });
-          var validationApiObservable = ObservableValue(!isValueMissingObservable.getValue());
-          onChangeAspect.onChange = composeSync(isValueMissingObservable.call, onChangeAspect.onChange);
-          updateDataAspect.updateData = composeSync(isValueMissingObservable.call, updateDataAspect.updateData);
-          aspects.validationApiAspect = ValidationApiAspect(validationApiObservable);
-          return {
-            buildApi: function buildApi(api) {
-              api.validationApi = ValidityApi(filterDom.filterInputElement, isValueMissingObservable, valueMissingMessage, function (isValid) {
-                return validationApiObservable.setValue(isValid);
-              }, triggerAspect.trigger);
-            },
-            dispose: function dispose() {
-              isValueMissingObservable.detachAll();
-              validationApiObservable.detachAll();
+            for (var i = 0; i < optionsArray.length; i++) {
+              if (optionsArray[i].selected) count++;
             }
+
+            return count === 0;
           };
-        },
-        layoutInit: function layoutInit(aspects) {}
-      };
-    }
+        }
+
+        var isValueMissingObservable = ObservableLambda(function () {
+          return required && getIsValueMissing();
+        });
+        var validationApiObservable = ObservableValue(!isValueMissingObservable.getValue());
+        onChangeAspect.onChange = composeSync(isValueMissingObservable.call, onChangeAspect.onChange);
+        updateDataAspect.updateData = composeSync(isValueMissingObservable.call, updateDataAspect.updateData);
+        aspects.validationApiAspect = ValidationApiAspect(validationApiObservable);
+        return {
+          buildApi: function buildApi(api) {
+            api.validationApi = ValidityApi(filterDom.filterInputElement, isValueMissingObservable, valueMissingMessage, function (isValid) {
+              return validationApiObservable.setValue(isValid);
+            }, triggerAspect.trigger);
+          },
+          dispose: function dispose() {
+            isValueMissingObservable.detachAll();
+            validationApiObservable.detachAll();
+          }
+        };
+      },
+      layoutInit: function layoutInit() {}
+    };
+  };
+}
+
+function GetValueRequiredAspect(getValueRequired) {
+  return {
+    getValueRequired: getValueRequired
   };
 }
 
@@ -3362,89 +3427,92 @@ function ValidityApi(visibleElement, isValueMissingObservable, valueMissingMessa
 
 function HiddenOptionPlugin() {
   return {
-    buildAspects: function buildAspects(aspects, configuration) {
-      return {
-        layout: function layout() {
-          var createWrapAspect = aspects.createWrapAspect,
-              isChoiceSelectableAspect = aspects.isChoiceSelectableAspect,
-              wrapsCollection = aspects.wrapsCollection,
-              buildChoiceAspect = aspects.buildChoiceAspect,
-              buildAndAttachChoiceAspect = aspects.buildAndAttachChoiceAspect,
-              countableChoicesListInsertAspect = aspects.countableChoicesListInsertAspect,
-              countableChoicesList = aspects.countableChoicesList;
+    plug: plug$j
+  };
+}
+function plug$j(configuration) {
+  return function (aspects) {
+    return {
+      layout: function layout() {
+        var createWrapAspect = aspects.createWrapAspect,
+            isChoiceSelectableAspect = aspects.isChoiceSelectableAspect,
+            wrapsCollection = aspects.wrapsCollection,
+            buildChoiceAspect = aspects.buildChoiceAspect,
+            buildAndAttachChoiceAspect = aspects.buildAndAttachChoiceAspect,
+            countableChoicesListInsertAspect = aspects.countableChoicesListInsertAspect,
+            countableChoicesList = aspects.countableChoicesList;
 
-          countableChoicesListInsertAspect.countableChoicesListInsert = function (wrap, key) {
-            if (!wrap.isOptionHidden) {
-              var choiceNext = wrapsCollection.getNext(key, function (c) {
-                return !c.isOptionHidden;
-              });
-              countableChoicesList.add(wrap, choiceNext);
-            }
-          };
-
-          var origBuildAndAttachChoice = buildAndAttachChoiceAspect.buildAndAttachChoice;
-
-          buildAndAttachChoiceAspect.buildAndAttachChoice = function (wrap, getNextElement) {
-            if (wrap.isOptionHidden) {
-              buildHiddenChoice(wrap);
-            } else {
-              origBuildAndAttachChoice(wrap, getNextElement);
-            }
-          };
-
-          var origIsSelectable = isChoiceSelectableAspect.isSelectable;
-
-          isChoiceSelectableAspect.isSelectable = function (wrap) {
-            return origIsSelectable(wrap) && !wrap.isOptionHidden;
-          };
-
-          var getIsOptionHidden = configuration.getIsOptionHidden,
-              options = configuration.options;
-
-          if (options) {
-            if (!getIsOptionHidden) getIsOptionHidden = function getIsOptionHidden(option) {
-              return option.hidden === undefined ? false : option.hidden;
-            };
-          } else {
-            if (!getIsOptionHidden) getIsOptionHidden = function getIsOptionHidden(option) {
-              return option.hidden;
-            };
+        countableChoicesListInsertAspect.countableChoicesListInsert = function (wrap, key) {
+          if (!wrap.isOptionHidden) {
+            var choiceNext = wrapsCollection.getNext(key, function (c) {
+              return !c.isOptionHidden;
+            });
+            countableChoicesList.add(wrap, choiceNext);
           }
+        };
 
-          var origCreateWrap = createWrapAspect.createWrap;
+        var origBuildAndAttachChoice = buildAndAttachChoiceAspect.buildAndAttachChoice;
 
-          createWrapAspect.createWrap = function (option) {
-            var wrap = origCreateWrap(option);
-            wrap.isOptionHidden = getIsOptionHidden(option);
-            return wrap;
+        buildAndAttachChoiceAspect.buildAndAttachChoice = function (wrap, getNextElement) {
+          if (wrap.isOptionHidden) {
+            buildHiddenChoice(wrap);
+          } else {
+            origBuildAndAttachChoice(wrap, getNextElement);
+          }
+        };
+
+        var origIsSelectable = isChoiceSelectableAspect.isSelectable;
+
+        isChoiceSelectableAspect.isSelectable = function (wrap) {
+          return origIsSelectable(wrap) && !wrap.isOptionHidden;
+        };
+
+        var getIsOptionHidden = configuration.getIsOptionHidden,
+            options = configuration.options;
+
+        if (options) {
+          if (!getIsOptionHidden) getIsOptionHidden = function getIsOptionHidden(option) {
+            return option.hidden === undefined ? false : option.hidden;
           };
-
-          return {
-            buildApi: function buildApi(api) {
-              var getNextNonHidden = function getNextNonHidden(key) {
-                return wrapsCollection.getNext(key, function (c) {
-                  return !c.isOptionHidden;
-                });
-              };
-
-              api.updateOptionsHidden = function () {
-                return wrapsCollection.forLoop(function (wrap, key) {
-                  return updateChoiceHidden$1(wrap, key, getNextNonHidden, countableChoicesList, getIsOptionHidden, buildChoiceAspect);
-                });
-              };
-
-              api.updateOptionHidden = function (key) {
-                return updateChoiceHidden$1(wrapsCollection.get(key), key, getNextNonHidden, countableChoicesList, getIsOptionHidden, buildChoiceAspect);
-              }; // TODO create updateHidden ? 
-              // it is too complex since we need to find the next non hidden, when this depends on key 
-              // there should be the backreference "wrap -> index" invited before
-              // api.updateOptionHidden  = (key) => wrapsCollection.get(key).updateHidden();
-
-            }
+        } else {
+          if (!getIsOptionHidden) getIsOptionHidden = function getIsOptionHidden(option) {
+            return option.hidden;
           };
         }
-      };
-    }
+
+        var origCreateWrap = createWrapAspect.createWrap;
+
+        createWrapAspect.createWrap = function (option) {
+          var wrap = origCreateWrap(option);
+          wrap.isOptionHidden = getIsOptionHidden(option);
+          return wrap;
+        };
+
+        return {
+          buildApi: function buildApi(api) {
+            var getNextNonHidden = function getNextNonHidden(key) {
+              return wrapsCollection.getNext(key, function (c) {
+                return !c.isOptionHidden;
+              });
+            };
+
+            api.updateOptionsHidden = function () {
+              return wrapsCollection.forLoop(function (wrap, key) {
+                return updateChoiceHidden$1(wrap, key, getNextNonHidden, countableChoicesList, getIsOptionHidden, buildChoiceAspect);
+              });
+            };
+
+            api.updateOptionHidden = function (key) {
+              return updateChoiceHidden$1(wrapsCollection.get(key), key, getNextNonHidden, countableChoicesList, getIsOptionHidden, buildChoiceAspect);
+            }; // TODO create updateHidden ? 
+            // it is too complex since we need to find the next non hidden, when this depends on key 
+            // there should be the backreference "wrap -> index" invited before
+            // api.updateOptionHidden  = (key) => wrapsCollection.get(key).updateHidden();
+
+          }
+        };
+      }
+    };
   };
 }
 
@@ -3491,81 +3559,84 @@ function updateChoiceHidden$1(wrap, key, getNextNonHidden, countableChoicesList,
 
 function HiddenOptionAltPlugin() {
   return {
-    buildAspects: function buildAspects(aspects, configuration) {
-      return {
-        layout: function layout() {
-          var createWrapAspect = aspects.createWrapAspect,
-              isChoiceSelectableAspect = aspects.isChoiceSelectableAspect,
-              wrapsCollection = aspects.wrapsCollection,
-              buildAndAttachChoiceAspect = aspects.buildAndAttachChoiceAspect,
-              countableChoicesListInsertAspect = aspects.countableChoicesListInsertAspect,
-              countableChoicesList = aspects.countableChoicesList;
+    plug: plug$i
+  };
+}
+function plug$i(configuration) {
+  return function (aspects) {
+    return {
+      layout: function layout() {
+        var createWrapAspect = aspects.createWrapAspect,
+            isChoiceSelectableAspect = aspects.isChoiceSelectableAspect,
+            wrapsCollection = aspects.wrapsCollection,
+            buildAndAttachChoiceAspect = aspects.buildAndAttachChoiceAspect,
+            countableChoicesListInsertAspect = aspects.countableChoicesListInsertAspect,
+            countableChoicesList = aspects.countableChoicesList;
 
-          countableChoicesListInsertAspect.countableChoicesListInsert = function (wrap, key) {
-            if (!wrap.isOptionHidden) {
-              var choiceNext = wrapsCollection.getNext(key, function (c) {
-                return !c.isOptionHidden;
-              });
-              countableChoicesList.add(wrap, choiceNext);
-            }
-          };
-
-          var origBuildAndAttachChoice = buildAndAttachChoiceAspect.buildAndAttachChoice;
-
-          buildAndAttachChoiceAspect.buildAndAttachChoice = function (wrap, getNextElement) {
-            origBuildAndAttachChoice(wrap, getNextElement);
-            wrap.choice.setVisible(!wrap.isOptionHidden);
-          };
-
-          var origIsSelectable = isChoiceSelectableAspect.isSelectable;
-
-          isChoiceSelectableAspect.isSelectable = function (wrap) {
-            return origIsSelectable(wrap) && !wrap.isOptionHidden;
-          };
-
-          var getIsOptionHidden = configuration.getIsOptionHidden,
-              options = configuration.options;
-
-          if (options) {
-            if (!getIsOptionHidden) getIsOptionHidden = function getIsOptionHidden(option) {
-              return option.hidden === undefined ? false : option.hidden;
-            };
-          } else {
-            if (!getIsOptionHidden) getIsOptionHidden = function getIsOptionHidden(option) {
-              return option.hidden;
-            };
+        countableChoicesListInsertAspect.countableChoicesListInsert = function (wrap, key) {
+          if (!wrap.isOptionHidden) {
+            var choiceNext = wrapsCollection.getNext(key, function (c) {
+              return !c.isOptionHidden;
+            });
+            countableChoicesList.add(wrap, choiceNext);
           }
+        };
 
-          var origCreateWrap = createWrapAspect.createWrap;
+        var origBuildAndAttachChoice = buildAndAttachChoiceAspect.buildAndAttachChoice;
 
-          createWrapAspect.createWrap = function (option) {
-            var wrap = origCreateWrap(option);
-            wrap.isOptionHidden = getIsOptionHidden(option);
-            return wrap;
+        buildAndAttachChoiceAspect.buildAndAttachChoice = function (wrap, getNextElement) {
+          origBuildAndAttachChoice(wrap, getNextElement);
+          wrap.choice.setVisible(!wrap.isOptionHidden);
+        };
+
+        var origIsSelectable = isChoiceSelectableAspect.isSelectable;
+
+        isChoiceSelectableAspect.isSelectable = function (wrap) {
+          return origIsSelectable(wrap) && !wrap.isOptionHidden;
+        };
+
+        var getIsOptionHidden = configuration.getIsOptionHidden,
+            options = configuration.options;
+
+        if (options) {
+          if (!getIsOptionHidden) getIsOptionHidden = function getIsOptionHidden(option) {
+            return option.hidden === undefined ? false : option.hidden;
           };
-
-          return {
-            buildApi: function buildApi(api) {
-              var getNextNonHidden = function getNextNonHidden(key) {
-                return wrapsCollection.getNext(key, function (c) {
-                  return !c.isOptionHidden;
-                });
-              };
-
-              api.updateOptionsHidden = function () {
-                return wrapsCollection.forLoop(function (wrap, key) {
-                  return updateChoiceHidden(wrap, key, getNextNonHidden, countableChoicesList, getIsOptionHidden);
-                });
-              };
-
-              api.updateOptionHidden = function (key) {
-                return updateChoiceHidden(wrapsCollection.get(key), key, getNextNonHidden, countableChoicesList, getIsOptionHidden);
-              };
-            }
+        } else {
+          if (!getIsOptionHidden) getIsOptionHidden = function getIsOptionHidden(option) {
+            return option.hidden;
           };
         }
-      };
-    }
+
+        var origCreateWrap = createWrapAspect.createWrap;
+
+        createWrapAspect.createWrap = function (option) {
+          var wrap = origCreateWrap(option);
+          wrap.isOptionHidden = getIsOptionHidden(option);
+          return wrap;
+        };
+
+        return {
+          buildApi: function buildApi(api) {
+            var getNextNonHidden = function getNextNonHidden(key) {
+              return wrapsCollection.getNext(key, function (c) {
+                return !c.isOptionHidden;
+              });
+            };
+
+            api.updateOptionsHidden = function () {
+              return wrapsCollection.forLoop(function (wrap, key) {
+                return updateChoiceHidden(wrap, key, getNextNonHidden, countableChoicesList, getIsOptionHidden);
+              });
+            };
+
+            api.updateOptionHidden = function (key) {
+              return updateChoiceHidden(wrapsCollection.get(key), key, getNextNonHidden, countableChoicesList, getIsOptionHidden);
+            };
+          }
+        };
+      }
+    };
   };
 }
 
@@ -3586,28 +3657,21 @@ function updateChoiceHidden(wrap, key, getNextNonHidden, countableChoicesList, g
 function CssPatchPlugin(defaults) {
   defaults.useCssPatch = true;
   return {
-    buildAspects: function buildAspects(aspects, configuration, settings) {
-      // merge
+    merge: function merge(configuration, settings) {
       var cssPatch = settings == null ? void 0 : settings.cssPatch;
       if (isBoolean(cssPatch)) throw new Error("BsMultiSelect: 'cssPatch' was used instead of 'useCssPatch'"); // often type of error
 
       configuration.cssPatch = createCss(defaults.cssPatch, cssPatch); // replace classes, merge styles
-
-      return {
-        // TODO: this means after all cssPatch added, but this should be done different way (another static extension point?)
-        plugStaticDom: function plugStaticDom() {
-          if (configuration.useCssPatch) extendCss(configuration.css, configuration.cssPatch);
-        }
-      };
+    },
+    plug: function plug(configuration) {
+      if (configuration.useCssPatch) extendCss(configuration.css, configuration.cssPatch);
     }
   };
 }
 
 function CssPatchBs4Plugin(defaults) {
   var cssPatch = {};
-  PickDomFactoryPlugCssPatch(cssPatch);
   PickDomFactoryPlugCssPatchBs4(cssPatch);
-  PicksDomFactoryPlugCssPatch(cssPatch);
   PicksDomFactoryPlugCssPatchBs4(cssPatch);
   ChoiceDomFactoryPlugCssPatch(cssPatch);
   ChoicesDomFactoryPlugCssPatch(cssPatch);
@@ -3618,9 +3682,7 @@ function CssPatchBs4Plugin(defaults) {
 
 function CssPatchBs5Plugin(defaults) {
   var cssPatch = {};
-  PickDomFactoryPlugCssPatch(cssPatch);
   PickDomFactoryPlugCssPatchBs5(cssPatch);
-  PicksDomFactoryPlugCssPatch(cssPatch);
   PicksDomFactoryPlugCssPatchBs5(cssPatch);
   ChoiceDomFactoryPlugCssPatch(cssPatch);
   ChoicesDomFactoryPlugCssPatch(cssPatch);
@@ -3631,314 +3693,324 @@ function CssPatchBs5Plugin(defaults) {
 
 function JQueryMethodsPlugin() {
   return {
-    buildAspects: function buildAspects() {
-      return {
-        layout: function layout(aspects) {
-          var staticDom = aspects.staticDom,
-              choicesDom = aspects.choicesDom,
-              filterDom = aspects.filterDom,
-              picksList = aspects.picksList,
-              picksDom = aspects.picksDom;
-          return {
-            buildApi: function buildApi(api) {
-              api.getContainer = function () {
-                return staticDom.containerElement;
-              };
+    plug: plug$h
+  };
+}
+function plug$h() {
+  return function (aspects) {
+    return {
+      layout: function layout() {
+        var staticDom = aspects.staticDom,
+            choicesDom = aspects.choicesDom,
+            filterDom = aspects.filterDom,
+            picksList = aspects.picksList,
+            picksDom = aspects.picksDom;
+        return {
+          buildApi: function buildApi(api) {
+            api.getContainer = function () {
+              return staticDom.containerElement;
+            };
 
-              api.getChoices = function () {
-                return choicesDom.choicesElement;
-              };
+            api.getChoices = function () {
+              return choicesDom.choicesElement;
+            };
 
-              api.getChoicesList = function () {
-                return choicesDom.choicesListElement;
-              };
+            api.getChoicesList = function () {
+              return choicesDom.choicesListElement;
+            };
 
-              api.getFilterInput = function () {
-                return filterDom.filterInputElement;
-              };
+            api.getFilterInput = function () {
+              return filterDom.filterInputElement;
+            };
 
-              api.getPicks = function () {
-                return picksDom.picksElement;
-              };
+            api.getPicks = function () {
+              return picksDom.picksElement;
+            };
 
-              api.picksCount = function () {
-                return picksList.getCount();
-              };
-            }
-          };
-        }
-      };
-    }
+            api.picksCount = function () {
+              return picksList.getCount();
+            };
+          }
+        };
+      }
+    };
   };
 }
 
 function OptionsApiPlugin() {
   return {
-    buildAspects: function buildAspects(aspects) {
-      return {
-        layout: function layout() {
-          var buildAndAttachChoiceAspect = aspects.buildAndAttachChoiceAspect,
-              wraps = aspects.wraps,
-              wrapsCollection = aspects.wrapsCollection,
-              createWrapAspect = aspects.createWrapAspect,
-              createChoiceBaseAspect = aspects.createChoiceBaseAspect,
-              optionsAspect = aspects.optionsAspect,
-              resetLayoutAspect = aspects.resetLayoutAspect;
-          return {
-            buildApi: function buildApi(api) {
-              api.updateOptionAdded = function (key) {
-                // TODO: generalize index as key 
-                var options = optionsAspect.getOptions();
-                var option = options[key];
-                var wrap = createWrapAspect.createWrap(option);
-                wrap.choice = createChoiceBaseAspect.createChoiceBase(option);
-                wraps.insert(key, wrap);
+    plug: plug$g
+  };
+}
+function plug$g() {
+  return function (aspects) {
+    return {
+      layout: function layout() {
+        var buildAndAttachChoiceAspect = aspects.buildAndAttachChoiceAspect,
+            wraps = aspects.wraps,
+            wrapsCollection = aspects.wrapsCollection,
+            createWrapAspect = aspects.createWrapAspect,
+            createChoiceBaseAspect = aspects.createChoiceBaseAspect,
+            optionsAspect = aspects.optionsAspect,
+            resetLayoutAspect = aspects.resetLayoutAspect;
+        return {
+          buildApi: function buildApi(api) {
+            api.updateOptionAdded = function (key) {
+              // TODO: generalize index as key 
+              var options = optionsAspect.getOptions();
+              var option = options[key];
+              var wrap = createWrapAspect.createWrap(option);
+              wrap.choice = createChoiceBaseAspect.createChoiceBase(option);
+              wraps.insert(key, wrap);
 
-                var nextChoice = function nextChoice() {
-                  return wrapsCollection.getNext(key, function (c) {
-                    return c.choice.choiceElement;
-                  });
-                };
-
-                buildAndAttachChoiceAspect.buildAndAttachChoice(wrap, function () {
-                  var _nextChoice;
-
-                  return (_nextChoice = nextChoice()) == null ? void 0 : _nextChoice.choice.choiceElement;
+              var nextChoice = function nextChoice() {
+                return wrapsCollection.getNext(key, function (c) {
+                  return c.choice.choiceElement;
                 });
               };
 
-              api.updateOptionRemoved = function (key) {
-                // TODO: generalize index as key 
-                resetLayoutAspect.resetLayout(); // always hide 1st, then reset filter
+              buildAndAttachChoiceAspect.buildAndAttachChoice(wrap, function () {
+                var _nextChoice;
 
-                var wrap = wraps.remove(key);
-                wrap.choice.remove == null ? void 0 : wrap.choice.remove();
-                wrap.dispose == null ? void 0 : wrap.dispose();
-              };
-            }
-          };
-        }
-      };
-    }
+                return (_nextChoice = nextChoice()) == null ? void 0 : _nextChoice.choice.choiceElement;
+              });
+            };
+
+            api.updateOptionRemoved = function (key) {
+              // TODO: generalize index as key 
+              resetLayoutAspect.resetLayout(); // always hide 1st, then reset filter
+
+              var wrap = wraps.remove(key);
+              wrap.choice.remove == null ? void 0 : wrap.choice.remove();
+              wrap.dispose == null ? void 0 : wrap.dispose();
+            };
+          }
+        };
+      }
+    };
   };
 }
 
 function FormRestoreOnBackwardPlugin() {
   return {
-    buildAspects: function buildAspects(aspects) {
-      return {
-        layout: function layout() {
-          var staticDom = aspects.staticDom,
-              environment = aspects.environment,
-              loadAspect = aspects.loadAspect,
-              updateOptionsSelectedAspect = aspects.updateOptionsSelectedAspect;
-          var window = environment.window;
+    plug: plug$f
+  };
+}
+function plug$f() {
+  return function (aspects) {
+    return {
+      layout: function layout() {
+        var staticDom = aspects.staticDom,
+            environment = aspects.environment,
+            loadAspect = aspects.loadAspect,
+            updateOptionsSelectedAspect = aspects.updateOptionsSelectedAspect;
+        var window = environment.window;
 
-          if (staticDom.selectElement && updateOptionsSelectedAspect) {
-            loadAspect.load = composeSync(loadAspect.load, function () {
-              // support browser's "step backward" and form's values restore
-              if (window.document.readyState != "complete") {
-                window.setTimeout(function () {
-                  updateOptionsSelectedAspect.updateOptionsSelected(); // there are no need to add more updates as api.updateWasValidated() because backward never trigger .was-validate
-                  // also backward never set the state to invalid
-                });
-              }
-            });
-          }
+        if (staticDom.selectElement && updateOptionsSelectedAspect) {
+          loadAspect.load = composeSync(loadAspect.load, function () {
+            // support browser's "step backward" and form's values restore
+            if (window.document.readyState != "complete") {
+              window.setTimeout(function () {
+                updateOptionsSelectedAspect.updateOptionsSelected(); // there are no need to add more updates as api.updateWasValidated() because backward never trigger .was-validate
+                // also backward never set the state to invalid
+              });
+            }
+          });
         }
-      };
-    }
+      }
+    };
   };
 }
 
 function SelectElementPlugin() {
   return {
-    buildAspects: function buildAspects(aspects) {
-      return {
-        plugStaticDom: function plugStaticDom() {
-          var configuration = aspects.configuration,
-              staticDomFactory = aspects.staticDomFactory,
-              createElementAspect = aspects.createElementAspect,
-              componentPropertiesAspect = aspects.componentPropertiesAspect,
-              onChangeAspect = aspects.onChangeAspect,
-              triggerAspect = aspects.triggerAspect,
-              optionsAspect = aspects.optionsAspect,
-              optGroupAspect = aspects.optGroupAspect,
-              disposeAspect = aspects.disposeAspect;
-          var origStaticDomFactoryCreate = staticDomFactory.create;
+    plug: plug$e
+  };
+}
+function plug$e(configuration) {
+  return function (aspects) {
+    return {
+      plugStaticDom: function plugStaticDom() {
+        var staticDomFactory = aspects.staticDomFactory,
+            createElementAspect = aspects.createElementAspect,
+            componentPropertiesAspect = aspects.componentPropertiesAspect,
+            onChangeAspect = aspects.onChangeAspect,
+            triggerAspect = aspects.triggerAspect,
+            optionsAspect = aspects.optionsAspect,
+            optGroupAspect = aspects.optGroupAspect,
+            disposeAspect = aspects.disposeAspect,
+            getValueRequiredAspect = aspects.getValueRequiredAspect;
+        var origStaticDomFactoryCreate = staticDomFactory.create;
 
-          staticDomFactory.create = function (choicesDomFactory, filterDomFactory, picksDomFactory) {
-            var _origStaticDomFactory = origStaticDomFactoryCreate(choicesDomFactory, filterDomFactory, picksDomFactory),
-                origCreateStaticDom = _origStaticDomFactory.createStaticDom;
+        staticDomFactory.create = function (choicesDomFactory, filterDomFactory, picksDomFactory) {
+          var _origStaticDomFactory = origStaticDomFactoryCreate(choicesDomFactory, filterDomFactory, picksDomFactory),
+              origCreateStaticDom = _origStaticDomFactory.createStaticDom;
 
-            return {
-              createStaticDom: function createStaticDom(element, containerClass) {
-                console.log("createStaticDom");
-                var selectElement = null;
-                var containerElement = null;
-                var picksElement = null;
+          return {
+            createStaticDom: function createStaticDom(element, containerClass) {
+              console.log("createStaticDom");
+              var selectElement = null;
+              var containerElement = null;
+              var picksElement = null;
 
-                if (element.tagName == 'SELECT') {
-                  selectElement = element;
+              if (element.tagName == 'SELECT') {
+                selectElement = element;
 
-                  if (containerClass) {
-                    containerElement = closestByClassName(selectElement, containerClass);
-                    if (containerElement) picksElement = findDirectChildByTagName(containerElement, 'UL');
-                  }
-                } else if (element.tagName == 'DIV') {
-                  selectElement = findDirectChildByTagName(element, 'SELECT');
-
-                  if (selectElement) {
-                    if (containerClass) {
-                      containerElement = closestByClassName(element, containerClass);
-                      if (containerElement) picksElement = findDirectChildByTagName(containerElement, 'UL');
-                    }
-                  } else {
-                    return origCreateStaticDom(element, containerClass);
-                  }
+                if (containerClass) {
+                  containerElement = closestByClassName(selectElement, containerClass);
+                  if (containerElement) picksElement = findDirectChildByTagName(containerElement, 'UL');
                 }
-
-                var disposableContainerElement = false;
-
-                if (!containerElement) {
-                  containerElement = createElementAspect.createElement('DIV');
-                  containerElement.classList.add(containerClass);
-                  disposableContainerElement = true;
-                }
-
-                var isDisposablePicksElement = false;
-
-                if (!picksElement) {
-                  picksElement = createElementAspect.createElement('UL');
-                  isDisposablePicksElement = true;
-                }
+              } else if (element.tagName == 'DIV') {
+                selectElement = findDirectChildByTagName(element, 'SELECT');
 
                 if (selectElement) {
-                  var backupDisplay = selectElement.style.display;
-                  selectElement.style.display = 'none';
-                  var backupedRequired = selectElement.required;
-
-                  configuration.getValueRequired = function () {
-                    return backupedRequired;
-                  };
-
-                  if (selectElement.required === true) selectElement.required = false;
-                  var getDisabled = configuration.getDisabled;
-
-                  if (!getDisabled) {
-                    var fieldsetElement = closestByTagName(selectElement, 'FIELDSET');
-
-                    if (fieldsetElement) {
-                      componentPropertiesAspect.getDisabled = function () {
-                        return selectElement.disabled || fieldsetElement.disabled;
-                      };
-                    } else {
-                      componentPropertiesAspect.getDisabled = function () {
-                        return selectElement.disabled;
-                      };
-                    }
+                  if (containerClass) {
+                    containerElement = closestByClassName(element, containerClass);
+                    if (containerElement) picksElement = findDirectChildByTagName(containerElement, 'UL');
                   }
+                } else {
+                  return origCreateStaticDom(element, containerClass);
+                }
+              }
 
-                  onChangeAspect.onChange = composeSync(function () {
-                    return triggerAspect.trigger('change');
-                  }, onChangeAspect.onChange);
+              var disposableContainerElement = false;
 
-                  optionsAspect.getOptions = function () {
-                    return selectElement.options;
-                  };
+              if (!containerElement) {
+                containerElement = createElementAspect.createElement('DIV');
+                containerElement.classList.add(containerClass);
+                disposableContainerElement = true;
+              }
 
-                  if (optGroupAspect) {
-                    optGroupAspect.getOptionOptGroup = function (option) {
-                      return option.parentNode;
-                    };
+              var isDisposablePicksElement = false;
 
-                    optGroupAspect.getOptGroupText = function (optGroup) {
-                      return optGroup.label;
-                    };
+              if (!picksElement) {
+                picksElement = createElementAspect.createElement('UL');
+                isDisposablePicksElement = true;
+              }
 
-                    optGroupAspect.getOptGroupId = function (optGroup) {
-                      return optGroup.id;
-                    };
-                  }
+              if (selectElement) {
+                var backupDisplay = selectElement.style.display;
+                selectElement.style.display = 'none';
+                var backupedRequired = selectElement.required;
+                if (getValueRequiredAspect) getValueRequiredAspect.getValueRequired = function () {
+                  return backupedRequired;
+                };
+                if (selectElement.required === true) selectElement.required = false;
+                var getDisabled = configuration.getDisabled;
 
-                  if (aspects.labelNewIdAspect) {
-                    console.log("new aspects.labelNewIdAspect");
+                if (!getDisabled) {
+                  var fieldsetElement = closestByTagName(selectElement, 'FIELDSET');
 
-                    aspects.labelNewIdAspect.createInputId = function () {
-                      return containerClass + "-generated-input-" + (selectElement.id ? selectElement.id : selectElement.name).toLowerCase() + "-id";
+                  if (fieldsetElement) {
+                    componentPropertiesAspect.getDisabled = function () {
+                      return selectElement.disabled || fieldsetElement.disabled;
                     };
                   } else {
-                    console.log("no new aspects.labelNewIdAspect");
+                    componentPropertiesAspect.getDisabled = function () {
+                      return selectElement.disabled;
+                    };
                   }
-
-                  disposeAspect.dispose = composeSync(disposeAspect.dispose, function () {
-                    selectElement.required = backupedRequired;
-                    selectElement.style.display = backupDisplay;
-                  });
                 }
 
-                var choicesDom = choicesDomFactory.create();
-                var filterDom = filterDomFactory.create(isDisposablePicksElement);
-                var picksDom = picksDomFactory.create(picksElement, isDisposablePicksElement);
-                var choicesElement = choicesDom.choicesElement;
-                return {
-                  choicesDom: choicesDom,
-                  filterDom: filterDom,
-                  picksDom: picksDom,
-                  staticDom: {
-                    initialElement: element,
-                    containerElement: containerElement,
-                    picksElement: picksElement,
-                    isDisposablePicksElement: isDisposablePicksElement,
-                    selectElement: selectElement
-                  },
-                  staticManager: {
-                    appendToContainer: function appendToContainer() {
-                      if (disposableContainerElement) {
-                        selectElement.parentNode.insertBefore(containerElement, selectElement.nextSibling);
-                        containerElement.appendChild(choicesElement);
-                      } else {
-                        selectElement.parentNode.insertBefore(choicesElement, selectElement.nextSibling);
-                      }
+                onChangeAspect.onChange = composeSync(function () {
+                  return triggerAspect.trigger('change');
+                }, onChangeAspect.onChange);
 
-                      if (isDisposablePicksElement) containerElement.appendChild(picksElement);
-                    },
-                    dispose: function dispose() {
-                      choicesElement.parentNode.removeChild(choicesElement);
-                      if (disposableContainerElement) selectElement.parentNode.removeChild(containerElement);
-                      if (isDisposablePicksElement) containerElement.removeChild(picksElement);
-                    }
-                  }
+                optionsAspect.getOptions = function () {
+                  return selectElement.options;
                 };
+
+                if (optGroupAspect) {
+                  optGroupAspect.getOptionOptGroup = function (option) {
+                    return option.parentNode;
+                  };
+
+                  optGroupAspect.getOptGroupText = function (optGroup) {
+                    return optGroup.label;
+                  };
+
+                  optGroupAspect.getOptGroupId = function (optGroup) {
+                    return optGroup.id;
+                  };
+                }
+
+                if (aspects.labelNewIdAspect) {
+                  console.log("new aspects.labelNewIdAspect");
+
+                  aspects.labelNewIdAspect.createInputId = function () {
+                    return containerClass + "-generated-input-" + (selectElement.id ? selectElement.id : selectElement.name).toLowerCase() + "-id";
+                  };
+                } else {
+                  console.log("no new aspects.labelNewIdAspect");
+                }
+
+                disposeAspect.dispose = composeSync(disposeAspect.dispose, function () {
+                  selectElement.required = backupedRequired;
+                  selectElement.style.display = backupDisplay;
+                });
               }
-            };
-          };
-        },
-        layout: function layout() {
-          var loadAspect = aspects.loadAspect,
-              environment = aspects.environment;
-          var document = environment.window.document;
-          var origLoadAspectLoop = loadAspect.loop;
 
-          loadAspect.loop = function () {
-            // browsers can change select value as part of "autocomplete" (IE11) at load time
-            // or "show preserved on go back" (Chrome) after page is loaded but before "ready" event;
-            // mote: they never "restore" selected-disabled options.
-            // TODO: make the FROM Validation for 'selected-disabled' easy.
-            if (document.readyState != 'loading') {
-              origLoadAspectLoop();
-            } else {
-              var domContentLoadedHandler = function domContentLoadedHandler() {
-                origLoadAspectLoop();
-                document.removeEventListener("DOMContentLoaded", domContentLoadedHandler);
+              var choicesDom = choicesDomFactory.create();
+              var filterDom = filterDomFactory.create(isDisposablePicksElement);
+              var picksDom = picksDomFactory.create(picksElement, isDisposablePicksElement);
+              var choicesElement = choicesDom.choicesElement;
+              return {
+                choicesDom: choicesDom,
+                filterDom: filterDom,
+                picksDom: picksDom,
+                staticDom: {
+                  initialElement: element,
+                  containerElement: containerElement,
+                  picksElement: picksElement,
+                  isDisposablePicksElement: isDisposablePicksElement,
+                  selectElement: selectElement
+                },
+                staticManager: {
+                  appendToContainer: function appendToContainer() {
+                    if (disposableContainerElement) {
+                      selectElement.parentNode.insertBefore(containerElement, selectElement.nextSibling);
+                      containerElement.appendChild(choicesElement);
+                    } else {
+                      selectElement.parentNode.insertBefore(choicesElement, selectElement.nextSibling);
+                    }
+
+                    if (isDisposablePicksElement) containerElement.appendChild(picksElement);
+                  },
+                  dispose: function dispose() {
+                    choicesElement.parentNode.removeChild(choicesElement);
+                    if (disposableContainerElement) selectElement.parentNode.removeChild(containerElement);
+                    if (isDisposablePicksElement) containerElement.removeChild(picksElement);
+                  }
+                }
               };
-
-              document.addEventListener('DOMContentLoaded', domContentLoadedHandler); // IE9+
             }
           };
-        }
-      };
-    }
+        };
+      },
+      layout: function layout() {
+        var loadAspect = aspects.loadAspect,
+            environment = aspects.environment;
+        var document = environment.window.document;
+        var origLoadAspectLoop = loadAspect.loop;
+
+        loadAspect.loop = function () {
+          // browsers can change select value as part of "autocomplete" (IE11) at load time
+          // or "show preserved on go back" (Chrome) after page is loaded but before "ready" event;
+          // mote: they never "restore" selected-disabled options.
+          // TODO: make the FROM Validation for 'selected-disabled' easy.
+          if (document.readyState != 'loading') {
+            origLoadAspectLoop();
+          } else {
+            var domContentLoadedHandler = function domContentLoadedHandler() {
+              origLoadAspectLoop();
+              document.removeEventListener("DOMContentLoaded", domContentLoadedHandler);
+            };
+
+            document.addEventListener('DOMContentLoaded', domContentLoadedHandler); // IE9+
+          }
+        };
+      }
+    };
   };
 }
 
@@ -3950,230 +4022,238 @@ function SelectElementPlugin() {
 
 function SelectedOptionPlugin() {
   return {
-    buildAspects: function buildAspects(aspects, configuration) {
-      return {
-        plugStaticDom: function plugStaticDom() {
-          var wrapsCollection = aspects.wrapsCollection;
-          var getIsOptionSelected = configuration.getSelected,
-              setIsOptionSelected = configuration.setSelected,
-              options = configuration.options;
+    plug: plug$d
+  };
+}
+function plug$d(configuration) {
+  return function (aspects) {
+    var getIsOptionSelected = configuration.getSelected,
+        setIsOptionSelected = configuration.setSelected,
+        options = configuration.options;
 
-          if (options) {
-            if (!setIsOptionSelected) {
-              setIsOptionSelected = function setIsOptionSelected(option, value) {
-                option.selected = value;
-              };
-            }
+    if (options) {
+      if (!setIsOptionSelected) {
+        setIsOptionSelected = function setIsOptionSelected(option, value) {
+          option.selected = value;
+        };
+      }
 
-            if (!getIsOptionSelected) getIsOptionSelected = function getIsOptionSelected(option) {
-              return option.selected;
-            };
-          } else {
-            // selectElement
-            if (!getIsOptionSelected) {
-              getIsOptionSelected = function getIsOptionSelected(option) {
-                return option.selected;
-              };
-            }
+      if (!getIsOptionSelected) getIsOptionSelected = function getIsOptionSelected(option) {
+        return option.selected;
+      };
+    } else {
+      // selectElement
+      if (!getIsOptionSelected) {
+        getIsOptionSelected = function getIsOptionSelected(option) {
+          return option.selected;
+        };
+      }
 
-            if (!setIsOptionSelected) {
-              setIsOptionSelected = function setIsOptionSelected(option, value) {
-                option.selected = value;
-              }; // NOTE: adding this (setAttribute) break Chrome's html form reset functionality:
-              // if (value) option.setAttribute('selected','');
-              // else option.removeAttribute('selected');
+      if (!setIsOptionSelected) {
+        setIsOptionSelected = function setIsOptionSelected(option, value) {
+          option.selected = value;
+        }; // NOTE: adding this (setAttribute) break Chrome's html form reset functionality:
+        // if (value) option.setAttribute('selected','');
+        // else option.removeAttribute('selected');
 
-            }
+      }
+    }
+
+    var getSelectedAspect = {
+      getSelected: getIsOptionSelected
+    };
+    var setSelectedAspect = {
+      setSelected: setIsOptionSelected
+    };
+    aspects.getSelectedAspect = getSelectedAspect;
+    aspects.setSelectedAspect = setSelectedAspect;
+    return {
+      plugStaticDom: function plugStaticDom() {
+        // TODO: move to createEventHandlers
+        var wrapsCollection = aspects.wrapsCollection;
+        aspects.updateOptionsSelectedAspect = UpdateOptionsSelectedAspect(wrapsCollection, getSelectedAspect);
+      },
+      layout: function layout() {
+        var wrapsCollection = aspects.wrapsCollection,
+            updateOptionsSelectedAspect = aspects.updateOptionsSelectedAspect,
+            createWrapAspect = aspects.createWrapAspect,
+            buildChoiceAspect = aspects.buildChoiceAspect,
+            removePickAspect = aspects.removePickAspect,
+            resetLayoutAspect = aspects.resetLayoutAspect,
+            picksList = aspects.picksList,
+            isChoiceSelectableAspect = aspects.isChoiceSelectableAspect,
+            optionToggleAspect = aspects.optionToggleAspect,
+            createPickHandlersAspect = aspects.createPickHandlersAspect,
+            addPickAspect = aspects.addPickAspect,
+            fullMatchAspect = aspects.fullMatchAspect,
+            onChangeAspect = aspects.onChangeAspect,
+            filterPredicateAspect = aspects.filterPredicateAspect;
+        var origFilterPredicate = filterPredicateAspect.filterPredicate;
+
+        filterPredicateAspect.filterPredicate = function (wrap, text) {
+          return !wrap.isOptionSelected && origFilterPredicate(wrap, text);
+        };
+
+        var origBuildChoice = buildChoiceAspect.buildChoice;
+
+        buildChoiceAspect.buildChoice = function (wrap) {
+          origBuildChoice(wrap);
+
+          wrap.updateSelected = function () {
+            wrap.choice.choiceDomManagerHandlers.updateSelected();
+            onChangeAspect.onChange();
+          };
+
+          wrap.dispose = composeSync(function () {
+            wrap.updateSelected = null;
+          }, wrap.dispose);
+        }; // TODO: test this instead of wrap.updateSelected
+        // function updateSelected(wrap){
+        //     if (wrap.pick){
+        //         if (wrap.isOptionSelected)
+        //             pickHandlers.producePick();
+        //         else {
+        //             pickHandlers.removeAndDispose();
+        //             pickHandlers.removeAndDispose=null;
+        //         }
+        //     }
+        //     wrap.choice.choiceDomManagerHandlers.updateSelected();
+        //     onChangeAspect.onChange();
+        // }
+
+
+        function composeUpdateSelected(wrap, booleanValue) {
+          return function () {
+            wrap.isOptionSelected = booleanValue;
+            wrap.updateSelected();
+          };
+        }
+
+        function trySetWrapSelected(option, updateSelected, booleanValue) {
+          //  wrap.option
+          var success = false;
+          var confirmed = setSelectedAspect.setSelected(option, booleanValue);
+
+          if (!(confirmed === false)) {
+            updateSelected();
+            success = true;
           }
 
-          configuration.getSelected = getIsOptionSelected;
-          configuration.setSelected = setIsOptionSelected;
-          aspects.updateOptionsSelectedAspect = UpdateOptionsSelectedAspect(wrapsCollection, getIsOptionSelected);
-        },
-        layout: function layout() {
-          var wrapsCollection = aspects.wrapsCollection,
-              updateOptionsSelectedAspect = aspects.updateOptionsSelectedAspect,
-              createWrapAspect = aspects.createWrapAspect,
-              buildChoiceAspect = aspects.buildChoiceAspect,
-              removePickAspect = aspects.removePickAspect,
-              resetLayoutAspect = aspects.resetLayoutAspect,
-              picksList = aspects.picksList,
-              isChoiceSelectableAspect = aspects.isChoiceSelectableAspect,
-              optionToggleAspect = aspects.optionToggleAspect,
-              createPickHandlersAspect = aspects.createPickHandlersAspect,
-              addPickAspect = aspects.addPickAspect,
-              fullMatchAspect = aspects.fullMatchAspect,
-              onChangeAspect = aspects.onChangeAspect,
-              filterPredicateAspect = aspects.filterPredicateAspect;
-          var getIsOptionSelected = configuration.getSelected,
-              setIsOptionSelected = configuration.setSelected;
-          var origFilterPredicate = filterPredicateAspect.filterPredicate;
+          return success;
+        }
 
-          filterPredicateAspect.filterPredicate = function (wrap, text) {
-            return !wrap.isOptionSelected && origFilterPredicate(wrap, text);
-          };
+        var origCreateWrap = createWrapAspect.createWrap;
 
-          var origBuildChoice = buildChoiceAspect.buildChoice;
+        createWrapAspect.createWrap = function (option) {
+          var wrap = origCreateWrap(option);
+          wrap.isOptionSelected = getSelectedAspect.getSelected(option);
+          wrap.updateSelected = null; // can it be combined ?
 
-          buildChoiceAspect.buildChoice = function (wrap) {
-            origBuildChoice(wrap);
+          return wrap;
+        };
 
-            wrap.updateSelected = function () {
-              wrap.choice.choiceDomManagerHandlers.updateSelected();
-              onChangeAspect.onChange();
-            };
+        optionToggleAspect.toggle; // TODO: improve design, no replace
 
-            wrap.dispose = composeSync(function () {
-              wrap.updateSelected = null;
-            }, wrap.dispose);
-          }; // TODO: test this instead of wrap.updateSelected
-          // function updateSelected(wrap){
-          //     if (wrap.pick){
-          //         if (wrap.isOptionSelected)
-          //             pickHandlers.producePick();
-          //         else {
-          //             pickHandlers.removeAndDispose();
-          //             pickHandlers.removeAndDispose=null;
-          //         }
-          //     }
-          //     wrap.choice.choiceDomManagerHandlers.updateSelected();
-          //     onChangeAspect.onChange();
-          // }
+        optionToggleAspect.toggle = function (wrap) {
+          return trySetWrapSelected(wrap.option, composeUpdateSelected(wrap, !wrap.isOptionSelected), !wrap.isOptionSelected);
+        };
 
+        fullMatchAspect.fullMatch;
 
-          function composeUpdateSelected(wrap, booleanValue) {
-            return function () {
-              wrap.isOptionSelected = booleanValue;
-              wrap.updateSelected();
-            };
-          }
+        fullMatchAspect.fullMatch = function (wrap) {
+          return trySetWrapSelected(wrap.option, composeUpdateSelected(wrap, true), true);
+        };
 
-          function trySetWrapSelected(option, updateSelected, booleanValue) {
-            //  wrap.option
-            var success = false;
-            var confirmed = setIsOptionSelected(option, booleanValue);
+        removePickAspect.removePick; // TODO: improve design, no replace
 
-            if (!(confirmed === false)) {
-              updateSelected();
-              success = true;
-            }
+        removePickAspect.removePick = function (wrap, pick) {
+          // TODO: try remove pick
+          return trySetWrapSelected(wrap.option, composeUpdateSelected(wrap, false), false);
+        };
 
-            return success;
-          }
+        var origCreatePickHandlers = createPickHandlersAspect.createPickHandlers;
 
-          var origCreateWrap = createWrapAspect.createWrap;
-
-          createWrapAspect.createWrap = function (option) {
-            var wrap = origCreateWrap(option);
-            wrap.isOptionSelected = getIsOptionSelected(option);
-            wrap.updateSelected = null; // can it be combined ?
-
-            return wrap;
-          };
-
-          optionToggleAspect.toggle; // TODO: improve design, no replace
-
-          optionToggleAspect.toggle = function (wrap) {
-            return trySetWrapSelected(wrap.option, composeUpdateSelected(wrap, !wrap.isOptionSelected), !wrap.isOptionSelected);
-          };
-
-          fullMatchAspect.fullMatch;
-
-          fullMatchAspect.fullMatch = function (wrap) {
-            return trySetWrapSelected(wrap.option, composeUpdateSelected(wrap, true), true);
-          };
-
-          removePickAspect.removePick; // TODO: improve design, no replace
-
-          removePickAspect.removePick = function (wrap, pick) {
-            // TODO: try remove pick
-            return trySetWrapSelected(wrap.option, composeUpdateSelected(wrap, false), false);
-          };
-
-          var origCreatePickHandlers = createPickHandlersAspect.createPickHandlers;
-
-          createPickHandlersAspect.createPickHandlers = function (wrap) {
-            var pickHandlers = origCreatePickHandlers(wrap);
-            wrap.updateSelected = composeSync(function () {
-              if (wrap.isOptionSelected) {
-                var pick = pickHandlers.producePick();
-                wrap.pick = pick;
-                pick.dispose = composeSync(pick.dispose, function () {
-                  wrap.pick = null;
-                });
-              } else {
-                pickHandlers.removeAndDispose();
-                pickHandlers.removeAndDispose = null;
-              }
-            }, wrap.updateSelected);
-            addPickAspect.addPick(wrap, pickHandlers);
-            return pickHandlers;
-          };
-
-          var origAddPick = addPickAspect.addPick;
-
-          addPickAspect.addPick = function (wrap, pickHandlers) {
+        createPickHandlersAspect.createPickHandlers = function (wrap) {
+          var pickHandlers = origCreatePickHandlers(wrap);
+          wrap.updateSelected = composeSync(function () {
             if (wrap.isOptionSelected) {
-              var pick = origAddPick(wrap, pickHandlers);
+              var pick = pickHandlers.producePick();
               wrap.pick = pick;
               pick.dispose = composeSync(pick.dispose, function () {
                 wrap.pick = null;
               });
-              return pick;
+            } else {
+              pickHandlers.removeAndDispose();
+              pickHandlers.removeAndDispose = null;
             }
-          };
+          }, wrap.updateSelected);
+          addPickAspect.addPick(wrap, pickHandlers);
+          return pickHandlers;
+        };
 
-          return {
-            buildApi: function buildApi(api) {
-              api.selectAll = function () {
-                resetLayoutAspect.resetLayout(); // always hide 1st
+        var origAddPick = addPickAspect.addPick;
 
-                wrapsCollection.forLoop(function (wrap) {
-                  if (isChoiceSelectableAspect.isSelectable(wrap) && !wrap.isOptionSelected) trySetWrapSelected(wrap.option, composeUpdateSelected(wrap, true), true);
-                });
-              };
+        addPickAspect.addPick = function (wrap, pickHandlers) {
+          if (wrap.isOptionSelected) {
+            var pick = origAddPick(wrap, pickHandlers);
+            wrap.pick = pick;
+            pick.dispose = composeSync(pick.dispose, function () {
+              wrap.pick = null;
+            });
+            return pick;
+          }
+        };
 
-              api.deselectAll = function () {
-                resetLayoutAspect.resetLayout(); // always hide 1st
+        return {
+          buildApi: function buildApi(api) {
+            api.selectAll = function () {
+              resetLayoutAspect.resetLayout(); // always hide 1st
 
-                picksList.forEach(function (pick) {
-                  return pick.setSelectedFalse();
-                });
-              };
+              wrapsCollection.forLoop(function (wrap) {
+                if (isChoiceSelectableAspect.isSelectable(wrap) && !wrap.isOptionSelected) trySetWrapSelected(wrap.option, composeUpdateSelected(wrap, true), true);
+              });
+            };
 
-              api.setOptionSelected = function (key, value) {
-                var wrap = wrapsCollection.get(key);
-                return trySetWrapSelected(wrap.option, composeUpdateSelected(wrap, value), value);
-              }; // used in FormRestoreOnBackwardPlugin
+            api.deselectAll = function () {
+              resetLayoutAspect.resetLayout(); // always hide 1st
+
+              picksList.forEach(function (pick) {
+                return pick.setSelectedFalse();
+              });
+            };
+
+            api.setOptionSelected = function (key, value) {
+              var wrap = wrapsCollection.get(key);
+              return trySetWrapSelected(wrap.option, composeUpdateSelected(wrap, value), value);
+            }; // used in FormRestoreOnBackwardPlugin
 
 
-              api.updateOptionsSelected = function () {
-                return updateOptionsSelectedAspect.updateOptionsSelected();
-              };
+            api.updateOptionsSelected = function () {
+              return updateOptionsSelectedAspect.updateOptionsSelected();
+            };
 
-              api.updateOptionSelected = function (key) {
-                return updateChoiceSelected(wrapsCollection.get(key), getIsOptionSelected);
-              };
-            }
-          };
-        }
-      };
-    }
+            api.updateOptionSelected = function (key) {
+              return updateChoiceSelected(wrapsCollection.get(key), getSelectedAspect);
+            };
+          }
+        };
+      }
+    };
   };
 }
 
-function UpdateOptionsSelectedAspect(wrapsCollection, getIsOptionSelected) {
+function UpdateOptionsSelectedAspect(wrapsCollection, getSelectedAspect) {
   return {
     updateOptionsSelected: function updateOptionsSelected() {
       wrapsCollection.forLoop(function (wrap) {
-        return updateChoiceSelected(wrap, getIsOptionSelected);
+        return updateChoiceSelected(wrap, getSelectedAspect);
       });
     }
   };
 }
 
-function updateChoiceSelected(wrap, getIsOptionSelected) {
-  var newIsSelected = getIsOptionSelected(wrap.option);
+function updateChoiceSelected(wrap, getSelectedAspect) {
+  var newIsSelected = getSelectedAspect.getSelected(wrap.option);
 
   if (newIsSelected != wrap.isOptionSelected) {
     wrap.isOptionSelected = newIsSelected;
@@ -4183,123 +4263,126 @@ function updateChoiceSelected(wrap, getIsOptionSelected) {
 
 function DisabledOptionPlugin() {
   return {
-    buildAspects: function buildAspects(aspects, configuration) {
-      return {
-        layout: function layout() {
-          var isChoiceSelectableAspect = aspects.isChoiceSelectableAspect,
-              createWrapAspect = aspects.createWrapAspect,
-              buildChoiceAspect = aspects.buildChoiceAspect,
-              filterPredicateAspect = aspects.filterPredicateAspect,
-              wrapsCollection = aspects.wrapsCollection,
-              optionToggleAspect = aspects.optionToggleAspect,
-              buildPickAspect = aspects.buildPickAspect;
-          var getIsOptionDisabled = configuration.getIsOptionDisabled,
-              options = configuration.options;
+    plug: plug$c
+  };
+}
+function plug$c(configuration) {
+  return function (aspects) {
+    return {
+      layout: function layout() {
+        var isChoiceSelectableAspect = aspects.isChoiceSelectableAspect,
+            createWrapAspect = aspects.createWrapAspect,
+            buildChoiceAspect = aspects.buildChoiceAspect,
+            filterPredicateAspect = aspects.filterPredicateAspect,
+            wrapsCollection = aspects.wrapsCollection,
+            optionToggleAspect = aspects.optionToggleAspect,
+            buildPickAspect = aspects.buildPickAspect;
+        var getIsOptionDisabled = configuration.getIsOptionDisabled,
+            options = configuration.options;
 
-          if (options) {
-            if (!getIsOptionDisabled) getIsOptionDisabled = function getIsOptionDisabled(option) {
-              return option.disabled === undefined ? false : option.disabled;
-            };
+        if (options) {
+          if (!getIsOptionDisabled) getIsOptionDisabled = function getIsOptionDisabled(option) {
+            return option.disabled === undefined ? false : option.disabled;
+          };
+        } else {
+          // selectElement
+          if (!getIsOptionDisabled) getIsOptionDisabled = function getIsOptionDisabled(option) {
+            return option.disabled;
+          };
+        } // TODO check this instead of wrap.updateDisabled
+        // function updateDisabled(wrap){
+        //     wrap?.choice?.choiceDomManagerHandlers?.updateDisabled?.();
+        //     wrap?.pick?.pickDomManagerHandlers?.updateDisabled?.();
+        // }
+
+
+        var origCreateWrap = createWrapAspect.createWrap;
+
+        createWrapAspect.createWrap = function (option) {
+          var wrap = origCreateWrap(option);
+          wrap.isOptionDisabled = getIsOptionDisabled(option); // TODO: remove usage wrap.isOptionDisabled
+
+          wrap.updateDisabled = null;
+          return wrap;
+        };
+
+        var origToggle = optionToggleAspect.toggle;
+
+        optionToggleAspect.toggle = function (wrap) {
+          var success = false;
+
+          if (wrap.isOptionSelected !== undefined) {
+            if (wrap.isOptionSelected || !wrap.isOptionDisabled) // TODO: declare dependency on SelectedOptionPlugin
+              success = origToggle(wrap);
           } else {
-            // selectElement
-            if (!getIsOptionDisabled) getIsOptionDisabled = function getIsOptionDisabled(option) {
-              return option.disabled;
-            };
-          } // TODO check this instead of wrap.updateDisabled
-          // function updateDisabled(wrap){
-          //     wrap?.choice?.choiceDomManagerHandlers?.updateDisabled?.();
-          //     wrap?.pick?.pickDomManagerHandlers?.updateDisabled?.();
-          // }
+            if (!wrap.isOptionDisabled) {
+              success = origToggle(wrap);
+            }
+          }
 
+          return success;
+        };
 
-          var origCreateWrap = createWrapAspect.createWrap;
+        var origIsSelectable = isChoiceSelectableAspect.isSelectable;
 
-          createWrapAspect.createWrap = function (option) {
-            var wrap = origCreateWrap(option);
-            wrap.isOptionDisabled = getIsOptionDisabled(option); // TODO: remove usage wrap.isOptionDisabled
+        isChoiceSelectableAspect.isSelectable = function (wrap) {
+          return origIsSelectable(wrap) && !wrap.isOptionDisabled;
+        };
 
+        var origFilterPredicate = filterPredicateAspect.filterPredicate;
+
+        filterPredicateAspect.filterPredicate = function (wrap, text) {
+          return !wrap.isOptionDisabled && origFilterPredicate(wrap, text);
+        };
+
+        var origBuildChoice = buildChoiceAspect.buildChoice;
+
+        buildChoiceAspect.buildChoice = function (wrap) {
+          origBuildChoice(wrap);
+          wrap.updateDisabled = wrap.choice.choiceDomManagerHandlers.updateDisabled;
+          wrap.choice.dispose = composeSync(function () {
             wrap.updateDisabled = null;
-            return wrap;
+          }, wrap.choice.dispose);
+        };
+
+        var origBuildPick = buildPickAspect.buildPick;
+
+        buildPickAspect.buildPick = function (wrap, removeOnButton) {
+          var pick = origBuildPick(wrap, removeOnButton);
+
+          pick.updateDisabled = function () {
+            return pick.pickDomManagerHandlers.updateDisabled();
           };
 
-          var origToggle = optionToggleAspect.toggle;
+          pick.dispose = composeSync(pick.dispose, function () {
+            pick.updateDisabled = null;
+          });
+          var choiceUpdateDisabledBackup = wrap.updateDisabled;
+          wrap.updateDisabled = composeSync(choiceUpdateDisabledBackup, pick.updateDisabled); // add pickDisabled
 
-          optionToggleAspect.toggle = function (wrap) {
-            var success = false;
+          pick.dispose = composeSync(pick.dispose, function () {
+            wrap.updateDisabled = choiceUpdateDisabledBackup; // remove pickDisabled
 
-            if (wrap.isOptionSelected !== undefined) {
-              if (wrap.isOptionSelected || !wrap.isOptionDisabled) // TODO: declare dependency on SelectedOptionPlugin
-                success = origToggle(wrap);
-            } else {
-              if (!wrap.isOptionDisabled) {
-                success = origToggle(wrap);
-              }
-            }
+            wrap.updateDisabled(); // make "true disabled" without it checkbox only looks disabled
+          });
+          return pick;
+        };
 
-            return success;
-          };
-
-          var origIsSelectable = isChoiceSelectableAspect.isSelectable;
-
-          isChoiceSelectableAspect.isSelectable = function (wrap) {
-            return origIsSelectable(wrap) && !wrap.isOptionDisabled;
-          };
-
-          var origFilterPredicate = filterPredicateAspect.filterPredicate;
-
-          filterPredicateAspect.filterPredicate = function (wrap, text) {
-            return !wrap.isOptionDisabled && origFilterPredicate(wrap, text);
-          };
-
-          var origBuildChoice = buildChoiceAspect.buildChoice;
-
-          buildChoiceAspect.buildChoice = function (wrap) {
-            origBuildChoice(wrap);
-            wrap.updateDisabled = wrap.choice.choiceDomManagerHandlers.updateDisabled;
-            wrap.choice.dispose = composeSync(function () {
-              wrap.updateDisabled = null;
-            }, wrap.choice.dispose);
-          };
-
-          var origBuildPick = buildPickAspect.buildPick;
-
-          buildPickAspect.buildPick = function (wrap, removeOnButton) {
-            var pick = origBuildPick(wrap, removeOnButton);
-
-            pick.updateDisabled = function () {
-              return pick.pickDomManagerHandlers.updateDisabled();
+        return {
+          buildApi: function buildApi(api) {
+            api.updateOptionsDisabled = function () {
+              return wrapsCollection.forLoop(function (wrap) {
+                return updateChoiceDisabled(wrap, getIsOptionDisabled);
+              });
             };
 
-            pick.dispose = composeSync(pick.dispose, function () {
-              pick.updateDisabled = null;
-            });
-            var choiceUpdateDisabledBackup = wrap.updateDisabled;
-            wrap.updateDisabled = composeSync(choiceUpdateDisabledBackup, pick.updateDisabled); // add pickDisabled
-
-            pick.dispose = composeSync(pick.dispose, function () {
-              wrap.updateDisabled = choiceUpdateDisabledBackup; // remove pickDisabled
-
-              wrap.updateDisabled(); // make "true disabled" without it checkbox only looks disabled
-            });
-            return pick;
-          };
-
-          return {
-            buildApi: function buildApi(api) {
-              api.updateOptionsDisabled = function () {
-                return wrapsCollection.forLoop(function (wrap) {
-                  return updateChoiceDisabled(wrap, getIsOptionDisabled);
-                });
-              };
-
-              api.updateOptionDisabled = function (key) {
-                return updateChoiceDisabled(wrapsCollection.get(key), getIsOptionDisabled);
-              };
-            }
-          };
-        }
-      };
-    }
+            api.updateOptionDisabled = function (key) {
+              return updateChoiceDisabled(wrapsCollection.get(key), getIsOptionDisabled);
+            };
+          }
+        };
+      }
+    };
   };
 }
 
@@ -4314,197 +4397,206 @@ function updateChoiceDisabled(wrap, getIsOptionDisabled) {
 
 function PicksApiPlugin() {
   return {
-    buildAspects: function buildAspects(aspects) {
-      return {
-        layout: function layout() {
-          var picksList = aspects.picksList,
-              createWrapAspect = aspects.createWrapAspect,
-              createPickHandlersAspect = aspects.createPickHandlersAspect,
-              addPickAspect = aspects.addPickAspect;
-          return {
-            buildApi: function buildApi(api) {
-              api.forEachPeak = function (f) {
-                return picksList.forEach(function (wrap) {
-                  return f(wrap.option);
-                });
-              }; // TODO: getHeadPeak
+    plug: plug$b
+  };
+}
+function plug$b() {
+  return function (aspects) {
+    return {
+      layout: function layout() {
+        var picksList = aspects.picksList,
+            createWrapAspect = aspects.createWrapAspect,
+            createPickHandlersAspect = aspects.createPickHandlersAspect,
+            addPickAspect = aspects.addPickAspect;
+        return {
+          buildApi: function buildApi(api) {
+            api.forEachPeak = function (f) {
+              return picksList.forEach(function (wrap) {
+                return f(wrap.option);
+              });
+            }; // TODO: getHeadPeak
 
 
-              api.getTailPeak = function () {
-                var _picksList$getTail;
+            api.getTailPeak = function () {
+              var _picksList$getTail;
 
-                return (_picksList$getTail = picksList.getTail()) == null ? void 0 : _picksList$getTail.option;
-              };
+              return (_picksList$getTail = picksList.getTail()) == null ? void 0 : _picksList$getTail.option;
+            };
 
-              api.countPeaks = function () {
-                return picksList.getCount();
-              };
+            api.countPeaks = function () {
+              return picksList.getCount();
+            };
 
-              api.isEmptyPeaks = function () {
-                return picksList.isEmpty();
-              };
+            api.isEmptyPeaks = function () {
+              return picksList.isEmpty();
+            };
 
-              api.addPick = function (option) {
-                var wrap = createWrapAspect.createWrap(option); // TODO should be moved to specific plugins
+            api.addPick = function (option) {
+              var wrap = createWrapAspect.createWrap(option); // TODO should be moved to specific plugins
 
-                wrap.updateDisabled = function () {};
+              wrap.updateDisabled = function () {};
 
-                wrap.updateHidden = function () {};
+              wrap.updateHidden = function () {};
 
-                var pickHandlers = createPickHandlersAspect.createPickHandlers(wrap);
-                addPickAspect.addPick(wrap, pickHandlers);
-              };
-            }
-          };
-        }
-      };
-    }
+              var pickHandlers = createPickHandlersAspect.createPickHandlers(wrap);
+              addPickAspect.addPick(wrap, pickHandlers);
+            };
+          }
+        };
+      }
+    };
   };
 }
 
 function PicksPlugin() {
   return {
-    buildAspects: function buildAspects(aspects, configuration) {
-      return {
-        plugStaticDom: function plugStaticDom() {
-          var configuration = aspects.configuration,
-              picksList = aspects.picksList;
-          var picks = configuration.picks;
+    plug: plug$a
+  };
+}
+function plug$a(configuration) {
+  return function (aspects) {
+    return {
+      plugStaticDom: function plugStaticDom() {
+        var configuration = aspects.configuration,
+            picksList = aspects.picksList;
+        var picks = configuration.picks;
 
-          if (picks) {
-            var origAdd = picksList.add,
-                origReset = picksList.reset;
+        if (picks) {
+          var origAdd = picksList.add,
+              origReset = picksList.reset;
 
-            picksList.add = function (e) {
-              var _origAdd = origAdd(e),
-                  remove = _origAdd.remove,
-                  index = _origAdd.index;
+          picksList.add = function (e) {
+            var _origAdd = origAdd(e),
+                remove = _origAdd.remove,
+                index = _origAdd.index;
 
-              picks.push(e);
-              return {
-                remove: composeSync(remove, function () {
-                  return void picks.splice(index(), 1);
-                }),
-                index: index
-              };
+            picks.push(e);
+            return {
+              remove: composeSync(remove, function () {
+                return void picks.splice(index(), 1);
+              }),
+              index: index
             };
+          };
 
-            picksList.reset = function () {
-              origReset();
-              picks.length = 0;
-            };
-          }
-        },
-        layout: function layout() {
-          aspects.inputAspect;
-              aspects.filterDom;
-              aspects.filterManagerAspect;
-          configuration.picks;
-              configuration.addOptionPicked;
-          /*
-          if (!addOptionPicked){
-              addOptionPicked = (option, index, value) => {
-                  if (value)
-                      picks.push(option);
-                  else
-                      picks.splice(index, 1);
-                  return true;
-              };
-          }
-                            function trySetWrapSelected(option, updateSelected, booleanValue){
-              let success = false;
-              var confirmed = setIsOptionSelected(option, booleanValue);
-              if (!(confirmed===false)) {
-                  updateSelected();
-                  success = true;
-              }
-              return success;
-          }
-                            let origProcessInput = inputAspect.processInput;
-          inputAspect.processInput = () => {
-              let origResult = origProcessInput();
-              if (!origResult.isEmpty)
-              {
-                  if ( filterManagerAspect.getNavigateManager().getCount() == 1)
-                  {
-                      // todo: move exact match to filterManager
-                      let fullMatchWrap =  filterManagerAspect.getNavigateManager().getHead();
-                      let text = filterManagerAspect.getFilter();
-                      if (fullMatchWrap.choice.searchText == text)
-                      {
-                          let success = trySetWrapSelected(fullMatchWrap, true);
-                          if (success) {
-                              filterDom.setEmpty();
-                              origResult.isEmpty = true;
-                          }
-                      }
-                  }
-              }
-              return origResult;
-          }*/
+          picksList.reset = function () {
+            origReset();
+            picks.length = 0;
+          };
         }
-      };
-    }
+      },
+      layout: function layout() {
+        aspects.inputAspect;
+            aspects.filterDom;
+            aspects.filterManagerAspect;
+        configuration.picks;
+            configuration.addOptionPicked;
+        /*
+        if (!addOptionPicked){
+            addOptionPicked = (option, index, value) => {
+                if (value)
+                    picks.push(option);
+                else
+                    picks.splice(index, 1);
+                return true;
+            };
+        }
+                      function trySetWrapSelected(option, updateSelected, booleanValue){
+            let success = false;
+            var confirmed = setIsOptionSelected(option, booleanValue);
+            if (!(confirmed===false)) {
+                updateSelected();
+                success = true;
+            }
+            return success;
+        }
+                      let origProcessInput = inputAspect.processInput;
+        inputAspect.processInput = () => {
+            let origResult = origProcessInput();
+            if (!origResult.isEmpty)
+            {
+                if ( filterManagerAspect.getNavigateManager().getCount() == 1)
+                {
+                    // todo: move exact match to filterManager
+                    let fullMatchWrap =  filterManagerAspect.getNavigateManager().getHead();
+                    let text = filterManagerAspect.getFilter();
+                    if (fullMatchWrap.choice.searchText == text)
+                    {
+                        let success = trySetWrapSelected(fullMatchWrap, true);
+                        if (success) {
+                            filterDom.setEmpty();
+                            origResult.isEmpty = true;
+                        }
+                    }
+                }
+            }
+            return origResult;
+        }*/
+      }
+    };
   };
 }
 
 function CreatePopperPlugin() {
   return {
-    buildAspects: function buildAspects(aspects) {
-      return {
-        plugStaticDom: function plugStaticDom() {
-          var environment = aspects.environment;
-          var popperRtlAspect = PopperRtlAspect();
-          aspects.popperRtlAspect = popperRtlAspect;
-          var createPopper = environment.createPopper,
-              Popper = environment.Popper,
-              globalPopper = environment.globalPopper;
-          var createModifiersVX = null;
-          var createPopperVX = null;
+    plug: plug$9
+  };
+}
+function plug$9() {
+  return function (aspects) {
+    return {
+      plugStaticDom: function plugStaticDom() {
+        var environment = aspects.environment;
+        var popperRtlAspect = PopperRtlAspect();
+        aspects.popperRtlAspect = popperRtlAspect;
+        var createPopper = environment.createPopper,
+            Popper = environment.Popper,
+            globalPopper = environment.globalPopper;
+        var createModifiersVX = null;
+        var createPopperVX = null;
 
-          if (Popper) {
-            // V2
+        if (Popper) {
+          // V2
+          createPopperVX = createPopper = function (createPopperConstructor) {
+            return function (anchorElement, element, popperConfiguration) {
+              return new createPopperConstructor(anchorElement, element, popperConfiguration);
+            };
+          }(Popper);
+          createModifiersVX = CreateModifiersV1;
+        } else if (createPopper) {
+          createPopperVX = createPopper;
+          createModifiersVX = CreateModifiersV2;
+        } else if (globalPopper) {
+          if (globalPopper.createPopper) {
+            createPopperVX = globalPopper.createPopper;
+            createModifiersVX = CreateModifiersV2;
+          } else {
             createPopperVX = createPopper = function (createPopperConstructor) {
               return function (anchorElement, element, popperConfiguration) {
                 return new createPopperConstructor(anchorElement, element, popperConfiguration);
               };
-            }(Popper);
+            }(globalPopper);
+
             createModifiersVX = CreateModifiersV1;
-          } else if (createPopper) {
-            createPopperVX = createPopper;
-            createModifiersVX = CreateModifiersV2;
-          } else if (globalPopper) {
-            if (globalPopper.createPopper) {
-              createPopperVX = globalPopper.createPopper;
-              createModifiersVX = CreateModifiersV2;
-            } else {
-              createPopperVX = createPopper = function (createPopperConstructor) {
-                return function (anchorElement, element, popperConfiguration) {
-                  return new createPopperConstructor(anchorElement, element, popperConfiguration);
-                };
-              }(globalPopper);
-
-              createModifiersVX = CreateModifiersV1;
-            }
-          } else {
-            throw new Error("BsMultiSelect: Popper component (https://popper.js.org) is required");
           }
-
-          var createPopperConfigurationAspect = CreatePopperConfigurationAspect(createModifiersVX);
-          aspects.createPopperAspect = CreatePopperAspect(createPopperVX, popperRtlAspect, createPopperConfigurationAspect);
-        },
-        attach: function attach() {
-          var createPopperAspect = aspects.createPopperAspect,
-              filterDom = aspects.filterDom,
-              choicesDom = aspects.choicesDom,
-              disposeAspect = aspects.disposeAspect,
-              staticManager = aspects.staticManager,
-              choicesVisibilityAspect = aspects.choicesVisibilityAspect,
-              specialPicksEventsAspect = aspects.specialPicksEventsAspect;
-          CreatePopper_ConstrunctorAspect(createPopperAspect, filterDom, choicesDom, disposeAspect, staticManager, choicesVisibilityAspect, specialPicksEventsAspect);
+        } else {
+          throw new Error("BsMultiSelect: Popper component (https://popper.js.org) is required");
         }
-      };
-    }
+
+        var createPopperConfigurationAspect = CreatePopperConfigurationAspect(createModifiersVX);
+        aspects.createPopperAspect = CreatePopperAspect(createPopperVX, popperRtlAspect, createPopperConfigurationAspect);
+      },
+      attach: function attach() {
+        var createPopperAspect = aspects.createPopperAspect,
+            filterDom = aspects.filterDom,
+            choicesDom = aspects.choicesDom,
+            disposeAspect = aspects.disposeAspect,
+            staticManager = aspects.staticManager,
+            choicesVisibilityAspect = aspects.choicesVisibilityAspect,
+            specialPicksEventsAspect = aspects.specialPicksEventsAspect;
+        CreatePopper_ConstrunctorAspect(createPopperAspect, filterDom, choicesDom, disposeAspect, staticManager, choicesVisibilityAspect, specialPicksEventsAspect);
+      }
+    };
   };
 }
 
@@ -4649,32 +4741,35 @@ function ChoicesDynamicStylingPlugin(defaults) {
   defaults.choicesDynamicStyling = choicesDynamicStyling;
   defaults.minimalChoicesDynamicStylingMaxHeight = 20;
   return {
-    buildAspects: function buildAspects(aspects, configuration) {
-      return {
-        layout: function layout() {
-          var choicesDynamicStyling = configuration.choicesDynamicStyling,
-              useChoicesDynamicStyling = configuration.useChoicesDynamicStyling;
+    plug: plug$8
+  };
+}
+function plug$8(configuration) {
+  return function (aspects) {
+    return {
+      layout: function layout() {
+        var choicesDynamicStyling = configuration.choicesDynamicStyling,
+            useChoicesDynamicStyling = configuration.useChoicesDynamicStyling;
 
-          if (useChoicesDynamicStyling) {
-            var choicesVisibilityAspect = aspects.choicesVisibilityAspect,
-                specialPicksEventsAspect = aspects.specialPicksEventsAspect;
-            var origSetChoicesVisible = choicesVisibilityAspect.setChoicesVisible;
+        if (useChoicesDynamicStyling) {
+          var choicesVisibilityAspect = aspects.choicesVisibilityAspect,
+              specialPicksEventsAspect = aspects.specialPicksEventsAspect;
+          var origSetChoicesVisible = choicesVisibilityAspect.setChoicesVisible;
 
-            choicesVisibilityAspect.setChoicesVisible = function (visible) {
-              if (visible) choicesDynamicStyling(aspects);
-              origSetChoicesVisible(visible);
-            };
+          choicesVisibilityAspect.setChoicesVisible = function (visible) {
+            if (visible) choicesDynamicStyling(aspects);
+            origSetChoicesVisible(visible);
+          };
 
-            var origBackSpace = specialPicksEventsAspect.backSpace;
+          var origBackSpace = specialPicksEventsAspect.backSpace;
 
-            specialPicksEventsAspect.backSpace = function (pick) {
-              origBackSpace(pick);
-              choicesDynamicStyling(aspects);
-            };
-          }
+          specialPicksEventsAspect.backSpace = function (pick) {
+            origBackSpace(pick);
+            choicesDynamicStyling(aspects);
+          };
         }
-      };
-    }
+      }
+    };
   };
 }
 
@@ -4717,62 +4812,93 @@ function choicesDynamicStyling(aspects) {
 function HighlightPlugin(defaults) {
   defaults.useHighlighting = false;
   return {
-    buildAspects: function buildAspects(aspects, configuration) {
-      return {
-        plugStaticDom: function plugStaticDom() {
-          if (configuration.useHighlighting) aspects.highlightAspect = HighlightAspect();
-        },
-        plugStaticDomFactories: function plugStaticDomFactories() {
-          var choiceDomFactory = aspects.choiceDomFactory,
-              optionPropertiesAspect = aspects.optionPropertiesAspect;
-          var origCreateChoiceDomFactory = choiceDomFactory.create;
+    plug: plug$7
+  };
+}
+function plug$7(configuration) {
+  return function (aspects) {
+    return {
+      plugStaticDom: function plugStaticDom() {
+        if (configuration.useHighlighting) aspects.highlightAspect = HighlightAspect();
+      },
+      plugStaticDomFactories: function plugStaticDomFactories() {
+        var choiceDomFactory = aspects.choiceDomFactory,
+            optionPropertiesAspect = aspects.optionPropertiesAspect;
+        var origCreateChoiceDomFactory = choiceDomFactory.create;
 
-          choiceDomFactory.create = function (choiceElement, wrap, toggle) {
-            var value = origCreateChoiceDomFactory(choiceElement, wrap, toggle);
+        choiceDomFactory.create = function (choiceElement, wrap, toggle) {
+          var value = origCreateChoiceDomFactory(choiceElement, wrap, toggle);
 
-            value.choiceDomManagerHandlers.updateHighlighted = function () {
-              var text = optionPropertiesAspect.getText(wrap.option);
-              var highlighter = aspects.highlightAspect.getHighlighter();
-              if (highlighter) highlighter(choiceElement, value.choiceDom, text);else choiceElement.textContent = text;
-            };
-
-            return value;
+          value.choiceDomManagerHandlers.updateHighlighted = function () {
+            var text = optionPropertiesAspect.getText(wrap.option);
+            var highlighter = aspects.highlightAspect.getHighlighter();
+            if (highlighter) highlighter(choiceElement, value.choiceDom, text);else choiceElement.textContent = text;
           };
-        },
-        layout: function layout() {
-          var highlightAspect = aspects.highlightAspect,
-              filterManagerAspect = aspects.filterManagerAspect,
-              buildChoiceAspect = aspects.buildChoiceAspect;
 
-          if (highlightAspect) {
-            var origProcessEmptyInput = filterManagerAspect.processEmptyInput;
+          return value;
+        };
+      },
+      layout: function layout() {
+        var highlightAspect = aspects.highlightAspect,
+            filterManagerAspect = aspects.filterManagerAspect,
+            buildChoiceAspect = aspects.buildChoiceAspect;
 
-            filterManagerAspect.processEmptyInput = function () {
-              highlightAspect.reset();
-              origProcessEmptyInput();
+        if (highlightAspect) {
+          var origProcessEmptyInput = filterManagerAspect.processEmptyInput;
+
+          filterManagerAspect.processEmptyInput = function () {
+            highlightAspect.reset();
+            origProcessEmptyInput();
+          };
+
+          var origSetFilter = filterManagerAspect.setFilter;
+
+          filterManagerAspect.setFilter = function (text) {
+            highlightAspect.set(text);
+            origSetFilter(text);
+          };
+
+          var origBuildChoice = buildChoiceAspect.buildChoice;
+
+          buildChoiceAspect.buildChoice = function (wrap) {
+            origBuildChoice(wrap);
+            var origSetVisible = wrap.choice.setVisible;
+
+            wrap.choice.setVisible = function (v) {
+              origSetVisible(v);
+              wrap.choice.choiceDomManagerHandlers.updateHighlighted();
             };
-
-            var origSetFilter = filterManagerAspect.setFilter;
-
-            filterManagerAspect.setFilter = function (text) {
-              highlightAspect.set(text);
-              origSetFilter(text);
-            };
-
-            var origBuildChoice = buildChoiceAspect.buildChoice;
-
-            buildChoiceAspect.buildChoice = function (wrap) {
-              origBuildChoice(wrap);
-              var origSetVisible = wrap.choice.setVisible;
-
-              wrap.choice.setVisible = function (v) {
-                origSetVisible(v);
-                wrap.choice.choiceDomManagerHandlers.updateHighlighted();
-              };
-            };
-          }
+          };
         }
+      }
+    };
+  };
+}
+
+function HighlightAspect() {
+  var highlighter = null;
+  return {
+    getHighlighter: function getHighlighter() {
+      return highlighter;
+    },
+    set: function set(filter) {
+      var guarded = filter.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      var regex = new RegExp("(" + guarded + ")", "gi");
+
+      highlighter = function highlighter(e, choiceDom, text) {
+        // TODO replace with
+        // var pos = text.indexOf(filter);
+        e.innerHTML = text.replace(regex, "<u>$1</u>"); // TODO to method
+        // var nodes = e.querySelectorAll('u');
+        // var array = Array.prototype.slice.call(nodes);
+        // if (choiceDom.highlightedElements)
+        //     choiceDom.highlightedElements.concat(array);
+        // else
+        //     choiceDom.highlightedElements = array;
       };
+    },
+    reset: function reset() {
+      highlighter = null;
     }
   };
 }
@@ -4780,16 +4906,22 @@ function HighlightPlugin(defaults) {
 function CustomChoiceStylingsPlugin(defaults) {
   defaults.customChoiceStylings = null;
   return {
-    buildAspects: function buildAspects(aspects, configuration) {
-      return {
-        plugStaticDom: function plugStaticDom() {
-          var choiceDomFactory = aspects.choiceDomFactory;
-          var customChoiceStylings = configuration.customChoiceStylings;
+    plug: plug$6
+  };
+}
+function plug$6(configuration) {
+  return function (aspects) {
+    return {
+      plugStaticDom: function plugStaticDom() {
+        var choiceDomFactory = aspects.choiceDomFactory;
+        var customChoiceStylings = configuration.customChoiceStylings;
+
+        if (customChoiceStylings) {
           var customChoiceStylingsAspect = CustomChoiceStylingsAspect(customChoiceStylings);
           ExtendChoiceDomFactory(choiceDomFactory, customChoiceStylingsAspect);
         }
-      };
-    }
+      }
+    };
   };
 }
 
@@ -4806,26 +4938,24 @@ function ExtendChoiceDomFactory(choiceDomFactory, customChoiceStylingsAspect) {
 function CustomChoiceStylingsAspect(customChoiceStylings) {
   return {
     customize: function customize(wrap, choiceDom, choiceDomManagerHandlers) {
-      if (customChoiceStylings) {
-        var handlers = customChoiceStylings(choiceDom, wrap.option);
+      var handlers = customChoiceStylings(choiceDom, wrap.option);
 
-        if (handlers) {
-          var customChoiceStylingsClosure = function customChoiceStylingsClosure(custom) {
-            return function () {
-              custom({
-                isOptionSelected: wrap.isOptionSelected,
-                isOptionDisabled: wrap.isOptionDisabled,
-                isHoverIn: wrap.choice.isHoverIn //isHighlighted: wrap.choice.isHighlighted  // TODO isHighlighted should be developed
+      if (handlers) {
+        var customChoiceStylingsClosure = function customChoiceStylingsClosure(custom) {
+          return function () {
+            custom({
+              isOptionSelected: wrap.isOptionSelected,
+              isOptionDisabled: wrap.isOptionDisabled,
+              isHoverIn: wrap.choice.isHoverIn //isHighlighted: wrap.choice.isHighlighted  // TODO isHighlighted should be developed
 
-              });
-            };
+            });
           };
+        };
 
-          if (choiceDomManagerHandlers.updateHoverIn && handlers.updateHoverIn) choiceDomManagerHandlers.updateHoverIn = composeSync(choiceDomManagerHandlers.updateHoverIn, customChoiceStylingsClosure(handlers.updateHoverIn));
-          if (choiceDomManagerHandlers.updateSelected && handlers.updateSelected) choiceDomManagerHandlers.updateSelected = composeSync(choiceDomManagerHandlers.updateSelected, customChoiceStylingsClosure(handlers.updateSelected));
-          if (choiceDomManagerHandlers.updateDisabled && handlers.updateDisabled) choiceDomManagerHandlers.updateDisabled = composeSync(choiceDomManagerHandlers.updateDisabled, customChoiceStylingsClosure(handlers.updateDisabled));
-          if (choiceDomManagerHandlers.updateHighlighted && handlers.updateHighlighted) choiceDomManagerHandlers.updateHighlighted = composeSync(choiceDomManagerHandlers.updateHighlighted, customChoiceStylingsClosure(handlers.updateHighlighted));
-        }
+        if (choiceDomManagerHandlers.updateHoverIn && handlers.updateHoverIn) choiceDomManagerHandlers.updateHoverIn = composeSync(choiceDomManagerHandlers.updateHoverIn, customChoiceStylingsClosure(handlers.updateHoverIn));
+        if (choiceDomManagerHandlers.updateSelected && handlers.updateSelected) choiceDomManagerHandlers.updateSelected = composeSync(choiceDomManagerHandlers.updateSelected, customChoiceStylingsClosure(handlers.updateSelected));
+        if (choiceDomManagerHandlers.updateDisabled && handlers.updateDisabled) choiceDomManagerHandlers.updateDisabled = composeSync(choiceDomManagerHandlers.updateDisabled, customChoiceStylingsClosure(handlers.updateDisabled));
+        if (choiceDomManagerHandlers.updateHighlighted && handlers.updateHighlighted) choiceDomManagerHandlers.updateHighlighted = composeSync(choiceDomManagerHandlers.updateHighlighted, customChoiceStylingsClosure(handlers.updateHighlighted));
       }
     }
   };
@@ -4834,17 +4964,20 @@ function CustomChoiceStylingsAspect(customChoiceStylings) {
 function CustomPickStylingsPlugin(defaults) {
   defaults.customPickStylings = null;
   return {
-    buildAspects: function buildAspects(aspects, configuration) {
-      return {
-        plugStaticDom: function plugStaticDom() {
-          var componentPropertiesAspect = aspects.componentPropertiesAspect,
-              pickDomFactory = aspects.pickDomFactory;
-          var customPickStylings = configuration.customPickStylings;
-          var customPickStylingsAspect = CustomPickStylingsAspect(componentPropertiesAspect, customPickStylings);
-          ExtendPickDomFactory(pickDomFactory, customPickStylingsAspect);
-        }
-      };
-    }
+    plug: plug$5
+  };
+}
+function plug$5(configuration) {
+  return function (aspects) {
+    return {
+      plugStaticDom: function plugStaticDom() {
+        var componentPropertiesAspect = aspects.componentPropertiesAspect,
+            pickDomFactory = aspects.pickDomFactory;
+        var customPickStylings = configuration.customPickStylings;
+        var customPickStylingsAspect = CustomPickStylingsAspect(componentPropertiesAspect, customPickStylings);
+        ExtendPickDomFactory(pickDomFactory, customPickStylingsAspect);
+      }
+    };
   };
 }
 
@@ -4884,45 +5017,36 @@ function CustomPickStylingsAspect(componentPropertiesAspect, customPickStylings)
 
 function UpdateAppearancePlugin() {
   return {
-    buildAspects: function buildAspects(aspects) {
-      return {
-        layout: function layout() {
-          var updateAppearanceAspect = aspects.updateAppearanceAspect,
-              updateAspect = aspects.updateAspect,
-              loadAspect = aspects.loadAspect;
-          updateAspect.update = composeSync(updateAspect.update, function () {
-            return updateAppearanceAspect.updateAppearance();
-          });
-          loadAspect.load = composeSync(loadAspect.load, function () {
-            return updateAppearanceAspect.updateAppearance();
-          });
-          return {
-            buildApi: function buildApi(api) {
-              api.updateAppearance = function () {
-                return updateAppearanceAspect.updateAppearance();
-              };
-            }
-          };
-        },
-        plugStaticDom: function plugStaticDom() {
-          aspects.updateAppearanceAspect = UpdateAppearanceAspect();
-        }
-      };
-    }
+    plug: plug$4
   };
-} // export function UpdateAppearancePlugin(aspects){
-//     var {updateAppearanceAspect, updateAspect, loadAspect} = aspects;
-//     updateAspect.update = composeSync(updateAspect.update, ()=>updateAppearanceAspect.updateAppearance())
-//     loadAspect.load = composeSync(loadAspect.load, ()=>updateAppearanceAspect.updateAppearance())
-//     return{
-//         buildApi(api){
-//             api.updateAppearance = ()=>updateAppearanceAspect.updateAppearance();
-//         }
-//     }
-// }
-// UpdateAppearancePlugin.plugStaticDom = (aspects) => {
-//     aspects.updateAppearanceAspect = UpdateAppearanceAspect();
-// }
+}
+function plug$4() {
+  return function (aspects) {
+    return {
+      layout: function layout() {
+        var updateAppearanceAspect = aspects.updateAppearanceAspect,
+            updateAspect = aspects.updateAspect,
+            loadAspect = aspects.loadAspect;
+        updateAspect.update = composeSync(updateAspect.update, function () {
+          return updateAppearanceAspect.updateAppearance();
+        });
+        loadAspect.load = composeSync(loadAspect.load, function () {
+          return updateAppearanceAspect.updateAppearance();
+        });
+        return {
+          buildApi: function buildApi(api) {
+            api.updateAppearance = function () {
+              return updateAppearanceAspect.updateAppearance();
+            };
+          }
+        };
+      },
+      plugStaticDom: function plugStaticDom() {
+        aspects.updateAppearanceAspect = UpdateAppearanceAspect();
+      }
+    };
+  };
+}
 
 function UpdateAppearanceAspect() {
   return {
@@ -4932,198 +5056,204 @@ function UpdateAppearanceAspect() {
 
 function DisableComponentPlugin() {
   return {
-    buildAspects: function buildAspects(aspects) {
-      return {
-        plugStaticDomFactories: function plugStaticDomFactories() {
-          var pickDomFactory = aspects.pickDomFactory,
-              componentPropertiesAspect = aspects.componentPropertiesAspect;
-          var origCreatePickDomFactory = pickDomFactory.create;
+    plug: plug$3
+  };
+}
+function plug$3() {
+  return function (aspects) {
+    return {
+      plugStaticDomFactories: function plugStaticDomFactories() {
+        var pickDomFactory = aspects.pickDomFactory,
+            componentPropertiesAspect = aspects.componentPropertiesAspect;
+        var origCreatePickDomFactory = pickDomFactory.create;
 
-          pickDomFactory.create = function (pickElement, wrap, remove) {
-            var value = origCreatePickDomFactory(pickElement, wrap, remove);
+        pickDomFactory.create = function (pickElement, wrap, remove) {
+          var value = origCreatePickDomFactory(pickElement, wrap, remove);
 
-            value.pickDomManagerHandlers.updateComponentDisabled = function () {
-              value.pickDom.pickButtonElement.disabled = componentPropertiesAspect.getDisabled();
-            };
-
-            return value;
+          value.pickDomManagerHandlers.updateComponentDisabled = function () {
+            value.pickDom.pickButtonElement.disabled = componentPropertiesAspect.getDisabled();
           };
-        },
-        layout: function layout() {
-          var updateAppearanceAspect = aspects.updateAppearanceAspect,
-              picksList = aspects.picksList,
-              picksDom = aspects.picksDom,
-              componentPropertiesAspect = aspects.componentPropertiesAspect,
-              picksElementAspect = aspects.picksElementAspect;
-          var origOnClick = picksElementAspect.onClick;
 
-          var disableComponent = function disableComponent(isComponentDisabled) {
+          return value;
+        };
+      },
+      layout: function layout() {
+        var updateAppearanceAspect = aspects.updateAppearanceAspect,
+            picksList = aspects.picksList,
+            picksDom = aspects.picksDom,
+            componentPropertiesAspect = aspects.componentPropertiesAspect,
+            picksElementAspect = aspects.picksElementAspect;
+        var origOnClick = picksElementAspect.onClick;
+
+        var disableComponent = function disableComponent(isComponentDisabled) {
+          picksList.forEach(function (pick) {
+            return pick.pickDomManagerHandlers.updateComponentDisabled();
+          });
+          picksDom.disable(isComponentDisabled);
+        };
+
+        picksElementAspect.onClick = function (handler) {
+          disableComponent = function disableComponent(isComponentDisabled) {
             picksList.forEach(function (pick) {
               return pick.pickDomManagerHandlers.updateComponentDisabled();
             });
             picksDom.disable(isComponentDisabled);
+            if (isComponentDisabled) picksElementAspect.onClickUnbind(); //componentDisabledEventBinder.unbind();
+            else origOnClick(handler); //componentDisabledEventBinder.bind(picksElement, "click",  handler); 
           };
+        };
 
-          picksElementAspect.onClick = function (handler) {
-            disableComponent = function disableComponent(isComponentDisabled) {
-              picksList.forEach(function (pick) {
-                return pick.pickDomManagerHandlers.updateComponentDisabled();
-              });
-              picksDom.disable(isComponentDisabled);
-              if (isComponentDisabled) picksElementAspect.onClickUnbind(); //componentDisabledEventBinder.unbind();
-              else origOnClick(handler); //componentDisabledEventBinder.bind(picksElement, "click",  handler); 
-            };
-          };
+        var isComponentDisabled; // state! 
 
-          var isComponentDisabled; // state! 
+        function updateDisabled() {
+          var newIsComponentDisabled = componentPropertiesAspect.getDisabled();
 
-          function updateDisabled() {
-            var newIsComponentDisabled = componentPropertiesAspect.getDisabled();
-
-            if (isComponentDisabled !== newIsComponentDisabled) {
-              isComponentDisabled = newIsComponentDisabled;
-              disableComponent(newIsComponentDisabled);
-            }
+          if (isComponentDisabled !== newIsComponentDisabled) {
+            isComponentDisabled = newIsComponentDisabled;
+            disableComponent(newIsComponentDisabled);
           }
-
-          updateAppearanceAspect.updateAppearance = composeSync(updateAppearanceAspect.updateAppearance, updateDisabled);
-          return {
-            buildApi: function buildApi(api) {
-              api.updateDisabled = updateDisabled;
-            }
-          };
         }
-      };
-    }
+
+        updateAppearanceAspect.updateAppearance = composeSync(updateAppearanceAspect.updateAppearance, updateDisabled);
+        return {
+          buildApi: function buildApi(api) {
+            api.updateDisabled = updateDisabled;
+          }
+        };
+      }
+    };
   };
 }
 
 function PlaceholderPlugin() {
   return {
-    buildAspects: function buildAspects(aspects, configuration) {
-      return {
-        layout: function layout() {
-          var staticManager = aspects.staticManager,
-              picksList = aspects.picksList,
-              picksDom = aspects.picksDom,
-              filterDom = aspects.filterDom,
-              staticDom = aspects.staticDom,
-              updateDataAspect = aspects.updateDataAspect,
-              resetFilterListAspect = aspects.resetFilterListAspect,
-              filterManagerAspect = aspects.filterManagerAspect,
-              environment = aspects.environment;
-          var isIE11 = environment.isIE11;
-          var placeholder = configuration.placeholder,
-              css = configuration.css;
-          var picksElement = picksDom.picksElement;
-          var filterInputElement = filterDom.filterInputElement;
+    plug: plug$2
+  };
+}
+function plug$2(configuration) {
+  return function (aspects) {
+    return {
+      layout: function layout() {
+        var staticManager = aspects.staticManager,
+            picksList = aspects.picksList,
+            picksDom = aspects.picksDom,
+            filterDom = aspects.filterDom,
+            staticDom = aspects.staticDom,
+            updateDataAspect = aspects.updateDataAspect,
+            resetFilterListAspect = aspects.resetFilterListAspect,
+            filterManagerAspect = aspects.filterManagerAspect,
+            environment = aspects.environment;
+        var isIE11 = environment.isIE11;
+        var placeholder = configuration.placeholder,
+            css = configuration.css;
+        var picksElement = picksDom.picksElement;
+        var filterInputElement = filterDom.filterInputElement;
 
-          function setPlaceholder(placeholder) {
-            filterInputElement.placeholder = placeholder;
-          }
+        function setPlaceholder(placeholder) {
+          filterInputElement.placeholder = placeholder;
+        }
 
-          if (isIE11) {
-            var ignoreNextInputResetableFlag = ResetableFlag();
-            var placeholderStopInputAspect = PlaceholderStopInputAspect(ignoreNextInputResetableFlag);
-            var setPlaceholderOrig = setPlaceholder;
+        if (isIE11) {
+          var ignoreNextInputResetableFlag = ResetableFlag();
+          var placeholderStopInputAspect = PlaceholderStopInputAspect(ignoreNextInputResetableFlag);
+          var setPlaceholderOrig = setPlaceholder;
 
-            setPlaceholder = function setPlaceholder(placeholder) {
-              ignoreNextInputResetableFlag.set();
-              setPlaceholderOrig(placeholder);
-            };
-
-            var origOnInput = filterDom.onInput;
-
-            filterDom.onInput = function (handler) {
-              origOnInput(function () {
-                if (placeholderStopInputAspect.get()) {
-                  placeholderStopInputAspect.reset();
-                } else {
-                  handler();
-                }
-              });
-            };
-          }
-
-          if (!placeholder) {
-            placeholder = getDataGuardedWithPrefix(staticDom.initialElement, "bsmultiselect", "placeholder");
-          }
-
-          function setEmptyInputWidth(isVisible) {
-            if (isVisible) filterInputElement.style.width = '100%';else filterInputElement.style.width = '2ch';
-          }
-
-          var emptyToggleStyling = toggleStyling(filterInputElement, css.filterInput_empty);
-
-          function showPlacehodler(isVisible) {
-            if (isVisible) {
-              setPlaceholder(placeholder ? placeholder : '');
-              picksElement.style.display = 'block';
-            } else {
-              setPlaceholder('');
-              picksElement.style.display = 'flex';
-            }
-
-            emptyToggleStyling(isVisible);
-            setEmptyInputWidth(isVisible);
-          }
-
-          showPlacehodler(true);
-
-          function setDisabled(isComponentDisabled) {
-            filterInputElement.disabled = isComponentDisabled;
-          }
-
-          var isEmpty = function isEmpty() {
-            return picksList.isEmpty() && filterDom.isEmpty();
+          setPlaceholder = function setPlaceholder(placeholder) {
+            ignoreNextInputResetableFlag.set();
+            setPlaceholderOrig(placeholder);
           };
 
-          function updatePlacehodlerVisibility() {
-            showPlacehodler(isEmpty());
-          }
+          var origOnInput = filterDom.onInput;
 
-          function updateEmptyInputWidth() {
-            setEmptyInputWidth(isEmpty());
-          }
-          var origDisable = picksDom.disable;
-
-          picksDom.disable = function (isComponentDisabled) {
-            setDisabled(isComponentDisabled);
-            origDisable(isComponentDisabled);
-          };
-
-          staticManager.appendToContainer = composeSync(staticManager.appendToContainer, updateEmptyInputWidth);
-          filterManagerAspect.processEmptyInput = composeSync(updateEmptyInputWidth, filterManagerAspect.processEmptyInput);
-          resetFilterListAspect.forceResetFilter = composeSync(resetFilterListAspect.forceResetFilter, updatePlacehodlerVisibility);
-          var origAdd = picksList.add;
-
-          picksList.add = function (pick) {
-            var returnValue = origAdd(pick);
-
-            if (picksList.getCount() == 1) {
-              // make flex
-              if (filterDom.isEmpty()) {
-                setPlaceholder('');
-                picksElement.style.display = 'flex';
-                emptyToggleStyling(false);
-                filterInputElement.style.width = '2ch';
+          filterDom.onInput = function (handler) {
+            origOnInput(function () {
+              if (placeholderStopInputAspect.get()) {
+                placeholderStopInputAspect.reset();
               } else {
-                picksElement.style.display = 'flex';
-              }
-            }
-
-            pick.dispose = composeSync(pick.dispose, function () {
-              if (isEmpty()) {
-                showPlacehodler(true);
+                handler();
               }
             });
-            return returnValue;
           };
-
-          updateDataAspect.updateData = composeSync(updateDataAspect.updateData, updatePlacehodlerVisibility);
         }
-      };
-    }
+
+        if (!placeholder) {
+          placeholder = getDataGuardedWithPrefix(staticDom.initialElement, "bsmultiselect", "placeholder");
+        }
+
+        function setEmptyInputWidth(isVisible) {
+          if (isVisible) filterInputElement.style.width = '100%';else filterInputElement.style.width = '2ch';
+        }
+
+        var emptyToggleStyling = toggleStyling(filterInputElement, css.filterInput_empty);
+
+        function showPlacehodler(isVisible) {
+          if (isVisible) {
+            setPlaceholder(placeholder ? placeholder : '');
+            picksElement.style.display = 'block';
+          } else {
+            setPlaceholder('');
+            picksElement.style.display = 'flex';
+          }
+
+          emptyToggleStyling(isVisible);
+          setEmptyInputWidth(isVisible);
+        }
+
+        showPlacehodler(true);
+
+        function setDisabled(isComponentDisabled) {
+          filterInputElement.disabled = isComponentDisabled;
+        }
+
+        var isEmpty = function isEmpty() {
+          return picksList.isEmpty() && filterDom.isEmpty();
+        };
+
+        function updatePlacehodlerVisibility() {
+          showPlacehodler(isEmpty());
+        }
+
+        function updateEmptyInputWidth() {
+          setEmptyInputWidth(isEmpty());
+        }
+        var origDisable = picksDom.disable;
+
+        picksDom.disable = function (isComponentDisabled) {
+          setDisabled(isComponentDisabled);
+          origDisable(isComponentDisabled);
+        };
+
+        staticManager.appendToContainer = composeSync(staticManager.appendToContainer, updateEmptyInputWidth);
+        filterManagerAspect.processEmptyInput = composeSync(updateEmptyInputWidth, filterManagerAspect.processEmptyInput);
+        resetFilterListAspect.forceResetFilter = composeSync(resetFilterListAspect.forceResetFilter, updatePlacehodlerVisibility);
+        var origAdd = picksList.add;
+
+        picksList.add = function (pick) {
+          var returnValue = origAdd(pick);
+
+          if (picksList.getCount() == 1) {
+            // make flex
+            if (filterDom.isEmpty()) {
+              setPlaceholder('');
+              picksElement.style.display = 'flex';
+              emptyToggleStyling(false);
+              filterInputElement.style.width = '2ch';
+            } else {
+              picksElement.style.display = 'flex';
+            }
+          }
+
+          pick.dispose = composeSync(pick.dispose, function () {
+            if (isEmpty()) {
+              showPlacehodler(true);
+            }
+          });
+          return returnValue;
+        };
+
+        updateDataAspect.updateData = composeSync(updateDataAspect.updateData, updatePlacehodlerVisibility);
+      }
+    };
   };
 } // ie11 support
 
@@ -5146,65 +5276,68 @@ function FloatingLabelPlugin(defaults) {
   defaults.css.label_floating_lifted = 'floating-lifted';
   defaults.css.picks_floating_lifted = 'floating-lifted';
   return {
-    buildAspects: function buildAspects(aspects, configuration) {
-      return {
-        plugStaticDom: function plugStaticDom(aspects) {
-          aspects.floatingLabelAspect = FloatingLabelAspect();
-        },
-        layout: function layout() {
-          var picksList = aspects.picksList,
-              picksDom = aspects.picksDom,
-              filterDom = aspects.filterDom,
-              updateDataAspect = aspects.updateDataAspect,
-              resetFilterListAspect = aspects.resetFilterListAspect,
-              floatingLabelAspect = aspects.floatingLabelAspect,
-              labelAspect = aspects.labelAspect;
-          var css = configuration.css;
+    plug: plug$1
+  };
+}
+function plug$1(configuration) {
+  return function (aspects) {
+    return {
+      plugStaticDom: function plugStaticDom(aspects) {
+        aspects.floatingLabelAspect = FloatingLabelAspect();
+      },
+      layout: function layout() {
+        var picksList = aspects.picksList,
+            picksDom = aspects.picksDom,
+            filterDom = aspects.filterDom,
+            updateDataAspect = aspects.updateDataAspect,
+            resetFilterListAspect = aspects.resetFilterListAspect,
+            floatingLabelAspect = aspects.floatingLabelAspect,
+            labelAspect = aspects.labelAspect;
+        var css = configuration.css;
 
-          if (floatingLabelAspect.isFloatingLabel()) {
-            var liftedLabel = function liftedLabel(isEmpty) {
-              liftToggleStyling1(isEmpty);
-              liftToggleStyling2(isEmpty);
-            };
+        if (floatingLabelAspect.isFloatingLabel()) {
+          var liftedLabel = function liftedLabel(isEmpty) {
+            liftToggleStyling1(isEmpty);
+            liftToggleStyling2(isEmpty);
+          };
 
-            var updateLiftedLabel = function updateLiftedLabel() {
-              liftedLabel(!isEmpty());
-            };
+          var updateLiftedLabel = function updateLiftedLabel() {
+            liftedLabel(!isEmpty());
+          };
 
-            var labelElement = labelAspect.getLabel();
-            var picksElement = picksDom.picksElement;
-            var liftToggleStyling1 = toggleStyling(labelElement, css.label_floating_lifted);
-            var liftToggleStyling2 = toggleStyling(picksElement, css.picks_floating_lifted);
+          var labelElement = labelAspect.getLabel();
+          var picksElement = picksDom.picksElement;
+          var liftToggleStyling1 = toggleStyling(labelElement, css.label_floating_lifted);
+          var liftToggleStyling2 = toggleStyling(picksElement, css.picks_floating_lifted);
 
-            var isEmpty = function isEmpty() {
-              return picksList.isEmpty() && filterDom.isEmpty() && !picksDom.getIsFocusIn();
-            };
+          var isEmpty = function isEmpty() {
+            return picksList.isEmpty() && filterDom.isEmpty() && !picksDom.getIsFocusIn();
+          };
+          updateLiftedLabel();
+          resetFilterListAspect.forceResetFilter = composeSync(resetFilterListAspect.forceResetFilter, updateLiftedLabel);
+          var origAdd = picksList.add;
+
+          picksList.add = function (pick) {
+            var returnValue = origAdd(pick);
+            if (picksList.getCount() == 1) updateLiftedLabel();
+            pick.dispose = composeSync(pick.dispose, function () {
+              if (picksList.getCount() == 0) updateLiftedLabel();
+            });
+            return returnValue;
+          };
+
+          var origToggleFocusStyling = picksDom.toggleFocusStyling;
+
+          picksDom.toggleFocusStyling = function () {
+            var isFocusIn = picksDom.getIsFocusIn();
+            origToggleFocusStyling(isFocusIn);
             updateLiftedLabel();
-            resetFilterListAspect.forceResetFilter = composeSync(resetFilterListAspect.forceResetFilter, updateLiftedLabel);
-            var origAdd = picksList.add;
+          };
 
-            picksList.add = function (pick) {
-              var returnValue = origAdd(pick);
-              if (picksList.getCount() == 1) updateLiftedLabel();
-              pick.dispose = composeSync(pick.dispose, function () {
-                if (picksList.getCount() == 0) updateLiftedLabel();
-              });
-              return returnValue;
-            };
-
-            var origToggleFocusStyling = picksDom.toggleFocusStyling;
-
-            picksDom.toggleFocusStyling = function () {
-              var isFocusIn = picksDom.getIsFocusIn();
-              origToggleFocusStyling(isFocusIn);
-              updateLiftedLabel();
-            };
-
-            updateDataAspect.updateData = composeSync(updateDataAspect.updateData, updateLiftedLabel);
-          }
+          updateDataAspect.updateData = composeSync(updateDataAspect.updateData, updateLiftedLabel);
         }
-      };
-    }
+      }
+    };
   };
 }
 
@@ -5242,50 +5375,53 @@ function WarningPlugin(defaults) {
   defaults.noResultsWarning = defNoResultsWarningMessage;
   defaults.isNoResultsWarningEnabled = false;
   return {
-    buildAspects: function buildAspects(aspects, configuration) {
-      return {
-        layout: function layout() {
-          var choicesDom = aspects.choicesDom,
-              createElementAspect = aspects.createElementAspect,
-              staticManager = aspects.staticManager,
-              afterInputAspect = aspects.afterInputAspect,
-              filterManagerAspect = aspects.filterManagerAspect,
-              resetLayoutAspect = aspects.resetLayoutAspect;
-          var css = configuration.css,
-              noResultsWarning = configuration.noResultsWarning;
+    plug: plug
+  };
+}
+function plug(configuration) {
+  return function (aspects) {
+    return {
+      layout: function layout() {
+        var choicesDom = aspects.choicesDom,
+            createElementAspect = aspects.createElementAspect,
+            staticManager = aspects.staticManager,
+            afterInputAspect = aspects.afterInputAspect,
+            filterManagerAspect = aspects.filterManagerAspect,
+            resetLayoutAspect = aspects.resetLayoutAspect;
+        var css = configuration.css,
+            noResultsWarning = configuration.noResultsWarning;
 
-          if (configuration.isNoResultsWarningEnabled) {
-            var warningAspect = WarningAspect(choicesDom, createElementAspect, staticManager, css);
-            aspects.warningAspect = warningAspect;
-            ExtendAfterInputAspect(afterInputAspect, warningAspect, filterManagerAspect, noResultsWarning);
-            resetLayoutAspect.resetLayout = composeSync(function () {
-              return warningAspect.hide();
-            }, resetLayoutAspect.resetLayout);
-          }
-        },
-        attach: function attach() {
-          var createPopperAspect = aspects.createPopperAspect,
-              filterDom = aspects.filterDom,
-              warningAspect = aspects.warningAspect,
-              staticManager = aspects.staticManager,
-              disposeAspect = aspects.disposeAspect;
-
-          if (warningAspect) {
-            var filterInputElement = filterDom.filterInputElement;
-            var pop2 = createPopperAspect.createPopper(warningAspect.warningElement, filterInputElement, false);
-            staticManager.appendToContainer = composeSync(staticManager.appendToContainer, pop2.init);
-            var origWarningAspectShow = warningAspect.show;
-
-            warningAspect.show = function (msg) {
-              pop2.update();
-              origWarningAspectShow(msg);
-            };
-
-            disposeAspect.dispose = composeSync(disposeAspect.dispose, pop2.dispose);
-          }
+        if (configuration.isNoResultsWarningEnabled) {
+          var warningAspect = WarningAspect(choicesDom, createElementAspect, staticManager, css);
+          aspects.warningAspect = warningAspect;
+          ExtendAfterInputAspect(afterInputAspect, warningAspect, filterManagerAspect, noResultsWarning);
+          resetLayoutAspect.resetLayout = composeSync(function () {
+            return warningAspect.hide();
+          }, resetLayoutAspect.resetLayout);
         }
-      };
-    }
+      },
+      attach: function attach() {
+        var createPopperAspect = aspects.createPopperAspect,
+            filterDom = aspects.filterDom,
+            warningAspect = aspects.warningAspect,
+            staticManager = aspects.staticManager,
+            disposeAspect = aspects.disposeAspect;
+
+        if (warningAspect) {
+          var filterInputElement = filterDom.filterInputElement;
+          var pop2 = createPopperAspect.createPopper(warningAspect.warningElement, filterInputElement, false);
+          staticManager.appendToContainer = composeSync(staticManager.appendToContainer, pop2.init);
+          var origWarningAspectShow = warningAspect.show;
+
+          warningAspect.show = function (msg) {
+            pop2.update();
+            origWarningAspectShow(msg);
+          };
+
+          disposeAspect.dispose = composeSync(disposeAspect.dispose, pop2.dispose);
+        }
+      }
+    };
   };
 }
 

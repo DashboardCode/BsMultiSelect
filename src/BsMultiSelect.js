@@ -28,7 +28,6 @@ import {CreateWrapAspect, CreateChoiceBaseAspect, OptionToggleAspect, CreatePick
 import {NavigateAspect, HoveredChoiceAspect} from './NavigateAspect'
 import {Wraps} from './Wraps'
 
-
 import {PickButtonAspect} from './PickButtonAspect'
 
 import {BuildPickAspect} from './BuildPickAspect'
@@ -76,6 +75,7 @@ export function BsMultiSelect(element, environment, pluginManager, configuration
     
     let wrapsCollection = ArrayFacade();
     
+
     let countableChoicesList = DoublyLinkedList(
         (wrap)=>wrap.choice.itemPrev, 
         (warp, v)=>warp.choice.itemPrev=v, 
@@ -133,8 +133,8 @@ export function BsMultiSelect(element, environment, pluginManager, configuration
     let pickButtonAspect  = PickButtonAspect(configuration.pickButtonHTML);
     let pickDomFactory    = PickDomFactory   (css, createElementAspect, optionPropertiesAspect, pickButtonAspect);
     let choiceDomFactory  = ChoiceDomFactory (css, createElementAspect, optionPropertiesAspect);
-    
-    pluginManager.plugStaticDomFactories(
+    var eventHandlers =  pluginManager.createHandlers();
+    eventHandlers.plugStaticDomFactories(
         {
             environment, configuration, disposeAspect, 
             
@@ -158,7 +158,7 @@ export function BsMultiSelect(element, environment, pluginManager, configuration
 
     let staticDomFactory  = StaticDomFactory(createElementAspect);
 
-    pluginManager.plugStaticDom(
+    eventHandlers.plugStaticDom(
         {staticDomFactory}
     ); // apply cssPatch to css, apply selectElement support;  
 
@@ -216,7 +216,7 @@ export function BsMultiSelect(element, environment, pluginManager, configuration
         disposeAspect
     );
     
-    pluginManager.layout(
+    eventHandlers.layout(
         {
             staticDom, picksDom, choicesDom, filterDom, resetLayoutAspect, 
             choicesVisibilityAspect, staticManager, buildChoiceAspect, optionToggleAspect,  choiceClickAspect, 
@@ -230,16 +230,16 @@ export function BsMultiSelect(element, environment, pluginManager, configuration
             multiSelectInlineLayoutAspect }
     );
     multiSelectInlineLayoutAspect.init();
-    pluginManager.attach();
+    eventHandlers.attach();
 
     let api = {component: "BsMultiSelect.api"} // key to use in memory leak analyzes
-    pluginManager.buildApi(api);
+    eventHandlers.buildApi(api);
 
     // after this we can pass aspects methods call without wrapping - there should be no more overridings. TODO freeze aspects?
     api.dispose = composeSync(
         resetLayoutAspect.resetLayout,
         ()=>{disposeAspect.dispose()},
-        pluginManager.dispose, 
+        eventHandlers.dispose, 
         ()=>{picksList.forEach(pick=>pick.dispose());},
         wraps.dispose,
         staticManager.dispose,  picksDom.dispose, filterDom.dispose );

@@ -7,36 +7,40 @@ export function WarningPlugin(defaults){
     defaults.noResultsWarning = defNoResultsWarningMessage;
     defaults.isNoResultsWarningEnabled = false;
     return {
-        buildAspects: (aspects, configuration) => {
-            return {
-                layout: () => {
-                    let {choicesDom, createElementAspect, staticManager, afterInputAspect, filterManagerAspect, resetLayoutAspect} = aspects;
-                    let {css, noResultsWarning} = configuration;
+        plug
+    }
+}
 
-                    if (configuration.isNoResultsWarningEnabled){
-                        let warningAspect = WarningAspect(choicesDom, createElementAspect, staticManager, css);
-                        aspects.warningAspect = warningAspect;
-                    
-                        ExtendAfterInputAspect(afterInputAspect, warningAspect, filterManagerAspect, noResultsWarning);
-                    
-                        resetLayoutAspect.resetLayout = composeSync(() => warningAspect.hide(), resetLayoutAspect.resetLayout);
+export function plug(configuration){
+    return (aspects) => {
+        return {
+            layout: () => {
+                let {choicesDom, createElementAspect, staticManager, afterInputAspect, filterManagerAspect, resetLayoutAspect} = aspects;
+                let {css, noResultsWarning} = configuration;
+
+                if (configuration.isNoResultsWarningEnabled){
+                    let warningAspect = WarningAspect(choicesDom, createElementAspect, staticManager, css);
+                    aspects.warningAspect = warningAspect;
+                
+                    ExtendAfterInputAspect(afterInputAspect, warningAspect, filterManagerAspect, noResultsWarning);
+                
+                    resetLayoutAspect.resetLayout = composeSync(() => warningAspect.hide(), resetLayoutAspect.resetLayout);
+                }
+            },
+            attach: ()=> {
+                let {createPopperAspect, filterDom, warningAspect, staticManager, disposeAspect} = aspects;
+                if (warningAspect){
+                    let filterInputElement = filterDom.filterInputElement;
+
+                    let pop2 = createPopperAspect.createPopper(warningAspect.warningElement, filterInputElement, false);
+                    staticManager.appendToContainer = composeSync(staticManager.appendToContainer, pop2.init);
+
+                    var origWarningAspectShow = warningAspect.show;
+                    warningAspect.show = (msg) => {
+                        pop2.update();
+                        origWarningAspectShow(msg);
                     }
-                },
-                attach: ()=> {
-                    let {createPopperAspect, filterDom, warningAspect, staticManager, disposeAspect} = aspects;
-                    if (warningAspect){
-                        let filterInputElement = filterDom.filterInputElement;
-                        
-                        let pop2 = createPopperAspect.createPopper(warningAspect.warningElement, filterInputElement, false);
-                        staticManager.appendToContainer = composeSync(staticManager.appendToContainer, pop2.init);
-                        
-                        var origWarningAspectShow = warningAspect.show;
-                        warningAspect.show = (msg) => {
-                            pop2.update();
-                            origWarningAspectShow(msg);
-                        }
-                        disposeAspect.dispose = composeSync(disposeAspect.dispose, pop2.dispose);      
-                    }
+                    disposeAspect.dispose = composeSync(disposeAspect.dispose, pop2.dispose);      
                 }
             }
         }

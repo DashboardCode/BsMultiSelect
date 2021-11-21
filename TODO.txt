@@ -1,3 +1,7 @@
+-1 Wrap ModuleFactory for better webpack
+  -1a how to customize StaticDom ? 
+  -1b how to inline aspects overdrive?
+
 0. esm bundle for IE11 with min;
 1. create lib bundle (no transpile) and test it in babel and ts project;
 

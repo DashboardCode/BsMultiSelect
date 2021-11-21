@@ -101,7 +101,7 @@ export function ChoiceDomFactory(css, createElementAspect,  optionPropertiesAspe
     }
 }
 
-export function ChoiceDomFactoryPlugCss(css){
+function ChoiceDomFactoryPlugCss(css){
     css.choiceCheckBox_disabled = 'disabled'; //  not bs, in scss as 'ul.form-control li .custom-control-input.disabled ~ .custom-control-label'
     css.choiceLabel_disabled = '';
     css.choice_disabled_hover  = '';
@@ -109,6 +109,7 @@ export function ChoiceDomFactoryPlugCss(css){
 }
 
 export function ChoiceDomFactoryPlugCssBs4(css){
+    ChoiceDomFactoryPlugCss(css)
     css.choiceCheckBox = 'custom-control-input';
     css.choiceContent = 'custom-control custom-checkbox d-flex';
     css.choiceLabel = 'custom-control-label justify-content-start';
@@ -117,6 +118,7 @@ export function ChoiceDomFactoryPlugCssBs4(css){
 }
 
 export function ChoiceDomFactoryPlugCssBs5(css){
+    ChoiceDomFactoryPlugCss(css)
     css.choiceCheckBox = 'form-check-input'; // bs
     css.choiceContent = 'form-check'; // bs d-flex required for rtl to align items
     css.choiceLabel = 'form-check-label';

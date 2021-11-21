@@ -4,64 +4,74 @@ import {getDataGuardedWithPrefix} from '../ToolsDom';
 const defValueMissingMessage = 'Please select an item in the list'
 
 export function ValidationApiPlugin(defaults){
-    defaults.getValueRequired = function(){
-        return false;
-    }
+    defaults.getValueRequired = () => false;
     defaults.valueMissingMessage = '';
     return {
-        buildAspects: (aspects, configuration) => {
-            return {
-                layout: () => {
-                    var {triggerAspect, onChangeAspect, optionsAspect, 
-                        staticDom, filterDom, updateDataAspect} = aspects;
-                   // TODO: required could be a function
-                   let {getIsValueMissing, valueMissingMessage, required, getValueRequired} = configuration;
-                   if (!isBoolean(required))
-                       required = getValueRequired(); 
-                   valueMissingMessage = defCall(valueMissingMessage,
-                       ()=> getDataGuardedWithPrefix(staticDom.initialElement,"bsmultiselect","value-missing-message"),
-                       defValueMissingMessage)
-               
-                   if (!getIsValueMissing) {
-                       getIsValueMissing = () => {
-                           let count = 0;
-                           let optionsArray = optionsAspect.getOptions();
-                           for (var i=0; i < optionsArray.length; i++) {
-                               if (optionsArray[i].selected) 
-                                   count++;
-                           }
-                           return count===0;
+        plug
+    }
+}
+
+export function plug(configuration){
+    return (aspects) => {
+        var getValueRequiredAspect = GetValueRequiredAspect(configuration.getValueRequired);
+        aspects.getValueRequiredAspect = getValueRequiredAspect;
+        return {
+            layout: () => {
+                var {triggerAspect, onChangeAspect, optionsAspect, 
+                    staticDom, filterDom, updateDataAspect} = aspects;
+               // TODO: required could be a function
+               let {getIsValueMissing, valueMissingMessage, required} = configuration;
+               if (!isBoolean(required))
+                   required = getValueRequiredAspect.getValueRequired(); 
+               valueMissingMessage = defCall(valueMissingMessage,
+                   ()=> getDataGuardedWithPrefix(staticDom.initialElement,"bsmultiselect","value-missing-message"),
+                   defValueMissingMessage)
+            
+               if (!getIsValueMissing) {
+                   getIsValueMissing = () => {
+                       let count = 0;
+                       let optionsArray = optionsAspect.getOptions();
+                       for (var i=0; i < optionsArray.length; i++) {
+                           if (optionsArray[i].selected) 
+                               count++;
                        }
+                       return count===0;
                    }
-                   
-                   var isValueMissingObservable = ObservableLambda(()=>required && getIsValueMissing());
-                   var validationApiObservable  = ObservableValue(!isValueMissingObservable.getValue());
-               
-                   onChangeAspect.onChange = composeSync(isValueMissingObservable.call, onChangeAspect.onChange);
-                   updateDataAspect.updateData = composeSync(isValueMissingObservable.call, updateDataAspect.updateData);
-               
-                   aspects.validationApiAspect = ValidationApiAspect(validationApiObservable);
-               
-                   return {
-                       buildApi(api){
-                           api.validationApi = ValidityApi(
-                               filterDom.filterInputElement, 
-                               isValueMissingObservable, 
-                               valueMissingMessage,
-                               (isValid)=>validationApiObservable.setValue(isValid),
-                               triggerAspect.trigger
-                           );
-                       },
-                       dispose(){
-                           isValueMissingObservable.detachAll(); 
-                           validationApiObservable.detachAll();
-                       }
+               }
+
+               var isValueMissingObservable = ObservableLambda(()=>required && getIsValueMissing());
+               var validationApiObservable  = ObservableValue(!isValueMissingObservable.getValue());
+           
+               onChangeAspect.onChange = composeSync(isValueMissingObservable.call, onChangeAspect.onChange);
+               updateDataAspect.updateData = composeSync(isValueMissingObservable.call, updateDataAspect.updateData);
+           
+               aspects.validationApiAspect = ValidationApiAspect(validationApiObservable);
+           
+               return {
+                   buildApi(api){
+                       api.validationApi = ValidityApi(
+                           filterDom.filterInputElement, 
+                           isValueMissingObservable, 
+                           valueMissingMessage,
+                           (isValid)=>validationApiObservable.setValue(isValid),
+                           triggerAspect.trigger
+                       );
+                   },
+                   dispose(){
+                       isValueMissingObservable.detachAll(); 
+                       validationApiObservable.detachAll();
                    }
-                },
-                layoutInit: (aspects)=> {
-                }
+               }
+            },
+            layoutInit: () => {
             }
         }
+    }
+}
+
+function GetValueRequiredAspect(getValueRequired){
+    return {
+        getValueRequired
     }
 }
 

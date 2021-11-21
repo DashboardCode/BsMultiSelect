@@ -3,14 +3,21 @@ import { composeSync } from "../ToolsJs";
 export function CustomChoiceStylingsPlugin(defaults){
     defaults.customChoiceStylings =  null;
     return {
-        buildAspects: (aspects, configuration) => {
-            return {
-	            plugStaticDom: ()=> {
-                    let {choiceDomFactory} = aspects;
-                    let customChoiceStylings = configuration.customChoiceStylings;
+        plug
+    }
+}
+
+export function plug(configuration){
+    return (aspects) => {
+        return {
+            plugStaticDom: ()=> {
+                let {choiceDomFactory} = aspects;
+                let customChoiceStylings = configuration.customChoiceStylings;
+                if (customChoiceStylings) {
+
                     let customChoiceStylingsAspect = CustomChoiceStylingsAspect(customChoiceStylings);
                     ExtendChoiceDomFactory(choiceDomFactory, customChoiceStylingsAspect);
-        	    }
+                }
             }
         }
     }
@@ -28,33 +35,31 @@ function ExtendChoiceDomFactory(choiceDomFactory, customChoiceStylingsAspect){
 function CustomChoiceStylingsAspect(customChoiceStylings){
     return {
         customize(wrap, choiceDom, choiceDomManagerHandlers){
-            if (customChoiceStylings){
-                var handlers = customChoiceStylings(choiceDom, wrap.option);
+            var handlers = customChoiceStylings(choiceDom, wrap.option);
 
-                if (handlers){
-                    function customChoiceStylingsClosure(custom){
-                        return function() {
-                                custom({
-                                    isOptionSelected: wrap.isOptionSelected,
-                                    isOptionDisabled: wrap.isOptionDisabled,
-                                    isHoverIn: wrap.choice.isHoverIn,
-                                    //isHighlighted: wrap.choice.isHighlighted  // TODO isHighlighted should be developed
-                                });
-                        }
+            if (handlers){
+                function customChoiceStylingsClosure(custom){
+                    return function() {
+                            custom({
+                                isOptionSelected: wrap.isOptionSelected,
+                                isOptionDisabled: wrap.isOptionDisabled,
+                                isHoverIn: wrap.choice.isHoverIn,
+                                //isHighlighted: wrap.choice.isHighlighted  // TODO isHighlighted should be developed
+                            });
                     }
-                    if (choiceDomManagerHandlers.updateHoverIn && handlers.updateHoverIn)  
-                        choiceDomManagerHandlers.updateHoverIn 
-                            = composeSync(choiceDomManagerHandlers.updateHoverIn, customChoiceStylingsClosure(handlers.updateHoverIn) );
-                    if (choiceDomManagerHandlers.updateSelected && handlers.updateSelected)  
-                        choiceDomManagerHandlers.updateSelected 
-                            = composeSync(choiceDomManagerHandlers.updateSelected, customChoiceStylingsClosure(handlers.updateSelected));
-                    if (choiceDomManagerHandlers.updateDisabled && handlers.updateDisabled)  
-                        choiceDomManagerHandlers.updateDisabled
-                            = composeSync(choiceDomManagerHandlers.updateDisabled, customChoiceStylingsClosure(handlers.updateDisabled));
-                    if (choiceDomManagerHandlers.updateHighlighted && handlers.updateHighlighted)  
-                        choiceDomManagerHandlers.updateHighlighted
-                            = composeSync(choiceDomManagerHandlers.updateHighlighted, customChoiceStylingsClosure(handlers.updateHighlighted));
                 }
+                if (choiceDomManagerHandlers.updateHoverIn && handlers.updateHoverIn)  
+                    choiceDomManagerHandlers.updateHoverIn 
+                        = composeSync(choiceDomManagerHandlers.updateHoverIn, customChoiceStylingsClosure(handlers.updateHoverIn) );
+                if (choiceDomManagerHandlers.updateSelected && handlers.updateSelected)  
+                    choiceDomManagerHandlers.updateSelected 
+                        = composeSync(choiceDomManagerHandlers.updateSelected, customChoiceStylingsClosure(handlers.updateSelected));
+                if (choiceDomManagerHandlers.updateDisabled && handlers.updateDisabled)  
+                    choiceDomManagerHandlers.updateDisabled
+                        = composeSync(choiceDomManagerHandlers.updateDisabled, customChoiceStylingsClosure(handlers.updateDisabled));
+                if (choiceDomManagerHandlers.updateHighlighted && handlers.updateHighlighted)  
+                    choiceDomManagerHandlers.updateHighlighted
+                        = composeSync(choiceDomManagerHandlers.updateHighlighted, customChoiceStylingsClosure(handlers.updateHighlighted));
             }
         }
     }

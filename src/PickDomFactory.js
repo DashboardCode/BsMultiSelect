@@ -1,31 +1,32 @@
 import  {EventBinder} from './ToolsDom';
 import  {addStyling, toggleStyling} from './ToolsStyling';
 
-
-export function PickDomFactoryPlugCss(css){
+function PickDomFactoryPlugCss(css){
     css.pickContent = '';
     css.pickContent_disabled = 'disabled';
-    css.pickButton = 'close';
 }
 
 export function PickDomFactoryPlugCssBs4(css){
+    PickDomFactoryPlugCss(css)
     css.pickButton = 'close';
 }
 
 export function PickDomFactoryPlugCssBs5(css){
+    PickDomFactoryPlugCss(css)
     css.pickButton = 'btn-close';
 }
 
-export function PickDomFactoryPlugCssPatch(cssPatch){
+function PickDomFactoryPlugCssPatch(cssPatch){
     cssPatch.pickContent_disabled = {opacity: '.65'};
 }
 
 export function PickDomFactoryPlugCssPatchBs4(cssPatch){
+    PickDomFactoryPlugCssPatch(cssPatch);
     cssPatch.pickButton = {float : "none", fontSize:'1.5em', lineHeight: '.9em', };
 }
 
-
 export function PickDomFactoryPlugCssPatchBs5(cssPatch){
+    PickDomFactoryPlugCssPatch(cssPatch);
     cssPatch.pickButton = {float : "none", fontSize:'0.8em', verticalAlign: "text-top"};
 }
 
@@ -66,5 +67,3 @@ export function PickDomFactory(css, createElementAspect, optionPropertiesAspect,
         }
     }
 }
-
-

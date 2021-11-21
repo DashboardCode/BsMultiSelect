@@ -4,22 +4,26 @@ export function ChoicesDynamicStylingPlugin(defaults){
     defaults.choicesDynamicStyling = choicesDynamicStyling;
     defaults.minimalChoicesDynamicStylingMaxHeight = 20;
     return {
-        buildAspects: (aspects, configuration) => {
-            return {
-                layout: () => {
-                    let {choicesDynamicStyling, useChoicesDynamicStyling} = configuration;
-                    if (useChoicesDynamicStyling) {
-                        let {choicesVisibilityAspect, specialPicksEventsAspect} = aspects;
-                        var origSetChoicesVisible = choicesVisibilityAspect.setChoicesVisible;
-                        choicesVisibilityAspect.setChoicesVisible = 
-                            function(visible){
-                                if (visible)
-                                    choicesDynamicStyling(aspects);
-                                origSetChoicesVisible(visible);
-                            };
-                        var origBackSpace = specialPicksEventsAspect.backSpace;
-                        specialPicksEventsAspect.backSpace = (pick) => { origBackSpace(pick);  choicesDynamicStyling(aspects);};
-                    }
+        plug
+    }
+}
+
+export function plug(configuration){ 
+    return (aspects) => {
+        return {
+            layout: () => {
+                let {choicesDynamicStyling, useChoicesDynamicStyling} = configuration;
+                if (useChoicesDynamicStyling) {
+                    let {choicesVisibilityAspect, specialPicksEventsAspect} = aspects;
+                    var origSetChoicesVisible = choicesVisibilityAspect.setChoicesVisible;
+                    choicesVisibilityAspect.setChoicesVisible = 
+                        function(visible){
+                            if (visible)
+                                choicesDynamicStyling(aspects);
+                            origSetChoicesVisible(visible);
+                        };
+                    var origBackSpace = specialPicksEventsAspect.backSpace;
+                    specialPicksEventsAspect.backSpace = (pick) => { origBackSpace(pick);  choicesDynamicStyling(aspects);};
                 }
             }
         }

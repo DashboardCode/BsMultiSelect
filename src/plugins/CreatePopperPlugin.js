@@ -2,9 +2,14 @@ import {composeSync} from '../ToolsJs';
 
 export function CreatePopperPlugin(){
     return {
-        buildAspects: (aspects) => {
-            return {
-                plugStaticDom(){
+        plug
+    }
+}
+
+export function plug(){ 
+    return (aspects) => {
+        return {
+            plugStaticDom(){
                     let {environment} = aspects;
                     var popperRtlAspect = PopperRtlAspect();
                     aspects.popperRtlAspect = popperRtlAspect;
@@ -43,7 +48,6 @@ export function CreatePopperPlugin(){
                 attach(){
                     let {createPopperAspect, filterDom, choicesDom, disposeAspect, staticManager, choicesVisibilityAspect, specialPicksEventsAspect} = aspects;
                     CreatePopper_ConstrunctorAspect(createPopperAspect, filterDom, choicesDom, disposeAspect, staticManager, choicesVisibilityAspect, specialPicksEventsAspect);
-                }
             }
         }
     }
