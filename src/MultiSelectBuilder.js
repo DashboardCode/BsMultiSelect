@@ -37,8 +37,8 @@ export function MultiSelectBuilder(environment, plugins, defaultCss)
         
         extendIfUndefined(configuration, settings);
         extendIfUndefined(configuration, defaults);
-        var pluginManager = pluginManagerFactory(configuration, settings); // merge settings.cssPatch and defaults.cssPatch
         let onInit = buildConfiguration?.(element, configuration); 
+        var pluginManager = pluginManagerFactory(configuration, settings); // merge settings.cssPatch and defaults.cssPatch and merge defaults.css and defaults.cssPatch 
         Object.freeze(configuration);
         let multiSelect = BsMultiSelect(element, environment, pluginManager, configuration, onInit); // onInit(api, aspects) - before load data
         return multiSelect;

@@ -4,7 +4,7 @@ export function StaticDomFactory(createElementAspect){
     return {
         create(choicesDomFactory, filterDomFactory, picksDomFactory){
             let choicesDom = choicesDomFactory.create();
-            return {
+            return { 
                 createStaticDom(element, containerClass){
                     function showError(message){
                         element.style.backgroundColor = 'red';
@@ -32,14 +32,14 @@ export function StaticDomFactory(createElementAspect){
                     else if (element.tagName=="INPUT"){
                         showError('BsMultiSelect: INPUT element is not supported');
                     }
-                    let isDisposablePicksElement=false;
+                    let isDisposablePicksElementFlag=false;
                     if (!picksElement) {
                         picksElement = createElementAspect.createElement('UL');
-                        isDisposablePicksElement = true; 
+                        isDisposablePicksElementFlag = true; 
                     }
 
-                    let filterDom = filterDomFactory.create(isDisposablePicksElement);
-                    let picksDom  = picksDomFactory.create(picksElement, isDisposablePicksElement);
+                    let filterDom = filterDomFactory.create(isDisposablePicksElementFlag);
+                    let picksDom  = picksDomFactory.create(picksElement, isDisposablePicksElementFlag);
                 
                     return {
                         choicesDom,
@@ -49,19 +49,19 @@ export function StaticDomFactory(createElementAspect){
                             initialElement:element,
                             containerElement,
                             picksElement,
-                            isDisposablePicksElement
+                            isDisposablePicksElementFlag
                         },
                         staticManager: {
                             appendToContainer(){ 
                                 containerElement.appendChild(choicesDom.choicesElement); 
-                                if (isDisposablePicksElement)
+                                if (isDisposablePicksElementFlag)
                                     containerElement.appendChild(picksElement)
                             },
                             dispose(){ 
                                 containerElement.removeChild(choicesDom.choicesElement); 
                                 if (removableContainerClass)
                                     containerElement.classList.remove(containerClass);
-                                if (isDisposablePicksElement)
+                                if (isDisposablePicksElementFlag)
                                     containerElement.removeChild(picksElement)
                             }
                         }

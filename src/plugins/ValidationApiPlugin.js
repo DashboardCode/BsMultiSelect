@@ -3,13 +3,14 @@ import {getDataGuardedWithPrefix} from '../ToolsDom';
 
 const defValueMissingMessage = 'Please select an item in the list'
 
-export function ValidationApiPlugin(defaults){
-    defaults.getValueRequired = () => false;
-    defaults.valueMissingMessage = '';
+export function ValidationApiPlugin(o){
+    preset(o);
     return {
         plug
     }
 }
+
+export function preset(o){o.getValueRequired=() => false; o.valueMissingMessage='';}
 
 export function plug(configuration){
     return (aspects) => {

@@ -2,9 +2,7 @@ import {closestByTagName, findDirectChildByTagName, closestByClassName} from '..
 import {composeSync} from '../ToolsJs';
 
 export function SelectElementPlugin(){
-    return {
-        plug
-    }
+    return {plug}
 }
 
 export function plug(configuration){
@@ -19,7 +17,6 @@ export function plug(configuration){
                         let {createStaticDom: origCreateStaticDom} = origStaticDomFactoryCreate(choicesDomFactory, filterDomFactory, picksDomFactory);
                         return { 
                             createStaticDom(element, containerClass){
-                                console.log("createStaticDom");
                                 let selectElement = null;
                                 let containerElement = null;
                                 let picksElement = null;
@@ -50,10 +47,10 @@ export function plug(configuration){
                                     disposableContainerElement= true;
                                 }
                             
-                                let isDisposablePicksElement = false;
+                                let isDisposablePicksElementFlag = false;
                                 if (!picksElement) {
                                     picksElement = createElementAspect.createElement('UL');
-                                    isDisposablePicksElement = true; 
+                                    isDisposablePicksElementFlag = true; 
                                 }
                             
                                 if (selectElement){
@@ -88,11 +85,17 @@ export function plug(configuration){
                                         optGroupAspect.getOptGroupId = (optGroup) => optGroup.id;
                                     }
                                 
-                                    if (aspects.labelNewIdAspect){
-                                        console.log("new aspects.labelNewIdAspect");
-                                        aspects.labelNewIdAspect.createInputId = () => `${containerClass}-generated-input-${((selectElement.id)?selectElement.id:selectElement.name).toLowerCase()}-id`;
-                                    } else {
-                                        console.log("no new aspects.labelNewIdAspect");
+                                    if (selectElement && aspects.createFilterInputElementIdAspect){
+                                        var origCreateFilterInputElementId = aspects.createFilterInputElementIdAspect.createFilterInputElementId;
+                                        
+                                        aspects.createFilterInputElementIdAspect.createFilterInputElementId = () =>
+                                        { 
+                                            let id = origCreateFilterInputElementId();
+                                            if (!id) {
+                                                id =`${containerClass}-generated-input-${((selectElement.id)?selectElement.id:selectElement.name).toLowerCase()}-id`;
+                                            }
+                                            return id;
+                                        }
                                     }
                                 
                                     disposeAspect.dispose = composeSync(disposeAspect.dispose, () => {
@@ -101,8 +104,8 @@ export function plug(configuration){
                                     });
                                 }
                                 let choicesDom = choicesDomFactory.create();
-                                let filterDom = filterDomFactory.create(isDisposablePicksElement);
-                                let picksDom  = picksDomFactory.create(picksElement, isDisposablePicksElement);
+                                let filterDom = filterDomFactory.create(isDisposablePicksElementFlag);
+                                let picksDom  = picksDomFactory.create(picksElement, isDisposablePicksElementFlag);
                             
                                 let {choicesElement} = choicesDom; 
 
@@ -115,7 +118,7 @@ export function plug(configuration){
                                             initialElement:element,
                                             containerElement,
                                             picksElement,
-                                            isDisposablePicksElement,
+                                            isDisposablePicksElementFlag,
                                             selectElement
                                     }, 
                                 
@@ -127,14 +130,14 @@ export function plug(configuration){
                                             }else {
                                                 selectElement.parentNode.insertBefore(choicesElement, selectElement.nextSibling)
                                             }
-                                            if (isDisposablePicksElement)
+                                            if (isDisposablePicksElementFlag)
                                                 containerElement.appendChild(picksElement)
                                         },
                                         dispose(){ 
                                             choicesElement.parentNode.removeChild(choicesElement);
                                             if (disposableContainerElement)
                                                 selectElement.parentNode.removeChild(containerElement) 
-                                            if (isDisposablePicksElement)
+                                            if (isDisposablePicksElementFlag)
                                                 containerElement.removeChild(picksElement)
                                         }
                                     }

@@ -2,7 +2,7 @@ import {addStyling, toggleStyling} from './ToolsStyling';
 
 export function PicksDomFactory(css, createElementAspect){
     return {
-        create(picksElement, isDisposablePicksElement){
+        create(picksElement, isDisposablePicksElementFlag){
             var pickFilterElement  = createElementAspect.createElement('LI');
     
             addStyling(picksElement,      css.picks);
@@ -38,7 +38,7 @@ export function PicksDomFactory(css, createElementAspect){
                     isFocusIn = newIsFocusIn
                 }, 
                 dispose(){
-                    if (!isDisposablePicksElement){
+                    if (!isDisposablePicksElementFlag){
                         disableToggleStyling(false)
                         focusToggleStyling(false)
 

@@ -10,13 +10,14 @@ export function CssPatchPlugin(defaults){
                 throw new Error("BsMultiSelect: 'cssPatch' was used instead of 'useCssPatch'") // often type of error
             configuration.cssPatch = createCss(defaults.cssPatch, cssPatch); // replace classes, merge styles
         },
-        plug(configuration){
-            if (configuration.useCssPatch)
-                extendCss(configuration.css, configuration.cssPatch);
-        }
+        plug
     }
 }
 
+export function plug(configuration){
+    if (configuration.useCssPatch)
+        extendCss(configuration.css, configuration.cssPatch);
+}
 
 const _cssPatchBs5 = {
     choicesList: {listStyleType:'none', paddingLeft:'0', paddingRight:'0', marginBottom:'0'},
@@ -136,7 +137,6 @@ const _cssBs4 = {
     warning: 'alert-warning bg-warning'
 }
 
-
 const _cssBs5 = {
     choices: 'dropdown-menu', // bs, in bsmultiselect.scss as div.dropdown-menu
     choicesList: '', // bs, in bsmultiselect.scss as div.dropdown-menu>ul (first child)
@@ -170,4 +170,3 @@ const _cssBs5 = {
 
     warning: 'alert-warning'
 }
-

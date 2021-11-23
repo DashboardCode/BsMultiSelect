@@ -1,5 +1,5 @@
 /*!
-  * BsMultiSelect v1.2.0-beta.19 (https://dashboardcode.github.io/BsMultiSelect/)
+  * BsMultiSelect v1.2.0-beta.20 (https://dashboardcode.github.io/BsMultiSelect/)
   * Copyright 2017-2021 Roman Pokrovskij (github user rpokrovskij)
   * Licensed under Apache 2 (https://github.com/DashboardCode/BsMultiSelect/blob/master/LICENSE)
   */
@@ -1051,15 +1051,15 @@
                 showError('BsMultiSelect: INPUT element is not supported');
               }
 
-              var isDisposablePicksElement = false;
+              var isDisposablePicksElementFlag = false;
 
               if (!picksElement) {
                 picksElement = createElementAspect.createElement('UL');
-                isDisposablePicksElement = true;
+                isDisposablePicksElementFlag = true;
               }
 
-              var filterDom = filterDomFactory.create(isDisposablePicksElement);
-              var picksDom = picksDomFactory.create(picksElement, isDisposablePicksElement);
+              var filterDom = filterDomFactory.create(isDisposablePicksElementFlag);
+              var picksDom = picksDomFactory.create(picksElement, isDisposablePicksElementFlag);
               return {
                 choicesDom: choicesDom,
                 filterDom: filterDom,
@@ -1068,17 +1068,17 @@
                   initialElement: element,
                   containerElement: containerElement,
                   picksElement: picksElement,
-                  isDisposablePicksElement: isDisposablePicksElement
+                  isDisposablePicksElementFlag: isDisposablePicksElementFlag
                 },
                 staticManager: {
                   appendToContainer: function appendToContainer() {
                     containerElement.appendChild(choicesDom.choicesElement);
-                    if (isDisposablePicksElement) containerElement.appendChild(picksElement);
+                    if (isDisposablePicksElementFlag) containerElement.appendChild(picksElement);
                   },
                   dispose: function dispose() {
                     containerElement.removeChild(choicesDom.choicesElement);
                     if (removableContainerClass) containerElement.classList.remove(containerClass);
-                    if (isDisposablePicksElement) containerElement.removeChild(picksElement);
+                    if (isDisposablePicksElementFlag) containerElement.removeChild(picksElement);
                   }
                 }
               };
@@ -1097,7 +1097,7 @@
 
     function PicksDomFactory(css, createElementAspect) {
       return {
-        create: function create(picksElement, isDisposablePicksElement) {
+        create: function create(picksElement, isDisposablePicksElementFlag) {
           var pickFilterElement = createElementAspect.createElement('LI');
           addStyling(picksElement, css.picks);
           addStyling(pickFilterElement, css.pickFilter);
@@ -1133,7 +1133,7 @@
               isFocusIn = newIsFocusIn;
             },
             dispose: function dispose() {
-              if (!isDisposablePicksElement) {
+              if (!isDisposablePicksElementFlag) {
                 disableToggleStyling(false);
                 focusToggleStyling(false);
                 if (pickFilterElement.parentNode) pickFilterElement.parentNode.removeChild(pickFilterElement);
@@ -1181,7 +1181,7 @@
 
     function FilterDomFactory(css, createElementAspect) {
       return {
-        create: function create(isDisposablePicksElement) {
+        create: function create(isDisposablePicksElementFlag) {
           var filterInputElement = createElementAspect.createElement('INPUT');
           addStyling(filterInputElement, css.filterInput);
           filterInputElement.setAttribute("type", "search");
@@ -1226,7 +1226,7 @@
             dispose: function dispose() {
               eventBinder.unbind();
 
-              if (!isDisposablePicksElement) {
+              if (!isDisposablePicksElementFlag) {
                 if (filterInputElement.parentNode) filterInputElement.parentNode.removeChild(filterInputElement);
               }
             }
@@ -2563,7 +2563,8 @@
     function PluginManager(buildAspectsList) {
       var aspects = {};
 
-      var createHandlers = function createHandlers() {
+      var createHandlers = function createHandlers(newAspects) {
+        extendIfUndefined(aspects, newAspects);
         var instances = [];
         var disposes = [];
         var eventHandlers = [];
@@ -2621,6 +2622,7 @@
               (_eventHandlers$i$valu3 = (_eventHandlers$i$valu4 = eventHandlers[i].value).plugStaticDom) == null ? void 0 : _eventHandlers$i$valu3.call(_eventHandlers$i$valu4, aspects);
             }
           },
+          // 
           layout: function layout(newAspects) {
             extendIfUndefined(aspects, newAspects);
 
@@ -2628,10 +2630,11 @@
               var _loop = function _loop(i) {
                 var a = eventHandlers[i].value;
 
-                if (a.plugStaticDomBus) {
+                if (a.preLayoutBus) {
                   if (eventHandlers.some(function (c) {
-                    return c.key === a.plugStaticDomBus.after;
-                  })) a.plugStaticDomBus.plugStaticDom == null ? void 0 : a.plugStaticDomBus.plugStaticDom(aspects);
+                    return c.key === a.preLayoutBus.after;
+                  })) // only check, not order
+                    a.preLayoutBus.preLayout == null ? void 0 : a.preLayoutBus.preLayout(aspects);
                 }
               };
 
@@ -2823,9 +2826,9 @@
         configuration.css = createCss(defaults.css, (_settings = settings) == null ? void 0 : _settings.css);
         extendIfUndefined(configuration, settings);
         extendIfUndefined(configuration, defaults);
-        var pluginManager = pluginManagerFactory(configuration, settings); // merge settings.cssPatch and defaults.cssPatch
-
         var onInit = buildConfiguration == null ? void 0 : buildConfiguration(element, configuration);
+        var pluginManager = pluginManagerFactory(configuration, settings); // merge settings.cssPatch and defaults.cssPatch and merge defaults.css and defaults.cssPatch 
+
         Object.freeze(configuration);
         var multiSelect = BsMultiSelect$1(element, environment, pluginManager, configuration, onInit); // onInit(api, aspects) - before load data
 
@@ -2884,36 +2887,28 @@
 
     function BsAppearancePlugin() {
       return {
-        plug: plug$n
+        plug: plug$o
       };
     }
-    function plug$n(configuration) {
+    function plug$o(configuration) {
       return function (aspects) {
         return {
-          plugStaticDomBus: {
+          // TODO, LabelElement should be moved to StaticDomFactory and staticDom 
+          preLayoutBus: {
             after: "LabelForAttributePlugin",
-            plugStaticDom: function plugStaticDom() {
-              console.log("TODOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO");
-              var labelAspect = aspects.labelAspect,
+            preLayout: function preLayout() {
+              var getLabelAspect = aspects.getLabelAspect,
                   staticDom = aspects.staticDom,
                   configuration = aspects.configuration;
               var selectElement = staticDom.selectElement;
               var getDefaultLabel = configuration.getDefaultLabel;
-              var origLabelAspectGetLabel = labelAspect.getLabel;
-              console.log("BsAppearancePlugin - new labelAspect.getLabel  ");
+              var origLabelAspectGetLabel = getLabelAspect.getLabel;
 
-              labelAspect.getLabel = function () {
+              getLabelAspect.getLabel = function () {
                 var e = origLabelAspectGetLabel();
                 if (e) return e;else {
-                  console.log("BsAppearancePlugin - new labelAspect.getLabel  - selectElement");
-
                   if (selectElement) {
-                    console.log("BsAppearancePlugin - new labelAspect.getLabel  - selectElement +");
                     var labelElement = getDefaultLabel(selectElement);
-                    console.log({
-                      name: "BsAppearancePlugin - new labelAspect.getLabel  - selectElement +",
-                      labelElement: labelElement
-                    });
                     return labelElement;
                   }
                 }
@@ -3204,94 +3199,64 @@
     function LabelForAttributePlugin(defaults) {
       defaults.label = null;
       return {
-        plug: plug$m
+        plug: plug$n
       };
     }
-    function plug$m(configuration) {
+    function plug$n(configuration) {
+      var getLabelAspect = {
+        getLabel: function getLabel() {
+          return defCall(configuration.label);
+        }
+      };
+      var createFilterInputElementIdAspect = {
+        createFilterInputElementId: function createFilterInputElementId() {
+          return defCall(configuration.filterInputElementId);
+        }
+      };
       return function (aspects) {
+        aspects.getLabelAspect = getLabelAspect;
+        aspects.createFilterInputElementIdAspect = createFilterInputElementIdAspect;
         return {
-          plugStaticDom: function plugStaticDom() {
-            aspects.labelAspect = LabelAspect(configuration);
-            aspects.labelNewIdAspect = LabelNewIdAspect(aspects); // ?
-          },
           layout: function layout() {
             var filterDom = aspects.filterDom,
-                labelAspect = aspects.labelAspect,
                 loadAspect = aspects.loadAspect,
-                labelNewIdAspect = aspects.labelNewIdAspect,
-                disposeAspect = aspects.disposeAspect; // TODO: move to 
-
-            console.log("LabelForAttributePlugin, labelNewIdAspect");
-            var labelForAttributeAspect = LabelForAttributeAspect(filterDom, labelAspect, labelNewIdAspect, disposeAspect);
-            aspects.labelForAttributeAspect = labelForAttributeAspect;
+                disposeAspect = aspects.disposeAspect,
+                staticDom = aspects.staticDom;
             loadAspect.load = composeSync(loadAspect.load, function () {
-              return labelForAttributeAspect.update();
+              var filterInputElement = filterDom.filterInputElement;
+              var labelElement = getLabelAspect.getLabel();
+
+              if (labelElement) {
+                var backupedForAttribute = labelElement.getAttribute('for');
+                var inputId = createFilterInputElementIdAspect.createFilterInputElementId();
+
+                if (!inputId) {
+                  var containerClass = configuration.containerClass;
+                  var containerElement = staticDom.containerElement;
+                  inputId = containerClass + "-generated-filter-" + containerElement.id;
+                }
+
+                filterInputElement.setAttribute('id', inputId);
+                labelElement.setAttribute('for', inputId);
+
+                if (backupedForAttribute) {
+                  disposeAspect.dispose = composeSync(disposeAspect.dispose, function () {
+                    return labelElement.setAttribute('for', backupedForAttribute);
+                  });
+                }
+              }
             });
           }
         };
       };
     }
 
-    function LabelAspect(configuration) {
-      return {
-        getLabel: function getLabel() {
-          return defCall(configuration.label);
-        }
-      };
-    } // TODO migrate to configuration
-
-
-    function LabelNewIdAspect(aspects) {
-      return {
-        createInputId: function createInputId() {
-          var configuration = aspects.configuration,
-              staticDom = aspects.staticDom;
-          var containerClass = configuration.containerClass;
-          var containerElement = staticDom.containerElement;
-          var a = containerClass + "-generated-filter-" + containerElement.id;
-          console.log('LabelNewIdAspect - ' + a);
-          return a; //`${containerClass}-generated-input-${((selectElement.id)?selectElement.id:selectElement.name).toLowerCase()}-id`;
-        }
-      };
-    }
-
-    function LabelForAttributeAspect(filterDom, labelAspect, labelNewIdAspect, disposeAspect) {
-      return {
-        update: function update() {
-          //let createInputId = null;
-          //let {selectElement, containerElement} = staticDom;
-          var filterInputElement = filterDom.filterInputElement; // if (selectElement)
-          //     createInputId = () => `${containerClass}-generated-input-${((selectElement.id)?selectElement.id:selectElement.name).toLowerCase()}-id`;
-          // else
-          //     createInputId = () => `${containerClass}-generated-filter-${containerElement.id}`;
-
-          var labelElement = labelAspect.getLabel(); //getLabelElementAspect.getLabelElement();
-
-          console.log("LabelForAttributeAspect - ");
-
-          if (labelElement) {
-            console.log("LabelForAttributeAspect + ");
-            var backupedForAttribute = labelElement.getAttribute('for');
-            var newId = labelNewIdAspect.createInputId();
-            filterInputElement.setAttribute('id', newId);
-            labelElement.setAttribute('for', newId);
-
-            if (backupedForAttribute) {
-              disposeAspect.dispose = composeSync(disposeAspect.dispose, function () {
-                return labelElement.setAttribute('for', backupedForAttribute);
-              });
-            }
-          }
-        }
-      };
-    }
-
     function RtlPlugin() {
       return {
-        plug: plug$l
+        plug: plug$m
       };
     }
-    function plug$l(configuration) {
+    function plug$m(configuration) {
       return function (aspects) {
         return {
           layout: function layout() {
@@ -3327,10 +3292,10 @@
 
     function FormResetPlugin() {
       return {
-        plug: plug$k
+        plug: plug$l
       };
     }
-    function plug$k() {
+    function plug$l() {
       return function (aspects) {
         return {
           layout: function layout() {
@@ -3362,17 +3327,20 @@
     }
 
     var defValueMissingMessage = 'Please select an item in the list';
-    function ValidationApiPlugin(defaults) {
-      defaults.getValueRequired = function () {
+    function ValidationApiPlugin(o) {
+      preset$2(o);
+      return {
+        plug: plug$k
+      };
+    }
+    function preset$2(o) {
+      o.getValueRequired = function () {
         return false;
       };
 
-      defaults.valueMissingMessage = '';
-      return {
-        plug: plug$j
-      };
+      o.valueMissingMessage = '';
     }
-    function plug$j(configuration) {
+    function plug$k(configuration) {
       return function (aspects) {
         var getValueRequiredAspect = GetValueRequiredAspect(configuration.getValueRequired);
         aspects.getValueRequiredAspect = getValueRequiredAspect;
@@ -3487,10 +3455,10 @@
 
     function HiddenOptionPlugin() {
       return {
-        plug: plug$i
+        plug: plug$j
       };
     }
-    function plug$i(configuration) {
+    function plug$j(configuration) {
       return function (aspects) {
         return {
           layout: function layout() {
@@ -3626,10 +3594,11 @@
 
           configuration.cssPatch = createCss(defaults.cssPatch, cssPatch); // replace classes, merge styles
         },
-        plug: function plug(configuration) {
-          if (configuration.useCssPatch) extendCss(configuration.css, configuration.cssPatch);
-        }
+        plug: plug$i
       };
+    }
+    function plug$i(configuration) {
+      if (configuration.useCssPatch) extendCss(configuration.css, configuration.cssPatch);
     }
 
     function CssPatchBs4Plugin(defaults) {
@@ -3800,7 +3769,6 @@
 
               return {
                 createStaticDom: function createStaticDom(element, containerClass) {
-                  console.log("createStaticDom");
                   var selectElement = null;
                   var containerElement = null;
                   var picksElement = null;
@@ -3833,11 +3801,11 @@
                     disposableContainerElement = true;
                   }
 
-                  var isDisposablePicksElement = false;
+                  var isDisposablePicksElementFlag = false;
 
                   if (!picksElement) {
                     picksElement = createElementAspect.createElement('UL');
-                    isDisposablePicksElement = true;
+                    isDisposablePicksElementFlag = true;
                   }
 
                   if (selectElement) {
@@ -3886,14 +3854,18 @@
                       };
                     }
 
-                    if (aspects.labelNewIdAspect) {
-                      console.log("new aspects.labelNewIdAspect");
+                    if (selectElement && aspects.createFilterInputElementIdAspect) {
+                      var origCreateFilterInputElementId = aspects.createFilterInputElementIdAspect.createFilterInputElementId;
 
-                      aspects.labelNewIdAspect.createInputId = function () {
-                        return containerClass + "-generated-input-" + (selectElement.id ? selectElement.id : selectElement.name).toLowerCase() + "-id";
+                      aspects.createFilterInputElementIdAspect.createFilterInputElementId = function () {
+                        var id = origCreateFilterInputElementId();
+
+                        if (!id) {
+                          id = containerClass + "-generated-input-" + (selectElement.id ? selectElement.id : selectElement.name).toLowerCase() + "-id";
+                        }
+
+                        return id;
                       };
-                    } else {
-                      console.log("no new aspects.labelNewIdAspect");
                     }
 
                     disposeAspect.dispose = composeSync(disposeAspect.dispose, function () {
@@ -3903,8 +3875,8 @@
                   }
 
                   var choicesDom = choicesDomFactory.create();
-                  var filterDom = filterDomFactory.create(isDisposablePicksElement);
-                  var picksDom = picksDomFactory.create(picksElement, isDisposablePicksElement);
+                  var filterDom = filterDomFactory.create(isDisposablePicksElementFlag);
+                  var picksDom = picksDomFactory.create(picksElement, isDisposablePicksElementFlag);
                   var choicesElement = choicesDom.choicesElement;
                   return {
                     choicesDom: choicesDom,
@@ -3914,7 +3886,7 @@
                       initialElement: element,
                       containerElement: containerElement,
                       picksElement: picksElement,
-                      isDisposablePicksElement: isDisposablePicksElement,
+                      isDisposablePicksElementFlag: isDisposablePicksElementFlag,
                       selectElement: selectElement
                     },
                     staticManager: {
@@ -3926,12 +3898,12 @@
                           selectElement.parentNode.insertBefore(choicesElement, selectElement.nextSibling);
                         }
 
-                        if (isDisposablePicksElement) containerElement.appendChild(picksElement);
+                        if (isDisposablePicksElementFlag) containerElement.appendChild(picksElement);
                       },
                       dispose: function dispose() {
                         choicesElement.parentNode.removeChild(choicesElement);
                         if (disposableContainerElement) selectElement.parentNode.removeChild(containerElement);
-                        if (isDisposablePicksElement) containerElement.removeChild(picksElement);
+                        if (isDisposablePicksElementFlag) containerElement.removeChild(picksElement);
                       }
                     }
                   };
@@ -5244,7 +5216,7 @@
                 updateDataAspect = aspects.updateDataAspect,
                 resetFilterListAspect = aspects.resetFilterListAspect,
                 floatingLabelAspect = aspects.floatingLabelAspect,
-                labelAspect = aspects.labelAspect;
+                getLabelAspect = aspects.getLabelAspect;
             var css = configuration.css;
 
             if (floatingLabelAspect.isFloatingLabel()) {
@@ -5257,7 +5229,7 @@
                 liftedLabel(!isEmpty());
               };
 
-              var labelElement = labelAspect.getLabel();
+              var labelElement = getLabelAspect.getLabel();
               var picksElement = picksDom.picksElement;
               var liftToggleStyling1 = toggleStyling(labelElement, css.label_floating_lifted);
               var liftToggleStyling2 = toggleStyling(picksElement, css.picks_floating_lifted);
@@ -5310,12 +5282,9 @@
     }
 
     var defNoResultsWarningMessage = 'No results found';
-    function WarningPlugin(defaults) {
-      defaults.noResultsWarning = defNoResultsWarningMessage;
-      defaults.isNoResultsWarningEnabled = false;
-      return {
-        plug: plug
-      };
+    function preset$1(o) {
+      o.noResultsWarning = defNoResultsWarningMessage;
+      o.isNoResultsWarningEnabled = false;
     }
     function plug(configuration) {
       return function (aspects) {
@@ -5406,8 +5375,14 @@
     }
 
     function WarningBs4Plugin(defaults) {
+      preset(defaults);
+      return {
+        plug: plug
+      };
+    }
+    function preset(defaults) {
       defaults.css.warning = 'alert-warning bg-warning';
-      return WarningPlugin(defaults);
+      preset$1(defaults);
     }
 
     var Bs4PluginSet = {

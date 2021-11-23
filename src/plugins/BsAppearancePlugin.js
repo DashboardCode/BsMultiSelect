@@ -11,25 +11,21 @@ export function BsAppearancePlugin(){
 export function plug(configuration){ 
     return (aspects) => {
         return {
-            plugStaticDomBus: {
+            // TODO, LabelElement should be moved to StaticDomFactory and staticDom 
+            preLayoutBus: {
                 after: "LabelForAttributePlugin",
-                plugStaticDom: () => {
-                    console.log("TODOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO");
-                    var {labelAspect, staticDom, configuration} = aspects; 
+                preLayout: () => {
+                    var {getLabelAspect, staticDom, configuration} = aspects; 
                     var {selectElement} = staticDom;
                     var {getDefaultLabel} = configuration;
-                    let origLabelAspectGetLabel = labelAspect.getLabel; 
-                    console.log("BsAppearancePlugin - new labelAspect.getLabel  ");
-                    labelAspect.getLabel = () => {
+                    let origLabelAspectGetLabel = getLabelAspect.getLabel; 
+                    getLabelAspect.getLabel = () => {
                         var e = origLabelAspectGetLabel();
                         if (e)
                             return e;
                         else{
-                            console.log("BsAppearancePlugin - new labelAspect.getLabel  - selectElement");
                             if (selectElement){
-                                console.log("BsAppearancePlugin - new labelAspect.getLabel  - selectElement +");
                                 let labelElement = getDefaultLabel(selectElement);
-                                console.log({name:"BsAppearancePlugin - new labelAspect.getLabel  - selectElement +", labelElement});
                                 return labelElement;
                             }
                         }

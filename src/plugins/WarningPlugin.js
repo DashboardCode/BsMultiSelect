@@ -3,13 +3,7 @@ import {composeSync} from '../ToolsJs';
 
 const defNoResultsWarningMessage = 'No results found';
 
-export function WarningPlugin(defaults){
-    defaults.noResultsWarning = defNoResultsWarningMessage;
-    defaults.isNoResultsWarningEnabled = false;
-    return {
-        plug
-    }
-}
+export function preset(o){o.noResultsWarning=defNoResultsWarningMessage; o.isNoResultsWarningEnabled=false;}
 
 export function plug(configuration){
     return (aspects) => {

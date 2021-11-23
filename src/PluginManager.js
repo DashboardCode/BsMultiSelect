@@ -36,7 +36,8 @@ export function ComposePluginManagerFactory(plugins, defaults){
 
 export function PluginManager(buildAspectsList){
     let aspects = {};
-    let createHandlers = ()=> {
+    let createHandlers = (newAspects)=> {
+        extendIfUndefined(aspects, newAspects)
         let instances = [];
         let disposes = [];
     
@@ -78,15 +79,16 @@ export function PluginManager(buildAspectsList){
                     eventHandlers[i].value.plugStaticDom?.(aspects);
                 }
             },
+            // 
             layout(newAspects){
                 extendIfUndefined(aspects, newAspects)
                 if (eventHandlers){
                     // TODO: complete to full bus event system
                     for(let i = 0; i<eventHandlers.length; i++){
                         let a = eventHandlers[i].value;
-                        if (a.plugStaticDomBus){
-                            if (eventHandlers.some(c => c.key===a.plugStaticDomBus.after))
-                                a.plugStaticDomBus.plugStaticDom?.(aspects);
+                        if (a.preLayoutBus){
+                            if (eventHandlers.some(c => c.key===a.preLayoutBus.after)) // only check, not order
+                                a.preLayoutBus.preLayout?.(aspects);
                         }
                     }
                 

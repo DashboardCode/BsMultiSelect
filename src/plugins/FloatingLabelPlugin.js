@@ -17,11 +17,11 @@ export function plug(configuration){
             },
             layout: () => {
                 let {picksList, picksDom, filterDom, 
-                    updateDataAspect, resetFilterListAspect, floatingLabelAspect, labelAspect} = aspects;
-               let {css} = configuration;
+                    updateDataAspect, resetFilterListAspect, floatingLabelAspect, getLabelAspect} = aspects;
+                let {css} = configuration;
                 
-               if (floatingLabelAspect.isFloatingLabel() ){
-                   let labelElement = labelAspect.getLabel(); 
+                if (floatingLabelAspect.isFloatingLabel() ){
+                   let labelElement = getLabelAspect.getLabel(); 
                    let picksElement = picksDom.picksElement;
             
                    var liftToggleStyling1 = toggleStyling(labelElement, css.label_floating_lifted);
@@ -63,7 +63,7 @@ export function plug(configuration){
                    }
                
                    updateDataAspect.updateData = composeSync(updateDataAspect.updateData, updateLiftedLabel);
-               }
+                }
             }
         }
     }
