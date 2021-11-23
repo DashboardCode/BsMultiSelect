@@ -1,3 +1,7 @@
+-2  how to customize StaticDomFactory and do not fully rewrite in SelectElementPlugin
+    -2a  LabelElement should become optional part of staticdom (search for label can be customized by BsAppearancePlugin)
+        -2aa  this will remove prelayoutBus.
+
 -1 Wrap ModuleFactory for better webpack
   -1a how to customize StaticDom ? 
   -1b how to inline aspects overdrive?

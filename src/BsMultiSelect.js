@@ -158,9 +158,7 @@ export function BsMultiSelect(element, environment, pluginManager, configuration
 
     let staticDomFactory  = StaticDomFactory(createElementAspect);
 
-    eventHandlers.plugStaticDom(
-        {staticDomFactory}
-    ); // apply cssPatch to css, apply selectElement support;  
+    eventHandlers.plugStaticDom({staticDomFactory}); // apply cssPatch to css, apply selectElement support;  
 
     let {createStaticDom} = staticDomFactory.create(choicesDomFactory, filterDomFactory, picksDomFactory); // overrided in SelectElementPlugin
 
