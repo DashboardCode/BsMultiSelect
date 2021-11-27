@@ -21,7 +21,7 @@ export function plug(configuration){
                     resetLayoutAspect.resetLayout = composeSync(() => warningAspect.hide(), resetLayoutAspect.resetLayout);
                 }
             },
-            attach: ()=> {
+            append: ()=> {
                 let {createPopperAspect, filterDom, warningAspect, staticManager, disposeAspect} = aspects;
                 if (warningAspect){
                     let filterInputElement = filterDom.filterInputElement;
@@ -63,12 +63,8 @@ function WarningAspect(choicesDom, createElementAspect, staticManager, css){
     let choicesElement = choicesDom.choicesElement;
 
     var warningElement = createElementAspect.createElement('DIV'); 
-    
-    var origAppendToContainer = staticManager.appendToContainer;
-    staticManager.appendToContainer = function(){
-        origAppendToContainer();
-        choicesElement.parentNode.insertBefore(warningElement, choicesElement.nextSibling); // insert after
-    }
+    staticManager.appendToContainer = composeSync(staticManager.appendToContainer, ()=>
+        choicesElement.parentNode.insertBefore(warningElement, choicesElement.nextSibling));
 
     warningElement.style.display = 'none';
     addStyling(warningElement, css.warning);

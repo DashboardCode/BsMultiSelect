@@ -14,6 +14,7 @@ export function PicksDomFactory(css, createElementAspect){
         
             return {
                 picksElement,
+                isDisposablePicksElementFlag,
                 pickFilterElement,
 
                 createPickElement(){

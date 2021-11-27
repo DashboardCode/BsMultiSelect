@@ -12,7 +12,7 @@ export function FloatingLabelPlugin(defaults){
 export function plug(configuration){ 
     return (aspects) => {
         return {
-            plugStaticDom: (aspects)=> {
+            plugStaticDom: ()=> {
                 aspects.floatingLabelAspect = FloatingLabelAspect();
             },
             layout: () => {

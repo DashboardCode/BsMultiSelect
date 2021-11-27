@@ -15,8 +15,10 @@ export function CssPatchPlugin(defaults){
 }
 
 export function plug(configuration){
-    if (configuration.useCssPatch)
+    if (configuration.useCssPatch){
         extendCss(configuration.css, configuration.cssPatch);
+        configuration.cssPatch = undefined;
+    }
 }
 
 const _cssPatchBs5 = {

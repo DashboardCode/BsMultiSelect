@@ -23,7 +23,7 @@ export function plug(configuration){
                             origSetChoicesVisible(visible);
                         };
                     var origBackSpace = specialPicksEventsAspect.backSpace;
-                    specialPicksEventsAspect.backSpace = (pick) => { origBackSpace(pick);  choicesDynamicStyling(aspects);};
+                    specialPicksEventsAspect.backSpace = (pick) => {origBackSpace(pick);  choicesDynamicStyling(aspects);};
                 }
             }
         }
@@ -31,7 +31,7 @@ export function plug(configuration){
 }
 
 function choicesDynamicStyling(aspects){
-    let {configuration, environment, choicesDom, navigateAspect} = aspects;
+    let {choicesDom, navigateAspect, environment, configuration} = aspects;
     let window = environment.window;
     let choicesElement = choicesDom.choicesElement;
     let minimalChoicesDynamicStylingMaxHeight = configuration.minimalChoicesDynamicStylingMaxHeight;

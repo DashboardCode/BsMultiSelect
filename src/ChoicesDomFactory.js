@@ -23,13 +23,12 @@ export function ChoicesDomFactory(css, createElementAspect) {
                         setVisible: (isVisible) => choiceElement.style.display = isVisible ? 'block': 'none',
                         attach: (beforeElement) => choicesListElement.insertBefore(choiceElement, beforeElement),
                         detach: () => choicesListElement.removeChild(choiceElement)
-                    };
+                    }
                 }
             }
         }
     }
 }
-
 
 export function ChoicesDomFactoryPlugCss(css){
     css.choices = 'dropdown-menu';
@@ -41,4 +40,3 @@ export function ChoicesDomFactoryPlugCssPatch(cssPatch){
     cssPatch.choicesList = {listStyleType:'none', paddingLeft:'0', paddingRight:'0', marginBottom:'0'};
     cssPatch.choice = {classes:'px-md-2 px-1', styles:{cursor:'pointer'}};
 }
-

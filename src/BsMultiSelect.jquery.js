@@ -14,7 +14,6 @@ const defaultCss = createDefaultCssBs5();
 
 const BsMultiSelect = (
     (window, jQuery, globalPopper) => {
-        console.log(defaultCss);
         let plugins = shallowClearClone(Bs5PluginSet, multiSelectPlugins);
         return createForJQuery(window, jQuery, globalPopper, 'BsMultiSelect', plugins, defaultCss)
     }

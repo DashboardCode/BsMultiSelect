@@ -17,8 +17,7 @@ export function plug(configuration){
                     /*inputAspect, filterDom, filterManagerAspect,*/ createPickHandlersAspect, addPickAspect,  fullMatchAspect, 
                     onChangeAspect, filterPredicateAspect
                     } = aspects;
-                let { options, picks, isOptionPicked, addPicked, removePicked
-                     /*,getSelected : getIsOptionSelected, setSelected : setIsOptionSelected*/ } = configuration;
+                let { options, picks, isOptionPicked, addPicked, removePicked } = configuration;
                 
                 // addPick = (option, key) => updateChoiceSelected(wrapsCollection.get(key), getIsOptionSelected)
                 // removePick = (key) => updateChoiceSelected(picks.get(key), getIsOptionSelected)

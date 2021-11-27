@@ -304,7 +304,7 @@ export function MultiSelectInlineLayoutAspect (
     }
 
     return {
-        init(){
+        layout(){
             filterDom.onFocusIn(()=>focusInAspect.setFocusIn(true));
             filterDom.onFocusOut(() => { 
                     if (!getSkipFocusout()){ // skip initiated by mouse click (we manage it different way)

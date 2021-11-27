@@ -13,7 +13,7 @@ export function plug(configuration){
     return (aspects) => {
         return {
             layout: () => {
-                let {staticManager, picksList, picksDom, filterDom, staticDom, updateDataAspect,
+                let {staticManager, picksList, picksDom, filterDom, initialDom, updateDataAspect,
                     resetFilterListAspect, filterManagerAspect, environment} = aspects;
                 let isIE11 = environment.isIE11;
                 let {placeholder,  css} = configuration;
@@ -44,7 +44,7 @@ export function plug(configuration){
                 }
             
                 if (!placeholder){
-                    placeholder = getDataGuardedWithPrefix(staticDom.initialElement,"bsmultiselect","placeholder");
+                    placeholder = getDataGuardedWithPrefix(initialDom.initialElement,"bsmultiselect","placeholder");
                 }
             
                 function setEmptyInputWidth(isVisible){

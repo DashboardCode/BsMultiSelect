@@ -1,8 +1,10 @@
 /*!
-  * BsMultiSelect v1.2.0-beta.20 (https://dashboardcode.github.io/BsMultiSelect/)
+  * BsMultiSelect v1.2.0-beta.22 (https://dashboardcode.github.io/BsMultiSelect/)
   * Copyright 2017-2021 Roman Pokrovskij (github user rpokrovskij)
   * Licensed under Apache 2 (https://github.com/DashboardCode/BsMultiSelect/blob/master/LICENSE)
   */
+import 'jquery';
+
 function isBoolean(value) {
   return value === true || value === false;
 }
@@ -889,76 +891,71 @@ function ChoiceDomFactoryPlugCssPatch(cssPatch) {
   cssPatch.choice_hover = 'text-primary bg-light';
 }
 
-function StaticDomFactory(createElementAspect) {
+function StaticDomFactory(createElementAspect, choicesDomFactory, filterDomFactory, picksDomFactory, initialDom, containerClass) {
   return {
-    create(choicesDomFactory, filterDomFactory, picksDomFactory) {
-      let choicesDom = choicesDomFactory.create();
-      return {
-        createStaticDom(element, containerClass) {
-          function showError(message) {
-            element.style.backgroundColor = 'red';
-            element.style.color = 'white';
-            throw new Error(message);
-          }
+    createStaticDom() {
+      var element = initialDom.initialElement;
+      let containerElement, picksElement;
+      let removableContainerClass = false;
 
-          let containerElement, picksElement;
-          let removableContainerClass = false;
+      if (element.tagName == 'DIV') {
+        containerElement = element;
 
-          if (element.tagName == 'DIV') {
-            containerElement = element;
-
-            if (!containerElement.classList.contains(containerClass)) {
-              containerElement.classList.add(containerClass);
-              removableContainerClass = true;
-            }
-
-            picksElement = findDirectChildByTagName(containerElement, 'UL');
-          } else if (element.tagName == 'UL') {
-            picksElement = element;
-            containerElement = closestByClassName(element, containerClass);
-
-            if (!containerElement) {
-              showError('BsMultiSelect: defined on UL but precedentant DIV for container not found; class=' + containerClass);
-            }
-          } else if (element.tagName == "INPUT") {
-            showError('BsMultiSelect: INPUT element is not supported');
-          }
-
-          let isDisposablePicksElementFlag = false;
-
-          if (!picksElement) {
-            picksElement = createElementAspect.createElement('UL');
-            isDisposablePicksElementFlag = true;
-          }
-
-          let filterDom = filterDomFactory.create(isDisposablePicksElementFlag);
-          let picksDom = picksDomFactory.create(picksElement, isDisposablePicksElementFlag);
-          return {
-            choicesDom,
-            filterDom,
-            picksDom,
-            staticDom: {
-              initialElement: element,
-              containerElement,
-              picksElement,
-              isDisposablePicksElementFlag
-            },
-            staticManager: {
-              appendToContainer() {
-                containerElement.appendChild(choicesDom.choicesElement);
-                if (isDisposablePicksElementFlag) containerElement.appendChild(picksElement);
-              },
-
-              dispose() {
-                containerElement.removeChild(choicesDom.choicesElement);
-                if (removableContainerClass) containerElement.classList.remove(containerClass);
-                if (isDisposablePicksElementFlag) containerElement.removeChild(picksElement);
-              }
-
-            }
-          };
+        if (!containerElement.classList.contains(containerClass)) {
+          containerElement.classList.add(containerClass);
+          removableContainerClass = true;
         }
 
+        picksElement = findDirectChildByTagName(containerElement, 'UL');
+      } else if (element.tagName == 'UL') {
+        picksElement = element;
+        containerElement = closestByClassName(element, containerClass);
+
+        if (!containerElement) {
+          throw new Error('BsMultiSelect: defined on UL but precedentant DIV for container not found; class=' + containerClass);
+        }
+      } else if (element.tagName == "INPUT") {
+        throw new Error('BsMultiSelect: INPUT element is not supported');
+      }
+
+      let staticDom = {
+        containerElement
+      };
+      let isDisposablePicksElementFlag = false;
+
+      if (!picksElement) {
+        picksElement = createElementAspect.createElement('UL');
+        isDisposablePicksElementFlag = true;
+      }
+
+      let choicesDom = choicesDomFactory.create();
+      let picksDom = picksDomFactory.create(picksElement, isDisposablePicksElementFlag);
+      let filterDom = filterDomFactory.create(isDisposablePicksElementFlag);
+      let {
+        choicesElement
+      } = choicesDom;
+      return {
+        staticDom,
+        choicesDom,
+        filterDom,
+        picksDom,
+        staticManager: {
+          appendToContainer() {
+            picksDom.pickFilterElement.appendChild(filterDom.filterInputElement);
+            picksDom.picksElement.appendChild(picksDom.pickFilterElement);
+            containerElement.appendChild(choicesElement);
+            if (isDisposablePicksElementFlag) containerElement.appendChild(picksElement);
+          },
+
+          dispose() {
+            containerElement.removeChild(choicesElement);
+            if (removableContainerClass) containerElement.classList.remove(containerClass);
+            if (isDisposablePicksElementFlag) containerElement.removeChild(picksElement);
+            picksDom.dispose();
+            filterDom.dispose();
+          }
+
+        }
       };
     }
 
@@ -983,6 +980,7 @@ function PicksDomFactory(css, createElementAspect) {
       let isFocusIn = false;
       return {
         picksElement,
+        isDisposablePicksElementFlag,
         pickFilterElement,
 
         createPickElement() {
@@ -2060,7 +2058,7 @@ function MultiSelectInlineLayoutAspect(environment, filterDom, choicesDom, choic
   }
 
   return {
-    init() {
+    layout() {
       filterDom.onFocusIn(() => focusInAspect.setFocusIn(true));
       filterDom.onFocusOut(() => {
         if (!getSkipFocusout()) {
@@ -2117,9 +2115,12 @@ function MultiSelectInlineLayoutAspect(environment, filterDom, choicesDom, choic
   };
 }
 
-function ResetLayoutAspect(resetLayout) {
+function ResetLayoutAspect(resetFilterAspect) {
   return {
-    resetLayout
+    resetLayout() {
+      resetFilterAspect.resetFilter();
+    }
+
   };
 }
 
@@ -2196,188 +2197,238 @@ function AfterInputAspect(filterManagerAspect, navigateAspect, choicesVisibility
   };
 }
 
-function BsMultiSelect(element, environment, pluginManager, configuration, onInit) {
-  var {
-    window
-  } = environment;
-  environment.isIE11 = !!window.MSInputMethodContext && !!document.documentMode;
+function ShowErrorAspect(initialDom, createElementAspect) {
+  return {
+    showError(error) {
+      let errorElement = createElementAspect.createElement('SPAN');
+      errorElement.style.backgroundColor = 'red';
+      errorElement.style.color = 'white';
+      errorElement.style.block = 'inline-block';
+      errorElement.style.padding = '0.2rem 0.5rem';
+      errorElement.textContent = 'BsMultiSelect ' + error.toString();
+      initialDom.initialElement.parentNode.insertBefore(errorElement, initialDom.initialElement.nextSibling);
+    }
+
+  };
+}
+
+function BsMultiSelect(element, environment, pluginManager, configuration) {
   let {
-    containerClass,
     css,
     getDisabled,
     options,
-    getText
+    getText,
+    pickButtonHTML,
+    containerClass
   } = configuration;
-  let disposeAspect = {
-    dispose() {}
-
+  let initialDom = {
+    initialElement: element
   };
-  let triggerAspect = TriggerAspect(element, environment.trigger);
-  let onChangeAspect = OnChangeAspect(triggerAspect, 'dashboardcode.multiselect:change');
-  let componentPropertiesAspect = ComponentPropertiesAspect(getDisabled ?? (() => false));
-  let optionsAspect = OptionsAspect(options);
-  let optionPropertiesAspect = OptionPropertiesAspect(getText);
-  let isChoiceSelectableAspect = IsChoiceSelectableAspect();
-  let createWrapAspect = CreateWrapAspect();
-  let createChoiceBaseAspect = CreateChoiceBaseAspect(optionPropertiesAspect);
-  let addPickAspect = AddPickAspect();
-  let removePickAspect = RemovePickAspect();
-  let createElementAspect = CreateElementAspect(name => window.document.createElement(name), (element, html) => element.innerHTML = html);
-  let wrapsCollection = ArrayFacade();
-  let countableChoicesList = DoublyLinkedList(wrap => wrap.choice.itemPrev, (warp, v) => warp.choice.itemPrev = v, wrap => wrap.choice.itemNext, (wrap, v) => wrap.choice.itemNext = v);
-  let countableChoicesListInsertAspect = CountableChoicesListInsertAspect(countableChoicesList, wrapsCollection);
-  let choicesEnumerableAspect = ChoicesEnumerableAspect(countableChoicesList, wrap => wrap.choice.itemNext);
-  let filteredChoicesList = DoublyLinkedList(wrap => wrap.choice.filteredPrev, (wrap, v) => wrap.choice.filteredPrev = v, wrap => wrap.choice.filteredNext, (wrap, v) => wrap.choice.filteredNext = v);
-  let emptyNavigateManager = NavigateManager(countableChoicesList, wrap => wrap.choice.itemPrev, wrap => wrap.choice.itemNext);
-  let filteredNavigateManager = NavigateManager(filteredChoicesList, wrap => wrap.choice.filteredPrev, wrap => wrap.choice.filteredNext);
-  let filterPredicateAspect = FilterPredicateAspect();
-  let filterManagerAspect = FilterManagerAspect(emptyNavigateManager, filteredNavigateManager, filteredChoicesList, choicesEnumerableAspect, filterPredicateAspect);
-  let hoveredChoiceAspect = HoveredChoiceAspect();
-  let navigateAspect = NavigateAspect(hoveredChoiceAspect, (down, hoveredChoice) => filterManagerAspect.getNavigateManager().navigate(down, hoveredChoice));
-  let picksList = List();
-  let wraps = Wraps(wrapsCollection, () => countableChoicesList.reset(), w => countableChoicesList.remove(w), (w, key) => countableChoicesListInsertAspect.countableChoicesListInsert(w, key));
-  let picksDomFactory = PicksDomFactory(css, createElementAspect);
-  let filterDomFactory = FilterDomFactory(css, createElementAspect);
-  let choicesDomFactory = ChoicesDomFactory(css, createElementAspect);
-  let pickButtonAspect = PickButtonAspect(configuration.pickButtonHTML);
-  let pickDomFactory = PickDomFactory(css, createElementAspect, optionPropertiesAspect, pickButtonAspect);
-  let choiceDomFactory = ChoiceDomFactory(css, createElementAspect, optionPropertiesAspect);
-  var eventHandlers = pluginManager.createHandlers();
-  eventHandlers.plugStaticDomFactories({
-    environment,
-    configuration,
-    disposeAspect,
-    triggerAspect,
-    onChangeAspect,
-    componentPropertiesAspect,
-    countableChoicesList,
-    countableChoicesListInsertAspect,
-    optionPropertiesAspect,
-    createElementAspect,
-    wrapsCollection,
-    choicesEnumerableAspect,
-    filteredChoicesList,
-    filterPredicateAspect,
-    isChoiceSelectableAspect,
-    hoveredChoiceAspect,
-    navigateAspect,
-    choicesDomFactory,
-    filterDomFactory,
-    picksDomFactory,
-    pickDomFactory,
-    choiceDomFactory,
-    filterManagerAspect,
-    optionsAspect,
-    createWrapAspect,
-    createChoiceBaseAspect,
-    picksList,
-    wraps,
-    addPickAspect,
-    removePickAspect
-  });
-  let staticDomFactory = StaticDomFactory(createElementAspect);
-  eventHandlers.plugStaticDom({
-    staticDomFactory
-  }); // apply cssPatch to css, apply selectElement support;  
+  let createElementAspect = CreateElementAspect(name => environment.window.document.createElement(name), (element, html) => element.innerHTML = html);
+  let showErrorAspect = ShowErrorAspect(initialDom, createElementAspect);
 
-  let {
-    createStaticDom
-  } = staticDomFactory.create(choicesDomFactory, filterDomFactory, picksDomFactory); // overrided in SelectElementPlugin
+  try {
+    let disposeAspect = {
+      dispose() {}
 
-  let {
-    staticDom,
-    filterDom,
-    picksDom,
-    staticManager,
-    choicesDom
-  } = createStaticDom(element, containerClass); // after this we can use staticDom (means generated DOM elements) in plugin construtctor, what simplifies parameters passing a lot   
+    };
+    let triggerAspect = TriggerAspect(element, environment.trigger);
+    let onChangeAspect = OnChangeAspect(triggerAspect, 'dashboardcode.multiselect:change');
+    let componentPropertiesAspect = ComponentPropertiesAspect(getDisabled ?? (() => false));
+    let optionsAspect = OptionsAspect(options);
+    let optionPropertiesAspect = OptionPropertiesAspect(getText);
+    let isChoiceSelectableAspect = IsChoiceSelectableAspect();
+    let createWrapAspect = CreateWrapAspect();
+    let createChoiceBaseAspect = CreateChoiceBaseAspect(optionPropertiesAspect);
+    let addPickAspect = AddPickAspect();
+    let removePickAspect = RemovePickAspect();
+    let wrapsCollection = ArrayFacade();
+    let countableChoicesList = DoublyLinkedList(wrap => wrap.choice.itemPrev, (warp, v) => warp.choice.itemPrev = v, wrap => wrap.choice.itemNext, (wrap, v) => wrap.choice.itemNext = v);
+    let countableChoicesListInsertAspect = CountableChoicesListInsertAspect(countableChoicesList, wrapsCollection);
+    let choicesEnumerableAspect = ChoicesEnumerableAspect(countableChoicesList, wrap => wrap.choice.itemNext);
+    let filteredChoicesList = DoublyLinkedList(wrap => wrap.choice.filteredPrev, (wrap, v) => wrap.choice.filteredPrev = v, wrap => wrap.choice.filteredNext, (wrap, v) => wrap.choice.filteredNext = v);
+    let emptyNavigateManager = NavigateManager(countableChoicesList, wrap => wrap.choice.itemPrev, wrap => wrap.choice.itemNext);
+    let filteredNavigateManager = NavigateManager(filteredChoicesList, wrap => wrap.choice.filteredPrev, wrap => wrap.choice.filteredNext);
+    let filterPredicateAspect = FilterPredicateAspect();
+    let filterManagerAspect = FilterManagerAspect(emptyNavigateManager, filteredNavigateManager, filteredChoicesList, choicesEnumerableAspect, filterPredicateAspect);
+    let hoveredChoiceAspect = HoveredChoiceAspect();
+    let navigateAspect = NavigateAspect(hoveredChoiceAspect, (down, hoveredChoice) => filterManagerAspect.getNavigateManager().navigate(down, hoveredChoice));
+    let picksList = List();
+    let wraps = Wraps(wrapsCollection, () => countableChoicesList.reset(), w => countableChoicesList.remove(w), (w, key) => countableChoicesListInsertAspect.countableChoicesListInsert(w, key));
+    let picksDomFactory = PicksDomFactory(css, createElementAspect);
+    let filterDomFactory = FilterDomFactory(css, createElementAspect);
+    let choicesDomFactory = ChoicesDomFactory(css, createElementAspect);
+    let pickButtonAspect = PickButtonAspect(pickButtonHTML);
+    let pickDomFactory = PickDomFactory(css, createElementAspect, optionPropertiesAspect, pickButtonAspect); // overrided in CustomPickStylingsPlugin, DisableComponentPlugin
 
-  let specialPicksEventsAspect = SpecialPicksEventsAspect();
-  let choicesVisibilityAspect = ChoicesVisibilityAspect(choicesDom.choicesElement);
-  let resetFilterListAspect = ResetFilterListAspect(filterDom, filterManagerAspect);
-  let resetFilterAspect = ResetFilterAspect(filterDom, resetFilterListAspect);
-  let focusInAspect = FocusInAspect(picksDom);
-  let buildPickAspect = BuildPickAspect(picksDom, pickDomFactory);
-  let producePickAspect = ProducePickAspect(picksList, removePickAspect, buildPickAspect);
-  let createPickHandlersAspect = CreatePickHandlersAspect(producePickAspect);
-  let optionToggleAspect = OptionToggleAspect(createPickHandlersAspect, addPickAspect);
-  let fullMatchAspect = FullMatchAspect(createPickHandlersAspect, addPickAspect);
-  let inputAspect = InputAspect(filterDom, filterManagerAspect, fullMatchAspect);
-  let choiceClickAspect = ChoiceClickAspect(optionToggleAspect, filterDom);
-  let buildChoiceAspect = BuildChoiceAspect(choicesDom, choiceDomFactory, choiceClickAspect);
-  let buildAndAttachChoiceAspect = BuildAndAttachChoiceAspect(buildChoiceAspect);
-  let resetLayoutAspect = ResetLayoutAspect(() => resetFilterAspect.resetFilter());
-  let optionAttachAspect = OptionAttachAspect(createWrapAspect, createChoiceBaseAspect, buildAndAttachChoiceAspect, wraps);
-  let optionsLoopAspect = OptionsLoopAspect(optionsAspect, optionAttachAspect);
-  let updateDataAspect = UpdateDataAspect(choicesDom, wraps, picksList, optionsLoopAspect, resetLayoutAspect);
-  let updateAspect = UpdateAspect(updateDataAspect);
-  let loadAspect = LoadAspect(optionsLoopAspect);
-  let picksElementAspect = PicksElementAspect(picksDom.picksElement);
-  let afterInputAspect = AfterInputAspect(filterManagerAspect, navigateAspect, choicesVisibilityAspect, hoveredChoiceAspect);
-  let multiSelectInlineLayoutAspect = MultiSelectInlineLayoutAspect(environment, filterDom, choicesDom, choicesVisibilityAspect, hoveredChoiceAspect, navigateAspect, filterManagerAspect, focusInAspect, optionToggleAspect, createPickHandlersAspect, picksList, inputAspect, specialPicksEventsAspect, buildChoiceAspect, resetLayoutAspect, picksElementAspect, afterInputAspect, disposeAspect);
-  eventHandlers.layout({
-    staticDom,
-    picksDom,
-    choicesDom,
-    filterDom,
-    resetLayoutAspect,
-    choicesVisibilityAspect,
-    staticManager,
-    buildChoiceAspect,
-    optionToggleAspect,
-    choiceClickAspect,
-    buildAndAttachChoiceAspect,
-    optionsLoopAspect,
-    optionAttachAspect,
-    buildPickAspect,
-    producePickAspect,
-    createPickHandlersAspect,
-    inputAspect,
-    resetFilterListAspect,
-    resetFilterAspect,
-    specialPicksEventsAspect,
-    resetLayoutAspect,
-    focusInAspect,
-    loadAspect,
-    updateDataAspect,
-    updateAspect,
-    fullMatchAspect,
-    picksElementAspect,
-    afterInputAspect,
-    multiSelectInlineLayoutAspect
-  });
-  multiSelectInlineLayoutAspect.init();
-  eventHandlers.attach();
-  let api = {
-    component: "BsMultiSelect.api"
-  }; // key to use in memory leak analyzes
+    let choiceDomFactory = ChoiceDomFactory(css, createElementAspect, optionPropertiesAspect); // overrided in CustomChoicesStylingsPlugin, HighlightPlugin
 
-  eventHandlers.buildApi(api); // after this we can pass aspects methods call without wrapping - there should be no more overridings. TODO freeze aspects?
+    let staticDomFactory = StaticDomFactory(createElementAspect, choicesDomFactory, filterDomFactory, picksDomFactory, initialDom, containerClass);
+    let eventHandlers = pluginManager.createHandlers(); // TODO: union to events or create event bus
 
-  api.dispose = composeSync(resetLayoutAspect.resetLayout, () => {
-    disposeAspect.dispose();
-  }, eventHandlers.dispose, () => {
-    picksList.forEach(pick => pick.dispose());
-  }, wraps.dispose, staticManager.dispose, picksDom.dispose, filterDom.dispose);
+    eventHandlers.plugStaticDom({
+      environment,
+      configuration,
+      disposeAspect,
+      initialDom,
+      showErrorAspect,
+      triggerAspect,
+      onChangeAspect,
+      componentPropertiesAspect,
+      countableChoicesList,
+      countableChoicesListInsertAspect,
+      optionPropertiesAspect,
+      createElementAspect,
+      wrapsCollection,
+      choicesEnumerableAspect,
+      filteredChoicesList,
+      filterPredicateAspect,
+      isChoiceSelectableAspect,
+      hoveredChoiceAspect,
+      navigateAspect,
+      choicesDomFactory,
+      filterDomFactory,
+      picksDomFactory,
+      pickDomFactory,
+      choiceDomFactory,
+      filterManagerAspect,
+      optionsAspect,
+      createWrapAspect,
+      createChoiceBaseAspect,
+      picksList,
+      wraps,
+      addPickAspect,
+      removePickAspect,
+      staticDomFactory
+    }); // apply selectElement support;  
+    // TODO: to staticManager
 
-  api.updateData = () => {
-    updateDataAspect.updateData();
-  };
+    let {
+      staticManager,
+      staticDom,
+      filterDom,
+      picksDom,
+      choicesDom
+    } = staticDomFactory.createStaticDom(); // overrided in SelectElementPlugin
+    // after this we can use staticDom (means generated DOM elements) in plugin construtctor, what simplifies parameters passing a lot   
 
-  api.update = () => {
-    updateAspect.update();
-  }; // TODO api.updateOption = (key) => {/* all updates: selected, disabled, hidden, text */}
+    let specialPicksEventsAspect = SpecialPicksEventsAspect();
+    let choicesVisibilityAspect = ChoicesVisibilityAspect(choicesDom.choicesElement);
+    let resetFilterListAspect = ResetFilterListAspect(filterDom, filterManagerAspect);
+    let resetFilterAspect = ResetFilterAspect(filterDom, resetFilterListAspect);
+    let focusInAspect = FocusInAspect(picksDom);
+    let buildPickAspect = BuildPickAspect(picksDom, pickDomFactory);
+    let producePickAspect = ProducePickAspect(picksList, removePickAspect, buildPickAspect);
+    let createPickHandlersAspect = CreatePickHandlersAspect(producePickAspect);
+    let optionToggleAspect = OptionToggleAspect(createPickHandlersAspect, addPickAspect);
+    let fullMatchAspect = FullMatchAspect(createPickHandlersAspect, addPickAspect);
+    let inputAspect = InputAspect(filterDom, filterManagerAspect, fullMatchAspect);
+    let choiceClickAspect = ChoiceClickAspect(optionToggleAspect, filterDom);
+    let buildChoiceAspect = BuildChoiceAspect(choicesDom, choiceDomFactory, choiceClickAspect);
+    let buildAndAttachChoiceAspect = BuildAndAttachChoiceAspect(buildChoiceAspect);
+    let resetLayoutAspect = ResetLayoutAspect(resetFilterAspect);
+    let optionAttachAspect = OptionAttachAspect(createWrapAspect, createChoiceBaseAspect, buildAndAttachChoiceAspect, wraps);
+    let optionsLoopAspect = OptionsLoopAspect(optionsAspect, optionAttachAspect);
+    let updateDataAspect = UpdateDataAspect(choicesDom, wraps, picksList, optionsLoopAspect, resetLayoutAspect);
+    let updateAspect = UpdateAspect(updateDataAspect);
+    let loadAspect = LoadAspect(optionsLoopAspect);
+    let picksElementAspect = PicksElementAspect(picksDom.picksElement);
+    let afterInputAspect = AfterInputAspect(filterManagerAspect, navigateAspect, choicesVisibilityAspect, hoveredChoiceAspect);
+    let multiSelectInlineLayoutAspect = MultiSelectInlineLayoutAspect(environment, filterDom, choicesDom, choicesVisibilityAspect, hoveredChoiceAspect, navigateAspect, filterManagerAspect, focusInAspect, optionToggleAspect, createPickHandlersAspect, picksList, inputAspect, specialPicksEventsAspect, buildChoiceAspect, resetLayoutAspect, picksElementAspect, afterInputAspect, disposeAspect);
+    eventHandlers.layout({
+      staticDom,
+      picksDom,
+      choicesDom,
+      filterDom,
+      resetLayoutAspect,
+      choicesVisibilityAspect,
+      staticManager,
+      buildChoiceAspect,
+      optionToggleAspect,
+      choiceClickAspect,
+      buildAndAttachChoiceAspect,
+      optionsLoopAspect,
+      optionAttachAspect,
+      buildPickAspect,
+      producePickAspect,
+      createPickHandlersAspect,
+      inputAspect,
+      resetFilterListAspect,
+      resetFilterAspect,
+      specialPicksEventsAspect,
+      resetLayoutAspect,
+      focusInAspect,
+      loadAspect,
+      updateDataAspect,
+      updateAspect,
+      fullMatchAspect,
+      picksElementAspect,
+      afterInputAspect,
+      multiSelectInlineLayoutAspect
+    });
+    multiSelectInlineLayoutAspect.layout(); // TODO: to staticManager
+
+    eventHandlers.append();
+    let api = {
+      component: "BsMultiSelect.api"
+    }; // key to use in memory leak analyzes
+
+    eventHandlers.buildApi(api);
+
+    api.updateData = () => {
+      updateDataAspect.updateData();
+    };
+
+    api.update = () => {
+      updateAspect.update();
+    }; // TODO api.updateOption = (key) => {/* all updates: selected, disabled, hidden, text */}
 
 
-  onInit?.(api, pluginManager.aspects);
-  picksDom.pickFilterElement.appendChild(filterDom.filterInputElement);
-  picksDom.picksElement.appendChild(picksDom.pickFilterElement);
-  staticManager.appendToContainer();
-  loadAspect.load();
-  return api;
+    api.dispose = composeSync(resetLayoutAspect.resetLayout, () => {
+      disposeAspect.dispose();
+    }, eventHandlers.dispose, () => {
+      picksList.forEach(pick => pick.dispose());
+    }, wraps.dispose, staticManager.dispose); // after this we can pass aspects methods call without wrapping - there should be no more overridings. TODO freeze aspects?        
+
+    staticManager.appendToContainer();
+    loadAspect.load();
+    return api;
+  } catch (error) {
+    showErrorAspect.showError(error);
+    throw error;
+  }
 }
 
-function ComposePluginManagerFactory(plugins, defaults) {
+function parseEventHandler(key, eventHandler, plugStaticDoms, preLayouts, layouts, appends, buildApis, disposes) {
+  if (eventHandler) {
+    if (eventHandler.plugStaticDom) plugStaticDoms.push({
+      key,
+      value: eventHandler.plugStaticDom
+    });
+    if (eventHandler.preLayout) preLayouts.push({
+      key,
+      value: eventHandler.preLayout
+    });
+    if (eventHandler.layout) layouts.push({
+      key,
+      value: eventHandler.layout
+    });
+    if (eventHandler.append) appends.push({
+      key,
+      value: eventHandler.append
+    });
+    if (eventHandler.buildApi) buildApis.push({
+      key,
+      value: eventHandler.buildApi
+    });
+    if (eventHandler.dispose) disposes.push({
+      key,
+      value: eventHandler.dispose
+    });
+  }
+}
+
+function ComposePluginManagerFactory(plugins, defaults, environment) {
   let plugedList = [];
   let mergeList = [];
 
@@ -2396,7 +2447,7 @@ function ComposePluginManagerFactory(plugins, defaults) {
     }
   }
 
-  return (configuration, settings) => {
+  return (configuration, settings, inlineBuildAspects) => {
     let buildAspectsList = [];
 
     for (let i = 0; i < mergeList.length; i++) {
@@ -2414,98 +2465,77 @@ function ComposePluginManagerFactory(plugins, defaults) {
         buildAspectsList.push({
           key: plugedList[j].key,
           value: buildAspects
-        }); // let events = tmp(aspects)
-        // if (events)
-        //     eventHandlers.push({key:buildAspectsList[j].key, value:events})
-      }
-    }
-
-    return PluginManager(buildAspectsList);
-  };
-}
-function PluginManager(buildAspectsList) {
-  let aspects = {};
-
-  let createHandlers = newAspects => {
-    extendIfUndefined(aspects, newAspects);
-    let instances = [];
-    let disposes = [];
-    var eventHandlers = [];
-
-    for (let j = 0; j < buildAspectsList.length; j++) {
-      let eh = buildAspectsList[j].value(aspects);
-
-      if (eh) {
-        eventHandlers.push({
-          key: buildAspectsList[j].key,
-          value: eh
         });
       }
     }
 
+    if (inlineBuildAspects) buildAspectsList.push({
+      key: "",
+      value: inlineBuildAspects
+    });
+    return PluginManager(environment, buildAspectsList);
+  };
+}
+function PluginManager(environment, buildAspectsList) {
+  let aspects = {
+    environment
+  };
+
+  let createHandlers = newAspects => {
+    extendIfUndefined(aspects, newAspects);
+    var plugStaticDoms = [];
+    var preLayouts = [];
+    var layouts = [];
+    var appends = [];
+    var buildApis = [];
+    let disposes = [];
+
+    for (let k = 0; k < buildAspectsList.length; k++) {
+      let eventHandler = buildAspectsList[k].value(aspects);
+      parseEventHandler(buildAspectsList[k].key, eventHandler, plugStaticDoms, preLayouts, layouts, appends, buildApis, disposes);
+    }
+
     return {
+      plugStaticDom(newAspects) {
+        extendIfUndefined(aspects, newAspects);
+
+        for (let i = 0; i < plugStaticDoms.length; i++) {
+          var eventHandler = plugStaticDoms[i].value?.();
+          parseEventHandler(plugStaticDoms[i].key, eventHandler, plugStaticDoms, preLayouts, layouts, appends, buildApis, disposes);
+        }
+      },
+
+      layout(newAspects) {
+        extendIfUndefined(aspects, newAspects);
+
+        for (let i = 0; i < preLayouts.length; i++) {
+          let eventHandler = preLayouts[i].value?.();
+          parseEventHandler(preLayouts[i].key, eventHandler, plugStaticDoms, preLayouts, layouts, appends, buildApis, disposes);
+        }
+
+        for (let j = 0; j < layouts.length; j++) {
+          let eventHandler = layouts[j].value?.();
+          parseEventHandler(layouts[j].key, eventHandler, plugStaticDoms, preLayouts, layouts, appends, buildApis, disposes);
+        }
+      },
+
+      append() {
+        for (let i = 0; i < appends.length; i++) {
+          var eventHandler = appends[i].value?.();
+          parseEventHandler(appends[i].key, eventHandler, plugStaticDoms, preLayouts, layouts, appends, buildApis, disposes);
+        }
+      },
+
       buildApi(api) {
-        for (let i = 0; i < instances.length; i++) {
-          let dispose = instances[i].buildApi?.(api);
-          if (dispose) disposes.push(dispose);
+        for (let i = 0; i < buildApis.length; i++) {
+          var eventHandler = buildApis[i].value?.(api);
+          parseEventHandler(buildApis[i].key, eventHandler, plugStaticDoms, preLayouts, layouts, appends, buildApis, disposes);
         }
       },
 
       dispose() {
         for (let i = 0; i < disposes.length; i++) {
-          disposes[i]();
-        }
-
-        disposes = null;
-
-        for (let i = 0; i < instances.length; i++) {
-          instances[i].dispose?.();
-        }
-
-        instances = null;
-      },
-
-      plugStaticDomFactories(newAspects) {
-        extendIfUndefined(aspects, newAspects);
-
-        for (let i = 0; i < eventHandlers.length; i++) {
-          eventHandlers[i].value.plugStaticDomFactories?.(aspects);
-        }
-      },
-
-      plugStaticDom(newAspects) {
-        extendIfUndefined(aspects, newAspects);
-
-        for (let i = 0; i < eventHandlers.length; i++) {
-          eventHandlers[i].value.plugStaticDom?.(aspects);
-        }
-      },
-
-      // 
-      layout(newAspects) {
-        extendIfUndefined(aspects, newAspects);
-
-        if (eventHandlers) {
-          // TODO: complete to full bus event system
-          for (let i = 0; i < eventHandlers.length; i++) {
-            let a = eventHandlers[i].value;
-
-            if (a.preLayoutBus) {
-              if (eventHandlers.some(c => c.key === a.preLayoutBus.after)) // only check, not order
-                a.preLayoutBus.preLayout?.(aspects);
-            }
-          }
-
-          for (let i = 0; i < eventHandlers.length; i++) {
-            let instance = eventHandlers[i].value.layout?.(aspects);
-            if (instance) instances.push(instance);
-          }
-        }
-      },
-
-      attach() {
-        if (eventHandlers) for (let i = 0; i < eventHandlers.length; i++) {
-          eventHandlers[i].value.attach?.(aspects);
+          disposes[i].value?.();
         }
       }
 
@@ -2646,12 +2676,20 @@ function adjustLegacySettings(settings) {
   }
 }
 
+// TODO: defaultCss should come together with DomFactories and Layout 
+
 function MultiSelectBuilder(environment, plugins, defaultCss) {
   const defaults = {
     containerClass: "dashboardcode-bsmultiselect",
     css: defaultCss
   };
-  var pluginManagerFactory = ComposePluginManagerFactory(plugins, defaults);
+  var pluginManagerFactory = ComposePluginManagerFactory(plugins, defaults, environment);
+  /*  NOTE: about namings
+      defaults - defaults for module 
+      setting - object that could modify defaults (not just overwrite)
+      options - configuration "generalization": can be buildConfiguration function or settings
+      configuration - for control instance
+  */
 
   let create = (element, options) => {
     if (options && options.plugins) console.log("DashboarCode.BsMultiSelect: 'options.plugins' is depricated, use - MultiSelectBuilder(environment, plugins) instead");
@@ -2670,17 +2708,17 @@ function MultiSelectBuilder(environment, plugins, defaultCss) {
       adjustLegacySettings(settings);
     }
 
-    let configuration = {}; // TODO: move to each plugin that add css (as plugMergeSettings) 
-
+    let configuration = {};
     configuration.css = createCss(defaults.css, settings?.css);
-    extendIfUndefined(configuration, settings);
+    extendIfUndefined(configuration, settings); // next line: merging of cssPatch will be delayed to the CssPatchPlugin merge handler
+
     extendIfUndefined(configuration, defaults);
-    let onInit = buildConfiguration?.(element, configuration);
-    var pluginManager = pluginManagerFactory(configuration, settings); // merge settings.cssPatch and defaults.cssPatch and merge defaults.css and defaults.cssPatch 
+    let inlineBuildAspectsList = buildConfiguration?.(element, configuration); // next line merges settings.cssPatch and defaults.cssPatch also merge defaults.css and defaults.cssPatch 
+
+    var pluginManager = pluginManagerFactory(configuration, settings, inlineBuildAspectsList); // now we can freeze configuration object
 
     Object.freeze(configuration);
-    let multiSelect = BsMultiSelect(element, environment, pluginManager, configuration, onInit); // onInit(api, aspects) - before load data
-
+    let multiSelect = BsMultiSelect(element, environment, pluginManager, configuration);
     return multiSelect;
   };
 
@@ -2709,36 +2747,33 @@ function plug$p(configuration) {
   return aspects => {
     return {
       // TODO, LabelElement should be moved to StaticDomFactory and staticDom 
-      preLayoutBus: {
-        after: "LabelForAttributePlugin",
-        preLayout: () => {
-          var {
-            getLabelAspect,
-            staticDom,
-            configuration
-          } = aspects;
-          var {
-            selectElement
-          } = staticDom;
-          var {
-            getDefaultLabel
-          } = configuration;
-          let origLabelAspectGetLabel = getLabelAspect.getLabel;
+      preLayout: () => {
+        var {
+          getLabelAspect,
+          staticDom
+        } = aspects;
+        var {
+          selectElement
+        } = staticDom;
+        var {
+          getDefaultLabel
+        } = configuration;
+        let origLabelAspectGetLabel = getLabelAspect.getLabel;
 
-          getLabelAspect.getLabel = () => {
-            var e = origLabelAspectGetLabel();
-            if (e) return e;else {
-              if (selectElement) {
-                let labelElement = getDefaultLabel(selectElement);
-                return labelElement;
-              }
+        getLabelAspect.getLabel = () => {
+          var e = origLabelAspectGetLabel();
+          if (e) return e;else {
+            if (selectElement) {
+              let labelElement = getDefaultLabel(selectElement);
+              return labelElement;
             }
-          };
-        }
+          }
+        };
       },
       layout: () => {
         let {
           validationApiAspect,
+          initialDom,
           picksDom,
           staticDom,
           updateAppearanceAspect,
@@ -2753,7 +2788,7 @@ function plug$p(configuration) {
           composeGetSize
         } = configuration;
         let selectElement = staticDom.selectElement;
-        let initialElement = staticDom.initialElement;
+        let initialElement = initialDom.initialElement;
         let isFloatingLabel = false;
 
         if (floatingLabelAspect) {
@@ -2811,7 +2846,7 @@ function plug$p(configuration) {
         }
 
         var getWasValidated = () => {
-          var wasValidatedElement = closestByClassName(staticDom.initialElement, 'was-validated');
+          var wasValidatedElement = closestByClassName(initialElement, 'was-validated');
           return wasValidatedElement ? true : false;
         };
 
@@ -3119,13 +3154,14 @@ function plug$n(configuration) {
       layout: () => {
         let {
           popperRtlAspect,
-          staticDom
+          staticDom,
+          initialDom
         } = aspects;
         let {
           isRtl
         } = configuration;
         let forceRtlOnContainer = false;
-        if (isBoolean(isRtl)) forceRtlOnContainer = true;else isRtl = getIsRtl(staticDom.initialElement);
+        if (isBoolean(isRtl)) forceRtlOnContainer = true;else isRtl = getIsRtl(initialDom.initialElement);
         var attributeBackup = AttributeBackup();
 
         if (forceRtlOnContainer) {
@@ -3202,14 +3238,10 @@ function plug$l(configuration) {
     var getValueRequiredAspect = GetValueRequiredAspect(configuration.getValueRequired);
     aspects.getValueRequiredAspect = getValueRequiredAspect;
     return {
-      layout: () => {
+      plugStaticDom: () => {
         var {
-          triggerAspect,
-          onChangeAspect,
           optionsAspect,
-          staticDom,
-          filterDom,
-          updateDataAspect
+          initialDom
         } = aspects; // TODO: required could be a function
 
         let {
@@ -3218,7 +3250,7 @@ function plug$l(configuration) {
           required
         } = configuration;
         if (!isBoolean(required)) required = getValueRequiredAspect.getValueRequired();
-        valueMissingMessage = defCall(valueMissingMessage, () => getDataGuardedWithPrefix(staticDom.initialElement, "bsmultiselect", "value-missing-message"), defValueMissingMessage);
+        valueMissingMessage = defCall(valueMissingMessage, () => getDataGuardedWithPrefix(initialDom.initialElement, "bsmultiselect", "value-missing-message"), defValueMissingMessage);
 
         if (!getIsValueMissing) {
           getIsValueMissing = () => {
@@ -3235,12 +3267,30 @@ function plug$l(configuration) {
 
         var isValueMissingObservable = ObservableLambda(() => required && getIsValueMissing());
         var validationApiObservable = ObservableValue(!isValueMissingObservable.getValue());
-        onChangeAspect.onChange = composeSync(isValueMissingObservable.call, onChangeAspect.onChange);
-        updateDataAspect.updateData = composeSync(isValueMissingObservable.call, updateDataAspect.updateData);
         aspects.validationApiAspect = ValidationApiAspect(validationApiObservable);
         return {
-          buildApi(api) {
-            api.validationApi = ValidityApi(filterDom.filterInputElement, isValueMissingObservable, valueMissingMessage, isValid => validationApiObservable.setValue(isValid), triggerAspect.trigger);
+          layout: () => {
+            var {
+              onChangeAspect,
+              updateDataAspect
+            } = aspects; // TODO: required could be a function
+
+            let {
+              valueMissingMessage
+            } = configuration;
+            onChangeAspect.onChange = composeSync(isValueMissingObservable.call, onChangeAspect.onChange);
+            updateDataAspect.updateData = composeSync(isValueMissingObservable.call, updateDataAspect.updateData);
+            return {
+              buildApi(api) {
+                var {
+                  triggerAspect,
+                  filterDom
+                } = aspects;
+                api.validationApi = ValidityApi(filterDom.filterInputElement, // !!
+                isValueMissingObservable, valueMissingMessage, isValid => validationApiObservable.setValue(isValid), triggerAspect.trigger);
+              }
+
+            };
           },
 
           dispose() {
@@ -3249,8 +3299,7 @@ function plug$l(configuration) {
           }
 
         };
-      },
-      layoutInit: () => {}
+      }
     };
   };
 }
@@ -3533,7 +3582,10 @@ function CssPatchPlugin(defaults) {
   };
 }
 function plug$i(configuration) {
-  if (configuration.useCssPatch) extendCss(configuration.css, configuration.cssPatch);
+  if (configuration.useCssPatch) {
+    extendCss(configuration.css, configuration.cssPatch);
+    configuration.cssPatch = undefined;
+  }
 }
 
 function CssPatchBs4Plugin(defaults) {
@@ -3603,7 +3655,7 @@ function OptionsApiPlugin() {
 function plug$g() {
   return aspects => {
     return {
-      layout: () => {
+      buildApi(api) {
         let {
           buildAndAttachChoiceAspect,
           wraps,
@@ -3613,33 +3665,30 @@ function plug$g() {
           optionsAspect,
           resetLayoutAspect
         } = aspects;
-        return {
-          buildApi(api) {
-            api.updateOptionAdded = key => {
-              // TODO: generalize index as key 
-              let options = optionsAspect.getOptions();
-              let option = options[key];
-              let wrap = createWrapAspect.createWrap(option);
-              wrap.choice = createChoiceBaseAspect.createChoiceBase(option);
-              wraps.insert(key, wrap);
 
-              let nextChoice = () => wrapsCollection.getNext(key, c => c.choice.choiceElement);
+        api.updateOptionAdded = key => {
+          // TODO: generalize index as key 
+          let options = optionsAspect.getOptions();
+          let option = options[key];
+          let wrap = createWrapAspect.createWrap(option);
+          wrap.choice = createChoiceBaseAspect.createChoiceBase(option);
+          wraps.insert(key, wrap);
 
-              buildAndAttachChoiceAspect.buildAndAttachChoice(wrap, () => nextChoice()?.choice.choiceElement);
-            };
+          let nextChoice = () => wrapsCollection.getNext(key, c => c.choice.choiceElement);
 
-            api.updateOptionRemoved = key => {
-              // TODO: generalize index as key 
-              resetLayoutAspect.resetLayout(); // always hide 1st, then reset filter
+          buildAndAttachChoiceAspect.buildAndAttachChoice(wrap, () => nextChoice()?.choice.choiceElement);
+        };
 
-              var wrap = wraps.remove(key);
-              wrap.choice.remove?.();
-              wrap.dispose?.();
-            };
-          }
+        api.updateOptionRemoved = key => {
+          // TODO: generalize index as key 
+          resetLayoutAspect.resetLayout(); // always hide 1st, then reset filter
 
+          var wrap = wraps.remove(key);
+          wrap.choice.remove?.();
+          wrap.dispose?.();
         };
       }
+
     };
   };
 }
@@ -3695,148 +3744,160 @@ function plug$e(configuration) {
           optionsAspect,
           optGroupAspect,
           disposeAspect,
-          getValueRequiredAspect
+          getValueRequiredAspect,
+          choicesDomFactory,
+          filterDomFactory,
+          picksDomFactory,
+          initialDom,
+          showErrorAspect
         } = aspects;
-        let origStaticDomFactoryCreate = staticDomFactory.create;
+        let containerClass = configuration.containerClass;
+        let origCreateStaticDom = staticDomFactory.createStaticDom;
+        let element = initialDom.initialElement;
 
-        staticDomFactory.create = (choicesDomFactory, filterDomFactory, picksDomFactory) => {
-          let {
-            createStaticDom: origCreateStaticDom
-          } = origStaticDomFactoryCreate(choicesDomFactory, filterDomFactory, picksDomFactory);
-          return {
-            createStaticDom(element, containerClass) {
-              let selectElement = null;
-              let containerElement = null;
-              let picksElement = null;
+        staticDomFactory.createStaticDom = () => {
+          let selectElement = null;
+          let containerElement = null;
+          let picksElement = null;
 
-              if (element.tagName == 'SELECT') {
-                selectElement = element;
+          if (element.tagName == 'SELECT') {
+            selectElement = element;
 
-                if (containerClass) {
-                  containerElement = closestByClassName(selectElement, containerClass);
-                  if (containerElement) picksElement = findDirectChildByTagName(containerElement, 'UL');
-                }
-              } else if (element.tagName == 'DIV') {
-                selectElement = findDirectChildByTagName(element, 'SELECT');
+            if (containerClass) {
+              containerElement = closestByClassName(selectElement, containerClass);
+              if (containerElement) picksElement = findDirectChildByTagName(containerElement, 'UL');
+            }
+          } else if (element.tagName == 'DIV') {
+            selectElement = findDirectChildByTagName(element, 'SELECT');
 
-                if (selectElement) {
-                  if (containerClass) {
-                    containerElement = closestByClassName(element, containerClass);
-                    if (containerElement) picksElement = findDirectChildByTagName(containerElement, 'UL');
-                  }
-                } else {
-                  return origCreateStaticDom(element, containerClass);
-                }
+            if (selectElement) {
+              if (containerClass) {
+                containerElement = closestByClassName(element, containerClass);
+                if (containerElement) picksElement = findDirectChildByTagName(containerElement, 'UL');
               }
+            } else {
+              return origCreateStaticDom(element, containerClass);
+            }
+          }
 
-              let disposableContainerElement = false;
+          let isDisposableContainerElementFlag = false;
 
-              if (!containerElement) {
-                containerElement = createElementAspect.createElement('DIV');
-                containerElement.classList.add(containerClass);
-                disposableContainerElement = true;
+          if (!containerElement) {
+            containerElement = createElementAspect.createElement('DIV');
+            containerElement.classList.add(containerClass);
+            isDisposableContainerElementFlag = true;
+          }
+
+          let staticDom = {
+            containerElement,
+            selectElement
+          };
+
+          if (selectElement) {
+            showErrorAspect.showError = error => {
+              let errorElement = createElementAspect.createElement('SPAN');
+              errorElement.style.backgroundColor = 'red';
+              errorElement.style.color = 'white';
+              errorElement.style.padding = '0.2rem 0.5rem';
+              errorElement.textContent = 'BsMultiSelect ' + error.toString();
+              selectElement.parentNode.insertBefore(errorElement, selectElement.nextSibling);
+            };
+
+            var backupDisplay = selectElement.style.display;
+            selectElement.style.display = 'none';
+            var backupedRequired = selectElement.required;
+            if (getValueRequiredAspect) getValueRequiredAspect.getValueRequired = function () {
+              return backupedRequired;
+            };
+            if (selectElement.required === true) selectElement.required = false;
+            let {
+              getDisabled
+            } = configuration;
+
+            if (!getDisabled) {
+              var fieldsetElement = closestByTagName(selectElement, 'FIELDSET');
+
+              if (fieldsetElement) {
+                componentPropertiesAspect.getDisabled = () => selectElement.disabled || fieldsetElement.disabled;
+              } else {
+                componentPropertiesAspect.getDisabled = () => selectElement.disabled;
               }
+            }
 
-              let isDisposablePicksElementFlag = false;
+            onChangeAspect.onChange = composeSync(() => triggerAspect.trigger('change'), onChangeAspect.onChange);
 
-              if (!picksElement) {
-                picksElement = createElementAspect.createElement('UL');
-                isDisposablePicksElementFlag = true;
-              }
+            optionsAspect.getOptions = () => selectElement.options;
 
-              if (selectElement) {
-                var backupDisplay = selectElement.style.display;
-                selectElement.style.display = 'none';
-                var backupedRequired = selectElement.required;
-                if (getValueRequiredAspect) getValueRequiredAspect.getValueRequired = function () {
-                  return backupedRequired;
-                };
-                if (selectElement.required === true) selectElement.required = false;
-                let {
-                  getDisabled
-                } = configuration;
+            if (optGroupAspect) {
+              optGroupAspect.getOptionOptGroup = option => option.parentNode;
 
-                if (!getDisabled) {
-                  var fieldsetElement = closestByTagName(selectElement, 'FIELDSET');
+              optGroupAspect.getOptGroupText = optGroup => optGroup.label;
 
-                  if (fieldsetElement) {
-                    componentPropertiesAspect.getDisabled = () => selectElement.disabled || fieldsetElement.disabled;
-                  } else {
-                    componentPropertiesAspect.getDisabled = () => selectElement.disabled;
-                  }
+              optGroupAspect.getOptGroupId = optGroup => optGroup.id;
+            }
+
+            if (selectElement && aspects.createFilterInputElementIdAspect) {
+              var origCreateFilterInputElementId = aspects.createFilterInputElementIdAspect.createFilterInputElementId;
+
+              aspects.createFilterInputElementIdAspect.createFilterInputElementId = () => {
+                let id = origCreateFilterInputElementId();
+
+                if (!id) {
+                  id = `${containerClass}-generated-input-${(selectElement.id ? selectElement.id : selectElement.name).toLowerCase()}-id`;
                 }
 
-                onChangeAspect.onChange = composeSync(() => triggerAspect.trigger('change'), onChangeAspect.onChange);
-
-                optionsAspect.getOptions = () => selectElement.options;
-
-                if (optGroupAspect) {
-                  optGroupAspect.getOptionOptGroup = option => option.parentNode;
-
-                  optGroupAspect.getOptGroupText = optGroup => optGroup.label;
-
-                  optGroupAspect.getOptGroupId = optGroup => optGroup.id;
-                }
-
-                if (selectElement && aspects.createFilterInputElementIdAspect) {
-                  var origCreateFilterInputElementId = aspects.createFilterInputElementIdAspect.createFilterInputElementId;
-
-                  aspects.createFilterInputElementIdAspect.createFilterInputElementId = () => {
-                    let id = origCreateFilterInputElementId();
-
-                    if (!id) {
-                      id = `${containerClass}-generated-input-${(selectElement.id ? selectElement.id : selectElement.name).toLowerCase()}-id`;
-                    }
-
-                    return id;
-                  };
-                }
-
-                disposeAspect.dispose = composeSync(disposeAspect.dispose, () => {
-                  selectElement.required = backupedRequired;
-                  selectElement.style.display = backupDisplay;
-                });
-              }
-
-              let choicesDom = choicesDomFactory.create();
-              let filterDom = filterDomFactory.create(isDisposablePicksElementFlag);
-              let picksDom = picksDomFactory.create(picksElement, isDisposablePicksElementFlag);
-              let {
-                choicesElement
-              } = choicesDom;
-              return {
-                choicesDom,
-                filterDom,
-                picksDom,
-                staticDom: {
-                  initialElement: element,
-                  containerElement,
-                  picksElement,
-                  isDisposablePicksElementFlag,
-                  selectElement
-                },
-                staticManager: {
-                  appendToContainer() {
-                    if (disposableContainerElement) {
-                      selectElement.parentNode.insertBefore(containerElement, selectElement.nextSibling);
-                      containerElement.appendChild(choicesElement);
-                    } else {
-                      selectElement.parentNode.insertBefore(choicesElement, selectElement.nextSibling);
-                    }
-
-                    if (isDisposablePicksElementFlag) containerElement.appendChild(picksElement);
-                  },
-
-                  dispose() {
-                    choicesElement.parentNode.removeChild(choicesElement);
-                    if (disposableContainerElement) selectElement.parentNode.removeChild(containerElement);
-                    if (isDisposablePicksElementFlag) containerElement.removeChild(picksElement);
-                  }
-
-                }
+                return id;
               };
             }
 
+            disposeAspect.dispose = composeSync(disposeAspect.dispose, () => {
+              selectElement.required = backupedRequired;
+              selectElement.style.display = backupDisplay;
+            });
+          }
+
+          let isDisposablePicksElementFlag = false;
+
+          if (!picksElement) {
+            picksElement = createElementAspect.createElement('UL');
+            isDisposablePicksElementFlag = true;
+          }
+
+          let choicesDom = choicesDomFactory.create();
+          let picksDom = picksDomFactory.create(picksElement, isDisposablePicksElementFlag);
+          let filterDom = filterDomFactory.create(isDisposablePicksElementFlag);
+          let {
+            choicesElement
+          } = choicesDom;
+          return {
+            choicesDom,
+            filterDom,
+            picksDom,
+            staticDom,
+            staticManager: {
+              appendToContainer() {
+                picksDom.pickFilterElement.appendChild(filterDom.filterInputElement);
+                picksDom.picksElement.appendChild(picksDom.pickFilterElement);
+
+                if (isDisposableContainerElementFlag) {
+                  selectElement.parentNode.insertBefore(containerElement, selectElement.nextSibling);
+                  containerElement.appendChild(choicesElement);
+                } else {
+                  selectElement.parentNode.insertBefore(choicesElement, selectElement.nextSibling);
+                }
+
+                if (isDisposablePicksElementFlag) containerElement.appendChild(picksElement);
+              },
+
+              dispose() {
+                choicesElement.parentNode.removeChild(choicesElement);
+                if (isDisposableContainerElementFlag) selectElement.parentNode.removeChild(containerElement);
+                if (isDisposablePicksElementFlag) containerElement.removeChild(picksElement);
+                picksDom.dispose();
+                filterDom.dispose();
+              }
+
+            }
           };
         };
       },
@@ -3851,7 +3912,7 @@ function plug$e(configuration) {
         loadAspect.loop = function () {
           // browsers can change select value as part of "autocomplete" (IE11) at load time
           // or "show preserved on go back" (Chrome) after page is loaded but before "ready" event;
-          // mote: they never "restore" selected-disabled options.
+          // NOTE: they never "restore" selected-disabled options.
           // TODO: make the FROM Validation for 'selected-disabled' easy.
           if (document.readyState != 'loading') {
             origLoadAspectLoop();
@@ -4247,38 +4308,35 @@ function PicksApiPlugin() {
 function plug$b() {
   return aspects => {
     return {
-      layout: () => {
+      buildApi(api) {
         let {
           picksList,
           createWrapAspect,
           createPickHandlersAspect,
           addPickAspect
         } = aspects;
-        return {
-          buildApi(api) {
-            api.forEachPeak = f => picksList.forEach(wrap => f(wrap.option)); // TODO: getHeadPeak
+
+        api.forEachPeak = f => picksList.forEach(wrap => f(wrap.option)); // TODO: getHeadPeak
 
 
-            api.getTailPeak = () => picksList.getTail()?.option;
+        api.getTailPeak = () => picksList.getTail()?.option;
 
-            api.countPeaks = () => picksList.getCount();
+        api.countPeaks = () => picksList.getCount();
 
-            api.isEmptyPeaks = () => picksList.isEmpty();
+        api.isEmptyPeaks = () => picksList.isEmpty();
 
-            api.addPick = option => {
-              let wrap = createWrapAspect.createWrap(option); // TODO should be moved to specific plugins
+        api.addPick = option => {
+          let wrap = createWrapAspect.createWrap(option); // TODO should be moved to specific plugins
 
-              wrap.updateDisabled = () => {};
+          wrap.updateDisabled = () => {};
 
-              wrap.updateHidden = () => {};
+          wrap.updateHidden = () => {};
 
-              let pickHandlers = createPickHandlersAspect.createPickHandlers(wrap);
-              addPickAspect.addPick(wrap, pickHandlers);
-            };
-          }
-
+          let pickHandlers = createPickHandlersAspect.createPickHandlers(wrap);
+          addPickAspect.addPick(wrap, pickHandlers);
         };
       }
+
     };
   };
 }
@@ -4293,7 +4351,6 @@ function plug$a(configuration) {
     return {
       plugStaticDom: () => {
         let {
-          configuration,
           picksList
         } = aspects;
         let {
@@ -4377,57 +4434,54 @@ function CreatePopperPlugin() {
   };
 }
 function plug$9() {
+  var popperRtlAspect = PopperRtlAspect();
   return aspects => {
+    aspects.popperRtlAspect = popperRtlAspect;
+    let {
+      environment
+    } = aspects;
+    let {
+      createPopper,
+      Popper,
+      globalPopper
+    } = environment;
+    let createModifiersVX = null;
+    let createPopperVX = null;
+
+    if (Popper) {
+      // V2
+      createPopperVX = createPopper = function (createPopperConstructor) {
+        return function (anchorElement, element, popperConfiguration) {
+          return new createPopperConstructor(anchorElement, element, popperConfiguration);
+        };
+      }(Popper);
+      createModifiersVX = CreateModifiersV1;
+    } else if (createPopper) {
+      createPopperVX = createPopper;
+      createModifiersVX = CreateModifiersV2;
+    } else if (globalPopper) {
+      if (globalPopper.createPopper) {
+        createPopperVX = globalPopper.createPopper;
+        createModifiersVX = CreateModifiersV2;
+      } else {
+        createPopperVX = createPopper = function (createPopperConstructor) {
+          return function (anchorElement, element, popperConfiguration) {
+            return new createPopperConstructor(anchorElement, element, popperConfiguration);
+          };
+        }(globalPopper);
+
+        createModifiersVX = CreateModifiersV1;
+      }
+    } else {
+      throw new Error("BsMultiSelect: Popper component (https://popper.js.org) is required");
+    }
+
+    var createPopperConfigurationAspect = CreatePopperConfigurationAspect(createModifiersVX);
+    var createPopperAspect = CreatePopperAspect(createPopperVX, popperRtlAspect, createPopperConfigurationAspect);
+    aspects.createPopperAspect = createPopperAspect;
     return {
-      plugStaticDom() {
+      append() {
         let {
-          environment
-        } = aspects;
-        var popperRtlAspect = PopperRtlAspect();
-        aspects.popperRtlAspect = popperRtlAspect;
-        let {
-          createPopper,
-          Popper,
-          globalPopper
-        } = environment;
-        let createModifiersVX = null;
-        let createPopperVX = null;
-
-        if (Popper) {
-          // V2
-          createPopperVX = createPopper = function (createPopperConstructor) {
-            return function (anchorElement, element, popperConfiguration) {
-              return new createPopperConstructor(anchorElement, element, popperConfiguration);
-            };
-          }(Popper);
-          createModifiersVX = CreateModifiersV1;
-        } else if (createPopper) {
-          createPopperVX = createPopper;
-          createModifiersVX = CreateModifiersV2;
-        } else if (globalPopper) {
-          if (globalPopper.createPopper) {
-            createPopperVX = globalPopper.createPopper;
-            createModifiersVX = CreateModifiersV2;
-          } else {
-            createPopperVX = createPopper = function (createPopperConstructor) {
-              return function (anchorElement, element, popperConfiguration) {
-                return new createPopperConstructor(anchorElement, element, popperConfiguration);
-              };
-            }(globalPopper);
-
-            createModifiersVX = CreateModifiersV1;
-          }
-        } else {
-          throw new Error("BsMultiSelect: Popper component (https://popper.js.org) is required");
-        }
-
-        var createPopperConfigurationAspect = CreatePopperConfigurationAspect(createModifiersVX);
-        aspects.createPopperAspect = CreatePopperAspect(createPopperVX, popperRtlAspect, createPopperConfigurationAspect);
-      },
-
-      attach() {
-        let {
-          createPopperAspect,
           filterDom,
           choicesDom,
           disposeAspect,
@@ -4435,29 +4489,25 @@ function plug$9() {
           choicesVisibilityAspect,
           specialPicksEventsAspect
         } = aspects;
-        CreatePopper_ConstrunctorAspect(createPopperAspect, filterDom, choicesDom, disposeAspect, staticManager, choicesVisibilityAspect, specialPicksEventsAspect);
+        let filterInputElement = filterDom.filterInputElement;
+        let choicesElement = choicesDom.choicesElement;
+        let pop = createPopperAspect.createPopper(choicesElement, filterInputElement, true);
+        staticManager.appendToContainer = composeSync(staticManager.appendToContainer, pop.init);
+        var origBackSpace = specialPicksEventsAspect.backSpace;
+
+        specialPicksEventsAspect.backSpace = pick => {
+          origBackSpace(pick);
+          pop.update();
+        };
+
+        disposeAspect.dispose = composeSync(disposeAspect.dispose, pop.dispose);
+        choicesVisibilityAspect.updatePopupLocation = composeSync(choicesVisibilityAspect.updatePopupLocation, function () {
+          pop.update();
+        });
       }
 
     };
   };
-}
-
-function CreatePopper_ConstrunctorAspect(createPopperAspect, filterDom, choicesDom, disposeAspect, staticManager, choicesVisibilityAspect, specialPicksEventsAspect) {
-  let filterInputElement = filterDom.filterInputElement;
-  let choicesElement = choicesDom.choicesElement;
-  let pop = createPopperAspect.createPopper(choicesElement, filterInputElement, true);
-  staticManager.appendToContainer = composeSync(staticManager.appendToContainer, pop.init);
-  var origBackSpace = specialPicksEventsAspect.backSpace;
-
-  specialPicksEventsAspect.backSpace = pick => {
-    origBackSpace(pick);
-    pop.update();
-  };
-
-  disposeAspect.dispose = composeSync(disposeAspect.dispose, pop.dispose);
-  choicesVisibilityAspect.updatePopupLocation = composeSync(choicesVisibilityAspect.updatePopupLocation, function () {
-    pop.update();
-  });
 }
 
 function PopperRtlAspect() {
@@ -4467,46 +4517,7 @@ function PopperRtlAspect() {
     }
 
   };
-} // CreatePopperPlugin.attach = (aspects)=> {
-//     let {createPopperAspect, filterDom, choicesDom, disposeAspect, staticManager, choicesVisibilityAspect, specialPicksEventsAspect} = aspects;
-//     CreatePopper_ConstrunctorAspect(createPopperAspect, filterDom, choicesDom, disposeAspect, staticManager, choicesVisibilityAspect, specialPicksEventsAspect);
-// }
-// CreatePopperPlugin.plugStaticDom = (aspects) => {
-//     let {environment} = aspects;
-//     var popperRtlAspect = PopperRtlAspect();
-//     aspects.popperRtlAspect = popperRtlAspect;
-//     let {createPopper, Popper, globalPopper} = environment;
-//     let createModifiersVX = null;
-//     let createPopperVX = null;
-//     if (Popper) { // V2
-//         createPopperVX = createPopper =  (function(createPopperConstructor) {
-//             return function(anchorElement, element, popperConfiguration) {
-//                 return new createPopperConstructor(anchorElement, element, popperConfiguration);
-//             }
-//         })(Popper);;
-//         createModifiersVX = CreateModifiersV1;
-//     } else if (createPopper) {
-//         createPopperVX = createPopper;
-//         createModifiersVX = CreateModifiersV2;
-//     } else if (globalPopper) {
-//         if (globalPopper.createPopper) {
-//             createPopperVX = globalPopper.createPopper;
-//             createModifiersVX = CreateModifiersV2;
-//         } else {
-//             createPopperVX = createPopper =  (function(createPopperConstructor) {
-//                 return function(anchorElement, element, popperConfiguration) {
-//                     return new createPopperConstructor(anchorElement, element, popperConfiguration);
-//                 }
-//             })(globalPopper);
-//             createModifiersVX = CreateModifiersV1;
-//         }
-//     } else {
-//         throw new Error("BsMultiSelect: Popper component (https://popper.js.org) is required");
-//     }
-//     var createPopperConfigurationAspect = CreatePopperConfigurationAspect(createModifiersVX);
-//     aspects.createPopperAspect = CreatePopperAspect(createPopperVX, popperRtlAspect, createPopperConfigurationAspect);
-// }
-
+}
 
 function CreateModifiersV1(preventOverflow) {
   return {
@@ -4627,10 +4638,10 @@ function plug$8(configuration) {
 
 function choicesDynamicStyling(aspects) {
   let {
-    configuration,
-    environment,
     choicesDom,
-    navigateAspect
+    navigateAspect,
+    environment,
+    configuration
   } = aspects;
   let window = environment.window;
   let choicesElement = choicesDom.choicesElement;
@@ -4669,6 +4680,23 @@ function HighlightPlugin(defaults) {
     plug: plug$7
   };
 }
+
+function ExtendChoiceDomFactory$1(choiceDomFactory, optionPropertiesAspect) {
+  var origCreateChoiceDomFactory = choiceDomFactory.create;
+
+  choiceDomFactory.create = (choiceElement, wrap, toggle) => {
+    var value = origCreateChoiceDomFactory(choiceElement, wrap, toggle);
+
+    value.choiceDomManagerHandlers.updateHighlighted = () => {
+      var text = optionPropertiesAspect.getText(wrap.option);
+      var highlighter = aspects.highlightAspect.getHighlighter();
+      if (highlighter) highlighter(choiceElement, value.choiceDom, text);else choiceElement.textContent = text;
+    };
+
+    return value;
+  };
+}
+
 function plug$7(configuration) {
   return aspects => {
     return {
@@ -4676,24 +4704,12 @@ function plug$7(configuration) {
         if (configuration.useHighlighting) aspects.highlightAspect = HighlightAspect();
       },
 
-      plugStaticDomFactories() {
+      plugStaticDom() {
         var {
           choiceDomFactory,
           optionPropertiesAspect
         } = aspects;
-        var origCreateChoiceDomFactory = choiceDomFactory.create;
-
-        choiceDomFactory.create = (choiceElement, wrap, toggle) => {
-          var value = origCreateChoiceDomFactory(choiceElement, wrap, toggle);
-
-          value.choiceDomManagerHandlers.updateHighlighted = () => {
-            var text = optionPropertiesAspect.getText(wrap.option);
-            var highlighter = aspects.highlightAspect.getHighlighter();
-            if (highlighter) highlighter(choiceElement, value.choiceDom, text);else choiceElement.textContent = text;
-          };
-
-          return value;
-        };
+        ExtendChoiceDomFactory$1(choiceDomFactory, optionPropertiesAspect);
       },
 
       layout() {
@@ -4844,17 +4860,17 @@ function plug$5(configuration) {
         } = aspects;
         let customPickStylings = configuration.customPickStylings;
         let customPickStylingsAspect = CustomPickStylingsAspect(componentPropertiesAspect, customPickStylings);
-        ExtendPickDomFactory(pickDomFactory, customPickStylingsAspect);
+        ExtendPickDomFactory$1(pickDomFactory, customPickStylingsAspect);
       }
     };
   };
 }
 
-function ExtendPickDomFactory(pickDomFactory, customPickStylingsAspect) {
-  let origPickDomFactoryCreate = pickDomFactory.create;
+function ExtendPickDomFactory$1(pickDomFactory, customPickStylingsAspect) {
+  let origCreatePickDomFactory = pickDomFactory.create;
 
   pickDomFactory.create = function (pickElement, wrap, removeOnButton) {
-    var o = origPickDomFactoryCreate(pickElement, wrap, removeOnButton);
+    var o = origCreatePickDomFactory(pickElement, wrap, removeOnButton);
     customPickStylingsAspect.customize(wrap, o.pickDom, o.pickDomManagerHandlers);
     return o;
   };
@@ -4891,11 +4907,12 @@ function UpdateAppearancePlugin() {
   };
 }
 function plug$4() {
+  var updateAppearanceAspect = UpdateAppearanceAspect();
   return aspects => {
+    aspects.updateAppearanceAspect = updateAppearanceAspect;
     return {
       layout: () => {
         var {
-          updateAppearanceAspect,
           updateAspect,
           loadAspect
         } = aspects;
@@ -4907,9 +4924,6 @@ function plug$4() {
           }
 
         };
-      },
-      plugStaticDom: () => {
-        aspects.updateAppearanceAspect = UpdateAppearanceAspect();
       }
     };
   };
@@ -4930,22 +4944,12 @@ function DisableComponentPlugin() {
 function plug$3() {
   return aspects => {
     return {
-      plugStaticDomFactories: () => {
+      plugStaticDom: () => {
         var {
           pickDomFactory,
           componentPropertiesAspect
         } = aspects;
-        var origCreatePickDomFactory = pickDomFactory.create;
-
-        pickDomFactory.create = (pickElement, wrap, remove) => {
-          var value = origCreatePickDomFactory(pickElement, wrap, remove);
-
-          value.pickDomManagerHandlers.updateComponentDisabled = () => {
-            value.pickDom.pickButtonElement.disabled = componentPropertiesAspect.getDisabled();
-          };
-
-          return value;
-        };
+        ExtendPickDomFactory(pickDomFactory, componentPropertiesAspect);
       },
       layout: () => {
         var {
@@ -4955,12 +4959,13 @@ function plug$3() {
           componentPropertiesAspect,
           picksElementAspect
         } = aspects;
-        var origOnClick = picksElementAspect.onClick;
 
         var disableComponent = isComponentDisabled => {
           picksList.forEach(pick => pick.pickDomManagerHandlers.updateComponentDisabled());
           picksDom.disable(isComponentDisabled);
         };
+
+        var origOnClick = picksElementAspect.onClick;
 
         picksElementAspect.onClick = handler => {
           disableComponent = isComponentDisabled => {
@@ -4994,6 +4999,20 @@ function plug$3() {
   };
 }
 
+function ExtendPickDomFactory(pickDomFactory, componentPropertiesAspect) {
+  var origCreatePickDomFactory = pickDomFactory.create;
+
+  pickDomFactory.create = (pickElement, wrap, remove) => {
+    var value = origCreatePickDomFactory(pickElement, wrap, remove);
+
+    value.pickDomManagerHandlers.updateComponentDisabled = () => {
+      value.pickDom.pickButtonElement.disabled = componentPropertiesAspect.getDisabled();
+    };
+
+    return value;
+  };
+}
+
 function PlaceholderPlugin() {
   return {
     plug: plug$2
@@ -5008,7 +5027,7 @@ function plug$2(configuration) {
           picksList,
           picksDom,
           filterDom,
-          staticDom,
+          initialDom,
           updateDataAspect,
           resetFilterListAspect,
           filterManagerAspect,
@@ -5052,7 +5071,7 @@ function plug$2(configuration) {
         }
 
         if (!placeholder) {
-          placeholder = getDataGuardedWithPrefix(staticDom.initialElement, "bsmultiselect", "placeholder");
+          placeholder = getDataGuardedWithPrefix(initialDom.initialElement, "bsmultiselect", "placeholder");
         }
 
         function setEmptyInputWidth(isVisible) {
@@ -5157,7 +5176,7 @@ function FloatingLabelPlugin(defaults) {
 function plug$1(configuration) {
   return aspects => {
     return {
-      plugStaticDom: aspects => {
+      plugStaticDom: () => {
         aspects.floatingLabelAspect = FloatingLabelAspect();
       },
       layout: () => {
@@ -5277,7 +5296,7 @@ function plug(configuration) {
           resetLayoutAspect.resetLayout = composeSync(() => warningAspect.hide(), resetLayoutAspect.resetLayout);
         }
       },
-      attach: () => {
+      append: () => {
         let {
           createPopperAspect,
           filterDom,
@@ -5323,13 +5342,7 @@ function ExtendAfterInputAspect(afterInputAspect, warningAspect, filterManagerAs
 function WarningAspect(choicesDom, createElementAspect, staticManager, css) {
   let choicesElement = choicesDom.choicesElement;
   var warningElement = createElementAspect.createElement('DIV');
-  var origAppendToContainer = staticManager.appendToContainer;
-
-  staticManager.appendToContainer = function () {
-    origAppendToContainer();
-    choicesElement.parentNode.insertBefore(warningElement, choicesElement.nextSibling); // insert after
-  };
-
+  staticManager.appendToContainer = composeSync(staticManager.appendToContainer, () => choicesElement.parentNode.insertBefore(warningElement, choicesElement.nextSibling));
   warningElement.style.display = 'none';
   addStyling(warningElement, css.warning);
   return {
@@ -5442,6 +5455,7 @@ let utilities = {
 
 function ModuleFactory$1(environment, customizationPlugins, defaultCss) {
   if (!environment.trigger) environment.trigger = (e, name) => e.dispatchEvent(new environment.window.Event(name));
+  if (!environment.isIE11) environment.isIE11 = !!environment.window.MSInputMethodContext && !!environment.window.document.documentMode;
   let multiSelectPluginsObj = shallowClearClone(customizationPlugins, multiSelectPlugins);
   let pluginsArray = ObjectValuesEx(multiSelectPluginsObj);
   let {

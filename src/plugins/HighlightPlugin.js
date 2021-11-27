@@ -5,6 +5,22 @@ export function HighlightPlugin(defaults){
     }
 }
 
+function ExtendChoiceDomFactory(choiceDomFactory, optionPropertiesAspect){
+    var origCreateChoiceDomFactory = choiceDomFactory.create;
+    choiceDomFactory.create = (choiceElement, wrap, toggle) => {
+        var value = origCreateChoiceDomFactory(choiceElement, wrap, toggle);
+        value.choiceDomManagerHandlers.updateHighlighted = () => {
+            var text = optionPropertiesAspect.getText(wrap.option);
+            var highlighter = aspects.highlightAspect.getHighlighter();
+            if (highlighter)
+                highlighter(choiceElement, value.choiceDom, text);                    
+            else
+            choiceElement.textContent = text;
+        };
+        return value;
+    }
+}
+
 export function plug(configuration){
     return (aspects) => {
         return {
@@ -12,22 +28,9 @@ export function plug(configuration){
                 if (configuration.useHighlighting)
                     aspects.highlightAspect = HighlightAspect();
             },
-            plugStaticDomFactories(){
+            plugStaticDom(){
                 var {choiceDomFactory, optionPropertiesAspect} = aspects;
-            
-                var origCreateChoiceDomFactory = choiceDomFactory.create;
-                choiceDomFactory.create = (choiceElement, wrap, toggle) => {
-                    var value = origCreateChoiceDomFactory(choiceElement, wrap, toggle);
-                    value.choiceDomManagerHandlers.updateHighlighted = ()=>{
-                        var text = optionPropertiesAspect.getText(wrap.option);
-                        var highlighter = aspects.highlightAspect.getHighlighter();
-                        if (highlighter)
-                            highlighter(choiceElement, value.choiceDom, text);                    
-                        else
-                        choiceElement.textContent = text;
-                    };
-                    return value;
-                }                    
+                ExtendChoiceDomFactory(choiceDomFactory, optionPropertiesAspect);
             },
             layout(){
                 let {highlightAspect, filterManagerAspect,  buildChoiceAspect} = aspects;

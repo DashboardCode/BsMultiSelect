@@ -17,19 +17,18 @@ export function plug(configuration){
         var getValueRequiredAspect = GetValueRequiredAspect(configuration.getValueRequired);
         aspects.getValueRequiredAspect = getValueRequiredAspect;
         return {
-            layout: () => {
-                var {triggerAspect, onChangeAspect, optionsAspect, 
-                    staticDom, filterDom, updateDataAspect} = aspects;
-               // TODO: required could be a function
-               let {getIsValueMissing, valueMissingMessage, required} = configuration;
-               if (!isBoolean(required))
+            plugStaticDom: ()=>{
+                var {optionsAspect, initialDom} = aspects;
+                // TODO: required could be a function
+                let {getIsValueMissing, valueMissingMessage, required} = configuration;
+                if (!isBoolean(required))
                    required = getValueRequiredAspect.getValueRequired(); 
-               valueMissingMessage = defCall(valueMissingMessage,
-                   ()=> getDataGuardedWithPrefix(staticDom.initialElement,"bsmultiselect","value-missing-message"),
+                valueMissingMessage = defCall(valueMissingMessage,
+                   ()=> getDataGuardedWithPrefix(initialDom.initialElement,"bsmultiselect","value-missing-message"),
                    defValueMissingMessage)
             
-               if (!getIsValueMissing) {
-                   getIsValueMissing = () => {
+                if (!getIsValueMissing) {
+                    getIsValueMissing = () => {
                        let count = 0;
                        let optionsArray = optionsAspect.getOptions();
                        for (var i=0; i < optionsArray.length; i++) {
@@ -37,34 +36,40 @@ export function plug(configuration){
                                count++;
                        }
                        return count===0;
-                   }
-               }
+                    }
+                }
 
-               var isValueMissingObservable = ObservableLambda(()=>required && getIsValueMissing());
-               var validationApiObservable  = ObservableValue(!isValueMissingObservable.getValue());
-           
-               onChangeAspect.onChange = composeSync(isValueMissingObservable.call, onChangeAspect.onChange);
-               updateDataAspect.updateData = composeSync(isValueMissingObservable.call, updateDataAspect.updateData);
-           
-               aspects.validationApiAspect = ValidationApiAspect(validationApiObservable);
-           
-               return {
-                   buildApi(api){
-                       api.validationApi = ValidityApi(
-                           filterDom.filterInputElement, 
-                           isValueMissingObservable, 
-                           valueMissingMessage,
-                           (isValid)=>validationApiObservable.setValue(isValid),
-                           triggerAspect.trigger
-                       );
-                   },
-                   dispose(){
-                       isValueMissingObservable.detachAll(); 
-                       validationApiObservable.detachAll();
-                   }
-               }
-            },
-            layoutInit: () => {
+                var isValueMissingObservable = ObservableLambda(()=>required && getIsValueMissing());
+                var validationApiObservable  = ObservableValue(!isValueMissingObservable.getValue());
+                aspects.validationApiAspect = ValidationApiAspect(validationApiObservable);
+
+                return {
+                    layout: () => {
+                        var {onChangeAspect, updateDataAspect} = aspects;
+                        // TODO: required could be a function
+                        let {valueMissingMessage} = configuration;
+                        
+                        onChangeAspect.onChange = composeSync(isValueMissingObservable.call, onChangeAspect.onChange);
+                        updateDataAspect.updateData = composeSync(isValueMissingObservable.call, updateDataAspect.updateData); 
+                   
+                        return {
+                            buildApi(api){
+                                var {triggerAspect, filterDom} = aspects;
+                                api.validationApi = ValidityApi(
+                                   filterDom.filterInputElement,  // !!
+                                   isValueMissingObservable, 
+                                   valueMissingMessage,
+                                   (isValid)=>validationApiObservable.setValue(isValid),
+                                   triggerAspect.trigger
+                                );
+                            }
+                        }
+                    },
+                    dispose(){
+                        isValueMissingObservable.detachAll(); 
+                        validationApiObservable.detachAll();
+                    }
+                }
             }
         }
     }

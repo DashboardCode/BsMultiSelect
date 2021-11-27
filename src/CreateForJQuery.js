@@ -14,7 +14,9 @@ export function createForJQuery(window, $,  globalPopper, name, plugins, default
         trigger = composeEventTrigger(window);
     }
 
-    let environment = {trigger, window, globalPopper}
+    var isIE11 = !!window.MSInputMethodContext && !!window.document.documentMode;
+
+    let environment = {trigger, window, globalPopper, isIE11}
     let pluginsArray = ObjectValuesEx(plugins)
     let {create, defaultSettings} = MultiSelectBuilder(environment, pluginsArray, defaultCss);
     let createForUmd = (element, settings) => {

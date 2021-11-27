@@ -1,6 +1,4 @@
-export function UpdateDataAspect(
-    choicesDom, wraps, picksList, optionsLoopAspect, resetLayoutAspect
-    ){
+export function UpdateDataAspect(choicesDom, wraps, picksList, optionsLoopAspect, resetLayoutAspect){
     return {
         updateData(){
             // close drop down , remove filter

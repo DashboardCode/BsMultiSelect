@@ -12,13 +12,13 @@ export function plug(configuration){
     return (aspects) => {
         return {
             layout: () => {
-                let {popperRtlAspect, staticDom} = aspects;
+                let {popperRtlAspect, staticDom, initialDom} = aspects;
                 let {isRtl} = configuration;
                 let forceRtlOnContainer = false; 
                 if (isBoolean(isRtl))
                     forceRtlOnContainer = true;
                 else
-                    isRtl = getIsRtl(staticDom.initialElement);
+                    isRtl = getIsRtl(initialDom.initialElement);
             
                 var attributeBackup = AttributeBackup();
                 if (forceRtlOnContainer){

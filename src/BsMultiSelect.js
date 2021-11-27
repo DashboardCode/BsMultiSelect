@@ -45,177 +45,182 @@ import {CountableChoicesListInsertAspect} from './CountableChoicesListInsertAspe
 import {PicksElementAspect} from './PicksElementAspect'
 import {AfterInputAspect} from './AfterInputAspect'
 
+import {ShowErrorAspect} from './ShowErrorAspect'
 
 /// environment - common for many; configuration for concreate
-export function BsMultiSelect(element, environment, pluginManager, configuration, onInit){
-    var {window} = environment;
-    environment.isIE11 = !!window.MSInputMethodContext && !!document.documentMode;
-
-    let { containerClass,
-          css, 
+export function BsMultiSelect(element, environment, pluginManager, configuration){
+    let { css, 
           getDisabled,
           options, 
-          getText
+          getText,
+          pickButtonHTML,
+          containerClass
         } = configuration;
     
-    let disposeAspect = {dispose(){}};
-    let triggerAspect = TriggerAspect(element, environment.trigger);
-    let onChangeAspect = OnChangeAspect(triggerAspect, 'dashboardcode.multiselect:change');
-    let componentPropertiesAspect = ComponentPropertiesAspect(getDisabled??(() => false));
-    let optionsAspect = OptionsAspect(options); 
-    let optionPropertiesAspect = OptionPropertiesAspect(getText);
-    let isChoiceSelectableAspect = IsChoiceSelectableAspect();
-    let createWrapAspect       = CreateWrapAspect();
-    let createChoiceBaseAspect = CreateChoiceBaseAspect(optionPropertiesAspect);
-    
-    let addPickAspect = AddPickAspect();
-    let removePickAspect = RemovePickAspect();
-    
-    let createElementAspect = CreateElementAspect(name => window.document.createElement(name), (element, html) => element.innerHTML = html );
-    
-    let wrapsCollection = ArrayFacade();
-    
-
-    let countableChoicesList = DoublyLinkedList(
-        (wrap)=>wrap.choice.itemPrev, 
-        (warp, v)=>warp.choice.itemPrev=v, 
-        (wrap)=>wrap.choice.itemNext, 
-        (wrap, v)=>wrap.choice.itemNext=v
-    );
-    
-    let countableChoicesListInsertAspect = CountableChoicesListInsertAspect(countableChoicesList, wrapsCollection);
-
-    let choicesEnumerableAspect = ChoicesEnumerableAspect(countableChoicesList, wrap=>wrap.choice.itemNext)
-    
-    let filteredChoicesList = DoublyLinkedList(
-        (wrap)=>wrap.choice.filteredPrev, 
-        (wrap, v)=>wrap.choice.filteredPrev=v, 
-        (wrap)=>wrap.choice.filteredNext, 
-        (wrap, v)=>wrap.choice.filteredNext=v
-    );
-    
-    let emptyNavigateManager = NavigateManager(
-        countableChoicesList,
-        (wrap)=>wrap.choice.itemPrev,
-        (wrap)=>wrap.choice.itemNext 
+    let initialDom = {initialElement: element};
+    let createElementAspect = CreateElementAspect(name => environment.window.document.createElement(name), (element, html) => element.innerHTML = html );
+    let showErrorAspect = ShowErrorAspect(initialDom, createElementAspect);
+    try{
+        let disposeAspect = {dispose(){}};
+        let triggerAspect = TriggerAspect(element, environment.trigger);
+        let onChangeAspect = OnChangeAspect(triggerAspect, 'dashboardcode.multiselect:change');
+        let componentPropertiesAspect = ComponentPropertiesAspect(getDisabled??(() => false));
+        let optionsAspect = OptionsAspect(options); 
+        let optionPropertiesAspect = OptionPropertiesAspect(getText);
+        let isChoiceSelectableAspect = IsChoiceSelectableAspect();
+        let createWrapAspect       = CreateWrapAspect();
+        let createChoiceBaseAspect = CreateChoiceBaseAspect(optionPropertiesAspect);
         
-    ); 
-    let filteredNavigateManager = NavigateManager(
-        filteredChoicesList, 
-        (wrap)=>wrap.choice.filteredPrev,
-        (wrap)=>wrap.choice.filteredNext ); 
+        let addPickAspect = AddPickAspect();
+        let removePickAspect = RemovePickAspect();
 
-    let filterPredicateAspect = FilterPredicateAspect()
+        let wrapsCollection = ArrayFacade();
 
-    let filterManagerAspect = FilterManagerAspect(
-        emptyNavigateManager,
-        filteredNavigateManager,
+        let countableChoicesList = DoublyLinkedList(
+            (wrap)=>wrap.choice.itemPrev, 
+            (warp, v)=>warp.choice.itemPrev=v, 
+            (wrap)=>wrap.choice.itemNext, 
+            (wrap, v)=>wrap.choice.itemNext=v
+        );
         
-        filteredChoicesList, 
-        choicesEnumerableAspect,
-        filterPredicateAspect
-    );
+        let countableChoicesListInsertAspect = CountableChoicesListInsertAspect(countableChoicesList, wrapsCollection);
 
-    let hoveredChoiceAspect = HoveredChoiceAspect()
-    let navigateAspect = NavigateAspect(hoveredChoiceAspect, 
-        (down, hoveredChoice)=>filterManagerAspect.getNavigateManager().navigate(down, hoveredChoice));
-    let picksList = List();
-    let wraps = Wraps(
-        wrapsCollection,
-        ()=>countableChoicesList.reset(), 
-        (w)=>countableChoicesList.remove(w),
-        (w, key)=>countableChoicesListInsertAspect.countableChoicesListInsert(w, key));
+        let choicesEnumerableAspect = ChoicesEnumerableAspect(countableChoicesList, wrap=>wrap.choice.itemNext)
+        
+        let filteredChoicesList = DoublyLinkedList(
+            (wrap)=>wrap.choice.filteredPrev, 
+            (wrap, v)=>wrap.choice.filteredPrev=v, 
+            (wrap)=>wrap.choice.filteredNext, 
+            (wrap, v)=>wrap.choice.filteredNext=v
+        );
+        
+        let emptyNavigateManager = NavigateManager(
+            countableChoicesList,
+            (wrap)=>wrap.choice.itemPrev,
+            (wrap)=>wrap.choice.itemNext 
 
-    let picksDomFactory   = PicksDomFactory  (css, createElementAspect);
-    let filterDomFactory  = FilterDomFactory (css, createElementAspect);
-    let choicesDomFactory = ChoicesDomFactory(css, createElementAspect);
+        ); 
+        let filteredNavigateManager = NavigateManager(
+            filteredChoicesList, 
+            (wrap)=>wrap.choice.filteredPrev,
+            (wrap)=>wrap.choice.filteredNext ); 
 
-    let pickButtonAspect  = PickButtonAspect(configuration.pickButtonHTML);
-    let pickDomFactory    = PickDomFactory   (css, createElementAspect, optionPropertiesAspect, pickButtonAspect);
-    let choiceDomFactory  = ChoiceDomFactory (css, createElementAspect, optionPropertiesAspect);
-    var eventHandlers =  pluginManager.createHandlers();
-    eventHandlers.plugStaticDomFactories(
-        {
-            environment, configuration, disposeAspect, 
-            
+        let filterPredicateAspect = FilterPredicateAspect()
+
+        let filterManagerAspect = FilterManagerAspect(
+            emptyNavigateManager,
+            filteredNavigateManager,
+
+            filteredChoicesList, 
+            choicesEnumerableAspect,
+            filterPredicateAspect
+        );
+
+        let hoveredChoiceAspect = HoveredChoiceAspect()
+        let navigateAspect = NavigateAspect(hoveredChoiceAspect, 
+            (down, hoveredChoice)=>filterManagerAspect.getNavigateManager().navigate(down, hoveredChoice));
+        let picksList = List();
+        let wraps = Wraps(
+            wrapsCollection,
+            ()=>countableChoicesList.reset(), 
+            (w)=>countableChoicesList.remove(w),
+            (w, key)=>countableChoicesListInsertAspect.countableChoicesListInsert(w, key));
+
+        let picksDomFactory   = PicksDomFactory  (css, createElementAspect);
+        let filterDomFactory  = FilterDomFactory (css, createElementAspect);
+        let choicesDomFactory = ChoicesDomFactory(css, createElementAspect);
+
+        let pickButtonAspect  = PickButtonAspect(pickButtonHTML);
+
+        let pickDomFactory    = PickDomFactory   (css, createElementAspect, optionPropertiesAspect, pickButtonAspect); // overrided in CustomPickStylingsPlugin, DisableComponentPlugin
+        let choiceDomFactory  = ChoiceDomFactory (css, createElementAspect, optionPropertiesAspect); // overrided in CustomChoicesStylingsPlugin, HighlightPlugin
+        
+        let staticDomFactory  = StaticDomFactory(
+            createElementAspect, 
+            choicesDomFactory, 
+            filterDomFactory, 
+            picksDomFactory, 
+            initialDom, 
+            containerClass
+            );
+
+        let eventHandlers =  pluginManager.createHandlers();
+        
+        // TODO: union to events or create event bus
+        eventHandlers.plugStaticDom({
+            environment, configuration, disposeAspect,
+            initialDom, showErrorAspect,
             triggerAspect, onChangeAspect, componentPropertiesAspect, 
             countableChoicesList, countableChoicesListInsertAspect, optionPropertiesAspect, createElementAspect,
             wrapsCollection, choicesEnumerableAspect, filteredChoicesList, 
             filterPredicateAspect, isChoiceSelectableAspect,  
-    
+        
             hoveredChoiceAspect, navigateAspect, 
-    
+        
             choicesDomFactory, filterDomFactory, picksDomFactory, 
             pickDomFactory, choiceDomFactory, 
-    
+        
             filterManagerAspect,
-    
+        
             optionsAspect, createWrapAspect, createChoiceBaseAspect, 
-            picksList, wraps, addPickAspect, removePickAspect
-        }
-    );
+            picksList, wraps, addPickAspect, removePickAspect,
 
+            staticDomFactory
+        }); // apply selectElement support;  
 
-    let staticDomFactory  = StaticDomFactory(createElementAspect);
+        // TODO: to staticManager
+        let {staticManager, staticDom, filterDom, picksDom, choicesDom} = staticDomFactory.createStaticDom(); // overrided in SelectElementPlugin
 
-    eventHandlers.plugStaticDom({staticDomFactory}); // apply cssPatch to css, apply selectElement support;  
+        // after this we can use staticDom (means generated DOM elements) in plugin construtctor, what simplifies parameters passing a lot   
 
-    let {createStaticDom} = staticDomFactory.create(choicesDomFactory, filterDomFactory, picksDomFactory); // overrided in SelectElementPlugin
+        let specialPicksEventsAspect = SpecialPicksEventsAspect();
 
-    let {staticDom, filterDom, picksDom, staticManager, choicesDom} = createStaticDom(element, containerClass);
+        let choicesVisibilityAspect = ChoicesVisibilityAspect(choicesDom.choicesElement);
+        let resetFilterListAspect = ResetFilterListAspect(filterDom, filterManagerAspect);
+        let resetFilterAspect =  ResetFilterAspect(filterDom, resetFilterListAspect);
 
-    // after this we can use staticDom (means generated DOM elements) in plugin construtctor, what simplifies parameters passing a lot   
+        let focusInAspect = FocusInAspect(picksDom);
+        
+        let buildPickAspect = BuildPickAspect(picksDom, pickDomFactory);
+        
+        let producePickAspect = ProducePickAspect(picksList, removePickAspect, buildPickAspect);
+        let createPickHandlersAspect = CreatePickHandlersAspect(producePickAspect);
+        
+        let optionToggleAspect  = OptionToggleAspect(createPickHandlersAspect, addPickAspect);
+        let fullMatchAspect = FullMatchAspect(createPickHandlersAspect, addPickAspect);
+        let inputAspect = InputAspect(filterDom, filterManagerAspect, fullMatchAspect);    
+        let choiceClickAspect = ChoiceClickAspect(optionToggleAspect, filterDom);
+        
+        let buildChoiceAspect = BuildChoiceAspect(choicesDom, choiceDomFactory, choiceClickAspect);
+        
+        let buildAndAttachChoiceAspect =  BuildAndAttachChoiceAspect(buildChoiceAspect);
+        let resetLayoutAspect = ResetLayoutAspect(resetFilterAspect);
 
+        let optionAttachAspect = OptionAttachAspect(createWrapAspect, createChoiceBaseAspect, buildAndAttachChoiceAspect, wraps);
+        let optionsLoopAspect = OptionsLoopAspect(optionsAspect, optionAttachAspect);
+        let updateDataAspect = UpdateDataAspect(choicesDom, wraps, picksList, optionsLoopAspect, resetLayoutAspect);
+        let updateAspect = UpdateAspect(updateDataAspect);
 
-    let specialPicksEventsAspect = SpecialPicksEventsAspect();
+        let loadAspect = LoadAspect(optionsLoopAspect);
 
-    let choicesVisibilityAspect = ChoicesVisibilityAspect(choicesDom.choicesElement);
-    let resetFilterListAspect = ResetFilterListAspect(filterDom, filterManagerAspect);
-    let resetFilterAspect =  ResetFilterAspect(filterDom, resetFilterListAspect);
+        let picksElementAspect = PicksElementAspect(picksDom.picksElement);
+        let afterInputAspect = AfterInputAspect(filterManagerAspect, navigateAspect, choicesVisibilityAspect, hoveredChoiceAspect);
 
-    let focusInAspect = FocusInAspect(picksDom);
-    
-    let buildPickAspect = BuildPickAspect(picksDom, pickDomFactory);
-    
-    let producePickAspect = ProducePickAspect(picksList, removePickAspect, buildPickAspect);
-    let createPickHandlersAspect = CreatePickHandlersAspect(producePickAspect);
-    
-    let optionToggleAspect  = OptionToggleAspect(createPickHandlersAspect, addPickAspect);
-    let fullMatchAspect = FullMatchAspect(createPickHandlersAspect, addPickAspect);
-    let inputAspect = InputAspect(filterDom, filterManagerAspect, fullMatchAspect);    
-    let choiceClickAspect = ChoiceClickAspect(optionToggleAspect, filterDom);
-    
-    let buildChoiceAspect = BuildChoiceAspect(choicesDom, choiceDomFactory, choiceClickAspect);
-    
-    let buildAndAttachChoiceAspect =  BuildAndAttachChoiceAspect(buildChoiceAspect);
-    let resetLayoutAspect = ResetLayoutAspect(() => resetFilterAspect.resetFilter());
-
-    let optionAttachAspect = OptionAttachAspect(createWrapAspect, createChoiceBaseAspect, buildAndAttachChoiceAspect, wraps);
-    let optionsLoopAspect = OptionsLoopAspect(optionsAspect, optionAttachAspect);
-    let updateDataAspect = UpdateDataAspect(choicesDom, wraps, picksList, optionsLoopAspect, resetLayoutAspect);
-    let updateAspect = UpdateAspect(updateDataAspect);
-
-    let loadAspect = LoadAspect(optionsLoopAspect);
-
-    let picksElementAspect = PicksElementAspect(picksDom.picksElement);
-    let afterInputAspect = AfterInputAspect(filterManagerAspect, navigateAspect, choicesVisibilityAspect, hoveredChoiceAspect);
-
-    let multiSelectInlineLayoutAspect =  MultiSelectInlineLayoutAspect(
-        environment, filterDom, choicesDom, 
-        choicesVisibilityAspect, 
-        hoveredChoiceAspect, navigateAspect, filterManagerAspect,
-        focusInAspect, optionToggleAspect,
-        createPickHandlersAspect,
-        picksList,
-        inputAspect, specialPicksEventsAspect,  buildChoiceAspect, 
-        resetLayoutAspect, 
-        picksElementAspect,
-        afterInputAspect,
-        disposeAspect
-    );
-    
-    eventHandlers.layout(
-        {
+        let multiSelectInlineLayoutAspect =  MultiSelectInlineLayoutAspect(
+            environment, filterDom, choicesDom, 
+            choicesVisibilityAspect, 
+            hoveredChoiceAspect, navigateAspect, filterManagerAspect,
+            focusInAspect, optionToggleAspect,
+            createPickHandlersAspect,
+            picksList,
+            inputAspect, specialPicksEventsAspect,  buildChoiceAspect, 
+            resetLayoutAspect, 
+            picksElementAspect,
+            afterInputAspect,
+            disposeAspect
+        );
+        
+        eventHandlers.layout({
             staticDom, picksDom, choicesDom, filterDom, resetLayoutAspect, 
             choicesVisibilityAspect, staticManager, buildChoiceAspect, optionToggleAspect,  choiceClickAspect, 
             buildAndAttachChoiceAspect, optionsLoopAspect, optionAttachAspect,
@@ -225,37 +230,38 @@ export function BsMultiSelect(element, environment, pluginManager, configuration
             loadAspect, updateDataAspect, updateAspect, 
             fullMatchAspect,
             picksElementAspect, afterInputAspect,
-            multiSelectInlineLayoutAspect }
-    );
-    multiSelectInlineLayoutAspect.init();
-    eventHandlers.attach();
+            multiSelectInlineLayoutAspect 
+        });
+        multiSelectInlineLayoutAspect.layout(); // TODO: to staticManager
 
-    let api = {component: "BsMultiSelect.api"} // key to use in memory leak analyzes
-    eventHandlers.buildApi(api);
+        eventHandlers.append();
 
-    // after this we can pass aspects methods call without wrapping - there should be no more overridings. TODO freeze aspects?
-    api.dispose = composeSync(
-        resetLayoutAspect.resetLayout,
-        ()=>{disposeAspect.dispose()},
-        eventHandlers.dispose, 
-        ()=>{picksList.forEach(pick=>pick.dispose());},
-        wraps.dispose,
-        staticManager.dispose,  picksDom.dispose, filterDom.dispose );
-    
-    api.updateData = () => { 
-        updateDataAspect.updateData();
-    };
-    api.update = () => {
-        updateAspect.update()
+        let api = {component: "BsMultiSelect.api"} // key to use in memory leak analyzes
+        eventHandlers.buildApi(api);
+
+        api.updateData = () => { 
+            updateDataAspect.updateData();
+        };
+        api.update = () => {
+            updateAspect.update()
+        }
+        // TODO api.updateOption = (key) => {/* all updates: selected, disabled, hidden, text */}
+
+        api.dispose = composeSync(
+            resetLayoutAspect.resetLayout,
+            ()=>{disposeAspect.dispose()},
+            eventHandlers.dispose, 
+            ()=>{picksList.forEach(pick=>pick.dispose());},
+            wraps.dispose,
+            staticManager.dispose);
+        
+        // after this we can pass aspects methods call without wrapping - there should be no more overridings. TODO freeze aspects?        
+        staticManager.appendToContainer();
+
+        loadAspect.load();
+        return api;
+    } catch(error) {
+        showErrorAspect.showError(error);
+        throw error;
     }
- 
-    
-    // TODO api.updateOption = (key) => {/* all updates: selected, disabled, hidden, text */}
-
-    onInit?.(api, pluginManager.aspects);
-    picksDom.pickFilterElement.appendChild(filterDom.filterInputElement);
-    picksDom.picksElement.appendChild(picksDom.pickFilterElement); 
-    staticManager.appendToContainer();
-    loadAspect.load();
-    return api;
 }

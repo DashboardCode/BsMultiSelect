@@ -7,6 +7,9 @@ export function ModuleFactory(environment, customizationPlugins, defaultCss){
     if (!environment.trigger)
         environment.trigger = (e, name) => e.dispatchEvent(new environment.window.Event(name))
 
+    if (!environment.isIE11)
+        environment.isIE11 = !!environment.window.MSInputMethodContext && !!environment.window.document.documentMode;
+
     let multiSelectPluginsObj = shallowClearClone(customizationPlugins, multiSelectPlugins);
     let pluginsArray = ObjectValuesEx(multiSelectPluginsObj);
     let {create: BsMultiSelect, BsMultiSelectDefault} = MultiSelectBuilder(environment, pluginsArray, defaultCss) 

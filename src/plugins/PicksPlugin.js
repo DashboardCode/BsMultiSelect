@@ -10,7 +10,7 @@ export function plug(configuration){
     return (aspects) => {
         return {
             plugStaticDom: ()=> {
-                let {configuration, picksList} = aspects;
+                let {picksList} = aspects;
                 let {picks} = configuration;
                 if (picks) {
                     let {add: origAdd, reset: origReset} = picksList;

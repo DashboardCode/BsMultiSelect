@@ -12,34 +12,32 @@ export function plug(configuration){
     return (aspects) => {
         return {
             // TODO, LabelElement should be moved to StaticDomFactory and staticDom 
-            preLayoutBus: {
-                after: "LabelForAttributePlugin",
-                preLayout: () => {
-                    var {getLabelAspect, staticDom, configuration} = aspects; 
-                    var {selectElement} = staticDom;
-                    var {getDefaultLabel} = configuration;
-                    let origLabelAspectGetLabel = getLabelAspect.getLabel; 
-                    getLabelAspect.getLabel = () => {
-                        var e = origLabelAspectGetLabel();
-                        if (e)
-                            return e;
-                        else{
-                            if (selectElement){
-                                let labelElement = getDefaultLabel(selectElement);
-                                return labelElement;
-                            }
+            preLayout: () => {
+                var {getLabelAspect, staticDom} = aspects; 
+                var {selectElement} = staticDom;
+                var {getDefaultLabel} = configuration;
+                let origLabelAspectGetLabel = getLabelAspect.getLabel; 
+                getLabelAspect.getLabel = () => {
+                    var e = origLabelAspectGetLabel();
+                    if (e)
+                        return e;
+                    else{
+                        if (selectElement){
+                            let labelElement = getDefaultLabel(selectElement);
+                            return labelElement;
                         }
                     }
                 }
             },
             layout: () => {
                 let {validationApiAspect, 
+                    initialDom,
                     picksDom, staticDom, updateAppearanceAspect, componentPropertiesAspect, floatingLabelAspect} = aspects;
                 let {getValidity, getSize, useCssPatch, css, composeGetSize} = configuration;
                 
                 let selectElement = staticDom.selectElement;
                 
-                let initialElement = staticDom.initialElement;
+                let initialElement = initialDom.initialElement;
                 
                 let isFloatingLabel = false;
                 if (floatingLabelAspect){
@@ -97,7 +95,7 @@ export function plug(configuration){
                 }
             
                 var getWasValidated = () => {
-                    var wasValidatedElement = closestByClassName(staticDom.initialElement, 'was-validated');
+                    var wasValidatedElement = closestByClassName(initialElement, 'was-validated');
                     return wasValidatedElement?true:false;
                 }
                 var wasUpdatedObservable = ObservableLambda(()=>getWasValidated());
@@ -111,7 +109,7 @@ export function plug(configuration){
                 validationObservable.attach(
                     (value)=>{
                         var  {validMessages, invalidMessages} = getMessagesElements(staticDom.containerElement);
-                        updateValidity( picksDom.picksElement, validMessages, invalidMessages, value);
+                        updateValidity(picksDom.picksElement, validMessages, invalidMessages, value);
                         picksDom.toggleFocusStyling();
                     }
                 )
@@ -134,9 +132,9 @@ export function plug(configuration){
                 
                 return {
                     buildApi(api){
-                        api.updateSize = updateSize;
-                        api.updateValidity = ()=> getManualValidationObservable.call();
-                        api.updateWasValidated = ()=>wasUpdatedObservable.call();
+                        api.updateSize=updateSize;
+                        api.updateValidity=()=>getManualValidationObservable.call();
+                        api.updateWasValidated=()=>wasUpdatedObservable.call();
                     },
                     dispose(){
                         wasUpdatedObservable.detachAll();

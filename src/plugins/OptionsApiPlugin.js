@@ -7,12 +7,10 @@ export function OptionsApiPlugin(){
 export function plug(){
     return (aspects) => {
         return {
-            layout: () => {
-                let {buildAndAttachChoiceAspect, wraps, wrapsCollection, createWrapAspect, createChoiceBaseAspect,
-                    optionsAspect, resetLayoutAspect} = aspects;
-                return {
                     buildApi(api){
-                    
+                        let {buildAndAttachChoiceAspect, wraps, wrapsCollection, createWrapAspect, createChoiceBaseAspect,
+                            optionsAspect, resetLayoutAspect} = aspects;
+                            
                         api.updateOptionAdded = (key) => {  // TODO: generalize index as key 
                             let options = optionsAspect.getOptions();
                             let option = options[key];
@@ -37,7 +35,5 @@ export function plug(){
                         }
                     }
                 }
-            }
-        }
     }
 }

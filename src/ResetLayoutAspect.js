@@ -1,5 +1,7 @@
-export function ResetLayoutAspect(resetLayout){
+export function ResetLayoutAspect(resetFilterAspect){
     return {
-        resetLayout
+        resetLayout(){
+            resetFilterAspect.resetFilter();
+        }
     }
 }

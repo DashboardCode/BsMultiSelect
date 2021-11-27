@@ -1,11 +1,11 @@
 /*!
-  * BsMultiSelect v1.2.0-beta.20 (https://dashboardcode.github.io/BsMultiSelect/)
+  * BsMultiSelect v1.2.0-beta.22 (https://dashboardcode.github.io/BsMultiSelect/)
   * Copyright 2017-2021 Roman Pokrovskij (github user rpokrovskij)
   * Licensed under Apache 2 (https://github.com/DashboardCode/BsMultiSelect/blob/master/LICENSE)
   */
 (function (global, factory) {
-    typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory(require('@popperjs/core')) :
-    typeof define === 'function' && define.amd ? define(['@popperjs/core'], factory) :
+    typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory(require('@popperjs/core'), require('jquery')) :
+    typeof define === 'function' && define.amd ? define(['@popperjs/core', 'jquery'], factory) :
     (global = typeof globalThis !== 'undefined' ? globalThis : global || self, global.dashboardcode = factory(global.Popper));
 })(this, (function (Popper) { 'use strict';
 
@@ -1015,72 +1015,66 @@
       cssPatch.choice_hover = 'text-primary bg-light';
     }
 
-    function StaticDomFactory(createElementAspect) {
+    function StaticDomFactory(createElementAspect, choicesDomFactory, filterDomFactory, picksDomFactory, initialDom, containerClass) {
       return {
-        create: function create(choicesDomFactory, filterDomFactory, picksDomFactory) {
+        createStaticDom: function createStaticDom() {
+          var element = initialDom.initialElement;
+          var containerElement, picksElement;
+          var removableContainerClass = false;
+
+          if (element.tagName == 'DIV') {
+            containerElement = element;
+
+            if (!containerElement.classList.contains(containerClass)) {
+              containerElement.classList.add(containerClass);
+              removableContainerClass = true;
+            }
+
+            picksElement = findDirectChildByTagName(containerElement, 'UL');
+          } else if (element.tagName == 'UL') {
+            picksElement = element;
+            containerElement = closestByClassName(element, containerClass);
+
+            if (!containerElement) {
+              throw new Error('BsMultiSelect: defined on UL but precedentant DIV for container not found; class=' + containerClass);
+            }
+          } else if (element.tagName == "INPUT") {
+            throw new Error('BsMultiSelect: INPUT element is not supported');
+          }
+
+          var staticDom = {
+            containerElement: containerElement
+          };
+          var isDisposablePicksElementFlag = false;
+
+          if (!picksElement) {
+            picksElement = createElementAspect.createElement('UL');
+            isDisposablePicksElementFlag = true;
+          }
+
           var choicesDom = choicesDomFactory.create();
+          var picksDom = picksDomFactory.create(picksElement, isDisposablePicksElementFlag);
+          var filterDom = filterDomFactory.create(isDisposablePicksElementFlag);
+          var choicesElement = choicesDom.choicesElement;
           return {
-            createStaticDom: function createStaticDom(element, containerClass) {
-              function showError(message) {
-                element.style.backgroundColor = 'red';
-                element.style.color = 'white';
-                throw new Error(message);
+            staticDom: staticDom,
+            choicesDom: choicesDom,
+            filterDom: filterDom,
+            picksDom: picksDom,
+            staticManager: {
+              appendToContainer: function appendToContainer() {
+                picksDom.pickFilterElement.appendChild(filterDom.filterInputElement);
+                picksDom.picksElement.appendChild(picksDom.pickFilterElement);
+                containerElement.appendChild(choicesElement);
+                if (isDisposablePicksElementFlag) containerElement.appendChild(picksElement);
+              },
+              dispose: function dispose() {
+                containerElement.removeChild(choicesElement);
+                if (removableContainerClass) containerElement.classList.remove(containerClass);
+                if (isDisposablePicksElementFlag) containerElement.removeChild(picksElement);
+                picksDom.dispose();
+                filterDom.dispose();
               }
-
-              var containerElement, picksElement;
-              var removableContainerClass = false;
-
-              if (element.tagName == 'DIV') {
-                containerElement = element;
-
-                if (!containerElement.classList.contains(containerClass)) {
-                  containerElement.classList.add(containerClass);
-                  removableContainerClass = true;
-                }
-
-                picksElement = findDirectChildByTagName(containerElement, 'UL');
-              } else if (element.tagName == 'UL') {
-                picksElement = element;
-                containerElement = closestByClassName(element, containerClass);
-
-                if (!containerElement) {
-                  showError('BsMultiSelect: defined on UL but precedentant DIV for container not found; class=' + containerClass);
-                }
-              } else if (element.tagName == "INPUT") {
-                showError('BsMultiSelect: INPUT element is not supported');
-              }
-
-              var isDisposablePicksElementFlag = false;
-
-              if (!picksElement) {
-                picksElement = createElementAspect.createElement('UL');
-                isDisposablePicksElementFlag = true;
-              }
-
-              var filterDom = filterDomFactory.create(isDisposablePicksElementFlag);
-              var picksDom = picksDomFactory.create(picksElement, isDisposablePicksElementFlag);
-              return {
-                choicesDom: choicesDom,
-                filterDom: filterDom,
-                picksDom: picksDom,
-                staticDom: {
-                  initialElement: element,
-                  containerElement: containerElement,
-                  picksElement: picksElement,
-                  isDisposablePicksElementFlag: isDisposablePicksElementFlag
-                },
-                staticManager: {
-                  appendToContainer: function appendToContainer() {
-                    containerElement.appendChild(choicesDom.choicesElement);
-                    if (isDisposablePicksElementFlag) containerElement.appendChild(picksElement);
-                  },
-                  dispose: function dispose() {
-                    containerElement.removeChild(choicesDom.choicesElement);
-                    if (removableContainerClass) containerElement.classList.remove(containerClass);
-                    if (isDisposablePicksElementFlag) containerElement.removeChild(picksElement);
-                  }
-                }
-              };
             }
           };
         }
@@ -1105,6 +1099,7 @@
           var isFocusIn = false;
           return {
             picksElement: picksElement,
+            isDisposablePicksElementFlag: isDisposablePicksElementFlag,
             pickFilterElement: pickFilterElement,
             createPickElement: function createPickElement() {
               var pickElement = createElementAspect.createElement('LI');
@@ -2169,7 +2164,7 @@
       }
 
       return {
-        init: function init() {
+        layout: function layout() {
           filterDom.onFocusIn(function () {
             return focusInAspect.setFocusIn(true);
           });
@@ -2229,9 +2224,11 @@
       };
     }
 
-    function ResetLayoutAspect(resetLayout) {
+    function ResetLayoutAspect(resetFilterAspect) {
       return {
-        resetLayout: resetLayout
+        resetLayout: function resetLayout() {
+          resetFilterAspect.resetFilter();
+        }
       };
     }
 
@@ -2299,220 +2296,269 @@
       };
     }
 
-    function BsMultiSelect$1(element, environment, pluginManager, configuration, onInit) {
-      var _eventHandlers$layout;
+    function ShowErrorAspect(initialDom, createElementAspect) {
+      return {
+        showError: function showError(error) {
+          var errorElement = createElementAspect.createElement('SPAN');
+          errorElement.style.backgroundColor = 'red';
+          errorElement.style.color = 'white';
+          errorElement.style.block = 'inline-block';
+          errorElement.style.padding = '0.2rem 0.5rem';
+          errorElement.textContent = 'BsMultiSelect ' + error.toString();
+          initialDom.initialElement.parentNode.insertBefore(errorElement, initialDom.initialElement.nextSibling);
+        }
+      };
+    }
 
-      var window = environment.window;
-      environment.isIE11 = !!window.MSInputMethodContext && !!document.documentMode;
-      var containerClass = configuration.containerClass,
-          css = configuration.css,
+    function BsMultiSelect$1(element, environment, pluginManager, configuration) {
+      var css = configuration.css,
           getDisabled = configuration.getDisabled,
           options = configuration.options,
-          getText = configuration.getText;
-      var disposeAspect = {
-        dispose: function dispose() {}
+          getText = configuration.getText,
+          pickButtonHTML = configuration.pickButtonHTML,
+          containerClass = configuration.containerClass;
+      var initialDom = {
+        initialElement: element
       };
-      var triggerAspect = TriggerAspect(element, environment.trigger);
-      var onChangeAspect = OnChangeAspect(triggerAspect, 'dashboardcode.multiselect:change');
-      var componentPropertiesAspect = ComponentPropertiesAspect(getDisabled != null ? getDisabled : function () {
-        return false;
-      });
-      var optionsAspect = OptionsAspect(options);
-      var optionPropertiesAspect = OptionPropertiesAspect(getText);
-      var isChoiceSelectableAspect = IsChoiceSelectableAspect();
-      var createWrapAspect = CreateWrapAspect();
-      var createChoiceBaseAspect = CreateChoiceBaseAspect(optionPropertiesAspect);
-      var addPickAspect = AddPickAspect();
-      var removePickAspect = RemovePickAspect();
       var createElementAspect = CreateElementAspect(function (name) {
-        return window.document.createElement(name);
+        return environment.window.document.createElement(name);
       }, function (element, html) {
         return element.innerHTML = html;
       });
-      var wrapsCollection = ArrayFacade();
-      var countableChoicesList = DoublyLinkedList(function (wrap) {
-        return wrap.choice.itemPrev;
-      }, function (warp, v) {
-        return warp.choice.itemPrev = v;
-      }, function (wrap) {
-        return wrap.choice.itemNext;
-      }, function (wrap, v) {
-        return wrap.choice.itemNext = v;
-      });
-      var countableChoicesListInsertAspect = CountableChoicesListInsertAspect(countableChoicesList, wrapsCollection);
-      var choicesEnumerableAspect = ChoicesEnumerableAspect(countableChoicesList, function (wrap) {
-        return wrap.choice.itemNext;
-      });
-      var filteredChoicesList = DoublyLinkedList(function (wrap) {
-        return wrap.choice.filteredPrev;
-      }, function (wrap, v) {
-        return wrap.choice.filteredPrev = v;
-      }, function (wrap) {
-        return wrap.choice.filteredNext;
-      }, function (wrap, v) {
-        return wrap.choice.filteredNext = v;
-      });
-      var emptyNavigateManager = NavigateManager(countableChoicesList, function (wrap) {
-        return wrap.choice.itemPrev;
-      }, function (wrap) {
-        return wrap.choice.itemNext;
-      });
-      var filteredNavigateManager = NavigateManager(filteredChoicesList, function (wrap) {
-        return wrap.choice.filteredPrev;
-      }, function (wrap) {
-        return wrap.choice.filteredNext;
-      });
-      var filterPredicateAspect = FilterPredicateAspect();
-      var filterManagerAspect = FilterManagerAspect(emptyNavigateManager, filteredNavigateManager, filteredChoicesList, choicesEnumerableAspect, filterPredicateAspect);
-      var hoveredChoiceAspect = HoveredChoiceAspect();
-      var navigateAspect = NavigateAspect(hoveredChoiceAspect, function (down, hoveredChoice) {
-        return filterManagerAspect.getNavigateManager().navigate(down, hoveredChoice);
-      });
-      var picksList = List();
-      var wraps = Wraps(wrapsCollection, function () {
-        return countableChoicesList.reset();
-      }, function (w) {
-        return countableChoicesList.remove(w);
-      }, function (w, key) {
-        return countableChoicesListInsertAspect.countableChoicesListInsert(w, key);
-      });
-      var picksDomFactory = PicksDomFactory(css, createElementAspect);
-      var filterDomFactory = FilterDomFactory(css, createElementAspect);
-      var choicesDomFactory = ChoicesDomFactory(css, createElementAspect);
-      var pickButtonAspect = PickButtonAspect(configuration.pickButtonHTML);
-      var pickDomFactory = PickDomFactory(css, createElementAspect, optionPropertiesAspect, pickButtonAspect);
-      var choiceDomFactory = ChoiceDomFactory(css, createElementAspect, optionPropertiesAspect);
-      var eventHandlers = pluginManager.createHandlers();
-      eventHandlers.plugStaticDomFactories({
-        environment: environment,
-        configuration: configuration,
-        disposeAspect: disposeAspect,
-        triggerAspect: triggerAspect,
-        onChangeAspect: onChangeAspect,
-        componentPropertiesAspect: componentPropertiesAspect,
-        countableChoicesList: countableChoicesList,
-        countableChoicesListInsertAspect: countableChoicesListInsertAspect,
-        optionPropertiesAspect: optionPropertiesAspect,
-        createElementAspect: createElementAspect,
-        wrapsCollection: wrapsCollection,
-        choicesEnumerableAspect: choicesEnumerableAspect,
-        filteredChoicesList: filteredChoicesList,
-        filterPredicateAspect: filterPredicateAspect,
-        isChoiceSelectableAspect: isChoiceSelectableAspect,
-        hoveredChoiceAspect: hoveredChoiceAspect,
-        navigateAspect: navigateAspect,
-        choicesDomFactory: choicesDomFactory,
-        filterDomFactory: filterDomFactory,
-        picksDomFactory: picksDomFactory,
-        pickDomFactory: pickDomFactory,
-        choiceDomFactory: choiceDomFactory,
-        filterManagerAspect: filterManagerAspect,
-        optionsAspect: optionsAspect,
-        createWrapAspect: createWrapAspect,
-        createChoiceBaseAspect: createChoiceBaseAspect,
-        picksList: picksList,
-        wraps: wraps,
-        addPickAspect: addPickAspect,
-        removePickAspect: removePickAspect
-      });
-      var staticDomFactory = StaticDomFactory(createElementAspect);
-      eventHandlers.plugStaticDom({
-        staticDomFactory: staticDomFactory
-      }); // apply cssPatch to css, apply selectElement support;  
+      var showErrorAspect = ShowErrorAspect(initialDom, createElementAspect);
 
-      var _staticDomFactory$cre = staticDomFactory.create(choicesDomFactory, filterDomFactory, picksDomFactory),
-          createStaticDom = _staticDomFactory$cre.createStaticDom; // overrided in SelectElementPlugin
+      try {
+        var _eventHandlers$layout;
 
-
-      var _createStaticDom = createStaticDom(element, containerClass),
-          staticDom = _createStaticDom.staticDom,
-          filterDom = _createStaticDom.filterDom,
-          picksDom = _createStaticDom.picksDom,
-          staticManager = _createStaticDom.staticManager,
-          choicesDom = _createStaticDom.choicesDom; // after this we can use staticDom (means generated DOM elements) in plugin construtctor, what simplifies parameters passing a lot   
-
-
-      var specialPicksEventsAspect = SpecialPicksEventsAspect();
-      var choicesVisibilityAspect = ChoicesVisibilityAspect(choicesDom.choicesElement);
-      var resetFilterListAspect = ResetFilterListAspect(filterDom, filterManagerAspect);
-      var resetFilterAspect = ResetFilterAspect(filterDom, resetFilterListAspect);
-      var focusInAspect = FocusInAspect(picksDom);
-      var buildPickAspect = BuildPickAspect(picksDom, pickDomFactory);
-      var producePickAspect = ProducePickAspect(picksList, removePickAspect, buildPickAspect);
-      var createPickHandlersAspect = CreatePickHandlersAspect(producePickAspect);
-      var optionToggleAspect = OptionToggleAspect(createPickHandlersAspect, addPickAspect);
-      var fullMatchAspect = FullMatchAspect(createPickHandlersAspect, addPickAspect);
-      var inputAspect = InputAspect(filterDom, filterManagerAspect, fullMatchAspect);
-      var choiceClickAspect = ChoiceClickAspect(optionToggleAspect, filterDom);
-      var buildChoiceAspect = BuildChoiceAspect(choicesDom, choiceDomFactory, choiceClickAspect);
-      var buildAndAttachChoiceAspect = BuildAndAttachChoiceAspect(buildChoiceAspect);
-      var resetLayoutAspect = ResetLayoutAspect(function () {
-        return resetFilterAspect.resetFilter();
-      });
-      var optionAttachAspect = OptionAttachAspect(createWrapAspect, createChoiceBaseAspect, buildAndAttachChoiceAspect, wraps);
-      var optionsLoopAspect = OptionsLoopAspect(optionsAspect, optionAttachAspect);
-      var updateDataAspect = UpdateDataAspect(choicesDom, wraps, picksList, optionsLoopAspect, resetLayoutAspect);
-      var updateAspect = UpdateAspect(updateDataAspect);
-      var loadAspect = LoadAspect(optionsLoopAspect);
-      var picksElementAspect = PicksElementAspect(picksDom.picksElement);
-      var afterInputAspect = AfterInputAspect(filterManagerAspect, navigateAspect, choicesVisibilityAspect, hoveredChoiceAspect);
-      var multiSelectInlineLayoutAspect = MultiSelectInlineLayoutAspect(environment, filterDom, choicesDom, choicesVisibilityAspect, hoveredChoiceAspect, navigateAspect, filterManagerAspect, focusInAspect, optionToggleAspect, createPickHandlersAspect, picksList, inputAspect, specialPicksEventsAspect, buildChoiceAspect, resetLayoutAspect, picksElementAspect, afterInputAspect, disposeAspect);
-      eventHandlers.layout((_eventHandlers$layout = {
-        staticDom: staticDom,
-        picksDom: picksDom,
-        choicesDom: choicesDom,
-        filterDom: filterDom,
-        resetLayoutAspect: resetLayoutAspect,
-        choicesVisibilityAspect: choicesVisibilityAspect,
-        staticManager: staticManager,
-        buildChoiceAspect: buildChoiceAspect,
-        optionToggleAspect: optionToggleAspect,
-        choiceClickAspect: choiceClickAspect,
-        buildAndAttachChoiceAspect: buildAndAttachChoiceAspect,
-        optionsLoopAspect: optionsLoopAspect,
-        optionAttachAspect: optionAttachAspect,
-        buildPickAspect: buildPickAspect,
-        producePickAspect: producePickAspect,
-        createPickHandlersAspect: createPickHandlersAspect,
-        inputAspect: inputAspect,
-        resetFilterListAspect: resetFilterListAspect,
-        resetFilterAspect: resetFilterAspect,
-        specialPicksEventsAspect: specialPicksEventsAspect
-      }, _eventHandlers$layout["resetLayoutAspect"] = resetLayoutAspect, _eventHandlers$layout.focusInAspect = focusInAspect, _eventHandlers$layout.loadAspect = loadAspect, _eventHandlers$layout.updateDataAspect = updateDataAspect, _eventHandlers$layout.updateAspect = updateAspect, _eventHandlers$layout.fullMatchAspect = fullMatchAspect, _eventHandlers$layout.picksElementAspect = picksElementAspect, _eventHandlers$layout.afterInputAspect = afterInputAspect, _eventHandlers$layout.multiSelectInlineLayoutAspect = multiSelectInlineLayoutAspect, _eventHandlers$layout));
-      multiSelectInlineLayoutAspect.init();
-      eventHandlers.attach();
-      var api = {
-        component: "BsMultiSelect.api"
-      }; // key to use in memory leak analyzes
-
-      eventHandlers.buildApi(api); // after this we can pass aspects methods call without wrapping - there should be no more overridings. TODO freeze aspects?
-
-      api.dispose = composeSync(resetLayoutAspect.resetLayout, function () {
-        disposeAspect.dispose();
-      }, eventHandlers.dispose, function () {
-        picksList.forEach(function (pick) {
-          return pick.dispose();
+        var disposeAspect = {
+          dispose: function dispose() {}
+        };
+        var triggerAspect = TriggerAspect(element, environment.trigger);
+        var onChangeAspect = OnChangeAspect(triggerAspect, 'dashboardcode.multiselect:change');
+        var componentPropertiesAspect = ComponentPropertiesAspect(getDisabled != null ? getDisabled : function () {
+          return false;
         });
-      }, wraps.dispose, staticManager.dispose, picksDom.dispose, filterDom.dispose);
+        var optionsAspect = OptionsAspect(options);
+        var optionPropertiesAspect = OptionPropertiesAspect(getText);
+        var isChoiceSelectableAspect = IsChoiceSelectableAspect();
+        var createWrapAspect = CreateWrapAspect();
+        var createChoiceBaseAspect = CreateChoiceBaseAspect(optionPropertiesAspect);
+        var addPickAspect = AddPickAspect();
+        var removePickAspect = RemovePickAspect();
+        var wrapsCollection = ArrayFacade();
+        var countableChoicesList = DoublyLinkedList(function (wrap) {
+          return wrap.choice.itemPrev;
+        }, function (warp, v) {
+          return warp.choice.itemPrev = v;
+        }, function (wrap) {
+          return wrap.choice.itemNext;
+        }, function (wrap, v) {
+          return wrap.choice.itemNext = v;
+        });
+        var countableChoicesListInsertAspect = CountableChoicesListInsertAspect(countableChoicesList, wrapsCollection);
+        var choicesEnumerableAspect = ChoicesEnumerableAspect(countableChoicesList, function (wrap) {
+          return wrap.choice.itemNext;
+        });
+        var filteredChoicesList = DoublyLinkedList(function (wrap) {
+          return wrap.choice.filteredPrev;
+        }, function (wrap, v) {
+          return wrap.choice.filteredPrev = v;
+        }, function (wrap) {
+          return wrap.choice.filteredNext;
+        }, function (wrap, v) {
+          return wrap.choice.filteredNext = v;
+        });
+        var emptyNavigateManager = NavigateManager(countableChoicesList, function (wrap) {
+          return wrap.choice.itemPrev;
+        }, function (wrap) {
+          return wrap.choice.itemNext;
+        });
+        var filteredNavigateManager = NavigateManager(filteredChoicesList, function (wrap) {
+          return wrap.choice.filteredPrev;
+        }, function (wrap) {
+          return wrap.choice.filteredNext;
+        });
+        var filterPredicateAspect = FilterPredicateAspect();
+        var filterManagerAspect = FilterManagerAspect(emptyNavigateManager, filteredNavigateManager, filteredChoicesList, choicesEnumerableAspect, filterPredicateAspect);
+        var hoveredChoiceAspect = HoveredChoiceAspect();
+        var navigateAspect = NavigateAspect(hoveredChoiceAspect, function (down, hoveredChoice) {
+          return filterManagerAspect.getNavigateManager().navigate(down, hoveredChoice);
+        });
+        var picksList = List();
+        var wraps = Wraps(wrapsCollection, function () {
+          return countableChoicesList.reset();
+        }, function (w) {
+          return countableChoicesList.remove(w);
+        }, function (w, key) {
+          return countableChoicesListInsertAspect.countableChoicesListInsert(w, key);
+        });
+        var picksDomFactory = PicksDomFactory(css, createElementAspect);
+        var filterDomFactory = FilterDomFactory(css, createElementAspect);
+        var choicesDomFactory = ChoicesDomFactory(css, createElementAspect);
+        var pickButtonAspect = PickButtonAspect(pickButtonHTML);
+        var pickDomFactory = PickDomFactory(css, createElementAspect, optionPropertiesAspect, pickButtonAspect); // overrided in CustomPickStylingsPlugin, DisableComponentPlugin
 
-      api.updateData = function () {
-        updateDataAspect.updateData();
-      };
+        var choiceDomFactory = ChoiceDomFactory(css, createElementAspect, optionPropertiesAspect); // overrided in CustomChoicesStylingsPlugin, HighlightPlugin
 
-      api.update = function () {
-        updateAspect.update();
-      }; // TODO api.updateOption = (key) => {/* all updates: selected, disabled, hidden, text */}
+        var staticDomFactory = StaticDomFactory(createElementAspect, choicesDomFactory, filterDomFactory, picksDomFactory, initialDom, containerClass);
+        var eventHandlers = pluginManager.createHandlers(); // TODO: union to events or create event bus
+
+        eventHandlers.plugStaticDom({
+          environment: environment,
+          configuration: configuration,
+          disposeAspect: disposeAspect,
+          initialDom: initialDom,
+          showErrorAspect: showErrorAspect,
+          triggerAspect: triggerAspect,
+          onChangeAspect: onChangeAspect,
+          componentPropertiesAspect: componentPropertiesAspect,
+          countableChoicesList: countableChoicesList,
+          countableChoicesListInsertAspect: countableChoicesListInsertAspect,
+          optionPropertiesAspect: optionPropertiesAspect,
+          createElementAspect: createElementAspect,
+          wrapsCollection: wrapsCollection,
+          choicesEnumerableAspect: choicesEnumerableAspect,
+          filteredChoicesList: filteredChoicesList,
+          filterPredicateAspect: filterPredicateAspect,
+          isChoiceSelectableAspect: isChoiceSelectableAspect,
+          hoveredChoiceAspect: hoveredChoiceAspect,
+          navigateAspect: navigateAspect,
+          choicesDomFactory: choicesDomFactory,
+          filterDomFactory: filterDomFactory,
+          picksDomFactory: picksDomFactory,
+          pickDomFactory: pickDomFactory,
+          choiceDomFactory: choiceDomFactory,
+          filterManagerAspect: filterManagerAspect,
+          optionsAspect: optionsAspect,
+          createWrapAspect: createWrapAspect,
+          createChoiceBaseAspect: createChoiceBaseAspect,
+          picksList: picksList,
+          wraps: wraps,
+          addPickAspect: addPickAspect,
+          removePickAspect: removePickAspect,
+          staticDomFactory: staticDomFactory
+        }); // apply selectElement support;  
+        // TODO: to staticManager
+
+        var _staticDomFactory$cre = staticDomFactory.createStaticDom(),
+            staticManager = _staticDomFactory$cre.staticManager,
+            staticDom = _staticDomFactory$cre.staticDom,
+            filterDom = _staticDomFactory$cre.filterDom,
+            picksDom = _staticDomFactory$cre.picksDom,
+            choicesDom = _staticDomFactory$cre.choicesDom; // overrided in SelectElementPlugin
+        // after this we can use staticDom (means generated DOM elements) in plugin construtctor, what simplifies parameters passing a lot   
 
 
-      onInit == null ? void 0 : onInit(api, pluginManager.aspects);
-      picksDom.pickFilterElement.appendChild(filterDom.filterInputElement);
-      picksDom.picksElement.appendChild(picksDom.pickFilterElement);
-      staticManager.appendToContainer();
-      loadAspect.load();
-      return api;
+        var specialPicksEventsAspect = SpecialPicksEventsAspect();
+        var choicesVisibilityAspect = ChoicesVisibilityAspect(choicesDom.choicesElement);
+        var resetFilterListAspect = ResetFilterListAspect(filterDom, filterManagerAspect);
+        var resetFilterAspect = ResetFilterAspect(filterDom, resetFilterListAspect);
+        var focusInAspect = FocusInAspect(picksDom);
+        var buildPickAspect = BuildPickAspect(picksDom, pickDomFactory);
+        var producePickAspect = ProducePickAspect(picksList, removePickAspect, buildPickAspect);
+        var createPickHandlersAspect = CreatePickHandlersAspect(producePickAspect);
+        var optionToggleAspect = OptionToggleAspect(createPickHandlersAspect, addPickAspect);
+        var fullMatchAspect = FullMatchAspect(createPickHandlersAspect, addPickAspect);
+        var inputAspect = InputAspect(filterDom, filterManagerAspect, fullMatchAspect);
+        var choiceClickAspect = ChoiceClickAspect(optionToggleAspect, filterDom);
+        var buildChoiceAspect = BuildChoiceAspect(choicesDom, choiceDomFactory, choiceClickAspect);
+        var buildAndAttachChoiceAspect = BuildAndAttachChoiceAspect(buildChoiceAspect);
+        var resetLayoutAspect = ResetLayoutAspect(resetFilterAspect);
+        var optionAttachAspect = OptionAttachAspect(createWrapAspect, createChoiceBaseAspect, buildAndAttachChoiceAspect, wraps);
+        var optionsLoopAspect = OptionsLoopAspect(optionsAspect, optionAttachAspect);
+        var updateDataAspect = UpdateDataAspect(choicesDom, wraps, picksList, optionsLoopAspect, resetLayoutAspect);
+        var updateAspect = UpdateAspect(updateDataAspect);
+        var loadAspect = LoadAspect(optionsLoopAspect);
+        var picksElementAspect = PicksElementAspect(picksDom.picksElement);
+        var afterInputAspect = AfterInputAspect(filterManagerAspect, navigateAspect, choicesVisibilityAspect, hoveredChoiceAspect);
+        var multiSelectInlineLayoutAspect = MultiSelectInlineLayoutAspect(environment, filterDom, choicesDom, choicesVisibilityAspect, hoveredChoiceAspect, navigateAspect, filterManagerAspect, focusInAspect, optionToggleAspect, createPickHandlersAspect, picksList, inputAspect, specialPicksEventsAspect, buildChoiceAspect, resetLayoutAspect, picksElementAspect, afterInputAspect, disposeAspect);
+        eventHandlers.layout((_eventHandlers$layout = {
+          staticDom: staticDom,
+          picksDom: picksDom,
+          choicesDom: choicesDom,
+          filterDom: filterDom,
+          resetLayoutAspect: resetLayoutAspect,
+          choicesVisibilityAspect: choicesVisibilityAspect,
+          staticManager: staticManager,
+          buildChoiceAspect: buildChoiceAspect,
+          optionToggleAspect: optionToggleAspect,
+          choiceClickAspect: choiceClickAspect,
+          buildAndAttachChoiceAspect: buildAndAttachChoiceAspect,
+          optionsLoopAspect: optionsLoopAspect,
+          optionAttachAspect: optionAttachAspect,
+          buildPickAspect: buildPickAspect,
+          producePickAspect: producePickAspect,
+          createPickHandlersAspect: createPickHandlersAspect,
+          inputAspect: inputAspect,
+          resetFilterListAspect: resetFilterListAspect,
+          resetFilterAspect: resetFilterAspect,
+          specialPicksEventsAspect: specialPicksEventsAspect
+        }, _eventHandlers$layout["resetLayoutAspect"] = resetLayoutAspect, _eventHandlers$layout.focusInAspect = focusInAspect, _eventHandlers$layout.loadAspect = loadAspect, _eventHandlers$layout.updateDataAspect = updateDataAspect, _eventHandlers$layout.updateAspect = updateAspect, _eventHandlers$layout.fullMatchAspect = fullMatchAspect, _eventHandlers$layout.picksElementAspect = picksElementAspect, _eventHandlers$layout.afterInputAspect = afterInputAspect, _eventHandlers$layout.multiSelectInlineLayoutAspect = multiSelectInlineLayoutAspect, _eventHandlers$layout));
+        multiSelectInlineLayoutAspect.layout(); // TODO: to staticManager
+
+        eventHandlers.append();
+        var api = {
+          component: "BsMultiSelect.api"
+        }; // key to use in memory leak analyzes
+
+        eventHandlers.buildApi(api);
+
+        api.updateData = function () {
+          updateDataAspect.updateData();
+        };
+
+        api.update = function () {
+          updateAspect.update();
+        }; // TODO api.updateOption = (key) => {/* all updates: selected, disabled, hidden, text */}
+
+
+        api.dispose = composeSync(resetLayoutAspect.resetLayout, function () {
+          disposeAspect.dispose();
+        }, eventHandlers.dispose, function () {
+          picksList.forEach(function (pick) {
+            return pick.dispose();
+          });
+        }, wraps.dispose, staticManager.dispose); // after this we can pass aspects methods call without wrapping - there should be no more overridings. TODO freeze aspects?        
+
+        staticManager.appendToContainer();
+        loadAspect.load();
+        return api;
+      } catch (error) {
+        showErrorAspect.showError(error);
+        throw error;
+      }
     }
 
-    function ComposePluginManagerFactory(plugins, defaults) {
+    function parseEventHandler(key, eventHandler, plugStaticDoms, preLayouts, layouts, appends, buildApis, disposes) {
+      if (eventHandler) {
+        if (eventHandler.plugStaticDom) plugStaticDoms.push({
+          key: key,
+          value: eventHandler.plugStaticDom
+        });
+        if (eventHandler.preLayout) preLayouts.push({
+          key: key,
+          value: eventHandler.preLayout
+        });
+        if (eventHandler.layout) layouts.push({
+          key: key,
+          value: eventHandler.layout
+        });
+        if (eventHandler.append) appends.push({
+          key: key,
+          value: eventHandler.append
+        });
+        if (eventHandler.buildApi) buildApis.push({
+          key: key,
+          value: eventHandler.buildApi
+        });
+        if (eventHandler.dispose) disposes.push({
+          key: key,
+          value: eventHandler.dispose
+        });
+      }
+    }
+
+    function ComposePluginManagerFactory(plugins, defaults, environment) {
       var plugedList = [];
       var mergeList = [];
 
@@ -2531,7 +2577,7 @@
         }
       }
 
-      return function (configuration, settings) {
+      return function (configuration, settings, inlineBuildAspects) {
         var buildAspectsList = [];
 
         for (var _i = 0; _i < mergeList.length; _i++) {
@@ -2549,111 +2595,87 @@
             buildAspectsList.push({
               key: plugedList[j].key,
               value: buildAspects
-            }); // let events = tmp(aspects)
-            // if (events)
-            //     eventHandlers.push({key:buildAspectsList[j].key, value:events})
-          }
-        }
-
-        return PluginManager(buildAspectsList);
-      };
-    }
-    function PluginManager(buildAspectsList) {
-      var aspects = {};
-
-      var createHandlers = function createHandlers(newAspects) {
-        extendIfUndefined(aspects, newAspects);
-        var instances = [];
-        var disposes = [];
-        var eventHandlers = [];
-
-        for (var j = 0; j < buildAspectsList.length; j++) {
-          var eh = buildAspectsList[j].value(aspects);
-
-          if (eh) {
-            eventHandlers.push({
-              key: buildAspectsList[j].key,
-              value: eh
             });
           }
         }
 
-        return {
-          buildApi: function buildApi(api) {
-            for (var i = 0; i < instances.length; i++) {
-              var _instances$i$buildApi, _instances$i;
+        if (inlineBuildAspects) buildAspectsList.push({
+          key: "",
+          value: inlineBuildAspects
+        });
+        return PluginManager(environment, buildAspectsList);
+      };
+    }
+    function PluginManager(environment, buildAspectsList) {
+      var aspects = {
+        environment: environment
+      };
 
-              var dispose = (_instances$i$buildApi = (_instances$i = instances[i]).buildApi) == null ? void 0 : _instances$i$buildApi.call(_instances$i, api);
-              if (dispose) disposes.push(dispose);
+      var createHandlers = function createHandlers(newAspects) {
+        extendIfUndefined(aspects, newAspects);
+        var plugStaticDoms = [];
+        var preLayouts = [];
+        var layouts = [];
+        var appends = [];
+        var buildApis = [];
+        var disposes = [];
+
+        for (var k = 0; k < buildAspectsList.length; k++) {
+          var eventHandler = buildAspectsList[k].value(aspects);
+          parseEventHandler(buildAspectsList[k].key, eventHandler, plugStaticDoms, preLayouts, layouts, appends, buildApis, disposes);
+        }
+
+        return {
+          plugStaticDom: function plugStaticDom(newAspects) {
+            extendIfUndefined(aspects, newAspects);
+
+            for (var i = 0; i < plugStaticDoms.length; i++) {
+              var _plugStaticDoms$i$val, _plugStaticDoms$i;
+
+              var eventHandler = (_plugStaticDoms$i$val = (_plugStaticDoms$i = plugStaticDoms[i]).value) == null ? void 0 : _plugStaticDoms$i$val.call(_plugStaticDoms$i);
+              parseEventHandler(plugStaticDoms[i].key, eventHandler, plugStaticDoms, preLayouts, layouts, appends, buildApis, disposes);
+            }
+          },
+          layout: function layout(newAspects) {
+            extendIfUndefined(aspects, newAspects);
+
+            for (var i = 0; i < preLayouts.length; i++) {
+              var _preLayouts$i$value, _preLayouts$i;
+
+              var _eventHandler = (_preLayouts$i$value = (_preLayouts$i = preLayouts[i]).value) == null ? void 0 : _preLayouts$i$value.call(_preLayouts$i);
+
+              parseEventHandler(preLayouts[i].key, _eventHandler, plugStaticDoms, preLayouts, layouts, appends, buildApis, disposes);
+            }
+
+            for (var j = 0; j < layouts.length; j++) {
+              var _layouts$j$value, _layouts$j;
+
+              var _eventHandler2 = (_layouts$j$value = (_layouts$j = layouts[j]).value) == null ? void 0 : _layouts$j$value.call(_layouts$j);
+
+              parseEventHandler(layouts[j].key, _eventHandler2, plugStaticDoms, preLayouts, layouts, appends, buildApis, disposes);
+            }
+          },
+          append: function append() {
+            for (var i = 0; i < appends.length; i++) {
+              var _appends$i$value, _appends$i;
+
+              var eventHandler = (_appends$i$value = (_appends$i = appends[i]).value) == null ? void 0 : _appends$i$value.call(_appends$i);
+              parseEventHandler(appends[i].key, eventHandler, plugStaticDoms, preLayouts, layouts, appends, buildApis, disposes);
+            }
+          },
+          buildApi: function buildApi(api) {
+            for (var i = 0; i < buildApis.length; i++) {
+              var _buildApis$i$value, _buildApis$i;
+
+              var eventHandler = (_buildApis$i$value = (_buildApis$i = buildApis[i]).value) == null ? void 0 : _buildApis$i$value.call(_buildApis$i, api);
+              parseEventHandler(buildApis[i].key, eventHandler, plugStaticDoms, preLayouts, layouts, appends, buildApis, disposes);
             }
           },
           dispose: function dispose() {
             for (var i = 0; i < disposes.length; i++) {
-              disposes[i]();
-            }
+              var _disposes$i$value, _disposes$i;
 
-            disposes = null;
-
-            for (var _i2 = 0; _i2 < instances.length; _i2++) {
-              var _instances$_i2$dispos, _instances$_i;
-
-              (_instances$_i2$dispos = (_instances$_i = instances[_i2]).dispose) == null ? void 0 : _instances$_i2$dispos.call(_instances$_i);
-            }
-
-            instances = null;
-          },
-          plugStaticDomFactories: function plugStaticDomFactories(newAspects) {
-            extendIfUndefined(aspects, newAspects);
-
-            for (var i = 0; i < eventHandlers.length; i++) {
-              var _eventHandlers$i$valu, _eventHandlers$i$valu2;
-
-              (_eventHandlers$i$valu = (_eventHandlers$i$valu2 = eventHandlers[i].value).plugStaticDomFactories) == null ? void 0 : _eventHandlers$i$valu.call(_eventHandlers$i$valu2, aspects);
-            }
-          },
-          plugStaticDom: function plugStaticDom(newAspects) {
-            extendIfUndefined(aspects, newAspects);
-
-            for (var i = 0; i < eventHandlers.length; i++) {
-              var _eventHandlers$i$valu3, _eventHandlers$i$valu4;
-
-              (_eventHandlers$i$valu3 = (_eventHandlers$i$valu4 = eventHandlers[i].value).plugStaticDom) == null ? void 0 : _eventHandlers$i$valu3.call(_eventHandlers$i$valu4, aspects);
-            }
-          },
-          // 
-          layout: function layout(newAspects) {
-            extendIfUndefined(aspects, newAspects);
-
-            if (eventHandlers) {
-              var _loop = function _loop(i) {
-                var a = eventHandlers[i].value;
-
-                if (a.preLayoutBus) {
-                  if (eventHandlers.some(function (c) {
-                    return c.key === a.preLayoutBus.after;
-                  })) // only check, not order
-                    a.preLayoutBus.preLayout == null ? void 0 : a.preLayoutBus.preLayout(aspects);
-                }
-              };
-
-              // TODO: complete to full bus event system
-              for (var i = 0; i < eventHandlers.length; i++) {
-                _loop(i);
-              }
-
-              for (var _i3 = 0; _i3 < eventHandlers.length; _i3++) {
-                var _eventHandlers$_i3$va, _eventHandlers$_i3$va2;
-
-                var instance = (_eventHandlers$_i3$va = (_eventHandlers$_i3$va2 = eventHandlers[_i3].value).layout) == null ? void 0 : _eventHandlers$_i3$va.call(_eventHandlers$_i3$va2, aspects);
-                if (instance) instances.push(instance);
-              }
-            }
-          },
-          attach: function attach() {
-            if (eventHandlers) for (var i = 0; i < eventHandlers.length; i++) {
-              var _eventHandlers$i$valu5, _eventHandlers$i$valu6;
-
-              (_eventHandlers$i$valu5 = (_eventHandlers$i$valu6 = eventHandlers[i].value).attach) == null ? void 0 : _eventHandlers$i$valu5.call(_eventHandlers$i$valu6, aspects);
+              (_disposes$i$value = (_disposes$i = disposes[i]).value) == null ? void 0 : _disposes$i$value.call(_disposes$i);
             }
           }
         };
@@ -2793,12 +2815,20 @@
       }
     }
 
+    // TODO: defaultCss should come together with DomFactories and Layout 
+
     function MultiSelectBuilder(environment, plugins, defaultCss) {
       var defaults = {
         containerClass: "dashboardcode-bsmultiselect",
         css: defaultCss
       };
-      var pluginManagerFactory = ComposePluginManagerFactory(plugins, defaults);
+      var pluginManagerFactory = ComposePluginManagerFactory(plugins, defaults, environment);
+      /*  NOTE: about namings
+          defaults - defaults for module 
+          setting - object that could modify defaults (not just overwrite)
+          options - configuration "generalization": can be buildConfiguration function or settings
+          configuration - for control instance
+      */
 
       var create = function create(element, options) {
         var _settings;
@@ -2819,17 +2849,17 @@
           adjustLegacySettings(settings);
         }
 
-        var configuration = {}; // TODO: move to each plugin that add css (as plugMergeSettings) 
-
+        var configuration = {};
         configuration.css = createCss(defaults.css, (_settings = settings) == null ? void 0 : _settings.css);
-        extendIfUndefined(configuration, settings);
+        extendIfUndefined(configuration, settings); // next line: merging of cssPatch will be delayed to the CssPatchPlugin merge handler
+
         extendIfUndefined(configuration, defaults);
-        var onInit = buildConfiguration == null ? void 0 : buildConfiguration(element, configuration);
-        var pluginManager = pluginManagerFactory(configuration, settings); // merge settings.cssPatch and defaults.cssPatch and merge defaults.css and defaults.cssPatch 
+        var inlineBuildAspectsList = buildConfiguration == null ? void 0 : buildConfiguration(element, configuration); // next line merges settings.cssPatch and defaults.cssPatch also merge defaults.css and defaults.cssPatch 
+
+        var pluginManager = pluginManagerFactory(configuration, settings, inlineBuildAspectsList); // now we can freeze configuration object
 
         Object.freeze(configuration);
-        var multiSelect = BsMultiSelect$1(element, environment, pluginManager, configuration, onInit); // onInit(api, aspects) - before load data
-
+        var multiSelect = BsMultiSelect$1(element, environment, pluginManager, configuration);
         return multiSelect;
       };
 
@@ -2851,10 +2881,12 @@
         trigger = composeEventTrigger(window);
       }
 
+      var isIE11 = !!window.MSInputMethodContext && !!window.document.documentMode;
       var environment = {
         trigger: trigger,
         window: window,
-        globalPopper: globalPopper
+        globalPopper: globalPopper,
+        isIE11: isIE11
       };
       var pluginsArray = ObjectValuesEx(plugins);
 
@@ -2892,29 +2924,26 @@
       return function (aspects) {
         return {
           // TODO, LabelElement should be moved to StaticDomFactory and staticDom 
-          preLayoutBus: {
-            after: "LabelForAttributePlugin",
-            preLayout: function preLayout() {
-              var getLabelAspect = aspects.getLabelAspect,
-                  staticDom = aspects.staticDom,
-                  configuration = aspects.configuration;
-              var selectElement = staticDom.selectElement;
-              var getDefaultLabel = configuration.getDefaultLabel;
-              var origLabelAspectGetLabel = getLabelAspect.getLabel;
+          preLayout: function preLayout() {
+            var getLabelAspect = aspects.getLabelAspect,
+                staticDom = aspects.staticDom;
+            var selectElement = staticDom.selectElement;
+            var getDefaultLabel = configuration.getDefaultLabel;
+            var origLabelAspectGetLabel = getLabelAspect.getLabel;
 
-              getLabelAspect.getLabel = function () {
-                var e = origLabelAspectGetLabel();
-                if (e) return e;else {
-                  if (selectElement) {
-                    var labelElement = getDefaultLabel(selectElement);
-                    return labelElement;
-                  }
+            getLabelAspect.getLabel = function () {
+              var e = origLabelAspectGetLabel();
+              if (e) return e;else {
+                if (selectElement) {
+                  var labelElement = getDefaultLabel(selectElement);
+                  return labelElement;
                 }
-              };
-            }
+              }
+            };
           },
           layout: function layout() {
             var validationApiAspect = aspects.validationApiAspect,
+                initialDom = aspects.initialDom,
                 picksDom = aspects.picksDom,
                 staticDom = aspects.staticDom,
                 updateAppearanceAspect = aspects.updateAppearanceAspect,
@@ -2926,7 +2955,7 @@
                 css = configuration.css,
                 composeGetSize = configuration.composeGetSize;
             var selectElement = staticDom.selectElement;
-            var initialElement = staticDom.initialElement;
+            var initialElement = initialDom.initialElement;
             var isFloatingLabel = false;
 
             if (floatingLabelAspect) {
@@ -2992,7 +3021,7 @@
             }
 
             var getWasValidated = function getWasValidated() {
-              var wasValidatedElement = closestByClassName(staticDom.initialElement, 'was-validated');
+              var wasValidatedElement = closestByClassName(initialElement, 'was-validated');
               return wasValidatedElement ? true : false;
             };
 
@@ -3271,10 +3300,11 @@
         return {
           layout: function layout() {
             var popperRtlAspect = aspects.popperRtlAspect,
-                staticDom = aspects.staticDom;
+                staticDom = aspects.staticDom,
+                initialDom = aspects.initialDom;
             var isRtl = configuration.isRtl;
             var forceRtlOnContainer = false;
-            if (isBoolean(isRtl)) forceRtlOnContainer = true;else isRtl = getIsRtl(staticDom.initialElement);
+            if (isBoolean(isRtl)) forceRtlOnContainer = true;else isRtl = getIsRtl(initialDom.initialElement);
             var attributeBackup = AttributeBackup();
 
             if (forceRtlOnContainer) {
@@ -3355,20 +3385,16 @@
         var getValueRequiredAspect = GetValueRequiredAspect(configuration.getValueRequired);
         aspects.getValueRequiredAspect = getValueRequiredAspect;
         return {
-          layout: function layout() {
-            var triggerAspect = aspects.triggerAspect,
-                onChangeAspect = aspects.onChangeAspect,
-                optionsAspect = aspects.optionsAspect,
-                staticDom = aspects.staticDom,
-                filterDom = aspects.filterDom,
-                updateDataAspect = aspects.updateDataAspect; // TODO: required could be a function
+          plugStaticDom: function plugStaticDom() {
+            var optionsAspect = aspects.optionsAspect,
+                initialDom = aspects.initialDom; // TODO: required could be a function
 
             var getIsValueMissing = configuration.getIsValueMissing,
                 valueMissingMessage = configuration.valueMissingMessage,
                 required = configuration.required;
             if (!isBoolean(required)) required = getValueRequiredAspect.getValueRequired();
             valueMissingMessage = defCall(valueMissingMessage, function () {
-              return getDataGuardedWithPrefix(staticDom.initialElement, "bsmultiselect", "value-missing-message");
+              return getDataGuardedWithPrefix(initialDom.initialElement, "bsmultiselect", "value-missing-message");
             }, defValueMissingMessage);
 
             if (!getIsValueMissing) {
@@ -3388,22 +3414,32 @@
               return required && getIsValueMissing();
             });
             var validationApiObservable = ObservableValue(!isValueMissingObservable.getValue());
-            onChangeAspect.onChange = composeSync(isValueMissingObservable.call, onChangeAspect.onChange);
-            updateDataAspect.updateData = composeSync(isValueMissingObservable.call, updateDataAspect.updateData);
             aspects.validationApiAspect = ValidationApiAspect(validationApiObservable);
             return {
-              buildApi: function buildApi(api) {
-                api.validationApi = ValidityApi(filterDom.filterInputElement, isValueMissingObservable, valueMissingMessage, function (isValid) {
-                  return validationApiObservable.setValue(isValid);
-                }, triggerAspect.trigger);
+              layout: function layout() {
+                var onChangeAspect = aspects.onChangeAspect,
+                    updateDataAspect = aspects.updateDataAspect; // TODO: required could be a function
+
+                var valueMissingMessage = configuration.valueMissingMessage;
+                onChangeAspect.onChange = composeSync(isValueMissingObservable.call, onChangeAspect.onChange);
+                updateDataAspect.updateData = composeSync(isValueMissingObservable.call, updateDataAspect.updateData);
+                return {
+                  buildApi: function buildApi(api) {
+                    var triggerAspect = aspects.triggerAspect,
+                        filterDom = aspects.filterDom;
+                    api.validationApi = ValidityApi(filterDom.filterInputElement, // !!
+                    isValueMissingObservable, valueMissingMessage, function (isValid) {
+                      return validationApiObservable.setValue(isValid);
+                    }, triggerAspect.trigger);
+                  }
+                };
               },
               dispose: function dispose() {
                 isValueMissingObservable.detachAll();
                 validationApiObservable.detachAll();
               }
             };
-          },
-          layoutInit: function layoutInit() {}
+          }
         };
       };
     }
@@ -3608,7 +3644,10 @@
       };
     }
     function plug$i(configuration) {
-      if (configuration.useCssPatch) extendCss(configuration.css, configuration.cssPatch);
+      if (configuration.useCssPatch) {
+        extendCss(configuration.css, configuration.cssPatch);
+        configuration.cssPatch = undefined;
+      }
     }
 
     function CssPatchBs5Plugin(defaults) {
@@ -3676,7 +3715,7 @@
     function plug$g() {
       return function (aspects) {
         return {
-          layout: function layout() {
+          buildApi: function buildApi(api) {
             var buildAndAttachChoiceAspect = aspects.buildAndAttachChoiceAspect,
                 wraps = aspects.wraps,
                 wrapsCollection = aspects.wrapsCollection,
@@ -3684,38 +3723,35 @@
                 createChoiceBaseAspect = aspects.createChoiceBaseAspect,
                 optionsAspect = aspects.optionsAspect,
                 resetLayoutAspect = aspects.resetLayoutAspect;
-            return {
-              buildApi: function buildApi(api) {
-                api.updateOptionAdded = function (key) {
-                  // TODO: generalize index as key 
-                  var options = optionsAspect.getOptions();
-                  var option = options[key];
-                  var wrap = createWrapAspect.createWrap(option);
-                  wrap.choice = createChoiceBaseAspect.createChoiceBase(option);
-                  wraps.insert(key, wrap);
 
-                  var nextChoice = function nextChoice() {
-                    return wrapsCollection.getNext(key, function (c) {
-                      return c.choice.choiceElement;
-                    });
-                  };
+            api.updateOptionAdded = function (key) {
+              // TODO: generalize index as key 
+              var options = optionsAspect.getOptions();
+              var option = options[key];
+              var wrap = createWrapAspect.createWrap(option);
+              wrap.choice = createChoiceBaseAspect.createChoiceBase(option);
+              wraps.insert(key, wrap);
 
-                  buildAndAttachChoiceAspect.buildAndAttachChoice(wrap, function () {
-                    var _nextChoice;
+              var nextChoice = function nextChoice() {
+                return wrapsCollection.getNext(key, function (c) {
+                  return c.choice.choiceElement;
+                });
+              };
 
-                    return (_nextChoice = nextChoice()) == null ? void 0 : _nextChoice.choice.choiceElement;
-                  });
-                };
+              buildAndAttachChoiceAspect.buildAndAttachChoice(wrap, function () {
+                var _nextChoice;
 
-                api.updateOptionRemoved = function (key) {
-                  // TODO: generalize index as key 
-                  resetLayoutAspect.resetLayout(); // always hide 1st, then reset filter
+                return (_nextChoice = nextChoice()) == null ? void 0 : _nextChoice.choice.choiceElement;
+              });
+            };
 
-                  var wrap = wraps.remove(key);
-                  wrap.choice.remove == null ? void 0 : wrap.choice.remove();
-                  wrap.dispose == null ? void 0 : wrap.dispose();
-                };
-              }
+            api.updateOptionRemoved = function (key) {
+              // TODO: generalize index as key 
+              resetLayoutAspect.resetLayout(); // always hide 1st, then reset filter
+
+              var wrap = wraps.remove(key);
+              wrap.choice.remove == null ? void 0 : wrap.choice.remove();
+              wrap.dispose == null ? void 0 : wrap.dispose();
             };
           }
         };
@@ -3770,153 +3806,166 @@
                 optionsAspect = aspects.optionsAspect,
                 optGroupAspect = aspects.optGroupAspect,
                 disposeAspect = aspects.disposeAspect,
-                getValueRequiredAspect = aspects.getValueRequiredAspect;
-            var origStaticDomFactoryCreate = staticDomFactory.create;
+                getValueRequiredAspect = aspects.getValueRequiredAspect,
+                choicesDomFactory = aspects.choicesDomFactory,
+                filterDomFactory = aspects.filterDomFactory,
+                picksDomFactory = aspects.picksDomFactory,
+                initialDom = aspects.initialDom,
+                showErrorAspect = aspects.showErrorAspect;
+            var containerClass = configuration.containerClass;
+            var origCreateStaticDom = staticDomFactory.createStaticDom;
+            var element = initialDom.initialElement;
 
-            staticDomFactory.create = function (choicesDomFactory, filterDomFactory, picksDomFactory) {
-              var _origStaticDomFactory = origStaticDomFactoryCreate(choicesDomFactory, filterDomFactory, picksDomFactory),
-                  origCreateStaticDom = _origStaticDomFactory.createStaticDom;
+            staticDomFactory.createStaticDom = function () {
+              var selectElement = null;
+              var containerElement = null;
+              var picksElement = null;
 
-              return {
-                createStaticDom: function createStaticDom(element, containerClass) {
-                  var selectElement = null;
-                  var containerElement = null;
-                  var picksElement = null;
+              if (element.tagName == 'SELECT') {
+                selectElement = element;
 
-                  if (element.tagName == 'SELECT') {
-                    selectElement = element;
+                if (containerClass) {
+                  containerElement = closestByClassName(selectElement, containerClass);
+                  if (containerElement) picksElement = findDirectChildByTagName(containerElement, 'UL');
+                }
+              } else if (element.tagName == 'DIV') {
+                selectElement = findDirectChildByTagName(element, 'SELECT');
 
-                    if (containerClass) {
-                      containerElement = closestByClassName(selectElement, containerClass);
-                      if (containerElement) picksElement = findDirectChildByTagName(containerElement, 'UL');
-                    }
-                  } else if (element.tagName == 'DIV') {
-                    selectElement = findDirectChildByTagName(element, 'SELECT');
-
-                    if (selectElement) {
-                      if (containerClass) {
-                        containerElement = closestByClassName(element, containerClass);
-                        if (containerElement) picksElement = findDirectChildByTagName(containerElement, 'UL');
-                      }
-                    } else {
-                      return origCreateStaticDom(element, containerClass);
-                    }
+                if (selectElement) {
+                  if (containerClass) {
+                    containerElement = closestByClassName(element, containerClass);
+                    if (containerElement) picksElement = findDirectChildByTagName(containerElement, 'UL');
                   }
+                } else {
+                  return origCreateStaticDom(element, containerClass);
+                }
+              }
 
-                  var disposableContainerElement = false;
+              var isDisposableContainerElementFlag = false;
 
-                  if (!containerElement) {
-                    containerElement = createElementAspect.createElement('DIV');
-                    containerElement.classList.add(containerClass);
-                    disposableContainerElement = true;
-                  }
+              if (!containerElement) {
+                containerElement = createElementAspect.createElement('DIV');
+                containerElement.classList.add(containerClass);
+                isDisposableContainerElementFlag = true;
+              }
 
-                  var isDisposablePicksElementFlag = false;
+              var staticDom = {
+                containerElement: containerElement,
+                selectElement: selectElement
+              };
 
-                  if (!picksElement) {
-                    picksElement = createElementAspect.createElement('UL');
-                    isDisposablePicksElementFlag = true;
-                  }
+              if (selectElement) {
+                showErrorAspect.showError = function (error) {
+                  var errorElement = createElementAspect.createElement('SPAN');
+                  errorElement.style.backgroundColor = 'red';
+                  errorElement.style.color = 'white';
+                  errorElement.style.padding = '0.2rem 0.5rem';
+                  errorElement.textContent = 'BsMultiSelect ' + error.toString();
+                  selectElement.parentNode.insertBefore(errorElement, selectElement.nextSibling);
+                };
 
-                  if (selectElement) {
-                    var backupDisplay = selectElement.style.display;
-                    selectElement.style.display = 'none';
-                    var backupedRequired = selectElement.required;
-                    if (getValueRequiredAspect) getValueRequiredAspect.getValueRequired = function () {
-                      return backupedRequired;
+                var backupDisplay = selectElement.style.display;
+                selectElement.style.display = 'none';
+                var backupedRequired = selectElement.required;
+                if (getValueRequiredAspect) getValueRequiredAspect.getValueRequired = function () {
+                  return backupedRequired;
+                };
+                if (selectElement.required === true) selectElement.required = false;
+                var getDisabled = configuration.getDisabled;
+
+                if (!getDisabled) {
+                  var fieldsetElement = closestByTagName(selectElement, 'FIELDSET');
+
+                  if (fieldsetElement) {
+                    componentPropertiesAspect.getDisabled = function () {
+                      return selectElement.disabled || fieldsetElement.disabled;
                     };
-                    if (selectElement.required === true) selectElement.required = false;
-                    var getDisabled = configuration.getDisabled;
-
-                    if (!getDisabled) {
-                      var fieldsetElement = closestByTagName(selectElement, 'FIELDSET');
-
-                      if (fieldsetElement) {
-                        componentPropertiesAspect.getDisabled = function () {
-                          return selectElement.disabled || fieldsetElement.disabled;
-                        };
-                      } else {
-                        componentPropertiesAspect.getDisabled = function () {
-                          return selectElement.disabled;
-                        };
-                      }
-                    }
-
-                    onChangeAspect.onChange = composeSync(function () {
-                      return triggerAspect.trigger('change');
-                    }, onChangeAspect.onChange);
-
-                    optionsAspect.getOptions = function () {
-                      return selectElement.options;
+                  } else {
+                    componentPropertiesAspect.getDisabled = function () {
+                      return selectElement.disabled;
                     };
-
-                    if (optGroupAspect) {
-                      optGroupAspect.getOptionOptGroup = function (option) {
-                        return option.parentNode;
-                      };
-
-                      optGroupAspect.getOptGroupText = function (optGroup) {
-                        return optGroup.label;
-                      };
-
-                      optGroupAspect.getOptGroupId = function (optGroup) {
-                        return optGroup.id;
-                      };
-                    }
-
-                    if (selectElement && aspects.createFilterInputElementIdAspect) {
-                      var origCreateFilterInputElementId = aspects.createFilterInputElementIdAspect.createFilterInputElementId;
-
-                      aspects.createFilterInputElementIdAspect.createFilterInputElementId = function () {
-                        var id = origCreateFilterInputElementId();
-
-                        if (!id) {
-                          id = containerClass + "-generated-input-" + (selectElement.id ? selectElement.id : selectElement.name).toLowerCase() + "-id";
-                        }
-
-                        return id;
-                      };
-                    }
-
-                    disposeAspect.dispose = composeSync(disposeAspect.dispose, function () {
-                      selectElement.required = backupedRequired;
-                      selectElement.style.display = backupDisplay;
-                    });
                   }
+                }
 
-                  var choicesDom = choicesDomFactory.create();
-                  var filterDom = filterDomFactory.create(isDisposablePicksElementFlag);
-                  var picksDom = picksDomFactory.create(picksElement, isDisposablePicksElementFlag);
-                  var choicesElement = choicesDom.choicesElement;
-                  return {
-                    choicesDom: choicesDom,
-                    filterDom: filterDom,
-                    picksDom: picksDom,
-                    staticDom: {
-                      initialElement: element,
-                      containerElement: containerElement,
-                      picksElement: picksElement,
-                      isDisposablePicksElementFlag: isDisposablePicksElementFlag,
-                      selectElement: selectElement
-                    },
-                    staticManager: {
-                      appendToContainer: function appendToContainer() {
-                        if (disposableContainerElement) {
-                          selectElement.parentNode.insertBefore(containerElement, selectElement.nextSibling);
-                          containerElement.appendChild(choicesElement);
-                        } else {
-                          selectElement.parentNode.insertBefore(choicesElement, selectElement.nextSibling);
-                        }
+                onChangeAspect.onChange = composeSync(function () {
+                  return triggerAspect.trigger('change');
+                }, onChangeAspect.onChange);
 
-                        if (isDisposablePicksElementFlag) containerElement.appendChild(picksElement);
-                      },
-                      dispose: function dispose() {
-                        choicesElement.parentNode.removeChild(choicesElement);
-                        if (disposableContainerElement) selectElement.parentNode.removeChild(containerElement);
-                        if (isDisposablePicksElementFlag) containerElement.removeChild(picksElement);
-                      }
-                    }
+                optionsAspect.getOptions = function () {
+                  return selectElement.options;
+                };
+
+                if (optGroupAspect) {
+                  optGroupAspect.getOptionOptGroup = function (option) {
+                    return option.parentNode;
                   };
+
+                  optGroupAspect.getOptGroupText = function (optGroup) {
+                    return optGroup.label;
+                  };
+
+                  optGroupAspect.getOptGroupId = function (optGroup) {
+                    return optGroup.id;
+                  };
+                }
+
+                if (selectElement && aspects.createFilterInputElementIdAspect) {
+                  var origCreateFilterInputElementId = aspects.createFilterInputElementIdAspect.createFilterInputElementId;
+
+                  aspects.createFilterInputElementIdAspect.createFilterInputElementId = function () {
+                    var id = origCreateFilterInputElementId();
+
+                    if (!id) {
+                      id = containerClass + "-generated-input-" + (selectElement.id ? selectElement.id : selectElement.name).toLowerCase() + "-id";
+                    }
+
+                    return id;
+                  };
+                }
+
+                disposeAspect.dispose = composeSync(disposeAspect.dispose, function () {
+                  selectElement.required = backupedRequired;
+                  selectElement.style.display = backupDisplay;
+                });
+              }
+
+              var isDisposablePicksElementFlag = false;
+
+              if (!picksElement) {
+                picksElement = createElementAspect.createElement('UL');
+                isDisposablePicksElementFlag = true;
+              }
+
+              var choicesDom = choicesDomFactory.create();
+              var picksDom = picksDomFactory.create(picksElement, isDisposablePicksElementFlag);
+              var filterDom = filterDomFactory.create(isDisposablePicksElementFlag);
+              var choicesElement = choicesDom.choicesElement;
+              return {
+                choicesDom: choicesDom,
+                filterDom: filterDom,
+                picksDom: picksDom,
+                staticDom: staticDom,
+                staticManager: {
+                  appendToContainer: function appendToContainer() {
+                    picksDom.pickFilterElement.appendChild(filterDom.filterInputElement);
+                    picksDom.picksElement.appendChild(picksDom.pickFilterElement);
+
+                    if (isDisposableContainerElementFlag) {
+                      selectElement.parentNode.insertBefore(containerElement, selectElement.nextSibling);
+                      containerElement.appendChild(choicesElement);
+                    } else {
+                      selectElement.parentNode.insertBefore(choicesElement, selectElement.nextSibling);
+                    }
+
+                    if (isDisposablePicksElementFlag) containerElement.appendChild(picksElement);
+                  },
+                  dispose: function dispose() {
+                    choicesElement.parentNode.removeChild(choicesElement);
+                    if (isDisposableContainerElementFlag) selectElement.parentNode.removeChild(containerElement);
+                    if (isDisposablePicksElementFlag) containerElement.removeChild(picksElement);
+                    picksDom.dispose();
+                    filterDom.dispose();
+                  }
                 }
               };
             };
@@ -3930,7 +3979,7 @@
             loadAspect.loop = function () {
               // browsers can change select value as part of "autocomplete" (IE11) at load time
               // or "show preserved on go back" (Chrome) after page is loaded but before "ready" event;
-              // mote: they never "restore" selected-disabled options.
+              // NOTE: they never "restore" selected-disabled options.
               // TODO: make the FROM Validation for 'selected-disabled' easy.
               if (document.readyState != 'loading') {
                 origLoadAspectLoop();
@@ -4337,45 +4386,42 @@
     function plug$b() {
       return function (aspects) {
         return {
-          layout: function layout() {
+          buildApi: function buildApi(api) {
             var picksList = aspects.picksList,
                 createWrapAspect = aspects.createWrapAspect,
                 createPickHandlersAspect = aspects.createPickHandlersAspect,
                 addPickAspect = aspects.addPickAspect;
-            return {
-              buildApi: function buildApi(api) {
-                api.forEachPeak = function (f) {
-                  return picksList.forEach(function (wrap) {
-                    return f(wrap.option);
-                  });
-                }; // TODO: getHeadPeak
+
+            api.forEachPeak = function (f) {
+              return picksList.forEach(function (wrap) {
+                return f(wrap.option);
+              });
+            }; // TODO: getHeadPeak
 
 
-                api.getTailPeak = function () {
-                  var _picksList$getTail;
+            api.getTailPeak = function () {
+              var _picksList$getTail;
 
-                  return (_picksList$getTail = picksList.getTail()) == null ? void 0 : _picksList$getTail.option;
-                };
+              return (_picksList$getTail = picksList.getTail()) == null ? void 0 : _picksList$getTail.option;
+            };
 
-                api.countPeaks = function () {
-                  return picksList.getCount();
-                };
+            api.countPeaks = function () {
+              return picksList.getCount();
+            };
 
-                api.isEmptyPeaks = function () {
-                  return picksList.isEmpty();
-                };
+            api.isEmptyPeaks = function () {
+              return picksList.isEmpty();
+            };
 
-                api.addPick = function (option) {
-                  var wrap = createWrapAspect.createWrap(option); // TODO should be moved to specific plugins
+            api.addPick = function (option) {
+              var wrap = createWrapAspect.createWrap(option); // TODO should be moved to specific plugins
 
-                  wrap.updateDisabled = function () {};
+              wrap.updateDisabled = function () {};
 
-                  wrap.updateHidden = function () {};
+              wrap.updateHidden = function () {};
 
-                  var pickHandlers = createPickHandlersAspect.createPickHandlers(wrap);
-                  addPickAspect.addPick(wrap, pickHandlers);
-                };
-              }
+              var pickHandlers = createPickHandlersAspect.createPickHandlers(wrap);
+              addPickAspect.addPick(wrap, pickHandlers);
             };
           }
         };
@@ -4391,8 +4437,7 @@
       return function (aspects) {
         return {
           plugStaticDom: function plugStaticDom() {
-            var configuration = aspects.configuration,
-                picksList = aspects.picksList;
+            var picksList = aspects.picksList;
             var picks = configuration.picks;
 
             if (picks) {
@@ -4477,79 +4522,73 @@
       };
     }
     function plug$9() {
+      var popperRtlAspect = PopperRtlAspect();
       return function (aspects) {
+        aspects.popperRtlAspect = popperRtlAspect;
+        var environment = aspects.environment;
+        var createPopper = environment.createPopper,
+            Popper = environment.Popper,
+            globalPopper = environment.globalPopper;
+        var createModifiersVX = null;
+        var createPopperVX = null;
+
+        if (Popper) {
+          // V2
+          createPopperVX = createPopper = function (createPopperConstructor) {
+            return function (anchorElement, element, popperConfiguration) {
+              return new createPopperConstructor(anchorElement, element, popperConfiguration);
+            };
+          }(Popper);
+          createModifiersVX = CreateModifiersV1;
+        } else if (createPopper) {
+          createPopperVX = createPopper;
+          createModifiersVX = CreateModifiersV2;
+        } else if (globalPopper) {
+          if (globalPopper.createPopper) {
+            createPopperVX = globalPopper.createPopper;
+            createModifiersVX = CreateModifiersV2;
+          } else {
+            createPopperVX = createPopper = function (createPopperConstructor) {
+              return function (anchorElement, element, popperConfiguration) {
+                return new createPopperConstructor(anchorElement, element, popperConfiguration);
+              };
+            }(globalPopper);
+
+            createModifiersVX = CreateModifiersV1;
+          }
+        } else {
+          throw new Error("BsMultiSelect: Popper component (https://popper.js.org) is required");
+        }
+
+        var createPopperConfigurationAspect = CreatePopperConfigurationAspect(createModifiersVX);
+        var createPopperAspect = CreatePopperAspect(createPopperVX, popperRtlAspect, createPopperConfigurationAspect);
+        aspects.createPopperAspect = createPopperAspect;
         return {
-          plugStaticDom: function plugStaticDom() {
-            var environment = aspects.environment;
-            var popperRtlAspect = PopperRtlAspect();
-            aspects.popperRtlAspect = popperRtlAspect;
-            var createPopper = environment.createPopper,
-                Popper = environment.Popper,
-                globalPopper = environment.globalPopper;
-            var createModifiersVX = null;
-            var createPopperVX = null;
-
-            if (Popper) {
-              // V2
-              createPopperVX = createPopper = function (createPopperConstructor) {
-                return function (anchorElement, element, popperConfiguration) {
-                  return new createPopperConstructor(anchorElement, element, popperConfiguration);
-                };
-              }(Popper);
-              createModifiersVX = CreateModifiersV1;
-            } else if (createPopper) {
-              createPopperVX = createPopper;
-              createModifiersVX = CreateModifiersV2;
-            } else if (globalPopper) {
-              if (globalPopper.createPopper) {
-                createPopperVX = globalPopper.createPopper;
-                createModifiersVX = CreateModifiersV2;
-              } else {
-                createPopperVX = createPopper = function (createPopperConstructor) {
-                  return function (anchorElement, element, popperConfiguration) {
-                    return new createPopperConstructor(anchorElement, element, popperConfiguration);
-                  };
-                }(globalPopper);
-
-                createModifiersVX = CreateModifiersV1;
-              }
-            } else {
-              throw new Error("BsMultiSelect: Popper component (https://popper.js.org) is required");
-            }
-
-            var createPopperConfigurationAspect = CreatePopperConfigurationAspect(createModifiersVX);
-            aspects.createPopperAspect = CreatePopperAspect(createPopperVX, popperRtlAspect, createPopperConfigurationAspect);
-          },
-          attach: function attach() {
-            var createPopperAspect = aspects.createPopperAspect,
-                filterDom = aspects.filterDom,
+          append: function append() {
+            var filterDom = aspects.filterDom,
                 choicesDom = aspects.choicesDom,
                 disposeAspect = aspects.disposeAspect,
                 staticManager = aspects.staticManager,
                 choicesVisibilityAspect = aspects.choicesVisibilityAspect,
                 specialPicksEventsAspect = aspects.specialPicksEventsAspect;
-            CreatePopper_ConstrunctorAspect(createPopperAspect, filterDom, choicesDom, disposeAspect, staticManager, choicesVisibilityAspect, specialPicksEventsAspect);
+            var filterInputElement = filterDom.filterInputElement;
+            var choicesElement = choicesDom.choicesElement;
+            var pop = createPopperAspect.createPopper(choicesElement, filterInputElement, true);
+            staticManager.appendToContainer = composeSync(staticManager.appendToContainer, pop.init);
+            var origBackSpace = specialPicksEventsAspect.backSpace;
+
+            specialPicksEventsAspect.backSpace = function (pick) {
+              origBackSpace(pick);
+              pop.update();
+            };
+
+            disposeAspect.dispose = composeSync(disposeAspect.dispose, pop.dispose);
+            choicesVisibilityAspect.updatePopupLocation = composeSync(choicesVisibilityAspect.updatePopupLocation, function () {
+              pop.update();
+            });
           }
         };
       };
-    }
-
-    function CreatePopper_ConstrunctorAspect(createPopperAspect, filterDom, choicesDom, disposeAspect, staticManager, choicesVisibilityAspect, specialPicksEventsAspect) {
-      var filterInputElement = filterDom.filterInputElement;
-      var choicesElement = choicesDom.choicesElement;
-      var pop = createPopperAspect.createPopper(choicesElement, filterInputElement, true);
-      staticManager.appendToContainer = composeSync(staticManager.appendToContainer, pop.init);
-      var origBackSpace = specialPicksEventsAspect.backSpace;
-
-      specialPicksEventsAspect.backSpace = function (pick) {
-        origBackSpace(pick);
-        pop.update();
-      };
-
-      disposeAspect.dispose = composeSync(disposeAspect.dispose, pop.dispose);
-      choicesVisibilityAspect.updatePopupLocation = composeSync(choicesVisibilityAspect.updatePopupLocation, function () {
-        pop.update();
-      });
     }
 
     function PopperRtlAspect() {
@@ -4558,46 +4597,7 @@
           return false;
         }
       };
-    } // CreatePopperPlugin.attach = (aspects)=> {
-    //     let {createPopperAspect, filterDom, choicesDom, disposeAspect, staticManager, choicesVisibilityAspect, specialPicksEventsAspect} = aspects;
-    //     CreatePopper_ConstrunctorAspect(createPopperAspect, filterDom, choicesDom, disposeAspect, staticManager, choicesVisibilityAspect, specialPicksEventsAspect);
-    // }
-    // CreatePopperPlugin.plugStaticDom = (aspects) => {
-    //     let {environment} = aspects;
-    //     var popperRtlAspect = PopperRtlAspect();
-    //     aspects.popperRtlAspect = popperRtlAspect;
-    //     let {createPopper, Popper, globalPopper} = environment;
-    //     let createModifiersVX = null;
-    //     let createPopperVX = null;
-    //     if (Popper) { // V2
-    //         createPopperVX = createPopper =  (function(createPopperConstructor) {
-    //             return function(anchorElement, element, popperConfiguration) {
-    //                 return new createPopperConstructor(anchorElement, element, popperConfiguration);
-    //             }
-    //         })(Popper);;
-    //         createModifiersVX = CreateModifiersV1;
-    //     } else if (createPopper) {
-    //         createPopperVX = createPopper;
-    //         createModifiersVX = CreateModifiersV2;
-    //     } else if (globalPopper) {
-    //         if (globalPopper.createPopper) {
-    //             createPopperVX = globalPopper.createPopper;
-    //             createModifiersVX = CreateModifiersV2;
-    //         } else {
-    //             createPopperVX = createPopper =  (function(createPopperConstructor) {
-    //                 return function(anchorElement, element, popperConfiguration) {
-    //                     return new createPopperConstructor(anchorElement, element, popperConfiguration);
-    //                 }
-    //             })(globalPopper);
-    //             createModifiersVX = CreateModifiersV1;
-    //         }
-    //     } else {
-    //         throw new Error("BsMultiSelect: Popper component (https://popper.js.org) is required");
-    //     }
-    //     var createPopperConfigurationAspect = CreatePopperConfigurationAspect(createModifiersVX);
-    //     aspects.createPopperAspect = CreatePopperAspect(createPopperVX, popperRtlAspect, createPopperConfigurationAspect);
-    // }
-
+    }
 
     function CreateModifiersV1(preventOverflow) {
       return {
@@ -4708,10 +4708,10 @@
     }
 
     function choicesDynamicStyling(aspects) {
-      var configuration = aspects.configuration,
+      var choicesDom = aspects.choicesDom,
+          navigateAspect = aspects.navigateAspect,
           environment = aspects.environment,
-          choicesDom = aspects.choicesDom,
-          navigateAspect = aspects.navigateAspect;
+          configuration = aspects.configuration;
       var window = environment.window;
       var choicesElement = choicesDom.choicesElement;
       var minimalChoicesDynamicStylingMaxHeight = configuration.minimalChoicesDynamicStylingMaxHeight; //find height of the browser window
@@ -4749,63 +4749,68 @@
         plug: plug$7
       };
     }
+
+    function ExtendChoiceDomFactory$1(choiceDomFactory, optionPropertiesAspect) {
+      var origCreateChoiceDomFactory = choiceDomFactory.create;
+
+      choiceDomFactory.create = function (choiceElement, wrap, toggle) {
+        var value = origCreateChoiceDomFactory(choiceElement, wrap, toggle);
+
+        value.choiceDomManagerHandlers.updateHighlighted = function () {
+          var text = optionPropertiesAspect.getText(wrap.option);
+          var highlighter = aspects.highlightAspect.getHighlighter();
+          if (highlighter) highlighter(choiceElement, value.choiceDom, text);else choiceElement.textContent = text;
+        };
+
+        return value;
+      };
+    }
+
     function plug$7(configuration) {
       return function (aspects) {
-        return {
+        var _ref;
+
+        return _ref = {
           plugStaticDom: function plugStaticDom() {
             if (configuration.useHighlighting) aspects.highlightAspect = HighlightAspect();
-          },
-          plugStaticDomFactories: function plugStaticDomFactories() {
-            var choiceDomFactory = aspects.choiceDomFactory,
-                optionPropertiesAspect = aspects.optionPropertiesAspect;
-            var origCreateChoiceDomFactory = choiceDomFactory.create;
-
-            choiceDomFactory.create = function (choiceElement, wrap, toggle) {
-              var value = origCreateChoiceDomFactory(choiceElement, wrap, toggle);
-
-              value.choiceDomManagerHandlers.updateHighlighted = function () {
-                var text = optionPropertiesAspect.getText(wrap.option);
-                var highlighter = aspects.highlightAspect.getHighlighter();
-                if (highlighter) highlighter(choiceElement, value.choiceDom, text);else choiceElement.textContent = text;
-              };
-
-              return value;
-            };
-          },
-          layout: function layout() {
-            var highlightAspect = aspects.highlightAspect,
-                filterManagerAspect = aspects.filterManagerAspect,
-                buildChoiceAspect = aspects.buildChoiceAspect;
-
-            if (highlightAspect) {
-              var origProcessEmptyInput = filterManagerAspect.processEmptyInput;
-
-              filterManagerAspect.processEmptyInput = function () {
-                highlightAspect.reset();
-                origProcessEmptyInput();
-              };
-
-              var origSetFilter = filterManagerAspect.setFilter;
-
-              filterManagerAspect.setFilter = function (text) {
-                highlightAspect.set(text);
-                origSetFilter(text);
-              };
-
-              var origBuildChoice = buildChoiceAspect.buildChoice;
-
-              buildChoiceAspect.buildChoice = function (wrap) {
-                origBuildChoice(wrap);
-                var origSetVisible = wrap.choice.setVisible;
-
-                wrap.choice.setVisible = function (v) {
-                  origSetVisible(v);
-                  wrap.choice.choiceDomManagerHandlers.updateHighlighted();
-                };
-              };
-            }
           }
-        };
+        }, _ref["plugStaticDom"] = function plugStaticDom() {
+          var choiceDomFactory = aspects.choiceDomFactory,
+              optionPropertiesAspect = aspects.optionPropertiesAspect;
+          ExtendChoiceDomFactory$1(choiceDomFactory, optionPropertiesAspect);
+        }, _ref.layout = function layout() {
+          var highlightAspect = aspects.highlightAspect,
+              filterManagerAspect = aspects.filterManagerAspect,
+              buildChoiceAspect = aspects.buildChoiceAspect;
+
+          if (highlightAspect) {
+            var origProcessEmptyInput = filterManagerAspect.processEmptyInput;
+
+            filterManagerAspect.processEmptyInput = function () {
+              highlightAspect.reset();
+              origProcessEmptyInput();
+            };
+
+            var origSetFilter = filterManagerAspect.setFilter;
+
+            filterManagerAspect.setFilter = function (text) {
+              highlightAspect.set(text);
+              origSetFilter(text);
+            };
+
+            var origBuildChoice = buildChoiceAspect.buildChoice;
+
+            buildChoiceAspect.buildChoice = function (wrap) {
+              origBuildChoice(wrap);
+              var origSetVisible = wrap.choice.setVisible;
+
+              wrap.choice.setVisible = function (v) {
+                origSetVisible(v);
+                wrap.choice.choiceDomManagerHandlers.updateHighlighted();
+              };
+            };
+          }
+        }, _ref;
       };
     }
 
@@ -4909,17 +4914,17 @@
                 pickDomFactory = aspects.pickDomFactory;
             var customPickStylings = configuration.customPickStylings;
             var customPickStylingsAspect = CustomPickStylingsAspect(componentPropertiesAspect, customPickStylings);
-            ExtendPickDomFactory(pickDomFactory, customPickStylingsAspect);
+            ExtendPickDomFactory$1(pickDomFactory, customPickStylingsAspect);
           }
         };
       };
     }
 
-    function ExtendPickDomFactory(pickDomFactory, customPickStylingsAspect) {
-      var origPickDomFactoryCreate = pickDomFactory.create;
+    function ExtendPickDomFactory$1(pickDomFactory, customPickStylingsAspect) {
+      var origCreatePickDomFactory = pickDomFactory.create;
 
       pickDomFactory.create = function (pickElement, wrap, removeOnButton) {
-        var o = origPickDomFactoryCreate(pickElement, wrap, removeOnButton);
+        var o = origCreatePickDomFactory(pickElement, wrap, removeOnButton);
         customPickStylingsAspect.customize(wrap, o.pickDom, o.pickDomManagerHandlers);
         return o;
       };
@@ -4955,11 +4960,12 @@
       };
     }
     function plug$4() {
+      var updateAppearanceAspect = UpdateAppearanceAspect();
       return function (aspects) {
+        aspects.updateAppearanceAspect = updateAppearanceAspect;
         return {
           layout: function layout() {
-            var updateAppearanceAspect = aspects.updateAppearanceAspect,
-                updateAspect = aspects.updateAspect,
+            var updateAspect = aspects.updateAspect,
                 loadAspect = aspects.loadAspect;
             updateAspect.update = composeSync(updateAspect.update, function () {
               return updateAppearanceAspect.updateAppearance();
@@ -4974,9 +4980,6 @@
                 };
               }
             };
-          },
-          plugStaticDom: function plugStaticDom() {
-            aspects.updateAppearanceAspect = UpdateAppearanceAspect();
           }
         };
       };
@@ -4996,20 +4999,10 @@
     function plug$3() {
       return function (aspects) {
         return {
-          plugStaticDomFactories: function plugStaticDomFactories() {
+          plugStaticDom: function plugStaticDom() {
             var pickDomFactory = aspects.pickDomFactory,
                 componentPropertiesAspect = aspects.componentPropertiesAspect;
-            var origCreatePickDomFactory = pickDomFactory.create;
-
-            pickDomFactory.create = function (pickElement, wrap, remove) {
-              var value = origCreatePickDomFactory(pickElement, wrap, remove);
-
-              value.pickDomManagerHandlers.updateComponentDisabled = function () {
-                value.pickDom.pickButtonElement.disabled = componentPropertiesAspect.getDisabled();
-              };
-
-              return value;
-            };
+            ExtendPickDomFactory(pickDomFactory, componentPropertiesAspect);
           },
           layout: function layout() {
             var updateAppearanceAspect = aspects.updateAppearanceAspect,
@@ -5017,7 +5010,6 @@
                 picksDom = aspects.picksDom,
                 componentPropertiesAspect = aspects.componentPropertiesAspect,
                 picksElementAspect = aspects.picksElementAspect;
-            var origOnClick = picksElementAspect.onClick;
 
             var disableComponent = function disableComponent(isComponentDisabled) {
               picksList.forEach(function (pick) {
@@ -5025,6 +5017,8 @@
               });
               picksDom.disable(isComponentDisabled);
             };
+
+            var origOnClick = picksElementAspect.onClick;
 
             picksElementAspect.onClick = function (handler) {
               disableComponent = function disableComponent(isComponentDisabled) {
@@ -5059,6 +5053,20 @@
       };
     }
 
+    function ExtendPickDomFactory(pickDomFactory, componentPropertiesAspect) {
+      var origCreatePickDomFactory = pickDomFactory.create;
+
+      pickDomFactory.create = function (pickElement, wrap, remove) {
+        var value = origCreatePickDomFactory(pickElement, wrap, remove);
+
+        value.pickDomManagerHandlers.updateComponentDisabled = function () {
+          value.pickDom.pickButtonElement.disabled = componentPropertiesAspect.getDisabled();
+        };
+
+        return value;
+      };
+    }
+
     function PlaceholderPlugin() {
       return {
         plug: plug$2
@@ -5072,7 +5080,7 @@
                 picksList = aspects.picksList,
                 picksDom = aspects.picksDom,
                 filterDom = aspects.filterDom,
-                staticDom = aspects.staticDom,
+                initialDom = aspects.initialDom,
                 updateDataAspect = aspects.updateDataAspect,
                 resetFilterListAspect = aspects.resetFilterListAspect,
                 filterManagerAspect = aspects.filterManagerAspect,
@@ -5111,7 +5119,7 @@
             }
 
             if (!placeholder) {
-              placeholder = getDataGuardedWithPrefix(staticDom.initialElement, "bsmultiselect", "placeholder");
+              placeholder = getDataGuardedWithPrefix(initialDom.initialElement, "bsmultiselect", "placeholder");
             }
 
             function setEmptyInputWidth(isVisible) {
@@ -5216,7 +5224,7 @@
     function plug$1(configuration) {
       return function (aspects) {
         return {
-          plugStaticDom: function plugStaticDom(aspects) {
+          plugStaticDom: function plugStaticDom() {
             aspects.floatingLabelAspect = FloatingLabelAspect();
           },
           layout: function layout() {
@@ -5331,7 +5339,7 @@
               }, resetLayoutAspect.resetLayout);
             }
           },
-          attach: function attach() {
+          append: function append() {
             var createPopperAspect = aspects.createPopperAspect,
                 filterDom = aspects.filterDom,
                 warningAspect = aspects.warningAspect,
@@ -5375,13 +5383,9 @@
     function WarningAspect(choicesDom, createElementAspect, staticManager, css) {
       var choicesElement = choicesDom.choicesElement;
       var warningElement = createElementAspect.createElement('DIV');
-      var origAppendToContainer = staticManager.appendToContainer;
-
-      staticManager.appendToContainer = function () {
-        origAppendToContainer();
-        choicesElement.parentNode.insertBefore(warningElement, choicesElement.nextSibling); // insert after
-      };
-
+      staticManager.appendToContainer = composeSync(staticManager.appendToContainer, function () {
+        return choicesElement.parentNode.insertBefore(warningElement, choicesElement.nextSibling);
+      });
       warningElement.style.display = 'none';
       addStyling(warningElement, css.warning);
       return {
@@ -5492,7 +5496,6 @@
     var defaultCss = createDefaultCssBs5();
 
     var BsMultiSelect = function (window, jQuery, globalPopper) {
-      console.log(defaultCss);
       var plugins = shallowClearClone(Bs5PluginSet, multiSelectPlugins);
       return createForJQuery(window, jQuery, globalPopper, 'BsMultiSelect', plugins, defaultCss);
     }(window, window.jQuery, Popper__default["default"]);

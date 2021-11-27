@@ -1,3 +1,4 @@
+import { extend } from 'jquery';
 import {composeSync} from '../ToolsJs';
 
 export function DisableComponentPlugin(){
@@ -9,28 +10,19 @@ export function DisableComponentPlugin(){
 export function plug(){ 
     return (aspects) => {
         return {
-            plugStaticDomFactories: () => {
+            plugStaticDom: () => {
                 var {pickDomFactory, componentPropertiesAspect} = aspects;
-
-                var origCreatePickDomFactory = pickDomFactory.create;
-                pickDomFactory.create = (pickElement, wrap, remove) => {
-                    var value = origCreatePickDomFactory(pickElement, wrap, remove);
-                    value.pickDomManagerHandlers.updateComponentDisabled = () => {
-                        value.pickDom.pickButtonElement.disabled = componentPropertiesAspect.getDisabled()
-                    };
-                    return value;
-                }
+                ExtendPickDomFactory(pickDomFactory, componentPropertiesAspect);
             },
             layout: () => {
                 var {updateAppearanceAspect, picksList, picksDom, componentPropertiesAspect, picksElementAspect} = aspects;
-
-                var origOnClick = picksElementAspect.onClick;
 
                 var disableComponent = (isComponentDisabled)=>{
                     picksList.forEach(pick=>pick.pickDomManagerHandlers.updateComponentDisabled())
                     picksDom.disable(isComponentDisabled);
                 }
-            
+
+                var origOnClick = picksElementAspect.onClick;
                 picksElementAspect.onClick = (handler)=>{
                     disableComponent = (isComponentDisabled)=>{
                         picksList.forEach(pick=>pick.pickDomManagerHandlers.updateComponentDisabled())
@@ -60,5 +52,16 @@ export function plug(){
                 }
             }
         }
+    }
+}
+
+function ExtendPickDomFactory(pickDomFactory, componentPropertiesAspect){
+    var origCreatePickDomFactory = pickDomFactory.create;
+    pickDomFactory.create = (pickElement, wrap, remove) => {
+        var value = origCreatePickDomFactory(pickElement, wrap, remove);
+        value.pickDomManagerHandlers.updateComponentDisabled = () => {
+            value.pickDom.pickButtonElement.disabled = componentPropertiesAspect.getDisabled()
+        };
+        return value;
     }
 }

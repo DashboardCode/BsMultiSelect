@@ -7,10 +7,12 @@ export function UpdateAppearancePlugin(){
 }
 
 export function plug(){
+    var updateAppearanceAspect = UpdateAppearanceAspect();
     return (aspects) => {
+        aspects.updateAppearanceAspect = updateAppearanceAspect;
         return {
             layout: () => {
-                var {updateAppearanceAspect, updateAspect, loadAspect} = aspects;
+                var {updateAspect, loadAspect} = aspects;
 
                 updateAspect.update = composeSync(updateAspect.update, ()=>updateAppearanceAspect.updateAppearance())
                 loadAspect.load = composeSync(loadAspect.load, ()=>updateAppearanceAspect.updateAppearance())
@@ -20,10 +22,8 @@ export function plug(){
                         api.updateAppearance = ()=>updateAppearanceAspect.updateAppearance();
                     }
                 }
-            },
-            plugStaticDom: ()=> {
-                aspects.updateAppearanceAspect = UpdateAppearanceAspect();
             }
+            
         }
     }
 }
