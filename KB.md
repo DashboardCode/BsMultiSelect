@@ -10,3 +10,7 @@ npm publish --tag beta
 npm outdated -g
 npm update -g
 
+# Git
+"please check out a branch to push to a remote"
+git branch -r   // list all remote branches
+git branch --show-current // get current branch
