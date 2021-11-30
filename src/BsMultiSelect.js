@@ -13,7 +13,7 @@ import {ChoicesDomFactory} from './ChoicesDomFactory';
 import {ChoicesVisibilityAspect} from './ChoicesVisibilityAspect';
 import {SpecialPicksEventsAspect} from './SpecialPicksEventsAspect';
  
-import {ComponentPropertiesAspect, TriggerAspect, OnChangeAspect} from './ComponentPropertiesAspect';
+import {TriggerAspect, OnChangeAspect} from './OnChangeAspect';
 import {OptionsAspect, OptionPropertiesAspect} from './OptionsAspect';
 
 import {ChoicesEnumerableAspect } from './ChoicesEnumerableAspect'
@@ -28,7 +28,7 @@ import {CreateWrapAspect, CreateChoiceBaseAspect, OptionToggleAspect, CreatePick
 import {NavigateAspect, HoveredChoiceAspect} from './NavigateAspect'
 import {Wraps} from './Wraps'
 
-import {PickButtonAspect} from './PickButtonAspect'
+//import {PickButtonAspect} from './PickButtonAspect'
 
 import {BuildPickAspect} from './BuildPickAspect'
 import {InputAspect} from './InputAspect'
@@ -50,23 +50,60 @@ import {ShowErrorAspect} from './ShowErrorAspect'
 /// environment - common for many; configuration for concreate
 export function BsMultiSelect(element, environment, pluginManager, configuration){
     let { css, 
-          getDisabled,
           options, 
           getText,
-          pickButtonHTML,
           containerClass
         } = configuration;
     
     let initialDom = {initialElement: element};
-    let createElementAspect = CreateElementAspect(name => environment.window.document.createElement(name), (element, html) => element.innerHTML = html );
+    let createElementAspect = CreateElementAspect(
+        name => environment.window.document.createElement(name), 
+        (element, html) => element.innerHTML = html ,
+        (element, html) => {
+            var newElement = new environment.window.DOMParser().parseFromString(html, 'text/html').body.children[0]; 
+            element.parentNode.insertBefore(newElement, element.nextSibling);
+        });
+        
     let showErrorAspect = ShowErrorAspect(initialDom, createElementAspect);
     try{
+        
+        let picksDomFactory   = PicksDomFactory  (css, createElementAspect);
+        let filterDomFactory  = FilterDomFactory (css, createElementAspect);
+        let choicesDomFactory = ChoicesDomFactory(css, createElementAspect);
+
+        let staticDomFactory  = StaticDomFactory(
+            createElementAspect, 
+            choicesDomFactory, 
+            filterDomFactory, 
+            picksDomFactory, 
+            initialDom, 
+            containerClass
+        );
+
+        let eventHandlers =  pluginManager.createHandlers();
+        
         let disposeAspect = {dispose(){}};
         let triggerAspect = TriggerAspect(element, environment.trigger);
         let onChangeAspect = OnChangeAspect(triggerAspect, 'dashboardcode.multiselect:change');
-        let componentPropertiesAspect = ComponentPropertiesAspect(getDisabled??(() => false));
+        
         let optionsAspect = OptionsAspect(options); 
+
+        eventHandlers.dom({
+            configuration, 
+            initialDom, createElementAspect, showErrorAspect,
+            
+            onChangeAspect, triggerAspect, 
+            optionsAspect, disposeAspect, 
+            staticDomFactory, choicesDomFactory, filterDomFactory, picksDomFactory});
+
+        let {staticManager, staticDom, filterDom, picksDom, choicesDom} = staticDomFactory.createStaticDom(); // overrided in SelectElementPlugin
+
         let optionPropertiesAspect = OptionPropertiesAspect(getText);
+
+        let pickDomFactory    = PickDomFactory   (css, createElementAspect, optionPropertiesAspect); // overrided in CustomPickStylingsPlugin, DisableComponentPlugin
+        let choiceDomFactory  = ChoiceDomFactory (css, createElementAspect, optionPropertiesAspect); // overrided in CustomChoicesStylingsPlugin, HighlightPlugin
+
+        // --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
         let isChoiceSelectableAspect = IsChoiceSelectableAspect();
         let createWrapAspect       = CreateWrapAspect();
         let createChoiceBaseAspect = CreateChoiceBaseAspect(optionPropertiesAspect);
@@ -122,54 +159,31 @@ export function BsMultiSelect(element, environment, pluginManager, configuration
         let picksList = List();
         let wraps = Wraps(
             wrapsCollection,
-            ()=>countableChoicesList.reset(), 
+            () =>countableChoicesList.reset(), 
             (w)=>countableChoicesList.remove(w),
             (w, key)=>countableChoicesListInsertAspect.countableChoicesListInsert(w, key));
 
-        let picksDomFactory   = PicksDomFactory  (css, createElementAspect);
-        let filterDomFactory  = FilterDomFactory (css, createElementAspect);
-        let choicesDomFactory = ChoicesDomFactory(css, createElementAspect);
 
-        let pickButtonAspect  = PickButtonAspect(pickButtonHTML);
+           
+            
 
-        let pickDomFactory    = PickDomFactory   (css, createElementAspect, optionPropertiesAspect, pickButtonAspect); // overrided in CustomPickStylingsPlugin, DisableComponentPlugin
-        let choiceDomFactory  = ChoiceDomFactory (css, createElementAspect, optionPropertiesAspect); // overrided in CustomChoicesStylingsPlugin, HighlightPlugin
-        
-        let staticDomFactory  = StaticDomFactory(
-            createElementAspect, 
-            choicesDomFactory, 
-            filterDomFactory, 
-            picksDomFactory, 
-            initialDom, 
-            containerClass
-            );
-
-        let eventHandlers =  pluginManager.createHandlers();
-        
         // TODO: union to events or create event bus
         eventHandlers.plugStaticDom({
-            environment, configuration, disposeAspect,
-            initialDom, showErrorAspect,
-            triggerAspect, onChangeAspect, componentPropertiesAspect, 
-            countableChoicesList, countableChoicesListInsertAspect, optionPropertiesAspect, createElementAspect,
+            environment, 
+            pickDomFactory, choiceDomFactory, 
+            countableChoicesList, countableChoicesListInsertAspect, optionPropertiesAspect, 
             wrapsCollection, choicesEnumerableAspect, filteredChoicesList, 
             filterPredicateAspect, isChoiceSelectableAspect,  
-        
             hoveredChoiceAspect, navigateAspect, 
-        
-            choicesDomFactory, filterDomFactory, picksDomFactory, 
-            pickDomFactory, choiceDomFactory, 
-        
             filterManagerAspect,
-        
-            optionsAspect, createWrapAspect, createChoiceBaseAspect, 
+            createWrapAspect, createChoiceBaseAspect, 
             picksList, wraps, addPickAspect, removePickAspect,
 
-            staticDomFactory
+            
         }); // apply selectElement support;  
 
         // TODO: to staticManager
-        let {staticManager, staticDom, filterDom, picksDom, choicesDom} = staticDomFactory.createStaticDom(); // overrided in SelectElementPlugin
+        //let {staticManager, staticDom, filterDom, picksDom, choicesDom} = staticDomFactory.createStaticDom(); // overrided in SelectElementPlugin
 
         // after this we can use staticDom (means generated DOM elements) in plugin construtctor, what simplifies parameters passing a lot   
 

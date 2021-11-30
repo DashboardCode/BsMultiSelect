@@ -8,17 +8,21 @@ export function SelectElementPlugin(){
 export function plug(configuration){
     return (aspects) => {
         return {
-            plugStaticDom: ()=> {
-                    let {staticDomFactory, createElementAspect,
-                        componentPropertiesAspect, onChangeAspect, triggerAspect, optionsAspect, optGroupAspect, disposeAspect, getValueRequiredAspect,
-                        choicesDomFactory, filterDomFactory, picksDomFactory, initialDom,
-                        showErrorAspect
-                    } = aspects;
-                    
-                    let containerClass = configuration.containerClass;
-                    let origCreateStaticDom = staticDomFactory.createStaticDom;
-                    let element = initialDom.initialElement;
-                    staticDomFactory.createStaticDom = () => {
+            dom: ()=> {
+                let {
+                    staticDomFactory, createElementAspect,
+                    onChangeAspect, triggerAspect, optionsAspect,  disposeAspect, 
+                    initialDom,
+                    showErrorAspect, 
+                    choicesDomFactory, filterDomFactory, picksDomFactory, // move to new appendAspect ?
+                    getValueRequiredAspect, createFilterInputElementIdAspect, optGroupAspect /* those three are plugins */,
+                    disabledComponentAspect
+                } = aspects;
+                
+                let containerClass = configuration.containerClass;
+                let origCreateStaticDom = staticDomFactory.createStaticDom;
+                let element = initialDom.initialElement;
+                staticDomFactory.createStaticDom = () => {
                         let selectElement = null;
                         let containerElement = null;
                         let picksElement = null;
@@ -69,24 +73,37 @@ export function plug(configuration){
                             selectElement.style.display = 'none';
                             var backupedRequired = selectElement.required;
                         
-                            if (getValueRequiredAspect)
+                            if (getValueRequiredAspect){
                                 getValueRequiredAspect.getValueRequired = function(){
                                     return backupedRequired;
                                 }
+                            }
                         
                             if(selectElement.required===true)
                                 selectElement.required = false;
                         
-                            let {getDisabled} = configuration;
+                            // TODO: move to DisableCompenentPlugin
+                            //let {getDisabled} = configuration;
                         
-                            if(!getDisabled) {
+                            if (disabledComponentAspect){
                                 var fieldsetElement = closestByTagName(selectElement, 'FIELDSET');
-                                if (fieldsetElement) {
-                                    componentPropertiesAspect.getDisabled = () => selectElement.disabled || fieldsetElement.disabled;
-                                } else {
-                                    componentPropertiesAspect.getDisabled = () => selectElement.disabled;
-                                }
+                                var origGetDisabled = disabledComponentAspect.getDisabled;
+                                if (fieldsetElement)
+                                    disabledComponentAspect.getDisabled = () => {
+                                        var value = origGetDisabled();
+                                        if (value===null)
+                                            value = selectElement.disabled || fieldsetElement.disabled;
+                                        return value;
+                                    } 
+                                else
+                                    disabledComponentAspect.getDisabled = () => {
+                                        var value = origGetDisabled();
+                                        if (value===null)
+                                            value = selectElement.disabled;
+                                        return value;
+                                    }
                             }
+
                             onChangeAspect.onChange = composeSync(() => triggerAspect.trigger('change'), onChangeAspect.onChange) 
                             optionsAspect.getOptions = () => selectElement.options;
 
@@ -96,10 +113,10 @@ export function plug(configuration){
                                 optGroupAspect.getOptGroupId = (optGroup) => optGroup.id;
                             }
                         
-                            if (selectElement && aspects.createFilterInputElementIdAspect){
-                                var origCreateFilterInputElementId = aspects.createFilterInputElementIdAspect.createFilterInputElementId;
+                            if (selectElement && createFilterInputElementIdAspect){
+                                var origCreateFilterInputElementId = createFilterInputElementIdAspect.createFilterInputElementId;
                                 
-                                aspects.createFilterInputElementIdAspect.createFilterInputElementId = () =>
+                                createFilterInputElementIdAspect.createFilterInputElementId = () =>
                                 { 
                                     let id = origCreateFilterInputElementId();
                                     if (!id) {
@@ -157,8 +174,7 @@ export function plug(configuration){
                                 }
                             }
                         }
-                    }
-                
+                }
             },
             layout: ()=>{
                 var {loadAspect, environment} = aspects;

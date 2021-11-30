@@ -2,7 +2,6 @@ import {closestByClassName} from '../ToolsDom'
 import {BsAppearancePlugin} from './BsAppearancePlugin'
 
 export function BsAppearanceBs4Plugin(defaults) {
-    defaults.pickButtonHTML = '<button aria-label="Remove" tabIndex="-1" type="button"><span aria-hidden="true">&times;</span></button>';
     defaults.composeGetSize = composeGetSize; // BsAppearancePlugin
     defaults.getDefaultLabel = getDefaultLabel; // FloatingLabelPlugin, BsAppearancePlugin
     return BsAppearancePlugin();

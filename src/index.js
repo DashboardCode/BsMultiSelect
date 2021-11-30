@@ -13,7 +13,8 @@ import { BsAppearanceBs5Plugin, BsAppearanceBs4Plugin, CssPatchBs4Plugin, CssPat
     FormRestoreOnBackwardPlugin, DisabledOptionPlugin, PicksApiPlugin, HighlightPlugin, ChoicesDynamicStylingPlugin, CustomPickStylingsPlugin, CustomChoiceStylingsPlugin, 
     PicksPlugin, HiddenOptionPlugin, HiddenOptionAltPlugin,
     BsAppearanceBs4CssPatchPlugin, BsAppearanceBs5CssPatchPlugin,
-    WarningBs4Plugin, WarningBs5Plugin
+    WarningBs4Plugin, WarningBs5Plugin,
+    PickButtonBs4Plugin, PickButtonBs5Plugin, PickButtonPlugCssPatchBs4, PickButtonPlugCssPatchBs5,
     /*,SelectedPicksPlugin*/
     } from "./plugins/index.js";
 
@@ -26,6 +27,8 @@ export {
     SelectElementPlugin, PicksPlugin,
     
     LabelForAttributePlugin, ValidationApiPlugin, UpdateAppearancePlugin, 
+    
+    PickButtonBs4Plugin, PickButtonBs5Plugin, PickButtonPlugCssPatchBs4, PickButtonPlugCssPatchBs5,
     
     DisableComponentPlugin, 
     FormResetPlugin, CreatePopperPlugin, RtlPlugin, PlaceholderPlugin, 

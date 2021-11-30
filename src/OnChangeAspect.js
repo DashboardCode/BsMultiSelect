@@ -14,9 +14,4 @@ export function OnChangeAspect(triggerAspect, name) {
     }
 }
 
-export function ComponentPropertiesAspect(getDisabled) {
-    return {
-        getDisabled
-    }
-}
 

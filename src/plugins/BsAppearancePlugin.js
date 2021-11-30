@@ -9,9 +9,14 @@ export function BsAppearancePlugin(){
 }
 
 export function plug(configuration){ 
+    let getSizeComponentAspect = {};
+    let getValidityComponentAspect = {};
     return (aspects) => {
+        aspects.getSizeComponentAspect = getSizeComponentAspect;
+        aspects.getValidityComponentAspect = getValidityComponentAspect;
         return {
-            // TODO, LabelElement should be moved to StaticDomFactory and staticDom 
+            // TODO1, LabelElement should be moved to StaticDomFactory and staticDom 
+            // NOTE: preLayout means first after createStaticDom
             preLayout: () => {
                 var {getLabelAspect, staticDom} = aspects; 
                 var {selectElement} = staticDom;
@@ -32,7 +37,7 @@ export function plug(configuration){
             layout: () => {
                 let {validationApiAspect, 
                     initialDom,
-                    picksDom, staticDom, updateAppearanceAspect, componentPropertiesAspect, floatingLabelAspect} = aspects;
+                    picksDom, staticDom, updateAppearanceAspect, floatingLabelAspect} = aspects;
                 let {getValidity, getSize, useCssPatch, css, composeGetSize} = configuration;
                 
                 let selectElement = staticDom.selectElement;
@@ -45,7 +50,7 @@ export function plug(configuration){
                     floatingLabelAspect.isFloatingLabel = () => isFloatingLabel
                 }
             
-                if (staticDom.selectElement) {
+                if (selectElement) {
                     if(!getValidity)
                         getValidity = composeGetValidity(selectElement)
                     if(!getSize) 
@@ -57,9 +62,9 @@ export function plug(configuration){
                         getSize = () => null
                 }
             
-                componentPropertiesAspect.getSize=getSize;
+                getSizeComponentAspect.getSize=getSize;
             
-                componentPropertiesAspect.getValidity=getValidity;
+                getValidityComponentAspect.getValidity=getValidity;
             
                 var updateSize;
                 if (!useCssPatch){
@@ -98,12 +103,12 @@ export function plug(configuration){
                     var wasValidatedElement = closestByClassName(initialElement, 'was-validated');
                     return wasValidatedElement?true:false;
                 }
+                
                 var wasUpdatedObservable = ObservableLambda(()=>getWasValidated());
                 var getManualValidationObservable = ObservableLambda(()=>getValidity());
-                let validationApiObservable = validationApiAspect?.validationApiObservable;
                 
                 var validationObservable = ObservableLambda(
-                    () => wasUpdatedObservable.getValue()?validationApiObservable.getValue():getManualValidationObservable.getValue()
+                    () => wasUpdatedObservable.getValue()?validationApiAspect.getValue():getManualValidationObservable.getValue()
                 )
                 
                 validationObservable.attach(
@@ -116,8 +121,8 @@ export function plug(configuration){
                 wasUpdatedObservable.attach(
                     ()=>validationObservable.call()
                 )
-                if (validationApiObservable)
-                    validationApiObservable.attach(
+                if (validationApiAspect)
+                    validationApiAspect.attach(
                         ()=>validationObservable.call()
                     )
                 getManualValidationObservable.attach(

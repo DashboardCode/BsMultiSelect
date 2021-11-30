@@ -1,3 +1,5 @@
+-3 environemnt and confiration should be removed as common objects on plugin instance and then on staticfactories level
+
 -2  how to customize StaticDomFactory and do not fully rewrite in SelectElementPlugin
     -2a  LabelElement should become optional part of staticdom (search for label can be customized by BsAppearancePlugin)
         -2aa  this will remove prelayoutBus.

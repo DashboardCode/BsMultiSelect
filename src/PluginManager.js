@@ -1,7 +1,9 @@
 import {extendIfUndefined} from './ToolsJs';
 
-function parseEventHandler(key, eventHandler, plugStaticDoms, preLayouts, layouts, appends, buildApis, disposes){
+function parseEventHandler(key, eventHandler, doms, plugStaticDoms, preLayouts, layouts, appends, buildApis, disposes){
     if (eventHandler) {
+        if (eventHandler.dom)
+            doms.push({key, value:eventHandler.dom});
         if (eventHandler.plugStaticDom)
             plugStaticDoms.push({key, value:eventHandler.plugStaticDom});
         if (eventHandler.preLayout)
@@ -21,7 +23,7 @@ export function ComposePluginManagerFactory(plugins, defaults, environment){
     let plugedList = [];
     let mergeList = [];
     for(let i = 0; i<plugins.length; i++){
-        let pluged =  plugins[i].value(defaults);
+        let pluged =  plugins[i].value(defaults, environment);
         if (pluged){
             if (pluged.plug)
                 plugedList.push({key:plugins[i].key, value:pluged.plug})
@@ -55,6 +57,7 @@ export function PluginManager(environment, buildAspectsList){
     let createHandlers = (newAspects)=> {
         extendIfUndefined(aspects, newAspects)
 
+        var doms = [];
         var plugStaticDoms = [];
         var preLayouts = [];
         var layouts = [];
@@ -63,38 +66,45 @@ export function PluginManager(environment, buildAspectsList){
         let disposes = [];
         for(let k = 0; k<buildAspectsList.length; k++){
             let eventHandler = buildAspectsList[k].value(aspects);
-            parseEventHandler(buildAspectsList[k].key, eventHandler, plugStaticDoms, preLayouts, layouts, appends, buildApis, disposes);
+            parseEventHandler(buildAspectsList[k].key, eventHandler, doms, plugStaticDoms, preLayouts, layouts, appends, buildApis, disposes);
         }
 
         return  {
+            dom(newAspects){
+                extendIfUndefined(aspects, newAspects);
+                for(let i = 0; i<doms.length; i++){
+                    var eventHandler = doms[i].value?.();
+                    parseEventHandler(doms[i].key, eventHandler, doms, plugStaticDoms, preLayouts, layouts, appends, buildApis, disposes);
+                }
+            },
             plugStaticDom(newAspects){
                 extendIfUndefined(aspects, newAspects);
                 for(let i = 0; i<plugStaticDoms.length; i++){
                     var eventHandler = plugStaticDoms[i].value?.();
-                    parseEventHandler(plugStaticDoms[i].key, eventHandler, plugStaticDoms, preLayouts, layouts, appends, buildApis, disposes);
+                    parseEventHandler(plugStaticDoms[i].key, eventHandler, doms, plugStaticDoms, preLayouts, layouts, appends, buildApis, disposes);
                 }
             },
             layout(newAspects){
                 extendIfUndefined(aspects, newAspects);
                 for(let i = 0; i<preLayouts.length; i++){
                     let eventHandler = preLayouts[i].value?.();
-                    parseEventHandler(preLayouts[i].key, eventHandler, plugStaticDoms, preLayouts, layouts, appends, buildApis, disposes);
+                    parseEventHandler(preLayouts[i].key, eventHandler, doms, plugStaticDoms, preLayouts, layouts, appends, buildApis, disposes);
                 }
                 for(let j = 0; j<layouts.length; j++){
                     let eventHandler = layouts[j].value?.();
-                    parseEventHandler(layouts[j].key, eventHandler, plugStaticDoms, preLayouts, layouts, appends, buildApis, disposes);
+                    parseEventHandler(layouts[j].key, eventHandler, doms, plugStaticDoms, preLayouts, layouts, appends, buildApis, disposes);
                 }
             },
             append(){
                 for(let i = 0; i<appends.length; i++){
                     var eventHandler = appends[i].value?.();
-                    parseEventHandler(appends[i].key, eventHandler, plugStaticDoms, preLayouts, layouts, appends, buildApis, disposes);
+                    parseEventHandler(appends[i].key, eventHandler, doms, plugStaticDoms, preLayouts, layouts, appends, buildApis, disposes);
                 }
             },
             buildApi(api){
                 for(let i = 0; i<buildApis.length; i++){
                     var eventHandler = buildApis[i].value?.(api);
-                    parseEventHandler(buildApis[i].key, eventHandler, plugStaticDoms, preLayouts, layouts, appends, buildApis, disposes);
+                    parseEventHandler(buildApis[i].key, eventHandler, doms, plugStaticDoms, preLayouts, layouts, appends, buildApis, disposes);
                 }
             },
             dispose(){

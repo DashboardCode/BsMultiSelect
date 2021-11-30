@@ -1,6 +1,7 @@
-export function CreateElementAspect(createElement, createElementFromHtml){
+export function CreateElementAspect(createElement, createElementFromHtml, createElementFromHtmlPutAfter){
     return {
         createElement,
-        createElementFromHtml
+        createElementFromHtml,
+        createElementFromHtmlPutAfter
     }
 }

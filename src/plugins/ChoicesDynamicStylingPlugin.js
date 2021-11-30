@@ -1,18 +1,23 @@
 // aka auto height and scrolling
-export function ChoicesDynamicStylingPlugin(defaults){
-    defaults.useChoicesDynamicStyling = false;
-    defaults.choicesDynamicStyling = choicesDynamicStyling;
-    defaults.minimalChoicesDynamicStylingMaxHeight = 20;
+export function ChoicesDynamicStylingPlugin(defaults, environment){
+    preset(defaults)
     return {
         plug
     }
 }
 
+export function preset(o){
+    o.useChoicesDynamicStyling = false;
+    o.choicesDynamicStyling = (aspects)=>choicesDynamicStyling(aspects, window);
+    o.minimalChoicesDynamicStylingMaxHeight = 20;
+}
+
 export function plug(configuration){ 
+    let {choicesDynamicStyling, useChoicesDynamicStyling} = configuration;
     return (aspects) => {
         return {
             layout: () => {
-                let {choicesDynamicStyling, useChoicesDynamicStyling} = configuration;
+                
                 if (useChoicesDynamicStyling) {
                     let {choicesVisibilityAspect, specialPicksEventsAspect} = aspects;
                     var origSetChoicesVisible = choicesVisibilityAspect.setChoicesVisible;
@@ -30,9 +35,8 @@ export function plug(configuration){
     }
 }
 
-function choicesDynamicStyling(aspects){
-    let {choicesDom, navigateAspect, environment, configuration} = aspects;
-    let window = environment.window;
+function choicesDynamicStyling(aspects, window){
+    let {choicesDom, navigateAspect, configuration} = aspects;
     let choicesElement = choicesDom.choicesElement;
     let minimalChoicesDynamicStylingMaxHeight = configuration.minimalChoicesDynamicStylingMaxHeight;
 

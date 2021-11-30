@@ -2,7 +2,6 @@ import {closestByClassName} from '../ToolsDom'
 import {BsAppearancePlugin} from './BsAppearancePlugin'
 
 export function BsAppearanceBs5Plugin(defaults) {
-    defaults.pickButtonHTML = '<button aria-label="Remove" tabIndex="-1" type="button"></button>'; // used in PickDomFactory
     defaults.composeGetSize = composeGetSize; // BsAppearancePlugin
     defaults.getDefaultLabel = getDefaultLabel; // FloatingLabelPlugin, BsAppearancePlugin
     return BsAppearancePlugin();

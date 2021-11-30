@@ -3,27 +3,25 @@ import {getDataGuardedWithPrefix} from '../ToolsDom';
 
 const defValueMissingMessage = 'Please select an item in the list'
 
-export function ValidationApiPlugin(o){
-    preset(o);
+export function ValidationApiPlugin(defaults){
+    preset(defaults);
     return {
         plug
     }
 }
 
-export function preset(o){o.getValueRequired=() => false; o.valueMissingMessage='';}
+export function preset(defaults){defaults.getValueRequired=() => false; defaults.valueMissingMessage='';}
 
 export function plug(configuration){
+    let  {required, getValueRequired, getIsValueMissing, valueMissingMessage} = configuration;
+    var getValueRequiredAspect = GetValueRequiredAspect(required, getValueRequired);
     return (aspects) => {
-        var getValueRequiredAspect = GetValueRequiredAspect(configuration.getValueRequired);
         aspects.getValueRequiredAspect = getValueRequiredAspect;
         return {
             plugStaticDom: ()=>{
                 var {optionsAspect, initialDom} = aspects;
-                // TODO: required could be a function
-                let {getIsValueMissing, valueMissingMessage, required} = configuration;
-                if (!isBoolean(required))
-                   required = getValueRequiredAspect.getValueRequired(); 
-                valueMissingMessage = defCall(valueMissingMessage,
+
+                var valueMissingMessageEx = defCall(valueMissingMessage,
                    ()=> getDataGuardedWithPrefix(initialDom.initialElement,"bsmultiselect","value-missing-message"),
                    defValueMissingMessage)
             
@@ -39,35 +37,40 @@ export function plug(configuration){
                     }
                 }
 
-                var isValueMissingObservable = ObservableLambda(()=>required && getIsValueMissing());
-                var validationApiObservable  = ObservableValue(!isValueMissingObservable.getValue());
-                aspects.validationApiAspect = ValidationApiAspect(validationApiObservable);
-
                 return {
-                    layout: () => {
-                        var {onChangeAspect, updateDataAspect} = aspects;
-                        // TODO: required could be a function
-                        let {valueMissingMessage} = configuration;
+                    preLayout() {
+                    // getValueRequiredAspect redefined on appendToContainer, so this can't be called on prelayout and layout
+                    var isValueMissingObservable = ObservableLambda(()=>getValueRequiredAspect.getValueRequired() && getIsValueMissing());
+                    var validationApiObservable  = ObservableValue(!isValueMissingObservable.getValue()); 
+                    aspects.validationApiAspect = ValidationApiAspect(validationApiObservable); // used in BsAppearancePlugin layout, possible races
+
+                    return {
+                        layout: () => {
+                            var {onChangeAspect, updateDataAspect} = aspects;
+                            // TODO: required could be a function
+                            //let {valueMissingMessage} = configuration;
+
+                            onChangeAspect.onChange = composeSync(isValueMissingObservable.call, onChangeAspect.onChange);
+                            updateDataAspect.updateData = composeSync(isValueMissingObservable.call, updateDataAspect.updateData); 
                         
-                        onChangeAspect.onChange = composeSync(isValueMissingObservable.call, onChangeAspect.onChange);
-                        updateDataAspect.updateData = composeSync(isValueMissingObservable.call, updateDataAspect.updateData); 
-                   
-                        return {
-                            buildApi(api){
-                                var {triggerAspect, filterDom} = aspects;
-                                api.validationApi = ValidityApi(
-                                   filterDom.filterInputElement,  // !!
-                                   isValueMissingObservable, 
-                                   valueMissingMessage,
-                                   (isValid)=>validationApiObservable.setValue(isValid),
-                                   triggerAspect.trigger
-                                );
+                            return {
+                                buildApi(api){
+                                    var {triggerAspect, filterDom} = aspects;
+                                    api.validationApi = ValidityApi(
+                                       filterDom.filterInputElement,  // !!
+                                       isValueMissingObservable, 
+                                       valueMissingMessageEx,
+                                       (isValid)=>validationApiObservable.setValue(isValid),
+                                       triggerAspect.trigger
+                                    );
+                                }
                             }
+                        },
+                        dispose(){
+                            isValueMissingObservable.detachAll(); 
+                            validationApiObservable.detachAll();
                         }
-                    },
-                    dispose(){
-                        isValueMissingObservable.detachAll(); 
-                        validationApiObservable.detachAll();
+                    }
                     }
                 }
             }
@@ -75,15 +78,26 @@ export function plug(configuration){
     }
 }
 
-function GetValueRequiredAspect(getValueRequired){
+function GetValueRequiredAspect(required, getValueRequiredCfg){
     return {
-        getValueRequired
+        getValueRequired(){
+            let value = false;
+            if (!isBoolean(required))
+                if (getValueRequiredCfg)
+                    value = getValueRequiredCfg();
+            return value;
+        }
     }
 }
 
 function ValidationApiAspect(validationApiObservable){
     return {
-        validationApiObservable
+        getValue(){
+            return validationApiObservable.getValue();
+        },
+        attach(f){
+            validationApiObservable.attach(f);
+        }
     }
 }
 

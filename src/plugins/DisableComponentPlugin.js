@@ -1,21 +1,28 @@
-import { extend } from 'jquery';
+//import { extend } from 'jquery';
 import {composeSync} from '../ToolsJs';
 
-export function DisableComponentPlugin(){
+export function DisableComponentPlugin(defaults){
+    preset(defaults)
     return {
         plug
     }
 }
 
-export function plug(){ 
+export function preset(defaults){
+    defaults.getDisabled = () => null;
+}
+
+export function plug(configuration){ 
+    let disabledComponentAspect = DisabledComponentAspect(configuration.getDisabled);
     return (aspects) => {
+        aspects.disabledComponentAspect=disabledComponentAspect;
         return {
             plugStaticDom: () => {
-                var {pickDomFactory, componentPropertiesAspect} = aspects;
-                ExtendPickDomFactory(pickDomFactory, componentPropertiesAspect);
+                var {pickDomFactory} = aspects;
+                ExtendPickDomFactory(pickDomFactory, disabledComponentAspect);
             },
             layout: () => {
-                var {updateAppearanceAspect, picksList, picksDom, componentPropertiesAspect, picksElementAspect} = aspects;
+                var {updateAppearanceAspect, picksList, picksDom, picksElementAspect} = aspects;
 
                 var disableComponent = (isComponentDisabled)=>{
                     picksList.forEach(pick=>pick.pickDomManagerHandlers.updateComponentDisabled())
@@ -36,7 +43,7 @@ export function plug(){
             
                 let isComponentDisabled; // state! 
                 function updateDisabled(){
-                    let newIsComponentDisabled = componentPropertiesAspect.getDisabled();
+                    let newIsComponentDisabled = disabledComponentAspect.getDisabled()??false;
                     if (isComponentDisabled!==newIsComponentDisabled){
                         isComponentDisabled=newIsComponentDisabled;
                         disableComponent(newIsComponentDisabled);
@@ -55,12 +62,18 @@ export function plug(){
     }
 }
 
-function ExtendPickDomFactory(pickDomFactory, componentPropertiesAspect){
+export function DisabledComponentAspect(getDisabled) {
+    return {
+        getDisabled
+    }
+}
+
+function ExtendPickDomFactory(pickDomFactory, disabledComponentAspect){
     var origCreatePickDomFactory = pickDomFactory.create;
     pickDomFactory.create = (pickElement, wrap, remove) => {
         var value = origCreatePickDomFactory(pickElement, wrap, remove);
         value.pickDomManagerHandlers.updateComponentDisabled = () => {
-            value.pickDom.pickButtonElement.disabled = componentPropertiesAspect.getDisabled()
+            // nothing
         };
         return value;
     }

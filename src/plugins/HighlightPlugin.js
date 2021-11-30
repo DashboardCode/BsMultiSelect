@@ -23,11 +23,9 @@ function ExtendChoiceDomFactory(choiceDomFactory, optionPropertiesAspect){
 
 export function plug(configuration){
     return (aspects) => {
+        if (configuration.useHighlighting)
+            aspects.highlightAspect = HighlightAspect();
         return {
-            plugStaticDom(){
-                if (configuration.useHighlighting)
-                    aspects.highlightAspect = HighlightAspect();
-            },
             plugStaticDom(){
                 var {choiceDomFactory, optionPropertiesAspect} = aspects;
                 ExtendChoiceDomFactory(choiceDomFactory, optionPropertiesAspect);

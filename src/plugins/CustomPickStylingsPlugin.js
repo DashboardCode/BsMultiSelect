@@ -11,9 +11,9 @@ export function plug(configuration){
     return (aspects) => {
         return {
             plugStaticDom: ()=> {
-                let {componentPropertiesAspect, pickDomFactory} = aspects;
+                let {disabledComponentAspect, pickDomFactory} = aspects;
                 let customPickStylings = configuration.customPickStylings;
-                let customPickStylingsAspect = CustomPickStylingsAspect(componentPropertiesAspect, customPickStylings);
+                let customPickStylingsAspect = CustomPickStylingsAspect(disabledComponentAspect, customPickStylings);
                 ExtendPickDomFactory(pickDomFactory, customPickStylingsAspect);
             }
         }
@@ -29,7 +29,7 @@ function ExtendPickDomFactory(pickDomFactory, customPickStylingsAspect){
     }
 }
 
-function CustomPickStylingsAspect(componentPropertiesAspect, customPickStylings){
+function CustomPickStylingsAspect(disabledComponentAspect, customPickStylings){
     return {
         customize(wrap, pickDom, pickDomManagerHandlers){
             if (customPickStylings){
@@ -40,7 +40,7 @@ function CustomPickStylingsAspect(componentPropertiesAspect, customPickStylings)
                         return function() {
                             custom({
                                 isOptionDisabled: wrap.isOptionDisabled,
-                                isComponentDisabled: componentPropertiesAspect.getDisabled()
+                                isComponentDisabled: disabledComponentAspect.getDisabled()
                             });
                         }
                     }

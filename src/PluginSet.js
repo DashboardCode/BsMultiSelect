@@ -21,16 +21,16 @@ import {
     WarningCssPatchPlugin, WarningBs4Plugin, WarningBs5Plugin,
 
     PicksPlugin,
-
+    PickButtonBs4Plugin, PickButtonBs5Plugin, PickButtonPlugCssPatchBs4, PickButtonPlugCssPatchBs5,
     HiddenOptionPlugin,
     /*HiddenOptionAltPlugin as HiddenOptionPlugin*/} from './plugins/index'
 
 import {shallowClearClone} from './ToolsJs'
 
 
-export let Bs4PluginSet = {BsAppearanceBs4Plugin, WarningBs4Plugin, CssPatchBs4Plugin, BsAppearanceBs4CssPatchPlugin }
+export let Bs4PluginSet = {BsAppearanceBs4Plugin, /*PickButtonBs4Plugin,*/ WarningBs4Plugin, CssPatchBs4Plugin, BsAppearanceBs4CssPatchPlugin /*, PickButtonPlugCssPatchBs4*/}
 
-export let Bs5PluginSet = {BsAppearanceBs5Plugin, WarningBs5Plugin, CssPatchBs5Plugin, BsAppearanceBs5CssPatchPlugin, FloatingLabelCssPatchBs5Plugin }
+export let Bs5PluginSet = {BsAppearanceBs5Plugin, /*PickButtonBs5Plugin, */WarningBs5Plugin, CssPatchBs5Plugin, BsAppearanceBs5CssPatchPlugin /*, PickButtonPlugCssPatchBs5*/, FloatingLabelCssPatchBs5Plugin}
 
 export let multiSelectPlugins = {SelectElementPlugin, 
     LabelForAttributePlugin, HiddenOptionPlugin, ValidationApiPlugin, 

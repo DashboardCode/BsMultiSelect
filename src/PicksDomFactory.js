@@ -60,18 +60,9 @@ export function PicksDomFactoryPlugCss(css){
     css.pick = 'badge';
 }
 
-function PicksDomFactoryPlugCssPatch(cssPatch){
+export function PicksDomFactoryPlugCssPatch(cssPatch){
     cssPatch.picks = {listStyleType:'none', display:'flex', flexWrap:'wrap',  height: 'auto', marginBottom: '0',cursor: 'text'},
     cssPatch.picks_disabled =  {backgroundColor: '#e9ecef'};
     cssPatch.picks_focus = {borderColor: '#80bdff', boxShadow: '0 0 0 0.2rem rgba(0, 123, 255, 0.25)'};
-}
-
-export function PicksDomFactoryPlugCssPatchBs4(cssPatch){
-    PicksDomFactoryPlugCssPatch(cssPatch)
-    cssPatch.pick = {paddingLeft: '0', paddingRight: '.5rem', paddingInlineStart:'0', paddingInlineEnd:'0.5rem', lineHeight: '1.5em'};
-}
-
-export function PicksDomFactoryPlugCssPatchBs5(cssPatch){
-    PicksDomFactoryPlugCssPatch(cssPatch)
-    cssPatch.pick = {paddingLeft: '0', paddingRight: '.5rem', paddingInlineStart:'0', paddingInlineEnd:'0.5rem', color:'var(--bs-dark)'};
+    cssPatch.pick = {paddingLeft: '0', paddingRight: '.5rem', paddingInlineStart:'0', paddingInlineEnd:'0.5rem'};
 }

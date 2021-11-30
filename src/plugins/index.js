@@ -44,6 +44,9 @@ import {WarningCssPatchPlugin} from './WarningCssPatchPlugin'
 import {WarningBs4Plugin} from './WarningBs4Plugin'
 import {WarningBs5Plugin} from './WarningBs5Plugin'
 
+import {PickButtonBs4Plugin, PickButtonBs5Plugin, PickButtonPlugCssPatchBs4, PickButtonPlugCssPatchBs5} from './PickButtonPlugin'
+
+
 export {
     BsAppearanceBs4Plugin, BsAppearanceBs5Plugin, 
     BsAppearanceBs4CssPatchPlugin, BsAppearanceBs5CssPatchPlugin,
@@ -54,6 +57,8 @@ export {
     LabelForAttributePlugin, HiddenOptionPlugin, ValidationApiPlugin, 
     UpdateAppearancePlugin, 
     
+    PickButtonBs4Plugin, PickButtonBs5Plugin, PickButtonPlugCssPatchBs4, PickButtonPlugCssPatchBs5,
+
     DisableComponentPlugin,
     FormResetPlugin, CreatePopperPlugin,  RtlPlugin,  PlaceholderPlugin, PlaceholderCssPatchPlugin, 
     OptionsApiPlugin, 
