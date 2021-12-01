@@ -57,15 +57,11 @@ export function RemovePickAspect(){
 export function ProducePickAspect(picksList, removePickAspect, buildPickAspect){
     return {
         producePick(wrap, pickHandlers){
-            let pick = buildPickAspect.buildPick(wrap, (event)=>pickHandlers.removeOnButton(event));
+            let pick = buildPickAspect.buildPick(wrap);
                 
-            let fixSelectedFalse = () => removePickAspect.removePick(wrap, pick)
-
-            pickHandlers.removeOnButton = fixSelectedFalse;
-            
             pick.pickElementAttach();
             let {remove: removeFromPicksList} = picksList.add(pick);
-            pick.setSelectedFalse = fixSelectedFalse;
+            pick.setSelectedFalse = () => removePickAspect.removePick(wrap, pick);
             pick.wrap = wrap; 
             pick.dispose = composeSync(
                 removeFromPicksList,
@@ -76,7 +72,7 @@ export function ProducePickAspect(picksList, removePickAspect, buildPickAspect){
                 pick.dispose);
             pickHandlers.removeAndDispose = () => pick.dispose();
             return pick;
-        }
+        } 
     }
 }
 
@@ -88,7 +84,7 @@ export function CreatePickHandlersAspect(producePickAspect){
             let pickHandlers = { 
                 producePick: null,  // not redefined directly, but redefined in addPickAspect
                 removeAndDispose: null,  // not redefined, 
-                removeOnButton: null // redefined in MultiSelectInlineLayout
+                //removeOnButton: null // redefined in MultiSelectInlineLayout
             }
             
             pickHandlers.producePick = () => producePickAspect.producePick(wrap, pickHandlers);

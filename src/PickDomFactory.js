@@ -1,29 +1,20 @@
-import  {addStyling, toggleStyling} from './ToolsStyling';
+import  {addStyling} from './ToolsStyling';
 
+// empty but can be usefull in custom development
 export function PickDomFactoryPlugCss(css){
     css.pickContent = '';
-    css.pickContent_disabled = 'disabled';
-}
-
-export function PickDomFactoryPlugCssPatch(cssPatch){
-    cssPatch.pickContent_disabled = {opacity: '.65'};
 }
 
 export function PickDomFactory(css, createElementAspect, optionPropertiesAspect){
     return { 
-        create(pickElement, wrap, remove){
+        create(pickElement, wrap){
             let pickContentElement = createElementAspect.createElement('SPAN');
             pickElement.appendChild(pickContentElement);
             
             addStyling(pickContentElement, css.pickContent);
             
-            let disableToggle = toggleStyling(pickContentElement, css.pickContent_disabled);
-
             function updateData(){
                 pickContentElement.textContent = optionPropertiesAspect.getText(wrap.option); 
-            }
-            function updateDisabled(){
-                disableToggle(wrap.isOptionDisabled)
             }
 
             return {
@@ -31,10 +22,9 @@ export function PickDomFactory(css, createElementAspect, optionPropertiesAspect)
                     pickContentElement
                 },
                 pickDomManagerHandlers:{
-                    updateData,
-                    updateDisabled,
+                    updateData
                 },
-                dispose(){
+                dispose(){ // empty but usefull for plugins
                 }
             }
         }

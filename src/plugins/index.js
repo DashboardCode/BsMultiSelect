@@ -20,7 +20,7 @@ import {OptionsApiPlugin} from './OptionsApiPlugin'
 import {FormRestoreOnBackwardPlugin} from './FormRestoreOnBackwardPlugin'
 import {SelectElementPlugin} from './SelectElementPlugin'
 import {SelectedOptionPlugin} from './SelectedOptionPlugin'
-import {DisabledOptionPlugin} from './DisabledOptionPlugin'
+import {DisabledOptionPlugin, DisabledOptionCssPatchPlugin} from './DisabledOptionPlugin'
 import {PicksApiPlugin} from './PicksApiPlugin'
 import {PicksPlugin} from './PicksPlugin'
 
@@ -64,7 +64,8 @@ export {
     OptionsApiPlugin, 
     JQueryMethodsPlugin, 
     SelectedOptionPlugin, FormRestoreOnBackwardPlugin, 
-    DisabledOptionPlugin, PicksApiPlugin, HighlightPlugin,
+    DisabledOptionPlugin, DisabledOptionCssPatchPlugin,
+    PicksApiPlugin, HighlightPlugin,
     ChoicesDynamicStylingPlugin, CustomPickStylingsPlugin, CustomChoiceStylingsPlugin,
     
     FloatingLabelPlugin, FloatingLabelCssPatchBs5Plugin,

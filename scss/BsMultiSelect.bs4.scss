@@ -75,12 +75,14 @@
             padding-left: 0;
             padding-inline-start: 0;
             padding-inline-end: .5rem;
-
+            padding-top: 0.35em;
+            padding-bottom: 0.35em;
             line-height: 1.5em;
             button.close {
                 float: none;
-                font-size: 1.5em;
-                line-height: .9em;
+                font-size: 1.8em;
+                line-height: .5em;
+                font-weight: 400;
                 // BS close orginally float:right, therefore it impossible to configure no-warp policy
                 // with .css("white-space", "nowrap") or  .css("display", "inline-block"); TODO: migrate to flex?
             }

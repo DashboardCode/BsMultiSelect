@@ -60,9 +60,23 @@ export function PicksDomFactoryPlugCss(css){
     css.pick = 'badge';
 }
 
-export function PicksDomFactoryPlugCssPatch(cssPatch){
+function PicksDomFactoryPlugCssPatch(cssPatch){
     cssPatch.picks = {listStyleType:'none', display:'flex', flexWrap:'wrap',  height: 'auto', marginBottom: '0',cursor: 'text'},
     cssPatch.picks_disabled =  {backgroundColor: '#e9ecef'};
     cssPatch.picks_focus = {borderColor: '#80bdff', boxShadow: '0 0 0 0.2rem rgba(0, 123, 255, 0.25)'};
-    cssPatch.pick = {paddingLeft: '0', paddingRight: '.5rem', paddingInlineStart:'0', paddingInlineEnd:'0.5rem'};
+    cssPatch.pick = {paddingLeft: '0', paddingRight: '.5rem', paddingInlineStart:'0', paddingInlineEnd:'0.5rem'}
+}
+
+export function PicksDomFactoryPlugCssPatchBs4(cssPatch){
+    PicksDomFactoryPlugCssPatch(cssPatch)
+    // TODO: this is done for button and should be moved to button plugin
+    //cssPatch.pick.lineHeight = '1.5em';
+    cssPatch.pick.paddingTop = '0.35em';
+    cssPatch.pick.paddingBottom = '0.35em';
+}
+
+export function PicksDomFactoryPlugCssPatchBs5(cssPatch){
+     PicksDomFactoryPlugCssPatch(cssPatch)
+     // TODO: this is done for button and should be moved to button plugin
+     cssPatch.pick.color ='var(--bs-dark)';
 }

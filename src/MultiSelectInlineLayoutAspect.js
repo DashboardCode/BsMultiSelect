@@ -13,8 +13,11 @@ export function MultiSelectInlineLayoutAspect (
 
         picksElementAspect,
         
+        //removeOnButtonAspect,
+
         afterInputAspect,
-        disposeAspect
+        disposeAspect,
+        pickDomFactory
     ) 
 {
     let choicesElement = choicesDom.choicesElement;
@@ -82,7 +85,10 @@ export function MultiSelectInlineLayoutAspect (
         }
     }
 
-    var preventDefaultClickEvent = null;
+    var preventDefaultClickEvent = null; // state
+    function setPreventDefaultClickEvent(event){
+        preventDefaultClickEvent=event;
+    }
 
     // TODO: remove setTimeout: set on start of mouse event reset on end
     function skipoutAndResetMousedown(){
@@ -90,14 +96,8 @@ export function MultiSelectInlineLayoutAspect (
         window.setTimeout(()=>resetSkipFocusout());
     }
 
-    function processUncheck(uncheckOption, event){
-        // we can't remove item on "click" in the same loop iteration - it is unfrendly for 3PP event handlers (they will get detached element)
-        // never remove elements in the same event iteration
-        window.setTimeout(()=>uncheckOption())
-        preventDefaultClickEvent = event; // setPreventDefaultMultiSelectEvent
-    }
 
-    // function handleOnRemoveButton(onRemove, setSelectedFalse){
+    // function composeOnRemoveButtonEventHandler(onRemove, setSelectedFalse){
     //     // processRemoveButtonClick removes the item
     //     // what is a problem with calling 'remove' directly (not using  setTimeout('remove', 0)):
     //     // consider situation "MultiSelect" on DROPDOWN (that should be closed on the click outside dropdown)
@@ -120,8 +120,13 @@ export function MultiSelectInlineLayoutAspect (
     //     });
     // }
     
-    function handleOnRemoveButton(setSelectedFalse){ return (event) => {
-        processUncheck(setSelectedFalse, event);
+    // we can't remove item on "click" in the same loop iteration - it is unfrendly for 3PP event handlers (they will get detached element)
+    // never remove elements in the same event iteration
+
+    function composeOnRemoveButtonEventHandler(removeOnButton){ return (event) => {
+        window.setTimeout(()=>removeOnButton(event))
+        
+        setPreventDefaultClickEvent(event); 
         resetLayoutAspect.resetLayout(); 
     }}
     
@@ -335,12 +340,28 @@ export function MultiSelectInlineLayoutAspect (
                 resetLayoutAspect.resetLayout // resetFilter by default
             );
         
-            let origCreatePickHandlers = createPickHandlersAspect.createPickHandlers;
-            createPickHandlersAspect.createPickHandlers = (wrap) => {
-                let pickHandlers = origCreatePickHandlers(wrap);
-                pickHandlers.removeOnButton = handleOnRemoveButton(pickHandlers.removeOnButton);
-                return pickHandlers;
-            } 
+            var origCreatePickDomFactory = pickDomFactory.create;
+            pickDomFactory.create = (pickElement, wrap) => {
+                var value = origCreatePickDomFactory(pickElement, wrap);
+                if (value.pickDomManagerHandlers.composeRemoveOnButton){
+                    var origcomposeRemoveOnButton = value.pickDomManagerHandlers.composeRemoveOnButton;
+                    value.pickDomManagerHandlers.composeRemoveOnButton = (event) => {
+                        var f = origcomposeRemoveOnButton(event);
+                        var compositionF = composeOnRemoveButtonEventHandler(f);
+                        return compositionF;
+                    }
+                }
+                return value;
+            }
+            
+            
+            // let origCreatePickHandlers = createPickHandlersAspect.createPickHandlers;
+            // createPickHandlersAspect.createPickHandlers = (wrap) => {
+            //     let pickHandlers = origCreatePickHandlers(wrap);
+            //     console.log(pickHandlers);
+            //     pickHandlers.removeOnButton = composeOnRemoveButtonEventHandler(pickHandlers.removeOnButton);
+            //     return pickHandlers;
+            // } 
         
             let origBuildChoice = buildChoiceAspect.buildChoice;
             buildChoiceAspect.buildChoice = (wrap) => {

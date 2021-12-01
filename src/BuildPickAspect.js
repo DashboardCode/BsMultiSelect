@@ -1,17 +1,9 @@
-export function BuildPickAspect(
-    picksDom, 
-    pickDomFactory
-){
-    return {
-        buildPick(wrap, removeOnButton){
+export function BuildPickAspect(picksDom, pickDomFactory){ 
+    return { 
+        buildPick(wrap/*, removeOnButton*/){
             let {pickElement, attach, detach} = picksDom.createPickElement(); 
-            let {dispose, pickDom, pickDomManagerHandlers} = pickDomFactory.create(pickElement, wrap, removeOnButton); 
-            
-            pickDomManagerHandlers.updateData();
-            if (pickDomManagerHandlers.updateDisabled)
-                pickDomManagerHandlers.updateDisabled();
-            if (pickDomManagerHandlers.updateComponentDisabled)
-                pickDomManagerHandlers.updateComponentDisabled();
+            let {dispose, pickDom, pickDomManagerHandlers} = pickDomFactory.create(pickElement, wrap /*, removeOnButton*/); 
+
             let pick = {
                 pickDom,
                 pickDomManagerHandlers,
@@ -25,6 +17,8 @@ export function BuildPickAspect(
                     pick.dispose = null;
                 }
             }
+
+            pickDomManagerHandlers.updateData(); // set visual text
             return pick;
         }
     }

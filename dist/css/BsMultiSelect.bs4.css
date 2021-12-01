@@ -39,12 +39,15 @@
   padding-inline-start: 0;
   -webkit-padding-end: 0.5rem;
   padding-inline-end: 0.5rem;
+  padding-top: 0.35em;
+  padding-bottom: 0.35em;
   line-height: 1.5em;
 }
 .dashboardcode-bsmultiselect ul.form-control > li.badge button.close {
   float: none;
-  font-size: 1.5em;
-  line-height: 0.9em;
+  font-size: 1.8em;
+  line-height: 0.5em;
+  font-weight: 400;
 }
 .dashboardcode-bsmultiselect ul.form-control > li.badge span.disabled {
   opacity: 0.65;

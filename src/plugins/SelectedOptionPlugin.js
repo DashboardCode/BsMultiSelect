@@ -124,7 +124,7 @@ export function plug(configuration){
                 removePickAspect.removePick = (wrap, pick) => { // TODO: try remove pick
                     return trySetWrapSelected(wrap.option, composeUpdateSelected(wrap, false), false);
                 }
-            
+             
                 
                 let origCreatePickHandlers =  createPickHandlersAspect.createPickHandlers;
                 createPickHandlersAspect.createPickHandlers = (wrap)=>{

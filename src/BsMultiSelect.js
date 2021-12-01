@@ -163,10 +163,6 @@ export function BsMultiSelect(element, environment, pluginManager, configuration
             (w)=>countableChoicesList.remove(w),
             (w, key)=>countableChoicesListInsertAspect.countableChoicesListInsert(w, key));
 
-
-           
-            
-
         // TODO: union to events or create event bus
         eventHandlers.plugStaticDom({
             environment, 
@@ -231,7 +227,8 @@ export function BsMultiSelect(element, environment, pluginManager, configuration
             resetLayoutAspect, 
             picksElementAspect,
             afterInputAspect,
-            disposeAspect
+            disposeAspect,
+            pickDomFactory
         );
         
         eventHandlers.layout({

@@ -22,8 +22,8 @@ export function plug(configuration){
 
 function ExtendPickDomFactory(pickDomFactory, customPickStylingsAspect){
     let origCreatePickDomFactory = pickDomFactory.create;
-    pickDomFactory.create = function(pickElement, wrap, removeOnButton){
-        var o = origCreatePickDomFactory(pickElement, wrap, removeOnButton);
+    pickDomFactory.create = function(pickElement, wrap /*, removeOnButton*/){
+        var o = origCreatePickDomFactory(pickElement, wrap /*, removeOnButton*/);
         customPickStylingsAspect.customize(wrap, o.pickDom, o.pickDomManagerHandlers);
         return o;
     }

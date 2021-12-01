@@ -10,7 +10,7 @@ import { BsMultiSelect, ModuleFactory } from "./BsMultiSelect.esm.js";
 import { BsAppearanceBs5Plugin, BsAppearanceBs4Plugin, CssPatchBs4Plugin, CssPatchBs5Plugin, SelectElementPlugin, LabelForAttributePlugin, ValidationApiPlugin, UpdateAppearancePlugin,  DisableComponentPlugin, 
     FormResetPlugin, CreatePopperPlugin, WarningCssPatchPlugin, RtlPlugin, PlaceholderPlugin, PlaceholderCssPatchPlugin, 
     FloatingLabelPlugin, FloatingLabelCssPatchBs5Plugin, OptionsApiPlugin, JQueryMethodsPlugin, SelectedOptionPlugin, 
-    FormRestoreOnBackwardPlugin, DisabledOptionPlugin, PicksApiPlugin, HighlightPlugin, ChoicesDynamicStylingPlugin, CustomPickStylingsPlugin, CustomChoiceStylingsPlugin, 
+    FormRestoreOnBackwardPlugin, DisabledOptionPlugin, DisabledOptionCssPatchPlugin, PicksApiPlugin, HighlightPlugin, ChoicesDynamicStylingPlugin, CustomPickStylingsPlugin, CustomChoiceStylingsPlugin, 
     PicksPlugin, HiddenOptionPlugin, HiddenOptionAltPlugin,
     BsAppearanceBs4CssPatchPlugin, BsAppearanceBs5CssPatchPlugin,
     WarningBs4Plugin, WarningBs5Plugin,
@@ -33,7 +33,9 @@ export {
     DisableComponentPlugin, 
     FormResetPlugin, CreatePopperPlugin, RtlPlugin, PlaceholderPlugin, 
     FloatingLabelPlugin, OptionsApiPlugin, JQueryMethodsPlugin, SelectedOptionPlugin, 
-    FormRestoreOnBackwardPlugin, DisabledOptionPlugin, PicksApiPlugin, HighlightPlugin, ChoicesDynamicStylingPlugin, CustomPickStylingsPlugin, CustomChoiceStylingsPlugin, 
+    FormRestoreOnBackwardPlugin, 
+    DisabledOptionPlugin, DisabledOptionCssPatchPlugin,
+    PicksApiPlugin, HighlightPlugin, ChoicesDynamicStylingPlugin, CustomPickStylingsPlugin, CustomChoiceStylingsPlugin, 
    
     HiddenOptionPlugin, HiddenOptionAltPlugin,
 

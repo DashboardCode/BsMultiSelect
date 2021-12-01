@@ -1,6 +1,12 @@
 import {composeSync} from '../ToolsJs';
+import {toggleStyling} from '../ToolsStyling';
 
-export function DisabledOptionPlugin(){
+export function DisabledOptionCssPatchPlugin(defaults){
+    defaults.cssPatch.pickContent_disabled = {opacity: '.65'};
+}
+
+export function DisabledOptionPlugin(defaults){
+    defaults.css.pickContent_disabled = 'disabled';
     return {
         plug    
     }
@@ -13,7 +19,7 @@ export function plug(configuration){
                 let {isChoiceSelectableAspect, createWrapAspect,  buildChoiceAspect,
                     filterPredicateAspect, wrapsCollection, optionToggleAspect, buildPickAspect } = aspects;
                 
-                let {getIsOptionDisabled, options} = configuration;
+                let {getIsOptionDisabled, options, css} = configuration;
                 if (options) {
                     if (!getIsOptionDisabled)
                         getIsOptionDisabled = (option) => (option.disabled===undefined) ? false : option.disabled;     
@@ -69,9 +75,16 @@ export function plug(configuration){
                 }
                 
                 let origBuildPick = buildPickAspect.buildPick;
-                buildPickAspect.buildPick = (wrap, removeOnButton) => {
-                    let pick = origBuildPick(wrap, removeOnButton);
+                buildPickAspect.buildPick = (wrap /*, removeOnButton*/) => {
+                    let pick = origBuildPick(wrap /*, removeOnButton*/);
                     
+                    let disableToggle = toggleStyling(pick.pickDom.pickContentElement, css.pickContent_disabled);
+                    pick.pickDomManagerHandlers.updateDisabled = ()=>{
+                        disableToggle(wrap.isOptionDisabled);
+                    }
+
+                    pick.pickDomManagerHandlers.updateDisabled();
+
                     pick.updateDisabled = () => pick.pickDomManagerHandlers.updateDisabled();
                     pick.dispose = composeSync(pick.dispose, ()=>{pick.updateDisabled=null});
             

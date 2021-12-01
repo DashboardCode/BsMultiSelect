@@ -13,7 +13,8 @@ import {
      OptionsApiPlugin, 
     JQueryMethodsPlugin, 
     SelectedOptionPlugin, FormRestoreOnBackwardPlugin, 
-    DisabledOptionPlugin, PicksApiPlugin, HighlightPlugin,
+    DisabledOptionPlugin, DisabledOptionCssPatchPlugin,
+    PicksApiPlugin, HighlightPlugin,
     ChoicesDynamicStylingPlugin, CustomPickStylingsPlugin, CustomChoiceStylingsPlugin,
     
     FloatingLabelPlugin, FloatingLabelCssPatchBs5Plugin, 
@@ -28,9 +29,9 @@ import {
 import {shallowClearClone} from './ToolsJs'
 
 
-export let Bs4PluginSet = {BsAppearanceBs4Plugin, /*PickButtonBs4Plugin,*/ WarningBs4Plugin, CssPatchBs4Plugin, BsAppearanceBs4CssPatchPlugin /*, PickButtonPlugCssPatchBs4*/}
+export let Bs4PluginSet = {BsAppearanceBs4Plugin, PickButtonBs4Plugin, WarningBs4Plugin, CssPatchBs4Plugin, BsAppearanceBs4CssPatchPlugin, PickButtonPlugCssPatchBs4}
 
-export let Bs5PluginSet = {BsAppearanceBs5Plugin, /*PickButtonBs5Plugin, */WarningBs5Plugin, CssPatchBs5Plugin, BsAppearanceBs5CssPatchPlugin /*, PickButtonPlugCssPatchBs5*/, FloatingLabelCssPatchBs5Plugin}
+export let Bs5PluginSet = {BsAppearanceBs5Plugin, PickButtonBs5Plugin, WarningBs5Plugin, CssPatchBs5Plugin, BsAppearanceBs5CssPatchPlugin, PickButtonPlugCssPatchBs5, FloatingLabelCssPatchBs5Plugin}
 
 export let multiSelectPlugins = {SelectElementPlugin, 
     LabelForAttributePlugin, HiddenOptionPlugin, ValidationApiPlugin, 
@@ -39,7 +40,7 @@ export let multiSelectPlugins = {SelectElementPlugin,
     FormResetPlugin, CreatePopperPlugin, WarningCssPatchPlugin, RtlPlugin,  PlaceholderPlugin, PlaceholderCssPatchPlugin, FloatingLabelPlugin,  OptionsApiPlugin, 
     JQueryMethodsPlugin, 
     SelectedOptionPlugin, FormRestoreOnBackwardPlugin, 
-    DisabledOptionPlugin, PicksApiPlugin, HighlightPlugin,
+    DisabledOptionPlugin, DisabledOptionCssPatchPlugin, PicksApiPlugin, HighlightPlugin,
     ChoicesDynamicStylingPlugin, CustomPickStylingsPlugin, CustomChoiceStylingsPlugin};
 
 export let picksPlugins = {PicksPlugin, 
