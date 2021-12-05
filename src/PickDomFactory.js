@@ -1,32 +1,27 @@
-import  {addStyling} from './ToolsStyling';
+import {composeSync} from './ToolsJs';
+import {addStyling} from './ToolsStyling';
 
 // empty but can be usefull in custom development
 export function PickDomFactoryPlugCss(css){
     css.pickContent = '';
 }
 
-export function PickDomFactory(css, createElementAspect, optionPropertiesAspect){
+export function PickDomFactory(css, createElementAspect, optionPropertiesAspect){ 
     return { 
-        create(pickElement, wrap){
+        create(pick){
             let pickContentElement = createElementAspect.createElement('SPAN');
-            pickElement.appendChild(pickContentElement);
-            
+            let {pickDom, pickDomManagerHandlers} = pick;
+            pickDom.pickElement.appendChild(pickContentElement);
+            pickDom.pickContentElement=pickContentElement;
+            pickDomManagerHandlers.updateData = ()=>{
+                pickContentElement.textContent = optionPropertiesAspect.getText(pick.wrap.option);
+            }
             addStyling(pickContentElement, css.pickContent);
-            
-            function updateData(){
-                pickContentElement.textContent = optionPropertiesAspect.getText(wrap.option); 
-            }
-
-            return {
-                pickDom:{
-                    pickContentElement
-                },
-                pickDomManagerHandlers:{
-                    updateData
-                },
-                dispose(){ // empty but usefull for plugins
-                }
-            }
+            pick.dispose=composeSync(pick.dispose, ()=>{
+                pickDom.pickContentElement=null;
+                pickDomManagerHandlers.updateData=null;
+            })
+            pickDomManagerHandlers.updateData(); // set visual text
         }
     }
 }

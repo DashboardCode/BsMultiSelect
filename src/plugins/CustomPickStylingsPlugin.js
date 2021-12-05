@@ -22,28 +22,31 @@ export function plug(configuration){
 
 function ExtendPickDomFactory(pickDomFactory, customPickStylingsAspect){
     let origCreatePickDomFactory = pickDomFactory.create;
-    pickDomFactory.create = function(pickElement, wrap /*, removeOnButton*/){
-        var o = origCreatePickDomFactory(pickElement, wrap /*, removeOnButton*/);
-        customPickStylingsAspect.customize(wrap, o.pickDom, o.pickDomManagerHandlers);
-        return o;
+    pickDomFactory.create = function(pick){
+        origCreatePickDomFactory(pick);
+        customPickStylingsAspect.customize(pick);
     }
 }
 
 function CustomPickStylingsAspect(disabledComponentAspect, customPickStylings){
     return {
-        customize(wrap, pickDom, pickDomManagerHandlers){
+        customize(pick){
             if (customPickStylings){
-                var handlers = customPickStylings(pickDom, wrap.option);
+                var handlers = customPickStylings(pick.pickDom, pick.wrap.option);
 
                 if (handlers){
                     function customPickStylingsClosure(custom){
                         return function() {
                             custom({
-                                isOptionDisabled: wrap.isOptionDisabled,
+                                isOptionDisabled: pick.wrap.isOptionDisabled,
+                                // wrap.component.getDisabled();
+                                // wrap.group.getDisabled();
                                 isComponentDisabled: disabledComponentAspect.getDisabled()
                             });
                         }
                     }
+                    let pickDomManagerHandlers = pick.pickDomManagerHandlers;
+                    // TODO: automate it
                     if (pickDomManagerHandlers.updateDisabled && handlers.updateDisabled)  
                         pickDomManagerHandlers.updateDisabled 
                             = composeSync(pickDomManagerHandlers.updateDisabled, customPickStylingsClosure(handlers.updateDisabled));

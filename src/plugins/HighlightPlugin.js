@@ -6,9 +6,9 @@ export function HighlightPlugin(defaults){
 }
 
 function ExtendChoiceDomFactory(choiceDomFactory, optionPropertiesAspect){
-    var origCreateChoiceDomFactory = choiceDomFactory.create;
-    choiceDomFactory.create = (choiceElement, wrap, toggle) => {
-        var value = origCreateChoiceDomFactory(choiceElement, wrap, toggle);
+    var origChoiceDomFactoryCreate = choiceDomFactory.create;
+    choiceDomFactory.create = (choiceElement, wrap) => {
+        var value = origChoiceDomFactoryCreate(choiceElement, wrap);
         value.choiceDomManagerHandlers.updateHighlighted = () => {
             var text = optionPropertiesAspect.getText(wrap.option);
             var highlighter = aspects.highlightAspect.getHighlighter();

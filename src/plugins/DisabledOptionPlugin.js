@@ -17,7 +17,7 @@ export function plug(configuration){
         return {
             layout: () => {
                 let {isChoiceSelectableAspect, createWrapAspect,  buildChoiceAspect,
-                    filterPredicateAspect, wrapsCollection, optionToggleAspect, buildPickAspect } = aspects;
+                    filterPredicateAspect, wrapsCollection, optionToggleAspect, producePickAspect, pickDomFactory } = aspects;
                 
                 let {getIsOptionDisabled, options, css} = configuration;
                 if (options) {
@@ -74,31 +74,10 @@ export function plug(configuration){
                     wrap.choice.dispose = composeSync(()=>{wrap.updateDisabled=null;}, wrap.choice.dispose);
                 }
                 
-                let origBuildPick = buildPickAspect.buildPick;
-                buildPickAspect.buildPick = (wrap /*, removeOnButton*/) => {
-                    let pick = origBuildPick(wrap /*, removeOnButton*/);
-                    
-                    let disableToggle = toggleStyling(pick.pickDom.pickContentElement, css.pickContent_disabled);
-                    pick.pickDomManagerHandlers.updateDisabled = ()=>{
-                        disableToggle(wrap.isOptionDisabled);
-                    }
-
-                    pick.pickDomManagerHandlers.updateDisabled();
-
-                    pick.updateDisabled = () => pick.pickDomManagerHandlers.updateDisabled();
-                    pick.dispose = composeSync(pick.dispose, ()=>{pick.updateDisabled=null});
+                ExtendProducePickAspectProducePick(producePickAspect);
             
-                    let choiceUpdateDisabledBackup = wrap.updateDisabled;
-                    wrap.updateDisabled = composeSync(choiceUpdateDisabledBackup, pick.updateDisabled); // add pickDisabled
-                    pick.dispose = composeSync(pick.dispose, 
-                        ()=>{
-                            wrap.updateDisabled = choiceUpdateDisabledBackup; // remove pickDisabled
-                            wrap.updateDisabled(); // make "true disabled" without it checkbox only looks disabled
-                        }
-                    )
-                    return pick;
-                }
-            
+                ExtendPickDomFactoryCreate(pickDomFactory, css);
+
                 return {
                     buildApi(api){
                         api.updateOptionsDisabled = () => wrapsCollection.forLoop( wrap => updateChoiceDisabled(wrap, getIsOptionDisabled))
@@ -107,6 +86,36 @@ export function plug(configuration){
                 };
             }
         }
+    }
+}
+
+function ExtendProducePickAspectProducePick(producePickAspect){
+    let orig = producePickAspect.producePick;
+    producePickAspect.producePick = (wrap) => {
+        let val = orig(wrap);
+        let pick = wrap.pick;
+        let choiceUpdateDisabledBackup = wrap.updateDisabled; // backup disable only choice
+        wrap.updateDisabled = composeSync(choiceUpdateDisabledBackup, () => pick.pickDomManagerHandlers.updateDisabled()); // add pickDisabled
+        pick.dispose = composeSync(pick.dispose, 
+                ()=>{
+                     wrap.updateDisabled = choiceUpdateDisabledBackup; // remove pickDisabled
+                     wrap.updateDisabled(); // make "true disabled" without it checkbox only looks disabled
+                }
+        )
+        return val;
+    }
+}
+
+function ExtendPickDomFactoryCreate(pickDomFactory, css){
+    let orig = pickDomFactory.create;
+    pickDomFactory.create = (pick) => {
+        orig(pick);
+        let {pickDom, pickDomManagerHandlers} = pick;
+        let disableToggle = toggleStyling(pickDom.pickContentElement, css.pickContent_disabled);
+        pickDomManagerHandlers.updateDisabled = ()=>{
+            disableToggle(pick.wrap.isOptionDisabled);
+        }
+        pickDomManagerHandlers.updateDisabled();
     }
 }
 

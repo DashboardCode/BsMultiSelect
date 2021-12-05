@@ -1,12 +1,5 @@
 import {composeSync} from '../ToolsJs';
 
-// TODO: there should be two new "independent aspects" AddPickAspect and RemovePickAspect 
-// plugin should overdrive them : call setWrapSelected and etc
-// therefore there should new component API methods
-// addOptionPick(key) -> call addPick(pick) which returns removePick() 
-// SetOptionSelectedAspect, OptionToggleAspect should be moved there 
-// OptionToggleAspect overrided in DisabledOptionPlugin
-
 export function SelectedOptionPlugin(){
     return {
         plug
@@ -14,9 +7,10 @@ export function SelectedOptionPlugin(){
 }
 
 export function plug(configuration){ 
+    let isChoiceSelectableAspect = IsChoiceSelectableAspect();
     return (aspects) => {
+        aspects.isChoiceSelectableAspect=isChoiceSelectableAspect;
         let {getSelected : getIsOptionSelected, setSelected : setIsOptionSelected, options} = configuration;
-            
         if (options) {
             if (!setIsOptionSelected){
                 setIsOptionSelected = (option, value) => {option.selected = value};
@@ -48,8 +42,8 @@ export function plug(configuration){
             },
             layout: () => {
                 let {wrapsCollection, updateOptionsSelectedAspect,
-                    createWrapAspect, buildChoiceAspect, removePickAspect,
-                    resetLayoutAspect, picksList, isChoiceSelectableAspect, optionToggleAspect,
+                    createWrapAspect, buildChoiceAspect, producePickAspect,
+                    resetLayoutAspect, picksList, optionToggleAspect,
                     /*inputAspect, filterDom, filterManagerAspect,*/ createPickHandlersAspect, addPickAspect,  fullMatchAspect, 
                     onChangeAspect, filterPredicateAspect
                     } = aspects;
@@ -120,33 +114,10 @@ export function plug(configuration){
                     return trySetWrapSelected(wrap.option, composeUpdateSelected(wrap, true), true);
                 }
             
-                let removePickOrig = removePickAspect.removePick; // TODO: improve design, no replace
-                removePickAspect.removePick = (wrap, pick) => { // TODO: try remove pick
-                    return trySetWrapSelected(wrap.option, composeUpdateSelected(wrap, false), false);
-                }
-             
+                ExtendProducePickAspect(producePickAspect, trySetWrapSelected, composeUpdateSelected);
                 
-                let origCreatePickHandlers =  createPickHandlersAspect.createPickHandlers;
-                createPickHandlersAspect.createPickHandlers = (wrap)=>{
-                    let pickHandlers = origCreatePickHandlers(wrap);
-                    wrap.updateSelected = composeSync(
-                        ()=>{
-                            if (wrap.isOptionSelected){
-                                let pick = pickHandlers.producePick();
-                                wrap.pick = pick;
-                                pick.dispose = composeSync(pick.dispose, ()=>{wrap.pick=null;});
-                            }
-                            else {
-                                pickHandlers.removeAndDispose();
-                                pickHandlers.removeAndDispose=null;
-                            }
-                        },
-                        wrap.updateSelected
-                    )
-                    
-                    addPickAspect.addPick(wrap, pickHandlers); 
-                    return pickHandlers;
-                }
+                ExtendCreatePickHandlersAspectCreatePickHandlers(createPickHandlersAspect, addPickAspect);
+                
             
                 let origAddPick =  addPickAspect.addPick;
                 addPickAspect.addPick = (wrap, pickHandlers) => {
@@ -191,6 +162,42 @@ export function plug(configuration){
     }
 }
 
+function ExtendCreatePickHandlersAspectCreatePickHandlers(createPickHandlersAspect, addPickAspect){
+    let orig =  createPickHandlersAspect.createPickHandlers;
+    createPickHandlersAspect.createPickHandlers = (wrap)=>{
+        let pickHandlers = orig(wrap);
+        wrap.updateSelected = composeSync(
+            ()=>{
+                if (wrap.isOptionSelected){
+                    let pick = pickHandlers.producePick();
+                    wrap.pick = pick;
+                    pick.dispose = composeSync(pick.dispose, ()=>{wrap.pick=null;});
+                }
+                else {
+                    pickHandlers.removeAndDispose();
+                    pickHandlers.removeAndDispose=null;
+                }
+            },
+            wrap.updateSelected
+        )
+        
+        addPickAspect.addPick(wrap, pickHandlers); // why I need it?
+        return pickHandlers;
+    }
+}
+
+function ExtendProducePickAspect(producePickAspect, trySetWrapSelected, composeUpdateSelected){
+    let orig = producePickAspect.producePick;
+    producePickAspect.producePick = function(wrap, pickHandlers){
+        let pick = orig(wrap, pickHandlers);
+        pick.setSelectedFalse = () => trySetWrapSelected(wrap.option, composeUpdateSelected(wrap, false), false);
+        pick.dispose = composeSync(
+            pick.dispose, ()=> {pick.setSelectedFalse = null}
+        );
+        return pick;
+    }
+}
+
 function UpdateOptionsSelectedAspect(wrapsCollection, getSelectedAspect){
     return {
         updateOptionsSelected(){
@@ -205,5 +212,11 @@ function updateChoiceSelected(wrap, getSelectedAspect){
     {
         wrap.isOptionSelected = newIsSelected;
         wrap.updateSelected?.(); // some hidden oesn't have element (and need to be updated)
+    }
+}
+
+export function IsChoiceSelectableAspect(){ // TODO rename to IsSelectableByUserAspect ?
+    return {
+        isSelectable: (wrap)=>true 
     }
 }

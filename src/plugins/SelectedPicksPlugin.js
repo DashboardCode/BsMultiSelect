@@ -12,7 +12,7 @@ export function plug(configuration){
         return {
             layout: () => {
                 let {wrapsCollection, 
-                    createWrapAspect, buildChoiceAspect, removePickAspect,
+                    createWrapAspect, buildChoiceAspect, producePickAspect,
                     resetLayoutAspect, picksList, isChoiceSelectableAspect, optionToggleAspect,
                     /*inputAspect, filterDom, filterManagerAspect,*/ createPickHandlersAspect, addPickAspect,  fullMatchAspect, 
                     onChangeAspect, filterPredicateAspect
@@ -104,33 +104,10 @@ export function plug(configuration){
                     return trySetWrapSelected(wrap.option, composeUpdateSelected(wrap, true), true);
                 }
             
-                let removePickOrig = removePickAspect.removePick; // TODO: improve design, no replace
-                removePickAspect.removePick = (wrap, pick) => { // TODO: try remove pick
-                    return trySetWrapSelected(wrap.option, composeUpdateSelected(wrap, false), false);
-                }
-            
+                ExtendProducePickAspect(producePickAspect, trySetWrapSelected, composeUpdateSelected);
 
-                let origCreatePickHandlers =  createPickHandlersAspect.createPickHandlers;
-                createPickHandlersAspect.createPickHandlers = (wrap)=>{
-                    let pickHandlers = origCreatePickHandlers(wrap);
-                    wrap.updateSelected = composeSync(
-                        ()=>{
-                            if (wrap.isOptionSelected){
-                                let pick = pickHandlers.producePick();
-                                wrap.pick = pick;
-                                pick.dispose = composeSync(pick.dispose, ()=>{wrap.pick=null;});
-                            }
-                            else {
-                                pickHandlers.removeAndDispose();
-                                pickHandlers.removeAndDispose=null;
-                            }
-                        },
-                        wrap.updateSelected
-                    )
-                    
-                    addPickAspect.addPick(wrap, pickHandlers); 
-                    return pickHandlers;
-                }
+                ExtendCreatePickHandlersAspectCreatePickHandlers(createPickHandlersAspect, addPickAspect);
+                
             
                 let origAddPick =  addPickAspect.addPick;
                 addPickAspect.addPick = (wrap, pickHandlers) => {
@@ -181,5 +158,40 @@ export function plug(configuration){
                 }
             }
         }
+    }
+}
+
+function ExtendCreatePickHandlersAspectCreatePickHandlers(createPickHandlersAspect, addPickAspect){
+    let orig =  createPickHandlersAspect.createPickHandlers;
+    createPickHandlersAspect.createPickHandlers = (wrap)=>{
+        let pickHandlers = orig(wrap);
+        wrap.updateSelected = composeSync(
+            ()=>{
+                if (wrap.isOptionSelected){
+                    let pick = pickHandlers.producePick();
+                    wrap.pick = pick;
+                    pick.dispose = composeSync(pick.dispose, ()=>{wrap.pick=null;});
+                }
+                else {
+                    pickHandlers.removeAndDispose();
+                    pickHandlers.removeAndDispose=null;
+                }
+            },
+            wrap.updateSelected
+        )
+        addPickAspect.addPick(wrap, pickHandlers); 
+        return pickHandlers;
+    }
+}
+
+function ExtendProducePickAspect(producePickAspect, trySetWrapSelected, composeUpdateSelected){
+    let origProducePickAspectProducePick = producePickAspect.producePick;
+    producePickAspect.producePick = function(wrap, pickHandlers){
+        let pick = origProducePickAspectProducePick(wrap, pickHandlers);
+        pick.setSelectedFalse = () => trySetWrapSelected(wrap.option, composeUpdateSelected(wrap, false), false);
+        pick.dispose = composeSync(
+            pick.dispose, ()=> {pick.setSelectedFalse = null}
+        );
+        return pick;
     }
 }

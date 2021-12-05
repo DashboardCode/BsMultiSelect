@@ -1,5 +1,5 @@
 /*!
-  * BsMultiSelect v1.2.0-beta.25 (https://dashboardcode.github.io/BsMultiSelect/)
+  * BsMultiSelect v1.2.0-beta.26 (https://dashboardcode.github.io/BsMultiSelect/)
   * Copyright 2017-2021 Roman Pokrovskij (github user rpokrovskij)
   * Licensed under Apache 2 (https://github.com/DashboardCode/BsMultiSelect/blob/master/LICENSE)
   */
@@ -504,27 +504,25 @@ function PickDomFactoryPlugCss(css) {
 }
 function PickDomFactory(css, createElementAspect, optionPropertiesAspect) {
   return {
-    create(pickElement, wrap) {
+    create(pick) {
       let pickContentElement = createElementAspect.createElement('SPAN');
-      pickElement.appendChild(pickContentElement);
-      addStyling(pickContentElement, css.pickContent);
+      let {
+        pickDom,
+        pickDomManagerHandlers
+      } = pick;
+      pickDom.pickElement.appendChild(pickContentElement);
+      pickDom.pickContentElement = pickContentElement;
 
-      function updateData() {
-        pickContentElement.textContent = optionPropertiesAspect.getText(wrap.option);
-      }
-
-      return {
-        pickDom: {
-          pickContentElement
-        },
-        pickDomManagerHandlers: {
-          updateData
-        },
-
-        dispose() {// empty but usefull for plugins
-        }
-
+      pickDomManagerHandlers.updateData = () => {
+        pickContentElement.textContent = optionPropertiesAspect.getText(pick.wrap.option);
       };
+
+      addStyling(pickContentElement, css.pickContent);
+      pick.dispose = composeSync(pick.dispose, () => {
+        pickDom.pickContentElement = null;
+        pickDomManagerHandlers.updateData = null;
+      });
+      pickDomManagerHandlers.updateData(); // set visual text
     }
 
   };
@@ -801,13 +799,13 @@ function ChoiceDomFactory(css, createElementAspect, optionPropertiesAspect) {
 
 
   return {
-    create(choiceElement, wrap, toggle) {
+    create(choiceElement, wrap) {
       let choiceDom = null;
       let choiceDomManagerHandlers = null;
-      let eventBinder = EventBinder();
-      eventBinder.bind(choiceElement, "click", toggle);
+      let choiceHoverToggle = null;
 
       if (wrap.hasOwnProperty("isOptionSelected")) {
+        choiceHoverToggle = toggleStyling(choiceElement, () => wrap.isOptionDisabled === true && css.choice_disabled_hover && wrap.isOptionSelected === false ? css.choice_disabled_hover : css.choice_hover);
         createElementAspect.createElementFromHtml(choiceElement, '<div><input formnovalidate type="checkbox"><label></label></div>');
         let choiceContentElement = choiceElement.querySelector('DIV');
         let choiceCheckBoxElement = choiceContentElement.querySelector('INPUT');
@@ -852,39 +850,32 @@ function ChoiceDomFactory(css, createElementAspect, optionPropertiesAspect) {
           choiceCursorDisabledToggle(isCheckBoxDisabled);
         };
 
-        let choiceHoverToggle = toggleStyling(choiceElement, () => {
-          if (css.choice_disabled_hover && wrap.isOptionDisabled === true && wrap.isOptionSelected === false) return css.choice_disabled_hover;else return css.choice_hover;
-        });
-
-        let updateHoverIn = function updateHoverIn() {
-          choiceHoverToggle(wrap.choice.isHoverIn);
-        };
-
         choiceDomManagerHandlers = {
           updateData: () => updateDataInternal(wrap, choiceLabelElement),
           updateHoverIn,
-          updateDisabled,
-          updateSelected
+          updateSelected,
+          updateDisabled
         };
       } else {
-        let choiceHoverToggle = toggleStyling(choiceElement, () => wrap.isOptionDisabled && css.choice_disabled_hover ? css.choice_disabled_hover : css.choice_hover);
-
-        let updateHoverIn = function updateHoverIn() {
-          choiceHoverToggle(wrap.choice.isHoverIn);
-        };
-
-        choiceElement.innerHTML = '<span></span>';
-        let choiceContentElement = choiceElement.querySelector('SPAN');
+        choiceHoverToggle = toggleStyling(choiceElement, () => wrap.isOptionDisabled && css.choice_disabled_hover ? css.choice_disabled_hover : css.choice_hover);
+        choiceElement.innerHTML = '<div></div>';
+        let choiceContentElement = choiceElement.querySelector('div');
         choiceDom = {
           choiceElement,
           choiceContentElement
         };
         choiceDomManagerHandlers = {
-          updateData: () => updateDataInternal(wrap, choiceContentElement),
-          updateHoverIn
+          updateData: () => updateDataInternal(wrap, choiceContentElement)
         };
       }
 
+      let updateHoverIn = function updateHoverIn() {
+        choiceHoverToggle(wrap.choice.isHoverIn);
+      };
+
+      choiceDomManagerHandlers.updateHoverIn = updateHoverIn;
+      let eventBinder = EventBinder();
+      eventBinder.bind(choiceElement, "click", event => choiceDomManagerHandlers.composeToggle(event));
       return {
         choiceDom,
         choiceDomManagerHandlers,
@@ -2140,19 +2131,15 @@ function plug$f(configuration) {
   };
 }
 
-// plugin should overdrive them : call setWrapSelected and etc
-// therefore there should new component API methods
-// addOptionPick(key) -> call addPick(pick) which returns removePick() 
-// SetOptionSelectedAspect, OptionToggleAspect should be moved there 
-// OptionToggleAspect overrided in DisabledOptionPlugin
-
 function SelectedOptionPlugin() {
   return {
     plug: plug$e
   };
 }
 function plug$e(configuration) {
+  let isChoiceSelectableAspect = IsChoiceSelectableAspect();
   return aspects => {
+    aspects.isChoiceSelectableAspect = isChoiceSelectableAspect;
     let {
       getSelected: getIsOptionSelected,
       setSelected: setIsOptionSelected,
@@ -2205,10 +2192,9 @@ function plug$e(configuration) {
           updateOptionsSelectedAspect,
           createWrapAspect,
           buildChoiceAspect,
-          removePickAspect,
+          producePickAspect,
           resetLayoutAspect,
           picksList,
-          isChoiceSelectableAspect,
           optionToggleAspect,
 
           /*inputAspect, filterDom, filterManagerAspect,*/
@@ -2292,33 +2278,8 @@ function plug$e(configuration) {
           return trySetWrapSelected(wrap.option, composeUpdateSelected(wrap, true), true);
         };
 
-        removePickAspect.removePick; // TODO: improve design, no replace
-
-        removePickAspect.removePick = (wrap, pick) => {
-          // TODO: try remove pick
-          return trySetWrapSelected(wrap.option, composeUpdateSelected(wrap, false), false);
-        };
-
-        let origCreatePickHandlers = createPickHandlersAspect.createPickHandlers;
-
-        createPickHandlersAspect.createPickHandlers = wrap => {
-          let pickHandlers = origCreatePickHandlers(wrap);
-          wrap.updateSelected = composeSync(() => {
-            if (wrap.isOptionSelected) {
-              let pick = pickHandlers.producePick();
-              wrap.pick = pick;
-              pick.dispose = composeSync(pick.dispose, () => {
-                wrap.pick = null;
-              });
-            } else {
-              pickHandlers.removeAndDispose();
-              pickHandlers.removeAndDispose = null;
-            }
-          }, wrap.updateSelected);
-          addPickAspect.addPick(wrap, pickHandlers);
-          return pickHandlers;
-        };
-
+        ExtendProducePickAspect$1(producePickAspect, trySetWrapSelected, composeUpdateSelected);
+        ExtendCreatePickHandlersAspectCreatePickHandlers(createPickHandlersAspect, addPickAspect);
         let origAddPick = addPickAspect.addPick;
 
         addPickAspect.addPick = (wrap, pickHandlers) => {
@@ -2365,6 +2326,44 @@ function plug$e(configuration) {
   };
 }
 
+function ExtendCreatePickHandlersAspectCreatePickHandlers(createPickHandlersAspect, addPickAspect) {
+  let orig = createPickHandlersAspect.createPickHandlers;
+
+  createPickHandlersAspect.createPickHandlers = wrap => {
+    let pickHandlers = orig(wrap);
+    wrap.updateSelected = composeSync(() => {
+      if (wrap.isOptionSelected) {
+        let pick = pickHandlers.producePick();
+        wrap.pick = pick;
+        pick.dispose = composeSync(pick.dispose, () => {
+          wrap.pick = null;
+        });
+      } else {
+        pickHandlers.removeAndDispose();
+        pickHandlers.removeAndDispose = null;
+      }
+    }, wrap.updateSelected);
+    addPickAspect.addPick(wrap, pickHandlers); // why I need it?
+
+    return pickHandlers;
+  };
+}
+
+function ExtendProducePickAspect$1(producePickAspect, trySetWrapSelected, composeUpdateSelected) {
+  let orig = producePickAspect.producePick;
+
+  producePickAspect.producePick = function (wrap, pickHandlers) {
+    let pick = orig(wrap, pickHandlers);
+
+    pick.setSelectedFalse = () => trySetWrapSelected(wrap.option, composeUpdateSelected(wrap, false), false);
+
+    pick.dispose = composeSync(pick.dispose, () => {
+      pick.setSelectedFalse = null;
+    });
+    return pick;
+  };
+}
+
 function UpdateOptionsSelectedAspect(wrapsCollection, getSelectedAspect) {
   return {
     updateOptionsSelected() {
@@ -2381,6 +2380,13 @@ function updateChoiceSelected(wrap, getSelectedAspect) {
     wrap.isOptionSelected = newIsSelected;
     wrap.updateSelected == null ? void 0 : wrap.updateSelected(); // some hidden oesn't have element (and need to be updated)
   }
+}
+
+function IsChoiceSelectableAspect() {
+  // TODO rename to IsSelectableByUserAspect ?
+  return {
+    isSelectable: wrap => true
+  };
 }
 
 function DisabledOptionCssPatchPlugin(defaults) {
@@ -2405,7 +2411,8 @@ function plug$d(configuration) {
           filterPredicateAspect,
           wrapsCollection,
           optionToggleAspect,
-          buildPickAspect
+          producePickAspect,
+          pickDomFactory
         } = aspects;
         let {
           getIsOptionDisabled,
@@ -2474,38 +2481,8 @@ function plug$d(configuration) {
           }, wrap.choice.dispose);
         };
 
-        let origBuildPick = buildPickAspect.buildPick;
-
-        buildPickAspect.buildPick = (wrap
-        /*, removeOnButton*/
-        ) => {
-          let pick = origBuildPick(wrap
-          /*, removeOnButton*/
-          );
-          let disableToggle = toggleStyling(pick.pickDom.pickContentElement, css.pickContent_disabled);
-
-          pick.pickDomManagerHandlers.updateDisabled = () => {
-            disableToggle(wrap.isOptionDisabled);
-          };
-
-          pick.pickDomManagerHandlers.updateDisabled();
-
-          pick.updateDisabled = () => pick.pickDomManagerHandlers.updateDisabled();
-
-          pick.dispose = composeSync(pick.dispose, () => {
-            pick.updateDisabled = null;
-          });
-          let choiceUpdateDisabledBackup = wrap.updateDisabled;
-          wrap.updateDisabled = composeSync(choiceUpdateDisabledBackup, pick.updateDisabled); // add pickDisabled
-
-          pick.dispose = composeSync(pick.dispose, () => {
-            wrap.updateDisabled = choiceUpdateDisabledBackup; // remove pickDisabled
-
-            wrap.updateDisabled(); // make "true disabled" without it checkbox only looks disabled
-          });
-          return pick;
-        };
-
+        ExtendProducePickAspectProducePick(producePickAspect);
+        ExtendPickDomFactoryCreate(pickDomFactory, css);
         return {
           buildApi(api) {
             api.updateOptionsDisabled = () => wrapsCollection.forLoop(wrap => updateChoiceDisabled(wrap, getIsOptionDisabled));
@@ -2516,6 +2493,44 @@ function plug$d(configuration) {
         };
       }
     };
+  };
+}
+
+function ExtendProducePickAspectProducePick(producePickAspect) {
+  let orig = producePickAspect.producePick;
+
+  producePickAspect.producePick = wrap => {
+    let val = orig(wrap);
+    let pick = wrap.pick;
+    let choiceUpdateDisabledBackup = wrap.updateDisabled; // backup disable only choice
+
+    wrap.updateDisabled = composeSync(choiceUpdateDisabledBackup, () => pick.pickDomManagerHandlers.updateDisabled()); // add pickDisabled
+
+    pick.dispose = composeSync(pick.dispose, () => {
+      wrap.updateDisabled = choiceUpdateDisabledBackup; // remove pickDisabled
+
+      wrap.updateDisabled(); // make "true disabled" without it checkbox only looks disabled
+    });
+    return val;
+  };
+}
+
+function ExtendPickDomFactoryCreate(pickDomFactory, css) {
+  let orig = pickDomFactory.create;
+
+  pickDomFactory.create = pick => {
+    orig(pick);
+    let {
+      pickDom,
+      pickDomManagerHandlers
+    } = pick;
+    let disableToggle = toggleStyling(pickDom.pickContentElement, css.pickContent_disabled);
+
+    pickDomManagerHandlers.updateDisabled = () => {
+      disableToggle(pick.wrap.isOptionDisabled);
+    };
+
+    pickDomManagerHandlers.updateDisabled();
   };
 }
 
@@ -2916,10 +2931,10 @@ function HighlightPlugin(defaults) {
 }
 
 function ExtendChoiceDomFactory$1(choiceDomFactory, optionPropertiesAspect) {
-  var origCreateChoiceDomFactory = choiceDomFactory.create;
+  var origChoiceDomFactoryCreate = choiceDomFactory.create;
 
-  choiceDomFactory.create = (choiceElement, wrap, toggle) => {
-    var value = origCreateChoiceDomFactory(choiceElement, wrap, toggle);
+  choiceDomFactory.create = (choiceElement, wrap) => {
+    var value = origChoiceDomFactoryCreate(choiceElement, wrap);
 
     value.choiceDomManagerHandlers.updateHighlighted = () => {
       var text = optionPropertiesAspect.getText(wrap.option);
@@ -3041,8 +3056,8 @@ function plug$7(configuration) {
 function ExtendChoiceDomFactory(choiceDomFactory, customChoiceStylingsAspect) {
   let origChoiceDomFactoryCreate = choiceDomFactory.create;
 
-  choiceDomFactory.create = function (choiceElement, wrap, toggle) {
-    var o = origChoiceDomFactoryCreate(choiceElement, wrap, toggle);
+  choiceDomFactory.create = function (choiceElement, wrap) {
+    var o = origChoiceDomFactoryCreate(choiceElement, wrap);
     customChoiceStylingsAspect.customize(wrap, o.choiceDom, o.choiceDomManagerHandlers);
     return o;
   };
@@ -3100,32 +3115,31 @@ function plug$6(configuration) {
 function ExtendPickDomFactory$2(pickDomFactory, customPickStylingsAspect) {
   let origCreatePickDomFactory = pickDomFactory.create;
 
-  pickDomFactory.create = function (pickElement, wrap
-  /*, removeOnButton*/
-  ) {
-    var o = origCreatePickDomFactory(pickElement, wrap
-    /*, removeOnButton*/
-    );
-    customPickStylingsAspect.customize(wrap, o.pickDom, o.pickDomManagerHandlers);
-    return o;
+  pickDomFactory.create = function (pick) {
+    origCreatePickDomFactory(pick);
+    customPickStylingsAspect.customize(pick);
   };
 }
 
 function CustomPickStylingsAspect(disabledComponentAspect, customPickStylings) {
   return {
-    customize(wrap, pickDom, pickDomManagerHandlers) {
+    customize(pick) {
       if (customPickStylings) {
-        var handlers = customPickStylings(pickDom, wrap.option);
+        var handlers = customPickStylings(pick.pickDom, pick.wrap.option);
 
         if (handlers) {
           function customPickStylingsClosure(custom) {
             return function () {
               custom({
-                isOptionDisabled: wrap.isOptionDisabled,
+                isOptionDisabled: pick.wrap.isOptionDisabled,
+                // wrap.component.getDisabled();
+                // wrap.group.getDisabled();
                 isComponentDisabled: disabledComponentAspect.getDisabled()
               });
             };
           }
+
+          let pickDomManagerHandlers = pick.pickDomManagerHandlers; // TODO: automate it
 
           if (pickDomManagerHandlers.updateDisabled && handlers.updateDisabled) pickDomManagerHandlers.updateDisabled = composeSync(pickDomManagerHandlers.updateDisabled, customPickStylingsClosure(handlers.updateDisabled));
           if (pickDomManagerHandlers.updateComponentDisabled && handlers.updateComponentDisabled) pickDomManagerHandlers.updateComponentDisabled = composeSync(pickDomManagerHandlers.updateComponentDisabled, customPickStylingsClosure(handlers.updateComponentDisabled));
@@ -3196,8 +3210,7 @@ function plug$4(configuration) {
           updateAppearanceAspect,
           picksList,
           picksDom,
-          picksElementAspect,
-          buildPickAspect
+          picksElementAspect
         } = aspects;
 
         var disableComponent = isComponentDisabled => {
@@ -3230,22 +3243,6 @@ function plug$4(configuration) {
         }
 
         updateAppearanceAspect.updateAppearance = composeSync(updateAppearanceAspect.updateAppearance, updateDisabled);
-        let origBuildPick = buildPickAspect.buildPick;
-
-        buildPickAspect.buildPick = (wrap
-        /*, removeOnButton*/
-        ) => {
-          let pick = origBuildPick(wrap
-          /*, removeOnButton*/
-          );
-
-          if (pick.pickDomManagerHandlers.updateComponentDisabled) {
-            pick.pickDomManagerHandlers.updateComponentDisabled();
-          }
-
-          return pick;
-        };
-
         return {
           buildApi(api) {
             api.updateDisabled = updateDisabled;
@@ -3265,20 +3262,17 @@ function DisabledComponentAspect(getDisabled) {
 function ExtendPickDomFactory$1(pickDomFactory, disabledComponentAspect) {
   var origCreatePickDomFactory = pickDomFactory.create;
 
-  pickDomFactory.create = (pickElement, wrap
-  /*, remove*/
-  ) => {
-    var value = origCreatePickDomFactory(pickElement, wrap
-    /*, remove*/
-    );
+  pickDomFactory.create = pick => {
+    origCreatePickDomFactory(pick);
+    let pickDomManagerHandlers = pick.pickDomManagerHandlers;
 
-    value.pickDomManagerHandlers.updateComponentDisabled = () => {
+    pickDomManagerHandlers.updateComponentDisabled = () => {
       var _disabledComponentAsp2;
 
-      if (value.pickDomManagerHandlers.disableButton) value.pickDomManagerHandlers.disableButton((_disabledComponentAsp2 = disabledComponentAspect.getDisabled()) != null ? _disabledComponentAsp2 : false);
+      if (pickDomManagerHandlers.disableButton) pickDomManagerHandlers.disableButton((_disabledComponentAsp2 = disabledComponentAspect.getDisabled()) != null ? _disabledComponentAsp2 : false);
     };
 
-    return value;
+    pickDomManagerHandlers.updateComponentDisabled();
   };
 }
 
@@ -3657,40 +3651,59 @@ function plug(configuration) {
           createElementAspect
         } = aspects;
         ExtendPickDomFactory(pickDomFactory, createElementAspect, configuration.pickButtonHTML, configuration.css);
+      },
+      layout: () => {
+        var {
+          producePickAspect
+        } = aspects;
+        ExtendProducePickAspect(producePickAspect);
       }
     };
+  };
+}
+
+function ExtendProducePickAspect(producePickAspect) {
+  let origProducePickPickAspect = producePickAspect.producePick;
+
+  producePickAspect.producePick = wrap => {
+    let pick = origProducePickPickAspect(wrap);
+
+    pick.removeOnButton = event => {
+      pick.setSelectedFalse();
+    };
+
+    pick.dispose = composeSync(pick.dispose, () => {
+      pick.removeOnButton = null;
+    });
+    return pick;
   };
 }
 
 function ExtendPickDomFactory(pickDomFactory, createElementAspect, pickButtonHTML, css) {
   var origCreatePickDomFactory = pickDomFactory.create;
 
-  pickDomFactory.create = (pickElement, wrap) => {
-    var value = origCreatePickDomFactory(pickElement, wrap);
-    createElementAspect.createElementFromHtmlPutAfter(value.pickDom.pickContentElement, pickButtonHTML);
-    let pickButtonElement = pickElement.querySelector('BUTTON');
+  pickDomFactory.create = pick => {
+    origCreatePickDomFactory(pick);
+    let {
+      pickDom,
+      pickDomManagerHandlers
+    } = pick;
+    createElementAspect.createElementFromHtmlPutAfter(pickDom.pickContentElement, pickButtonHTML);
+    let pickButtonElement = pickDom.pickElement.querySelector('BUTTON');
+    pickDom.pickButtonElement = pickButtonElement;
 
-    value.pickDomManagerHandlers.disableButton = val => {
+    pickDomManagerHandlers.disableButton = val => {
       pickButtonElement.disabled = val;
     };
 
-    value.pickDomManagerHandlers.composeRemoveOnButton = event => {
-      wrap.pick.setSelectedFalse();
-    };
-
     let eventBinder = EventBinder();
-    eventBinder.bind(pickButtonElement, "click", event => value.pickDomManagerHandlers.composeRemoveOnButton(event) // NOTE : warapped in multiselect layout
-    );
+    eventBinder.bind(pickButtonElement, "click", event => pick.removeOnButton(event));
     addStyling(pickButtonElement, css.pickButton);
-    value.pickDom.pickButtonElement = pickButtonElement;
-    var origDispose = value.pickDom.dispose;
-
-    value.pickDom.dispose = () => {
-      origDispose();
+    pick.dispose = composeSync(pick.dispose, () => {
       eventBinder.unbind();
-    };
-
-    return value;
+      pickDom.pickButtonElement = null;
+      pickDomManagerHandlers.disableButton = null;
+    });
   };
 }
 
@@ -3987,7 +4000,8 @@ function BuildAndAttachChoiceAspect(buildChoiceAspect) {
     }
 
   };
-}
+} //ProducePickAspect producePick
+
 function BuildChoiceAspect(choicesDom, choiceDomFactory, choiceClickAspect) {
   return {
     buildChoice(wrap) {
@@ -4001,10 +4015,13 @@ function BuildChoiceAspect(choicesDom, choiceDomFactory, choiceClickAspect) {
       wrap.choice.choiceElementAttach = attach;
       wrap.choice.isChoiceElementAttached = true;
       let {
-        dispose,
         choiceDom,
-        choiceDomManagerHandlers
-      } = choiceDomFactory.create(choiceElement, wrap, () => choiceClickAspect.choiceClick(wrap));
+        choiceDomManagerHandlers,
+        dispose
+      } = choiceDomFactory.create(choiceElement, wrap);
+
+      choiceDomManagerHandlers.composeToggle = event => choiceClickAspect.choiceClick(wrap);
+
       wrap.choice.choiceDom = choiceDom;
       choiceDomManagerHandlers.updateData();
       if (choiceDomManagerHandlers.updateSelected) choiceDomManagerHandlers.updateSelected();
@@ -4028,6 +4045,7 @@ function BuildChoiceAspect(choicesDom, choiceDomFactory, choiceClickAspect) {
       };
 
       wrap.choice.dispose = () => {
+        wrap.choice.choiceDomManagerHandlers.composeToggle = null;
         wrap.choice.choiceDomManagerHandlers = null;
         dispose();
         wrap.choice.choiceElement = null;
@@ -4107,13 +4125,7 @@ function UpdateAspect(updateDataAspect) {
   };
 }
 
-function IsChoiceSelectableAspect() {
-  // TODO rename to IsSelectableByUserAspect ?
-  return {
-    isSelectable: wrap => true
-  };
-} // todo: remove?
-
+// todo: remove?
 function ChoiceClickAspect(optionToggleAspect, filterDom) {
   return {
     choiceClick: wrap => {
@@ -4148,58 +4160,6 @@ function FullMatchAspect(createPickHandlersAspect, addPickAspect) {
       let pickHandlers = createPickHandlersAspect.createPickHandlers(wrap);
       addPickAspect.addPick(wrap, pickHandlers);
       return true; // TODO: process setOptionSelectedAspect
-    }
-
-  };
-}
-function RemovePickAspect() {
-  return {
-    removePick(wrap, pick) {
-      pick.dispose(); // overrided in SelectedOptionPlugin with trySetWrapSelected(wrap, false);
-    }
-
-  };
-}
-function ProducePickAspect(picksList, removePickAspect, buildPickAspect) {
-  return {
-    producePick(wrap, pickHandlers) {
-      let pick = buildPickAspect.buildPick(wrap);
-      pick.pickElementAttach();
-      let {
-        remove: removeFromPicksList
-      } = picksList.add(pick);
-
-      pick.setSelectedFalse = () => removePickAspect.removePick(wrap, pick);
-
-      pick.wrap = wrap;
-      pick.dispose = composeSync(removeFromPicksList, () => {
-        pick.setSelectedFalse = null;
-        pick.wrap = null;
-      }, pick.dispose);
-
-      pickHandlers.removeAndDispose = () => pick.dispose();
-
-      return pick;
-    }
-
-  };
-} // redefined in MultiSelectInlineLayout to redefine handlers removeOnButton
-// redefined in SelectedOptionPlugin to compose wrap.updateSelected
-
-function CreatePickHandlersAspect(producePickAspect) {
-  return {
-    createPickHandlers(wrap) {
-      let pickHandlers = {
-        producePick: null,
-        // not redefined directly, but redefined in addPickAspect
-        removeAndDispose: null // not redefined, 
-        //removeOnButton: null // redefined in MultiSelectInlineLayout
-
-      };
-
-      pickHandlers.producePick = () => producePickAspect.producePick(wrap, pickHandlers);
-
-      return pickHandlers;
     }
 
   };
@@ -4240,6 +4200,71 @@ function CreateWrapAspect() {
       return {
         option: option
       };
+    }
+
+  };
+}
+
+function CreatePickHandlersAspect(producePickAspect, picksList) {
+  return {
+    createPickHandlers(wrap) {
+      var pickHandlers = {
+        producePick: null,
+        // not redefined directly, but redefined in addPickAspect
+        removeAndDispose: null // not redefined, used in MultiSelectInlineLayout injected into wrap.choice.remove 
+
+      };
+
+      pickHandlers.producePick = () => {
+        let pick = producePickAspect.producePick(wrap);
+        let {
+          remove: removeFromPicksList
+        } = picksList.add(pick);
+        pick.dispose = composeSync(removeFromPicksList, pick.dispose);
+
+        pickHandlers.removeAndDispose = () => pick.dispose();
+
+        return pick;
+      };
+
+      return pickHandlers;
+    }
+
+  };
+}
+
+function ProducePickAspect(picksDom, pickDomFactory) {
+  return {
+    // overrided by DisableOptionPlugin
+    producePick(wrap) {
+      let {
+        pickElement,
+        attach,
+        detach
+      } = picksDom.createPickElement();
+      let pickDom = {
+        pickElement
+      };
+      let pickDomManagerHandlers = {
+        attach
+      };
+      let pick = {
+        wrap,
+        pickDom,
+        pickDomManagerHandlers,
+        dispose: () => {
+          detach();
+          pickDom.pickElement = null;
+          pickDomManagerHandlers.attach = null;
+          pick.wrap = null;
+          pick.pickDom = null;
+          pick.pickDomManagerHandlers = null;
+        }
+      };
+      wrap.pick = pick;
+      pickDomFactory.create(pick);
+      pick.pickDomManagerHandlers.attach();
+      return pick;
     }
 
   };
@@ -4303,44 +4328,6 @@ function insert(key, wrap, wrapsCollection, listFacade_add) {
     wrapsCollection.add(wrap, key);
     listFacade_add(wrap, key);
   }
-}
-
-function BuildPickAspect(picksDom, pickDomFactory) {
-  return {
-    buildPick(wrap
-    /*, removeOnButton*/
-    ) {
-      let {
-        pickElement,
-        attach,
-        detach
-      } = picksDom.createPickElement();
-      let {
-        dispose,
-        pickDom,
-        pickDomManagerHandlers
-      } = pickDomFactory.create(pickElement, wrap
-      /*, removeOnButton*/
-      );
-      let pick = {
-        pickDom,
-        pickDomManagerHandlers,
-        pickElementAttach: attach,
-        dispose: () => {
-          detach();
-          dispose();
-          pick.pickDomManagerHandlers = null;
-          pick.pickDom = pickDom;
-          pick.pickElementAttach = null;
-          pick.dispose = null;
-        }
-      };
-      pickDomManagerHandlers.updateData(); // set visual text
-
-      return pick;
-    }
-
-  };
 }
 
 function InputAspect(filterDom, filterManagerAspect, fullMatchAspect) {
@@ -4413,8 +4400,8 @@ function FocusInAspect(picksDom) {
   };
 }
 
-function MultiSelectInlineLayoutAspect(environment, filterDom, choicesDom, choicesVisibilityAspect, hoveredChoiceAspect, navigateAspect, filterManagerAspect, focusInAspect, optionToggleAspect, createPickHandlersAspect, picksList, inputAspect, specialPicksEventsAspect, buildChoiceAspect, resetLayoutAspect, picksElementAspect, //removeOnButtonAspect,
-afterInputAspect, disposeAspect, pickDomFactory) {
+function MultiSelectInlineLayoutAspect(environment, filterDom, choicesDom, choicesVisibilityAspect, hoveredChoiceAspect, navigateAspect, filterManagerAspect, focusInAspect, optionToggleAspect, createPickHandlersAspect, picksList, inputAspect, specialPicksEventsAspect, buildChoiceAspect, resetLayoutAspect, picksElementAspect, afterInputAspect, disposeAspect, pickDomFactory) {
+  //return  
   let choicesElement = choicesDom.choicesElement;
   var window = environment.window;
   var document = window.document;
@@ -4723,28 +4710,14 @@ afterInputAspect, disposeAspect, pickDomFactory) {
       );
       var origCreatePickDomFactory = pickDomFactory.create;
 
-      pickDomFactory.create = (pickElement, wrap) => {
-        var value = origCreatePickDomFactory(pickElement, wrap);
+      pickDomFactory.create = pick => {
+        origCreatePickDomFactory(pick);
 
-        if (value.pickDomManagerHandlers.composeRemoveOnButton) {
-          var origcomposeRemoveOnButton = value.pickDomManagerHandlers.composeRemoveOnButton;
-
-          value.pickDomManagerHandlers.composeRemoveOnButton = event => {
-            var f = origcomposeRemoveOnButton(event);
-            var compositionF = composeOnRemoveButtonEventHandler(f);
-            return compositionF;
-          };
+        if (pick.removeOnButton) {
+          var origRemoveOnButton = pick.removeOnButton;
+          pick.removeOnButton = composeOnRemoveButtonEventHandler(origRemoveOnButton);
         }
-
-        return value;
-      }; // let origCreatePickHandlers = createPickHandlersAspect.createPickHandlers;
-      // createPickHandlersAspect.createPickHandlers = (wrap) => {
-      //     let pickHandlers = origCreatePickHandlers(wrap);
-      //     console.log(pickHandlers);
-      //     pickHandlers.removeOnButton = composeOnRemoveButtonEventHandler(pickHandlers.removeOnButton);
-      //     return pickHandlers;
-      // } 
-
+      };
 
       let origBuildChoice = buildChoiceAspect.buildChoice;
 
@@ -4906,26 +4879,40 @@ function BsMultiSelect(element, environment, pluginManager, configuration) {
       choicesDomFactory,
       filterDomFactory,
       picksDomFactory
-    });
+    }); // --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
+    //let choicesDom = choicesDomFactory.create();
+
     let {
-      staticManager,
       staticDom,
+      choicesDom,
       filterDom,
       picksDom,
-      choicesDom
+      staticManager
     } = staticDomFactory.createStaticDom(); // overrided in SelectElementPlugin
+    // let isDisposablePicksElementFlag=false;
+    // if (!picksElement) {
+    //     picksElement = createElementAspect.createElement('UL');
+    //     isDisposablePicksElementFlag = true; 
+    // }
+    // let picksDom  = picksDomFactory.create(staticManager.picksElement, staticManager.isDisposablePicksElementFlag);
+    // let filterDom = filterDomFactory.create(staticManager.isDisposablePicksElementFlag);
+    // containerElement.appendChild(choicesElement); 
+    // picksDom.pickFilterElement.appendChild(filterDom.filterInputElement);
+    // picksDom.picksElement.appendChild(picksDom.pickFilterElement); 
+    // choicesElement.parentNode.removeChild(choicesElement); // select
+    // //containerElement.removeChild(choicesElement);  // no select
+    // picksDom.dispose();
+    // filterDom.dispose();
+    // --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
 
     let optionPropertiesAspect = OptionPropertiesAspect(getText);
     let pickDomFactory = PickDomFactory(css, createElementAspect, optionPropertiesAspect); // overrided in CustomPickStylingsPlugin, DisableComponentPlugin
 
     let choiceDomFactory = ChoiceDomFactory(css, createElementAspect, optionPropertiesAspect); // overrided in CustomChoicesStylingsPlugin, HighlightPlugin
-    // --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
 
-    let isChoiceSelectableAspect = IsChoiceSelectableAspect();
     let createWrapAspect = CreateWrapAspect();
     let createChoiceBaseAspect = CreateChoiceBaseAspect(optionPropertiesAspect);
     let addPickAspect = AddPickAspect();
-    let removePickAspect = RemovePickAspect();
     let wrapsCollection = ArrayFacade();
     let countableChoicesList = DoublyLinkedList(wrap => wrap.choice.itemPrev, (warp, v) => warp.choice.itemPrev = v, wrap => wrap.choice.itemNext, (wrap, v) => wrap.choice.itemNext = v);
     let countableChoicesListInsertAspect = CountableChoicesListInsertAspect(countableChoicesList, wrapsCollection);
@@ -4937,8 +4924,10 @@ function BsMultiSelect(element, environment, pluginManager, configuration) {
     let filterManagerAspect = FilterManagerAspect(emptyNavigateManager, filteredNavigateManager, filteredChoicesList, choicesEnumerableAspect, filterPredicateAspect);
     let hoveredChoiceAspect = HoveredChoiceAspect();
     let navigateAspect = NavigateAspect(hoveredChoiceAspect, (down, hoveredChoice) => filterManagerAspect.getNavigateManager().navigate(down, hoveredChoice));
-    let picksList = List();
-    let wraps = Wraps(wrapsCollection, () => countableChoicesList.reset(), w => countableChoicesList.remove(w), (w, key) => countableChoicesListInsertAspect.countableChoicesListInsert(w, key)); // TODO: union to events or create event bus
+    let picksList = List(); // !!!!!!!!!!
+
+    let wraps = Wraps(wrapsCollection, () => countableChoicesList.reset(), w => countableChoicesList.remove(w), (w, key) => countableChoicesListInsertAspect.countableChoicesListInsert(w, key)); // !!!!!!!!!!!
+    // TODO: union to events or create event bus
 
     eventHandlers.plugStaticDom({
       environment,
@@ -4951,7 +4940,6 @@ function BsMultiSelect(element, environment, pluginManager, configuration) {
       choicesEnumerableAspect,
       filteredChoicesList,
       filterPredicateAspect,
-      isChoiceSelectableAspect,
       hoveredChoiceAspect,
       navigateAspect,
       filterManagerAspect,
@@ -4959,8 +4947,7 @@ function BsMultiSelect(element, environment, pluginManager, configuration) {
       createChoiceBaseAspect,
       picksList,
       wraps,
-      addPickAspect,
-      removePickAspect
+      addPickAspect
     }); // apply selectElement support;  
     // TODO: to staticManager
     //let {staticManager, staticDom, filterDom, picksDom, choicesDom} = staticDomFactory.createStaticDom(); // overrided in SelectElementPlugin
@@ -4971,21 +4958,23 @@ function BsMultiSelect(element, environment, pluginManager, configuration) {
     let resetFilterListAspect = ResetFilterListAspect(filterDom, filterManagerAspect);
     let resetFilterAspect = ResetFilterAspect(filterDom, resetFilterListAspect);
     let focusInAspect = FocusInAspect(picksDom);
-    let buildPickAspect = BuildPickAspect(picksDom, pickDomFactory);
-    let producePickAspect = ProducePickAspect(picksList, removePickAspect, buildPickAspect);
-    let createPickHandlersAspect = CreatePickHandlersAspect(producePickAspect);
+    let producePickAspect = ProducePickAspect(picksDom, pickDomFactory);
+    let createPickHandlersAspect = CreatePickHandlersAspect(producePickAspect, picksList);
     let optionToggleAspect = OptionToggleAspect(createPickHandlersAspect, addPickAspect);
     let fullMatchAspect = FullMatchAspect(createPickHandlersAspect, addPickAspect);
     let inputAspect = InputAspect(filterDom, filterManagerAspect, fullMatchAspect);
     let choiceClickAspect = ChoiceClickAspect(optionToggleAspect, filterDom);
     let buildChoiceAspect = BuildChoiceAspect(choicesDom, choiceDomFactory, choiceClickAspect);
     let buildAndAttachChoiceAspect = BuildAndAttachChoiceAspect(buildChoiceAspect);
-    let resetLayoutAspect = ResetLayoutAspect(resetFilterAspect);
+    let resetLayoutAspect = ResetLayoutAspect(resetFilterAspect); //!!!!!!!!!
+    //createWrapAspect, createChoiceBaseAspect, buildAndAttachChoiceAspect, wraps
+
     let optionAttachAspect = OptionAttachAspect(createWrapAspect, createChoiceBaseAspect, buildAndAttachChoiceAspect, wraps);
     let optionsLoopAspect = OptionsLoopAspect(optionsAspect, optionAttachAspect);
     let updateDataAspect = UpdateDataAspect(choicesDom, wraps, picksList, optionsLoopAspect, resetLayoutAspect);
+    let loadAspect = LoadAspect(optionsLoopAspect); // !!!!!!!!!!!
+
     let updateAspect = UpdateAspect(updateDataAspect);
-    let loadAspect = LoadAspect(optionsLoopAspect);
     let picksElementAspect = PicksElementAspect(picksDom.picksElement);
     let afterInputAspect = AfterInputAspect(filterManagerAspect, navigateAspect, choicesVisibilityAspect, hoveredChoiceAspect);
     let multiSelectInlineLayoutAspect = MultiSelectInlineLayoutAspect(environment, filterDom, choicesDom, choicesVisibilityAspect, hoveredChoiceAspect, navigateAspect, filterManagerAspect, focusInAspect, optionToggleAspect, createPickHandlersAspect, picksList, inputAspect, specialPicksEventsAspect, buildChoiceAspect, resetLayoutAspect, picksElementAspect, afterInputAspect, disposeAspect, pickDomFactory);
@@ -5003,7 +4992,6 @@ function BsMultiSelect(element, environment, pluginManager, configuration) {
       buildAndAttachChoiceAspect,
       optionsLoopAspect,
       optionAttachAspect,
-      buildPickAspect,
       producePickAspect,
       createPickHandlersAspect,
       inputAspect,

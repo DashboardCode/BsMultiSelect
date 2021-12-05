@@ -7,15 +7,19 @@ export function ChoiceDomFactory(css, createElementAspect,  optionPropertiesAspe
     }
     //TODO move check which aspects availbale like wrap.hasOwnProperty("isOptionSelected") to there
     return {
-        create(choiceElement, wrap, toggle){
+        create(choiceElement, wrap){
             let choiceDom = null;
             let choiceDomManagerHandlers = null;
-            let eventBinder = EventBinder();
-                eventBinder.bind(choiceElement, "click",  toggle);
-            
+            let choiceHoverToggle = null;
+
             if (wrap.hasOwnProperty("isOptionSelected")){
-                createElementAspect.createElementFromHtml(choiceElement, '<div><input formnovalidate type="checkbox"><label></label></div>');
                 
+                choiceHoverToggle = toggleStyling(choiceElement, () =>
+                    (wrap.isOptionDisabled===true && css.choice_disabled_hover && wrap.isOptionSelected===false)?
+                        css.choice_disabled_hover:css.choice_hover
+                );
+
+                createElementAspect.createElementFromHtml(choiceElement, '<div><input formnovalidate type="checkbox"><label></label></div>');
                 let choiceContentElement = choiceElement.querySelector('DIV');
                 let choiceCheckBoxElement = choiceContentElement.querySelector('INPUT');
                 let choiceLabelElement = choiceContentElement.querySelector('LABEL');
@@ -55,41 +59,39 @@ export function ChoiceDomFactory(css, createElementAspect,  optionPropertiesAspe
                     choiceCursorDisabledToggle(isCheckBoxDisabled);
                 }
 
-                let choiceHoverToggle    = toggleStyling(choiceElement, ()=>{
-                    if (css.choice_disabled_hover &&  wrap.isOptionDisabled===true && wrap.isOptionSelected===false)
-                        return css.choice_disabled_hover;
-                    else
-                        return css.choice_hover;
-                });
-                let updateHoverIn = function(){
-                    choiceHoverToggle(wrap.choice.isHoverIn);
-                }
-
                 choiceDomManagerHandlers = {
                     updateData: ()=>updateDataInternal(wrap, choiceLabelElement),
                     updateHoverIn,
-                    updateDisabled,
                     updateSelected, 
+                    updateDisabled,
                 }
+
             }else{
-                let choiceHoverToggle    = toggleStyling(choiceElement, ()=>
-                    (wrap.isOptionDisabled && css.choice_disabled_hover)?css.choice_disabled_hover:css.choice_hover);
+                choiceHoverToggle    = toggleStyling(choiceElement, ()=>
+                    (wrap.isOptionDisabled && css.choice_disabled_hover)?
+                        css.choice_disabled_hover:css.choice_hover
+                );
                 
-                let updateHoverIn = function(){
-                    choiceHoverToggle(wrap.choice.isHoverIn);
-                }
-                choiceElement.innerHTML = '<span></span>';
-                let choiceContentElement = choiceElement.querySelector('SPAN');
+                choiceElement.innerHTML = '<div></div>';
+                let choiceContentElement = choiceElement.querySelector('div');
+
                 choiceDom = {
                     choiceElement,
-                    choiceContentElement,
+                    choiceContentElement
                 };
                 choiceDomManagerHandlers = {
                     updateData: ()=>updateDataInternal(wrap, choiceContentElement),
-                    updateHoverIn
                 }
             }
-            
+
+            let updateHoverIn = function(){
+                choiceHoverToggle(wrap.choice.isHoverIn);
+            }
+            choiceDomManagerHandlers.updateHoverIn=updateHoverIn;
+
+            let eventBinder = EventBinder();
+            eventBinder.bind(choiceElement, "click", event=>choiceDomManagerHandlers.composeToggle(event) );
+
             return {
                 choiceDom,
                 choiceDomManagerHandlers, 

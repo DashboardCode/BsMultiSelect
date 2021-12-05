@@ -10,16 +10,15 @@ export function MultiSelectInlineLayoutAspect (
         picksList,
         inputAspect, specialPicksEventsAspect,  buildChoiceAspect, 
         resetLayoutAspect,
-
         picksElementAspect,
         
-        //removeOnButtonAspect,
-
         afterInputAspect,
         disposeAspect,
         pickDomFactory
     ) 
 {
+    
+    //return  
     let choicesElement = choicesDom.choicesElement;
     var window = environment.window;
     var document = window.document;
@@ -341,28 +340,15 @@ export function MultiSelectInlineLayoutAspect (
             );
         
             var origCreatePickDomFactory = pickDomFactory.create;
-            pickDomFactory.create = (pickElement, wrap) => {
-                var value = origCreatePickDomFactory(pickElement, wrap);
-                if (value.pickDomManagerHandlers.composeRemoveOnButton){
-                    var origcomposeRemoveOnButton = value.pickDomManagerHandlers.composeRemoveOnButton;
-                    value.pickDomManagerHandlers.composeRemoveOnButton = (event) => {
-                        var f = origcomposeRemoveOnButton(event);
-                        var compositionF = composeOnRemoveButtonEventHandler(f);
-                        return compositionF;
-                    }
+            pickDomFactory.create = (pick) => {
+                origCreatePickDomFactory(pick);
+                if (pick.removeOnButton){
+                    var origRemoveOnButton = pick.removeOnButton;
+                    pick.removeOnButton = composeOnRemoveButtonEventHandler(origRemoveOnButton);
                 }
-                return value;
             }
             
             
-            // let origCreatePickHandlers = createPickHandlersAspect.createPickHandlers;
-            // createPickHandlersAspect.createPickHandlers = (wrap) => {
-            //     let pickHandlers = origCreatePickHandlers(wrap);
-            //     console.log(pickHandlers);
-            //     pickHandlers.removeOnButton = composeOnRemoveButtonEventHandler(pickHandlers.removeOnButton);
-            //     return pickHandlers;
-            // } 
-        
             let origBuildChoice = buildChoiceAspect.buildChoice;
             buildChoiceAspect.buildChoice = (wrap) => {
                 origBuildChoice(wrap);

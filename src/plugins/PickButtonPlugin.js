@@ -1,5 +1,6 @@
 import {EventBinder} from '../ToolsDom';
 import {addStyling} from '../ToolsStyling';
+import {composeSync} from '../ToolsJs';
 
 export function PickButtonPlugCssPatchBs4(defaults){
     // increase font and limit the line
@@ -33,39 +34,56 @@ export function plug(configuration){
             plugStaticDom: () => {
                 var {pickDomFactory, createElementAspect} = aspects;
                 ExtendPickDomFactory(pickDomFactory, createElementAspect, configuration.pickButtonHTML, configuration.css);
+            },
+            layout: ()=>{
+                var {producePickAspect} = aspects;
+                ExtendProducePickAspect(producePickAspect);
+                
             }
         }
     }
 }
 
+function ExtendProducePickAspect(producePickAspect){
+    let origProducePickPickAspect = producePickAspect.producePick;
+    producePickAspect.producePick = (wrap)=>{
+        let pick = origProducePickPickAspect(wrap)
+        pick.removeOnButton = (event) => {
+            pick.setSelectedFalse();
+        }
+        pick.dispose = composeSync(
+            pick.dispose,
+            ()=>{pick.removeOnButton=null}
+        );
+        return pick;
+    }
+}
+
 function ExtendPickDomFactory(pickDomFactory, createElementAspect, pickButtonHTML, css){
     var origCreatePickDomFactory = pickDomFactory.create;
-    pickDomFactory.create = (pickElement, wrap) => {
+    pickDomFactory.create = (pick) => {
         
-        var value = origCreatePickDomFactory(pickElement, wrap);
-        createElementAspect.createElementFromHtmlPutAfter(value.pickDom.pickContentElement, pickButtonHTML);
-        let pickButtonElement  = pickElement.querySelector('BUTTON');
-        
-        value.pickDomManagerHandlers.disableButton = (val)=> {
+        origCreatePickDomFactory(pick);
+        let {pickDom,pickDomManagerHandlers} = pick;
+        createElementAspect.createElementFromHtmlPutAfter(pickDom.pickContentElement, pickButtonHTML);
+        let pickButtonElement  = pickDom.pickElement.querySelector('BUTTON');
+        pickDom.pickButtonElement=pickButtonElement;
+        pickDomManagerHandlers.disableButton = (val)=> {
             pickButtonElement.disabled = val;
         }
 
-        value.pickDomManagerHandlers.composeRemoveOnButton = (event) => {
-            wrap.pick.setSelectedFalse();
-        }
         let eventBinder = EventBinder();
-
-        eventBinder.bind(pickButtonElement, "click", (event)=>value.pickDomManagerHandlers.composeRemoveOnButton(event) // NOTE : warapped in multiselect layout
-        );  
+        eventBinder.bind(pickButtonElement, "click", (event)=>pick.removeOnButton(event));
+        
         addStyling(pickButtonElement, css.pickButton);
         
-        
-        value.pickDom.pickButtonElement = pickButtonElement;
-        var origDispose = value.pickDom.dispose;
-        value.pickDom.dispose = ()=>{
-            origDispose();
-            eventBinder.unbind();
-        }
-        return value;
+        pick.dispose = composeSync(
+            pick.dispose,
+            ()=>{
+                eventBinder.unbind();
+                pickDom.pickButtonElement=null;
+                pickDomManagerHandlers.disableButton = null;
+            }
+        )
     }
 }

@@ -1,11 +1,3 @@
-import {composeSync} from './ToolsJs';
-
-export function IsChoiceSelectableAspect(){ // TODO rename to IsSelectableByUserAspect ?
-    return {
-        isSelectable: (wrap)=>true 
-    }
-}
-
 // todo: remove?
 export function ChoiceClickAspect(optionToggleAspect, filterDom){
     return {
@@ -46,52 +38,7 @@ export function FullMatchAspect(createPickHandlersAspect, addPickAspect){
     }
 }
 
-export function RemovePickAspect(){
-    return {
-        removePick(wrap, pick){
-            pick.dispose(); // overrided in SelectedOptionPlugin with trySetWrapSelected(wrap, false);
-        }
-    }
-}
 
-export function ProducePickAspect(picksList, removePickAspect, buildPickAspect){
-    return {
-        producePick(wrap, pickHandlers){
-            let pick = buildPickAspect.buildPick(wrap);
-                
-            pick.pickElementAttach();
-            let {remove: removeFromPicksList} = picksList.add(pick);
-            pick.setSelectedFalse = () => removePickAspect.removePick(wrap, pick);
-            pick.wrap = wrap; 
-            pick.dispose = composeSync(
-                removeFromPicksList,
-                ()=>{
-                    pick.setSelectedFalse=null;
-                    pick.wrap = null;
-                }, 
-                pick.dispose);
-            pickHandlers.removeAndDispose = () => pick.dispose();
-            return pick;
-        } 
-    }
-}
-
-// redefined in MultiSelectInlineLayout to redefine handlers removeOnButton
-// redefined in SelectedOptionPlugin to compose wrap.updateSelected
-export function CreatePickHandlersAspect(producePickAspect){
-    return{
-        createPickHandlers(wrap){
-            let pickHandlers = { 
-                producePick: null,  // not redefined directly, but redefined in addPickAspect
-                removeAndDispose: null,  // not redefined, 
-                //removeOnButton: null // redefined in MultiSelectInlineLayout
-            }
-            
-            pickHandlers.producePick = () => producePickAspect.producePick(wrap, pickHandlers);
-            return pickHandlers;
-        }
-    }
-}
 
 export function CreateChoiceBaseAspect(optionPropertiesAspect){
     return {

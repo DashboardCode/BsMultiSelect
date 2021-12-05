@@ -23,7 +23,7 @@ export function plug(){
                         wrap.updateHidden = ()=>{};
                         let pickHandlers = createPickHandlersAspect.createPickHandlers(wrap);
                         addPickAspect.addPick(wrap, pickHandlers);
-                    }
+                }
             }
         }
     }

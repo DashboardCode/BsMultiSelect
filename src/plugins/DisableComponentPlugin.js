@@ -21,7 +21,7 @@ export function plug(configuration){
                 ExtendPickDomFactory(pickDomFactory, disabledComponentAspect);
             },
             layout: () => {
-                var {updateAppearanceAspect, picksList, picksDom, picksElementAspect, buildPickAspect} = aspects;
+                var {updateAppearanceAspect, picksList, picksDom, picksElementAspect} = aspects;
 
                 var disableComponent = (isComponentDisabled)=>{
                     picksList.forEach(pick=>pick.pickDomManagerHandlers.updateComponentDisabled())
@@ -51,16 +51,6 @@ export function plug(configuration){
             
                 updateAppearanceAspect.updateAppearance = composeSync(updateAppearanceAspect.updateAppearance,  updateDisabled);
             
-                let origBuildPick = buildPickAspect.buildPick;
-                buildPickAspect.buildPick = (wrap /*, removeOnButton*/) => {
-                    let pick = origBuildPick(wrap /*, removeOnButton*/);
-                    
-                    if (pick.pickDomManagerHandlers.updateComponentDisabled){
-                        pick.pickDomManagerHandlers.updateComponentDisabled();
-                    }
-                    return pick;
-                }
-
                 return{
                     buildApi(api){
                         api.updateDisabled = updateDisabled;
@@ -79,12 +69,13 @@ export function DisabledComponentAspect(getDisabled) {
 
 function ExtendPickDomFactory(pickDomFactory, disabledComponentAspect){
     var origCreatePickDomFactory = pickDomFactory.create;
-    pickDomFactory.create = (pickElement, wrap/*, remove*/) => {
-        var value = origCreatePickDomFactory(pickElement, wrap/*, remove*/);
-        value.pickDomManagerHandlers.updateComponentDisabled = () => {
-            if (value.pickDomManagerHandlers.disableButton)
-                value.pickDomManagerHandlers.disableButton(disabledComponentAspect.getDisabled()??false)
+    pickDomFactory.create = (pick) => {
+        origCreatePickDomFactory(pick);
+        let pickDomManagerHandlers = pick.pickDomManagerHandlers;
+        pickDomManagerHandlers.updateComponentDisabled = () => {
+            if (pickDomManagerHandlers.disableButton)
+                pickDomManagerHandlers.disableButton(disabledComponentAspect.getDisabled()??false)
         };
-        return value;
+        pickDomManagerHandlers.updateComponentDisabled();
     }
 }

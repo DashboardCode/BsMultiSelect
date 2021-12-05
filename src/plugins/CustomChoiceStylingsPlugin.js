@@ -25,8 +25,8 @@ export function plug(configuration){
 
 function ExtendChoiceDomFactory(choiceDomFactory, customChoiceStylingsAspect){
     let origChoiceDomFactoryCreate = choiceDomFactory.create;
-    choiceDomFactory.create = function(choiceElement, wrap, toggle){
-        var o = origChoiceDomFactoryCreate(choiceElement, wrap, toggle);
+    choiceDomFactory.create = function(choiceElement, wrap){
+        var o = origChoiceDomFactoryCreate(choiceElement, wrap);
         customChoiceStylingsAspect.customize(wrap, o.choiceDom, o.choiceDomManagerHandlers);
         return o;
     }
