@@ -1,4 +1,5 @@
 import {composeSync} from '../ToolsJs';
+import {toggleStyling} from '../ToolsStyling';
 
 export function SelectedOptionPlugin(){
     return {
@@ -42,9 +43,9 @@ export function plug(configuration){
             },
             layout: () => {
                 let {wrapsCollection, updateOptionsSelectedAspect,
-                    createWrapAspect, buildChoiceAspect, producePickAspect,
-                    resetLayoutAspect, picksList, optionToggleAspect,
-                    /*inputAspect, filterDom, filterManagerAspect,*/ createPickHandlersAspect, addPickAspect,  fullMatchAspect, 
+                    createWrapAspect, produceChoiceAspect,
+                    resetLayoutAspect, picksList,
+                    producePickAspect, 
                     onChangeAspect, filterPredicateAspect
                     } = aspects;
                 
@@ -52,31 +53,6 @@ export function plug(configuration){
                 filterPredicateAspect.filterPredicate = (wrap, text) =>
                     !wrap.isOptionSelected  &&  origFilterPredicate(wrap, text)
                 
-                
-                let  origBuildChoice = buildChoiceAspect.buildChoice;
-                buildChoiceAspect.buildChoice= (wrap) => {
-                    origBuildChoice(wrap);
-                    wrap.updateSelected = () => {
-                        wrap.choice.choiceDomManagerHandlers.updateSelected();
-                        onChangeAspect.onChange();
-                    }
-                    wrap.dispose = composeSync( ()=>{wrap.updateSelected = null}, wrap.dispose)
-                }
-            
-                // TODO: test this instead of wrap.updateSelected
-                // function updateSelected(wrap){
-                //     if (wrap.pick){
-                //         if (wrap.isOptionSelected)
-                //             pickHandlers.producePick();
-                //         else {
-                //             pickHandlers.removeAndDispose();
-                //             pickHandlers.removeAndDispose=null;
-                //         }
-                //     }
-                //     wrap.choice.choiceDomManagerHandlers.updateSelected();
-                //     onChangeAspect.onChange();
-                // }
-            
             
                 function composeUpdateSelected(wrap, booleanValue){
                     return () => {
@@ -94,6 +70,8 @@ export function plug(configuration){
                     }
                     return success;
                 }
+
+                ExtendProduceChoiceAspectProduceChoice(produceChoiceAspect, onChangeAspect, trySetWrapSelected, composeUpdateSelected, producePickAspect, picksList);
             
                 let origCreateWrap = createWrapAspect.createWrap;
                 createWrapAspect.createWrap = (option)=>{
@@ -104,32 +82,8 @@ export function plug(configuration){
                 }
                 
             
-                let origToggle = optionToggleAspect.toggle; // TODO: improve design, no replace
-                optionToggleAspect.toggle= (wrap) => {
-                    return trySetWrapSelected(wrap.option, composeUpdateSelected(wrap, !wrap.isOptionSelected), !wrap.isOptionSelected)
-                }
-            
-                let origFullMatch = fullMatchAspect.fullMatch;
-                fullMatchAspect.fullMatch = (wrap) => {
-                    return trySetWrapSelected(wrap.option, composeUpdateSelected(wrap, true), true);
-                }
-            
                 ExtendProducePickAspect(producePickAspect, trySetWrapSelected, composeUpdateSelected);
                 
-                ExtendCreatePickHandlersAspectCreatePickHandlers(createPickHandlersAspect, addPickAspect);
-                
-            
-                let origAddPick =  addPickAspect.addPick;
-                addPickAspect.addPick = (wrap, pickHandlers) => {
-                    if (wrap.isOptionSelected){
-                        let pick = origAddPick(wrap, pickHandlers);
-                        wrap.pick = pick;
-                        pick.dispose = composeSync(pick.dispose, ()=>{wrap.pick=null;});
-                        return pick;
-                    }
-                }
-            
-            
                 return {
                     buildApi(api){
                         api.selectAll= ()=>{
@@ -162,27 +116,70 @@ export function plug(configuration){
     }
 }
 
-function ExtendCreatePickHandlersAspectCreatePickHandlers(createPickHandlersAspect, addPickAspect){
-    let orig =  createPickHandlersAspect.createPickHandlers;
-    createPickHandlersAspect.createPickHandlers = (wrap)=>{
-        let pickHandlers = orig(wrap);
-        wrap.updateSelected = composeSync(
-            ()=>{
-                if (wrap.isOptionSelected){
-                    let pick = pickHandlers.producePick();
-                    wrap.pick = pick;
-                    pick.dispose = composeSync(pick.dispose, ()=>{wrap.pick=null;});
-                }
-                else {
-                    pickHandlers.removeAndDispose();
-                    pickHandlers.removeAndDispose=null;
-                }
-            },
-            wrap.updateSelected
-        )
-        
-        addPickAspect.addPick(wrap, pickHandlers); // why I need it?
-        return pickHandlers;
+function ExtendProduceChoiceAspectProduceChoice(produceChoiceAspect, onChangeAspect, trySetWrapSelected, composeUpdateSelected, producePickAspect, picksList){
+    let  orig = produceChoiceAspect.produceChoice;
+    produceChoiceAspect.produceChoice = (wrap) => {
+        let val = orig(wrap);
+        wrap.choice.choiceDomManagerHandlers.updateSelected();
+
+        wrap.choice.tryToggleChoice = ()=>
+            trySetWrapSelected(wrap.option, composeUpdateSelected(wrap, !wrap.isOptionSelected), !wrap.isOptionSelected) 
+
+        wrap.choice.fullMatch = () => trySetWrapSelected(wrap.option, composeUpdateSelected(wrap, true), true);
+
+        wrap.choice.choiсeClick = (event) =>{ let wasToggled = wrap.choice.tryToggleChoice();} // TODO: add fail message?
+
+        wrap.updateSelected = () => {
+            wrap.choice.choiceDomManagerHandlers.updateSelected();
+            onChangeAspect.onChange();
+        }
+
+        // addPickForChoice used only in load loop; updateSelected on toggle
+        wrap.choice.addPickForChoice = () => {
+
+            var pickHandlers = { 
+                producePick: null,  // not redefined directly, but redefined in addPickAspect
+                removeAndDispose: null,  // not redefined, used in MultiSelectInlineLayout injected into wrap.choice.choiceRemove 
+            }
+            
+            pickHandlers.producePick = () => {
+                let pick = producePickAspect.producePick(wrap);
+                let {remove} = picksList.add(pick);
+                pick.dispose = composeSync(remove, pick.dispose);
+                pickHandlers.removeAndDispose = () => pick.dispose();
+                return pick;
+            }
+
+            wrap.updateSelected = composeSync(
+                ()=>{
+                    if (wrap.isOptionSelected){
+                        let pick = pickHandlers.producePick();
+                        wrap.pick = pick;
+                        pick.dispose = composeSync(pick.dispose, ()=>{wrap.pick=null;});
+                    }
+                    else {
+                        pickHandlers.removeAndDispose();
+                        pickHandlers.removeAndDispose=null;
+                    }
+                },
+                wrap.updateSelected
+            )
+            if (wrap.isOptionSelected){
+                let pick = pickHandlers.producePick();
+                wrap.pick = pick;
+                pick.dispose = composeSync(pick.dispose, ()=>{wrap.pick=null;});
+            }
+            return pickHandlers; //removeAndDispose
+        }
+
+        wrap.dispose = composeSync( ()=>{
+            wrap.updateSelected = null;
+            wrap.choice.choiсeClick = null;
+            wrap.choice.tryToggleChoice = null;
+            wrap.choice.fullMatch = null;
+            wrap.choice.addPickForChoice = null;
+        }, wrap.dispose)
+        return val;
     }
 }
 
@@ -197,6 +194,86 @@ function ExtendProducePickAspect(producePickAspect, trySetWrapSelected, composeU
         return pick;
     }
 }
+
+function ExtendChoiceDomFactory(choiceDomFactory, css, createElementAspect,  optionPropertiesAspect){
+
+    var updateDataInternal = function(wrap, element){
+        element.textContent = optionPropertiesAspect.getText(wrap.option);
+    }
+
+    let orig = choiceDomFactory.create;
+    choiceDomFactory.create = function(choiceElement, wrap){
+        orig(choiceElement, wrap);
+        choiceHoverToggle = toggleStyling(choiceElement, () =>
+            (wrap.isOptionDisabled===true && css.choice_disabled_hover && wrap.isOptionSelected===false)?
+                css.choice_disabled_hover:css.choice_hover
+        );
+
+        createElementAspect.createElementFromHtml(choiceElement, '<div><input formnovalidate type="checkbox"><label></label></div>');
+        let choiceContentElement = choiceElement.querySelector('DIV');
+        let choiceCheckBoxElement = choiceContentElement.querySelector('INPUT');
+        let choiceLabelElement = choiceContentElement.querySelector('LABEL');
+        
+        addStyling(choiceContentElement,  css.choiceContent); 
+        addStyling(choiceCheckBoxElement, css.choiceCheckBox); 
+        addStyling(choiceLabelElement,    css.choiceLabel); 
+
+        choiceDom.choiceContentElement = choiceContentElement;
+        choiceDom.choiceCheckBoxElement = choiceCheckBoxElement;
+        choiceDom.choiceLabelElement = choiceLabelElement;
+        
+        let choiceSelectedToggle = toggleStyling(choiceElement, css.choice_selected);
+        let updateSelected = function(){ 
+            choiceSelectedToggle(wrap.isOptionSelected);
+            choiceCheckBoxElement.checked = wrap.isOptionSelected;
+            if (wrap.isOptionDisabled || wrap.choice.isHoverIn){
+                choiceHoverToggle(wrap.choice.isHoverIn, true);
+            }
+        }
+
+        let choiceDisabledToggle = toggleStyling(choiceElement, css.choice_disabled);
+        let choiceCheckBoxDisabledToggle = toggleStyling(choiceCheckBoxElement, css.choiceCheckBox_disabled);
+        let choiceLabelDisabledToggle = toggleStyling(choiceLabelElement, css.choiceLabel_disabled);
+        let choiceCursorDisabledToggle = toggleStyling(choiceElement, {classes:[], styles:{cursor:"default"}}); 
+        let updateDisabled = function(){
+            choiceDisabledToggle(wrap.isOptionDisabled);
+            choiceCheckBoxDisabledToggle(wrap.isOptionDisabled);
+            choiceLabelDisabledToggle(wrap.isOptionDisabled);
+    
+            // do not desable checkBox if option is selected! there should be possibility to unselect "disabled"
+            let isCheckBoxDisabled = wrap.isOptionDisabled && !wrap.isOptionSelected;
+            choiceCheckBoxElement.disabled = isCheckBoxDisabled;
+            choiceCursorDisabledToggle(isCheckBoxDisabled);
+        }
+
+        choiceDomManagerHandlers.updateData = ()=>updateDataInternal(wrap, choiceLabelElement);
+        choiceDomManagerHandlers.updateHoverIn = updateHoverIn;
+        choiceDomManagerHandlers.updateSelected = updateSelected;
+        choiceDomManagerHandlers.updateDisabled = updateDisabled;
+        composeSync(choice.dispose, ()=>{  
+            choiceDomManagerHandlers.updateData = null;
+            choiceDomManagerHandlers.updateHoverIn = null;
+            choiceDomManagerHandlers.updateSelected = null;
+            choiceDomManagerHandlers.updateDisabled = null;
+            choiceDom.choiceContentElement = null;
+            choiceDom.choiceCheckBoxElement = null;
+            choiceDom.choiceLabelElement = null;
+        });
+
+        choiceDomManagerHandlers.updateData();
+
+        let updateHoverIn = function(){
+            choiceHoverToggle(wrap.choice.isHoverIn);
+        }
+        choiceDomManagerHandlers.updateHoverIn=updateHoverIn;
+
+        let eventBinder = EventBinder();
+        eventBinder.bind(choiceElement, "click", event=>choice.choiсeClick(event) );
+
+        composeSync(choice.dispose, ()=>{  eventBinder.unbind(); });
+    }
+}
+
 
 function UpdateOptionsSelectedAspect(wrapsCollection, getSelectedAspect){
     return {

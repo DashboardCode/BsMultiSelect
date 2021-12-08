@@ -3,13 +3,6 @@ export function OptionAttachAspect(createWrapAspect, createChoiceBaseAspect, bui
         attach(option){
             let wrap = createWrapAspect.createWrap(option);
             wrap.choice = createChoiceBaseAspect.createChoiceBase(option);
-
-            // let optGroup = optGroupAspect.getOptionOptGroup(option);
-            // if (prevOptGroup != optGroup){
-            //     currentOptGroup = optGroup;
-            //     var optGroupWrap = optGroupBuildAspect.wrapAndAttachOptGroupItem(option);
-            // }
-            // wrap.optGroup = currentOptGroup;
             
             
             wraps.push(wrap); // note: before attach because attach need it for navigation management

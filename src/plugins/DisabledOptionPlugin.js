@@ -16,8 +16,8 @@ export function plug(configuration){
     return (aspects) => {
         return {
             layout: () => {
-                let {isChoiceSelectableAspect, createWrapAspect,  buildChoiceAspect,
-                    filterPredicateAspect, wrapsCollection, optionToggleAspect, producePickAspect, pickDomFactory } = aspects;
+                let {isChoiceSelectableAspect, createWrapAspect,  produceChoiceAspect,
+                    filterPredicateAspect, wrapsCollection,  producePickAspect, pickDomFactory } = aspects;
                 
                 let {getIsOptionDisabled, options, css} = configuration;
                 if (options) {
@@ -42,20 +42,7 @@ export function plug(configuration){
                     return wrap;
                 };
             
-                let origToggle = optionToggleAspect.toggle;
-                optionToggleAspect.toggle = (wrap) => {
-                    let success = false;
-                    if (wrap.isOptionSelected!==undefined){
-                        if (wrap.isOptionSelected || !wrap.isOptionDisabled) // TODO: declare dependency on SelectedOptionPlugin
-                            success = origToggle(wrap);
-                    }
-                    else{
-                        if (!wrap.isOptionDisabled) {
-                            success = origToggle(wrap);
-                        }
-                    }
-                    return success;
-                };
+                
             
                 let origIsSelectable = isChoiceSelectableAspect.isSelectable;
                 isChoiceSelectableAspect.isSelectable = (wrap) => {
@@ -67,12 +54,7 @@ export function plug(configuration){
                     return  !wrap.isOptionDisabled && origFilterPredicate(wrap, text) ;
                 };
             
-                let origBuildChoice = buildChoiceAspect.buildChoice;
-                buildChoiceAspect.buildChoice = (wrap) => {
-                    origBuildChoice(wrap);
-                    wrap.updateDisabled = wrap.choice.choiceDomManagerHandlers.updateDisabled
-                    wrap.choice.dispose = composeSync(()=>{wrap.updateDisabled=null;}, wrap.choice.dispose);
-                }
+                ExtendProduceChoiceAspectProduceChoice(produceChoiceAspect);
                 
                 ExtendProducePickAspectProducePick(producePickAspect);
             
@@ -86,6 +68,33 @@ export function plug(configuration){
                 };
             }
         }
+    }
+}
+
+function ExtendProduceChoiceAspectProduceChoice(produceChoiceAspect){
+    let orig = produceChoiceAspect.produceChoice;
+    produceChoiceAspect.produceChoice = (wrap) => {
+        let val = orig(wrap);
+        wrap.choice.choiceDomManagerHandlers.updateDisabled();
+        wrap.updateDisabled = wrap.choice.choiceDomManagerHandlers.updateDisabled
+        wrap.choice.dispose = composeSync(()=>{wrap.updateDisabled=null;}, wrap.choice.dispose);
+
+        let origToggle = wrap.choice.tryToggleChoice;
+        wrap.choice.tryToggleChoice = () => {
+            let success = false;
+            if (wrap.isOptionSelected!==undefined){
+                if (wrap.isOptionSelected || !wrap.isOptionDisabled) // TODO: declare dependency on SelectedOptionPlugin
+                    success = origToggle(wrap);
+            }
+            else{
+                if (!wrap.isOptionDisabled) {
+                    success = origToggle(wrap);
+                }
+            }
+            return success;
+        };
+
+        return val;
     }
 }
 

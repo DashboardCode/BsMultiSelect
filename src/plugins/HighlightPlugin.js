@@ -7,17 +7,17 @@ export function HighlightPlugin(defaults){
 
 function ExtendChoiceDomFactory(choiceDomFactory, optionPropertiesAspect){
     var origChoiceDomFactoryCreate = choiceDomFactory.create;
-    choiceDomFactory.create = (choiceElement, wrap) => {
-        var value = origChoiceDomFactoryCreate(choiceElement, wrap);
-        value.choiceDomManagerHandlers.updateHighlighted = () => {
-            var text = optionPropertiesAspect.getText(wrap.option);
+    choiceDomFactory.create = (choice) => {
+        origChoiceDomFactoryCreate(choice);
+        let choiceElement = choice.choiceDom.choiceElement;
+        choice.choiceDomManagerHandlers.updateHighlighted = () => {
+            var text = optionPropertiesAspect.getText(choice.wrap.option);
             var highlighter = aspects.highlightAspect.getHighlighter();
             if (highlighter)
-                highlighter(choiceElement, value.choiceDom, text);                    
+                highlighter(choiceElement, choice.choiceDom, text);                    
             else
             choiceElement.textContent = text;
         };
-        return value;
     }
 }
 
@@ -31,7 +31,7 @@ export function plug(configuration){
                 ExtendChoiceDomFactory(choiceDomFactory, optionPropertiesAspect);
             },
             layout(){
-                let {highlightAspect, filterManagerAspect,  buildChoiceAspect} = aspects;
+                let {highlightAspect, filterManagerAspect,  produceChoiceAspect} = aspects;
                 if (highlightAspect){
                     let origProcessEmptyInput = filterManagerAspect.processEmptyInput;
                     filterManagerAspect.processEmptyInput = function(){
@@ -43,11 +43,11 @@ export function plug(configuration){
                         highlightAspect.set(text);
                         origSetFilter(text);
                     }
-                    let origBuildChoice = buildChoiceAspect.buildChoice;
-                    buildChoiceAspect.buildChoice = function(wrap){
-                        origBuildChoice(wrap);
-                        let origSetVisible =  wrap.choice.setVisible;
-                        wrap.choice.setVisible = function(v){
+                    let origProduceChoice = produceChoiceAspect.produceChoice;
+                    produceChoiceAspect.produceChoice = function(wrap){
+                        origProduceChoice(wrap);
+                        let origSetVisible =  wrap.choice.choiceDomManagerHandlers.setVisible;
+                        wrap.choice.choiceDomManagerHandlers.setVisible = function(v){
                           origSetVisible(v);
                           wrap.choice.choiceDomManagerHandlers.updateHighlighted();
                         }

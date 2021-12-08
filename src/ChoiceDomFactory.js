@@ -1,5 +1,6 @@
 import {EventBinder} from './ToolsDom';
 import {addStyling, toggleStyling} from './ToolsStyling';
+import {composeSync} from './ToolsJs';
 
 export function ChoiceDomFactory(css, createElementAspect,  optionPropertiesAspect){
     var updateDataInternal = function(wrap, element){
@@ -7,11 +8,14 @@ export function ChoiceDomFactory(css, createElementAspect,  optionPropertiesAspe
     }
     //TODO move check which aspects availbale like wrap.hasOwnProperty("isOptionSelected") to there
     return {
-        create(choiceElement, wrap){
-            let choiceDom = null;
-            let choiceDomManagerHandlers = null;
-            let choiceHoverToggle = null;
+        create(choice){
+            let wrap = choice.wrap;
+            let choiceElement = choice.choiceDom.choiceElement;
+            let choiceDom = choice.choiceDom;
+            let choiceDomManagerHandlers = choice.choiceDomManagerHandlers;
 
+            let choiceHoverToggle = null;
+            
             if (wrap.hasOwnProperty("isOptionSelected")){
                 
                 choiceHoverToggle = toggleStyling(choiceElement, () =>
@@ -28,12 +32,9 @@ export function ChoiceDomFactory(css, createElementAspect,  optionPropertiesAspe
                 addStyling(choiceCheckBoxElement, css.choiceCheckBox); 
                 addStyling(choiceLabelElement,    css.choiceLabel); 
 
-                choiceDom = {
-                    choiceElement,
-                    choiceContentElement,
-                    choiceCheckBoxElement,
-                    choiceLabelElement
-                };
+                choiceDom.choiceContentElement = choiceContentElement;
+                choiceDom.choiceCheckBoxElement = choiceCheckBoxElement;
+                choiceDom.choiceLabelElement = choiceLabelElement;
                 
                 let choiceSelectedToggle = toggleStyling(choiceElement, css.choice_selected);
                 let updateSelected = function(){ 
@@ -59,12 +60,19 @@ export function ChoiceDomFactory(css, createElementAspect,  optionPropertiesAspe
                     choiceCursorDisabledToggle(isCheckBoxDisabled);
                 }
 
-                choiceDomManagerHandlers = {
-                    updateData: ()=>updateDataInternal(wrap, choiceLabelElement),
-                    updateHoverIn,
-                    updateSelected, 
-                    updateDisabled,
-                }
+                choiceDomManagerHandlers.updateData = ()=>updateDataInternal(wrap, choiceLabelElement);
+                choiceDomManagerHandlers.updateHoverIn = updateHoverIn;
+                choiceDomManagerHandlers.updateSelected = updateSelected;
+                choiceDomManagerHandlers.updateDisabled = updateDisabled;
+                composeSync(choice.dispose, ()=>{  
+                    choiceDomManagerHandlers.updateData = null;
+                    choiceDomManagerHandlers.updateHoverIn = null;
+                    choiceDomManagerHandlers.updateSelected = null;
+                    choiceDomManagerHandlers.updateDisabled = null;
+                    choiceDom.choiceContentElement = null;
+                    choiceDom.choiceCheckBoxElement = null;
+                    choiceDom.choiceLabelElement = null;
+                });
 
             }else{
                 choiceHoverToggle    = toggleStyling(choiceElement, ()=>
@@ -75,14 +83,16 @@ export function ChoiceDomFactory(css, createElementAspect,  optionPropertiesAspe
                 choiceElement.innerHTML = '<div></div>';
                 let choiceContentElement = choiceElement.querySelector('div');
 
-                choiceDom = {
-                    choiceElement,
-                    choiceContentElement
-                };
-                choiceDomManagerHandlers = {
-                    updateData: ()=>updateDataInternal(wrap, choiceContentElement),
-                }
+                choiceDom.choiceContentElement = choiceContentElement;
+                
+                choiceDomManagerHandlers.updateData = ()=>updateDataInternal(wrap, choiceContentElement);
+                composeSync(choice.dispose, ()=>{  
+                        choiceDomManagerHandlers.updateData = null;
+                        choiceDom.choiceContentElement = null;
+                });
             }
+
+            choiceDomManagerHandlers.updateData();
 
             let updateHoverIn = function(){
                 choiceHoverToggle(wrap.choice.isHoverIn);
@@ -90,15 +100,10 @@ export function ChoiceDomFactory(css, createElementAspect,  optionPropertiesAspe
             choiceDomManagerHandlers.updateHoverIn=updateHoverIn;
 
             let eventBinder = EventBinder();
-            eventBinder.bind(choiceElement, "click", event=>choiceDomManagerHandlers.composeToggle(event) );
+            eventBinder.bind(choiceElement, "click", event=>choice.choiсeClick(event) );
 
-            return {
-                choiceDom,
-                choiceDomManagerHandlers, 
-                dispose(){
-                    eventBinder.unbind();
-                }
-            }
+            composeSync(choice.dispose, ()=>{  eventBinder.unbind(); });
+
         }
     }
 }

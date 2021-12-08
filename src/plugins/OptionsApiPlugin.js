@@ -18,11 +18,11 @@ export function plug(){
                             let wrap = createWrapAspect.createWrap(option);
                             wrap.choice= createChoiceBaseAspect.createChoiceBase(option);
                             wraps.insert(key, wrap);
-                            let nextChoice = ()=> wrapsCollection.getNext(key, c => c.choice.choiceElement);
+                            let nextChoice = ()=> wrapsCollection.getNext(key, c => c.choice.choiceDom.choiceElement);
                         
                             buildAndAttachChoiceAspect.buildAndAttachChoice(
                                 wrap,
-                                () => nextChoice()?.choice.choiceElement
+                                () => nextChoice()?.choice.choiceDom.choiceElement
                             )
                         }
                     
@@ -30,7 +30,7 @@ export function plug(){
                             resetLayoutAspect.resetLayout(); // always hide 1st, then reset filter
 
                             var wrap = wraps.remove(key);
-                            wrap.choice.remove?.();
+                            wrap.choice.choiceDomManagerHandlers.detach?.();
                             wrap.dispose?.();
                         }
                     }

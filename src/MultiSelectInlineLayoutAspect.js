@@ -5,10 +5,9 @@ export function MultiSelectInlineLayoutAspect (
         environment, filterDom, choicesDom, 
         choicesVisibilityAspect, 
         hoveredChoiceAspect, navigateAspect, filterManagerAspect,
-        focusInAspect, optionToggleAspect,
-        createPickHandlersAspect,
+        focusInAspect,
         picksList,
-        inputAspect, specialPicksEventsAspect,  buildChoiceAspect, 
+        inputAspect, specialPicksEventsAspect,  produceChoiceAspect, 
         resetLayoutAspect,
         picksElementAspect,
         
@@ -142,7 +141,7 @@ export function MultiSelectInlineLayoutAspect (
     };
  
     function adoptChoiceElement(wrap){
-        let choiceElement = wrap.choice.choiceElement;
+        let choiceElement = wrap.choice.choiceDom.choiceElement;
         // in chrome it happens on "become visible" so we need to skip it, 
         // for IE11 and edge it doesn't happens, but for IE11 and Edge it doesn't happens on small 
         // mouse moves inside the item. 
@@ -214,7 +213,7 @@ export function MultiSelectInlineLayoutAspect (
     function hoveredToSelected(){
         let hoveredWrap = hoveredChoiceAspect.getHoveredChoice(); 
         if (hoveredWrap){
-            let wasToggled = optionToggleAspect.toggle(hoveredWrap); 
+            let wasToggled = hoveredWrap.choice.tryToggleChoice(); 
             if (wasToggled) {
                 resetLayoutAspect.resetLayout();
             }
@@ -349,17 +348,19 @@ export function MultiSelectInlineLayoutAspect (
             }
             
             
-            let origBuildChoice = buildChoiceAspect.buildChoice;
-            buildChoiceAspect.buildChoice = (wrap) => {
-                origBuildChoice(wrap);
-                let pickHandlers = createPickHandlersAspect.createPickHandlers(wrap);
-        
-                wrap.choice.remove = composeSync(wrap.choice.remove, () => {
+            let origProduceChoice = produceChoiceAspect.produceChoice;
+            produceChoiceAspect.produceChoice = (wrap) => {
+                origProduceChoice(wrap);
+                var pickHandlers = wrap.choice.addPickForChoice(); 
+                // note pickHandlers.removeAndDispose not exist (till produce is created)
+                wrap.choice.choiceDomManagerHandlers.detach = composeSync(wrap.choice.choiceDomManagerHandlers.detach, () => {
                     if (pickHandlers.removeAndDispose) {
                         pickHandlers.removeAndDispose();
                         pickHandlers.removeAndDispose=null;
                     }
                 })
+
+                wrap.choice.choiсeClick = composeSync(wrap.choice.choiсeClick, ()=>filterDom.setFocus());
                 
                 let unbindChoiceElement = adoptChoiceElement(wrap);
                 wrap.choice.dispose = composeSync(unbindChoiceElement, wrap.choice.dispose);

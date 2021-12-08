@@ -25,3 +25,25 @@ export function PickDomFactory(css, createElementAspect, optionPropertiesAspect)
         }
     }
 }
+
+
+// export function PickDomFactoryAlt(css, createElementAspect, optionPropertiesAspect){ 
+//     return { 
+//         create(pickElement, option){
+//             let pickContentElement = createElementAspect.createElement('SPAN');
+//             pickElement.appendChild(pickContentElement);
+//             addStyling(pickContentElement, css.pickContent);
+//             function updateData(){
+//                 pickContentElement.textContent = optionPropertiesAspect.getText(option);
+//             }
+//             updateData();
+//             let pickDom = { pickContentElement };
+//             let pickDomManagerHandlers = { updateData };
+//             return {
+//                 pickDom,
+//                 pickDomManagerHandlers,
+//                 dispose: {pickDom.pickContentElement=null; pickDomManagerHandlers.updateData=null;}
+//             }
+//         }
+//     }
+// }

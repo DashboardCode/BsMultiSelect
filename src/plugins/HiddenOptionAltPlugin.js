@@ -22,7 +22,7 @@ export function plug(configuration){
                 let origBuildAndAttachChoice = buildAndAttachChoiceAspect.buildAndAttachChoice;
                 buildAndAttachChoiceAspect.buildAndAttachChoice=(wrap,  getNextElement) => {
                     origBuildAndAttachChoice(wrap, getNextElement);
-                    wrap.choice.setVisible(!wrap.isOptionHidden)
+                    wrap.choice.choiceDomManagerHandlers.setVisible(!wrap.isOptionHidden)
                 }
             
                 var origIsSelectable = isChoiceSelectableAspect.isSelectable;
@@ -72,6 +72,6 @@ function updateChoiceHidden(wrap, key, getNextNonHidden, countableChoicesList, g
             let nextChoice = getNextNonHidden(key); // TODO: should not rely on element but do
             countableChoicesList.add(wrap, nextChoice); 
         }
-        wrap.choice.setVisible(!wrap.isOptionHidden)
+        wrap.choice.choiceDomManagerHandlers.setVisible(!wrap.isOptionHidden)
     }
 }

@@ -4,7 +4,7 @@ export function ProducePickAspect(picksDom, pickDomFactory){
         producePick(wrap){
             let {pickElement, attach, detach} = picksDom.createPickElement(); 
             let pickDom = {pickElement};
-            let pickDomManagerHandlers = {attach};
+            let pickDomManagerHandlers = {attach, detach};
             
             let pick = {
                 wrap,
@@ -25,7 +25,7 @@ export function ProducePickAspect(picksDom, pickDomFactory){
             pickDomFactory.create(pick); 
                 
             pick.pickDomManagerHandlers.attach();
-
+            
             return pick;
         } 
     }

@@ -61,8 +61,8 @@ function choicesDynamicStyling(aspects, window){
         var origNavigateAspectNavigate = navigateAspect.navigate;
         navigateAspect.navigate = function(down){
             var wrap = origNavigateAspectNavigate(down);
-            if (wrap!= null && wrap.choice!=null && wrap.choice.choiceElement!=null)
-            wrap.choice.choiceElement.scrollIntoView(false); // alignTo false -  scroll to the top bottom of dropdown first
+            if (wrap!= null && wrap.choice!=null && wrap.choice.choiceDom.choiceElement!=null)
+            wrap.choice.choiceDom.choiceElement.scrollIntoView(false); // alignTo false -  scroll to the top bottom of dropdown first
             // TODO: BUG if mouse left on the dropdow scroll to bottom and one after doesn't work properly
             return wrap;
         }

@@ -1,5 +1,5 @@
 /*!
-  * BsMultiSelect v1.2.0-beta.26 (https://dashboardcode.github.io/BsMultiSelect/)
+  * BsMultiSelect v1.2.0-beta.27 (https://dashboardcode.github.io/BsMultiSelect/)
   * Copyright 2017-2021 Roman Pokrovskij (github user rpokrovskij)
   * Licensed under Apache 2 (https://github.com/DashboardCode/BsMultiSelect/blob/master/LICENSE)
   */
@@ -828,7 +828,26 @@
           pickDomManagerHandlers.updateData(); // set visual text
         }
       };
-    }
+    } // export function PickDomFactoryAlt(css, createElementAspect, optionPropertiesAspect){ 
+    //     return { 
+    //         create(pickElement, option){
+    //             let pickContentElement = createElementAspect.createElement('SPAN');
+    //             pickElement.appendChild(pickContentElement);
+    //             addStyling(pickContentElement, css.pickContent);
+    //             function updateData(){
+    //                 pickContentElement.textContent = optionPropertiesAspect.getText(option);
+    //             }
+    //             updateData();
+    //             let pickDom = { pickContentElement };
+    //             let pickDomManagerHandlers = { updateData };
+    //             return {
+    //                 pickDom,
+    //                 pickDomManagerHandlers,
+    //                 dispose: {pickDom.pickContentElement=null; pickDomManagerHandlers.updateData=null;}
+    //             }
+    //         }
+    //     }
+    // }
 
     function ChoiceDomFactory(css, createElementAspect, optionPropertiesAspect) {
       var updateDataInternal = function updateDataInternal(wrap, element) {
@@ -837,9 +856,11 @@
 
 
       return {
-        create: function create(choiceElement, wrap) {
-          var choiceDom = null;
-          var choiceDomManagerHandlers = null;
+        create: function create(choice) {
+          var wrap = choice.wrap;
+          var choiceElement = choice.choiceDom.choiceElement;
+          var choiceDom = choice.choiceDom;
+          var choiceDomManagerHandlers = choice.choiceDomManagerHandlers;
           var choiceHoverToggle = null;
 
           if (wrap.hasOwnProperty("isOptionSelected")) {
@@ -853,12 +874,9 @@
             addStyling(choiceContentElement, css.choiceContent);
             addStyling(choiceCheckBoxElement, css.choiceCheckBox);
             addStyling(choiceLabelElement, css.choiceLabel);
-            choiceDom = {
-              choiceElement: choiceElement,
-              choiceContentElement: choiceContentElement,
-              choiceCheckBoxElement: choiceCheckBoxElement,
-              choiceLabelElement: choiceLabelElement
-            };
+            choiceDom.choiceContentElement = choiceContentElement;
+            choiceDom.choiceCheckBoxElement = choiceCheckBoxElement;
+            choiceDom.choiceLabelElement = choiceLabelElement;
             var choiceSelectedToggle = toggleStyling(choiceElement, css.choice_selected);
 
             var updateSelected = function updateSelected() {
@@ -890,14 +908,22 @@
               choiceCursorDisabledToggle(isCheckBoxDisabled);
             };
 
-            choiceDomManagerHandlers = {
-              updateData: function updateData() {
-                return updateDataInternal(wrap, choiceLabelElement);
-              },
-              updateHoverIn: updateHoverIn,
-              updateSelected: updateSelected,
-              updateDisabled: updateDisabled
+            choiceDomManagerHandlers.updateData = function () {
+              return updateDataInternal(wrap, choiceLabelElement);
             };
+
+            choiceDomManagerHandlers.updateHoverIn = updateHoverIn;
+            choiceDomManagerHandlers.updateSelected = updateSelected;
+            choiceDomManagerHandlers.updateDisabled = updateDisabled;
+            composeSync(choice.dispose, function () {
+              choiceDomManagerHandlers.updateData = null;
+              choiceDomManagerHandlers.updateHoverIn = null;
+              choiceDomManagerHandlers.updateSelected = null;
+              choiceDomManagerHandlers.updateDisabled = null;
+              choiceDom.choiceContentElement = null;
+              choiceDom.choiceCheckBoxElement = null;
+              choiceDom.choiceLabelElement = null;
+            });
           } else {
             choiceHoverToggle = toggleStyling(choiceElement, function () {
               return wrap.isOptionDisabled && css.choice_disabled_hover ? css.choice_disabled_hover : css.choice_hover;
@@ -906,16 +932,19 @@
 
             var _choiceContentElement = choiceElement.querySelector('div');
 
-            choiceDom = {
-              choiceElement: choiceElement,
-              choiceContentElement: _choiceContentElement
+            choiceDom.choiceContentElement = _choiceContentElement;
+
+            choiceDomManagerHandlers.updateData = function () {
+              return updateDataInternal(wrap, _choiceContentElement);
             };
-            choiceDomManagerHandlers = {
-              updateData: function updateData() {
-                return updateDataInternal(wrap, _choiceContentElement);
-              }
-            };
+
+            composeSync(choice.dispose, function () {
+              choiceDomManagerHandlers.updateData = null;
+              choiceDom.choiceContentElement = null;
+            });
           }
+
+          choiceDomManagerHandlers.updateData();
 
           var updateHoverIn = function updateHoverIn() {
             choiceHoverToggle(wrap.choice.isHoverIn);
@@ -924,15 +953,11 @@
           choiceDomManagerHandlers.updateHoverIn = updateHoverIn;
           var eventBinder = EventBinder();
           eventBinder.bind(choiceElement, "click", function (event) {
-            return choiceDomManagerHandlers.composeToggle(event);
+            return choice.choiсeClick(event);
           });
-          return {
-            choiceDom: choiceDom,
-            choiceDomManagerHandlers: choiceDomManagerHandlers,
-            dispose: function dispose() {
-              eventBinder.unbind();
-            }
-          };
+          composeSync(choice.dispose, function () {
+            eventBinder.unbind();
+          });
         }
       };
     }
@@ -1366,7 +1391,7 @@
           showEmptyFilter = true;
           filterText = "";
           choicesEnumerableAspect.forEach(function (wrap) {
-            wrap.choice.setVisible(true);
+            wrap.choice.choiceDomManagerHandlers.setVisible(true);
           });
         },
         getFilter: function getFilter() {
@@ -1381,85 +1406,73 @@
             wrap.choice.filteredPrev = wrap.choice.filteredNext = null;
             var v = filterPredicateAspect.filterPredicate(wrap, text);
             if (v) filteredChoicesList.add(wrap);
-            wrap.choice.setVisible(v);
+            wrap.choice.choiceDomManagerHandlers.setVisible(v);
           });
         }
       };
     }
 
-    function BuildAndAttachChoiceAspect(buildChoiceAspect) {
+    function BuildAndAttachChoiceAspect(produceChoiceAspect) {
       return {
         buildAndAttachChoice: function buildAndAttachChoice(wrap, getNextElement) {
-          buildChoiceAspect.buildChoice(wrap);
-          wrap.choice.choiceElementAttach(getNextElement == null ? void 0 : getNextElement());
+          produceChoiceAspect.produceChoice(wrap);
+          wrap.choice.choiceDomManagerHandlers.attach(getNextElement == null ? void 0 : getNextElement());
         }
       };
-    } //ProducePickAspect producePick
-
-    function BuildChoiceAspect(choicesDom, choiceDomFactory, choiceClickAspect) {
+    }
+    function ProduceChoiceAspect(choicesDom, choiceDomFactory) {
       return {
-        buildChoice: function buildChoice(wrap) {
+        // 1 overrided in highlight and option disable plugins
+        // 2 call in HiddenPlugin (create)
+        // 3 overrided in layout: pick created, choice.choiceDomManagerHandlers.detach updated to remove pick
+        produceChoice: function produceChoice(wrap) {
           var _choicesDom$createCho = choicesDom.createChoiceElement(),
               choiceElement = _choicesDom$createCho.choiceElement,
-              setVisible = _choicesDom$createCho.setVisible,
               attach = _choicesDom$createCho.attach,
-              detach = _choicesDom$createCho.detach;
+              detach = _choicesDom$createCho.detach,
+              setVisible = _choicesDom$createCho.setVisible;
 
-          wrap.choice.choiceElement = choiceElement;
-          wrap.choice.choiceElementAttach = attach;
-          wrap.choice.isChoiceElementAttached = true;
-
-          var _choiceDomFactory$cre = choiceDomFactory.create(choiceElement, wrap),
-              choiceDom = _choiceDomFactory$cre.choiceDom,
-              choiceDomManagerHandlers = _choiceDomFactory$cre.choiceDomManagerHandlers,
-              dispose = _choiceDomFactory$cre.dispose;
-
-          choiceDomManagerHandlers.composeToggle = function (event) {
-            return choiceClickAspect.choiceClick(wrap);
+          var choice = wrap.choice;
+          choice.wrap = wrap;
+          choice.choiceDom = {
+            choiceElement: choiceElement
           };
+          var choiceDomManagerHandlers = {
+            attach: attach,
+            detach: detach,
+            setVisible: setVisible // TODO: refactor it there should be 3 types of not visibility: for hidden, for filtered out, for optgroup, for message item
 
-          wrap.choice.choiceDom = choiceDom;
-          choiceDomManagerHandlers.updateData();
-          if (choiceDomManagerHandlers.updateSelected) choiceDomManagerHandlers.updateSelected();
-          if (choiceDomManagerHandlers.updateDisabled) choiceDomManagerHandlers.updateDisabled();
-          wrap.choice.choiceDomManagerHandlers = choiceDomManagerHandlers;
-
-          wrap.choice.remove = function () {
-            detach();
           };
+          choice.choiceDomManagerHandlers = choiceDomManagerHandlers;
+          choiceDomFactory.create(choice); // added by "navigation (by mouse and arrows) plugin"
 
-          wrap.choice.isFilteredIn = true;
+          choice.isHoverIn = false; // internal state
 
-          wrap.choice.setHoverIn = function (v) {
-            wrap.choice.isHoverIn = v;
+          choice.setHoverIn = function (v) {
+            choice.isHoverIn = v;
             choiceDomManagerHandlers.updateHoverIn();
-          };
+          }; //choice.setHovered
 
-          wrap.choice.setVisible = function (v) {
-            wrap.choice.isFilteredIn = v;
-            setVisible(wrap.choice.isFilteredIn);
-          };
 
-          wrap.choice.dispose = function () {
-            wrap.choice.choiceDomManagerHandlers.composeToggle = null;
-            wrap.choice.choiceDomManagerHandlers = null;
-            dispose();
-            wrap.choice.choiceElement = null;
-            wrap.choice.choiceDom = null;
-            wrap.choice.choiceElementAttach = null;
-            wrap.choice.isChoiceElementAttached = false;
-            wrap.choice.remove = null; // not real data manipulation but internal state
-
-            wrap.choice.setVisible = null; // TODO: refactor it there should be 3 types of not visibility: for hidden, for filtered out, for optgroup, for message item
-
-            wrap.choice.setHoverIn = null;
-            wrap.choice.dispose = null;
-          };
+          choice.dispose = composeSync(choice.dispose, function () {
+            choiceDom.choiceElement = null;
+            choice.choiceDom = null;
+            choiceDomManagerHandlers.attach = null;
+            choiceDomManagerHandlers.detach = null;
+            choiceDomManagerHandlers.setVisible = null;
+            choice.choiceDomManagerHandlers = null;
+            choice.choiсeClick = null;
+            choice.setHoverIn = null;
+            choice.wrap = null;
+            choice.dispose = null;
+          });
 
           wrap.dispose = function () {
-            wrap.choice.dispose();
+            choice.dispose();
             wrap.dispose = null;
           };
+
+          return choice;
         }
       };
     }
@@ -1468,13 +1481,7 @@
       return {
         attach: function attach(option) {
           var wrap = createWrapAspect.createWrap(option);
-          wrap.choice = createChoiceBaseAspect.createChoiceBase(option); // let optGroup = optGroupAspect.getOptionOptGroup(option);
-          // if (prevOptGroup != optGroup){
-          //     currentOptGroup = optGroup;
-          //     var optGroupWrap = optGroupBuildAspect.wrapAndAttachOptGroupItem(option);
-          // }
-          // wrap.optGroup = currentOptGroup;
-
+          wrap.choice = createChoiceBaseAspect.createChoiceBase(option);
           wraps.push(wrap); // note: before attach because attach need it for navigation management
 
           buildAndAttachChoiceAspect.buildAndAttachChoice(wrap); //wraps.push(wrap);
@@ -1518,49 +1525,11 @@
       };
     }
 
-    // todo: remove?
-    function ChoiceClickAspect(optionToggleAspect, filterDom) {
-      return {
-        choiceClick: function choiceClick(wrap) {
-          optionToggleAspect.toggle(wrap);
-          filterDom.setFocus();
-        }
-      };
-    } // // fullMatchAspect trySetWrapSelected(fullMatchWrap.option, composeUpdateSelected(fullMatchWrap, true), true);
-
-    function OptionToggleAspect(createPickHandlersAspect, addPickAspect
-    /*, setOptionSelectedAspect*/
-    ) {
-      return {
-        toggle: function toggle(wrap) {
-          var pickHandlers = createPickHandlersAspect.createPickHandlers(wrap);
-          addPickAspect.addPick(wrap, pickHandlers);
-          return true; // TODO: process setOptionSelectedAspect
-        }
-      };
-    }
-    function AddPickAspect() {
-      return {
-        addPick: function addPick(wrap, pickHandlers) {
-          return pickHandlers.producePick();
-        }
-      };
-    }
-    function FullMatchAspect(createPickHandlersAspect, addPickAspect) {
-      return {
-        fullMatch: function fullMatch(wrap) {
-          var pickHandlers = createPickHandlersAspect.createPickHandlers(wrap);
-          addPickAspect.addPick(wrap, pickHandlers);
-          return true; // TODO: process setOptionSelectedAspect
-        }
-      };
-    }
+    // no overrides (not an aspect, just )
     function CreateChoiceBaseAspect(optionPropertiesAspect) {
       return {
         createChoiceBase: function createChoiceBase(option) {
           return {
-            //updateDisabled:null,  
-            //updateHidden:null,
             // navigation and filter support
             filteredPrev: null,
             filteredNext: null,
@@ -1568,17 +1537,10 @@
             // TODO make an index abstraction
             // internal state handlers, so they do not have "update semantics"
             isHoverIn: false,
-            isFilteredIn: false,
-            setVisible: null,
             setHoverIn: null,
-            // TODO: is it a really sense to have them there?
-            isChoiceElementAttached: false,
-            choiceElement: null,
             choiceDom: null,
-            choiceElementAttach: null,
             itemPrev: null,
             itemNext: null,
-            remove: null,
             dispose: null
           };
         }
@@ -1590,36 +1552,6 @@
           return {
             option: option
           };
-        }
-      };
-    }
-
-    function CreatePickHandlersAspect(producePickAspect, picksList) {
-      return {
-        createPickHandlers: function createPickHandlers(wrap) {
-          var pickHandlers = {
-            producePick: null,
-            // not redefined directly, but redefined in addPickAspect
-            removeAndDispose: null // not redefined, used in MultiSelectInlineLayout injected into wrap.choice.remove 
-
-          };
-
-          pickHandlers.producePick = function () {
-            var pick = producePickAspect.producePick(wrap);
-
-            var _picksList$add = picksList.add(pick),
-                removeFromPicksList = _picksList$add.remove;
-
-            pick.dispose = composeSync(removeFromPicksList, pick.dispose);
-
-            pickHandlers.removeAndDispose = function () {
-              return pick.dispose();
-            };
-
-            return pick;
-          };
-
-          return pickHandlers;
         }
       };
     }
@@ -1637,7 +1569,8 @@
             pickElement: pickElement
           };
           var pickDomManagerHandlers = {
-            attach: attach
+            attach: attach,
+            detach: detach
           };
           var pick = {
             wrap: wrap,
@@ -1729,7 +1662,7 @@
       }
     }
 
-    function InputAspect(filterDom, filterManagerAspect, fullMatchAspect) {
+    function InputAspect(filterDom, filterManagerAspect) {
       return {
         // overrided in SelectedOptionPlugin
         processInput: function processInput() {
@@ -1748,7 +1681,7 @@
               var _text = filterManagerAspect.getFilter();
 
               if (fullMatchWrap.choice.searchText == _text) {
-                var success = fullMatchAspect.fullMatch(fullMatchWrap);
+                var success = fullMatchWrap.choice.fullMatch();
 
                 if (success) {
                   filterDom.setEmpty();
@@ -1795,7 +1728,7 @@
       };
     }
 
-    function MultiSelectInlineLayoutAspect(environment, filterDom, choicesDom, choicesVisibilityAspect, hoveredChoiceAspect, navigateAspect, filterManagerAspect, focusInAspect, optionToggleAspect, createPickHandlersAspect, picksList, inputAspect, specialPicksEventsAspect, buildChoiceAspect, resetLayoutAspect, picksElementAspect, afterInputAspect, disposeAspect, pickDomFactory) {
+    function MultiSelectInlineLayoutAspect(environment, filterDom, choicesDom, choicesVisibilityAspect, hoveredChoiceAspect, navigateAspect, filterManagerAspect, focusInAspect, picksList, inputAspect, specialPicksEventsAspect, produceChoiceAspect, resetLayoutAspect, picksElementAspect, afterInputAspect, disposeAspect, pickDomFactory) {
       //return  
       var choicesElement = choicesDom.choicesElement;
       var window = environment.window;
@@ -1914,7 +1847,7 @@
       };
 
       function adoptChoiceElement(wrap) {
-        var choiceElement = wrap.choice.choiceElement; // in chrome it happens on "become visible" so we need to skip it, 
+        var choiceElement = wrap.choice.choiceDom.choiceElement; // in chrome it happens on "become visible" so we need to skip it, 
         // for IE11 and edge it doesn't happens, but for IE11 and Edge it doesn't happens on small 
         // mouse moves inside the item. 
         // https://stackoverflow.com/questions/59022563/browser-events-mouseover-doesnt-happen-when-you-make-element-visible-and-mous
@@ -1983,7 +1916,7 @@
         var hoveredWrap = hoveredChoiceAspect.getHoveredChoice();
 
         if (hoveredWrap) {
-          var wasToggled = optionToggleAspect.toggle(hoveredWrap);
+          var wasToggled = hoveredWrap.choice.tryToggleChoice();
 
           if (wasToggled) {
             resetLayoutAspect.resetLayout();
@@ -2124,16 +2057,20 @@
             }
           };
 
-          var origBuildChoice = buildChoiceAspect.buildChoice;
+          var origProduceChoice = produceChoiceAspect.produceChoice;
 
-          buildChoiceAspect.buildChoice = function (wrap) {
-            origBuildChoice(wrap);
-            var pickHandlers = createPickHandlersAspect.createPickHandlers(wrap);
-            wrap.choice.remove = composeSync(wrap.choice.remove, function () {
+          produceChoiceAspect.produceChoice = function (wrap) {
+            origProduceChoice(wrap);
+            var pickHandlers = wrap.choice.addPickForChoice(); // note pickHandlers.removeAndDispose not exist (till produce is created)
+
+            wrap.choice.choiceDomManagerHandlers.detach = composeSync(wrap.choice.choiceDomManagerHandlers.detach, function () {
               if (pickHandlers.removeAndDispose) {
                 pickHandlers.removeAndDispose();
                 pickHandlers.removeAndDispose = null;
               }
+            });
+            wrap.choice.choiсeClick = composeSync(wrap.choice.choiсeClick, function () {
+              return filterDom.setFocus();
             });
             var unbindChoiceElement = adoptChoiceElement(wrap);
             wrap.choice.dispose = composeSync(unbindChoiceElement, wrap.choice.dispose);
@@ -2163,7 +2100,7 @@
       };
     }
 
-    function CountableChoicesListInsertAspect(countableChoicesList, wrapsCollection) {
+    function CountableChoicesListInsertAspect(wrapsCollection, countableChoicesList) {
       return {
         countableChoicesListInsert: function countableChoicesListInsert(wrap, key) {
           var choiceNext = wrapsCollection.getNext(key);
@@ -2278,29 +2215,13 @@
           filterDomFactory: filterDomFactory,
           picksDomFactory: picksDomFactory
         }); // --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
-        //let choicesDom = choicesDomFactory.create();
 
         var _staticDomFactory$cre = staticDomFactory.createStaticDom(),
             staticDom = _staticDomFactory$cre.staticDom,
             choicesDom = _staticDomFactory$cre.choicesDom,
             filterDom = _staticDomFactory$cre.filterDom,
             picksDom = _staticDomFactory$cre.picksDom,
-            staticManager = _staticDomFactory$cre.staticManager; // overrided in SelectElementPlugin
-        // let isDisposablePicksElementFlag=false;
-        // if (!picksElement) {
-        //     picksElement = createElementAspect.createElement('UL');
-        //     isDisposablePicksElementFlag = true; 
-        // }
-        // let picksDom  = picksDomFactory.create(staticManager.picksElement, staticManager.isDisposablePicksElementFlag);
-        // let filterDom = filterDomFactory.create(staticManager.isDisposablePicksElementFlag);
-        // containerElement.appendChild(choicesElement); 
-        // picksDom.pickFilterElement.appendChild(filterDom.filterInputElement);
-        // picksDom.picksElement.appendChild(picksDom.pickFilterElement); 
-        // choicesElement.parentNode.removeChild(choicesElement); // select
-        // //containerElement.removeChild(choicesElement);  // no select
-        // picksDom.dispose();
-        // filterDom.dispose();
-        // --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
+            staticManager = _staticDomFactory$cre.staticManager; // --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
 
 
         var optionPropertiesAspect = OptionPropertiesAspect(getText);
@@ -2308,9 +2229,9 @@
 
         var choiceDomFactory = ChoiceDomFactory(css, createElementAspect, optionPropertiesAspect); // overrided in CustomChoicesStylingsPlugin, HighlightPlugin
 
-        var createWrapAspect = CreateWrapAspect();
-        var createChoiceBaseAspect = CreateChoiceBaseAspect(optionPropertiesAspect);
-        var addPickAspect = AddPickAspect();
+        var producePickAspect = ProducePickAspect(picksDom, pickDomFactory);
+        var picksList = List();
+        var produceChoiceAspect = ProduceChoiceAspect(choicesDom, choiceDomFactory);
         var wrapsCollection = ArrayFacade();
         var countableChoicesList = DoublyLinkedList(function (wrap) {
           return wrap.choice.itemPrev;
@@ -2321,7 +2242,20 @@
         }, function (wrap, v) {
           return wrap.choice.itemNext = v;
         });
-        var countableChoicesListInsertAspect = CountableChoicesListInsertAspect(countableChoicesList, wrapsCollection);
+        var countableChoicesListInsertAspect = CountableChoicesListInsertAspect(wrapsCollection, countableChoicesList);
+        var wraps = Wraps(wrapsCollection, function () {
+          return countableChoicesList.reset();
+        }, function (w) {
+          return countableChoicesList.remove(w);
+        }, function (w, key) {
+          return countableChoicesListInsertAspect.countableChoicesListInsert(w, key);
+        }); // !!!!!!!!!!!
+        //let createChoiceHandlersAspect = CreateChoiceHandlersAspect(produceChoiceAspect, wraps);
+
+        var createWrapAspect = CreateWrapAspect();
+        var createChoiceBaseAspect = CreateChoiceBaseAspect(optionPropertiesAspect); //let addPickAspect = AddPickAspect();
+        //--------------------------
+
         var choicesEnumerableAspect = ChoicesEnumerableAspect(countableChoicesList, function (wrap) {
           return wrap.choice.itemNext;
         });
@@ -2349,17 +2283,7 @@
         var hoveredChoiceAspect = HoveredChoiceAspect();
         var navigateAspect = NavigateAspect(hoveredChoiceAspect, function (down, hoveredChoice) {
           return filterManagerAspect.getNavigateManager().navigate(down, hoveredChoice);
-        });
-        var picksList = List(); // !!!!!!!!!!
-
-        var wraps = Wraps(wrapsCollection, function () {
-          return countableChoicesList.reset();
-        }, function (w) {
-          return countableChoicesList.remove(w);
-        }, function (w, key) {
-          return countableChoicesListInsertAspect.countableChoicesListInsert(w, key);
-        }); // !!!!!!!!!!!
-        // TODO: union to events or create event bus
+        }); // TODO: union to events or create event bus
 
         eventHandlers.plugStaticDom({
           environment: environment,
@@ -2379,25 +2303,22 @@
           createChoiceBaseAspect: createChoiceBaseAspect,
           picksList: picksList,
           wraps: wraps,
-          addPickAspect: addPickAspect
+          //addPickAspect,
+          producePickAspect: producePickAspect,
+          produceChoiceAspect: produceChoiceAspect
         }); // apply selectElement support;  
         // TODO: to staticManager
         //let {staticManager, staticDom, filterDom, picksDom, choicesDom} = staticDomFactory.createStaticDom(); // overrided in SelectElementPlugin
         // after this we can use staticDom (means generated DOM elements) in plugin construtctor, what simplifies parameters passing a lot   
 
         var specialPicksEventsAspect = SpecialPicksEventsAspect();
-        var choicesVisibilityAspect = ChoicesVisibilityAspect(choicesDom.choicesElement);
         var resetFilterListAspect = ResetFilterListAspect(filterDom, filterManagerAspect);
         var resetFilterAspect = ResetFilterAspect(filterDom, resetFilterListAspect);
         var focusInAspect = FocusInAspect(picksDom);
-        var producePickAspect = ProducePickAspect(picksDom, pickDomFactory);
-        var createPickHandlersAspect = CreatePickHandlersAspect(producePickAspect, picksList);
-        var optionToggleAspect = OptionToggleAspect(createPickHandlersAspect, addPickAspect);
-        var fullMatchAspect = FullMatchAspect(createPickHandlersAspect, addPickAspect);
-        var inputAspect = InputAspect(filterDom, filterManagerAspect, fullMatchAspect);
-        var choiceClickAspect = ChoiceClickAspect(optionToggleAspect, filterDom);
-        var buildChoiceAspect = BuildChoiceAspect(choicesDom, choiceDomFactory, choiceClickAspect);
-        var buildAndAttachChoiceAspect = BuildAndAttachChoiceAspect(buildChoiceAspect);
+        var inputAspect = InputAspect(filterDom, filterManagerAspect
+        /*, fullMatchAspect*/
+        );
+        var buildAndAttachChoiceAspect = BuildAndAttachChoiceAspect(produceChoiceAspect);
         var resetLayoutAspect = ResetLayoutAspect(resetFilterAspect); //!!!!!!!!!
         //createWrapAspect, createChoiceBaseAspect, buildAndAttachChoiceAspect, wraps
 
@@ -2408,8 +2329,9 @@
 
         var updateAspect = UpdateAspect(updateDataAspect);
         var picksElementAspect = PicksElementAspect(picksDom.picksElement);
+        var choicesVisibilityAspect = ChoicesVisibilityAspect(choicesDom.choicesElement);
         var afterInputAspect = AfterInputAspect(filterManagerAspect, navigateAspect, choicesVisibilityAspect, hoveredChoiceAspect);
-        var multiSelectInlineLayoutAspect = MultiSelectInlineLayoutAspect(environment, filterDom, choicesDom, choicesVisibilityAspect, hoveredChoiceAspect, navigateAspect, filterManagerAspect, focusInAspect, optionToggleAspect, createPickHandlersAspect, picksList, inputAspect, specialPicksEventsAspect, buildChoiceAspect, resetLayoutAspect, picksElementAspect, afterInputAspect, disposeAspect, pickDomFactory);
+        var multiSelectInlineLayoutAspect = MultiSelectInlineLayoutAspect(environment, filterDom, choicesDom, choicesVisibilityAspect, hoveredChoiceAspect, navigateAspect, filterManagerAspect, focusInAspect, picksList, inputAspect, specialPicksEventsAspect, produceChoiceAspect, resetLayoutAspect, picksElementAspect, afterInputAspect, disposeAspect, pickDomFactory);
         eventHandlers.layout((_eventHandlers$layout = {
           staticDom: staticDom,
           picksDom: picksDom,
@@ -2418,19 +2340,14 @@
           resetLayoutAspect: resetLayoutAspect,
           choicesVisibilityAspect: choicesVisibilityAspect,
           staticManager: staticManager,
-          buildChoiceAspect: buildChoiceAspect,
-          optionToggleAspect: optionToggleAspect,
-          choiceClickAspect: choiceClickAspect,
           buildAndAttachChoiceAspect: buildAndAttachChoiceAspect,
           optionsLoopAspect: optionsLoopAspect,
           optionAttachAspect: optionAttachAspect,
-          producePickAspect: producePickAspect,
-          createPickHandlersAspect: createPickHandlersAspect,
           inputAspect: inputAspect,
           resetFilterListAspect: resetFilterListAspect,
           resetFilterAspect: resetFilterAspect,
           specialPicksEventsAspect: specialPicksEventsAspect
-        }, _eventHandlers$layout["resetLayoutAspect"] = resetLayoutAspect, _eventHandlers$layout.focusInAspect = focusInAspect, _eventHandlers$layout.loadAspect = loadAspect, _eventHandlers$layout.updateDataAspect = updateDataAspect, _eventHandlers$layout.updateAspect = updateAspect, _eventHandlers$layout.fullMatchAspect = fullMatchAspect, _eventHandlers$layout.picksElementAspect = picksElementAspect, _eventHandlers$layout.afterInputAspect = afterInputAspect, _eventHandlers$layout.multiSelectInlineLayoutAspect = multiSelectInlineLayoutAspect, _eventHandlers$layout));
+        }, _eventHandlers$layout["resetLayoutAspect"] = resetLayoutAspect, _eventHandlers$layout.focusInAspect = focusInAspect, _eventHandlers$layout.loadAspect = loadAspect, _eventHandlers$layout.updateDataAspect = updateDataAspect, _eventHandlers$layout.updateAspect = updateAspect, _eventHandlers$layout.picksElementAspect = picksElementAspect, _eventHandlers$layout.afterInputAspect = afterInputAspect, _eventHandlers$layout.multiSelectInlineLayoutAspect = multiSelectInlineLayoutAspect, _eventHandlers$layout));
         multiSelectInlineLayoutAspect.layout(); // TODO: to staticManager
 
         eventHandlers.append();
@@ -3478,7 +3395,7 @@
             var createWrapAspect = aspects.createWrapAspect,
                 isChoiceSelectableAspect = aspects.isChoiceSelectableAspect,
                 wrapsCollection = aspects.wrapsCollection,
-                buildChoiceAspect = aspects.buildChoiceAspect,
+                produceChoiceAspect = aspects.produceChoiceAspect,
                 buildAndAttachChoiceAspect = aspects.buildAndAttachChoiceAspect,
                 countableChoicesListInsertAspect = aspects.countableChoicesListInsertAspect,
                 countableChoicesList = aspects.countableChoicesList;
@@ -3539,12 +3456,12 @@
 
                 api.updateOptionsHidden = function () {
                   return wrapsCollection.forLoop(function (wrap, key) {
-                    return updateChoiceHidden(wrap, key, getNextNonHidden, countableChoicesList, getIsOptionHidden, buildChoiceAspect);
+                    return updateChoiceHidden(wrap, key, getNextNonHidden, countableChoicesList, getIsOptionHidden, produceChoiceAspect);
                   });
                 };
 
                 api.updateOptionHidden = function (key) {
-                  return updateChoiceHidden(wrapsCollection.get(key), key, getNextNonHidden, countableChoicesList, getIsOptionHidden, buildChoiceAspect);
+                  return updateChoiceHidden(wrapsCollection.get(key), key, getNextNonHidden, countableChoicesList, getIsOptionHidden, produceChoiceAspect);
                 }; // TODO create updateHidden ? 
                 // it is too complex since we need to find the next non hidden, when this depends on key 
                 // there should be the backreference "wrap -> index" invited before
@@ -3562,12 +3479,10 @@
         return void 0;
       };
 
-      wrap.choice.isChoiceElementAttached = false;
-      wrap.choice.choiceElement = null;
-      wrap.choice.choiceElementAttach = null;
-      wrap.choice.setVisible = null;
+      wrap.choice.choicesDom = {};
+      wrap.choice.choiceDomManagerHandlers = {};
+      wrap.choice.choiceDomManagerHandlers.setVisible = null;
       wrap.choice.setHoverIn = null;
-      wrap.choice.remove = null;
 
       wrap.choice.dispose = function () {
         wrap.choice.dispose = null;
@@ -3579,7 +3494,7 @@
       };
     }
 
-    function updateChoiceHidden(wrap, key, getNextNonHidden, countableChoicesList, getIsOptionHidden, buildChoiceAspect) {
+    function updateChoiceHidden(wrap, key, getNextNonHidden, countableChoicesList, getIsOptionHidden, produceChoiceAspect) {
       var newIsOptionHidden = getIsOptionHidden(wrap.option);
 
       if (newIsOptionHidden != wrap.isOptionHidden) {
@@ -3587,13 +3502,13 @@
 
         if (wrap.isOptionHidden) {
           countableChoicesList.remove(wrap);
-          wrap.choice.remove();
+          wrap.choice.choiceDomManagerHandlers.detach();
           buildHiddenChoice(wrap);
         } else {
           var nextChoice = getNextNonHidden(key);
           countableChoicesList.add(wrap, nextChoice);
-          buildChoiceAspect.buildChoice(wrap);
-          wrap.choice.choiceElementAttach(nextChoice == null ? void 0 : nextChoice.choice.choiceElement);
+          produceChoiceAspect.produceChoice(wrap);
+          wrap.choice.choiceDomManagerHandlers.attach(nextChoice == null ? void 0 : nextChoice.choice.choiceDom.choiceElement);
         }
       }
     }
@@ -3700,14 +3615,14 @@
 
               var nextChoice = function nextChoice() {
                 return wrapsCollection.getNext(key, function (c) {
-                  return c.choice.choiceElement;
+                  return c.choice.choiceDom.choiceElement;
                 });
               };
 
               buildAndAttachChoiceAspect.buildAndAttachChoice(wrap, function () {
                 var _nextChoice;
 
-                return (_nextChoice = nextChoice()) == null ? void 0 : _nextChoice.choice.choiceElement;
+                return (_nextChoice = nextChoice()) == null ? void 0 : _nextChoice.choice.choiceDom.choiceElement;
               });
             };
 
@@ -3716,7 +3631,7 @@
               resetLayoutAspect.resetLayout(); // always hide 1st, then reset filter
 
               var wrap = wraps.remove(key);
-              wrap.choice.remove == null ? void 0 : wrap.choice.remove();
+              wrap.choice.choiceDomManagerHandlers.detach == null ? void 0 : wrap.choice.choiceDomManagerHandlers.detach();
               wrap.dispose == null ? void 0 : wrap.dispose();
             };
           }
@@ -4027,14 +3942,10 @@
             var wrapsCollection = aspects.wrapsCollection,
                 updateOptionsSelectedAspect = aspects.updateOptionsSelectedAspect,
                 createWrapAspect = aspects.createWrapAspect,
-                buildChoiceAspect = aspects.buildChoiceAspect,
-                producePickAspect = aspects.producePickAspect,
+                produceChoiceAspect = aspects.produceChoiceAspect,
                 resetLayoutAspect = aspects.resetLayoutAspect,
                 picksList = aspects.picksList,
-                optionToggleAspect = aspects.optionToggleAspect,
-                createPickHandlersAspect = aspects.createPickHandlersAspect,
-                addPickAspect = aspects.addPickAspect,
-                fullMatchAspect = aspects.fullMatchAspect,
+                producePickAspect = aspects.producePickAspect,
                 onChangeAspect = aspects.onChangeAspect,
                 filterPredicateAspect = aspects.filterPredicateAspect;
             var origFilterPredicate = filterPredicateAspect.filterPredicate;
@@ -4042,34 +3953,6 @@
             filterPredicateAspect.filterPredicate = function (wrap, text) {
               return !wrap.isOptionSelected && origFilterPredicate(wrap, text);
             };
-
-            var origBuildChoice = buildChoiceAspect.buildChoice;
-
-            buildChoiceAspect.buildChoice = function (wrap) {
-              origBuildChoice(wrap);
-
-              wrap.updateSelected = function () {
-                wrap.choice.choiceDomManagerHandlers.updateSelected();
-                onChangeAspect.onChange();
-              };
-
-              wrap.dispose = composeSync(function () {
-                wrap.updateSelected = null;
-              }, wrap.dispose);
-            }; // TODO: test this instead of wrap.updateSelected
-            // function updateSelected(wrap){
-            //     if (wrap.pick){
-            //         if (wrap.isOptionSelected)
-            //             pickHandlers.producePick();
-            //         else {
-            //             pickHandlers.removeAndDispose();
-            //             pickHandlers.removeAndDispose=null;
-            //         }
-            //     }
-            //     wrap.choice.choiceDomManagerHandlers.updateSelected();
-            //     onChangeAspect.onChange();
-            // }
-
 
             function composeUpdateSelected(wrap, booleanValue) {
               return function () {
@@ -4091,6 +3974,7 @@
               return success;
             }
 
+            ExtendProduceChoiceAspectProduceChoice$1(produceChoiceAspect, onChangeAspect, trySetWrapSelected, composeUpdateSelected, producePickAspect, picksList);
             var origCreateWrap = createWrapAspect.createWrap;
 
             createWrapAspect.createWrap = function (option) {
@@ -4101,33 +3985,7 @@
               return wrap;
             };
 
-            optionToggleAspect.toggle; // TODO: improve design, no replace
-
-            optionToggleAspect.toggle = function (wrap) {
-              return trySetWrapSelected(wrap.option, composeUpdateSelected(wrap, !wrap.isOptionSelected), !wrap.isOptionSelected);
-            };
-
-            fullMatchAspect.fullMatch;
-
-            fullMatchAspect.fullMatch = function (wrap) {
-              return trySetWrapSelected(wrap.option, composeUpdateSelected(wrap, true), true);
-            };
-
             ExtendProducePickAspect$1(producePickAspect, trySetWrapSelected, composeUpdateSelected);
-            ExtendCreatePickHandlersAspectCreatePickHandlers(createPickHandlersAspect, addPickAspect);
-            var origAddPick = addPickAspect.addPick;
-
-            addPickAspect.addPick = function (wrap, pickHandlers) {
-              if (wrap.isOptionSelected) {
-                var pick = origAddPick(wrap, pickHandlers);
-                wrap.pick = pick;
-                pick.dispose = composeSync(pick.dispose, function () {
-                  wrap.pick = null;
-                });
-                return pick;
-              }
-            };
-
             return {
               buildApi: function buildApi(api) {
                 api.selectAll = function () {
@@ -4166,26 +4024,87 @@
       };
     }
 
-    function ExtendCreatePickHandlersAspectCreatePickHandlers(createPickHandlersAspect, addPickAspect) {
-      var orig = createPickHandlersAspect.createPickHandlers;
+    function ExtendProduceChoiceAspectProduceChoice$1(produceChoiceAspect, onChangeAspect, trySetWrapSelected, composeUpdateSelected, producePickAspect, picksList) {
+      var orig = produceChoiceAspect.produceChoice;
 
-      createPickHandlersAspect.createPickHandlers = function (wrap) {
-        var pickHandlers = orig(wrap);
-        wrap.updateSelected = composeSync(function () {
+      produceChoiceAspect.produceChoice = function (wrap) {
+        var val = orig(wrap);
+        wrap.choice.choiceDomManagerHandlers.updateSelected();
+
+        wrap.choice.tryToggleChoice = function () {
+          return trySetWrapSelected(wrap.option, composeUpdateSelected(wrap, !wrap.isOptionSelected), !wrap.isOptionSelected);
+        };
+
+        wrap.choice.fullMatch = function () {
+          return trySetWrapSelected(wrap.option, composeUpdateSelected(wrap, true), true);
+        };
+
+        wrap.choice.choiсeClick = function (event) {
+          wrap.choice.tryToggleChoice();
+        }; // TODO: add fail message?
+
+
+        wrap.updateSelected = function () {
+          wrap.choice.choiceDomManagerHandlers.updateSelected();
+          onChangeAspect.onChange();
+        }; // addPickForChoice used only in load loop; updateSelected on toggle
+
+
+        wrap.choice.addPickForChoice = function () {
+          var pickHandlers = {
+            producePick: null,
+            // not redefined directly, but redefined in addPickAspect
+            removeAndDispose: null // not redefined, used in MultiSelectInlineLayout injected into wrap.choice.choiceRemove 
+
+          };
+
+          pickHandlers.producePick = function () {
+            var pick = producePickAspect.producePick(wrap);
+
+            var _picksList$add = picksList.add(pick),
+                remove = _picksList$add.remove;
+
+            pick.dispose = composeSync(remove, pick.dispose);
+
+            pickHandlers.removeAndDispose = function () {
+              return pick.dispose();
+            };
+
+            return pick;
+          };
+
+          wrap.updateSelected = composeSync(function () {
+            if (wrap.isOptionSelected) {
+              var pick = pickHandlers.producePick();
+              wrap.pick = pick;
+              pick.dispose = composeSync(pick.dispose, function () {
+                wrap.pick = null;
+              });
+            } else {
+              pickHandlers.removeAndDispose();
+              pickHandlers.removeAndDispose = null;
+            }
+          }, wrap.updateSelected);
+
           if (wrap.isOptionSelected) {
             var pick = pickHandlers.producePick();
             wrap.pick = pick;
             pick.dispose = composeSync(pick.dispose, function () {
               wrap.pick = null;
             });
-          } else {
-            pickHandlers.removeAndDispose();
-            pickHandlers.removeAndDispose = null;
           }
-        }, wrap.updateSelected);
-        addPickAspect.addPick(wrap, pickHandlers); // why I need it?
 
-        return pickHandlers;
+          return pickHandlers; //removeAndDispose
+        };
+
+        wrap.dispose = composeSync(function () {
+          wrap.updateSelected = null;
+          wrap.choice.choiсeClick = null;
+          wrap.choice.tryToggleChoice = null;
+          wrap.choice.fullMatch = null;
+          wrap.choice.addPickForChoice = null;
+        }, wrap.dispose);
+        return val;
       };
     }
 
@@ -4251,10 +4170,9 @@
           layout: function layout() {
             var isChoiceSelectableAspect = aspects.isChoiceSelectableAspect,
                 createWrapAspect = aspects.createWrapAspect,
-                buildChoiceAspect = aspects.buildChoiceAspect,
+                produceChoiceAspect = aspects.produceChoiceAspect,
                 filterPredicateAspect = aspects.filterPredicateAspect,
                 wrapsCollection = aspects.wrapsCollection,
-                optionToggleAspect = aspects.optionToggleAspect,
                 producePickAspect = aspects.producePickAspect,
                 pickDomFactory = aspects.pickDomFactory;
             var getIsOptionDisabled = configuration.getIsOptionDisabled,
@@ -4287,23 +4205,6 @@
               return wrap;
             };
 
-            var origToggle = optionToggleAspect.toggle;
-
-            optionToggleAspect.toggle = function (wrap) {
-              var success = false;
-
-              if (wrap.isOptionSelected !== undefined) {
-                if (wrap.isOptionSelected || !wrap.isOptionDisabled) // TODO: declare dependency on SelectedOptionPlugin
-                  success = origToggle(wrap);
-              } else {
-                if (!wrap.isOptionDisabled) {
-                  success = origToggle(wrap);
-                }
-              }
-
-              return success;
-            };
-
             var origIsSelectable = isChoiceSelectableAspect.isSelectable;
 
             isChoiceSelectableAspect.isSelectable = function (wrap) {
@@ -4316,16 +4217,7 @@
               return !wrap.isOptionDisabled && origFilterPredicate(wrap, text);
             };
 
-            var origBuildChoice = buildChoiceAspect.buildChoice;
-
-            buildChoiceAspect.buildChoice = function (wrap) {
-              origBuildChoice(wrap);
-              wrap.updateDisabled = wrap.choice.choiceDomManagerHandlers.updateDisabled;
-              wrap.choice.dispose = composeSync(function () {
-                wrap.updateDisabled = null;
-              }, wrap.choice.dispose);
-            };
-
+            ExtendProduceChoiceAspectProduceChoice(produceChoiceAspect);
             ExtendProducePickAspectProducePick(producePickAspect);
             ExtendPickDomFactoryCreate(pickDomFactory, css);
             return {
@@ -4343,6 +4235,37 @@
             };
           }
         };
+      };
+    }
+
+    function ExtendProduceChoiceAspectProduceChoice(produceChoiceAspect) {
+      var orig = produceChoiceAspect.produceChoice;
+
+      produceChoiceAspect.produceChoice = function (wrap) {
+        var val = orig(wrap);
+        wrap.choice.choiceDomManagerHandlers.updateDisabled();
+        wrap.updateDisabled = wrap.choice.choiceDomManagerHandlers.updateDisabled;
+        wrap.choice.dispose = composeSync(function () {
+          wrap.updateDisabled = null;
+        }, wrap.choice.dispose);
+        var origToggle = wrap.choice.tryToggleChoice;
+
+        wrap.choice.tryToggleChoice = function () {
+          var success = false;
+
+          if (wrap.isOptionSelected !== undefined) {
+            if (wrap.isOptionSelected || !wrap.isOptionDisabled) // TODO: declare dependency on SelectedOptionPlugin
+              success = origToggle(wrap);
+          } else {
+            if (!wrap.isOptionDisabled) {
+              success = origToggle(wrap);
+            }
+          }
+
+          return success;
+        };
+
+        return val;
       };
     }
 
@@ -4403,9 +4326,7 @@
         return {
           buildApi: function buildApi(api) {
             var picksList = aspects.picksList,
-                createWrapAspect = aspects.createWrapAspect,
-                createPickHandlersAspect = aspects.createPickHandlersAspect,
-                addPickAspect = aspects.addPickAspect;
+                createWrapAspect = aspects.createWrapAspect;
 
             api.forEachPeak = function (f) {
               return picksList.forEach(function (wrap) {
@@ -4435,8 +4356,7 @@
 
               wrap.updateHidden = function () {};
 
-              var pickHandlers = createPickHandlersAspect.createPickHandlers(wrap);
-              addPickAspect.addPick(wrap, pickHandlers);
+              wrap.choice.addPickForChoice();
             };
           }
         };
@@ -4754,7 +4674,7 @@
 
         navigateAspect.navigate = function (down) {
           var wrap = origNavigateAspectNavigate(down);
-          if (wrap != null && wrap.choice != null && wrap.choice.choiceElement != null) wrap.choice.choiceElement.scrollIntoView(false); // alignTo false -  scroll to the top bottom of dropdown first
+          if (wrap != null && wrap.choice != null && wrap.choice.choiceDom.choiceElement != null) wrap.choice.choiceDom.choiceElement.scrollIntoView(false); // alignTo false -  scroll to the top bottom of dropdown first
           // TODO: BUG if mouse left on the dropdow scroll to bottom and one after doesn't work properly
 
           return wrap;
@@ -4772,16 +4692,15 @@
     function ExtendChoiceDomFactory$1(choiceDomFactory, optionPropertiesAspect) {
       var origChoiceDomFactoryCreate = choiceDomFactory.create;
 
-      choiceDomFactory.create = function (choiceElement, wrap) {
-        var value = origChoiceDomFactoryCreate(choiceElement, wrap);
+      choiceDomFactory.create = function (choice) {
+        origChoiceDomFactoryCreate(choice);
+        var choiceElement = choice.choiceDom.choiceElement;
 
-        value.choiceDomManagerHandlers.updateHighlighted = function () {
-          var text = optionPropertiesAspect.getText(wrap.option);
+        choice.choiceDomManagerHandlers.updateHighlighted = function () {
+          var text = optionPropertiesAspect.getText(choice.wrap.option);
           var highlighter = aspects.highlightAspect.getHighlighter();
-          if (highlighter) highlighter(choiceElement, value.choiceDom, text);else choiceElement.textContent = text;
+          if (highlighter) highlighter(choiceElement, choice.choiceDom, text);else choiceElement.textContent = text;
         };
-
-        return value;
       };
     }
 
@@ -4797,7 +4716,7 @@
           layout: function layout() {
             var highlightAspect = aspects.highlightAspect,
                 filterManagerAspect = aspects.filterManagerAspect,
-                buildChoiceAspect = aspects.buildChoiceAspect;
+                produceChoiceAspect = aspects.produceChoiceAspect;
 
             if (highlightAspect) {
               var origProcessEmptyInput = filterManagerAspect.processEmptyInput;
@@ -4814,13 +4733,13 @@
                 origSetFilter(text);
               };
 
-              var origBuildChoice = buildChoiceAspect.buildChoice;
+              var origProduceChoice = produceChoiceAspect.produceChoice;
 
-              buildChoiceAspect.buildChoice = function (wrap) {
-                origBuildChoice(wrap);
-                var origSetVisible = wrap.choice.setVisible;
+              produceChoiceAspect.produceChoice = function (wrap) {
+                origProduceChoice(wrap);
+                var origSetVisible = wrap.choice.choiceDomManagerHandlers.setVisible;
 
-                wrap.choice.setVisible = function (v) {
+                wrap.choice.choiceDomManagerHandlers.setVisible = function (v) {
                   origSetVisible(v);
                   wrap.choice.choiceDomManagerHandlers.updateHighlighted();
                 };
@@ -4884,30 +4803,30 @@
     function ExtendChoiceDomFactory(choiceDomFactory, customChoiceStylingsAspect) {
       var origChoiceDomFactoryCreate = choiceDomFactory.create;
 
-      choiceDomFactory.create = function (choiceElement, wrap) {
-        var o = origChoiceDomFactoryCreate(choiceElement, wrap);
-        customChoiceStylingsAspect.customize(wrap, o.choiceDom, o.choiceDomManagerHandlers);
-        return o;
+      choiceDomFactory.create = function (choice) {
+        origChoiceDomFactoryCreate(choice);
+        customChoiceStylingsAspect.customize(choice.wrap, choice.choiceDom, choice.choiceDomManagerHandlers);
       };
     }
 
     function CustomChoiceStylingsAspect(customChoiceStylings) {
       return {
-        customize: function customize(wrap, choiceDom, choiceDomManagerHandlers) {
-          var handlers = customChoiceStylings(choiceDom, wrap.option);
+        customize: function customize(choice) {
+          var handlers = customChoiceStylings(choice.choiceDom, choice.wrap.option);
 
           if (handlers) {
             var customChoiceStylingsClosure = function customChoiceStylingsClosure(custom) {
               return function () {
                 custom({
-                  isOptionSelected: wrap.isOptionSelected,
-                  isOptionDisabled: wrap.isOptionDisabled,
-                  isHoverIn: wrap.choice.isHoverIn //isHighlighted: wrap.choice.isHighlighted  // TODO isHighlighted should be developed
+                  isOptionSelected: choice.wrap.isOptionSelected,
+                  isOptionDisabled: choice.wrap.isOptionDisabled,
+                  isHoverIn: choice.isHoverIn //isHighlighted: wrap.choice.isHighlighted  // TODO isHighlighted should be developed
 
                 });
               };
             };
 
+            var choiceDomManagerHandlers = choice.choiceDomManagerHandlers;
             if (choiceDomManagerHandlers.updateHoverIn && handlers.updateHoverIn) choiceDomManagerHandlers.updateHoverIn = composeSync(choiceDomManagerHandlers.updateHoverIn, customChoiceStylingsClosure(handlers.updateHoverIn));
             if (choiceDomManagerHandlers.updateSelected && handlers.updateSelected) choiceDomManagerHandlers.updateSelected = composeSync(choiceDomManagerHandlers.updateSelected, customChoiceStylingsClosure(handlers.updateSelected));
             if (choiceDomManagerHandlers.updateDisabled && handlers.updateDisabled) choiceDomManagerHandlers.updateDisabled = composeSync(choiceDomManagerHandlers.updateDisabled, customChoiceStylingsClosure(handlers.updateDisabled));

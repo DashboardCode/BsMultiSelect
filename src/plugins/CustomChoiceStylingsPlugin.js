@@ -25,29 +25,29 @@ export function plug(configuration){
 
 function ExtendChoiceDomFactory(choiceDomFactory, customChoiceStylingsAspect){
     let origChoiceDomFactoryCreate = choiceDomFactory.create;
-    choiceDomFactory.create = function(choiceElement, wrap){
-        var o = origChoiceDomFactoryCreate(choiceElement, wrap);
-        customChoiceStylingsAspect.customize(wrap, o.choiceDom, o.choiceDomManagerHandlers);
-        return o;
+    choiceDomFactory.create = function(choice){
+        origChoiceDomFactoryCreate(choice);
+        customChoiceStylingsAspect.customize(choice.wrap, choice.choiceDom, choice.choiceDomManagerHandlers);
     }
 }
 
 function CustomChoiceStylingsAspect(customChoiceStylings){
     return {
-        customize(wrap, choiceDom, choiceDomManagerHandlers){
-            var handlers = customChoiceStylings(choiceDom, wrap.option);
+        customize(choice){
+            var handlers = customChoiceStylings(choice.choiceDom, choice.wrap.option);
 
             if (handlers){
                 function customChoiceStylingsClosure(custom){
                     return function() {
                             custom({
-                                isOptionSelected: wrap.isOptionSelected,
-                                isOptionDisabled: wrap.isOptionDisabled,
-                                isHoverIn: wrap.choice.isHoverIn,
+                                isOptionSelected: choice.wrap.isOptionSelected,
+                                isOptionDisabled: choice.wrap.isOptionDisabled,
+                                isHoverIn: choice.isHoverIn,
                                 //isHighlighted: wrap.choice.isHighlighted  // TODO isHighlighted should be developed
                             });
                     }
                 }
+                let choiceDomManagerHandlers = choice.choiceDomManagerHandlers;
                 if (choiceDomManagerHandlers.updateHoverIn && handlers.updateHoverIn)  
                     choiceDomManagerHandlers.updateHoverIn 
                         = composeSync(choiceDomManagerHandlers.updateHoverIn, customChoiceStylingsClosure(handlers.updateHoverIn) );

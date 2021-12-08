@@ -42,7 +42,7 @@ export function FilterManagerAspect(
             showEmptyFilter =true;
             filterText ="";
             choicesEnumerableAspect.forEach( (wrap)=>{
-                wrap.choice.setVisible(true);
+                wrap.choice.choiceDomManagerHandlers.setVisible(true);
             });
         },
         getFilter(){
@@ -57,7 +57,7 @@ export function FilterManagerAspect(
                 var v = filterPredicateAspect.filterPredicate(wrap, text)
                 if (v)
                     filteredChoicesList.add(wrap);
-                wrap.choice.setVisible(v);
+                wrap.choice.choiceDomManagerHandlers.setVisible(v);
             });
         }
     }

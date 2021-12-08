@@ -9,7 +9,7 @@ export function plug(configuration){
         return {
             layout: () => {
                 let {createWrapAspect, isChoiceSelectableAspect,
-                    wrapsCollection, buildChoiceAspect, buildAndAttachChoiceAspect,
+                    wrapsCollection, produceChoiceAspect, buildAndAttachChoiceAspect,
                     countableChoicesListInsertAspect, countableChoicesList} = aspects;
                 
                 countableChoicesListInsertAspect.countableChoicesListInsert = (wrap, key) => {
@@ -56,11 +56,11 @@ export function plug(configuration){
                     
                         api.updateOptionsHidden = () => 
                             wrapsCollection.forLoop( (wrap, key) => 
-                                    updateChoiceHidden(wrap, key, getNextNonHidden, countableChoicesList, getIsOptionHidden, buildChoiceAspect)
+                                    updateChoiceHidden(wrap, key, getNextNonHidden, countableChoicesList, getIsOptionHidden, produceChoiceAspect)
                                 );
                     
                         api.updateOptionHidden  = (key) => 
-                            updateChoiceHidden(wrapsCollection.get(key), key, getNextNonHidden, countableChoicesList, getIsOptionHidden, buildChoiceAspect);
+                            updateChoiceHidden(wrapsCollection.get(key), key, getNextNonHidden, countableChoicesList, getIsOptionHidden, produceChoiceAspect);
                         // TODO create updateHidden ? 
                         // it is too complex since we need to find the next non hidden, when this depends on key 
                         // there should be the backreference "wrap -> index" invited before
@@ -75,12 +75,10 @@ export function plug(configuration){
 function buildHiddenChoice(wrap){
     wrap.updateSelected = () => void 0;
     
-    wrap.choice.isChoiceElementAttached = false;
-    wrap.choice.choiceElement = null;
-    wrap.choice.choiceElementAttach = null;
-    wrap.choice.setVisible = null; 
+    wrap.choice.choicesDom = {};
+    wrap.choice.choiceDomManagerHandlers ={}
+    wrap.choice.choiceDomManagerHandlers.setVisible = null; 
     wrap.choice.setHoverIn = null;
-    wrap.choice.remove = null; 
     
     wrap.choice.dispose = () => { 
         wrap.choice.dispose = null;
@@ -92,7 +90,7 @@ function buildHiddenChoice(wrap){
     };
 }
 
-function updateChoiceHidden(wrap, key, getNextNonHidden, countableChoicesList, getIsOptionHidden, buildChoiceAspect){
+function updateChoiceHidden(wrap, key, getNextNonHidden, countableChoicesList, getIsOptionHidden, produceChoiceAspect){
     let newIsOptionHidden = getIsOptionHidden(wrap.option);
     if (newIsOptionHidden != wrap.isOptionHidden)
     {
@@ -100,13 +98,13 @@ function updateChoiceHidden(wrap, key, getNextNonHidden, countableChoicesList, g
         if (wrap.isOptionHidden) {
 
             countableChoicesList.remove(wrap);
-            wrap.choice.remove(); 
+            wrap.choice.choiceDomManagerHandlers.detach(); 
             buildHiddenChoice(wrap);
         } else {
             let nextChoice = getNextNonHidden(key);
             countableChoicesList.add(wrap, nextChoice);
-            buildChoiceAspect.buildChoice(wrap);
-            wrap.choice.choiceElementAttach(nextChoice?.choice.choiceElement);
+            produceChoiceAspect.produceChoice(wrap);
+            wrap.choice.choiceDomManagerHandlers.attach(nextChoice?.choice.choiceDom.choiceElement);
         }
     }
 }
