@@ -36,13 +36,10 @@ export function plug(configuration){
             },
             layout: () => {
                 let {validationApiAspect, 
-                    initialDom,
                     picksDom, staticDom, updateAppearanceAspect, floatingLabelAspect} = aspects;
                 let {getValidity, getSize, useCssPatch, css, composeGetSize} = configuration;
                 
-                let selectElement = staticDom.selectElement;
-                
-                let initialElement = initialDom.initialElement;
+                let {selectElement, initialElement} = staticDom;
                 
                 let isFloatingLabel = false;
                 if (floatingLabelAspect){

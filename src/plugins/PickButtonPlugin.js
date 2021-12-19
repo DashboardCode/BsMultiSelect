@@ -32,8 +32,8 @@ export function plug(configuration){
     return (aspects) => {
         return {
             plugStaticDom: () => {
-                var {pickDomFactory, createElementAspect} = aspects;
-                ExtendPickDomFactory(pickDomFactory, createElementAspect, configuration.pickButtonHTML, configuration.css);
+                var {pickDomFactory, staticDom} = aspects;
+                ExtendPickDomFactory(pickDomFactory, staticDom.createElementAspect, configuration.pickButtonHTML, configuration.css);
             },
             layout: ()=>{
                 var {producePickAspect} = aspects;

@@ -5,13 +5,13 @@ export function HighlightPlugin(defaults){
     }
 }
 
-function ExtendChoiceDomFactory(choiceDomFactory, optionPropertiesAspect){
+function ExtendChoiceDomFactory(choiceDomFactory, dataWrap){
     var origChoiceDomFactoryCreate = choiceDomFactory.create;
     choiceDomFactory.create = (choice) => {
         origChoiceDomFactoryCreate(choice);
         let choiceElement = choice.choiceDom.choiceElement;
         choice.choiceDomManagerHandlers.updateHighlighted = () => {
-            var text = optionPropertiesAspect.getText(choice.wrap.option);
+            var text = dataWrap.getText(choice.wrap.option);
             var highlighter = aspects.highlightAspect.getHighlighter();
             if (highlighter)
                 highlighter(choiceElement, choice.choiceDom, text);                    
@@ -27,8 +27,8 @@ export function plug(configuration){
             aspects.highlightAspect = HighlightAspect();
         return {
             plugStaticDom(){
-                var {choiceDomFactory, optionPropertiesAspect} = aspects;
-                ExtendChoiceDomFactory(choiceDomFactory, optionPropertiesAspect);
+                var {choiceDomFactory, dataWrap} = aspects;
+                ExtendChoiceDomFactory(choiceDomFactory, dataWrap);
             },
             layout(){
                 let {highlightAspect, filterManagerAspect,  produceChoiceAspect} = aspects;

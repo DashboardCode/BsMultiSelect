@@ -43,24 +43,21 @@ export function ProduceChoiceAspect(choicesDom, choiceDomFactory) {
                 choice.isHoverIn =v ;
                 choiceDomManagerHandlers.updateHoverIn();
             }
-            //choice.setHovered
-        
 
-            choice.dispose =  composeSync(choice.dispose, () =>{
-                choiceDom.choiceElement = null;
+            choice.dispose =  composeSync(() =>{
+                choice.choiceDom.choiceElement = null;
                 choice.choiceDom = null;
                 choiceDomManagerHandlers.attach=null;
                 choiceDomManagerHandlers.detach=null;
                 choiceDomManagerHandlers.setVisible=null;
                 choice.choiceDomManagerHandlers = null;
                 choice.choiсeClick=null;
-                
     
                 choice.setHoverIn = null;
         
                 choice.wrap = null;
                 choice.dispose = null;
-            })
+            }, choice.dispose)
 
             wrap.dispose = () => {
                 choice.dispose();
@@ -68,7 +65,5 @@ export function ProduceChoiceAspect(choicesDom, choiceDomFactory) {
             }
             return choice;
         }
-        
     }
-    
 }

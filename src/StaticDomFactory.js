@@ -1,68 +1,58 @@
 import {findDirectChildByTagName, closestByClassName} from './ToolsDom';
 
-export function StaticDomFactory(
-    createElementAspect, choicesDomFactory, filterDomFactory, picksDomFactory, initialDom, containerClass){
+export function StaticDomFactory(staticDom){
     return {
         createStaticDom(){
-            var element = initialDom.initialElement;
-            
+            let {createElementAspect, initialElement, containerClass} = staticDom;
+
             let containerElement, picksElement;
             let removableContainerClass= false;
-            if (element.tagName == 'DIV') {
-                containerElement = element;
+            if (initialElement.tagName == 'DIV') {
+                containerElement = initialElement;
                 if (!containerElement.classList.contains(containerClass)){
                     containerElement.classList.add(containerClass);
                     removableContainerClass = true;
                 }
                 picksElement = findDirectChildByTagName(containerElement, 'UL');
             }
-            else if (element.tagName == 'UL') {
-                picksElement = element;
-                containerElement = closestByClassName(element, containerClass);
+            else if (initialElement.tagName == 'UL') {
+                picksElement = initialElement;
+                containerElement = closestByClassName(initialElement, containerClass);
                 if (!containerElement){
                     throw new Error('BsMultiSelect: defined on UL but precedentant DIV for container not found; class='+containerClass);
                 }
             } 
-            else if (element.tagName=="INPUT") {
+            else if (initialElement.tagName=="INPUT") {
                 throw new Error('BsMultiSelect: INPUT element is not supported');
             }
-
-            let staticDom = {
-                containerElement
-            };
+            
             
             let isDisposablePicksElementFlag=false;
             if (!picksElement) {
                 picksElement = createElementAspect.createElement('UL');
                 isDisposablePicksElementFlag = true; 
             }
+            staticDom.containerElement = containerElement;
+            staticDom.isDisposablePicksElementFlag = isDisposablePicksElementFlag;
+            staticDom.picksElement = picksElement;
 
-            let choicesDom = choicesDomFactory.create();
-            let picksDom  = picksDomFactory.create(picksElement, isDisposablePicksElementFlag);
-            let filterDom = filterDomFactory.create(isDisposablePicksElementFlag);
-
-            let {choicesElement} = choicesDom; 
             return {
-                staticDom,
-
-                choicesDom,
-                filterDom,
-                picksDom,
-                
                 staticManager: {
                     appendToContainer(){ 
+                        let {containerElement, isDisposablePicksElementFlag, choicesDom, picksDom, filterDom} = staticDom;
                         picksDom.pickFilterElement.appendChild(filterDom.filterInputElement);
                         picksDom.picksElement.appendChild(picksDom.pickFilterElement); 
-                        containerElement.appendChild(choicesElement); 
+                        containerElement.appendChild(choicesDom.choicesElement); 
                         if (isDisposablePicksElementFlag)
-                            containerElement.appendChild(picksElement)
+                            containerElement.appendChild(picksDom.picksElement)
                     },
                     dispose(){ 
-                        containerElement.removeChild(choicesElement); 
+                        let {containerElement, containerClass, isDisposablePicksElementFlag, choicesDom, picksDom, filterDom} = staticDom;
+                        containerElement.removeChild(choicesDom.choicesElement); 
                         if (removableContainerClass)
                             containerElement.classList.remove(containerClass);
                         if (isDisposablePicksElementFlag)
-                            containerElement.removeChild(picksElement)
+                            containerElement.removeChild(picksDom.picksElement)
                         picksDom.dispose();
                         filterDom.dispose();
                     }

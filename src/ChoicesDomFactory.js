@@ -1,8 +1,9 @@
 import {addStyling} from './ToolsStyling';
 
-export function ChoicesDomFactory(css, createElementAspect) {
+export function ChoicesDomFactory(staticDom) {
     return {
         create(){
+            let {css, createElementAspect} = staticDom;
             var choicesElement = createElementAspect.createElement('DIV');
             var choicesListElement = createElementAspect.createElement('UL');
             

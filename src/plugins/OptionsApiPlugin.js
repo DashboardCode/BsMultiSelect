@@ -9,10 +9,10 @@ export function plug(){
         return {
                     buildApi(api){
                         let {buildAndAttachChoiceAspect, wraps, wrapsCollection, createWrapAspect, createChoiceBaseAspect,
-                            optionsAspect, resetLayoutAspect} = aspects;
+                            dataWrap, resetLayoutAspect} = aspects;
                             
                         api.updateOptionAdded = (key) => {  // TODO: generalize index as key 
-                            let options = optionsAspect.getOptions();
+                            let options = dataWrap.getOptions();
                             let option = options[key];
 
                             let wrap = createWrapAspect.createWrap(option);

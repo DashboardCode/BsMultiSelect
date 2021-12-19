@@ -12,10 +12,10 @@ export function OptionAttachAspect(createWrapAspect, createChoiceBaseAspect, bui
     }
 }
 
-export function OptionsLoopAspect(optionsAspect, optionAttachAspect){ 
+export function OptionsLoopAspect(dataWrap, optionAttachAspect){ 
     return{
         loop(){
-            let options = optionsAspect.getOptions();
+            let options = dataWrap.getOptions();
             for(let i = 0; i<options.length; i++) {
                 let option = options[i];
                 optionAttachAspect.attach(option);

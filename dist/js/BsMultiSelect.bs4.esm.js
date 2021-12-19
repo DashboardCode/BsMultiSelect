@@ -502,19 +502,22 @@ function extendCss(stylings1, stylings2) {
 function PickDomFactoryPlugCss(css) {
   css.pickContent = '';
 }
-function PickDomFactory(css, createElementAspect, optionPropertiesAspect) {
+function PickDomFactory(css, createElementAspect, dataWrap) {
   return {
     create(pick) {
-      let pickContentElement = createElementAspect.createElement('SPAN');
+      let wrap = pick.wrap;
       let {
         pickDom,
         pickDomManagerHandlers
       } = pick;
-      pickDom.pickElement.appendChild(pickContentElement);
+      let pickElement = pickDom.pickElement;
+      let pickContentElement = createElementAspect.createElement('SPAN');
+      pickElement.appendChild(pickContentElement);
       pickDom.pickContentElement = pickContentElement;
 
       pickDomManagerHandlers.updateData = () => {
-        pickContentElement.textContent = optionPropertiesAspect.getText(pick.wrap.option);
+        // this is not a generic because there could be more then one text field.
+        pickContentElement.textContent = dataWrap.getText(wrap.option);
       };
 
       addStyling(pickContentElement, css.pickContent);
@@ -526,30 +529,17 @@ function PickDomFactory(css, createElementAspect, optionPropertiesAspect) {
     }
 
   };
-} // export function PickDomFactoryAlt(css, createElementAspect, optionPropertiesAspect){ 
-//     return { 
-//         create(pickElement, option){
-//             let pickContentElement = createElementAspect.createElement('SPAN');
-//             pickElement.appendChild(pickContentElement);
-//             addStyling(pickContentElement, css.pickContent);
-//             function updateData(){
-//                 pickContentElement.textContent = optionPropertiesAspect.getText(option);
-//             }
-//             updateData();
-//             let pickDom = { pickContentElement };
-//             let pickDomManagerHandlers = { updateData };
-//             return {
-//                 pickDom,
-//                 pickDomManagerHandlers,
-//                 dispose: {pickDom.pickContentElement=null; pickDomManagerHandlers.updateData=null;}
-//             }
-//         }
-//     }
-// }
+}
 
-function PicksDomFactory(css, createElementAspect) {
+function PicksDomFactory(staticDom) {
   return {
-    create(picksElement, isDisposablePicksElementFlag) {
+    create() {
+      var {
+        picksElement,
+        isDisposablePicksElementFlag,
+        css,
+        createElementAspect
+      } = staticDom;
       var pickFilterElement = createElementAspect.createElement('LI');
       addStyling(picksElement, css.picks);
       addStyling(pickFilterElement, css.pickFilter);
@@ -811,102 +801,93 @@ function ResetableFlag() {
   };
 }
 
-function ChoiceDomFactory(css, createElementAspect, optionPropertiesAspect) {
-  var updateDataInternal = function updateDataInternal(wrap, element) {
-    element.textContent = optionPropertiesAspect.getText(wrap.option);
-  }; //TODO move check which aspects availbale like wrap.hasOwnProperty("isOptionSelected") to there
+function buildDom(choiceElement, choiceDom, createElementAspect, css) {
+  createElementAspect.createElementFromHtml(choiceElement, '<div><input formnovalidate type="checkbox"><label></label></div>');
+  let choiceContentElement = choiceElement.querySelector('DIV');
+  let choiceCheckBoxElement = choiceContentElement.querySelector('INPUT');
+  let choiceLabelElement = choiceContentElement.querySelector('LABEL');
+  choiceDom.choiceContentElement = choiceContentElement;
+  choiceDom.choiceCheckBoxElement = choiceCheckBoxElement;
+  choiceDom.choiceLabelElement = choiceLabelElement;
+  addStyling(choiceContentElement, css.choiceContent);
+  addStyling(choiceCheckBoxElement, css.choiceCheckBox);
+  addStyling(choiceLabelElement, css.choiceLabel);
+}
 
+function buidDisabled(choiceDom, choiceDomManagerHandlers, css, wrap) {
+  let choiceDisabledToggle = toggleStyling(choiceDom.choiceElement, css.choice_disabled);
+  let choiceCheckBoxDisabledToggle = toggleStyling(choiceDom.choiceCheckBoxElement, css.choiceCheckBox_disabled);
+  let choiceLabelDisabledToggle = toggleStyling(choiceDom.choiceLabelElement, css.choiceLabel_disabled);
+  let choiceCursorDisabledToggle = toggleStyling(choiceDom.choiceElement, {
+    classes: [],
+    styles: {
+      cursor: "default"
+    }
+  });
 
+  let updateDisabled = function updateDisabled() {
+    choiceDisabledToggle(wrap.isOptionDisabled);
+    choiceCheckBoxDisabledToggle(wrap.isOptionDisabled);
+    choiceLabelDisabledToggle(wrap.isOptionDisabled); // do not desable checkBox if option is selected! there should be possibility to unselect "disabled"
+
+    let isCheckBoxDisabled = wrap.isOptionDisabled && !wrap.isOptionSelected;
+    choiceDom.choiceCheckBoxElement.disabled = isCheckBoxDisabled;
+    choiceCursorDisabledToggle(isCheckBoxDisabled);
+  };
+
+  choiceDomManagerHandlers.updateDisabled = updateDisabled;
+}
+
+function ChoiceDomFactory(css, createElementAspect, dataWrap) {
+  //TODO move check which aspects availbale like wrap.hasOwnProperty("isOptionSelected") to there
   return {
     create(choice) {
       let wrap = choice.wrap;
+      let {
+        choiceDom,
+        choiceDomManagerHandlers
+      } = choice;
       let choiceElement = choice.choiceDom.choiceElement;
-      let choiceDom = choice.choiceDom;
-      let choiceDomManagerHandlers = choice.choiceDomManagerHandlers;
-      let choiceHoverToggle = null;
+      buildDom(choiceElement, choiceDom, createElementAspect, css); // --- --- --- ---
 
-      if (wrap.hasOwnProperty("isOptionSelected")) {
-        choiceHoverToggle = toggleStyling(choiceElement, () => wrap.isOptionDisabled === true && css.choice_disabled_hover && wrap.isOptionSelected === false ? css.choice_disabled_hover : css.choice_hover);
-        createElementAspect.createElementFromHtml(choiceElement, '<div><input formnovalidate type="checkbox"><label></label></div>');
-        let choiceContentElement = choiceElement.querySelector('DIV');
-        let choiceCheckBoxElement = choiceContentElement.querySelector('INPUT');
-        let choiceLabelElement = choiceContentElement.querySelector('LABEL');
-        addStyling(choiceContentElement, css.choiceContent);
-        addStyling(choiceCheckBoxElement, css.choiceCheckBox);
-        addStyling(choiceLabelElement, css.choiceLabel);
-        choiceDom.choiceContentElement = choiceContentElement;
-        choiceDom.choiceCheckBoxElement = choiceCheckBoxElement;
-        choiceDom.choiceLabelElement = choiceLabelElement;
-        let choiceSelectedToggle = toggleStyling(choiceElement, css.choice_selected);
+      let choiceHoverToggle = toggleStyling(choiceElement, () => wrap.isOptionDisabled === true && css.choice_disabled_hover && wrap.isOptionSelected === false ? css.choice_disabled_hover : css.choice_hover); //let choiceHoverToggle2 = toggleStyling(choiceElement, css.choice_disabled_hover, css.choice_hover);
 
-        let updateSelected = function updateSelected() {
-          choiceSelectedToggle(wrap.isOptionSelected);
-          choiceCheckBoxElement.checked = wrap.isOptionSelected;
+      choiceDomManagerHandlers.updateHoverIn = () => choiceHoverToggle(choice.isHoverIn);
 
-          if (wrap.isOptionDisabled || wrap.choice.isHoverIn) {
-            choiceHoverToggle(wrap.choice.isHoverIn, true);
-          }
-        };
+      let choiceSelectedToggle = toggleStyling(choiceElement, css.choice_selected);
 
-        let choiceDisabledToggle = toggleStyling(choiceElement, css.choice_disabled);
-        let choiceCheckBoxDisabledToggle = toggleStyling(choiceCheckBoxElement, css.choiceCheckBox_disabled);
-        let choiceLabelDisabledToggle = toggleStyling(choiceLabelElement, css.choiceLabel_disabled);
-        let choiceCursorDisabledToggle = toggleStyling(choiceElement, {
-          classes: [],
-          styles: {
-            cursor: "default"
-          }
-        });
+      let updateSelected = function updateSelected() {
+        choiceSelectedToggle(wrap.isOptionSelected);
+        choiceDom.choiceCheckBoxElement.checked = wrap.isOptionSelected;
 
-        let updateDisabled = function updateDisabled() {
-          choiceDisabledToggle(wrap.isOptionDisabled);
-          choiceCheckBoxDisabledToggle(wrap.isOptionDisabled);
-          choiceLabelDisabledToggle(wrap.isOptionDisabled); // do not desable checkBox if option is selected! there should be possibility to unselect "disabled"
-
-          let isCheckBoxDisabled = wrap.isOptionDisabled && !wrap.isOptionSelected;
-          choiceCheckBoxElement.disabled = isCheckBoxDisabled;
-          choiceCursorDisabledToggle(isCheckBoxDisabled);
-        };
-
-        choiceDomManagerHandlers.updateData = () => updateDataInternal(wrap, choiceLabelElement);
-
-        choiceDomManagerHandlers.updateHoverIn = updateHoverIn;
-        choiceDomManagerHandlers.updateSelected = updateSelected;
-        choiceDomManagerHandlers.updateDisabled = updateDisabled;
-        composeSync(choice.dispose, () => {
-          choiceDomManagerHandlers.updateData = null;
-          choiceDomManagerHandlers.updateHoverIn = null;
-          choiceDomManagerHandlers.updateSelected = null;
-          choiceDomManagerHandlers.updateDisabled = null;
-          choiceDom.choiceContentElement = null;
-          choiceDom.choiceCheckBoxElement = null;
-          choiceDom.choiceLabelElement = null;
-        });
-      } else {
-        choiceHoverToggle = toggleStyling(choiceElement, () => wrap.isOptionDisabled && css.choice_disabled_hover ? css.choice_disabled_hover : css.choice_hover);
-        choiceElement.innerHTML = '<div></div>';
-        let choiceContentElement = choiceElement.querySelector('div');
-        choiceDom.choiceContentElement = choiceContentElement;
-
-        choiceDomManagerHandlers.updateData = () => updateDataInternal(wrap, choiceContentElement);
-
-        composeSync(choice.dispose, () => {
-          choiceDomManagerHandlers.updateData = null;
-          choiceDom.choiceContentElement = null;
-        });
-      }
-
-      choiceDomManagerHandlers.updateData();
-
-      let updateHoverIn = function updateHoverIn() {
-        choiceHoverToggle(wrap.choice.isHoverIn);
+        if (wrap.isOptionDisabled || choice.isHoverIn) {
+          choiceHoverToggle(choice.isHoverIn, true); // choiceHoverToggle2(
+          //     choice.isHoverIn?(wrap.isOptionDisabled?1:2):0
+          // );
+        }
       };
 
-      choiceDomManagerHandlers.updateHoverIn = updateHoverIn;
+      choiceDomManagerHandlers.updateSelected = updateSelected; // --- --- --- ---
+
+      buidDisabled(choiceDom, choiceDomManagerHandlers, css, wrap);
+
+      choiceDomManagerHandlers.updateData = () => {
+        choiceDom.choiceLabelElement.textContent = dataWrap.getText(wrap.option);
+      }; //updateDataInternal(wrap, choiceLabelElement, dataWrap);
+
+
+      choiceDomManagerHandlers.updateData();
       let eventBinder = EventBinder();
       eventBinder.bind(choiceElement, "click", event => choice.choiсeClick(event));
       composeSync(choice.dispose, () => {
         eventBinder.unbind();
+        choiceDomManagerHandlers.updateData = null;
+        choiceDomManagerHandlers.updateHoverIn = null;
+        choiceDomManagerHandlers.updateSelected = null;
+        choiceDomManagerHandlers.updateDisabled = null;
+        choiceDom.choiceContentElement = null;
+        choiceDom.choiceCheckBoxElement = null;
+        choiceDom.choiceLabelElement = null;
       });
     }
 
@@ -949,12 +930,16 @@ function ChoiceDomFactoryPlugCssPatch(cssPatch) {
   }; // more flexible than {color: '#6c757d'}; note: avoid opacity on pickElement's border; TODO write to BS4 
 
   cssPatch.choice_disabled_hover = 'bg-light';
-  cssPatch.choice_hover = 'text-primary bg-light';
+  cssPatch.choice_hover = 'bg-light text-primary';
 }
 
-function ChoicesDomFactory(css, createElementAspect) {
+function ChoicesDomFactory(staticDom) {
   return {
     create() {
+      let {
+        css,
+        createElementAspect
+      } = staticDom;
       var choicesElement = createElementAspect.createElement('DIV');
       var choicesListElement = createElementAspect.createElement('UL');
       choicesElement.appendChild(choicesListElement);
@@ -1001,9 +986,14 @@ function ChoicesDomFactoryPlugCssPatch(cssPatch) {
   };
 }
 
-function FilterDomFactory(css, createElementAspect) {
+function FilterDomFactory(staticDom) {
   return {
-    create(isDisposablePicksElementFlag) {
+    create() {
+      let {
+        isDisposablePicksElementFlag,
+        css,
+        createElementAspect
+      } = staticDom;
       var filterInputElement = createElementAspect.createElement('INPUT');
       addStyling(filterInputElement, css.filterInput);
       filterInputElement.setAttribute("type", "search");
@@ -1137,7 +1127,6 @@ function plug$p(configuration) {
       layout: () => {
         let {
           validationApiAspect,
-          initialDom,
           picksDom,
           staticDom,
           updateAppearanceAspect,
@@ -1150,8 +1139,10 @@ function plug$p(configuration) {
           css,
           composeGetSize
         } = configuration;
-        let selectElement = staticDom.selectElement;
-        let initialElement = initialDom.initialElement;
+        let {
+          selectElement,
+          initialElement
+        } = staticDom;
         let isFloatingLabel = false;
 
         if (floatingLabelAspect) {
@@ -1445,14 +1436,13 @@ function plug$n(configuration) {
       layout: () => {
         let {
           popperRtlAspect,
-          staticDom,
-          initialDom
+          staticDom
         } = aspects;
         let {
           isRtl
         } = configuration;
         let forceRtlOnContainer = false;
-        if (isBoolean(isRtl)) forceRtlOnContainer = true;else isRtl = getIsRtl(initialDom.initialElement);
+        if (isBoolean(isRtl)) forceRtlOnContainer = true;else isRtl = getIsRtl(staticDom.initialElement);
         var attributeBackup = AttributeBackup();
 
         if (forceRtlOnContainer) {
@@ -1537,15 +1527,15 @@ function plug$l(configuration) {
     return {
       plugStaticDom: () => {
         var {
-          optionsAspect,
-          initialDom
+          dataWrap,
+          staticDom
         } = aspects;
-        var valueMissingMessageEx = defCall(valueMissingMessage, () => getDataGuardedWithPrefix(initialDom.initialElement, "bsmultiselect", "value-missing-message"), defValueMissingMessage);
+        var valueMissingMessageEx = defCall(valueMissingMessage, () => getDataGuardedWithPrefix(staticDom.initialElement, "bsmultiselect", "value-missing-message"), defValueMissingMessage);
 
         if (!getIsValueMissing) {
           getIsValueMissing = () => {
             let count = 0;
-            let optionsArray = optionsAspect.getOptions();
+            let optionsArray = dataWrap.getOptions();
 
             for (var i = 0; i < optionsArray.length; i++) {
               if (optionsArray[i].selected) count++;
@@ -1575,11 +1565,11 @@ function plug$l(configuration) {
                 return {
                   buildApi(api) {
                     var {
-                      triggerAspect,
+                      staticDom,
                       filterDom
                     } = aspects;
                     api.validationApi = ValidityApi(filterDom.filterInputElement, // !!
-                    isValueMissingObservable, valueMissingMessageEx, isValid => validationApiObservable.setValue(isValid), triggerAspect.trigger);
+                    isValueMissingObservable, valueMissingMessageEx, isValid => validationApiObservable.setValue(isValid), staticDom.trigger);
                   }
 
                 };
@@ -1870,13 +1860,13 @@ function plug$h() {
           wrapsCollection,
           createWrapAspect,
           createChoiceBaseAspect,
-          optionsAspect,
+          dataWrap,
           resetLayoutAspect
         } = aspects;
 
         api.updateOptionAdded = key => {
           // TODO: generalize index as key 
-          let options = optionsAspect.getOptions();
+          let options = dataWrap.getOptions();
           let option = options[key];
           let wrap = createWrapAspect.createWrap(option);
           wrap.choice = createChoiceBaseAspect.createChoiceBase(option);
@@ -1946,56 +1936,80 @@ function SelectElementPlugin() {
 function plug$f(configuration) {
   return aspects => {
     return {
+      data: (initialElement, staticDom, dataWrap, containerClass) => {
+        let selectElement = null;
+        staticDom.containerElement = null;
+
+        if (initialElement.tagName == 'SELECT') {
+          selectElement = initialElement;
+
+          if (containerClass) {
+            staticDom.containerElement = closestByClassName(selectElement, containerClass);
+          }
+        } else if (initialElement.tagName == 'DIV') {
+          selectElement = findDirectChildByTagName(initialElement, 'SELECT');
+
+          if (selectElement) {
+            if (containerClass) {
+              staticDom.containerElement = closestByClassName(initialElement, containerClass);
+            }
+          } else {
+            return origCreateStaticDom(initialElement, containerClass);
+          }
+        }
+
+        if (selectElement) {
+          staticDom.selectElement = selectElement;
+
+          dataWrap.getOptions = () => selectElement.options;
+        }
+      },
       dom: () => {
         let {
           staticDomFactory,
-          createElementAspect,
           onChangeAspect,
-          triggerAspect,
-          optionsAspect,
+          dataWrap,
           disposeAspect,
-          initialDom,
+          staticDom,
           showErrorAspect,
-          choicesDomFactory,
-          filterDomFactory,
-          picksDomFactory,
-          // move to new appendAspect ?
           getValueRequiredAspect,
           createFilterInputElementIdAspect,
-          optGroupAspect
-          /* those three are plugins */
-          ,
+          optGroupAspect,
           disabledComponentAspect
+          /* those four are plugins */
+
         } = aspects;
+        let {
+          createElementAspect,
+          initialElement
+        } = staticDom;
         let containerClass = configuration.containerClass;
         let origCreateStaticDom = staticDomFactory.createStaticDom;
-        let element = initialDom.initialElement;
 
         staticDomFactory.createStaticDom = () => {
           let selectElement = null;
           let containerElement = null;
-          let picksElement = null;
 
-          if (element.tagName == 'SELECT') {
-            selectElement = element;
+          if (initialElement.tagName == 'SELECT') {
+            selectElement = initialElement;
 
             if (containerClass) {
               containerElement = closestByClassName(selectElement, containerClass);
-              if (containerElement) picksElement = findDirectChildByTagName(containerElement, 'UL');
             }
-          } else if (element.tagName == 'DIV') {
-            selectElement = findDirectChildByTagName(element, 'SELECT');
+          } else if (initialElement.tagName == 'DIV') {
+            selectElement = findDirectChildByTagName(initialElement, 'SELECT');
 
             if (selectElement) {
               if (containerClass) {
-                containerElement = closestByClassName(element, containerClass);
-                if (containerElement) picksElement = findDirectChildByTagName(containerElement, 'UL');
+                containerElement = closestByClassName(initialElement, containerClass);
               }
             } else {
-              return origCreateStaticDom(element, containerClass);
+              return origCreateStaticDom(initialElement, containerClass);
             }
           }
 
+          let picksElement = null;
+          if (containerElement) picksElement = findDirectChildByTagName(containerElement, 'UL');
           let isDisposableContainerElementFlag = false;
 
           if (!containerElement) {
@@ -2003,11 +2017,6 @@ function plug$f(configuration) {
             containerElement.classList.add(containerClass);
             isDisposableContainerElementFlag = true;
           }
-
-          let staticDom = {
-            containerElement,
-            selectElement
-          };
 
           if (selectElement) {
             showErrorAspect.showError = error => {
@@ -2046,9 +2055,9 @@ function plug$f(configuration) {
               };
             }
 
-            onChangeAspect.onChange = composeSync(() => triggerAspect.trigger('change'), onChangeAspect.onChange);
+            onChangeAspect.onChange = composeSync(() => staticDom.trigger('change'), onChangeAspect.onChange);
 
-            optionsAspect.getOptions = () => selectElement.options;
+            dataWrap.getOptions = () => selectElement.options;
 
             if (optGroupAspect) {
               optGroupAspect.getOptionOptGroup = option => option.parentNode;
@@ -2085,36 +2094,42 @@ function plug$f(configuration) {
             isDisposablePicksElementFlag = true;
           }
 
-          let choicesDom = choicesDomFactory.create();
-          let picksDom = picksDomFactory.create(picksElement, isDisposablePicksElementFlag);
-          let filterDom = filterDomFactory.create(isDisposablePicksElementFlag);
-          let {
-            choicesElement
-          } = choicesDom;
+          staticDom.containerElement = containerElement;
+          staticDom.isDisposablePicksElementFlag = isDisposablePicksElementFlag;
+          staticDom.picksElement = picksElement;
+          staticDom.selectElement = selectElement;
           return {
-            choicesDom,
-            filterDom,
-            picksDom,
-            staticDom,
             staticManager: {
               appendToContainer() {
+                let {
+                  choicesDom,
+                  filterDom,
+                  picksDom,
+                  isDisposablePicksElementFlag
+                } = staticDom;
                 picksDom.pickFilterElement.appendChild(filterDom.filterInputElement);
                 picksDom.picksElement.appendChild(picksDom.pickFilterElement);
 
                 if (isDisposableContainerElementFlag) {
                   selectElement.parentNode.insertBefore(containerElement, selectElement.nextSibling);
-                  containerElement.appendChild(choicesElement);
+                  containerElement.appendChild(choicesDom.choicesElement);
                 } else {
-                  selectElement.parentNode.insertBefore(choicesElement, selectElement.nextSibling);
+                  selectElement.parentNode.insertBefore(choicesDom.choicesElement, selectElement.nextSibling);
                 }
 
-                if (isDisposablePicksElementFlag) containerElement.appendChild(picksElement);
+                if (isDisposablePicksElementFlag) containerElement.appendChild(picksDom.picksElement);
               },
 
               dispose() {
-                choicesElement.parentNode.removeChild(choicesElement);
+                let {
+                  choicesDom,
+                  filterDom,
+                  picksDom,
+                  isDisposablePicksElementFlag
+                } = staticDom;
+                choicesDom.choicesElement.parentNode.removeChild(choicesDom.choicesElement);
                 if (isDisposableContainerElementFlag) selectElement.parentNode.removeChild(containerElement);
-                if (isDisposablePicksElementFlag) containerElement.removeChild(picksElement);
+                if (isDisposablePicksElementFlag) containerElement.removeChild(picksDom.picksElement);
                 picksDom.dispose();
                 filterDom.dispose();
               }
@@ -2947,7 +2962,7 @@ function HighlightPlugin(defaults) {
   };
 }
 
-function ExtendChoiceDomFactory$1(choiceDomFactory, optionPropertiesAspect) {
+function ExtendChoiceDomFactory$1(choiceDomFactory, dataWrap) {
   var origChoiceDomFactoryCreate = choiceDomFactory.create;
 
   choiceDomFactory.create = choice => {
@@ -2955,7 +2970,7 @@ function ExtendChoiceDomFactory$1(choiceDomFactory, optionPropertiesAspect) {
     let choiceElement = choice.choiceDom.choiceElement;
 
     choice.choiceDomManagerHandlers.updateHighlighted = () => {
-      var text = optionPropertiesAspect.getText(choice.wrap.option);
+      var text = dataWrap.getText(choice.wrap.option);
       var highlighter = aspects.highlightAspect.getHighlighter();
       if (highlighter) highlighter(choiceElement, choice.choiceDom, text);else choiceElement.textContent = text;
     };
@@ -2969,9 +2984,9 @@ function plug$8(configuration) {
       plugStaticDom() {
         var {
           choiceDomFactory,
-          optionPropertiesAspect
+          dataWrap
         } = aspects;
-        ExtendChoiceDomFactory$1(choiceDomFactory, optionPropertiesAspect);
+        ExtendChoiceDomFactory$1(choiceDomFactory, dataWrap);
       },
 
       layout() {
@@ -3306,11 +3321,11 @@ function plug$3(configuration) {
           picksList,
           picksDom,
           filterDom,
-          initialDom,
           updateDataAspect,
           resetFilterListAspect,
           filterManagerAspect,
-          environment
+          environment,
+          staticDom
         } = aspects;
         let isIE11 = environment.isIE11;
         let {
@@ -3350,7 +3365,7 @@ function plug$3(configuration) {
         }
 
         if (!placeholder) {
-          placeholder = getDataGuardedWithPrefix(initialDom.initialElement, "bsmultiselect", "placeholder");
+          placeholder = getDataGuardedWithPrefix(staticDom.initialElement, "bsmultiselect", "placeholder");
         }
 
         function setEmptyInputWidth(isVisible) {
@@ -3544,12 +3559,15 @@ function plug$1(configuration) {
       layout: () => {
         let {
           choicesDom,
-          createElementAspect,
           staticManager,
           afterInputAspect,
           filterManagerAspect,
-          resetLayoutAspect
+          resetLayoutAspect,
+          staticDom
         } = aspects;
+        let {
+          createElementAspect
+        } = staticDom;
         let {
           css,
           noResultsWarning
@@ -3664,9 +3682,9 @@ function plug(configuration) {
       plugStaticDom: () => {
         var {
           pickDomFactory,
-          createElementAspect
+          staticDom
         } = aspects;
-        ExtendPickDomFactory(pickDomFactory, createElementAspect, configuration.pickButtonHTML, configuration.css);
+        ExtendPickDomFactory(pickDomFactory, staticDom.createElementAspect, configuration.pickButtonHTML, configuration.css);
       },
       layout: () => {
         var {
@@ -3796,15 +3814,19 @@ let utilities = {
   toggleStyling
 };
 
-function StaticDomFactory(createElementAspect, choicesDomFactory, filterDomFactory, picksDomFactory, initialDom, containerClass) {
+function StaticDomFactory(staticDom) {
   return {
     createStaticDom() {
-      var element = initialDom.initialElement;
+      let {
+        createElementAspect,
+        initialElement,
+        containerClass
+      } = staticDom;
       let containerElement, picksElement;
       let removableContainerClass = false;
 
-      if (element.tagName == 'DIV') {
-        containerElement = element;
+      if (initialElement.tagName == 'DIV') {
+        containerElement = initialElement;
 
         if (!containerElement.classList.contains(containerClass)) {
           containerElement.classList.add(containerClass);
@@ -3812,20 +3834,17 @@ function StaticDomFactory(createElementAspect, choicesDomFactory, filterDomFacto
         }
 
         picksElement = findDirectChildByTagName(containerElement, 'UL');
-      } else if (element.tagName == 'UL') {
-        picksElement = element;
-        containerElement = closestByClassName(element, containerClass);
+      } else if (initialElement.tagName == 'UL') {
+        picksElement = initialElement;
+        containerElement = closestByClassName(initialElement, containerClass);
 
         if (!containerElement) {
           throw new Error('BsMultiSelect: defined on UL but precedentant DIV for container not found; class=' + containerClass);
         }
-      } else if (element.tagName == "INPUT") {
+      } else if (initialElement.tagName == "INPUT") {
         throw new Error('BsMultiSelect: INPUT element is not supported');
       }
 
-      let staticDom = {
-        containerElement
-      };
       let isDisposablePicksElementFlag = false;
 
       if (!picksElement) {
@@ -3833,29 +3852,37 @@ function StaticDomFactory(createElementAspect, choicesDomFactory, filterDomFacto
         isDisposablePicksElementFlag = true;
       }
 
-      let choicesDom = choicesDomFactory.create();
-      let picksDom = picksDomFactory.create(picksElement, isDisposablePicksElementFlag);
-      let filterDom = filterDomFactory.create(isDisposablePicksElementFlag);
-      let {
-        choicesElement
-      } = choicesDom;
+      staticDom.containerElement = containerElement;
+      staticDom.isDisposablePicksElementFlag = isDisposablePicksElementFlag;
+      staticDom.picksElement = picksElement;
       return {
-        staticDom,
-        choicesDom,
-        filterDom,
-        picksDom,
         staticManager: {
           appendToContainer() {
+            let {
+              containerElement,
+              isDisposablePicksElementFlag,
+              choicesDom,
+              picksDom,
+              filterDom
+            } = staticDom;
             picksDom.pickFilterElement.appendChild(filterDom.filterInputElement);
             picksDom.picksElement.appendChild(picksDom.pickFilterElement);
-            containerElement.appendChild(choicesElement);
-            if (isDisposablePicksElementFlag) containerElement.appendChild(picksElement);
+            containerElement.appendChild(choicesDom.choicesElement);
+            if (isDisposablePicksElementFlag) containerElement.appendChild(picksDom.picksElement);
           },
 
           dispose() {
-            containerElement.removeChild(choicesElement);
+            let {
+              containerElement,
+              containerClass,
+              isDisposablePicksElementFlag,
+              choicesDom,
+              picksDom,
+              filterDom
+            } = staticDom;
+            containerElement.removeChild(choicesDom.choicesElement);
             if (removableContainerClass) containerElement.classList.remove(containerClass);
-            if (isDisposablePicksElementFlag) containerElement.removeChild(picksElement);
+            if (isDisposablePicksElementFlag) containerElement.removeChild(picksDom.picksElement);
             picksDom.dispose();
             filterDom.dispose();
           }
@@ -3899,34 +3926,12 @@ function SpecialPicksEventsAspect() {
   };
 }
 
-function TriggerAspect(element, trigger) {
-  return {
-    trigger: eventName => {
-      trigger(element, eventName);
-    }
-  };
-}
-function OnChangeAspect(triggerAspect, name) {
+function OnChangeAspect(staticDom, name) {
   return {
     onChange() {
-      triggerAspect.trigger(name);
+      staticDom.trigger(name);
     }
 
-  };
-}
-
-function OptionsAspect(options) {
-  return {
-    getOptions: () => options
-  };
-}
-function OptionPropertiesAspect(getText) {
-  if (!getText) {
-    getText = option => option.text;
-  }
-
-  return {
-    getText
   };
 }
 
@@ -4048,11 +4053,10 @@ function ProduceChoiceAspect(choicesDom, choiceDomFactory) {
       choice.setHoverIn = v => {
         choice.isHoverIn = v;
         choiceDomManagerHandlers.updateHoverIn();
-      }; //choice.setHovered
+      };
 
-
-      choice.dispose = composeSync(choice.dispose, () => {
-        choiceDom.choiceElement = null;
+      choice.dispose = composeSync(() => {
+        choice.choiceDom.choiceElement = null;
         choice.choiceDom = null;
         choiceDomManagerHandlers.attach = null;
         choiceDomManagerHandlers.detach = null;
@@ -4062,7 +4066,7 @@ function ProduceChoiceAspect(choicesDom, choiceDomFactory) {
         choice.setHoverIn = null;
         choice.wrap = null;
         choice.dispose = null;
-      });
+      }, choice.dispose);
 
       wrap.dispose = () => {
         choice.dispose();
@@ -4087,10 +4091,10 @@ function OptionAttachAspect(createWrapAspect, createChoiceBaseAspect, buildAndAt
 
   };
 }
-function OptionsLoopAspect(optionsAspect, optionAttachAspect) {
+function OptionsLoopAspect(dataWrap, optionAttachAspect) {
   return {
     loop() {
-      let options = optionsAspect.getOptions();
+      let options = dataWrap.getOptions();
 
       for (let i = 0; i < options.length; i++) {
         let option = options[i];
@@ -4126,14 +4130,14 @@ function UpdateAspect(updateDataAspect) {
 }
 
 // no overrides (not an aspect, just )
-function CreateChoiceBaseAspect(optionPropertiesAspect) {
+function CreateChoiceBaseAspect(dataWrap) {
   return {
     createChoiceBase(option) {
       return {
         // navigation and filter support
         filteredPrev: null,
         filteredNext: null,
-        searchText: optionPropertiesAspect.getText(option).toLowerCase().trim(),
+        searchText: dataWrap.getText(option).toLowerCase().trim(),
         // TODO make an index abstraction
         // internal state handlers, so they do not have "update semantics"
         isHoverIn: false,
@@ -4750,203 +4754,217 @@ function AfterInputAspect(filterManagerAspect, navigateAspect, choicesVisibility
   };
 }
 
-function ShowErrorAspect(initialDom, createElementAspect) {
+function ShowErrorAspect(staticDom) {
   return {
     showError(error) {
+      let {
+        createElementAspect,
+        initialElement
+      } = staticDom;
       let errorElement = createElementAspect.createElement('SPAN');
       errorElement.style.backgroundColor = 'red';
       errorElement.style.color = 'white';
       errorElement.style.block = 'inline-block';
       errorElement.style.padding = '0.2rem 0.5rem';
       errorElement.textContent = 'BsMultiSelect ' + error.toString();
-      initialDom.initialElement.parentNode.insertBefore(errorElement, initialDom.initialElement.nextSibling);
+      initialElement.parentNode.insertBefore(errorElement, initialElement.nextSibling);
     }
 
   };
 }
 
-function BsMultiSelect(element, environment, pluginManager, configuration) {
+function BsMultiSelect(initialElement, environment, pluginManager, configuration) {
   let {
     css,
-    options,
     getText,
-    containerClass
+    containerClass,
+    options
   } = configuration;
-  let initialDom = {
-    initialElement: element
-  };
+  let {
+    trigger
+  } = environment;
   let createElementAspect = CreateElementAspect(name => environment.window.document.createElement(name), (element, html) => element.innerHTML = html, (element, html) => {
     var newElement = new environment.window.DOMParser().parseFromString(html, 'text/html').body.children[0];
     element.parentNode.insertBefore(newElement, element.nextSibling);
   });
-  let showErrorAspect = ShowErrorAspect(initialDom, createElementAspect);
+  let dataWrap = {};
+  let staticDom = {
+    initialElement,
+    css,
+    createElementAspect,
+    containerClass
+  };
+  let staticDomFactory = StaticDomFactory(staticDom);
+  let picksDomFactory = PicksDomFactory(staticDom);
+  let filterDomFactory = FilterDomFactory(staticDom);
+  let choicesDomFactory = ChoicesDomFactory(staticDom);
+  dataWrap.getText = getText != null ? getText : option => option.text;
+
+  dataWrap.getOptions = () => options;
+
+  staticDom.trigger = eventName => trigger(initialElement, eventName);
+
+  let pickDomFactory = PickDomFactory(css, staticDom.createElementAspect, dataWrap); // overrided in CustomPickStylingsPlugin, DisableComponentPlugin
+
+  let choiceDomFactory = ChoiceDomFactory(css, staticDom.createElementAspect, dataWrap); // overrided in CustomChoicesStylingsPlugin, HighlightPlugin
+
+  staticDom.environment = environment;
+  staticDom.showErrorAspect = ShowErrorAspect(staticDom);
 
   try {
-    let picksDomFactory = PicksDomFactory(css, createElementAspect);
-    let filterDomFactory = FilterDomFactory(css, createElementAspect);
-    let choicesDomFactory = ChoicesDomFactory(css, createElementAspect);
-    let staticDomFactory = StaticDomFactory(createElementAspect, choicesDomFactory, filterDomFactory, picksDomFactory, initialDom, containerClass);
     let eventHandlers = pluginManager.createHandlers();
-    let disposeAspect = {
-      dispose() {}
-
-    };
-    let triggerAspect = TriggerAspect(element, environment.trigger);
-    let onChangeAspect = OnChangeAspect(triggerAspect, 'dashboardcode.multiselect:change');
-    let optionsAspect = OptionsAspect(options);
-    eventHandlers.dom({
-      configuration,
-      initialDom,
-      createElementAspect,
-      showErrorAspect,
-      onChangeAspect,
-      triggerAspect,
-      optionsAspect,
-      disposeAspect,
-      staticDomFactory,
-      choicesDomFactory,
-      filterDomFactory,
-      picksDomFactory
-    }); // --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
-
-    let {
-      staticDom,
-      choicesDom,
-      filterDom,
-      picksDom,
-      staticManager
-    } = staticDomFactory.createStaticDom(); // --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
-
-    let optionPropertiesAspect = OptionPropertiesAspect(getText);
-    let pickDomFactory = PickDomFactory(css, createElementAspect, optionPropertiesAspect); // overrided in CustomPickStylingsPlugin, DisableComponentPlugin
-
-    let choiceDomFactory = ChoiceDomFactory(css, createElementAspect, optionPropertiesAspect); // overrided in CustomChoicesStylingsPlugin, HighlightPlugin
-
-    let producePickAspect = ProducePickAspect(picksDom, pickDomFactory);
-    let picksList = List();
-    let produceChoiceAspect = ProduceChoiceAspect(choicesDom, choiceDomFactory);
-    let wrapsCollection = ArrayFacade();
-    let countableChoicesList = DoublyLinkedList(wrap => wrap.choice.itemPrev, (warp, v) => warp.choice.itemPrev = v, wrap => wrap.choice.itemNext, (wrap, v) => wrap.choice.itemNext = v);
-    let countableChoicesListInsertAspect = CountableChoicesListInsertAspect(wrapsCollection, countableChoicesList);
-    let wraps = Wraps(wrapsCollection, () => countableChoicesList.reset(), w => countableChoicesList.remove(w), (w, key) => countableChoicesListInsertAspect.countableChoicesListInsert(w, key)); // !!!!!!!!!!!
-    //let createChoiceHandlersAspect = CreateChoiceHandlersAspect(produceChoiceAspect, wraps);
-
-    let createWrapAspect = CreateWrapAspect();
-    let createChoiceBaseAspect = CreateChoiceBaseAspect(optionPropertiesAspect); //let addPickAspect = AddPickAspect();
-    //--------------------------
-
-    let choicesEnumerableAspect = ChoicesEnumerableAspect(countableChoicesList, wrap => wrap.choice.itemNext);
-    let filteredChoicesList = DoublyLinkedList(wrap => wrap.choice.filteredPrev, (wrap, v) => wrap.choice.filteredPrev = v, wrap => wrap.choice.filteredNext, (wrap, v) => wrap.choice.filteredNext = v);
-    let emptyNavigateManager = NavigateManager(countableChoicesList, wrap => wrap.choice.itemPrev, wrap => wrap.choice.itemNext);
-    let filteredNavigateManager = NavigateManager(filteredChoicesList, wrap => wrap.choice.filteredPrev, wrap => wrap.choice.filteredNext);
-    let filterPredicateAspect = FilterPredicateAspect();
-    let filterManagerAspect = FilterManagerAspect(emptyNavigateManager, filteredNavigateManager, filteredChoicesList, choicesEnumerableAspect, filterPredicateAspect);
-    let hoveredChoiceAspect = HoveredChoiceAspect();
-    let navigateAspect = NavigateAspect(hoveredChoiceAspect, (down, hoveredChoice) => filterManagerAspect.getNavigateManager().navigate(down, hoveredChoice)); // TODO: union to events or create event bus
-
-    eventHandlers.plugStaticDom({
-      environment,
-      pickDomFactory,
-      choiceDomFactory,
-      countableChoicesList,
-      countableChoicesListInsertAspect,
-      optionPropertiesAspect,
-      wrapsCollection,
-      choicesEnumerableAspect,
-      filteredChoicesList,
-      filterPredicateAspect,
-      hoveredChoiceAspect,
-      navigateAspect,
-      filterManagerAspect,
-      createWrapAspect,
-      createChoiceBaseAspect,
-      picksList,
-      wraps,
-      //addPickAspect,
-      producePickAspect,
-      produceChoiceAspect
-    }); // apply selectElement support;  
-    // TODO: to staticManager
-    //let {staticManager, staticDom, filterDom, picksDom, choicesDom} = staticDomFactory.createStaticDom(); // overrided in SelectElementPlugin
-    // after this we can use staticDom (means generated DOM elements) in plugin construtctor, what simplifies parameters passing a lot   
-
-    let specialPicksEventsAspect = SpecialPicksEventsAspect();
-    let resetFilterListAspect = ResetFilterListAspect(filterDom, filterManagerAspect);
-    let resetFilterAspect = ResetFilterAspect(filterDom, resetFilterListAspect);
-    let focusInAspect = FocusInAspect(picksDom);
-    let inputAspect = InputAspect(filterDom, filterManagerAspect
-    /*, fullMatchAspect*/
-    );
-    let buildAndAttachChoiceAspect = BuildAndAttachChoiceAspect(produceChoiceAspect);
-    let resetLayoutAspect = ResetLayoutAspect(resetFilterAspect); //!!!!!!!!!
-    //createWrapAspect, createChoiceBaseAspect, buildAndAttachChoiceAspect, wraps
-
-    let optionAttachAspect = OptionAttachAspect(createWrapAspect, createChoiceBaseAspect, buildAndAttachChoiceAspect, wraps);
-    let optionsLoopAspect = OptionsLoopAspect(optionsAspect, optionAttachAspect);
-    let updateDataAspect = UpdateDataAspect(choicesDom, wraps, picksList, optionsLoopAspect, resetLayoutAspect);
-    let loadAspect = LoadAspect(optionsLoopAspect); // !!!!!!!!!!!
-
-    let updateAspect = UpdateAspect(updateDataAspect);
-    let picksElementAspect = PicksElementAspect(picksDom.picksElement);
-    let choicesVisibilityAspect = ChoicesVisibilityAspect(choicesDom.choicesElement);
-    let afterInputAspect = AfterInputAspect(filterManagerAspect, navigateAspect, choicesVisibilityAspect, hoveredChoiceAspect);
-    let multiSelectInlineLayoutAspect = MultiSelectInlineLayoutAspect(environment, filterDom, choicesDom, choicesVisibilityAspect, hoveredChoiceAspect, navigateAspect, filterManagerAspect, focusInAspect, picksList, inputAspect, specialPicksEventsAspect, produceChoiceAspect, resetLayoutAspect, picksElementAspect, afterInputAspect, disposeAspect, pickDomFactory);
-    eventHandlers.layout({
-      staticDom,
-      picksDom,
-      choicesDom,
-      filterDom,
-      resetLayoutAspect,
-      choicesVisibilityAspect,
-      staticManager,
-      buildAndAttachChoiceAspect,
-      optionsLoopAspect,
-      optionAttachAspect,
-      inputAspect,
-      resetFilterListAspect,
-      resetFilterAspect,
-      specialPicksEventsAspect,
-      resetLayoutAspect,
-      focusInAspect,
-      loadAspect,
-      updateDataAspect,
-      updateAspect,
-      //fullMatchAspect,
-      picksElementAspect,
-      afterInputAspect,
-      multiSelectInlineLayoutAspect
-    });
-    multiSelectInlineLayoutAspect.layout(); // TODO: to staticManager
-
-    eventHandlers.append();
-    let api = {
-      component: "BsMultiSelect.api"
-    }; // key to use in memory leak analyzes
-
-    eventHandlers.buildApi(api);
-
-    api.updateData = () => {
-      updateDataAspect.updateData();
-    };
-
-    api.update = () => {
-      updateAspect.update();
-    }; // TODO api.updateOption = (key) => {/* all updates: selected, disabled, hidden, text */}
-
-
-    api.dispose = composeSync(resetLayoutAspect.resetLayout, () => {
-      disposeAspect.dispose();
-    }, eventHandlers.dispose, () => {
-      picksList.forEach(pick => pick.dispose());
-    }, wraps.dispose, staticManager.dispose); // after this we can pass aspects methods call without wrapping - there should be no more overridings. TODO freeze aspects?        
-
-    staticManager.appendToContainer();
-    loadAspect.load();
-    return api;
+    return BsMultiSelectImpl(dataWrap, staticDom, staticDomFactory, picksDomFactory, filterDomFactory, choicesDomFactory, pickDomFactory, choiceDomFactory, eventHandlers);
   } catch (error) {
-    showErrorAspect.showError(error);
+    staticDom.showErrorAspect.showError(error);
     throw error;
   }
+}
+function BsMultiSelectImpl(dataWrap, staticDom, staticDomFactory, picksDomFactory, filterDomFactory, choicesDomFactory, pickDomFactory, choiceDomFactory, eventHandlers) {
+  let onChangeAspect = OnChangeAspect(staticDom, 'dashboardcode.multiselect:change');
+  let disposeAspect = {
+    dispose() {}
+
+  };
+  eventHandlers.dom({
+    showErrorAspect: staticDom.showErrorAspect,
+    environment: staticDom.environment,
+    onChangeAspect,
+    disposeAspect,
+    staticDomFactory,
+    choicesDomFactory,
+    filterDomFactory,
+    picksDomFactory,
+    staticDom,
+    dataWrap
+  }); // --- --- --- --- --- --- --- --- --- --- --- --- --- ---
+
+  let {
+    staticManager
+  } = staticDomFactory.createStaticDom();
+  let choicesDom = choicesDomFactory.create();
+  let picksDom = picksDomFactory.create();
+  let filterDom = filterDomFactory.create();
+  staticDom.choicesDom = choicesDom;
+  staticDom.picksDom = picksDom;
+  staticDom.filterDom = filterDom; // --- --- --- --- --- --- --- --- --- --- --- --- --- ---
+
+  let producePickAspect = ProducePickAspect(picksDom, pickDomFactory);
+  let picksList = List();
+  let produceChoiceAspect = ProduceChoiceAspect(choicesDom, choiceDomFactory);
+  let wrapsCollection = ArrayFacade();
+  let countableChoicesList = DoublyLinkedList(wrap => wrap.choice.itemPrev, (warp, v) => warp.choice.itemPrev = v, wrap => wrap.choice.itemNext, (wrap, v) => wrap.choice.itemNext = v);
+  let countableChoicesListInsertAspect = CountableChoicesListInsertAspect(wrapsCollection, countableChoicesList);
+  let wraps = Wraps(wrapsCollection, () => countableChoicesList.reset(), w => countableChoicesList.remove(w), (w, key) => countableChoicesListInsertAspect.countableChoicesListInsert(w, key)); // !!!!!!!!!!!
+  //let createChoiceHandlersAspect = CreateChoiceHandlersAspect(produceChoiceAspect, wraps);
+
+  let createWrapAspect = CreateWrapAspect();
+  let createChoiceBaseAspect = CreateChoiceBaseAspect(dataWrap); //let addPickAspect = AddPickAspect();
+  //--------------------------
+
+  let choicesEnumerableAspect = ChoicesEnumerableAspect(countableChoicesList, wrap => wrap.choice.itemNext);
+  let filteredChoicesList = DoublyLinkedList(wrap => wrap.choice.filteredPrev, (wrap, v) => wrap.choice.filteredPrev = v, wrap => wrap.choice.filteredNext, (wrap, v) => wrap.choice.filteredNext = v);
+  let emptyNavigateManager = NavigateManager(countableChoicesList, wrap => wrap.choice.itemPrev, wrap => wrap.choice.itemNext);
+  let filteredNavigateManager = NavigateManager(filteredChoicesList, wrap => wrap.choice.filteredPrev, wrap => wrap.choice.filteredNext);
+  let filterPredicateAspect = FilterPredicateAspect();
+  let filterManagerAspect = FilterManagerAspect(emptyNavigateManager, filteredNavigateManager, filteredChoicesList, choicesEnumerableAspect, filterPredicateAspect);
+  let hoveredChoiceAspect = HoveredChoiceAspect();
+  let navigateAspect = NavigateAspect(hoveredChoiceAspect, (down, hoveredChoice) => filterManagerAspect.getNavigateManager().navigate(down, hoveredChoice)); // TODO: union to events or create event bus
+
+  eventHandlers.plugStaticDom({
+    pickDomFactory,
+    choiceDomFactory,
+    countableChoicesList,
+    countableChoicesListInsertAspect,
+    wrapsCollection,
+    choicesEnumerableAspect,
+    filteredChoicesList,
+    filterPredicateAspect,
+    hoveredChoiceAspect,
+    navigateAspect,
+    filterManagerAspect,
+    createWrapAspect,
+    createChoiceBaseAspect,
+    picksList,
+    wraps,
+    //addPickAspect,
+    producePickAspect,
+    produceChoiceAspect
+  }); // apply selectElement support;  
+  // TODO: to staticManager
+  //let {staticManager, staticDom, filterDom, picksDom, choicesDom} = staticDomFactory.createStaticDom(); // overrided in SelectElementPlugin
+  // after this we can use staticDom (means generated DOM elements) in plugin construtctor, what simplifies parameters passing a lot   
+
+  let specialPicksEventsAspect = SpecialPicksEventsAspect();
+  let resetFilterListAspect = ResetFilterListAspect(filterDom, filterManagerAspect);
+  let resetFilterAspect = ResetFilterAspect(filterDom, resetFilterListAspect);
+  let focusInAspect = FocusInAspect(picksDom);
+  let inputAspect = InputAspect(filterDom, filterManagerAspect
+  /*, fullMatchAspect*/
+  );
+  let buildAndAttachChoiceAspect = BuildAndAttachChoiceAspect(produceChoiceAspect);
+  let resetLayoutAspect = ResetLayoutAspect(resetFilterAspect); //!!!!!!!!!
+  //createWrapAspect, createChoiceBaseAspect, buildAndAttachChoiceAspect, wraps
+
+  let optionAttachAspect = OptionAttachAspect(createWrapAspect, createChoiceBaseAspect, buildAndAttachChoiceAspect, wraps);
+  let optionsLoopAspect = OptionsLoopAspect(dataWrap, optionAttachAspect);
+  let updateDataAspect = UpdateDataAspect(choicesDom, wraps, picksList, optionsLoopAspect, resetLayoutAspect);
+  let loadAspect = LoadAspect(optionsLoopAspect); // !!!!!!!!!!!
+
+  let updateAspect = UpdateAspect(updateDataAspect);
+  let picksElementAspect = PicksElementAspect(picksDom.picksElement);
+  let choicesVisibilityAspect = ChoicesVisibilityAspect(choicesDom.choicesElement);
+  let afterInputAspect = AfterInputAspect(filterManagerAspect, navigateAspect, choicesVisibilityAspect, hoveredChoiceAspect);
+  let multiSelectInlineLayoutAspect = MultiSelectInlineLayoutAspect(staticDom.environment, filterDom, choicesDom, choicesVisibilityAspect, hoveredChoiceAspect, navigateAspect, filterManagerAspect, focusInAspect, picksList, inputAspect, specialPicksEventsAspect, produceChoiceAspect, resetLayoutAspect, picksElementAspect, afterInputAspect, disposeAspect, pickDomFactory);
+  eventHandlers.layout({
+    picksDom,
+    choicesDom,
+    filterDom,
+    resetLayoutAspect,
+    choicesVisibilityAspect,
+    staticManager,
+    buildAndAttachChoiceAspect,
+    optionsLoopAspect,
+    optionAttachAspect,
+    inputAspect,
+    resetFilterListAspect,
+    resetFilterAspect,
+    specialPicksEventsAspect,
+    resetLayoutAspect,
+    focusInAspect,
+    loadAspect,
+    updateDataAspect,
+    updateAspect,
+    picksElementAspect,
+    afterInputAspect
+  });
+  multiSelectInlineLayoutAspect.layout(); // TODO: to staticManager
+
+  eventHandlers.append();
+  let api = {
+    component: "BsMultiSelect.api",
+    // key to use in memory leak analyzes
+    updateData: () => {
+      updateDataAspect.updateData();
+    },
+    update: () => {
+      updateAspect.update();
+    }
+  };
+  eventHandlers.buildApi(api); // TODO api.updateOption = (key) => {/* all updates: selected, disabled, hidden, text */}
+
+  api.dispose = composeSync(resetLayoutAspect.resetLayout, () => {
+    disposeAspect.dispose();
+  }, eventHandlers.dispose, () => {
+    picksList.forEach(pick => pick.dispose());
+  }, wraps.dispose, staticManager.dispose, () => {
+    staticDom.choicesDom = null;
+    staticDom.picksDom = null;
+    staticDom.filterDom = null;
+  }); // after this we can pass aspects methods call without wrapping - there should be no more overridings. TODO freeze aspects?        
+
+  staticManager.appendToContainer();
+  loadAspect.load();
+  return api;
 }
 
 function parseEventHandler(key, eventHandler, doms, plugStaticDoms, preLayouts, layouts, appends, buildApis, disposes) {

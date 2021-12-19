@@ -2,108 +2,93 @@ import {EventBinder} from './ToolsDom';
 import {addStyling, toggleStyling} from './ToolsStyling';
 import {composeSync} from './ToolsJs';
 
-export function ChoiceDomFactory(css, createElementAspect,  optionPropertiesAspect){
-    var updateDataInternal = function(wrap, element){
-        element.textContent = optionPropertiesAspect.getText(wrap.option);
+function buildDom(choiceElement, choiceDom, createElementAspect, css){
+    createElementAspect.createElementFromHtml(choiceElement, '<div><input formnovalidate type="checkbox"><label></label></div>');
+    let choiceContentElement = choiceElement.querySelector('DIV');
+    let choiceCheckBoxElement = choiceContentElement.querySelector('INPUT');
+    let choiceLabelElement = choiceContentElement.querySelector('LABEL');
+    
+    choiceDom.choiceContentElement = choiceContentElement;
+    choiceDom.choiceCheckBoxElement = choiceCheckBoxElement;
+    choiceDom.choiceLabelElement = choiceLabelElement;
+
+    addStyling(choiceContentElement,  css.choiceContent); 
+    addStyling(choiceCheckBoxElement, css.choiceCheckBox); 
+    addStyling(choiceLabelElement,    css.choiceLabel); 
+}
+
+function buidDisabled(choiceDom, choiceDomManagerHandlers, css, wrap){
+    let choiceDisabledToggle = toggleStyling(choiceDom.choiceElement, css.choice_disabled);
+    let choiceCheckBoxDisabledToggle = toggleStyling(choiceDom.choiceCheckBoxElement, css.choiceCheckBox_disabled);
+    let choiceLabelDisabledToggle = toggleStyling(choiceDom.choiceLabelElement, css.choiceLabel_disabled);
+    let choiceCursorDisabledToggle = toggleStyling(choiceDom.choiceElement, {classes:[], styles:{cursor:"default"}}); 
+    
+    let updateDisabled = function(){
+        choiceDisabledToggle(wrap.isOptionDisabled);
+        choiceCheckBoxDisabledToggle(wrap.isOptionDisabled);
+        choiceLabelDisabledToggle(wrap.isOptionDisabled);
+
+        // do not desable checkBox if option is selected! there should be possibility to unselect "disabled"
+        let isCheckBoxDisabled = wrap.isOptionDisabled && !wrap.isOptionSelected;
+        choiceDom.choiceCheckBoxElement.disabled = isCheckBoxDisabled;
+        choiceCursorDisabledToggle(isCheckBoxDisabled);
     }
+    choiceDomManagerHandlers.updateDisabled = updateDisabled;    
+}
+
+export function ChoiceDomFactory(css, createElementAspect,  dataWrap){
     //TODO move check which aspects availbale like wrap.hasOwnProperty("isOptionSelected") to there
     return {
         create(choice){
             let wrap = choice.wrap;
+            let {choiceDom, choiceDomManagerHandlers} = choice;
             let choiceElement = choice.choiceDom.choiceElement;
-            let choiceDom = choice.choiceDom;
-            let choiceDomManagerHandlers = choice.choiceDomManagerHandlers;
 
-            let choiceHoverToggle = null;
+            buildDom(choiceElement, choiceDom, createElementAspect, css);
             
-            if (wrap.hasOwnProperty("isOptionSelected")){
-                
-                choiceHoverToggle = toggleStyling(choiceElement, () =>
+            // --- --- --- ---
+            let choiceHoverToggle = toggleStyling(choiceElement, () =>
                     (wrap.isOptionDisabled===true && css.choice_disabled_hover && wrap.isOptionSelected===false)?
-                        css.choice_disabled_hover:css.choice_hover
-                );
+                        css.choice_disabled_hover:
+                        css.choice_hover
+            );
 
-                createElementAspect.createElementFromHtml(choiceElement, '<div><input formnovalidate type="checkbox"><label></label></div>');
-                let choiceContentElement = choiceElement.querySelector('DIV');
-                let choiceCheckBoxElement = choiceContentElement.querySelector('INPUT');
-                let choiceLabelElement = choiceContentElement.querySelector('LABEL');
-                
-                addStyling(choiceContentElement,  css.choiceContent); 
-                addStyling(choiceCheckBoxElement, css.choiceCheckBox); 
-                addStyling(choiceLabelElement,    css.choiceLabel); 
+            //let choiceHoverToggle2 = toggleStyling(choiceElement, css.choice_disabled_hover, css.choice_hover);
+            choiceDomManagerHandlers.updateHoverIn=()=>choiceHoverToggle(choice.isHoverIn);
 
-                choiceDom.choiceContentElement = choiceContentElement;
-                choiceDom.choiceCheckBoxElement = choiceCheckBoxElement;
-                choiceDom.choiceLabelElement = choiceLabelElement;
-                
-                let choiceSelectedToggle = toggleStyling(choiceElement, css.choice_selected);
-                let updateSelected = function(){ 
-                    choiceSelectedToggle(wrap.isOptionSelected);
-                    choiceCheckBoxElement.checked = wrap.isOptionSelected;
-                    if (wrap.isOptionDisabled || wrap.choice.isHoverIn){
-                        choiceHoverToggle(wrap.choice.isHoverIn, true);
-                    }
+            let choiceSelectedToggle = toggleStyling(choiceElement, css.choice_selected);
+            let updateSelected = function(){ 
+                choiceSelectedToggle(wrap.isOptionSelected);
+                choiceDom.choiceCheckBoxElement.checked = wrap.isOptionSelected;
+                if (wrap.isOptionDisabled || choice.isHoverIn){
+                    choiceHoverToggle(choice.isHoverIn, true);
+                    // choiceHoverToggle2(
+                    //     choice.isHoverIn?(wrap.isOptionDisabled?1:2):0
+                    // );
                 }
-
-                let choiceDisabledToggle = toggleStyling(choiceElement, css.choice_disabled);
-                let choiceCheckBoxDisabledToggle = toggleStyling(choiceCheckBoxElement, css.choiceCheckBox_disabled);
-                let choiceLabelDisabledToggle = toggleStyling(choiceLabelElement, css.choiceLabel_disabled);
-                let choiceCursorDisabledToggle = toggleStyling(choiceElement, {classes:[], styles:{cursor:"default"}}); 
-                let updateDisabled = function(){
-                    choiceDisabledToggle(wrap.isOptionDisabled);
-                    choiceCheckBoxDisabledToggle(wrap.isOptionDisabled);
-                    choiceLabelDisabledToggle(wrap.isOptionDisabled);
-    
-                    // do not desable checkBox if option is selected! there should be possibility to unselect "disabled"
-                    let isCheckBoxDisabled = wrap.isOptionDisabled && !wrap.isOptionSelected;
-                    choiceCheckBoxElement.disabled = isCheckBoxDisabled;
-                    choiceCursorDisabledToggle(isCheckBoxDisabled);
-                }
-
-                choiceDomManagerHandlers.updateData = ()=>updateDataInternal(wrap, choiceLabelElement);
-                choiceDomManagerHandlers.updateHoverIn = updateHoverIn;
-                choiceDomManagerHandlers.updateSelected = updateSelected;
-                choiceDomManagerHandlers.updateDisabled = updateDisabled;
-                composeSync(choice.dispose, ()=>{  
-                    choiceDomManagerHandlers.updateData = null;
-                    choiceDomManagerHandlers.updateHoverIn = null;
-                    choiceDomManagerHandlers.updateSelected = null;
-                    choiceDomManagerHandlers.updateDisabled = null;
-                    choiceDom.choiceContentElement = null;
-                    choiceDom.choiceCheckBoxElement = null;
-                    choiceDom.choiceLabelElement = null;
-                });
-
-            }else{
-                choiceHoverToggle    = toggleStyling(choiceElement, ()=>
-                    (wrap.isOptionDisabled && css.choice_disabled_hover)?
-                        css.choice_disabled_hover:css.choice_hover
-                );
-                
-                choiceElement.innerHTML = '<div></div>';
-                let choiceContentElement = choiceElement.querySelector('div');
-
-                choiceDom.choiceContentElement = choiceContentElement;
-                
-                choiceDomManagerHandlers.updateData = ()=>updateDataInternal(wrap, choiceContentElement);
-                composeSync(choice.dispose, ()=>{  
-                        choiceDomManagerHandlers.updateData = null;
-                        choiceDom.choiceContentElement = null;
-                });
             }
+            choiceDomManagerHandlers.updateSelected = updateSelected;
+            // --- --- --- ---
 
+            buidDisabled(choiceDom, choiceDomManagerHandlers, css, wrap)
+
+            choiceDomManagerHandlers.updateData = ()=> {choiceDom.choiceLabelElement.textContent = dataWrap.getText(wrap.option)};
+                //updateDataInternal(wrap, choiceLabelElement, dataWrap);
             choiceDomManagerHandlers.updateData();
-
-            let updateHoverIn = function(){
-                choiceHoverToggle(wrap.choice.isHoverIn);
-            }
-            choiceDomManagerHandlers.updateHoverIn=updateHoverIn;
 
             let eventBinder = EventBinder();
             eventBinder.bind(choiceElement, "click", event=>choice.choiсeClick(event) );
 
-            composeSync(choice.dispose, ()=>{  eventBinder.unbind(); });
-
+            composeSync(choice.dispose, ()=>{  
+                eventBinder.unbind(); 
+                choiceDomManagerHandlers.updateData = null;
+                choiceDomManagerHandlers.updateHoverIn = null;
+                choiceDomManagerHandlers.updateSelected = null;
+                choiceDomManagerHandlers.updateDisabled = null;
+                choiceDom.choiceContentElement = null;
+                choiceDom.choiceCheckBoxElement = null;
+                choiceDom.choiceLabelElement = null;
+            });
         }
     }
 }
@@ -138,7 +123,41 @@ export function ChoiceDomFactoryPlugCssPatch(cssPatch){
     cssPatch.choiceContent = {justifyContent: 'flex-start', cursor:'inherit'}; // BS problem: without this on inline form menu items justified center
     cssPatch.choiceLabel = {color: 'inherit', cursor:'inherit'}; // otherwise BS .was-validated set its color
     cssPatch.choiceLabel_disabled = {opacity: '.65'};  // more flexible than {color: '#6c757d'}; note: avoid opacity on pickElement's border; TODO write to BS4 
-    cssPatch.choice_disabled_hover  = 'bg-light';
-    cssPatch.choice_hover = 'text-primary bg-light';
+    cssPatch.choice_disabled_hover = 'bg-light';
+    cssPatch.choice_hover = 'bg-light text-primary';
 }
 
+export function ChoiceDomFactory2(css, createElementAspect, dataWrap){
+    //TODO move check which aspects availbale like wrap.hasOwnProperty("isOptionSelected") to there
+    return {
+        create(choice){
+            let wrap = choice.wrap;
+            let {choiceDom, choiceDomManagerHandlers} = choice;
+            let choiceElement = choice.choiceDom.choiceElement;
+
+            choiceElement.innerHTML = '<span></span>';
+            let choiceContentElement = choiceElement.querySelector('span');
+
+            choiceDom.choiceContentElement = choiceContentElement;
+            
+            choiceDomManagerHandlers.updateData = () => {
+                choiceContentElement.textContent = dataWrap.getText(wrap.option);
+            }
+            choiceDomManagerHandlers.updateData();
+
+            let choiceHoverToggle = toggleStyling(choiceElement, css.choice_hover);
+
+            choiceDomManagerHandlers.updateHoverIn = () => choiceHoverToggle(choice.isHoverIn);
+
+            let eventBinder = EventBinder();
+            eventBinder.bind(choiceElement, "click", event=>choice.choiсeClick(event));
+
+            composeSync(choice.dispose, ()=>{ 
+                choiceDomManagerHandlers.updateData = null;
+                choiceDomManagerHandlers.updateHoverIn = null;
+                choiceDom.choiceContentElement = null;
+                eventBinder.unbind(); 
+            });
+        }
+    }
+}

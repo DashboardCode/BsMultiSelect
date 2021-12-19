@@ -1,13 +1,13 @@
 
 // no overrides (not an aspect, just )
-export function CreateChoiceBaseAspect(optionPropertiesAspect){
+export function CreateChoiceBaseAspect(dataWrap){
     return {
         createChoiceBase(option){
             return {
                 // navigation and filter support
                 filteredPrev: null, 
                 filteredNext: null, 
-                searchText: optionPropertiesAspect.getText(option).toLowerCase().trim(), // TODO make an index abstraction
+                searchText: dataWrap.getText(option).toLowerCase().trim(), // TODO make an index abstraction
 
                 // internal state handlers, so they do not have "update semantics"
                 isHoverIn: false,

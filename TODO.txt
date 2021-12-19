@@ -9,6 +9,7 @@
   -1b how to inline aspects overdrive?
 
 0. esm bundle for IE11 with min;
+
 1. create lib bundle (no transpile) and test it in babel and ts project;
 
 2. https://webpack.js.org/guides/package-exports/

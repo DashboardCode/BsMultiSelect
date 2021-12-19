@@ -195,10 +195,10 @@ function ExtendProducePickAspect(producePickAspect, trySetWrapSelected, composeU
     }
 }
 
-function ExtendChoiceDomFactory(choiceDomFactory, css, createElementAspect,  optionPropertiesAspect){
+function ExtendChoiceDomFactory(choiceDomFactory, css, createElementAspect,  dataWrap){
 
     var updateDataInternal = function(wrap, element){
-        element.textContent = optionPropertiesAspect.getText(wrap.option);
+        element.textContent = dataWrap.getText(wrap.option);
     }
 
     let orig = choiceDomFactory.create;

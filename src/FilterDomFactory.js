@@ -1,9 +1,10 @@
 import {addStyling} from './ToolsStyling';
 import {EventBinder} from './ToolsDom';
 
-export function FilterDomFactory(css, createElementAspect){
+export function FilterDomFactory(staticDom){
     return {
-        create(isDisposablePicksElementFlag){
+        create(){
+            let {isDisposablePicksElementFlag, css, createElementAspect} = staticDom;
             var filterInputElement = createElementAspect.createElement('INPUT');
             addStyling(filterInputElement, css.filterInput);
         

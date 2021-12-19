@@ -6,15 +6,20 @@ export function PickDomFactoryPlugCss(css){
     css.pickContent = '';
 }
 
-export function PickDomFactory(css, createElementAspect, optionPropertiesAspect){ 
+export function PickDomFactory(css, createElementAspect, dataWrap){ 
     return { 
         create(pick){
-            let pickContentElement = createElementAspect.createElement('SPAN');
+            let wrap = pick.wrap;
             let {pickDom, pickDomManagerHandlers} = pick;
-            pickDom.pickElement.appendChild(pickContentElement);
+            let pickElement = pickDom.pickElement;
+            
+            let pickContentElement = createElementAspect.createElement('SPAN');
+
+            pickElement.appendChild(pickContentElement);
             pickDom.pickContentElement=pickContentElement;
-            pickDomManagerHandlers.updateData = ()=>{
-                pickContentElement.textContent = optionPropertiesAspect.getText(pick.wrap.option);
+            pickDomManagerHandlers.updateData = () => {
+                // this is not a generic because there could be more then one text field.
+                pickContentElement.textContent = dataWrap.getText(wrap.option); 
             }
             addStyling(pickContentElement, css.pickContent);
             pick.dispose=composeSync(pick.dispose, ()=>{
@@ -25,25 +30,3 @@ export function PickDomFactory(css, createElementAspect, optionPropertiesAspect)
         }
     }
 }
-
-
-// export function PickDomFactoryAlt(css, createElementAspect, optionPropertiesAspect){ 
-//     return { 
-//         create(pickElement, option){
-//             let pickContentElement = createElementAspect.createElement('SPAN');
-//             pickElement.appendChild(pickContentElement);
-//             addStyling(pickContentElement, css.pickContent);
-//             function updateData(){
-//                 pickContentElement.textContent = optionPropertiesAspect.getText(option);
-//             }
-//             updateData();
-//             let pickDom = { pickContentElement };
-//             let pickDomManagerHandlers = { updateData };
-//             return {
-//                 pickDom,
-//                 pickDomManagerHandlers,
-//                 dispose: {pickDom.pickContentElement=null; pickDomManagerHandlers.updateData=null;}
-//             }
-//         }
-//     }
-// }

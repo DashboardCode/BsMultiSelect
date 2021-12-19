@@ -19,16 +19,16 @@ export function plug(configuration){
         aspects.getValueRequiredAspect = getValueRequiredAspect;
         return {
             plugStaticDom: ()=>{
-                var {optionsAspect, initialDom} = aspects;
+                var {dataWrap, staticDom} = aspects;
 
                 var valueMissingMessageEx = defCall(valueMissingMessage,
-                   ()=> getDataGuardedWithPrefix(initialDom.initialElement,"bsmultiselect","value-missing-message"),
+                   ()=> getDataGuardedWithPrefix(staticDom.initialElement,"bsmultiselect","value-missing-message"),
                    defValueMissingMessage)
             
                 if (!getIsValueMissing) {
                     getIsValueMissing = () => {
                        let count = 0;
-                       let optionsArray = optionsAspect.getOptions();
+                       let optionsArray = dataWrap.getOptions();
                        for (var i=0; i < optionsArray.length; i++) {
                            if (optionsArray[i].selected) 
                                count++;
@@ -55,13 +55,13 @@ export function plug(configuration){
                         
                             return {
                                 buildApi(api){
-                                    var {triggerAspect, filterDom} = aspects;
+                                    var {staticDom, filterDom} = aspects;
                                     api.validationApi = ValidityApi(
                                        filterDom.filterInputElement,  // !!
                                        isValueMissingObservable, 
                                        valueMissingMessageEx,
                                        (isValid)=>validationApiObservable.setValue(isValid),
-                                       triggerAspect.trigger
+                                       staticDom.trigger
                                     );
                                 }
                             }

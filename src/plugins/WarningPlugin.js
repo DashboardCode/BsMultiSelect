@@ -9,7 +9,8 @@ export function plug(configuration){
     return (aspects) => {
         return {
             layout: () => {
-                let {choicesDom, createElementAspect, staticManager, afterInputAspect, filterManagerAspect, resetLayoutAspect} = aspects;
+                let {choicesDom, staticManager, afterInputAspect, filterManagerAspect, resetLayoutAspect, staticDom} = aspects;
+                let {createElementAspect} = staticDom;
                 let {css, noResultsWarning} = configuration;
 
                 if (configuration.isNoResultsWarningEnabled){

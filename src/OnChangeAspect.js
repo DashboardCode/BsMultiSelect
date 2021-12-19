@@ -1,17 +1,7 @@
-export function TriggerAspect(element, trigger) {
-    return {
-        trigger: (eventName) => {
-            trigger(element, eventName)
-        }
-    }
-}
-
-export function OnChangeAspect(triggerAspect, name) {
+export function OnChangeAspect(staticDom, name) {
     return {
         onChange(){
-            triggerAspect.trigger(name)
+            staticDom.trigger(name)
         }
     }
 }
-
-

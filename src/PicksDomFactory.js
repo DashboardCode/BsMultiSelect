@@ -1,8 +1,9 @@
 import {addStyling, toggleStyling} from './ToolsStyling';
 
-export function PicksDomFactory(css, createElementAspect){
+export function PicksDomFactory(staticDom){
     return {
-        create(picksElement, isDisposablePicksElementFlag){
+        create(){
+            var {picksElement, isDisposablePicksElementFlag, css, createElementAspect} = staticDom;
             var pickFilterElement  = createElementAspect.createElement('LI');
     
             addStyling(picksElement,      css.picks);
